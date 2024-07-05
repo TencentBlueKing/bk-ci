@@ -25,13 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.agentreq
+package com.tencent.devops.environment.config
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.environment.service.job.NodeManApi
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-data class AgentTerminateAgentInstallTaskReq(
-    @get:Schema(title = "实例ID列表")
-    @JsonProperty("instance_id_list")
-    val instanceIdList: List<String>
-)
+@Configuration
+class TencentEnvironmentConfig {
+
+    @Bean
+    @ConditionalOnMissingBean(NodeManApi::class)
+    fun nodeManApi(environmentProperties: EnvironmentProperties): NodeManApi {
+        return NodeManApi(
+            environmentProperties.nodeman.nodemanApiBaseUrl,
+            environmentProperties.apigw.bkAppCode,
+            environmentProperties.apigw.bkAppSecret,
+            environmentProperties.nodeman.defaultUser
+        )
+    }
+
+}

@@ -38,24 +38,23 @@ import com.tencent.devops.environment.config.EnvironmentProperties
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.job.agentreq.AgentHostForInstallAgent
 import com.tencent.devops.environment.pojo.job.agentreq.AgentInstallAgentReq
-import com.tencent.devops.environment.pojo.job.agentreq.AgentRetryAgentInstallTaskReq
-import com.tencent.devops.environment.pojo.job.agentreq.AgentTerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
+import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskNodeManReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
+import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskNodeManReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
-import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentChannel
-import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
-import com.tencent.devops.environment.pojo.job.agentres.AgentObtainManualCommand
+import com.tencent.devops.environment.pojo.job.agentres.AgentInstallChannel
 import com.tencent.devops.environment.pojo.job.agentres.AgentOriginalResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
-import com.tencent.devops.environment.pojo.job.agentres.AgentRetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentTerminalAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.Content
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.IpFilter
+import com.tencent.devops.environment.pojo.job.agentres.ManualInstallCommand
 import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
+import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResp
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.Step
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
@@ -91,7 +90,6 @@ data class GSEAgentService @Autowired constructor(
         private const val DEFAULT_INSTALL_AGENT_AP_ID = 1
         private const val DEFAULT_IS_MANUAL = false
         private const val DEFAULT_CLOUD_ID = 0
-        private const val DEFAULT_PLACE_HOLDER = -1
         private const val DEFAULT_NOT_INSTALL_LATEST_PLUGINS = false
 
         const val AGENT_ABNORMAL_NODE_STATUS = 0
@@ -100,9 +98,6 @@ data class GSEAgentService @Autowired constructor(
 
         const val NODEMAN_COMMAND_NOT_READY_CODE = 3800015
         const val NODEMAN_LOG_NOT_READY_CODE = 3800007
-
-        private val LANGUAGE_HEADER_EN = mapOf("blueking-language" to "en")
-        private const val DEFAULT_LANGUAGE_TYPE_CN = "zh_CN"
 
     }
 
@@ -157,14 +152,7 @@ data class GSEAgentService @Autowired constructor(
             replaceHostId = installAgentReq.replaceHostId,
             isInstallLatestPlugins = DEFAULT_NOT_INSTALL_LATEST_PLUGINS
         )
-        val agentInstallAgentRes: AgentOriginalResult<AgentInstallAgentResult> =
-            if (DEFAULT_LANGUAGE_TYPE_CN == I18nUtil.getLanguage(userId)) {
-                nodeManApi.executePostRequest(installAgentRequest, AgentInstallAgentResult::class.java, null)
-            } else {
-                nodeManApi.executePostRequest(
-                    installAgentRequest, AgentInstallAgentResult::class.java, null, LANGUAGE_HEADER_EN
-                )
-            }
+        val agentInstallAgentRes = nodeManApi.installAgent(installAgentRequest)
         val installAgentRes: AgentResult<InstallAgentResult> = AgentResult(
             code = agentInstallAgentRes.code,
             result = agentInstallAgentRes.result,
@@ -235,13 +223,11 @@ data class GSEAgentService @Autowired constructor(
         terminateAgentInstallTaskReq: TerminateAgentInstallTaskReq
     ): AgentResult<TerminalAgentInstallTaskResult> {
         NodeManApi.setNodemanOperationName(::terminalAgentInstallTask.name)
-        val terminalAgentInstallTaskRequest = AgentTerminateAgentInstallTaskReq(
+        val terminateAgentInstallTaskNodeManReq = TerminateAgentInstallTaskNodeManReq(
             instanceIdList = terminateAgentInstallTaskReq.instanceIdList
         )
         val agentTrmAgentInstallTaskRes: AgentOriginalResult<AgentTerminalAgentInstallTaskResult> =
-            nodeManApi.executePostRequest(
-                terminalAgentInstallTaskRequest, AgentTerminalAgentInstallTaskResult::class.java, jobId
-            )
+            nodeManApi.terminateAgentInstallTask(jobId, terminateAgentInstallTaskNodeManReq)
         val termAgentInstallTaskRes: AgentResult<TerminalAgentInstallTaskResult> = AgentResult(
             code = agentTrmAgentInstallTaskRes.code,
             result = agentTrmAgentInstallTaskRes.result,
@@ -264,13 +250,11 @@ data class GSEAgentService @Autowired constructor(
         retryAgentInstallTaskReq: RetryAgentInstallTaskReq
     ): AgentResult<RetryAgentInstallTaskResult> {
         NodeManApi.setNodemanOperationName(::retryAgentInstallTask.name)
-        val retryAgentInstallTaskRequest = AgentRetryAgentInstallTaskReq(
+        val retryAgentInstallTaskNodeManReq = RetryAgentInstallTaskNodeManReq(
             instanceIdList = retryAgentInstallTaskReq.instanceIdList
         )
-        val agentRetryAgentInstallTaskRes: AgentOriginalResult<AgentRetryAgentInstallTaskResult> =
-            nodeManApi.executePostRequest(
-                retryAgentInstallTaskRequest, AgentRetryAgentInstallTaskResult::class.java, jobId
-            )
+        val agentRetryAgentInstallTaskRes: AgentOriginalResult<RetryAgentInstallTaskResp> =
+            nodeManApi.retryAgentInstallTask(jobId, retryAgentInstallTaskNodeManReq)
         val retryAgentInstallTaskRes: AgentResult<RetryAgentInstallTaskResult> = AgentResult(
             code = agentRetryAgentInstallTaskRes.code,
             result = agentRetryAgentInstallTaskRes.result,
@@ -287,19 +271,14 @@ data class GSEAgentService @Autowired constructor(
 
     fun queryAgentInstallChannel(withHidden: Boolean): AgentResult<QueryAgentInstallChannelResult> {
         NodeManApi.setNodemanOperationName(::queryAgentInstallChannel.name)
-        val agentQueryAgentInsChannelRes: AgentOriginalResult<Array<AgentInstallAgentChannel>> =
-            nodeManApi.executeGetRequest(
-                shortGetTag = false,
-                classOfT = Array<AgentInstallAgentChannel>::class.java,
-                jobId = DEFAULT_PLACE_HOLDER,
-                args = arrayOf(withHidden)
-            )
+        val agentInstallChannelResp: AgentOriginalResult<Array<AgentInstallChannel>> =
+            nodeManApi.queryAgentInstallChannel(withHidden)
         val queryAgentInsChannelRes: AgentResult<QueryAgentInstallChannelResult> = AgentResult(
-            code = agentQueryAgentInsChannelRes.code,
-            result = agentQueryAgentInsChannelRes.result,
-            message = agentQueryAgentInsChannelRes.message,
-            errors = agentQueryAgentInsChannelRes.errors,
-            data = agentQueryAgentInsChannelRes.data?.let {
+            code = agentInstallChannelResp.code,
+            result = agentInstallChannelResp.result,
+            message = agentInstallChannelResp.message,
+            errors = agentInstallChannelResp.errors,
+            data = agentInstallChannelResp.data?.let {
                 QueryAgentInstallChannelResult(
                     installChannelList = it.map { installChannel ->
                         InstallAgentChannel(
@@ -317,12 +296,10 @@ data class GSEAgentService @Autowired constructor(
 
     fun obtainManualInstallationCommand(jobId: Int, hostId: Long): AgentResult<ObtainManualCommandResult> {
         NodeManApi.setNodemanOperationName(::obtainManualInstallationCommand.name)
-        val agentObtainManualCommandRes: AgentOriginalResult<AgentObtainManualCommand> = try {
-            nodeManApi.executeGetRequest(
-                shortGetTag = false,
-                classOfT = AgentObtainManualCommand::class.java,
+        val manualInstallCommandResp: AgentOriginalResult<ManualInstallCommand> = try {
+            nodeManApi.getJobCommands(
                 jobId = jobId,
-                args = arrayOf(hostId)
+                hostId = hostId
             )
         } catch (e: RemoteServiceException) { // 最初未获取到安装命令，节点管理抛出的"订阅任务未准备好"异常，该情况可重试，后台不抛出异常
             if (logger.isDebugEnabled)
@@ -340,17 +317,17 @@ data class GSEAgentService @Autowired constructor(
             }
         }
         val obtainManualCommandRes: AgentResult<ObtainManualCommandResult> = AgentResult(
-            code = agentObtainManualCommandRes.code,
-            result = agentObtainManualCommandRes.result,
-            message = agentObtainManualCommandRes.message,
-            errors = agentObtainManualCommandRes.errors,
-            data = if (agentObtainManualCommandRes.data?.solutions.isNullOrEmpty()) {
+            code = manualInstallCommandResp.code,
+            result = manualInstallCommandResp.result,
+            message = manualInstallCommandResp.message,
+            errors = manualInstallCommandResp.errors,
+            data = if (manualInstallCommandResp.data?.solutions.isNullOrEmpty()) {
                 ObtainManualCommandResult(
-                    status = agentObtainManualCommandRes.data?.status,
+                    status = manualInstallCommandResp.data?.status,
                     networkPolicyDocLink = getNetworkPolicyDocLink()
                 )
             } else {
-                agentObtainManualCommandRes.data?.solutions?.get(0)?.let {
+                manualInstallCommandResp.data?.solutions?.get(0)?.let {
                     ObtainManualCommandResult(
                         type = it.type,
                         description = it.description,

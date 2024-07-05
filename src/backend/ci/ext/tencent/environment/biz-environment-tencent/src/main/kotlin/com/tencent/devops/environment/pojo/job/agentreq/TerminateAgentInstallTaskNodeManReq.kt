@@ -25,22 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.agentres
+package com.tencent.devops.environment.pojo.job.agentreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.environment.pojo.apigw.ApiGwReq
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class AgentQueryAgentTaskLog(
-    @get:Schema(title = "节点名称")
-    val step: String,
-    @get:Schema(title = "执行状态")
-    val status: String,
-    @get:Schema(title = "执行日志")
-    val log: String?,
-    @get:Schema(title = "启动时间")
-    @JsonProperty("start_time")
-    val startTime: String?,
-    @get:Schema(title = "完成时间")
-    @JsonProperty("finish_time")
-    val finishTime: String?
-)
+data class TerminateAgentInstallTaskNodeManReq(
+    @get:Schema(title = "实例ID列表")
+    @JsonProperty("instance_id_list")
+    val instanceIdList: List<String>
+) : ApiGwReq()

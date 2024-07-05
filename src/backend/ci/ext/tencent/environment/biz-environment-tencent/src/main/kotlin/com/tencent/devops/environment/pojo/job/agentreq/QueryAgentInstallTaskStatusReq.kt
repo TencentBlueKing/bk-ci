@@ -28,10 +28,15 @@
 package com.tencent.devops.environment.pojo.job.agentreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.environment.pojo.apigw.ApiGwReq
+
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class AgentRetryAgentInstallTaskReq(
-    @get:Schema(title = "实例ID列表")
-    @JsonProperty("instance_id_list")
-    val instanceIdList: List<String>
-)
+@Schema(title = "查询Agent安装任务状态接口请求信息")
+data class QueryAgentInstallTaskStatusReq(
+    @get:Schema(title = "当前页数，默认为1")
+    val page: Int?,
+    @get:Schema(title = "分页大小，默认为10")
+    @JsonProperty("pagesize")
+    val pageSize: Int?
+) : ApiGwReq()

@@ -27,11 +27,20 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class AgentObtainManualCommand(
-    @get:Schema(title = "安装方案")
-    val solutions: List<AgentSolution>? = null,
-    @get:Schema(title = "等待状态", description = "当调用install接口拿到job_id之后，需要等待一定时间才能拿到安装命令")
-    val status: String? = null
+data class AgentInstallTaskLog(
+    @get:Schema(title = "节点名称")
+    val step: String,
+    @get:Schema(title = "执行状态")
+    val status: String,
+    @get:Schema(title = "执行日志")
+    val log: String?,
+    @get:Schema(title = "启动时间")
+    @JsonProperty("start_time")
+    val startTime: String?,
+    @get:Schema(title = "完成时间")
+    @JsonProperty("finish_time")
+    val finishTime: String?
 )

@@ -27,18 +27,11 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class AgentQueryAgentStatusFromNodemanResult(
-    @get:Schema(title = "实例记录数量总和")
-    val total: Int?,
-    @get:Schema(title = "过滤的主机详细信息列表")
-    val list: List<AgentFilterHostInfo>?,
-    @get:Schema(title = "正在运行机器的数量")
-    @JsonProperty("running_count")
-    val runningCount: Int?,
-    @get:Schema(title = "没有操作权限的主机数量")
-    @JsonProperty("no_permission_count")
-    val noPermissionCount: Int?
+data class ManualInstallCommand(
+    @get:Schema(title = "安装方案")
+    val solutions: List<AgentSolution>? = null,
+    @get:Schema(title = "等待状态", description = "当调用install接口拿到job_id之后，需要等待一定时间才能拿到安装命令")
+    val status: String? = null
 )

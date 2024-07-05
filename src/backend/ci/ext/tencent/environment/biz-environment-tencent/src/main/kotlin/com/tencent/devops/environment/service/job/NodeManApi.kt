@@ -27,55 +27,46 @@
 
 package com.tencent.devops.environment.service.job
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.environment.pojo.apigw.ApiGwReq
+import com.tencent.devops.environment.pojo.job.agentreq.AgentInstallAgentReq
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentInstallTaskStatusReq
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromNodeManReq
+import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskNodeManReq
+import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskNodeManReq
+import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentInstallChannel
+import com.tencent.devops.environment.pojo.job.agentres.AgentInstallTaskLog
 import com.tencent.devops.environment.pojo.job.agentres.AgentOriginalResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskStatusResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentTerminalAgentInstallTaskResult
+import com.tencent.devops.environment.pojo.job.agentres.ManualInstallCommand
+import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromNodemanResp
+import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResp
+import com.tencent.devops.environment.service.api.BaseApiGwApi
 import okhttp3.Response
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 
-@Component("NodeManApi")
-class NodeManApi {
-    @Value("\${environment.apigw.bkAppCode:}")
-    private val bkAppCode = ""
-
-    @Value("\${environment.apigw.bkAppSecret:}")
-    private val bkAppSecret = ""
-
-    @Value("\${environment.cc.bkScopeType:#{null}}")
-    val bkScopeType: String = ""
-
-    @Value("\${environment.cc.bkScopeId:#{null}}")
-    val bkScopeId: String = ""
-
-    @Value("\${environment.nodeman.nodemanApiBaseUrl:}")
-    private val nodemanApiBaseUrl = ""
+class NodeManApi(
+    apiBaseUrl: String,
+    appCode: String,
+    appSecret: String,
+    username: String?
+) : BaseApiGwApi(apiBaseUrl, appCode, appSecret, username) {
 
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
 
-        private val url = mapOf(
-            "installAgent" to "/job/install",
-            "queryAgentTaskStatus" to "/job/%s/details",
-            "queryAgentTaskLog" to "/job/%s/log",
-            "terminalAgentInstallTask" to "/job/%s/revoke",
-            "retryAgentInstallTask" to "/job/%s/retry",
-            "queryAgentStatusFromNodeman" to "/host/search",
-            "queryAgentInstallChannel" to "/install_channel",
-            "obtainManualInstallationCommand" to "/job/%s/get_job_commands",
-            "getApList" to "/ap",
-            "getCloudList" to "/cloud?with_default_area=true"
-        )
-        private val suffix = mapOf(
-            "queryAgentTaskLog" to "/?instance_id=%s",
-            "queryAgentInstallChannel" to "/?with_hidden=%s",
-            "obtainManualInstallationCommand" to "/?bk_host_id=%s"
-        )
+        private const val PATH_INSTALL_AGENT = "/job/install"
+        private const val PATH_QUERY_AGENT_INSTALL_TASK_STATUS = "/job/%s/details"
+        private const val PATH_QUERY_AGENT_INSTALL_TASK_LOG = "/job/%s/log/?instance_id=%s"
+        private const val PATH_TERMINAL_AGENT_INSTALL_TASK = "/job/%s/revoke"
+        private const val PATH_RETRY_AGENT_INSTALL_TASK = "/job/%s/retry"
+        private const val PATH_QUERY_AGENT_STATUS_FROM_NODMAN = "/host/search"
+        private const val PATH_QUERY_AGENT_INSTALL_CHANNEL = "/install_channel/?with_hidden=%s"
+        private const val PATH_OBTAIN_MANUAL_INSTALLATION_COMMAND = "/job/%s/get_job_commands/?bk_host_id=%s"
 
         private val logger = LoggerFactory.getLogger(NodeManApi::class.java)
 
@@ -91,51 +82,118 @@ class NodeManApi {
         fun removeNodemanOperationName() {
             nodemanOperationName.remove()
         }
+    }
 
-        private val mapper = jacksonObjectMapper().apply {
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    fun queryAgentInstallChannel(
+        withHidden: Boolean
+    ): AgentOriginalResult<Array<AgentInstallChannel>> {
+        val pathAndParams = String.format(PATH_QUERY_AGENT_INSTALL_CHANNEL, withHidden)
+        return executeGetRequest(
+            pathAndParams = pathAndParams,
+            shortGetTag = false
+        )
+    }
+
+    fun getJobCommands(
+        jobId: Int,
+        hostId: Long
+    ): AgentOriginalResult<ManualInstallCommand> {
+        val pathAndParams = String.format(PATH_OBTAIN_MANUAL_INSTALLATION_COMMAND, jobId, hostId)
+        return executeGetRequest(
+            pathAndParams = pathAndParams,
+            shortGetTag = false
+        )
+    }
+
+    fun installAgent(installAgentRequest: AgentInstallAgentReq): AgentOriginalResult<AgentInstallAgentResult> {
+        return executePostRequest(
+            pathAndParams = PATH_INSTALL_AGENT,
+            req = installAgentRequest
+        )
+    }
+
+    fun queryAgentInstallTaskStatus(
+        jobId: Int,
+        queryAgentInstallTaskStatusReq: QueryAgentInstallTaskStatusReq
+    ): AgentOriginalResult<AgentQueryAgentTaskStatusResult> {
+        val pathAndParams = String.format(PATH_QUERY_AGENT_INSTALL_TASK_STATUS, jobId)
+        return executePostRequest(
+            pathAndParams = pathAndParams,
+            req = queryAgentInstallTaskStatusReq
+        )
+    }
+
+    fun queryAgentInstallTaskLog(
+        jobId: Int,
+        instanceId: String
+    ): AgentOriginalResult<Array<AgentInstallTaskLog>> {
+        val pathAndParams = String.format(PATH_QUERY_AGENT_INSTALL_TASK_LOG, jobId, instanceId)
+        return executeGetRequest(
+            pathAndParams = pathAndParams,
+            shortGetTag = true
+        )
+    }
+
+    fun queryAgentStatus(req: QueryAgentStatusFromNodeManReq): AgentOriginalResult<QueryAgentStatusFromNodemanResp> {
+        return executePostRequest(
+            pathAndParams = PATH_QUERY_AGENT_STATUS_FROM_NODMAN,
+            req = req
+        )
+    }
+
+    fun terminateAgentInstallTask(
+        jobId: Int,
+        req: TerminateAgentInstallTaskNodeManReq
+    ): AgentOriginalResult<AgentTerminalAgentInstallTaskResult> {
+        val pathAndParams = String.format(PATH_TERMINAL_AGENT_INSTALL_TASK, jobId)
+        return executePostRequest(
+            pathAndParams = pathAndParams,
+            req = req
+        )
+    }
+
+    fun retryAgentInstallTask(
+        jobId: Int,
+        req: RetryAgentInstallTaskNodeManReq
+    ): AgentOriginalResult<RetryAgentInstallTaskResp> {
+        val pathAndParams = String.format(PATH_RETRY_AGENT_INSTALL_TASK, jobId)
+        return executePostRequest(
+            pathAndParams = pathAndParams,
+            req = req
+        )
+    }
+
+    private fun <T : ApiGwReq, R : Any> executePostRequest(
+        pathAndParams: String,
+        req: T
+    ): AgentOriginalResult<R> {
+        doPost(pathAndParams, req).use { resp ->
+            return getResultFromRes(resp)
         }
     }
 
-    fun <T, U : Any> executePostRequest(
-        req: T,
-        classOfU: Class<U>,
-        jobId: Int? = null,
-        addHeader: Map<String, String>? = null
-    ): AgentOriginalResult<U> {
-        val (bkAuthorization, url) = getAgentAuthReq(jobId)
-        val headers = getAuthHeaderMap(bkAuthorization)
-        if (!addHeader.isNullOrEmpty()) headers.putAll(addHeader)
-        val requestContent = mapper.writeValueAsString(req)
-        logger.info("[${getNodemanOperationName()}]POST url: $url, body: ${logWithLengthLimit(requestContent)}")
-        return getResultFromRes(OkhttpUtils.doPost(url, requestContent, headers), classOfU)
-    }
-
-    fun <T, U> executeGetRequest(
-        shortGetTag: Boolean = false,
-        classOfT: Class<T>,
-        jobId: Int? = null,
-        vararg args: U
-    ): AgentOriginalResult<T> {
-        val operationName = getNodemanOperationName()
-        val (bkAuthorization, url) = getAgentAuthReq(jobId)
-        val headers = getAuthHeaderMap(bkAuthorization)
-        val urlWithSuffix = url + String.format(suffix[operationName] ?: "", *args)
-        logger.info("[$operationName]GET url: $urlWithSuffix")
-        return if (!shortGetTag) {
-            getResultFromRes(OkhttpUtils.doGet(urlWithSuffix, headers), classOfT)
+    private fun <R> executeGetRequest(
+        pathAndParams: String,
+        shortGetTag: Boolean = false
+    ): AgentOriginalResult<R> {
+        if (shortGetTag) {
+            doShortGet(pathAndParams).use { resp ->
+                return getResultFromRes(resp)
+            }
         } else {
-            getResultFromRes(OkhttpUtils.doShortGet(urlWithSuffix, headers), classOfT)
+            doGet(pathAndParams).use { resp ->
+                return getResultFromRes(resp)
+            }
         }
     }
 
-    private fun <T> getResultFromRes(response: Response, classOfT: Class<T>): AgentOriginalResult<T> {
+    private fun <R> getResultFromRes(response: Response): AgentOriginalResult<R> {
         val operationName = getNodemanOperationName()
         removeNodemanOperationName()
         try {
             val responseBody = response.body?.string()
             logger.info("[$operationName] response body(origin): ${logWithLengthLimit(responseBody.toString())}")
-            val agentResp = mapper.readValue<AgentOriginalResult<T>>(responseBody!!)
+            val agentResp = JsonUtil.to(responseBody!!, object : TypeReference<AgentOriginalResult<R>>() {})
             if (!agentResp.result!!) {
                 logger.error(
                     "[$operationName] Execute failed! Error code: ${agentResp.code}, " +
@@ -146,30 +204,8 @@ class NodeManApi {
                     errorMessage = "Execute failed! Error code: ${agentResp.code}, " +
                         "Error msg: ${agentResp.message}"
                 )
-            } else {
-                var jsonData = ""
-                val operationResult: T? =
-                    if (null != agentResp.data) {
-                        jsonData = mapper.writeValueAsString(agentResp.data)
-                        mapper.readValue(jsonData, classOfT)
-                    } else {
-                        null
-                    }
-                if (logger.isDebugEnabled)
-                    logger.debug("[$operationName] serialized jsonData: ${logWithLengthLimit(jsonData)}")
-                return AgentOriginalResult(
-                    code = agentResp.code,
-                    result = agentResp.result,
-                    message = agentResp.message,
-                    errors = agentResp.errors,
-                    data = operationResult
-                )
             }
-        } catch (remoteServiceException: RemoteServiceException) {
-            logger.warn(
-                "Failed to execute the HTTP request. [$operationName]RemoteServiceException:", remoteServiceException
-            )
-            throw remoteServiceException
+            return agentResp
         } catch (exception: Exception) {
             logger.warn("Failed to execute the HTTP request. [$operationName]Exception:", exception)
             throw exception
@@ -183,22 +219,4 @@ class NodeManApi {
             logOrigin
     }
 
-    private fun getAuthHeaderMap(bkAuthorization: String): MutableMap<String, String> {
-        return mutableMapOf(
-            "accept" to "*/*",
-            "Content-Type" to "application/json",
-            "X-Bkapi-Authorization" to bkAuthorization
-        )
-    }
-
-    private fun getAgentAuthReq(jobId: Int? = null): Pair<String, String> {
-        val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
-            "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"$AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE\"}"
-        val operationName = getNodemanOperationName()
-        val reqUrl = nodemanApiBaseUrl + String.format(
-            url[operationName] ?: "",
-            jobId?.toString() ?: ""
-        )
-        return Pair(bkAuthorization, reqUrl)
-    }
 }

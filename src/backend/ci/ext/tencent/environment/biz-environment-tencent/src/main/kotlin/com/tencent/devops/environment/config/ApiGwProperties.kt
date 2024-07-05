@@ -25,29 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.agentreq
+package com.tencent.devops.environment.config
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
-import io.swagger.v3.oas.annotations.media.Schema
-
-data class AgentQueryAgentStatusFromNodemanReq(
-    @get:Schema(title = "主机ID")
-    @JsonProperty("bk_host_id")
-    val bkHostId: List<Long>?,
-    @get:Schema(title = "搜索条件")
-    val conditions: List<AgentCondition<List<String>>>?,
-    @get:Schema(title = "展示额外信息")
-    @JsonProperty("extra_data")
-    val extraData: List<String>?,
-    @get:Schema(title = "分页大小，默认为10")
-    val pagesize: Int?,
-    @get:Schema(title = "当前页数，默认为1")
-    val page: Int?,
-    @get:Schema(title = "只返回IP，不返回其他字段")
-    @JsonProperty("only_ip")
-    val onlyIp: Boolean?,
-    @get:Schema(title = "是否只返回运行状态统计")
-    @JsonProperty("running_count")
-    val runningCount: Boolean?
+data class ApiGwProperties(
+    /**
+     * 蓝鲸应用代码
+     */
+    val bkAppCode: String,
+    /**
+     * 蓝鲸应用密钥
+     */
+    val bkAppSecret: String
 )

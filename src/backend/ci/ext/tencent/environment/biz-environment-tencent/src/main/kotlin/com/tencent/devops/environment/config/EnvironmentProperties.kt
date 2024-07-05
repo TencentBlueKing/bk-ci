@@ -34,6 +34,10 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConfigurationProperties(prefix = "environment")
 data class EnvironmentProperties(
     /**
+     * APIGW相关配置
+     */
+    val apigw: ApiGwProperties,
+    /**
      * 节点管理相关配置
      */
     val nodeman: NodeManProperties,

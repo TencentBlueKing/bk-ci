@@ -35,5 +35,9 @@ data class NodeManProperties(
     /**
      * 节点管理安装Agent相关的网络策略文档链接
      */
-    val networkPolicyDocLink: String? = null
+    val networkPolicyDocLink: String? = null,
+    /**
+     * 调用节点管理接口使用的默认用户
+     */
+    val defaultUser: String? = "admin"
 )

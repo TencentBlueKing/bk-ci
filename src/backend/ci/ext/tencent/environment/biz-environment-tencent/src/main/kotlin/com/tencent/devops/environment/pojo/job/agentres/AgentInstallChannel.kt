@@ -25,26 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.agentreq
+package com.tencent.devops.environment.pojo.job.agentres
 
-import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.environment.pojo.apigw.ApiGwReq
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "安装agent的请求信息")
-data class AgentInstallAgentReq(
-    @get:Schema(title = "任务类型", required = true)
-    @JsonProperty("job_type")
-    val jobType: String,
-    @get:Schema(title = "主机列表", required = true)
-    val hosts: List<AgentHostForInstallAgent>,
-    @get:Schema(title = "被替换的Proxy主机ID")
-    @JsonProperty("replace_host_id")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    val replaceHostId: Int?,
-    @get:Schema(title = "是否安装最新版本插件，默认不安装最新插件")
-    @JsonProperty("is_install_latest_plugins")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    val isInstallLatestPlugins: Boolean?
-) : ApiGwReq()
+data class AgentInstallChannel(
+    @get:Schema(title = "安装通道ID")
+    val id: Int,
+    @get:Schema(title = "安装通道名称")
+    val name: String,
+    @get:Schema(title = "安装通道管控区域ID")
+    @JsonProperty("bk_cloud_id")
+    val bkCloudId: Int,
+    @get:Schema(title = "是否为隐藏安装通道")
+    val hidden: Boolean
+)

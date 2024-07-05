@@ -32,10 +32,10 @@ import com.tencent.devops.environment.config.EnvironmentProperties
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.AgentVersion
-import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentTaskStatusReq
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentInstallTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
+import com.tencent.devops.environment.pojo.job.agentres.AgentInstallTaskLog
 import com.tencent.devops.environment.pojo.job.agentres.AgentOriginalResult
-import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskLog
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.HostDetail
@@ -193,14 +193,12 @@ data class InstallTaskService @Autowired constructor(
         queryAgentTaskStatusReq: QueryAgentTaskStatusReq
     ): AgentResult<QueryAgentTaskStatusResult> {
         NodeManApi.setNodemanOperationName(::queryAgentInstallTaskStatus.name)
-        val queryAgentTaskStatusRequest = AgentQueryAgentTaskStatusReq(
+        val queryAgentInstallTaskStatusReq = QueryAgentInstallTaskStatusReq(
             page = queryAgentTaskStatusReq.page,
             pageSize = queryAgentTaskStatusReq.pageSize
         )
         val agentQueryAgentTaskStatusRes: AgentOriginalResult<AgentQueryAgentTaskStatusResult> =
-            nodeManApi.executePostRequest(
-                queryAgentTaskStatusRequest, AgentQueryAgentTaskStatusResult::class.java, jobId
-            )
+            nodeManApi.queryAgentInstallTaskStatus(jobId, queryAgentInstallTaskStatusReq)
         val queryAgentTaskStatusRes: AgentResult<QueryAgentTaskStatusResult> = AgentResult(
             code = agentQueryAgentTaskStatusRes.code,
             result = agentQueryAgentTaskStatusRes.result,
@@ -297,12 +295,10 @@ data class InstallTaskService @Autowired constructor(
         instanceId: String
     ): AgentResult<QueryAgentTaskLogResult> {
         NodeManApi.setNodemanOperationName(::queryAgentInstallTaskLog.name)
-        val agentQueryAgentTaskLogRes: AgentOriginalResult<Array<AgentQueryAgentTaskLog>> = try {
-            nodeManApi.executeGetRequest(
-                shortGetTag = true,
-                classOfT = Array<AgentQueryAgentTaskLog>::class.java,
+        val agentInstallTaskLogRes: AgentOriginalResult<Array<AgentInstallTaskLog>> = try {
+            nodeManApi.queryAgentInstallTaskLog(
                 jobId = jobId,
-                args = arrayOf(instanceId)
+                instanceId = instanceId
             )
         } catch (e: RemoteServiceException) { // 最初未获取到日志，节点管理抛出的"订阅任务未准备好"异常，该情况可重试，后台不抛出异常
             if (logger.isDebugEnabled)
@@ -320,11 +316,11 @@ data class InstallTaskService @Autowired constructor(
             }
         }
         val queryAgentTaskLogRes: AgentResult<QueryAgentTaskLogResult> = AgentResult(
-            code = agentQueryAgentTaskLogRes.code,
-            result = agentQueryAgentTaskLogRes.result,
-            message = agentQueryAgentTaskLogRes.message,
-            errors = agentQueryAgentTaskLogRes.errors,
-            data = agentQueryAgentTaskLogRes.data?.let {
+            code = agentInstallTaskLogRes.code,
+            result = agentInstallTaskLogRes.result,
+            message = agentInstallTaskLogRes.message,
+            errors = agentInstallTaskLogRes.errors,
+            data = agentInstallTaskLogRes.data?.let {
                 QueryAgentTaskLogResult(
                     queryAgentTaskLogResult = it.map { queryAgentTaskLog ->
                         QueryAgentTaskLog(

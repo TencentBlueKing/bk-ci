@@ -35,9 +35,7 @@ import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromJobR
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromNodemanResult
 import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.agentreq.AgentCondition
-import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentStatusFromNodemanReq
-import com.tencent.devops.environment.pojo.job.agentres.AgentOriginalResult
-import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusFromNodemanResult
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromNodeManReq
 import com.tencent.devops.environment.pojo.job.agentres.ExtraData
 import com.tencent.devops.environment.pojo.job.agentres.FilterHostInfo
 import com.tencent.devops.environment.pojo.job.agentres.IdentityInfo
@@ -170,7 +168,7 @@ class QueryAgentStatusService @Autowired constructor(
         queryAgentStatusFromNodemanReq: QueryAgentStatusFromNodemanReq
     ): AgentResult<QueryAgentStatusFromNodemanResult> {
         NodeManApi.setNodemanOperationName(::queryAgentStatusFromNodeman.name)
-        val queryAgentStatusFromNodemanRequest = AgentQueryAgentStatusFromNodemanReq(
+        val queryAgentStatusFromNodeManReq = QueryAgentStatusFromNodeManReq(
             bkHostId = queryAgentStatusFromNodemanReq.bkHostId,
             conditions = queryAgentStatusFromNodemanReq.conditions?.map {
                 AgentCondition(key = it.key, value = it.value)
@@ -181,16 +179,13 @@ class QueryAgentStatusService @Autowired constructor(
             onlyIp = queryAgentStatusFromNodemanReq.onlyIp,
             runningCount = queryAgentStatusFromNodemanReq.runningCount
         )
-        val agentQueryAgentStatusRes: AgentOriginalResult<AgentQueryAgentStatusFromNodemanResult> =
-            nodeManApi.executePostRequest(
-                queryAgentStatusFromNodemanRequest, AgentQueryAgentStatusFromNodemanResult::class.java
-            )
+        val agentStatusFromNodeManResp = nodeManApi.queryAgentStatus(queryAgentStatusFromNodeManReq)
         val queryAgentStatusRes: AgentResult<QueryAgentStatusFromNodemanResult> = AgentResult(
-            code = agentQueryAgentStatusRes.code,
-            result = agentQueryAgentStatusRes.result,
-            message = agentQueryAgentStatusRes.message,
-            errors = agentQueryAgentStatusRes.errors,
-            data = agentQueryAgentStatusRes.data?.let {
+            code = agentStatusFromNodeManResp.code,
+            result = agentStatusFromNodeManResp.result,
+            message = agentStatusFromNodeManResp.message,
+            errors = agentStatusFromNodeManResp.errors,
+            data = agentStatusFromNodeManResp.data?.let {
                 QueryAgentStatusFromNodemanResult(
                     total = it.total,
                     list = it.list?.map { filterHostInfo ->

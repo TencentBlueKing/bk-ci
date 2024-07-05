@@ -30,14 +30,15 @@ package com.tencent.devops.environment.pojo.job.agentres
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class AgentInstallAgentChannel(
-    @get:Schema(title = "安装通道ID")
-    val id: Int,
-    @get:Schema(title = "安装通道名称")
-    val name: String,
-    @get:Schema(title = "安装通道管控区域ID")
-    @JsonProperty("bk_cloud_id")
-    val bkCloudId: Int,
-    @get:Schema(title = "是否为隐藏安装通道")
-    val hidden: Boolean
+data class QueryAgentStatusFromNodemanResp(
+    @get:Schema(title = "实例记录数量总和")
+    val total: Int?,
+    @get:Schema(title = "过滤的主机详细信息列表")
+    val list: List<AgentFilterHostInfo>?,
+    @get:Schema(title = "正在运行机器的数量")
+    @JsonProperty("running_count")
+    val runningCount: Int?,
+    @get:Schema(title = "没有操作权限的主机数量")
+    @JsonProperty("no_permission_count")
+    val noPermissionCount: Int?
 )
