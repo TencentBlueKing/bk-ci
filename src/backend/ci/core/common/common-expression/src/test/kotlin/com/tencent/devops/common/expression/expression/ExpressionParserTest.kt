@@ -28,6 +28,7 @@
 package com.tencent.devops.common.expression.expression
 
 import com.tencent.devops.common.expression.ExecutionContext
+import com.tencent.devops.common.expression.ExpressionException
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.SubNameValueEvaluateInfo
@@ -130,7 +131,7 @@ class ExpressionParserTest {
             "cn.com",
             ExpressionParser.evaluateByMap("matrix.power.url", variables, true)
         )
-        assertThrows<ExpressionParseException> {
+        assertThrows<ExpressionException> {
             ExpressionParser.evaluateByMap("matrix.power.url=='cn.com'", variablesWithError, true)
         }
     }

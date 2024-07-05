@@ -14,6 +14,7 @@ import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import java.util.LinkedList
 import java.util.Queue
 import java.util.Stack
+import kotlin.jvm.Throws
 
 /**
  * 用来将流水线变量转为树的形式，来对其转换到表达式引擎做兼容处理
@@ -65,9 +66,8 @@ class ContextTree(
                         endFlag = false
                         return@breadthFirstTraversal true
                     }
-                    if (n.value != null) {
-                        // TODO: 自定异常
-                        throw RuntimeException()
+                    if (n.value != null && n.value != value) {
+                        throw ContextDataRuntimeException("duplicate key ${n.key} value ${n.value}|$value not equal")
                     }
                     valueNode = n
                     return@breadthFirstTraversal true
@@ -179,6 +179,7 @@ open class ContextTreeNode(
         }
     }
 
+    @Throws(ContextJsonFormatException::class)
     fun toContext(): PipelineContextData {
         if (this.children.isEmpty()) {
             return StringContextData(this.value ?: "")
@@ -194,12 +195,12 @@ open class ContextTreeNode(
     }
 
     // 校验当前节点的值转换的JSON树是否与子节点结构和值相同
+    @Throws(ContextJsonFormatException::class)
     private fun checkJson() {
         val jsonTree = try {
             ObjectMapper().readTree(this.value)
         } catch (e: Exception) {
-            // TODO: 校验 json 但是自己不是 json 值报错
-            throw RuntimeException()
+            throw ContextJsonFormatException("${this.value} to json error ${e.localizedMessage}")
         }
         jsonTree.equals(ObjectNodeComparator(), this.toJson())
     }
