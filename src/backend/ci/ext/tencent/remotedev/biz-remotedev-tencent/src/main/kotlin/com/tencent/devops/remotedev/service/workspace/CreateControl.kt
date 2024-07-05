@@ -56,8 +56,8 @@ import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
-import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -711,7 +711,8 @@ class CreateControl @Autowired constructor(
         if (oldWs != null) {
             // 直接硬删除记录。新的工作空间会复用原先的name
             workspaceDao.deleteWorkspace(oldWs.workspaceName, dslContext)
-            SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java).deleteWorkspace(userId, workspaceName)
+            SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
+                .deleteWorkspace(userId, workspaceName)
         }
         when (checkOwnerType) {
             WorkspaceOwnerType.PROJECT -> {
@@ -735,9 +736,6 @@ class CreateControl @Autowired constructor(
                     ),
                     dslContext = dslContext
                 )
-                if (oldWs?.status?.checkDelivering() == true) {
-                    workspaceDao.updateWorkspaceStatus(dslContext, oldWs.workspaceName, WorkspaceStatus.DELETED)
-                }
             }
 
             WorkspaceOwnerType.PERSONAL -> {
