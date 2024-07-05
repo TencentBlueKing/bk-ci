@@ -18,5 +18,5 @@ data class CCFindHostBizRelationsReq(
     val bkUsername: String? = "admin",
     @get:Schema(title = "主机属性列表", required = true)
     @JsonProperty("bk_host_id")
-    val bkHostId: List<Long>
+    val bkHostId: List<Int>
 )

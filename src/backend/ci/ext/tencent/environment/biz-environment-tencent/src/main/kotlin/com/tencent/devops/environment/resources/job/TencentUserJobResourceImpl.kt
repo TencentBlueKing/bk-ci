@@ -26,6 +26,7 @@ import com.tencent.devops.environment.pojo.job.jobresp.JobResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.service.gseagent.GSEAgentService
+import com.tencent.devops.environment.service.gseagent.InstallTaskService
 import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.PermissionManageService
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,7 +36,8 @@ import javax.ws.rs.core.Response
 @RestResource
 class TencentUserJobResourceImpl @Autowired constructor(
     private val jobService: JobService,
-    private val GSEAgentService: GSEAgentService,
+    private val gseAgentService: GSEAgentService,
+    private val installTaskService: InstallTaskService,
     private val permissionManageService: PermissionManageService
 ) : TencentUserJobResource {
     override fun queryJobInstanceStatus(
@@ -107,7 +109,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         installAgentReq: String
     ): AgentResult<InstallAgentResult> {
         checkParamBlank(userId, projectId)
-        return GSEAgentService.installAgent(userId, keyFile, installAgentReq)
+        return gseAgentService.installAgent(userId, keyFile, installAgentReq)
     }
 
     override fun queryAgentTaskStatus(
@@ -117,7 +119,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         queryAgentTaskStatusReq: QueryAgentTaskStatusReq
     ): AgentResult<QueryAgentTaskStatusResult> {
         checkParamBlank(userId, projectId)
-        return GSEAgentService.queryAgentTaskStatus(jobId, queryAgentTaskStatusReq)
+        return installTaskService.queryAgentInstallTaskStatus(jobId, queryAgentTaskStatusReq)
     }
 
     override fun queryAgentTaskLog(
@@ -127,7 +129,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         instanceId: String
     ): AgentResult<QueryAgentTaskLogResult> {
         checkParamBlank(userId, projectId)
-        return GSEAgentService.queryAgentTaskLog(jobId, instanceId)
+        return installTaskService.queryAgentInstallTaskLog(jobId, instanceId)
     }
 
     override fun terminalAgentInstallTask(
@@ -137,7 +139,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         terminateAgentInstallTaskReq: TerminateAgentInstallTaskReq
     ): AgentResult<TerminalAgentInstallTaskResult> {
         checkParamBlank(userId, projectId)
-        return GSEAgentService.terminalAgentInstallTask(jobId, terminateAgentInstallTaskReq)
+        return gseAgentService.terminalAgentInstallTask(jobId, terminateAgentInstallTaskReq)
     }
 
     override fun retryAgentInstallTask(
@@ -147,7 +149,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         retryAgentInstallTaskReq: RetryAgentInstallTaskReq
     ): AgentResult<RetryAgentInstallTaskResult> {
         checkParamBlank(userId, projectId)
-        return GSEAgentService.retryAgentInstallTask(jobId, retryAgentInstallTaskReq)
+        return gseAgentService.retryAgentInstallTask(jobId, retryAgentInstallTaskReq)
     }
 
     override fun queryAgentInstallChannel(
@@ -156,7 +158,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         withHidden: Boolean
     ): AgentResult<QueryAgentInstallChannelResult> {
         checkParamBlank(userId, projectId)
-        return GSEAgentService.queryAgentInstallChannel(withHidden)
+        return gseAgentService.queryAgentInstallChannel(withHidden)
     }
 
     override fun obtainManualInstallationCommand(
@@ -166,7 +168,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         hostId: Long
     ): AgentResult<ObtainManualCommandResult> {
         checkParamBlank(userId, projectId)
-        return GSEAgentService.obtainManualInstallationCommand(jobId, hostId)
+        return gseAgentService.obtainManualInstallationCommand(jobId, hostId)
     }
 
     private fun checkParamBlank(userId: String, projectId: String) {

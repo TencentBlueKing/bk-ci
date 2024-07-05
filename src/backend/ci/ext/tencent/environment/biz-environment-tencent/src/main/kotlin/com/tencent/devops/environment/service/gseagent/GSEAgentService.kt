@@ -33,88 +33,50 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.environment.config.NodeManProperties
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_AGENT_STATUS_QUERY_EMPTY_JOB_ID
-import com.tencent.devops.environment.dao.job.CmdbNodeDao
-import com.tencent.devops.environment.pojo.enums.NodeStatus
-import com.tencent.devops.environment.pojo.job.AgentVersion
+import com.tencent.devops.environment.config.EnvironmentProperties
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.job.agentreq.AgentHostForInstallAgent
 import com.tencent.devops.environment.pojo.job.agentreq.AgentInstallAgentReq
-import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentRetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentTerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
-import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentObtainManualCommand
 import com.tencent.devops.environment.pojo.job.agentres.AgentOriginalResult
-import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskLog
-import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentRetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentTerminalAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.Content
-import com.tencent.devops.environment.pojo.job.agentres.HostDetail
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.IpFilter
-import com.tencent.devops.environment.pojo.job.agentres.Meta
 import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
-import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLog
-import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
-import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
-import com.tencent.devops.environment.pojo.job.agentres.Statistics
 import com.tencent.devops.environment.pojo.job.agentres.Step
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
 import com.tencent.devops.environment.service.job.ChooseAgentInstallChannelIdService
 import com.tencent.devops.environment.service.job.NodeManApi
-import com.tencent.devops.environment.service.job.QueryAgentStatusService
 import com.tencent.devops.environment.service.job.TencentQueryFromCCService
-import com.tencent.devops.environment.service.prometheus.AgentStatusUpdateThreadMetrics
 import com.tencent.devops.environment.utils.FileUtils
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.io.InputStream
-import java.util.concurrent.SynchronousQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
-import javax.annotation.PostConstruct
 import javax.ws.rs.core.Response
 
 @Service("GSEAgentService")
 data class GSEAgentService @Autowired constructor(
     private val nodeManApi: NodeManApi,
     private val chooseAgentInstallChannelIdService: ChooseAgentInstallChannelIdService,
-    private val dslContext: DSLContext,
-    private val cmdbNodeDao: CmdbNodeDao,
-    private val redisOperation: RedisOperation,
     private val tencentQueryFromCCService: TencentQueryFromCCService,
-    private val queryAgentStatusService: QueryAgentStatusService,
-    private val agentStatusUpdateThreadMetrics: AgentStatusUpdateThreadMetrics,
-    private val nodeManProperties: NodeManProperties
+    private val environmentProperties: EnvironmentProperties,
+    private val installTaskService: InstallTaskService
 ) {
-    @Value("\${environment.cc.bkBizScopeId:#{null}}")
-    val bkBizScopeId: Int = 0
-
-    @Value("\${environment.checkAgentStatus.corePoolSize:#{null}}")
-    final val corePoolSize: Int = 2
-
-    @Value("\${environment.checkAgentStatus.maximumPoolSize:#{null}}")
-    final val maximumPoolSize: Int = 6
-
-    @Value("\${environment.checkAgentStatus.keepAliveTime:#{null}}")
-    final val keepAliveTime: Long = 0L
 
     companion object {
         private val logger = LoggerFactory.getLogger(GSEAgentService::class.java)
@@ -124,23 +86,13 @@ data class GSEAgentService @Autowired constructor(
         }
 
         private const val DEFAULT_INSTALL_AGENT_JOB_TYPE = "REINSTALL_AGENT"
-        private const val DEFAULT_INSTALL_AGENT_AP_ID = 1 // 节点管理预发布/正式环境 apId均固定为1
+
+        // 节点管理预发布/正式环境 apId均固定为1
+        private const val DEFAULT_INSTALL_AGENT_AP_ID = 1
         private const val DEFAULT_IS_MANUAL = false
         private const val DEFAULT_CLOUD_ID = 0
         private const val DEFAULT_PLACE_HOLDER = -1
         private const val DEFAULT_NOT_INSTALL_LATEST_PLUGINS = false
-
-        private const val DEFAULT_PAGE = 1
-        private const val DEFAULT_PAGE_SIZE = 20
-        private const val MAXIMUM_RETRY_TIMES = 100
-
-        private const val AGENT_INSTALL_NORMAL = "SUCCESS"
-        private val agentTaskEndStatusList = listOf(
-            "FAILED", "SUCCESS", "PART_FAILED", "TERMINATED", "REMOVED", "FILTERED", "IGNORED"
-        )
-        private val agentRunningStatusList = listOf(
-            "PENDING", "RUNNING"
-        )
 
         const val AGENT_ABNORMAL_NODE_STATUS = 0
         const val AGENT_NORMAL_NODE_STATUS = 1
@@ -152,34 +104,11 @@ data class GSEAgentService @Autowired constructor(
         private val LANGUAGE_HEADER_EN = mapOf("blueking-language" to "en")
         private const val DEFAULT_LANGUAGE_TYPE_CN = "zh_CN"
 
-        private const val GAUGE_NAME_ACTIVE_THREAD_COUNT = "activeThreadCount" // 活跃线程数
-        private const val GAUGE_NAME_CORE_THREAD_COUNT = "coreThreadCount" // 核心线程数
-        private const val GAUGE_NAME_MAX_THREAD_COUNT = "maxThreadCount" // 最大线程数
     }
 
-    lateinit var checkAgentStatusExecutor: ThreadPoolExecutor
-
-    @PostConstruct
-    fun init() {
-        checkAgentStatusExecutor = ThreadPoolExecutor(
-            corePoolSize,
-            maximumPoolSize,
-            keepAliveTime,
-            TimeUnit.MILLISECONDS,
-            SynchronousQueue()
-        )
-    }
-
-    @Scheduled(cron = "0/15 * * * * ?")
-    fun monitorCheckAgentStatusExecutorTask() {
-        agentStatusUpdateThreadMetrics.map[GAUGE_NAME_ACTIVE_THREAD_COUNT] =
-            checkAgentStatusExecutor.activeCount.toDouble()
-        agentStatusUpdateThreadMetrics.map[GAUGE_NAME_CORE_THREAD_COUNT] =
-            checkAgentStatusExecutor.corePoolSize.toDouble()
-        agentStatusUpdateThreadMetrics.map[GAUGE_NAME_MAX_THREAD_COUNT] =
-            checkAgentStatusExecutor.maximumPoolSize.toDouble()
-    }
-
+    /**
+     * 安装GSE Agent
+     */
     fun installAgent(
         userId: String,
         keyFile: InputStream?,
@@ -187,14 +116,13 @@ data class GSEAgentService @Autowired constructor(
     ): AgentResult<InstallAgentResult> {
         NodeManApi.setNodemanOperationName(::installAgent.name)
         val installAgentReq = mapper.readValue<InstallAgentReq>(installAgentReqString)
-        val hostIdToqueryCCResDataMap = tencentQueryFromCCService.queryCCFindHostBizRelations(
-            installAgentReq.hosts.mapNotNull { it.bkHostId?.toLong() }
-        ).data?.associateBy { it.bkHostId }
+        val hostIdList = installAgentReq.hosts.mapNotNull { it.bkHostId }
+        val hostIdToBizIdMap = buildHostToBizIdMap(hostIdList)
         val installAgentRequest = AgentInstallAgentReq(
             jobType = DEFAULT_INSTALL_AGENT_JOB_TYPE,
             hosts = installAgentReq.hosts.map {
                 AgentHostForInstallAgent(
-                    bkBizId = hostIdToqueryCCResDataMap?.get(it.bkHostId)?.bkBizId ?: bkBizScopeId,
+                    bkBizId = getBizIdOfHost(hostIdToBizIdMap, it.bkHostId),
                     bkCloudId = it.bkCloudId ?: DEFAULT_CLOUD_ID,
                     bkHostId = it.bkHostId,
                     bkAddressing = it.bkAddressing,
@@ -263,242 +191,45 @@ data class GSEAgentService @Autowired constructor(
                 }
             )
         )
-        checkAgentStatus(installAgentRes.data?.jobId, installAgentReq.hosts.mapNotNull { it.innerIp })
+        checkInstallAgentTaskCreated(installAgentRes)
+        installTaskService.startCheckInstallStatusTask(
+            jobId = installAgentRes.data?.jobId!!,
+            ipList = installAgentReq.hosts.mapNotNull { it.innerIp }
+        )
         return installAgentRes
     }
 
-    /**
-     * 安装agent状态轮询
-     * 发起安装任务后，轮询安装状态：安装中 - NODE_STATUS: RUNNING
-     * 执行定时轮询任务，每隔 3000ms 检查任务状态，如果结束（成功/失败）则停止轮询。
-     */
-    fun checkAgentStatus(jobId: Int?, ipList: List<String>?) {
-        checkAgentStatusTimed(jobId, ipList)
-    }
-
-    private fun checkAgentStatusTimed(jobId: Int?, ipList: List<String>?) {
-        if (null == jobId) {
+    private fun checkInstallAgentTaskCreated(installAgentRes: AgentResult<InstallAgentResult>) {
+        if (null == installAgentRes.data?.jobId) {
             throw CustomException(
                 Response.Status.BAD_REQUEST,
-                I18nUtil.getCodeLanMessage(ERROR_AGENT_STATUS_QUERY_EMPTY_JOB_ID)
+                I18nUtil.getCodeLanMessage(
+                    messageCode = EnvironmentMessageCode.ERROR_FAIL_TO_CREATE_AGENT_INSTALL_TASK,
+                    params = arrayOf(installAgentRes.message ?: "")
+                )
             )
         }
-        if (null == ipList) return
-        val runningIpList = ipList.toMutableList()
-        cmdbNodeDao.updateNodeStatusByNodeIp(dslContext, ipList, NodeStatus.RUNNING.name, null, jobId.toLong())
-        val task = object : Runnable {
-            var count = 0
-            override fun run() {
-                while (count < MAXIMUM_RETRY_TIMES) {
-                    val queryAgentTaskStatusReq = QueryAgentTaskStatusReq(
-                        page = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE
-                    )
-                    val queryAgentTaskStatusRes = queryAgentTaskStatus(
-                        jobId, queryAgentTaskStatusReq
-                    )
-                    queryAgentTaskStatusRes.data?.list?.filter {
-                        it.ip in runningIpList
-                    }?.map {
-                        if (logger.isDebugEnabled)
-                            logger.debug("Agent install task: ip: ${it.ip}, status: ${it.status}")
-                        if (it.status in agentTaskEndStatusList) { // agent安装任务结束(成功/失败)
-                            val agentInfo = queryAgentStatusService.getAgentVersions(
-                                listOf(AgentVersion(ip = it.ip, bkHostId = it.bkHostId?.toLong()))
-                            )
-                            val nodeStatus =
-                                if (AGENT_INSTALL_NORMAL == it.status) NodeStatus.NORMAL.name
-                                else getNodeStatus(agentInfo?.get(0)) // agent安装任务失败，重新查询节点agent安装状态
-                            val nodeAgentVersion = agentInfo?.get(0)?.version
-                            cmdbNodeDao.updateNodeStatusByNodeIp(
-                                dslContext, listOf(it.ip), nodeStatus, nodeAgentVersion, null
-                            )
-                            runningIpList.remove(it.ip)
-                        }
-                    }
-                    logger.info("Agent install task runningIpList:${runningIpList.joinToString()}")
-                    if (runningIpList.isEmpty()) {
-                        logger.info("Agent install task is complete.")
-                        break
-                    } else {
-                        logger.debug("Agent install task running...")
-                        count++
-                    }
-                    Thread.sleep(3000L)
-                }
-                if (count >= MAXIMUM_RETRY_TIMES) {
-                    logger.info("Agent install task abnormal ip: $runningIpList")
-                    cmdbNodeDao.updateNodeStatusByNodeIp(
-                        dslContext, runningIpList, NodeStatus.ABNORMAL.name, null, null
-                    )
-                }
-            }
-        }
-        try {
-            checkAgentStatusExecutor.submit(task)
-        } catch (e: Exception) {
-            logger.warn("Check agent status failed. Exception: $e")
-        }
     }
 
-    private fun getNodeStatus(agentInfo: AgentVersion?): String {
-        return if (AGENT_NOT_INSTALLED_TAG == agentInfo?.installedTag)
-            NodeStatus.NOT_INSTALLED.name
-        else if (AGENT_ABNORMAL_NODE_STATUS == agentInfo?.status)
-            NodeStatus.ABNORMAL.name
-        else if (AGENT_NORMAL_NODE_STATUS == agentInfo?.status)
-            NodeStatus.NORMAL.name
-        else
-            NodeStatus.NOT_INSTALLED.name
+    private fun buildHostToBizIdMap(hostIdList: List<Int>): Map<Int, Int> {
+        val hostBizRelationList = tencentQueryFromCCService.queryCCFindHostBizRelations(
+            hostIdList
+        ).data
+        return hostBizRelationList?.associate {
+            it.bkHostId to it.bkBizId
+        } ?: emptyMap()
     }
 
-    fun queryAgentTaskStatus(
-        jobId: Int,
-        queryAgentTaskStatusReq: QueryAgentTaskStatusReq
-    ): AgentResult<QueryAgentTaskStatusResult> {
-        NodeManApi.setNodemanOperationName(::queryAgentTaskStatus.name)
-        val queryAgentTaskStatusRequest = AgentQueryAgentTaskStatusReq(
-            page = queryAgentTaskStatusReq.page,
-            pageSize = queryAgentTaskStatusReq.pageSize
-        )
-        val agentQueryAgentTaskStatusRes: AgentOriginalResult<AgentQueryAgentTaskStatusResult> =
-            nodeManApi.executePostRequest(
-                queryAgentTaskStatusRequest, AgentQueryAgentTaskStatusResult::class.java, jobId
-            )
-        val queryAgentTaskStatusRes: AgentResult<QueryAgentTaskStatusResult> = AgentResult(
-            code = agentQueryAgentTaskStatusRes.code,
-            result = agentQueryAgentTaskStatusRes.result,
-            message = agentQueryAgentTaskStatusRes.message,
-            errors = agentQueryAgentTaskStatusRes.errors,
-            data = agentQueryAgentTaskStatusRes.data?.let {
-                QueryAgentTaskStatusResult(
-                    jobId = it.jobId,
-                    createdBy = it.createdBy,
-                    jobType = it.jobType,
-                    jobTypeDisplay = it.jobTypeDisplay,
-                    ipFilterList = it.ipFilterList,
-                    total = it.total,
-                    list = it.list?.map { hostDetail ->
-                        HostDetail(
-                            filterHost = hostDetail.filterHost,
-                            bkHostId = hostDetail.bkHostId,
-                            ip = hostDetail.ip,
-                            innerIp = hostDetail.innerIp,
-                            innerIpv6 = hostDetail.innerIpv6,
-                            instanceId = hostDetail.instanceId,
-                            bkCloudId = hostDetail.bkCloudId,
-                            bkCloudName = hostDetail.bkCloudName,
-                            bkBizId = hostDetail.bkBizId,
-                            bkBizName = hostDetail.bkBizName,
-                            jobId = hostDetail.jobId,
-                            status = hostDetail.status,
-                            statusDisplay = hostDetail.statusDisplay,
-                            isManual = hostDetail.isManual
-                        )
-                    },
-                    statistics = it.statistics.let { statistics ->
-                        Statistics(
-                            totalCount = statistics.totalCount,
-                            failedCount = statistics.failedCount,
-                            ignoredCount = statistics.ignoredCount,
-                            pendingCount = statistics.pendingCount,
-                            runningCount = statistics.runningCount,
-                            successCount = statistics.successCount
-                        )
-                    },
-                    status = it.status,
-                    endTime = it.endTime,
-                    startTime = it.startTime,
-                    costTime = it.costTime,
-                    meta = it.meta.let { meta ->
-                        Meta(
-                            type = meta.type,
-                            stepType = meta.stepType,
-                            opType = meta.opType,
-                            opTypeDisplay = meta.opTypeDisplay,
-                            stepTypeDisplay = meta.stepTypeDisplay
-                        )
-                    }
-                )
-            }
-        )
-        // 若agent安装任务结束(成功/失败)，同步更新db中节点安装的状态
-        val hostIdToNodeStatus = mutableMapOf<Long, String>()
-        val hostInfoToStatusMap = agentQueryAgentTaskStatusRes.data?.list?.associate {
-            val status = when (it.status) {
-                AGENT_INSTALL_NORMAL -> NodeStatus.NORMAL.name
-                in agentRunningStatusList -> NodeStatus.RUNNING.name
-                else -> NodeStatus.ABNORMAL.name
-            }
-            Pair(it.ip, it.bkHostId) to status
-        }?.filter { it.value != NodeStatus.RUNNING.name } // RUNNING的节点不更新
-        hostInfoToStatusMap?.map { (key, value) ->
-            hostIdToNodeStatus[key.second.toLong()] = value
+    private fun getBizIdOfHost(hostIdToBizIdMap: Map<Int, Int>, hostId: Int?): Int {
+        if (hostId == null) {
+            return 0
         }
-        // 对于安装失败的节点，再查agent安装状态
-        val hostIdToAgentVersionInfoMap = hostInfoToStatusMap?.filter {
-            NodeStatus.ABNORMAL.name == it.value
-        }?.let { hostInfoToStatus ->
-            queryAgentStatusService.getAgentVersions(
-                hostInfoToStatus.map {
-                    AgentVersion(ip = it.key.first, bkHostId = it.key.second.toLong())
-                }
-            )?.associateBy { it.bkHostId }
-        }
-        val queryAgentHostIdList = hostIdToAgentVersionInfoMap?.keys?.filterNotNull()
-        queryAgentHostIdList?.map { hostIdToNodeStatus[it] = getNodeStatus(hostIdToAgentVersionInfoMap[it]) }
-        cmdbNodeDao.batchUpdateNodeInCCByHostId(dslContext, hostIdToNodeStatus)
-        return queryAgentTaskStatusRes
+        return hostIdToBizIdMap[hostId] ?: environmentProperties.cc.bkBizScopeId
     }
 
-    fun queryAgentTaskLog(
-        jobId: Int,
-        instanceId: String
-    ): AgentResult<QueryAgentTaskLogResult> {
-        NodeManApi.setNodemanOperationName(::queryAgentTaskLog.name)
-        val agentQueryAgentTaskLogRes: AgentOriginalResult<Array<AgentQueryAgentTaskLog>> = try {
-            nodeManApi.executeGetRequest(
-                shortGetTag = true,
-                classOfT = Array<AgentQueryAgentTaskLog>::class.java,
-                jobId = jobId,
-                args = arrayOf(instanceId)
-            )
-        } catch (e: RemoteServiceException) { // 最初未获取到日志，节点管理抛出的"订阅任务未准备好"异常，该情况可重试，后台不抛出异常
-            if (logger.isDebugEnabled)
-                logger.debug("e.errorCode: ${e.errorCode}, isEq: ${NODEMAN_LOG_NOT_READY_CODE == e.errorCode}")
-            if (NODEMAN_LOG_NOT_READY_CODE == e.errorCode) {
-                AgentOriginalResult(
-                    code = NODEMAN_LOG_NOT_READY_CODE,
-                    result = false,
-                    message = "Nodeman log is not ready.",
-                    errors = null,
-                    data = null
-                )
-            } else {
-                throw e
-            }
-        }
-        val queryAgentTaskLogRes: AgentResult<QueryAgentTaskLogResult> = AgentResult(
-            code = agentQueryAgentTaskLogRes.code,
-            result = agentQueryAgentTaskLogRes.result,
-            message = agentQueryAgentTaskLogRes.message,
-            errors = agentQueryAgentTaskLogRes.errors,
-            data = agentQueryAgentTaskLogRes.data?.let {
-                QueryAgentTaskLogResult(
-                    queryAgentTaskLogResult = it.map { queryAgentTaskLog ->
-                        QueryAgentTaskLog(
-                            step = queryAgentTaskLog.step,
-                            status = queryAgentTaskLog.status,
-                            log = queryAgentTaskLog.log,
-                            startTime = queryAgentTaskLog.startTime,
-                            finishTime = queryAgentTaskLog.finishTime
-                        )
-                    }
-                )
-            }
-        )
-        return queryAgentTaskLogRes
-    }
-
+    /**
+     * 终止agent安装任务
+     */
     fun terminalAgentInstallTask(
         jobId: Int,
         terminateAgentInstallTaskReq: TerminateAgentInstallTaskReq
@@ -525,6 +256,9 @@ data class GSEAgentService @Autowired constructor(
         return termAgentInstallTaskRes
     }
 
+    /**
+     * 重试agent安装任务
+     */
     fun retryAgentInstallTask(
         jobId: Int,
         retryAgentInstallTaskReq: RetryAgentInstallTaskReq
@@ -641,7 +375,7 @@ data class GSEAgentService @Autowired constructor(
     }
 
     private fun getNetworkPolicyDocLink(): String? {
-        return nodeManProperties.networkPolicyDocLink
+        return environmentProperties.nodeman.networkPolicyDocLink
     }
 
 }

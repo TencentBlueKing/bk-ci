@@ -27,13 +27,18 @@
 
 package com.tencent.devops.environment.config
 
-data class NodeManProperties(
+data class CCProperties(
+
+    val bkScopeType: String = "biz_set",
+    val bkSupplierAccount: String = "0",
     /**
-     * 节点管理API根地址
+     * 【全业务-蓝盾测试部署专用】CC全业务ID
      */
-    val nodemanApiBaseUrl: String,
+    val bkScopeId: Int,
     /**
-     * 节点管理安装Agent相关的网络策略文档链接
+     *  【蓝盾测试机】CC业务ID
      */
-    val networkPolicyDocLink: String? = null
+    val bkBizScopeId: Int,
+    val bkccQueryBaseUrl: String,
+    val bkccExecuteBaseUrl: String
 )

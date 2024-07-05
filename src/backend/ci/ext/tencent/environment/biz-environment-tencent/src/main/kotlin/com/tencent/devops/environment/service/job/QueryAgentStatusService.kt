@@ -47,6 +47,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+/**
+ * 查询GSE Agent的状态与版本信息
+ */
 @Service("QueryAgentStatusService")
 class QueryAgentStatusService @Autowired constructor(
     private val jobService: JobService,

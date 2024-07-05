@@ -27,13 +27,22 @@
 
 package com.tencent.devops.environment.config
 
-data class NodeManProperties(
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
+
+@ConstructorBinding
+@ConfigurationProperties(prefix = "environment")
+data class EnvironmentProperties(
     /**
-     * 节点管理API根地址
+     * 节点管理相关配置
      */
-    val nodemanApiBaseUrl: String,
+    val nodeman: NodeManProperties,
     /**
-     * 节点管理安装Agent相关的网络策略文档链接
+     * CC相关配置
      */
-    val networkPolicyDocLink: String? = null
+    val cc: CCProperties,
+    /**
+     * 查询GSE Agent状态相关配置
+     */
+    val checkAgentStatus: CheckAgentStatusProperties,
 )

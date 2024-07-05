@@ -25,15 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.config
+package com.tencent.devops.environment.service.gseagent.utils
 
-data class NodeManProperties(
-    /**
-     * 节点管理API根地址
-     */
-    val nodemanApiBaseUrl: String,
-    /**
-     * 节点管理安装Agent相关的网络策略文档链接
-     */
-    val networkPolicyDocLink: String? = null
-)
+import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.job.AgentVersion
+
+object NodeStatusUtils {
+
+    private const val AGENT_ABNORMAL_NODE_STATUS = 0
+    private const val AGENT_NORMAL_NODE_STATUS = 1
+    private const val AGENT_NOT_INSTALLED_TAG = false
+
+    fun getNodeStatus(agentInfo: AgentVersion?): String {
+        return if (AGENT_NOT_INSTALLED_TAG == agentInfo?.installedTag)
+            NodeStatus.NOT_INSTALLED.name
+        else if (AGENT_ABNORMAL_NODE_STATUS == agentInfo?.status)
+            NodeStatus.ABNORMAL.name
+        else if (AGENT_NORMAL_NODE_STATUS == agentInfo?.status)
+            NodeStatus.NORMAL.name
+        else
+            NodeStatus.NOT_INSTALLED.name
+    }
+}

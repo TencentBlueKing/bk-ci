@@ -27,13 +27,17 @@
 
 package com.tencent.devops.environment.config
 
-data class NodeManProperties(
+data class CheckAgentStatusProperties(
     /**
-     * 节点管理API根地址
+     * 线程池核心线程数
      */
-    val nodemanApiBaseUrl: String,
+    val corePoolSize: Int = 2,
     /**
-     * 节点管理安装Agent相关的网络策略文档链接
+     * 线程池最大线程数
      */
-    val networkPolicyDocLink: String? = null
+    val maximumPoolSize: Int = 6,
+    /**
+     * 线程池非核心线程存活时间，单位为秒
+     */
+    val keepAliveTime: Long = 0
 )

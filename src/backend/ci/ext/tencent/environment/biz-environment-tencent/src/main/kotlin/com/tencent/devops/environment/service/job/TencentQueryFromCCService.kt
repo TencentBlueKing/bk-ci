@@ -41,9 +41,9 @@ import com.tencent.devops.environment.pojo.job.ccreq.CCListHostWithoutBizReq
 import com.tencent.devops.environment.pojo.job.ccreq.CCPage
 import com.tencent.devops.environment.pojo.job.ccreq.CCRules
 import com.tencent.devops.environment.pojo.job.ccres.CCBkHost
-import com.tencent.devops.environment.pojo.job.ccres.QueryCCListHostWithoutBizData
 import com.tencent.devops.environment.pojo.job.ccres.CCResp
 import com.tencent.devops.environment.pojo.job.ccres.HostBizRelation
+import com.tencent.devops.environment.pojo.job.ccres.QueryCCListHostWithoutBizData
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -140,7 +140,7 @@ class TencentQueryFromCCService {
         return mapper.readValue(resBody!!)
     }
 
-    fun queryCCFindHostBizRelations(hostIdList: List<Long>): CCResp<List<HostBizRelation>> {
+    fun queryCCFindHostBizRelations(hostIdList: List<Int>): CCResp<List<HostBizRelation>> {
         val ccFindHostBizRelationsReq = CCFindHostBizRelationsReq(
             bkAppCode = bkAppCode,
             bkAppSecret = bkAppSecret,
