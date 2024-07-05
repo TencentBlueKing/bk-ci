@@ -90,7 +90,8 @@ class NodeManApi(
         val pathAndParams = String.format(PATH_QUERY_AGENT_INSTALL_CHANNEL, withHidden)
         return executeGetRequest(
             pathAndParams = pathAndParams,
-            shortGetTag = false
+            shortGetTag = false,
+            typeReference = object : TypeReference<AgentOriginalResult<Array<AgentInstallChannel>>>() {}
         )
     }
 
@@ -101,14 +102,16 @@ class NodeManApi(
         val pathAndParams = String.format(PATH_OBTAIN_MANUAL_INSTALLATION_COMMAND, jobId, hostId)
         return executeGetRequest(
             pathAndParams = pathAndParams,
-            shortGetTag = false
+            shortGetTag = false,
+            typeReference = object : TypeReference<AgentOriginalResult<ManualInstallCommand>>() {}
         )
     }
 
     fun installAgent(installAgentRequest: AgentInstallAgentReq): AgentOriginalResult<AgentInstallAgentResult> {
         return executePostRequest(
             pathAndParams = PATH_INSTALL_AGENT,
-            req = installAgentRequest
+            req = installAgentRequest,
+            typeReference = object : TypeReference<AgentOriginalResult<AgentInstallAgentResult>>() {}
         )
     }
 
@@ -119,7 +122,8 @@ class NodeManApi(
         val pathAndParams = String.format(PATH_QUERY_AGENT_INSTALL_TASK_STATUS, jobId)
         return executePostRequest(
             pathAndParams = pathAndParams,
-            req = queryAgentInstallTaskStatusReq
+            req = queryAgentInstallTaskStatusReq,
+            typeReference = object : TypeReference<AgentOriginalResult<AgentQueryAgentTaskStatusResult>>() {}
         )
     }
 
@@ -130,14 +134,16 @@ class NodeManApi(
         val pathAndParams = String.format(PATH_QUERY_AGENT_INSTALL_TASK_LOG, jobId, instanceId)
         return executeGetRequest(
             pathAndParams = pathAndParams,
-            shortGetTag = true
+            shortGetTag = true,
+            typeReference = object : TypeReference<AgentOriginalResult<Array<AgentInstallTaskLog>>>() {}
         )
     }
 
     fun queryAgentStatus(req: QueryAgentStatusFromNodeManReq): AgentOriginalResult<QueryAgentStatusFromNodemanResp> {
         return executePostRequest(
             pathAndParams = PATH_QUERY_AGENT_STATUS_FROM_NODMAN,
-            req = req
+            req = req,
+            typeReference = object : TypeReference<AgentOriginalResult<QueryAgentStatusFromNodemanResp>>() {}
         )
     }
 
@@ -148,7 +154,8 @@ class NodeManApi(
         val pathAndParams = String.format(PATH_TERMINAL_AGENT_INSTALL_TASK, jobId)
         return executePostRequest(
             pathAndParams = pathAndParams,
-            req = req
+            req = req,
+            typeReference = object : TypeReference<AgentOriginalResult<AgentTerminalAgentInstallTaskResult>>() {}
         )
     }
 
@@ -159,41 +166,47 @@ class NodeManApi(
         val pathAndParams = String.format(PATH_RETRY_AGENT_INSTALL_TASK, jobId)
         return executePostRequest(
             pathAndParams = pathAndParams,
-            req = req
+            req = req,
+            typeReference = object : TypeReference<AgentOriginalResult<RetryAgentInstallTaskResp>>() {}
         )
     }
 
     private fun <T : ApiGwReq, R : Any> executePostRequest(
         pathAndParams: String,
-        req: T
+        req: T,
+        typeReference: TypeReference<AgentOriginalResult<R>>
     ): AgentOriginalResult<R> {
         doPost(pathAndParams, req).use { resp ->
-            return getResultFromRes(resp)
+            return getResultFromRes(resp, typeReference)
         }
     }
 
     private fun <R> executeGetRequest(
         pathAndParams: String,
-        shortGetTag: Boolean = false
+        shortGetTag: Boolean = false,
+        typeReference: TypeReference<AgentOriginalResult<R>>
     ): AgentOriginalResult<R> {
         if (shortGetTag) {
             doShortGet(pathAndParams).use { resp ->
-                return getResultFromRes(resp)
+                return getResultFromRes(resp, typeReference)
             }
         } else {
             doGet(pathAndParams).use { resp ->
-                return getResultFromRes(resp)
+                return getResultFromRes(resp, typeReference)
             }
         }
     }
 
-    private fun <R> getResultFromRes(response: Response): AgentOriginalResult<R> {
+    private fun <R> getResultFromRes(
+        response: Response,
+        typeReference: TypeReference<AgentOriginalResult<R>>
+    ): AgentOriginalResult<R> {
         val operationName = getNodemanOperationName()
         removeNodemanOperationName()
         try {
             val responseBody = response.body?.string()
             logger.info("[$operationName] response body(origin): ${logWithLengthLimit(responseBody.toString())}")
-            val agentResp = JsonUtil.to(responseBody!!, object : TypeReference<AgentOriginalResult<R>>() {})
+            val agentResp = JsonUtil.to(responseBody!!, typeReference)
             if (!agentResp.result!!) {
                 logger.error(
                     "[$operationName] Execute failed! Error code: ${agentResp.code}, " +
