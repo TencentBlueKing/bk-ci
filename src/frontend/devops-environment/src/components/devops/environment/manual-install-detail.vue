@@ -1,6 +1,7 @@
 <template>
     <bk-tab :active.sync="active" ext-cls="manual-install-tab" type="unborder-card" v-bkloading="{ isLoading: !commandStep.type }">
         <bk-tab-panel name="method" :label="$t('environment.安装方式')">
+            <a class="iwiki-link" :href="commandStep.networkPolicyDocLink" target="_blank"></a>
             <div class="form-item">
                 <label class="label">
                     {{ $t('environment.安装方式：') }}
@@ -215,6 +216,12 @@
         .bk-tab-content {
             height: 100%;
         }
+    }
+    .iwiki-link {
+        flex-direction: row-reverse;
+        display: flex;
+        color: #3a84ff;
+        cursor: pointer;
     }
     
 </style>

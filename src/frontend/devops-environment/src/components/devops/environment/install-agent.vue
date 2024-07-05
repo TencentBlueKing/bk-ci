@@ -18,6 +18,7 @@
                 :label-width="labelWidth"
                 :model="formData"
                 :rules="rules"
+                v-bkloading="{ isLoading, title: $t('environment.无法连通网络？') }"
             >
                 <bk-form-item
                     :label="$t('environment.nodeInfo.installMethod')"

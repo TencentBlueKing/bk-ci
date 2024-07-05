@@ -437,5 +437,6 @@
     "启用": "Enable",
     "停用": "Disable",
     "启用成功": "Enable successful",
-    "停用成功": "Disable successful"
+    "停用成功": "Disable successful",
+    "无法连通网络？": "无法连通网络？"
 }
