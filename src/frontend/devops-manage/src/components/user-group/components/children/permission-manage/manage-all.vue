@@ -6,7 +6,7 @@
         :data="searchData"
         unique-select
         class="multi-search"
-        placeholder="用户/组织架构"
+        :placeholder="t('用户/组织架构')"
       />
     </div>
     <div class="manage-article">
@@ -25,9 +25,9 @@
       </div>
       <div class="manage-content">
         <div class="manage-content-btn">
-          <bk-button :disabled="!isPermission" @click="batchRenewal">批量续期</bk-button>
-          <bk-button :disabled="!isPermission" @click="batchHandover" v-if="asideItem?.type==='USER'">批量移交</bk-button>
-          <bk-button :disabled="!isPermission" @click="batchRemove">批量移出</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchRenewal">{{t("批量续期")}}</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchHandover" v-if="asideItem?.type==='USER'">{{t("批量移交")}}</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchRemove">{{t("批量移出")}}</bk-button>
         </div>
         <div v-if="isPermission" class="group-tab">
           <GroupTab
@@ -54,45 +54,45 @@
   <bk-dialog
     :width="640"
     theme="danger"
-    confirm-text="提交"
+    :confirm-text="t('提交')"
     class="renewal-dialog"
     :is-show="isShowRenewal"
     @closed="handleRenewalClosed"
     @confirm="handleRenewalConfirm"
   >
     <template #header>
-      续期
+      {{t("续期")}}
       <span class="dialog-header"> {{asideItem.name}} </span>
     </template>
     <template #default>
       <p class="renewal-text">
-        <span>用户组名：</span> 开发人员
+        <span>{{t("用户组名")}}：</span> 开发人员
       </p>
       <p class="renewal-text">
-        <span class="required">授权期限</span>
+        <span class="required">{{t("授权期限")}}</span>
         <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
       </p>
       <p class="renewal-text">
-        <span>到期时间：</span> 已过期
+        <span>{{t("到期时间")}}：</span> 已过期
       </p>
     </template>
   </bk-dialog>
   <bk-dialog
     :width="640"
     theme="danger"
-    confirm-text="移交"
+    :confirm-text="t('移交')"
     class="handover-dialog"
     :is-show="isShowHandover"
     @closed="handleHandoverClosed"
     @confirm="handleHandoverConfirm"
   >
     <template #header>
-      移交
+      {{t("移交")}}
       <span class="dialog-header"> {{asideItem.name}} </span>
     </template>
     <template #default>
       <p class="handover-text">
-        <span>用户组名：</span> 开发人员
+        <span>{{t("用户组名")}}：</span> 开发人员
       </p>
       <p class="handover-text">
         <bk-form
@@ -104,11 +104,11 @@
           <bk-form-item
             required
             property="name"
-            label="移交给"
+            :label="t('移交给')"
           >
             <bk-input
               v-model="handOverForm.name"
-              placeholder="请输入"
+              :placeholder="t('请输入')"
               clearable
             />
           </bk-form-item>
@@ -119,8 +119,8 @@
   <bk-dialog
     :width="450"
     theme="danger"
-    cancel-text="关闭"
-    confirm-text="确认移出"
+    :cancel-text="t('关闭')"
+    :confirm-text="t('确认移出')"
     header-align="center"
     footer-align="center"
     class="remove-dialog"
@@ -129,14 +129,14 @@
     @confirm="handleRemoveConfirm"
   >
     <template #header>
-      <span class="dialog-header"> 确认从用户组中移出用户吗？ </span>
+      <span class="dialog-header"> {{t("确认从用户组中移出用户吗")}}？ </span>
     </template>
     <template #default>
       <p class="remove-text">
-        <span>待移出用户：</span> {{asideItem.name}}
+        <span>{{t("待移出用户")}}：</span> {{asideItem.name}}
       </p>
       <p class="remove-text">
-        <span>所在用户组：</span> 开发人员
+        <span>{{t("所在用户组")}}：</span> 开发人员
       </p>
     </template>
   </bk-dialog>
@@ -152,10 +152,13 @@
     <template #default>
       <div class="slider-main">
         <p class="main-desc">
-          已选择<span class="desc-primary"> {{ selectedLength }} </span>个用户组
-          <span>；其中
-            <span class="desc-warn"> {{ unableMoveLength }} </span>个用户组<span class="desc-warn">无法移出</span>，本次操作将忽略
-          </span>
+          <i18n-t keypath="已选择X个用户组" tag="div">
+            <span class="desc-primary"> {{ selectedLength }} </span>
+          </i18n-t>
+          <i18n-t v-if="unableMoveLength" keypath="；其中X个用户组无法移出，本次操作将忽略" tag="div">
+            <span class="desc-warn"> {{ unableMoveLength }} </span>
+            <span class="desc-warn">{{t("无法移出")}}</span>
+          </i18n-t>
         </p>
         <div>
           <!-- 这个要有分页的点击事件 -->
@@ -171,19 +174,19 @@
       </div>
       <div class="slider-footer">
         <div class="footer-main">
-          <div v-if="sliderTitle === '批量续期'">
+          <div v-if="sliderTitle === t('批量续期')">
             <div class="main-line">
-              <p class="main-label">续期对象</p>
-              <span class="main-text">用户： {{ asideItem.name }}</span>
+              <p class="main-label">{{t("续期对象")}}</p>
+              <span class="main-text">{{("用户")}}： {{ asideItem.name }}</span>
             </div>
             <div class="main-line">
-              <p class="main-label">续期时长</p>
+              <p class="main-label">{{("续期时长")}}</p>
               <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
             </div>
           </div>
-          <div v-if="sliderTitle === '批量移交'">
+          <div v-if="sliderTitle === t('批量移交')">
             <div class="main-line" style="margin-top: 26px;">
-              <p class="main-label">移交给</p>
+              <p class="main-label">{{("移交给")}}</p>
               <bk-form
                 ref="formRef"
                 :rules="rules"
@@ -195,30 +198,29 @@
                 >
                   <bk-input
                     v-model="handOverForm.name"
-                    placeholder="请输入"
+                    :placeholder="t('请输入')"
                     clearable
                   />
                 </bk-form-item>
               </bk-form>
             </div>
           </div>
-          <div v-if="sliderTitle === '批量移出'">
+          <div v-if="sliderTitle === t('批量移出')">
             <div class="main-line" style="margin-top: 40px;">
               <p class="main-label-remove">
-                确认从以上
-                <span class="remove-num">{{ selectedLength }}</span>
-                个用户组中移出
-                <span class="remove-person">{{ asideItem.name }}</span>
-                吗？
+                <i18n-t keypath="确认从以上X个用户组中移出X吗？" tag="div">
+                  <span class="remove-num">{{ selectedLength }}</span>
+                  <span class="remove-person">{{ asideItem.name }}</span>
+                </i18n-t>
               </p>
             </div>
           </div>
         </div>
         <div class="footer-btn">
-          <bk-button v-if="batchFlag === 'renewal'" theme="primary" @click="batchConfirm('renewal')">确定续期</bk-button>
-          <bk-button v-if="batchFlag === 'handover'" theme="primary" @click="batchConfirm('handover')">确定移交</bk-button>
-          <bk-button v-if="batchFlag === 'remove'" theme="danger" @click="batchConfirm('remove')">确定移出</bk-button>
-          <bk-button @click="batchCancel">取消</bk-button>
+          <bk-button v-if="batchFlag === 'renewal'" theme="primary" @click="batchConfirm('renewal')">{{t("确定续期")}}</bk-button>
+          <bk-button v-if="batchFlag === 'handover'" theme="primary" @click="batchConfirm('handover')">{{t("确定移交")}}</bk-button>
+          <bk-button v-if="batchFlag === 'remove'" theme="danger" @click="batchConfirm('remove')">{{t("确定移出")}}</bk-button>
+          <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
         </div>
       </div>
     </template>
@@ -229,7 +231,7 @@
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { Message } from 'bkui-vue';
-import { ref, onMounted, computed, watch, nextTick } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import ManageAside from './manage-aside.vue';
 import GroupTab from './group-tab.vue';
 import TimeLimit from './time-limit.vue';
@@ -247,14 +249,14 @@ const projectId = computed(() => route.params?.projectCode);
 const expiredAt = ref();
 const isLoading = ref(false);
 const isShowSlider = ref(false);
-const sliderTitle = ref('批量续期');
+const sliderTitle = ref();
 const batchFlag = ref();
 const handOverForm = ref({
   name: '',
 });
 const rules = {
   name: [
-    { required: true, message: '请输入移交人', trigger: 'blur' },
+    { required: true, message: t('请输入移交人'), trigger: 'blur' },
   ],
 };
 const searchValue = ref([]);
@@ -401,10 +403,10 @@ function handleChangeTime(value) {
  */
 function batchRenewal() {
   if (!selectedLength.value) {
-    Message('请先选择用户组');
+    Message(t('请先选择用户组'));
     return;
   }
-  sliderTitle.value = '批量续期';
+  sliderTitle.value = t('批量续期');
   batchFlag.value = 'renewal';
   isShowSlider.value = true;
   getSourceList();
@@ -414,10 +416,10 @@ function batchRenewal() {
  */
 function batchHandover() {
   if (!selectedLength.value) {
-    Message('请先选择用户组');
+    Message(t('请先选择用户组'));
     return;
   }
-  sliderTitle.value = '批量移交';
+  sliderTitle.value = t('批量移交');
   batchFlag.value = 'handover';
   isShowSlider.value = true;
   getSourceList();
@@ -427,10 +429,10 @@ function batchHandover() {
  */
 function batchRemove() {
   if (!selectedLength.value) {
-    Message('请先选择用户组');
+    Message(t('请先选择用户组'));
     return;
   }
-  sliderTitle.value = '批量移出';
+  sliderTitle.value = t('批量移出');
   batchFlag.value = 'remove';
   isShowSlider.value = true;
   getSourceList();
@@ -682,6 +684,7 @@ function asideRemoveConfirm(value) {
     margin: 16px 24px;
 
     .main-desc {
+      display: flex;
       margin-bottom: 16px;
       color: #63656e;
       font-size: 12px;

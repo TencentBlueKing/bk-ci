@@ -1,7 +1,7 @@
 <template>
   <bk-loading :loading="groupTableStore.isLoading" class="group-tab">
     <div class="manage-content-project" v-if="projectTable">
-      <p class="project-group">项目级用户组</p>
+      <p class="project-group">{{t("项目级用户组")}}</p>
       <div class="project-group-table">
         <bk-collapse-panel v-model="activeFlag">
           <template #header>
@@ -35,7 +35,7 @@
       </div>
     </div>
     <div class="manage-content-resource" v-if="sourceTable.length">
-      <p class="project-group">资源级用户组</p>
+      <p class="project-group">{{t("资源级用户组")}}</p>
       <div class="project-group-table" v-for="item in sourceTable" :key="item.resourceType">
         <bk-collapse-panel v-model="item.activeFlag" :item-click="collapseClick" :name="item.resourceType">
           <template #header>
@@ -72,10 +72,12 @@
 </template>
 
 <script setup name="GroupTab">
+import { useI18n } from 'vue-i18n';
 import { ref, defineProps, defineEmits, computed, watch, reactive } from 'vue';
 import userGroupTable from "@/store/userGroupTable";
 import TabTable from './tab-table.vue';
 
+const { t } = useI18n();
 const activeFlag =  ref(true);
 const groupTableStore = userGroupTable();
 const projectTable = computed(() => props.sourceList.find(item => item.resourceType == 'project'));

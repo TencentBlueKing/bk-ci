@@ -1,7 +1,7 @@
 import http from '@/http/api';
 import { defineStore } from 'pinia';
 import { useRoute } from 'vue-router';
-import { ref, reactive, computed, nextTick } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 
 export interface GroupTableType {
   groupId: string | number;
@@ -74,7 +74,7 @@ export default defineStore('userGroupTable', () => {
    * 获取折叠数据
    */
   async function getCollapseList({ type, name }) {
-    const res = await http.getMemberGroups(projectId.value, { type, member: name });
+    // const res = await http.getMemberGroups(projectId.value, { type, member: name });
     // collapseList.value = res;
     collapseList.value = [
       {
@@ -98,6 +98,11 @@ export default defineStore('userGroupTable', () => {
         count: 0,
       },
     ];
+
+    sourceList.value = collapseList.value.map((item) => ({
+      ...item,
+      tableData: [],
+    }))
   }
   async function getGroupList(resourceType, asideItem) {
     const pathParams = {
@@ -118,15 +123,11 @@ export default defineStore('userGroupTable', () => {
       isLoading.value = true;
       setTimeout(async () => {
         const resourceTypes = ['project', 'pipelineGroup'];
-        const results = await Promise.all(
-          resourceTypes.map(resourceType => getGroupList(resourceType, asideItem))
-        );
-        const [projectResult, pipelineGroupResult] = results;
+        // const results = await Promise.all(
+        //   resourceTypes.map(resourceType => getGroupList(resourceType, asideItem))
+        // );
+        // const [projectResult, pipelineGroupResult] = results;
 
-        sourceList.value = collapseList.value.map((item) => ({
-          ...item,
-          tableData: [],
-        }))
         // sourceList.value[0].tableData = projectResult.records;
         // sourceList.value[0].hasNext = projectResult.hasNext;
         // sourceList.value[1].tableData = pipelineGroupResult.records;
@@ -285,7 +286,7 @@ export default defineStore('userGroupTable', () => {
   function handleRemoveRow() {
     const activeTableData = sourceList.value.find(group => group.resourceType === selectedTableGroupType.value);
     if (activeTableData) {
-      activeTableData.tableData?.splice(rowIndex.value, 1);
+      activeTableData.tableData?.splice(rowIndex.value as number, 1);
       activeTableData.tableData = [...activeTableData.tableData];
     }
   }
@@ -316,8 +317,8 @@ export default defineStore('userGroupTable', () => {
     selectSourceList.value = Object.entries(selectedData)
       .map(([key, tableData]: [string, GroupTableType[]]) => ({
         count: tableData.length,
-        resourceTypeName: sourceList.value.find((item: SourceType) => item.resourceType == key)?.resourceTypeName,
-        resourceType: sourceList.value.find((item: SourceType) => item.resourceType == key)?.resourceType,
+        resourceTypeName: sourceList.value.find((item: SourceType) => item.resourceType == key)?.resourceTypeName || '',
+        resourceType: sourceList.value.find((item: SourceType) => item.resourceType == key)?.resourceType || '',
         activeFlag: true,
         tableData,
       }));

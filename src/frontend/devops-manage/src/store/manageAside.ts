@@ -106,7 +106,7 @@ export default defineStore('manageAside', () => {
     if (userName.value) {
       params.userName = userName.value;
     }
-    const res = await http.getProjectMembers(projectId, params);
+    // const res = await http.getProjectMembers(projectId, params);
     // memberList.value = res.records
     memberList.value = [
       {
@@ -115,7 +115,7 @@ export default defineStore('manageAside', () => {
         type: 'DEPARTMENT',
       }, {
         id: 2,
-        name: '余姣姣',
+        name: '赵六',
         type: 'USER',
       }, {
         id: 3,

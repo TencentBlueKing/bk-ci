@@ -14,51 +14,52 @@
   >
     <template #prepend>
       <div v-if="isCurrentAll" class="prepend">
-        已选择全量数据 {{ groupTotal }} 条，
-        <span @click="handleClear">清除选择</span>
+        {{t('已选择全量数据X条', [groupTotal])}}
+        &nbsp; | &nbsp;
+        <span @click="handleClear">{{t("清除选择")}}</span>
       </div>
       <div v-else-if="isShowOperation && selectedData[groupType]?.length" class="prepend">
-        已选择 {{ selectedData[groupType].length }} 条数据，
-        <span @click="handleSelectAllData"> 选择全量数据 {{ groupTotal }} 条 </span>
+        {{t('已选择X条数据，', [selectedData[groupType].length])}}
+        <span @click="handleSelectAllData">{{ t('选择全量数据X条', [groupTotal]) }}</span>
         &nbsp; | &nbsp;
-        <span @click="handleClear">清除选择</span>
+        <span @click="handleClear">{{t("清除选择")}}</span>
       </div>
     </template>
     <template #fixedBottom v-if="hasNext">
       <div class="prepend">
-        剩余{{ 22 }} 条数据，
-        <span @click="handleLoadMore"> 加载更多 </span>
+        {{ t("剩余X条数据",["22"]) }}
+        <span @click="handleLoadMore"> {{t("加载更多")}} </span>
       </div>
     </template>
     <bk-table-column type="selection" :min-width="30" width="30" align="center" v-if="isShowOperation" />
-    <bk-table-column label="用户组" prop="groupName">
+    <bk-table-column :label="t('用户组')" prop="groupName">
       <template #default="{row}">
         {{ row.groupName }}
-        <div v-if="!isShowOperation && row.removeMemberButtonControl !== 'OTHER'"  class="overlay">唯一管理员无法移出</div>
+        <div v-if="!isShowOperation && row.removeMemberButtonControl !== 'OTHER'"  class="overlay">{{t("唯一管理员无法移出")}}</div>
       </template>
     </bk-table-column>
-    <bk-table-column label="用户描述" prop="groupDesc" />
-    <bk-table-column label="有效期" prop="validityPeriod" />
-    <bk-table-column label="加入时间" prop="joinedTime" />
-    <bk-table-column label="加入方式/操作人" prop="operateSource">
+    <bk-table-column :label="t('用户描述')" prop="groupDesc" />
+    <bk-table-column :label="t('有效期')" prop="validityPeriod" />
+    <bk-table-column :label="t('加入时间')" prop="joinedTime" />
+    <bk-table-column :label="t('加入方式/操作人')" prop="operateSource">
       <template #default="{row}">
         {{ row.operateSource }}/{{ row.operator }}
       </template>
     </bk-table-column>
-    <bk-table-column label="操作" v-if="isShowOperation">
+    <bk-table-column :label="t('操作')" v-if="isShowOperation">
       <template #default="{row, index}">
         <div class="operation-btn">
           <bk-button
             text
             theme="primary"
             @click="handleRenewal(row)"
-          >续期</bk-button>
+          >{{t("续期")}}</bk-button>
           <bk-button
             text
             theme="primary"
             style="margin:0 8px"
             @click="handleHandOver(row, index)"
-          >移交</bk-button>
+          >{{t("移交")}}</bk-button>
           <span
             v-bk-tooltips="{
               content: row.removeMemberButtonControl==='UNIQUE_MANAGER'?
@@ -76,7 +77,7 @@
               theme="primary"
               :disabled="row.removeMemberButtonControl!='OTHER'"
               @click="handleRemove(row, index)"
-            >移出</bk-button>
+            >{{t("移出")}}</bk-button>
           </span>
         </div>
       </template>
@@ -85,13 +86,16 @@
 </template>
 
 <script setup name="TabTable">
+import { useI18n } from 'vue-i18n';
 import { ref, defineProps, defineEmits, computed } from 'vue';
 
+const { t } = useI18n();
 const fixedBottom = {
   position: 'relative',
   height: 42,
 };
 const refTable = ref(null);
+const isCurrentAll = ref(false);
 const groupType = computed(() => props.groupType);
 const groupTotal = computed(() => props.groupTotal);
 
@@ -131,7 +135,6 @@ const emit = defineEmits([
   'pageLimitChange',
   'pageValueChange',
 ])
-const isCurrentAll = ref(false);
 /**
  * 当前页全选事件
  */

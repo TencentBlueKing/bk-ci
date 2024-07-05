@@ -40,7 +40,7 @@
             theme="light dot-menu"
             :popoverDelay="[100, 0]"
             :arrow="false"
-            offset="15"
+            :offset="15"
             :distance="0">
             <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
             <template #content>

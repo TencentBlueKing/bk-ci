@@ -28,13 +28,13 @@
               text
               @click="handleShowPerson(item)"
             >
-              人员列表
+              {{t("人员列表")}}
             </bk-button>
             <bk-button
               class="btn"
               text
               @click="handleRemoval(item)">
-              移出项目
+              {{t("移出项目")}}
             </bk-button>
           </div>
         </template>
@@ -54,21 +54,18 @@
   </div>
   <bk-dialog
     :is-show="isShowhandOverDialog"
-    :theme="'primary'"
     :width="640"
-    :confirm-text="t('移交')"
     :is-loading="handOverDialogLoding"
     @closed="handOverClose"
-    @confirm="handOverConfirm"
   >
     <template #header>
-      {{ t('移出项目') }}
-      <span class="dialog-header"> 移出用户： {{ removeUser.name }} </span>
+      {{ t("移出项目") }}
+      <span class="dialog-header"> {{t("移出用户")}}： {{ removeUser.name }} </span>
     </template>
     <template #default>
       <div class="dialog">
         <p class="text-tag">
-          将用户移出项目前，需要指定移交人，平台将自动完成所有权限/授权的移交。
+          {{t("将用户移出项目前，需要指定移交人，平台将自动完成所有权限/授权的移交")}}。
         </p>
         <bk-form
           ref="formRef"
@@ -76,56 +73,64 @@
         >
           <bk-form-item
             required
-            label="移交人"
+            :label="t('移交人')"
             property="name"
             labelWidth=""
           >
             <bk-input
               v-model="handOverForm.name"
-              placeholder="请输入"
+              :placeholder="t('请输入')"
               clearable
+              @clear="handOverInputClear"
+              @blur="handOverInputBlur"
             />
+            <p v-if="verifying" class="verifying">
+              {{ authorizationStatus }}
+            </p>
           </bk-form-item>
         </bk-form>
 
-        <div v-if="isHandOverfail" class="hand-over-fail">
-          <p>
-            <img src="@/css/svg/close.svg" class="close-icon">
-            以下授权移交失败，请<span>重新指定其他授权人</span>，否则无法将用户移出项目
+        <div v-if="!isAuthorizedSuccess && isHandOverfail" class="hand-over-fail">
+          <p class="err-text">
+            <p style="display: flex; line-height: 14px;">
+              <img src="@/css/svg/close.svg" class="close-icon">
+              <i18n-t keypath="检测到以下授权将无法移交给X，请先前往「授权管理」单独处理" tag="div" >
+                <span> {{ removeUser.name }} </span>
+              </i18n-t>
+            </p>
+            <p>
+              <!-- 一个图标占位 -->
+              <span class="blue-text" @click="refreshHandOverfail">{{t("刷新")}}</span>
+            </p>
           </p>
-          <!-- 这里需要循环拿数据 -->
+          <!-- 这里需要循环拿数据overTable替换成后端返回的东西 -->
           <div class="hand-over-table-group">
-            <p class="hand-over-table-item">代码库授权</p>
-            <bk-table
-              :data="overTable"
-              :border="['outer', 'row']"
-              show-overflow-tooltip
-            >
-              <bk-table-column label="代码库" prop="code" />
-              <bk-table-column label="失败原因" prop="reason" />
-              <bk-table-column label="授权人" prop="percent">
-                <template #default="{ row }">
-                  <bk-input v-model="row.percent"></bk-input>
-                </template>
-              </bk-table-column>
-            </bk-table>
+            <p class="hand-over-table-item">{{t("代码库授权")}}</p>
+            <p class="blue-text">
+              <!-- 一个图标占位 -->
+              <span @click="goAauthorization">{{t("前往处理")}}</span>
+            </p>
           </div>
         </div>
       </div>
+    </template>
+    <template #footer>
+      <bk-button theme="primary" @click="handOverConfirm" :disabled="!isAuthorizedSuccess"> {{t("移交并移出")}} </bk-button>
+      <bk-button @click="handOverClose"> {{t("关闭")}} </bk-button>
     </template>
   </bk-dialog>
   <bk-dialog
     :width="480"
     :theme="'primary'"
     :dialog-type="'confirm'"
-    confirm-text="关闭"
+    :confirm-text="t('关闭')"
     :is-show="isShowPersonDialog"
     :is-loading="personDialogLoading"
     @closed="() => isShowPersonDialog = false"
     @confirm="() => isShowPersonDialog = false"
   >
     <template #header>
-      人员列表
+      {{t("人员列表")}}
       <span class="dialog-header"> {{ removeUser.name }} </span>
     </template>
     <template #default>
@@ -135,7 +140,7 @@
           show-overflow-tooltip
           class="person-table"
         >
-          <bk-table-column label="用户" prop="person" />
+          <bk-table-column :label="t('用户')" prop="person" />
         </bk-table>
     </template>
   </bk-dialog>
@@ -146,16 +151,16 @@
     :is-show="isShowRemoveDialog"
   >
     <template #header>
-      <h2 class="dialog-header-text"> 确认将组织移出本项目吗？ </h2>
+      <h2 class="dialog-header-text"> {{t("确认将组织移出本项目吗")}}？ </h2>
     </template>
     <template #default>
         <p class="remove-text">
-          <span>待移出组织：</span> {{ removeUser.name }}
+          <span>{{t("待移出组织")}}：</span> {{ removeUser.name }}
         </p>
     </template>
     <template #footer>
-      <bk-button theme="danger" @click="handleRemoveConfirm"> 确定移出 </bk-button>
-      <bk-button @click="() => isShowRemoveDialog = false"> 关闭 </bk-button>
+      <bk-button theme="danger" @click="handleRemoveConfirm"> {{t("确定移出")}} </bk-button>
+      <bk-button @click="() => isShowRemoveDialog = false"> {{t("关闭")}} </bk-button>
     </template>
   </bk-dialog>
 </template>
@@ -175,15 +180,27 @@ const isHandOverfail = ref(false);
 const isShowPersonDialog = ref(false);
 const personDialogLoading = ref(false);
 const isShowRemoveDialog = ref(false);
+const isAuthorizedSuccess = ref(false);
+const verifying = ref(false);
 const handOverForm = ref({
   name: ''
-})
+});
 
 const organizationIcon = computed(() => require('../../../svg/organization.svg?inline'));
 const organizationActiveIcon = computed(() => require('../../../svg/organization-active.svg?inline'));
 const userIcon = computed(() => require('../../../svg/user.svg?inline'));
 const userActiveIcon = computed(() => require('../../../svg/user-active.svg?inline'));
 const removeUser = ref(null);
+const authorizationStatus = computed(() => {
+  if (verifying.value) {
+    if (isAuthorizedSuccess.value) {
+      return t("授权校验通过");
+    } else if (!isHandOverfail.value){
+      return t("正在校验授权");
+    }
+  }
+  return '';
+});
 
 const props = defineProps({
   memberList: {
@@ -209,6 +226,10 @@ watch(() => props.memberList, (newData) => {
   pageCount.value = newData.length;
   emit('handleClick', newData[0]);
 });
+
+watch(()=> handOverForm.value.name,(newName,oldName) => {
+  handOverInputClear();
+})
 
 defineExpose({
   handOverfail,
@@ -260,6 +281,41 @@ function handOverConfirm() {
 }
 function handOverfail(flag) {
   isHandOverfail.value = flag;
+}
+/**
+ * 移交人输入清空事件
+ */
+function handOverInputClear(){
+  verifying.value = false;
+  isAuthorizedSuccess.value = false;
+  isHandOverfail.value = false;
+}
+/**
+ * 移交人输入失焦事件
+ */
+function handOverInputBlur(){
+  console.log('失焦时输入框内容',handOverForm.value.name);
+  if(!handOverForm.value.name) return;
+  verifying.value = true;
+  setTimeout(()=>{
+    if(Math.random()> 0.5){
+      isAuthorizedSuccess.value = true;
+    } else {
+      isHandOverfail.value = true;
+    }
+  },2000)
+}
+/**
+ * 刷新
+ */
+function refreshHandOverfail() {
+
+}
+/**
+ * 前往授权管理
+ */
+function goAauthorization() {
+  window.open(`${location.origin}/console/manage/xxzza/permission`, '_blank')
 }
 /**
  * 人员列表
@@ -383,37 +439,56 @@ function handleRemoveConfirm() {
     color: #63656E;
   }
 
+  .verifying{
+    font-size: 12px;
+    color: #63656E;
+  }
+
   .hand-over-fail {
     border-top: 1px solid #DCDEE5;
     margin-bottom: 25px;
 
-    p {
+    .err-text {
+      display: flex;
+      justify-content: space-between;
       margin-top: 8px;
       color: #63656e;
       font-size: 12px;
+
+      .close-icon {
+        width: 14px;
+        height: 14px;
+        vertical-align: middle;
+      }
 
       span {
         font-weight: 700;
       }
     }
 
-    .close-icon {
-      width: 14px;
-      height: 14px;
-      vertical-align: middle;
-    }
 
-    .hand-over-table-item {
+    .hand-over-table-group{
+      display: flex;
+      justify-content: space-between;
       width: 100%;
       height: 32px;
       line-height: 32px;
       margin-top: 12px;
-      padding-left: 16px;
+      padding: 0 16px;
       background: #EAEBF0;
       border-radius: 2px;
+    }
+    
+    .hand-over-table-item {
       font-family: MicrosoftYaHei;
       font-size: 14px;
       color: #313238;
+    }
+
+    .blue-text {
+      font-size: 12px;
+      color: #3A84FF;
+      cursor: pointer;
     }
   }
 }
