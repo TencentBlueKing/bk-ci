@@ -380,6 +380,13 @@ class StoreProjectServiceImpl @Autowired constructor(
             )!!
             // 更新组件关联初始化项目
             storeProjectRelDao.updateStoreInitProject(context, userId, storeProjectInfo)
+            storeProjectRelDao.deleteUserStoreTestProject(
+                dslContext = context,
+                userId = initProjectInfo.creator,
+                storeType = storeProjectInfo.storeType,
+                storeCode = storeProjectInfo.storeCode,
+                storeProjectType = StoreProjectTypeEnum.TEST
+            )
             storeProjectRelDao.addStoreProjectRel(
                 dslContext = context,
                 userId = userId,
@@ -387,13 +394,6 @@ class StoreProjectServiceImpl @Autowired constructor(
                 storeCode = storeProjectInfo.storeCode,
                 projectCode = initProjectInfo.projectCode,
                 type = StoreProjectTypeEnum.TEST.type.toByte()
-            )
-            storeProjectRelDao.deleteUserStoreTestProject(
-                dslContext = context,
-                userId = initProjectInfo.creator,
-                storeType = storeProjectInfo.storeType,
-                storeCode = storeProjectInfo.storeCode,
-                storeProjectType = StoreProjectTypeEnum.TEST
             )
             val storePipelineRel = storePipelineRelDao.getStorePipelineRel(
                 dslContext = context,
