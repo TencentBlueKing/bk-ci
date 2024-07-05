@@ -30,7 +30,7 @@ package com.tencent.devops.process.engine.init
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.process.engine.listener.run.finish.SubPipelineBuildFinishListener
-import com.tencent.devops.process.engine.listener.run.start.SubPipelineBuildStartListener
+import com.tencent.devops.process.engine.listener.run.start.SubPipelineBuildQueueListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -163,29 +163,29 @@ class BuildEngineExtendConfiguration {
     }
 
     @Bean
-    fun subPipelineBuildStartQueue(): Queue {
-        return Queue(MQ.QUEUE_PIPELINE_BUILD_START_SUBPIPEINE)
+    fun subPipelineBuildQueue(): Queue {
+        return Queue(MQ.QUEUE_PIPELINE_BUILD_QUEUE_SUBPIPEINE)
     }
 
     @Bean
-    fun subPipelineBuildStartQueueBind(
-        @Autowired subPipelineBuildStartQueue: Queue,
-        @Autowired pipelineBuildStartFanoutExchange: FanoutExchange
+    fun subPipelineBuildQueueBind(
+        @Autowired subPipelineBuildQueue: Queue,
+        @Autowired pipelineBuildQueueFanoutExchange: FanoutExchange
     ): Binding {
-        return BindingBuilder.bind(subPipelineBuildStartQueue).to(pipelineBuildStartFanoutExchange)
+        return BindingBuilder.bind(subPipelineBuildQueue).to(pipelineBuildQueueFanoutExchange)
     }
 
     @Bean
     fun subPipelineBuildStartListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired subPipelineBuildStartQueue: Queue,
+        @Autowired subPipelineBuildQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: SubPipelineBuildStartListener,
+        @Autowired buildListener: SubPipelineBuildQueueListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         return Tools.createSimpleMessageListenerContainer(
             connectionFactory = connectionFactory,
-            queue = subPipelineBuildStartQueue,
+            queue = subPipelineBuildQueue,
             rabbitAdmin = rabbitAdmin,
             buildListener = buildListener,
             messageConverter = messageConverter,
