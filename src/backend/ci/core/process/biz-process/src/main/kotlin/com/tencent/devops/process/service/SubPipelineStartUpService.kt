@@ -190,17 +190,6 @@ class SubPipelineStartUpService @Autowired constructor(
         )
         if (runMode == SYNC_RUN_MODE) {
             subPipelineStatusService.onStart(subBuildId)
-        } else {
-            // 同步父流水线的插件执行状态
-            subPipelineStatusService.updatePipelineTaskStatus(
-                projectId = projectId,
-                pipelineId = parentPipelineId,
-                buildId = buildId,
-                taskId = taskId,
-                executeCount = executeCount ?: 1,
-                asyncStatus = BuildStatus.RUNNING.name,
-                userId = userId
-            )
         }
 
         return Result(
