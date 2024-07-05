@@ -614,7 +614,8 @@ class UserPipelineResourceImpl @Autowired constructor(
                 filterByLabels = filterByLabels,
                 filterByViewIds = filterByViewIds,
                 collation = collation ?: PipelineCollation.DEFAULT,
-                showDelete = showDelete ?: false
+                showDelete = showDelete ?: false,
+                queryByWeb = true
             )
         )
     }
