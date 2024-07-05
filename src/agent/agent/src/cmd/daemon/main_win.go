@@ -69,8 +69,8 @@ func main() {
 	}
 
 	// 初始化日志
-	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsDaemon.log")
-	err := logs.Init(logFilePath, isDebug, false)
+	workDir := systemutil.GetExecutableDir()
+	err := logs.Init(filepath.Join(workDir, "logs", "devopsDaemon.log"), isDebug, false)
 	if err != nil {
 		fmt.Printf("init daemon log error %v\n", err)
 		systemutil.ExitProcess(1)
@@ -78,7 +78,6 @@ func main() {
 
 	logs.Infof("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
-	workDir := systemutil.GetExecutableDir()
 	err = os.Chdir(workDir)
 	if err != nil {
 		logs.Info("change work dir failed, err: ", err.Error())
@@ -92,21 +91,18 @@ func main() {
 		}
 	}()
 
+	if ok := systemutil.CheckProcess(daemonProcess); !ok {
+		logs.Info("get process lock failed, exit")
+		return
+	}
+
 	logs.Info("devops daemon start")
 	logs.Info("pid: ", os.Getpid())
 	logs.Info("workDir: ", workDir)
 
 	//服务定义
 	serviceConfig := &service.Config{
-		Name:             "name",
-		DisplayName:      "displayName",
-		Description:      "description",
-		WorkingDirectory: "C:/data/landun",
-	}
-
-	if ok := systemutil.CheckProcess(daemonProcess); !ok {
-		logs.Info("get process lock failed, exit")
-		return
+		Name: "name",
 	}
 
 	daemonProgram := &program{}
@@ -166,7 +162,7 @@ func watch() {
 
 			GAgentProcess = cmd.Process
 			logs.Info("devops agent started, pid: ", cmd.Process.Pid)
-			_, err = cmd.Process.Wait()
+			err = cmd.Wait()
 			if err != nil {
 				var exitErr *exec.ExitError
 				if errors.As(err, &exitErr) {

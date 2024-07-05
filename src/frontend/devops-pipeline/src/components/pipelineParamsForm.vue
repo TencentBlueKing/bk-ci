@@ -234,7 +234,9 @@
             }
 
             .bk-select {
-                background: white;
+                &:not(.is-disabled) {
+                    background: white;
+                }
                 width: 100%;
             }
             .meta-data {

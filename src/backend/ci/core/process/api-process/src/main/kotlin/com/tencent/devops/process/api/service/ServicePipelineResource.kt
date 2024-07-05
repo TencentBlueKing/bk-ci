@@ -295,7 +295,7 @@ interface ServicePipelineResource {
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，不指定则为空", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<PipelineInfo?>

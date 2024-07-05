@@ -197,7 +197,8 @@ class PipelineRuntimeService @Autowired constructor(
             statusSet = setOf(
                 BuildStatus.RUNNING, BuildStatus.REVIEWING,
                 BuildStatus.QUEUE, BuildStatus.PREPARE_ENV,
-                BuildStatus.UNEXEC, BuildStatus.QUEUE_CACHE
+                BuildStatus.UNEXEC, BuildStatus.QUEUE_CACHE,
+                BuildStatus.STAGE_SUCCESS
             )
         )
 

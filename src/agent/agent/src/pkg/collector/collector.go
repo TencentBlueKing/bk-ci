@@ -106,8 +106,17 @@ func doAgentCollect(ctx context.Context) {
 
 	for {
 		logs.Info("launch telegraf agent")
-		if err = tAgent.Run(ctx); err != nil {
-			logs.WithError(err).Error("telegraf agent exit")
+		err = tAgent.Run(ctx)
+		select {
+		case <-ctx.Done():
+			// 上下文被取消需要返回调用方重新获取上下文，不然一直是取消状态
+			logs.Info("telegraf agent ctx done")
+			return
+		default:
+			// 普通的 telegraf 退出直接重新启动即可
+			if err != nil {
+				logs.WithError(err).Error("telegraf agent exit")
+			}
 		}
 		time.Sleep(telegrafRelaunchTime)
 	}
