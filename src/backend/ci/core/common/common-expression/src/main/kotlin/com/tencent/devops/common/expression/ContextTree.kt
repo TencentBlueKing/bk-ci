@@ -81,7 +81,7 @@ class ContextTree(
         if (valueNode != null) {
             valueNode!!.value = value
         } else {
-            parentNode.addChild(toTree(tokens.subList(tokenIdx, tokens.size), value))
+            parentNode.addChild(toTree(tokens.subList(tokenIdx, tokens.size), value, parentNode.depth + 1))
         }
     }
 
@@ -97,11 +97,11 @@ class ContextTree(
         }
     }
 
-    private fun toTree(tokens: List<String>, value: String): ContextTreeNode {
+    private fun toTree(tokens: List<String>, value: String, depth: Int = 0): ContextTreeNode {
         if (tokens.size == 1) {
             return ContextTreeNode(tokens[0], value)
         }
-        val rNode = ContextTreeNode(tokens[0], null)
+        val rNode = ContextTreeNode(tokens[0], null, depth = depth)
         val valueTokens = tokens.subList(1, tokens.size)
         var node = rNode
         valueTokens.forEachIndexed { idx, t ->
