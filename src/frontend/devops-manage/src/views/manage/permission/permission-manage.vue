@@ -48,6 +48,8 @@
             :pagination="pagination"
             @select-all="handleSelectAll"
             @selection-change="handleSelectionChange"
+            @page-value-change="handlePageChange"
+            @page-limit-change="handlePageLimitChange"
           >
             <!-- :scroll-loading="isScrollLoading"
             @scroll-bottom="getTableList" -->
@@ -521,6 +523,19 @@ function handlePickSuccess () {
   dateTimeRange.value = daterangeCache.value;
   pagination.value.current = 1;
   hasNext.value = true;
+  getTableList();
+}
+
+function handlePageChange (page) {
+  hasNext.value = true;
+  pagination.value.current = page;
+  getTableList();
+}
+
+function handlePageLimitChange (limit) {
+  hasNext.value = true;
+  pagination.value.current = 1;
+  pagination.value.limit = limit;
   getTableList();
 }
 
