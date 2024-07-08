@@ -86,9 +86,6 @@ interface BuildSubPipelineResource {
         @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "当前流水线执行次数", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_EXECUTE_COUNT)
-        executeCount: Int?,
         @Parameter(description = "要启动的流水线ID", required = true)
         @PathParam("callPipelineId")
         callPipelineId: String,
@@ -104,7 +101,10 @@ interface BuildSubPipelineResource {
         @QueryParam("channelCode")
         channelCode: ChannelCode?,
         @Parameter(description = "启动参数", required = true)
-        values: Map<String, String>
+        values: Map<String, String>,
+        @Parameter(description = "当前流水线执行次数", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_EXECUTE_COUNT)
+        executeCount: Int? = 1
     ): Result<ProjectBuildId>
 
     @Operation(summary = "从构建机启动指定项目的子流水线")
