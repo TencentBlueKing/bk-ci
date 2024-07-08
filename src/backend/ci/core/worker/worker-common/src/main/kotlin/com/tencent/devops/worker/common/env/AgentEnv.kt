@@ -34,14 +34,15 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.service.env.Env
+import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
 import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.WorkspaceUtils.getLandun
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import java.util.Locale
 import java.util.Properties
+import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
 object AgentEnv {
@@ -79,17 +80,31 @@ object AgentEnv {
     private val propertyFile = File(getLandun(), AGENT_PROPERTIES_FILE_NAME)
 
     fun getProjectId(): String {
-
         if (projectId.isNullOrBlank()) {
             synchronized(this) {
                 if (projectId.isNullOrBlank()) {
-                    projectId = getProperty(DOCKER_PROJECT_ID)
-                    if (projectId.isNullOrBlank()) {
-                        projectId = getProperty(PROJECT_ID)
+                    projectId = when (BuildEnv.getBuildType()) {
+                        BuildType.AGENT -> {
+                            ThirdPartyAgentBuildInfoUtils.getBuildInfo()?.projectId
+                        }
+
+                        BuildType.DOCKER -> {
+                            DockerEnv.getProjectId()
+                        }
+
+                        BuildType.MACOS, BuildType.MACOS_NEW -> {
+                            BuildEnv.getProjectId()
+                        }
+
+                        else -> {
+                            getProperty(DOCKER_PROJECT_ID) ?: getProperty(PROJECT_ID)
+                        }
+
                     }
                     if (projectId.isNullOrBlank()) {
                         throw PropertyNotExistException("$PROJECT_ID|$DOCKER_PROJECT_ID", "Empty project Id")
                     }
+
                     logger.info("Get the project ID($projectId)")
                 }
             }
@@ -144,7 +159,10 @@ object AgentEnv {
                         secretKey = getProperty(AGENT_SECRET_KEY)
                     }
                     if (secretKey.isNullOrBlank()) {
-                        throw PropertyNotExistException("$AGENT_SECRET_KEY|$DOCKER_AGENT_SECRET_KEY", "Empty agent secret key")
+                        throw PropertyNotExistException(
+                            "$AGENT_SECRET_KEY|$DOCKER_AGENT_SECRET_KEY",
+                            "Empty agent secret key"
+                        )
                     }
                     logger.info("Get the agent secret key($secretKey)")
                 }
