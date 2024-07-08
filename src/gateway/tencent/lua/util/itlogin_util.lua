@@ -126,7 +126,7 @@ function _M:get_staff_info_new(credentialKey)
         return
     end
 
-    local res, err = httpc:request_uri("https://moa4.woa.com/itlogin/mobile_gate/validate", {
+    local res, err = httpc:request_uri("https://moa.it.tencent.com/itlogin/mobile_gate/validate", {
         method = "POST",
         body = "key=" .. credentialKey,
         ssl_verify = false,
@@ -156,6 +156,10 @@ function _M:get_staff_info_new(credentialKey)
     local responseBody = res.body
     --- 转换JSON的返回数据为TABLE
     local result = json.decode(responseBody)
+    if result.Domain:sub(-#"-odc") == "-odc" then
+        result.IsOuter = true
+    end
+
     return result
 end
 
