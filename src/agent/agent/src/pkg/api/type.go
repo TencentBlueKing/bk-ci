@@ -85,9 +85,10 @@ type Credential struct {
 }
 
 type DockerOptions struct {
-	Volumes []string `json:"volumes"`
-	Gpus    string   `json:"gpus"`
-	Mounts  []string `json:"mounts"`
+	Volumes    []string `json:"volumes"`
+	Gpus       string   `json:"gpus"`
+	Mounts     []string `json:"mounts"`
+	Privileged bool     `json:"privileged"`
 }
 
 type ThirdPartyBuildWithStatus struct {

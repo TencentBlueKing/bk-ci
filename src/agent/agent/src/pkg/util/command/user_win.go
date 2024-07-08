@@ -36,7 +36,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 )
 
-func setUser(_ *exec.Cmd, runUser string) error {
+func SetUser(_ *exec.Cmd, runUser string) error {
 	logs.Info("set user(windows): ", runUser)
 	return nil
 }

@@ -221,6 +221,22 @@ interface UserThirdPartyAgentResource {
         nodeHashId: String
     ): Result<Boolean>
 
+    @Operation(summary = "批量删除第三方构建机")
+    @DELETE
+    @Path("/projects/{projectId}/nodes/batch_delete")
+    fun batchDeleteAgent(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(minLength = 1, maxLength = 128)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        @BkField(minLength = 1, maxLength = 64)
+        projectId: String,
+        @Parameter(description = "Node Hash IDs", required = true)
+        nodeHashIds: Set<String>
+    ): Result<Boolean>
+
     @Operation(summary = "保存agent环境变量")
     @POST
     @Path("/projects/{projectId}/nodes/{nodeHashId}/envs")

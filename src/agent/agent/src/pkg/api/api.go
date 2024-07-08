@@ -61,7 +61,7 @@ func AgentStartup() (*httputil.DevopsResult, error) {
 
 	startInfo := &ThirdPartyAgentStartInfo{
 		HostName:      config.GAgentEnv.HostName,
-		HostIp:        config.GAgentEnv.AgentIp,
+		HostIp:        config.GAgentEnv.GetAgentIp(),
 		DetectOs:      config.GAgentEnv.OsName,
 		MasterVersion: config.AgentVersion,
 		SlaveVersion:  config.GAgentEnv.SlaveVersion,
