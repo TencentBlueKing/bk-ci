@@ -93,6 +93,17 @@
                     "items" : {
                       "enum" : [ "NamePrefixFilter", "RegexBasedFilter" ]
                     }
+                  },
+                  "custom-filter" : {
+                    "type" : "object",
+                    "properties" : {
+                      "url" : {
+                        "type" : "string"
+                      },
+                      "credentials" : {
+                        "type" : "string"
+                      }
+                    }
                   }
                 }
               } ]
@@ -232,6 +243,17 @@
                     "uniqueItems" : true,
                     "items" : {
                       "enum" : [ "NamePrefixFilter", "RegexBasedFilter" ]
+                    }
+                  },
+                  "custom-filter" : {
+                    "type" : "object",
+                    "properties" : {
+                      "url" : {
+                        "type" : "string"
+                      },
+                      "credentials" : {
+                        "type" : "string"
+                      }
                     }
                   }
                 }
@@ -598,6 +620,17 @@
                   "items" : {
                     "enum" : [ "NamePrefixFilter", "RegexBasedFilter" ]
                   }
+                },
+                "custom-filter" : {
+                  "type" : "object",
+                  "properties" : {
+                    "url" : {
+                      "type" : "string"
+                    },
+                    "credentials" : {
+                      "type" : "string"
+                    }
+                  }
                 }
               }
             } ]
@@ -737,6 +770,17 @@
                   "uniqueItems" : true,
                   "items" : {
                     "enum" : [ "NamePrefixFilter", "RegexBasedFilter" ]
+                  }
+                },
+                "custom-filter" : {
+                  "type" : "object",
+                  "properties" : {
+                    "url" : {
+                      "type" : "string"
+                    },
+                    "credentials" : {
+                      "type" : "string"
+                    }
                   }
                 }
               }

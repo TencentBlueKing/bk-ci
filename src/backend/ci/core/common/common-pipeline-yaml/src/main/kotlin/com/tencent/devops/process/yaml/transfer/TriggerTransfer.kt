@@ -56,6 +56,7 @@ import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWra
 import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.transfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
+import com.tencent.devops.process.yaml.v3.models.on.CustomFilter
 import com.tencent.devops.process.yaml.v3.models.on.EnableType
 import com.tencent.devops.process.yaml.v3.models.on.IssueRule
 import com.tencent.devops.process.yaml.v3.models.on.MrRule
@@ -104,7 +105,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         TGitPushActionType.NEW_BRANCH.value
                     ),
                     repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName
+                    repositoryName = triggerOn.repoName,
+                    enableThirdFilter = !push.custom?.url.isNullOrBlank(),
+                    thirdUrl = push.custom?.url,
+                    thirdSecretToken = push.custom?.credentials
                 ).checkTriggerElementEnable(push.enable).apply {
                     version = "2.*"
                 }
@@ -153,7 +157,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     ),
                     eventType = CodeEventType.MERGE_REQUEST,
                     repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName
+                    repositoryName = triggerOn.repoName,
+                    enableThirdFilter = !mr.custom?.url.isNullOrBlank(),
+                    thirdUrl = mr.custom?.url,
+                    thirdSecretToken = mr.custom?.credentials
                 ).checkTriggerElementEnable(mr.enable).apply {
                     version = "2.*"
                 }
@@ -253,7 +260,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     users = git.includeUsers,
                     usersIgnore = git.excludeUsers,
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    action = git.includePushAction
+                    action = git.includePushAction,
+                    custom = if (git.enableThirdFilter == true) CustomFilter(
+                        url = git.thirdUrl,
+                        credentials = git.thirdSecretToken
+                    ) else null
                 )
 
                 CodeEventType.TAG_PUSH -> nowExist.tag = TagRule(
@@ -281,7 +292,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     webhookQueue = git.webhookQueue.nullIfDefault(false),
                     reportCommitCheck = git.enableCheck.nullIfDefault(true),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    action = git.includeMrAction
+                    action = git.includeMrAction,
+                    custom = if (git.enableThirdFilter == true) CustomFilter(
+                        url = git.thirdUrl,
+                        credentials = git.thirdSecretToken
+                    ) else null
                 )
                 CodeEventType.MERGE_REQUEST_ACCEPT ->
                     throw PipelineTransferException(

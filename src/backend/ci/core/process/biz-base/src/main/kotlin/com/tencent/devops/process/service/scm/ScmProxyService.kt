@@ -474,7 +474,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitRepository
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.GIT_INVALID)
-        val isOauth = repo.credentialId.isEmpty()
+        val isOauth = repo.authType == RepoAuthType.OAUTH
         val token = if (isOauth) {
             getAccessToken(repo.userName).first
         } else {
