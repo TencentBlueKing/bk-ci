@@ -1584,6 +1584,21 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun createMoa2faRequest(userId: String, workspaceName: String): String {
+        val result = workspaceDao.fetchWorkspaceWithOwner(
+            dslContext = dslContext,
+            mountType = WorkspaceMountType.START,
+            workspaceName = workspaceName,
+            assignType = WorkspaceShared.AssignType.OWNER
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(workspaceName)
+        )
+
+        val owners = result.map { it["SHARED_USER"] as String }.toSet()
+        // TODO
+        owners.first()
+
+
 
     }
 
