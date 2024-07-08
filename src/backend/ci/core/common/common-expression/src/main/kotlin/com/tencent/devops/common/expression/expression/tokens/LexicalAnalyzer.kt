@@ -30,7 +30,6 @@ package com.tencent.devops.common.expression.expression.tokens
 import com.tencent.devops.common.expression.SubNameValueEvaluateInfo
 import com.tencent.devops.common.expression.expression.ExpressionConstants
 import com.tencent.devops.common.expression.expression.sdk.ExpressionUtility
-import org.bouncycastle.asn1.x500.style.RFC4519Style.c
 
 @Suppress("ComplexCondition", "ComplexMethod", "LongMethod")
 class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateInfo: SubNameValueEvaluateInfo? = null) {
@@ -147,15 +146,20 @@ class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateIn
         while (true) {
             mIndex++
             if (mIndex >= expression.length) {
+                // 兼容 xxx.number
                 if (mLastToken?.kind == TokenKind.Dereference) {
                     numberIndex = true
                 }
                 break
             }
             if (testTokenBoundary(expression[mIndex]) && expression[mIndex] != '.') {
+                // 兼容 xxx.number
+                if (mLastToken?.kind == TokenKind.Dereference) {
+                    numberIndex = true
+                }
                 break
             }
-            // 兼容下 xxx.number.xxx, number.xxx 的情况
+            // 兼容下 xxx.number.xxx
             if (mLastToken?.kind == TokenKind.Dereference && expression[mIndex] == '.') {
                 numberIndex = true
                 break

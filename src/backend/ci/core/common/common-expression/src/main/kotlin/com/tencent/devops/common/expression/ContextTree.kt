@@ -1,15 +1,11 @@
 package com.tencent.devops.common.expression
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.tencent.devops.common.expression.context.ContextValueNode
-import com.tencent.devops.common.expression.context.DictionaryContextData
-import com.tencent.devops.common.expression.context.PipelineContextData
-import com.tencent.devops.common.expression.context.StringContextData
+import com.tencent.devops.common.expression.context.*
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import java.util.LinkedList
 import java.util.Queue
@@ -181,10 +177,7 @@ open class ContextTreeNode(
         if (this.children.isEmpty()) {
             return StringContextData(this.value ?: "")
         }
-        if (value != null) {
-            this.checkJson()
-        }
-        val dict = DictionaryContextData()
+        val dict = value?.let { DictionaryContextDataWithVal(it) } ?: DictionaryContextData()
         this.children.forEach { child ->
             dict[child.key] = child.toContext()
         }
@@ -192,16 +185,16 @@ open class ContextTreeNode(
     }
 
     // 校验当前节点的值转换的JSON树是否与子节点结构和值相同
-    @Throws(ContextJsonFormatException::class)
-    private fun checkJson() {
-        val jsonTree = try {
-            ObjectMapper().readTree(this.value)
-        } catch (e: Exception) {
-            throw ContextJsonFormatException("${this.value} to json error ${e.localizedMessage}")
-        }
-        // TODO: 是否需要兼容 json 不同类型
-        jsonTree.equals(ObjectNodeComparator(), this.toJson())
-    }
+//    @Throws(ContextJsonFormatException::class)
+//    private fun checkJson() {
+//        val jsonTree = try {
+//            ObjectMapper().readTree(this.value)
+//        } catch (e: Exception) {
+//            throw ContextJsonFormatException("${this.value} to json error ${e.localizedMessage}")
+//        }
+//        // TODO: 是否需要兼容 json 不同类型
+//        jsonTree.equals(ObjectNodeComparator(), this.toJson())
+//    }
 
     private fun toJson(): JsonNode {
         val jsonNodeFactory = JsonNodeFactory.instance

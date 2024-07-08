@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.expression.expression
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.expression.ExecutionContext
-import com.tencent.devops.common.expression.ExpressionException
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.SubNameValueEvaluateInfo
@@ -117,11 +117,11 @@ class ExpressionParserTest {
     @DisplayName("测试流水线变量中对象的转换")
     @Test
     fun variablesObjectConvert() {
-        val variablesWithError = mapOf(
-            "matrix.power" to "{url=cn.com, project=p-xxx}",
-            "matrix.power.url" to "cn.com",
-            "matrix.power.project" to "p-xxx"
-        )
+//        val variablesWithError = mapOf(
+//            "matrix.power" to "{url=cn.com, project=p-xxx}",
+//            "matrix.power.url" to "cn.com",
+//            "matrix.power.project" to "p-xxx"
+//        )
         val variables = mapOf(
             "matrix.power" to "{ \"url\" : \"cn.com\", \"project\": \"p-xxx\" }",
             "matrix.power.url" to "cn.com",
@@ -238,21 +238,20 @@ class ExpressionParserTest {
             "friends"
         )
         variables.forEach { (k, v) ->
-            // TODO: 是否需要兼容 json 不同类型
             if (k in jsonKeys) {
-//                Assertions.assertEquals(
-//                    JsonUtil.getObjectMapper().readTree(v),
-//                    JsonUtil.getObjectMapper().readTree(
-//                        ExpressionParser.evaluateByMap("toJSON($k)", variables, true).toString()
-//                    )
-//                )
+                Assertions.assertEquals(
+                    JsonUtil.getObjectMapper().readTree(v),
+                    JsonUtil.getObjectMapper().readTree(
+                        ExpressionParser.evaluateByMap(k, variables, true).toString()
+                    )
+                )
                 return@forEach
             }
             Assertions.assertEquals(v, ExpressionParser.evaluateByMap(k, variables, true))
         }
-        assertThrows<ExpressionException> {
-            ExpressionParser.evaluateByMap("matrix.power.url=='cn.com'", variablesWithError, true)
-        }
+//        assertThrows<ExpressionException> {
+//            ExpressionParser.evaluateByMap("matrix.power.url=='cn.com'", variablesWithError, true)
+//        }
     }
 
     @DisplayName("测试解析文字")
