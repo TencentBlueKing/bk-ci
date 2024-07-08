@@ -50,13 +50,13 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         projectId: String,
         parentPipelineId: String,
         buildId: String,
-        executeCount: Int?,
         callProjectId: String,
         callPipelineId: String,
         atomCode: String,
         taskId: String,
         runMode: String,
-        values: Map<String, String>
+        values: Map<String, String>,
+        executeCount: Int?
     ): Result<ProjectBuildId> {
         return subPipeService.callPipelineStartup(
             projectId = projectId,
@@ -76,13 +76,13 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         projectId: String,
         parentPipelineId: String,
         buildId: String,
-        executeCount: Int?,
         callPipelineId: String,
         atomCode: String,
         taskId: String,
         runMode: String,
         channelCode: ChannelCode?,
-        values: Map<String, String>
+        values: Map<String, String>,
+        executeCount: Int?
     ): Result<ProjectBuildId> {
         return subPipeService.callPipelineStartup(
             projectId = projectId,
