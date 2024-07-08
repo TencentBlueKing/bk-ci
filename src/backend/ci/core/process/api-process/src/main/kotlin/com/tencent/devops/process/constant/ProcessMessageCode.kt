@@ -362,6 +362,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_JOB_CONTROL_NODECURR = "2101251" // 流水线Job:{0}的单节点或总结点并发配置需要为小于1000的正整数
 
     const val ERROR_PIPELINE_CONDITION_EXPRESSION_TOO_LONG = "2101253" // 自定义条件表达式{0}的长度超过{1}位
+    const val ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY = "2101254" // 构建启动参数如果必填，不能为空
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -536,12 +537,18 @@ object ProcessMessageCode {
     const val BK_QUALITY_IN = "bkQualityIn" // 质量红线(准入)
     const val BK_QUALITY_OUT = "bkQualityOut" // 质量红线(准出)
     const val BK_BUILD_FINISHED_AND_DENY_PAUSE = "bkBuildFinishedAndDenyPause" // 构建已结束，禁止暂停请求
+    const val BK_PIPELINE_RUN_CONDITION_RESULT = "bkPipelineRunConditionResult" // 执行条件计算结果
+    const val BK_PIPELINE_RUN_CONDITION_NOT_MATCH = "bkPipelineRunConditionNotMatch" // 执行条件为满足，将跳过
+    const val BK_PIPELINE_RUN_CONDITION_WITH_ERROR = "bkPipelineRunConditionWithError" // 执行条件计算报错
 
     // TODO: AgentReuseMutex
     const val BK_AGENT_REUSE_MUTEX = "bkAgentReuseMutex"
     const val BK_AGENT_REUSE_MUTEX_AGENT_ID_NULL = "bkAgentReuseMutexAgentIdNull"
     const val BK_MERGE_YAML_CREATE_FILE_TITLE = "bkMergeYamlCreateFileTitle" // 新增流水线发布mr标题
     const val BK_MERGE_YAML_UPDATE_FILE_TITLE = "bkMergeYamlUpdateFileTitle" // 修改流水线发布mr标题
+    const val BK_BUILD_QUEUE_WAIT_FOR_CONCURRENCY = "bkBuildQueueWaitingForConcurrency" // 并发组配置的排队
+    const val BK_BUILD_QUEUE_WAIT = "bkBuildQueueWaiting" // 并发配置的排队
+    const val BK_BUILD_CANCEL_BY_CONCURRENCY = "bkBuildCancelByConcurrency" // 并发组配置的取消
 
     const val BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE = "bkPipelineElementCheckFailedMessage"
     // 没有子流水线执行权限错误标题

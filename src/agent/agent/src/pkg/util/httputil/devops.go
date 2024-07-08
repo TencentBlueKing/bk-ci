@@ -29,19 +29,15 @@ package httputil
 
 import (
 	"encoding/json"
-	"errors"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
-
-	"github.com/TencentBlueKing/bk-ci/agent/internal/third_party/dep/fs"
-
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
-	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 )
 
@@ -180,7 +176,7 @@ func DownloadUpgradeFile(url string, headers map[string]string, filepath string)
 		return "", errors.New("download upgrade file failed")
 	}
 
-	err = AtomicWriteFile(filepath, resp.Body, 0644)
+	err = innerFileUtil.AtomicWriteFile(filepath, resp.Body, constant.CommonFileModePerm)
 	if err != nil {
 		logs.Error("download upgrade file failed", err)
 		return "", errors.New("download upgrade file failed")
@@ -215,29 +211,4 @@ func writeToFile(file string, content io.Reader) error {
 		return err
 	}
 	return nil
-}
-
-func AtomicWriteFile(filename string, reader io.Reader, mode os.FileMode) error {
-	tempFile, err := os.CreateTemp(filepath.Split(filename))
-	if err != nil {
-		exitcode.CheckOsIoError(filename, err)
-		return err
-	}
-	tempName := tempFile.Name()
-
-	if _, err := io.Copy(tempFile, reader); err != nil {
-		tempFile.Close() // return value is ignored as we are already on error path
-		exitcode.CheckOsIoError(filename, err)
-		return err
-	}
-
-	if err := tempFile.Close(); err != nil {
-		return err
-	}
-
-	if err := systemutil.Chmod(tempName, mode); err != nil {
-		return err
-	}
-
-	return fs.RenameWithFallback(tempName, filename)
 }

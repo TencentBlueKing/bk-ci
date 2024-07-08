@@ -32,10 +32,12 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.InstalledPkgShaContentRequest
 import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreApproveReleaseRequest
 import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
@@ -205,5 +207,27 @@ interface OpStoreComponentResource {
         @Parameter(description = "工作台-下架组件请求报文体", required = true)
         @Valid
         storeOfflineRequest: StoreOfflineRequest
+    ): Result<Boolean>
+
+    @Operation(summary = "更新组件已安装包sha1摘要值")
+    @PUT
+    @Path("/types/{storeType}/codes/{storeCode}/versions/{version}/component/installed/pkg/sha/update")
+    fun updateComponentInstalledPkgShaContent(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @Parameter(description = "组件代码", required = true)
+        @PathParam("storeCode")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeCode: String,
+        @Parameter(description = "组件版本", required = true)
+        @PathParam("version")
+        version: String,
+        @Parameter(description = "更新组件已安装包sha1摘要值请求报文", required = true)
+        installedPkgShaContentRequest: InstalledPkgShaContentRequest
     ): Result<Boolean>
 }

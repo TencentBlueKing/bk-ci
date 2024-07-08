@@ -57,7 +57,7 @@ func Run(isDebug bool) {
 	}
 
 	// 数据采集
-	go collector.DoAgentCollect()
+	go collector.Collect()
 
 	// 定期清理
 	go cron.CleanJob()
@@ -102,7 +102,7 @@ func doAsk() {
 	}
 
 	if err != nil {
-		logs.Error("ask request failed: ", err.Error())
+		logs.WithErrorNoStack(err).Error("ask request failed")
 		return
 	}
 	if result.IsNotOk() {
@@ -127,7 +127,7 @@ func doAsk() {
 	resp := new(api.AskResp)
 	err = util.ParseJsonToData(result.Data, &resp)
 	if err != nil {
-		logs.Error("parse ask resp failed: ", err.Error())
+		logs.WithErrorNoStack(err).Error("parse ask resp failed")
 		return
 	}
 

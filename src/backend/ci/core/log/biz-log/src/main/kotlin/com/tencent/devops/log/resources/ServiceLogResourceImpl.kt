@@ -61,6 +61,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         tag: String?,
         containerHashId: String?,
         executeCount: Int?,
+        subTag: String?,
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?
@@ -75,6 +76,7 @@ class ServiceLogResourceImpl @Autowired constructor(
             tag = tag,
             containerHashId = containerHashId,
             executeCount = executeCount,
+            subTag = subTag,
             jobId = jobId,
             stepId = stepId,
             archiveFlag = archiveFlag

@@ -31,10 +31,12 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -177,7 +179,7 @@ class PipelineBuildService(
 
             // 如果指定了版本号，则设置指定的版本号
             pipeline.version = signPipelineVersion ?: pipeline.version
-
+            val originModelStr = JsonUtil.toJson(model, formatted = false)
             // 只有新构建才需要填充Post插件与质量红线插件
             if (!pipelineParamMap.containsKey(PIPELINE_RETRY_BUILD_ID)) {
                 pipelineElementService.fillElementWhenNewBuild(
@@ -209,12 +211,14 @@ class PipelineBuildService(
                 pipelineId = pipeline.pipelineId,
                 buildId = buildId,
                 resourceVersion = pipeline.version,
-                model = model,
+                modelStr = originModelStr,
                 pipelineSetting = setting,
                 currentBuildNo = buildNo,
                 triggerReviewers = triggerReviewers,
                 pipelineParamMap = pipelineParamMap,
                 webHookStartParam = webHookStartParam,
+                // 解析出定义的流水线变量
+                realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id },
                 debug = debug ?: false,
                 versionName = versionName,
                 yamlVersion = yamlVersion

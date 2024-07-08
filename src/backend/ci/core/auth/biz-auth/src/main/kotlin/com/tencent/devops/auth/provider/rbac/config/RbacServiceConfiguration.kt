@@ -49,6 +49,7 @@ import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.BkHttpRequestService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import org.jooq.DSLContext
@@ -101,7 +102,6 @@ class RbacServiceConfiguration {
     @Bean
     fun permissionGradeManagerService(
         client: Client,
-        permissionGroupPoliciesService: PermissionGroupPoliciesService,
         iamV2ManagerService: V2ManagerService,
         iamConfiguration: IamConfiguration,
         authMonitorSpaceDao: AuthMonitorSpaceDao,
@@ -112,10 +112,10 @@ class RbacServiceConfiguration {
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
         traceEventDispatcher: TraceEventDispatcher,
         itsmService: ItsmService,
-        authAuthorizationScopesService: AuthAuthorizationScopesService
+        authAuthorizationScopesService: AuthAuthorizationScopesService,
+        permissionResourceGroupService: PermissionResourceGroupService
     ) = PermissionGradeManagerService(
         client = client,
-        permissionGroupPoliciesService = permissionGroupPoliciesService,
         iamV2ManagerService = iamV2ManagerService,
         iamConfiguration = iamConfiguration,
         authMonitorSpaceDao = authMonitorSpaceDao,
@@ -126,7 +126,8 @@ class RbacServiceConfiguration {
         authResourceGroupConfigDao = authResourceGroupConfigDao,
         traceEventDispatcher = traceEventDispatcher,
         itsmService = itsmService,
-        authAuthorizationScopesService = authAuthorizationScopesService
+        authAuthorizationScopesService = authAuthorizationScopesService,
+        permissionResourceGroupService = permissionResourceGroupService
     )
 
     @Bean

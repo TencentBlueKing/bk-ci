@@ -197,7 +197,8 @@ class PipelineRuntimeService @Autowired constructor(
             statusSet = setOf(
                 BuildStatus.RUNNING, BuildStatus.REVIEWING,
                 BuildStatus.QUEUE, BuildStatus.PREPARE_ENV,
-                BuildStatus.UNEXEC, BuildStatus.QUEUE_CACHE
+                BuildStatus.UNEXEC, BuildStatus.QUEUE_CACHE,
+                BuildStatus.STAGE_SUCCESS
             )
         )
 
@@ -481,7 +482,9 @@ class PipelineRuntimeService @Autowired constructor(
                 queueTime = queueTime,
                 artifactList = artifactList,
                 remark = remark,
-                totalTime = startTime?.let { s -> endTime?.let { e -> e - s } ?: 0 } ?: 0,
+                totalTime = if (startTime != null && endTime != null) {
+                    (endTime!! - startTime!!).takeIf { it > 0 }
+                } else null,
                 executeTime = executeTime,
                 buildParameters = buildParameters,
                 webHookType = webhookType,
@@ -503,9 +506,12 @@ class PipelineRuntimeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildNum: Int?,
-        statusSet: Set<BuildStatus>?
+        statusSet: Set<BuildStatus>?,
+        debug: Boolean? = false
     ): BuildHistory? {
-        val record = pipelineBuildDao.getBuildInfoByBuildNum(dslContext, projectId, pipelineId, buildNum, statusSet)
+        val record = pipelineBuildDao.getBuildInfoByBuildNum(
+            dslContext, projectId, pipelineId, buildNum, statusSet, debug ?: false
+        )
         return if (record != null) {
             genBuildHistory(record, System.currentTimeMillis())
         } else {

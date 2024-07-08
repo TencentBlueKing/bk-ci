@@ -183,6 +183,7 @@ object CommonMessageCode {
     const val YAML_NOT_VALID = "2100130" // yaml不合法 {0}
     const val GIT_INVALID_PRIVATE_KEY = "2100131" // 不支持的SSH私钥格式，仅支持rsa格式私钥
     const val GIT_INVALID_PRIVATE_KEY_OR_PASSWORD = "2100132" // 第三方服务[{0}]操作失败，失败详情：{1}
+    const val MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER = "2100133" // mr accept事件类型不支持code转换
 
     const val SVN_TOKEN_FAIL = "2100135" // SVN Token 不正确
     const val SVN_TOKEN_EMPTY = "2100136" // SVN Token 为空, 请检查代码库的凭证类型

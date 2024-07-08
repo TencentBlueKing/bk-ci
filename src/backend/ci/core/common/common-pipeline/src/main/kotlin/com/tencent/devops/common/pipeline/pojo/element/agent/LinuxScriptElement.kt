@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.agent
 
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
@@ -46,6 +47,8 @@ data class LinuxScriptElement(
     override var status: String? = null,
     @get:Schema(title = "用户自定义ID", required = false)
     override var stepId: String? = null,
+    @get:Schema(title = "用户自定义环境变量（插件运行时写入环境）", required = false)
+    override var customEnv: List<NameAndValue>? = null,
     @get:Schema(title = "FAQ url链接", required = false)
     val errorFAQUrl: String? = null,
     @get:Schema(title = "脚本类型", required = true)

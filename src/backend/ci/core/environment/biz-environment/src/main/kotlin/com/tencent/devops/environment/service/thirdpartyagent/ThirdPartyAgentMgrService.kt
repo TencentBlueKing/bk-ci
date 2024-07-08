@@ -284,7 +284,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             )
         thirdPartyAgentDao.saveAgentEnvs(
             dslContext = dslContext,
-            agentId = agentRecord.id,
+            agentIds = setOf(agentRecord.id),
             envStr = objectMapper.writeValueAsString(envs)
         )
     }
@@ -982,34 +982,35 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     fun deleteAgent(
         userId: String,
         projectId: String,
-        nodeId: String
+        nodeHashIds: Set<String>
     ) {
-        logger.info("Delete the node($nodeId) of project($projectId) by user($userId)")
-        val id = HashUtil.decodeIdToLong(nodeId)
+        logger.info("Delete the node($nodeHashIds) of project($projectId) by user($userId)")
+        val nodeIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val record = thirdPartyAgentDao.getAgentByNodeId(dslContext = context, nodeId = id, projectId = projectId)
-            if (record == null) {
-                logger.warn("The node($nodeId) is not exist")
+            val records = thirdPartyAgentDao.getAgentsByNodeIds(context, nodeIds, projectId)
+            if (records.isEmpty()) {
+                logger.warn("The node($nodeIds) is not exist")
                 throw NotFoundException("The node is not exist")
             }
             ActionAuditContext.current()
-                .setInstanceId(record.nodeId.toString())
-                .setInstanceName(record.nodeId.toString())
-            val count = thirdPartyAgentDao.updateStatus(
+                .setInstanceId(nodeIds.joinToString(","))
+                .setInstanceName(nodeIds.joinToString(","))
+            val count = thirdPartyAgentDao.batchUpdateStatus(
                 dslContext = context,
-                id = record.id,
-                nodeId = null,
+                ids = records.map { it.id }.toSet(),
                 projectId = projectId,
                 status = AgentStatus.DELETE
             )
-            if (count != 1) {
+            if (count < 1) {
                 logger.warn("Can't delete the agent($count)")
             }
 
-            nodeDao.updateNodeStatus(dslContext = context, id = id, status = NodeStatus.DELETED)
-            if (record.nodeId != null) {
-                environmentPermissionService.deleteNode(projectId = projectId, nodeId = record.nodeId)
+            nodeDao.updateNodeStatus(dslContext = context, ids = nodeIds, status = NodeStatus.DELETED)
+            records.forEach { record ->
+                if (record.nodeId != null) {
+                    environmentPermissionService.deleteNode(projectId = projectId, nodeId = record.nodeId)
+                }
             }
         }
     }
@@ -1393,7 +1394,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     thirdPartyAgentDao.updateStatus(context, agentRecord.id, null, projectId, AgentStatus.IMPORT_OK)
                     thirdPartAgentService.addAgentAction(projectId, agentRecord.id, AgentAction.ONLINE)
                     if (agentRecord.nodeId != null) {
-                        nodeDao.updateNodeStatus(context, agentRecord.nodeId, NodeStatus.NORMAL)
+                        nodeDao.updateNodeStatus(context, setOf(agentRecord.nodeId), NodeStatus.NORMAL)
                     }
                     AgentStatus.IMPORT_OK
                 }
@@ -1407,7 +1408,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                             return@transactionResult AgentStatus.DELETE
                         }
                         if (nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name) {
-                            val count = nodeDao.updateNodeStatus(context, agentRecord.nodeId, NodeStatus.NORMAL)
+                            val count = nodeDao.updateNodeStatus(context, setOf(agentRecord.nodeId), NodeStatus.NORMAL)
                             agentDisconnectNotifyService?.online(
                                 projectId = agentRecord.projectId ?: "",
                                 ip = agentRecord.ip ?: "",

@@ -33,13 +33,15 @@ import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserAuthResourceGroupResourceImpl @Autowired constructor(
-    private val permissionResourceGroupService: PermissionResourceGroupService
+    private val permissionResourceGroupService: PermissionResourceGroupService,
+    private val permissionResourceMemberService: PermissionResourceMemberService
 ) : UserAuthResourceGroupResource {
     override fun getGroupPolicies(
         userId: String,
@@ -65,9 +67,9 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         memberRenewalDTO: GroupMemberRenewalDTO
     ): Result<Boolean> {
         return Result(
-            permissionResourceGroupService.renewal(
+            permissionResourceMemberService.renewalGroupMember(
                 userId = userId,
-                projectId = projectId,
+                projectCode = projectId,
                 resourceType = resourceType,
                 groupId = groupId,
                 memberRenewalDTO = memberRenewalDTO
@@ -82,9 +84,9 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         groupId: Int
     ): Result<Boolean> {
         return Result(
-            permissionResourceGroupService.deleteGroupMember(
+            permissionResourceMemberService.deleteGroupMember(
                 userId = userId,
-                projectId = projectId,
+                projectCode = projectId,
                 resourceType = resourceType,
                 groupId = groupId
             )
@@ -115,7 +117,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         renameGroupDTO: RenameGroupDTO
     ): Result<Boolean> {
         return Result(
-            permissionResourceGroupService.rename(
+            permissionResourceGroupService.renameGroup(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,

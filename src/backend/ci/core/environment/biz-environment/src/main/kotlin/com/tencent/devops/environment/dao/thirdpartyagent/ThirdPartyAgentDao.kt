@@ -245,6 +245,21 @@ class ThirdPartyAgentDao {
         }
     }
 
+    fun batchUpdateStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        ids: Set<Long>,
+        status: AgentStatus
+    ): Int {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.update(this)
+                .set(STATUS, status.status)
+                .where(ID.`in`(ids))
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
+        }
+    }
+
     fun updateAgentVersion(
         dslContext: DSLContext,
         id: Long,
@@ -351,6 +366,19 @@ class ThirdPartyAgentDao {
         }
     }
 
+    fun getAgentByAgentIds(
+        dslContext: DSLContext,
+        ids: Set<Long>,
+        projectId: String
+    ): List<TEnvironmentThirdpartyAgentRecord> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectFrom(this)
+                .where(ID.`in`(ids))
+                .and(PROJECT_ID.eq(projectId))
+                .fetch()
+        }
+    }
+
     fun getAgentByNodeIdAllProj(dslContext: DSLContext, nodeIdList: List<Long>): Result<Record2<Long, String>> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.select(
@@ -406,11 +434,11 @@ class ThirdPartyAgentDao {
         }
     }
 
-    fun saveAgentEnvs(dslContext: DSLContext, agentId: Long, envStr: String) {
+    fun saveAgentEnvs(dslContext: DSLContext, agentIds: Set<Long>, envStr: String) {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             dslContext.update(this)
                 .set(AGENT_ENVS, envStr)
-                .where(ID.eq(agentId))
+                .where(ID.`in`(agentIds))
                 .execute()
         }
     }
