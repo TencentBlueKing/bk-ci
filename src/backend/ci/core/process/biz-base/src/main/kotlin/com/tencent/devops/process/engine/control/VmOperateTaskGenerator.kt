@@ -37,8 +37,8 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import org.springframework.stereotype.Component
 import jakarta.xml.bind.Element
+import org.springframework.stereotype.Component
 
 /**
  * 生成运行环境操作的插件任务
@@ -55,11 +55,19 @@ class VmOperateTaskGenerator {
 
         fun isVmAtom(task: PipelineBuildTask) = isStartVM(task) || isStopVM(task)
 
+        fun isVmAtom(atomCode: String) = isStartVM(atomCode) || isStopVM(atomCode)
+
         fun isStartVM(task: PipelineBuildTask) =
             task.taskAtom == START_VM_TASK_ATOM || task.taskAtom == START_NORMAL_TASK_ATOM
 
         fun isStopVM(task: PipelineBuildTask) =
             task.taskAtom == SHUTDOWN_VM_TASK_ATOM || task.taskAtom == SHUTDOWN_NORMAL_TASK_ATOM
+
+        fun isStartVM(atomCode: String) =
+            atomCode.startsWith(START_VM_TASK_ATOM) || atomCode.startsWith(START_NORMAL_TASK_ATOM)
+
+        fun isStopVM(atomCode: String) =
+            atomCode.startsWith(SHUTDOWN_VM_TASK_ATOM) || atomCode.startsWith(SHUTDOWN_NORMAL_TASK_ATOM)
     }
 
     /**
@@ -120,7 +128,8 @@ class VmOperateTaskGenerator {
             subBuildId = null,
             additionalOptions = additionalOptions,
             atomCode = atomCode,
-            stepId = null
+            stepId = null,
+            jobId = container.jobId
         )
     }
 
@@ -182,7 +191,8 @@ class VmOperateTaskGenerator {
                 subBuildId = null,
                 additionalOptions = additionalOptions,
                 atomCode = "$SHUTDOWN_VM_TASK_ATOM-END",
-                stepId = null
+                stepId = null,
+                jobId = container.jobId
             )
         )
 
@@ -216,7 +226,8 @@ class VmOperateTaskGenerator {
                 subBuildId = null,
                 additionalOptions = additionalOptions,
                 atomCode = "$SHUTDOWN_VM_TASK_ATOM-FINISH",
-                stepId = null
+                stepId = null,
+                jobId = container.jobId
             )
         )
 
