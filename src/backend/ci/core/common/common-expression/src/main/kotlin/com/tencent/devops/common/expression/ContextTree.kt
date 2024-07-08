@@ -25,7 +25,6 @@ import kotlin.jvm.Throws
 class ContextTree(
     val nodes: MutableMap<String, ContextTreeNode> = mutableMapOf()
 ) {
-    // TODO: 有问题需要改造添加枝干的算法
     fun addNode(key: String, value: String) {
         val tokens = key.split(".")
         val rootKey = tokens.first()
@@ -200,6 +199,7 @@ open class ContextTreeNode(
         } catch (e: Exception) {
             throw ContextJsonFormatException("${this.value} to json error ${e.localizedMessage}")
         }
+        // TODO: 是否需要兼容 json 不同类型
         jsonTree.equals(ObjectNodeComparator(), this.toJson())
     }
 

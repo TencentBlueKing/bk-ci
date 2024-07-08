@@ -238,6 +238,7 @@ class ExpressionParserTest {
             "friends"
         )
         variables.forEach { (k, v) ->
+            // TODO: 是否需要兼容 json 不同类型
             if (k in jsonKeys) {
 //                Assertions.assertEquals(
 //                    JsonUtil.getObjectMapper().readTree(v),
