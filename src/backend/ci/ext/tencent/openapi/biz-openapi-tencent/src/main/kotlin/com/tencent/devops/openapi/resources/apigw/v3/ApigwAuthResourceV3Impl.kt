@@ -1,6 +1,6 @@
 package com.tencent.devops.openapi.resources.apigw.v3
 
-import com.tencent.devops.auth.api.ServiceGroupResource
+import com.tencent.devops.auth.api.service.ServiceGroupResource
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceUserBlackListResource
 import com.tencent.devops.auth.pojo.dto.GroupDTO

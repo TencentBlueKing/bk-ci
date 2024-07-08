@@ -25,34 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.auth.resources.external
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.log.service.LogPermissionService
-import com.tencent.devops.log.service.impl.StreamLogPermissionService
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.auth.api.login.ExternalThirdLoginResource
+import com.tencent.devops.auth.service.ThirdLoginService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import javax.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Autowired
 
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class LogInitConfiguration {
-    @Bean
-    fun managerService(client: Client) = ManagerService(client)
+@RestResource
+class ExternalThirdLoginResourceImpl @Autowired constructor(
+    val loginService: ThirdLoginService
+) : ExternalThirdLoginResource {
+    override fun thirdLogin(code: String, userId: String, type: String, email: String?): Response {
+        return loginService.thirdLogin(code, userId, type, email)
+    }
 
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
-    fun gitStreamLogPermissionService(
-        client: Client,
-        tokenCheckService: ClientTokenService
-    ): LogPermissionService = StreamLogPermissionService(
-        client = client,
-        tokenCheckService = tokenCheckService
-    )
+    override fun verifyToken(token: String): Result<String> {
+        return Result(loginService.verifyToken(token))
+    }
 }

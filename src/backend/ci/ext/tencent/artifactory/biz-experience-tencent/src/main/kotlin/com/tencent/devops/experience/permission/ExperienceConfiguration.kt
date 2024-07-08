@@ -27,9 +27,6 @@
 
 package com.tencent.devops.experience.permission
 
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
-import com.tencent.devops.common.auth.api.BSAuthResourceApi
-import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.experience.dao.ExperienceDao
@@ -46,16 +43,6 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class ExperienceConfiguration {
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
-    fun txExperiencePermissionServiceImpl(
-        bsAuthPermissionApi: BSAuthPermissionApi,
-        bsAuthResourceApi: BSAuthResourceApi,
-        experienceServiceCode: BSExperienceAuthServiceCode
-    ) = TxExperiencePermissionServiceImpl(
-        bsAuthPermissionApi, bsAuthResourceApi, experienceServiceCode
-    )
-
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
     fun streamExperiencePermissionServiceImpl(

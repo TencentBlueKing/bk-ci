@@ -23,42 +23,30 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.repository
+package com.tencent.devops.auth.resources.user
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.repository.dao.RepositoryDao
-import com.tencent.devops.repository.service.RepositoryPermissionService
-import com.tencent.devops.repository.service.permission.StreamRepositoryPermissionServiceImpl
+import com.tencent.devops.auth.api.user.UserAuthItsmCallbackResource
+import com.tencent.devops.auth.dao.AuthItsmCallbackDao
+import com.tencent.devops.auth.pojo.vo.AuthItsmCallbackInfo
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import org.jooq.DSLContext
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import org.springframework.beans.factory.annotation.Autowired
 
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class RepositoryConfiguration {
-    @Bean
-    fun managerService(client: Client) = ManagerService(client)
+@RestResource
+class UserAuthItsmCallbackResourceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val authItsmCallbackDao: AuthItsmCallbackDao
+) : UserAuthItsmCallbackResource {
 
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
-    fun gitStreamRepositoryPermissionService(
-        dslContext: DSLContext,
-        tokenService: ClientTokenService,
-        repositoryDao: RepositoryDao,
-        client: Client
-    ): RepositoryPermissionService = StreamRepositoryPermissionServiceImpl(
-        dslContext = dslContext,
-        repositoryDao = repositoryDao,
-        tokenService = tokenService,
-        client = client
-    )
+    override fun get(projectId: String): Result<AuthItsmCallbackInfo?> {
+        val record = authItsmCallbackDao.getCallbackByEnglishName(
+            dslContext = dslContext,
+            projectCode = projectId
+        )
+        return Result(authItsmCallbackDao.convert(record))
+    }
 }

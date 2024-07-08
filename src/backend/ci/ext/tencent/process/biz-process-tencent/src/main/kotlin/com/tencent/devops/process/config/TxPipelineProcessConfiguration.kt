@@ -65,26 +65,6 @@ class TxPipelineProcessConfiguration {
     fun managerService(client: Client) = ManagerService(client)
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
-    fun pipelinePermissionServiceImpl(
-        authProjectApi: AuthProjectApi,
-        authResourceApi: AuthResourceApi,
-        authPermissionApi: AuthPermissionApi,
-        pipelineAuthServiceCode: PipelineAuthServiceCode,
-        managerService: ManagerService,
-        pipelineDao: PipelineInfoDao,
-        dslContext: DSLContext
-    ) = PipelinePermissionServiceImpl(
-        authProjectApi = authProjectApi,
-        authResourceApi = authResourceApi,
-        authPermissionApi = authPermissionApi,
-        pipelineAuthServiceCode = pipelineAuthServiceCode,
-        managerService = managerService,
-        pipelineDao = pipelineDao,
-        dslContext = dslContext
-    )
-
-    @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
     fun detailPage() = GitCIDetailPageBuild()
 

@@ -25,34 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.auth.resources.user
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.log.service.LogPermissionService
-import com.tencent.devops.log.service.impl.StreamLogPermissionService
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.auth.api.login.UserThirdLoginResource
+import com.tencent.devops.auth.service.ThirdLoginService
+import com.tencent.devops.common.web.RestResource
+import javax.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Autowired
 
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class LogInitConfiguration {
-    @Bean
-    fun managerService(client: Client) = ManagerService(client)
+@RestResource
+class UserThirdLoginResourceImpl @Autowired constructor(
+    val loginService: ThirdLoginService
+) : UserThirdLoginResource {
 
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
-    fun gitStreamLogPermissionService(
-        client: Client,
-        tokenCheckService: ClientTokenService
-    ): LogPermissionService = StreamLogPermissionService(
-        client = client,
-        tokenCheckService = tokenCheckService
-    )
+    override fun thirdLoginOut(userId: String): Response {
+        return loginService.thirdLoginOut(userId)
+    }
 }

@@ -25,34 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.auth.resources.op
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.log.service.LogPermissionService
-import com.tencent.devops.log.service.impl.StreamLogPermissionService
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.auth.api.callback.OpCallBackResource
+import com.tencent.devops.auth.pojo.IamCallBackInfo
+import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
+import com.tencent.devops.auth.service.CallBackService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class LogInitConfiguration {
-    @Bean
-    fun managerService(client: Client) = ManagerService(client)
+@RestResource
+class OpCallBackResourceImpl @Autowired constructor(
+    val callBackService: CallBackService
+) : OpCallBackResource {
 
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
-    fun gitStreamLogPermissionService(
-        client: Client,
-        tokenCheckService: ClientTokenService
-    ): LogPermissionService = StreamLogPermissionService(
-        client = client,
-        tokenCheckService = tokenCheckService
-    )
+    override fun create(resourceMap: Map<String, IamCallBackInterfaceDTO>): Result<Boolean> {
+        return Result(callBackService.createOrUpdate(resourceMap))
+    }
+
+    override fun get(resourceId: String): Result<IamCallBackInfo?> {
+        return Result(callBackService.getResource(resourceId))
+    }
+
+    override fun list(): Result<List<IamCallBackInfo>?> {
+        return Result(callBackService.list())
+    }
+
+    override fun refreshGateway(oldToNewMap: Map<String, String>): Result<Boolean> {
+        return Result(callBackService.refreshGateway(oldToNewMap))
+    }
 }

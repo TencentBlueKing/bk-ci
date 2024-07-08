@@ -23,36 +23,43 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.auth.resources.service
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.log.service.LogPermissionService
-import com.tencent.devops.log.service.impl.StreamLogPermissionService
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.devops.auth.api.callback.ServiceAuthResourceCallBackResource
+import com.tencent.devops.auth.service.iam.PermissionResourceCallbackService
+import com.tencent.devops.common.web.RestResource
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class LogInitConfiguration {
-    @Bean
-    fun managerService(client: Client) = ManagerService(client)
+@RestResource
+class ServiceAuthResourceCallBackResourceImpl @Autowired constructor(
+    private val permissionResourceCallbackService: PermissionResourceCallbackService
+) : ServiceAuthResourceCallBackResource {
+    override fun projectInfo(
+        callBackInfo: CallbackRequestDTO,
+        token: String
+    ): CallbackBaseResponseDTO {
+        logger.info("callBackInfo: $callBackInfo, token: $token")
+        return permissionResourceCallbackService.getProject(callBackInfo, token)
+    }
 
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
-    fun gitStreamLogPermissionService(
-        client: Client,
-        tokenCheckService: ClientTokenService
-    ): LogPermissionService = StreamLogPermissionService(
-        client = client,
-        tokenCheckService = tokenCheckService
-    )
+    override fun resourceList(
+        callBackInfo: CallbackRequestDTO,
+        token: String
+    ): CallbackBaseResponseDTO? {
+        logger.info("callBackInfo: $callBackInfo, token: $token")
+        return permissionResourceCallbackService.getInstanceByResource(
+                callBackInfo = callBackInfo,
+                token = token
+            )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(ServiceAuthResourceCallBackResourceImpl::class.java)
+    }
 }

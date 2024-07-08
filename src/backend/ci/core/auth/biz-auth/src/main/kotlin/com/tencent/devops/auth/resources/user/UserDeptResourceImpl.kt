@@ -25,31 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.config
+package com.tencent.devops.auth.resources.user
 
-import com.tencent.devops.common.auth.service.BkAccessTokenApi
-import com.tencent.devops.project.listener.ProjectEventListener
-import com.tencent.devops.project.listener.TencentProjectEventListener
-import com.tencent.devops.project.service.ProjectPaasCCService
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.devops.auth.api.user.UserDeptResource
+import com.tencent.devops.auth.pojo.vo.DeptInfoVo
+import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
+import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
 
-@Suppress("UNUSED")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class TencentProjectMQConfiguration {
+@RestResource
+class UserDeptResourceImpl @Autowired constructor(
+    val deptService: DeptService
+) : UserDeptResource {
+    override fun getDeptByLevel(userId: String, accessToken: String?, level: Int): Result<DeptInfoVo?> {
+        return Result(deptService.getDeptByLevel(level, accessToken, userId))
+    }
 
-    @Bean
-    fun projectEventListener(
-        @Autowired projectPaasCCService: ProjectPaasCCService,
-        @Autowired bkAccessTokenApi: BkAccessTokenApi,
-    ): ProjectEventListener = TencentProjectEventListener(
-        projectPaasCCService = projectPaasCCService,
-        bkAccessTokenApi = bkAccessTokenApi,
-    )
+    override fun getDeptByParent(
+        userId: String,
+        accessToken: String?,
+        parentId: Int,
+        pageSize: Int?
+    ): Result<DeptInfoVo?> {
+        return Result(deptService.getDeptByParent(parentId, accessToken, userId, pageSize))
+    }
+
+    override fun getUserAndDeptByName(
+        userId: String,
+        accessToken: String?,
+        name: String,
+        type: ManagerScopesEnum
+    ): Result<List<UserAndDeptInfoVo?>> {
+        return Result(deptService.getUserAndDeptByName(name, accessToken, userId, type))
+    }
+
+    override fun getDeptUsers(userId: String, accessToken: String?, deptId: Int): Result<List<String>?> {
+        return Result(deptService.getDeptUser(deptId, accessToken))
+    }
 }

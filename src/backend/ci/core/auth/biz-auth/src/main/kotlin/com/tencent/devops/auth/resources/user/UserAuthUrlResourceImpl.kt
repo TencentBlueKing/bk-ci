@@ -25,34 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.auth.resources.user
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.log.service.LogPermissionService
-import com.tencent.devops.log.service.impl.StreamLogPermissionService
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.auth.api.user.UserAuthUrlResource
+import com.tencent.devops.auth.pojo.PermissionUrlDTO
+import com.tencent.devops.auth.service.iam.PermissionUrlService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class LogInitConfiguration {
-    @Bean
-    fun managerService(client: Client) = ManagerService(client)
+@RestResource
+class UserAuthUrlResourceImpl @Autowired constructor(
+    val urlService: PermissionUrlService
+) : UserAuthUrlResource {
+    override fun permissionUrl(permissionUrlDTO: List<PermissionUrlDTO>): Result<String?> {
+        return urlService.getPermissionUrl(permissionUrlDTO)
+    }
 
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
-    fun gitStreamLogPermissionService(
-        client: Client,
-        tokenCheckService: ClientTokenService
-    ): LogPermissionService = StreamLogPermissionService(
-        client = client,
-        tokenCheckService = tokenCheckService
-    )
+    override fun getRolePermissionUrl(projectId: String, roleId: String?): Result<String?> {
+        return Result(urlService.getRolePermissionUrl(projectId, roleId))
+    }
 }
