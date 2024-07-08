@@ -21,6 +21,7 @@
             <bk-date-picker
               v-model="dateTimeRange"
               type="datetimerange"
+              :placeholder="t('授权时间')"
               @clear="handleClearDaterange"
               @change="handleChangeDaterange"
               @pick-success="handlePickSuccess"
@@ -39,25 +40,25 @@
         <bk-loading class="content-table" :loading="isLoading">
           <bk-table
             ref="refTable"
-            checked
             :data="tableData"
             :columns="columns"
             height="100%"
             show-overflow-tooltip
             :key="resourceType"
-            :scroll-loading="isScrollLoading"
+            :pagination="pagination"
             @select-all="handleSelectAll"
             @selection-change="handleSelectionChange"
-            @scroll-bottom="getTableList"
           >
+            <!-- :scroll-loading="isScrollLoading"
+            @scroll-bottom="getTableList" -->
             <template #prepend>
               <div v-if="isSelectAll" class="prepend">
-                {{ t('已选择全量数据X条', [totalCount]) }}
+                {{ t('已选择全量数据X条', [pagination.count]) }}
                 <span @click="handleClear">{{ t('清除选择') }}</span>
               </div>
               <div v-else-if="selectList.length" class="prepend">
                 {{ t('已选择X条数据，', [selectList.length]) }}
-                <span @click="handleSelectAllData"> {{ t('选择全量数据X条', [totalCount]) }}</span> 
+                <span @click="handleSelectAllData"> {{ t('选择全量数据X条', [pagination.count]) }}</span> 
                 &nbsp; | &nbsp;
                 <span @click="handleClear">{{ t('清除选择') }}</span> 
               </div>
@@ -75,7 +76,7 @@
       @closed="dialogClose"
     >
       <div class="dialog">
-        <bk-tag radius="20px" class="tag">{{ t('已选择X个XX', [isSelectAll ? totalCount : selectList.length, searchName]) }}</bk-tag>
+        <bk-tag radius="20px" class="tag">{{ t('已选择X个XX', [isSelectAll ? pagination.count : selectList.length, searchName]) }}</bk-tag>
         <bk-form
           ref="formRef"
           :model="resetFormData"
@@ -89,15 +90,20 @@
           >
             <bk-input
               v-model="resetFormData.name"
-              :placeholder="t('输入授权人，按回车进行校验')"
+              :placeholder="t('输入授权人，输入框失焦进行校验')"
               clearable
               :disabled="dialogLoading"
-              @enter="handleCheckReset()"
+              @change="(val) => handleClearName(val)"
+              @blur="handleCheckReset()"
             />
           </bk-form-item>
         </bk-form>
-  
-        <div v-if="isResetFailure" class="check-failure">
+
+        <div v-if="isChecking">
+          <Spinner class="check-checking-icon" />
+          <span>{{ t('授权校验中') }}</span>
+        </div>
+        <div v-else-if="isResetFailure" class="check-failure">
           <div class="failed-tips">
             <div class="manage-icon manage-icon-warning-circle-fill warning-icon"></div>
             <i18n-t keypath="检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权" tag="div">
@@ -150,7 +156,7 @@ import { ref, onMounted, computed, h, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { convertTime } from '@/utils/util'
 import { Message } from 'bkui-vue';
-import { Success } from 'bkui-vue/lib/icon';
+import { Success, Spinner } from 'bkui-vue/lib/icon';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -168,18 +174,21 @@ const showResetDialog = ref(false);
 const dialogLoading = ref(false);
 const isResetFailure = ref(false);
 const isResetSuccess = ref(false);
+const isChecking = ref(false);
 const isScrollLoading = ref(false);
-const page = ref(1);
-const pageSize = ref(20);
 const projectId = computed(() => route.params?.projectCode);
 const resourceType = ref('repertory');
 const hasNext = ref(true);
-const totalCount = ref(0);
 const isSelectAll = ref(false);  // 选择全量数据
 const dateTimeRange = ref(['', '']);
 const daterangeCache = ref(['', '']);
 const disabledResetBtn = ref(true);
 const failedCount = ref(0);
+const pagination = ref({
+  count: 0,
+  limit: 20,
+  current: 1,
+});
 const searchName = computed(() => {
   const nameMap = {
     'pipeline': t('流水线'),
@@ -254,6 +263,28 @@ const columns = ref([
   {
     label: searchName,
     field: "resourceName",
+    render ({ cell, row }) {
+      return h(
+        'span',
+        {
+          style: resourceType.value === 'env_node' ? {} : {
+            cursor: 'pointer',
+            color: '#3a84ff',
+          },
+          onClick () {
+            if (resourceType.value === 'env_node') return
+            if (resourceType.value === 'repertory') {
+              window.open(`${location.origin}/console/codelib/${row.projectCode}?searchName=${row.resourceName}&id=${row.resourceCode}`, '_blank')
+            } else {
+              window.open(`${location.origin}/console/pipeline/${row.projectCode}/${row.resourceCode}/history/delegation`, '_blank')
+            }
+          }
+        },
+        [
+          cell
+        ]
+      )
+    }
   },
   {
     label: t('授权人'),
@@ -282,7 +313,7 @@ const filterQuery = computed(() => {
   }, {})
 })
 watch(() => searchValue.value, (val, oldVal) => {
-  page.value = 1;
+  pagination.value.current = 1;
   isSelectAll.value = false;
   hasNext.value = true;
   getTableList();
@@ -293,7 +324,7 @@ onMounted(() => {
 });
 
 function init () {
-  page.value = 1;
+  pagination.value.current = 1;
   tableData.value = [];
   hasNext.value = true;
   searchValue.value = [];
@@ -307,7 +338,7 @@ function init () {
 async function getTableList () {
   if (!hasNext.value) return;
 
-  if (page.value === 1) {
+  if (pagination.value.current === 1) {
     isLoading.value = true;
     refTable.value.clearSelection();
     selectList.value = [];
@@ -317,8 +348,8 @@ async function getTableList () {
   }
   try {
     const res = await http.getResourceAuthList(projectId.value, {
-      page: page.value,
-      pageSize: pageSize.value,
+      page: pagination.value.current,
+      pageSize: pagination.value.limit,
       projectCode: projectId.value,
       resourceType: resourceType.value,
       ...filterQuery.value,
@@ -326,9 +357,9 @@ async function getTableList () {
       lessThanHandoverTime: dateTimeRange.value[1],
     });
     tableData.value = [...tableData.value, ...res.records];
-    page.value += 1;
+    pagination.value.count = res.count;
+    pagination.value.current += 1;
     hasNext.value = res.count > tableData.value.length;
-    totalCount.value = res.count;
 
     isLoading.value = false;
     isScrollLoading.value = false;
@@ -405,13 +436,27 @@ function dialogClose() {
   isResetFailure.value = false;
   isResetSuccess.value = false;
   isSelectAll.value = false;
+  disabledResetBtn.value = true;
   resetFormData.value.name = '';
   formRef.value?.clearValidate();
+}
+
+function handleClearName (val) {
+  if (!val) {
+    isResetFailure.value = false;
+    isResetSuccess.value = false;
+    disabledResetBtn.value = true;
+    resetTableData.value = [];
+    failedCount.value = 0;
+  }
 }
 
 async function handleCheckReset () {
   if (!resetFormData.value.name) return
   try {
+    isChecking.value = true;
+    disabledResetBtn.value = true;
+
     const res = await http.resetAuthorization(projectId.value, {
       ...resetParams.value,
       preCheck: true
@@ -423,6 +468,7 @@ async function handleCheckReset () {
     }
     isResetFailure.value = !!failedCount.value;
     isResetSuccess.value = !failedCount.value;
+    isChecking.value = false;
 
     disabledResetBtn.value = failedCount.value === selectList.value.length;
   } catch (e) {
@@ -446,7 +492,7 @@ function confirmReset() {
         message: t('授权已成功重置', [searchName.value]),
       });
 
-      page.value = 1;
+      pagination.value.current += 1;
       getTableList();
       
       isSelectAll.value = false;
@@ -467,13 +513,13 @@ function handleChangeDaterange (date) {
 }
 function handleClearDaterange () {
   dateTimeRange.value = ['', '']
-  page.value = 1;
+  pagination.value.current = 1;
   hasNext.value = true;
   getTableList();
 }
 function handlePickSuccess () {
   dateTimeRange.value = daterangeCache.value;
-  page.value = 1;
+  pagination.value.current = 1;
   hasNext.value = true;
   getTableList();
 }
@@ -594,6 +640,10 @@ function handlePickSuccess () {
 }
 .check-success-icon {
   color: #2DCB56;
+  margin-right: 5px;
+}
+.check-checking-icon {
+  color: #3A84FF;
   margin-right: 5px;
 }
 .reset-form {
