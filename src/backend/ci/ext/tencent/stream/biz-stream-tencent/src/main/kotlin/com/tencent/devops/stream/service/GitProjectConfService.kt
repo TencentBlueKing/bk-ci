@@ -38,7 +38,7 @@ import com.tencent.devops.stream.dao.GitProjectConfDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.pojo.GitProjectConf
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

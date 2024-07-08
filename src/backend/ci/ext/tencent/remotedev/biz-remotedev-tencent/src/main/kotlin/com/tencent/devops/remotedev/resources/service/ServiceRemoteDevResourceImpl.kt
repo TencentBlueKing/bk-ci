@@ -67,7 +67,7 @@ import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.remotedev.utils.RsaUtil
 import java.net.URLDecoder
 import java.util.Base64
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate

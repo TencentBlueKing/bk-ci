@@ -56,7 +56,7 @@ import com.tencent.devops.environment.service.job.PermissionManageService
 import com.tencent.devops.environment.service.job.TencentStockDataUpdateService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @RestResource
 class TencentServiceJobResourceImpl @Autowired constructor(

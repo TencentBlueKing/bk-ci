@@ -175,6 +175,7 @@ class OpenRtxCustomService constructor(
                     sendRichText(richtextMessage)
                 }
             }
+            else -> {}
         }
         return true
     }

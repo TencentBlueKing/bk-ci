@@ -74,7 +74,7 @@ import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 
 @RestResource
 class ServiceGitResourceImpl @Autowired constructor(

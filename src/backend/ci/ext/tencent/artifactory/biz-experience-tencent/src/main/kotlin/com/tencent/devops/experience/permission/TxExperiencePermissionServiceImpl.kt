@@ -13,7 +13,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.service.ExperiencePermissionService
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 class TxExperiencePermissionServiceImpl @Autowired constructor(
     private val bsAuthPermissionApi: BSAuthPermissionApi,

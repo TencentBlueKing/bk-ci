@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Component
 class EsbAgentClient {

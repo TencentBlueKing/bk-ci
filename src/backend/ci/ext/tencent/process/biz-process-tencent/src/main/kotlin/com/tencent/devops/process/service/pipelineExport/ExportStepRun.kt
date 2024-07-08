@@ -15,7 +15,7 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.v2.models.step.PreStep
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 object ExportStepRun {
     private val logger = LoggerFactory.getLogger(ExportStepRun::class.java)

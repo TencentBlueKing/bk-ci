@@ -51,7 +51,7 @@ import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperienceSearchRecommendDao
 import com.tencent.devops.experience.pojo.ExperienceExtendBanner
 import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired

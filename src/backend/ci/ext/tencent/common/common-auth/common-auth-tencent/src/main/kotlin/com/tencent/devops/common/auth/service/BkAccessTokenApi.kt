@@ -19,7 +19,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 /**
  * 获取蓝鲸accessToken服务类

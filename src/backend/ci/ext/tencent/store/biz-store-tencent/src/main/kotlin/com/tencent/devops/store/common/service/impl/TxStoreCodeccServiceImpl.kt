@@ -47,7 +47,7 @@ import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

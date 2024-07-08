@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 class StreamScmServiceTest {

@@ -45,7 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Primary
 @Service

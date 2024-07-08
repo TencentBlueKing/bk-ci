@@ -33,7 +33,7 @@ import com.tencent.devops.model.project.tables.records.TProjectLabelRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectLabelDao
 import com.tencent.devops.project.pojo.label.ProjectLabel
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

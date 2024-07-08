@@ -45,7 +45,7 @@ import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
 import com.tencent.devops.remotedev.pojo.software.UserSoftware
 import com.tencent.devops.remotedev.pojo.software.UserSoftwareInstalledRecord
 import java.net.SocketTimeoutException
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody

@@ -26,7 +26,7 @@ import org.slf4j.MDC
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Service
 @Suppress("LongParameterList", "MaxLineLength")

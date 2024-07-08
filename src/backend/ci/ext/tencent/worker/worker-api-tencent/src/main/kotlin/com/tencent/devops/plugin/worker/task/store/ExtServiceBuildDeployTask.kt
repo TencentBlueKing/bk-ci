@@ -52,7 +52,7 @@ import com.tencent.devops.worker.common.api.utils.ApiUrlUtils
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
-import io.fabric8.kubernetes.client.internal.readiness.Readiness
+import io.fabric8.kubernetes.client.readiness.Readiness
 import java.io.File
 import org.slf4j.LoggerFactory
 

@@ -52,7 +52,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.text.SimpleDateFormat
 import java.util.Date
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Component
 class V1GitRequestEventHandle @Autowired constructor(

@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.ci.SERVICE_TYPE
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.web.utils.I18nUtil
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = SERVICE_TYPE)
 @JsonSubTypes(

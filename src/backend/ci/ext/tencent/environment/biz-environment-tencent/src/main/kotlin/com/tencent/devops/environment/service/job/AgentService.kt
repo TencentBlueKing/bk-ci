@@ -77,8 +77,8 @@ import java.io.InputStream
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import javax.annotation.PostConstruct
-import javax.ws.rs.core.Response
+import jakarta.annotation.PostConstruct
+import jakarta.ws.rs.core.Response
 
 @Service("AgentService")
 data class AgentService @Autowired constructor(

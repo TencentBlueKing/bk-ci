@@ -83,8 +83,8 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
-import javax.ws.rs.BadRequestException
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Service

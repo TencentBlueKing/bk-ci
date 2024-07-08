@@ -28,8 +28,8 @@
 package com.tencent.devops.experience.pojo.index
 
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.PathParam
-import javax.ws.rs.QueryParam
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.QueryParam
 
 class NewCategoryParam {
     @Parameter(description = "类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)

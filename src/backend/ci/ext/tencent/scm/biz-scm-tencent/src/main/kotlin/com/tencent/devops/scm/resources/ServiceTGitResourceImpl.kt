@@ -42,7 +42,7 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.services.TGitService
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

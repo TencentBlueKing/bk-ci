@@ -34,7 +34,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import java.net.URLEncoder
 import java.nio.file.Paths
 import java.util.regex.Pattern
-import javax.ws.rs.BadRequestException
+import jakarta.ws.rs.BadRequestException
 
 object PathUtils {
     fun checkAndNormalizeAbsPath(path: String): String {

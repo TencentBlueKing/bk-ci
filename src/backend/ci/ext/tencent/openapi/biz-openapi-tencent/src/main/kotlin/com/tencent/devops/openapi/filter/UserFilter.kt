@@ -40,12 +40,12 @@ import com.tencent.devops.openapi.service.op.OpAppUserService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import javax.annotation.Priority
-import javax.ws.rs.Priorities
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.ContainerRequestFilter
-import javax.ws.rs.container.PreMatching
-import javax.ws.rs.ext.Provider
+import jakarta.annotation.Priority
+import jakarta.ws.rs.Priorities
+import jakarta.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.container.ContainerRequestFilter
+import jakarta.ws.rs.container.PreMatching
+import jakarta.ws.rs.ext.Provider
 
 @Component
 @Provider

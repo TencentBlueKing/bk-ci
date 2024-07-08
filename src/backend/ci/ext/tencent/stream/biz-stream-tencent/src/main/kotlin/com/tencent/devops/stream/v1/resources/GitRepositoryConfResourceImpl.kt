@@ -38,7 +38,7 @@ import com.tencent.devops.stream.constant.StreamMessageCode.PROJECT_CANNOT_OPEN_
 import com.tencent.devops.stream.v1.pojo.V1GitRepositoryConf
 import com.tencent.devops.stream.v1.service.V1GitRepositoryConfService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @RestResource
 class GitRepositoryConfResourceImpl @Autowired constructor(

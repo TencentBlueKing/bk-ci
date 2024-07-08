@@ -38,7 +38,7 @@ import com.tencent.devops.monitoring.pojo.GrafanaNotification
 import com.tencent.devops.monitoring.pojo.NocNoticeBusData
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value

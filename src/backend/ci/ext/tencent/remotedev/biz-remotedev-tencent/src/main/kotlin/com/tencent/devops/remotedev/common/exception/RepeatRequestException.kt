@@ -28,6 +28,6 @@
 package com.tencent.devops.remotedev.common.exception
 
 import com.tencent.devops.common.api.exception.CustomException
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 open class RepeatRequestException(lockKey: String) : CustomException(Response.Status.BAD_REQUEST, "重复请求！请稍后重试")

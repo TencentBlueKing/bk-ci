@@ -58,7 +58,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Optional
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 /**
  * 模板可见范围逻辑类

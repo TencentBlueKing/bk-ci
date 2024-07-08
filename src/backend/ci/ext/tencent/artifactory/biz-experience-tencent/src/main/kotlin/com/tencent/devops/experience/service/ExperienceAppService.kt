@@ -77,7 +77,7 @@ import org.springframework.stereotype.Service
 import java.net.URI
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Service
 @SuppressWarnings("LongParameterList", "MagicNumber", "TooGenericExceptionThrown", "ComplexCondition")

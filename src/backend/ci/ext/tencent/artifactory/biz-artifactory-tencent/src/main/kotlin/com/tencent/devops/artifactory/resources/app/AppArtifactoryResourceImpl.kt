@@ -69,7 +69,7 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.BadRequestException
+import jakarta.ws.rs.BadRequestException
 
 @RestResource
 @SuppressWarnings("MagicNumber", "TooManyFunctions", "ThrowsCount")

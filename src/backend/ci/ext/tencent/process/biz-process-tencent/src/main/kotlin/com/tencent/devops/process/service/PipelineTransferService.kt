@@ -59,8 +59,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
-import javax.annotation.PostConstruct
-import javax.ws.rs.core.Response
+import jakarta.annotation.PostConstruct
+import jakarta.ws.rs.core.Response
 
 @Service
 class PipelineTransferService @Autowired constructor(

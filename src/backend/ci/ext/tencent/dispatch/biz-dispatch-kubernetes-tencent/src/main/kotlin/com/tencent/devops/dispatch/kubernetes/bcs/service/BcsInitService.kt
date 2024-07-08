@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.dispatch.kubernetes.bcs.config.KubernetesConfig
 import com.tencent.devops.dispatch.kubernetes.client.SecretClient
 import com.tencent.devops.dispatch.kubernetes.pojo.base.KubernetesRepo
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.DependsOn

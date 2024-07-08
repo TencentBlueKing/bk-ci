@@ -40,7 +40,7 @@ import com.tencent.devops.support.dao.MessageCodeDetailDao
 import com.tencent.devops.support.model.code.AddMessageCodeRequest
 import com.tencent.devops.support.model.code.MessageCodeResp
 import com.tencent.devops.support.model.code.UpdateMessageCodeRequest
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

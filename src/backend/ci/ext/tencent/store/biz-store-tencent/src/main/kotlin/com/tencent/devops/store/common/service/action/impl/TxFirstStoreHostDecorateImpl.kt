@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.common.web.utils.BkApiUtil
-import javax.annotation.Priority
+import jakarta.annotation.Priority
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component

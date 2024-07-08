@@ -8,7 +8,7 @@ import com.tencent.devops.experience.pojo.outer.OuterProfileVO
 import com.tencent.devops.experience.service.ExperienceAppService
 import com.tencent.devops.experience.service.ExperienceOuterService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @RestResource
 class OpenExperienceResourceImpl @Autowired constructor(

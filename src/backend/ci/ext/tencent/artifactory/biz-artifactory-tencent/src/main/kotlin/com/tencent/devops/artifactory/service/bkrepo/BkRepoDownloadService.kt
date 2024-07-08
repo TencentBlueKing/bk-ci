@@ -77,9 +77,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLEncoder
 import java.util.regex.Pattern
-import javax.ws.rs.BadRequestException
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.core.Response
 
 @Suppress("LongParameterList", "ComplexMethod", "LongMethod", "MagicNumber", "TooManyFunctions")
 open class BkRepoDownloadService @Autowired constructor(

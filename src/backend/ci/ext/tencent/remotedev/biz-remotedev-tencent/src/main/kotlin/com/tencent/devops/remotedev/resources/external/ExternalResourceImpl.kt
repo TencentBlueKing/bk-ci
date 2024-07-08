@@ -35,9 +35,9 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.StreamingOutput
 
 @RestResource
 class ExternalResourceImpl @Autowired constructor(

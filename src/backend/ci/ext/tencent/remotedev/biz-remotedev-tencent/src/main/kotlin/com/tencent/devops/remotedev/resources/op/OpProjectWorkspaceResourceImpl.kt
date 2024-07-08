@@ -42,7 +42,7 @@ import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired

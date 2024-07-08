@@ -22,7 +22,7 @@ import java.net.HttpRetryException
 import java.net.InetAddress
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager

@@ -186,6 +186,7 @@ class WechatWorkCallbackService @Autowired constructor(
                 when (eventType) {
                     EventType.click -> processClickEvent(eventKey, receiverType, chatId, userName)
 //                    EventType.enter_chat -> autoReplyMessage(receiverType, chatId, userName)
+                    else -> {}
                 }
                 logger.info("accept a event callback:$eventType")
             }
@@ -228,6 +229,8 @@ class WechatWorkCallbackService @Autowired constructor(
                     autoReplyMessage(receiverType, chatId, userName)
                 }
             }
+
+            else -> {}
         }
 
         return true

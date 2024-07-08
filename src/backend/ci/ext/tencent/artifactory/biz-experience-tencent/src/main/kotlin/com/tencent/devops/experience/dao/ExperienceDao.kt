@@ -40,7 +40,7 @@ import org.springframework.stereotype.Repository
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Repository
 @SuppressWarnings("LongParameterList", "LongMethod")

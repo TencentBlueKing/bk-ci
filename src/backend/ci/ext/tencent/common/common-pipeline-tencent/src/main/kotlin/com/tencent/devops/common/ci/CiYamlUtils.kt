@@ -53,7 +53,7 @@ import com.tencent.devops.common.ci.yaml.Trigger
 import com.tencent.devops.common.web.utils.I18nUtil
 import java.io.BufferedReader
 import java.io.StringReader
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 
 @Suppress("NestedBlockDepth")

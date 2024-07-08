@@ -31,8 +31,8 @@ import com.tencent.devops.artifactory.api.external.ExternalShortUrlResource
 import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 
 @RestResource
 class ExternalShortUrlResourceImpl @Autowired constructor(

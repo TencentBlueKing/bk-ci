@@ -123,7 +123,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import kotlin.math.ceil
 
 @Service

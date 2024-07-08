@@ -1,9 +1,9 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI À¶¾¨³ÖĞø¼¯³ÉÆ½Ì¨ available.
+ * Tencent is pleased to support the open source community by making BK-CI è“é²¸æŒç»­é›†æˆå¹³å° available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
- * BK-CI À¶¾¨³ÖĞø¼¯³ÉÆ½Ì¨ is licensed under the MIT license.
+ * BK-CI è“é²¸æŒç»­é›†æˆå¹³å° is licensed under the MIT license.
  *
  * A copy of the MIT License is included in this file.
  *
@@ -34,27 +34,27 @@ import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "OPEN_STORE", description = "OP-store×é¼ş")
+@Tag(name = "OPEN_STORE", description = "OP-storeç»„ä»¶")
 @Path("/op/store")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxStoreResource {
 
-    @Operation(summary = "¸üĞÂ×é¼ş¹ØÁª³õÊ¼»¯ÏîÄ¿ĞÅÏ¢")
+    @Operation(summary = "æ›´æ–°ç»„ä»¶å…³è”åˆå§‹åŒ–é¡¹ç›®ä¿¡æ¯")
     @PUT
     @Path("/rele/project/update")
     fun updateStoreInitProject(
-        @Parameter(description = "ÓÃ»§ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "ç”¨æˆ·ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "×é¼ş¹ØÁª³õÊ¼»¯ÏîÄ¿ĞÅÏ¢", required = true)
+        @Parameter(description = "ç»„ä»¶å…³è”åˆå§‹åŒ–é¡¹ç›®ä¿¡æ¯", required = true)
         storeProjectInfo: StoreProjectInfo
     ): Result<Boolean>
 }
