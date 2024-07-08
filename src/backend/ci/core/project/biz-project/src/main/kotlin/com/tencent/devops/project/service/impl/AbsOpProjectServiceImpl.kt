@@ -278,7 +278,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                 kind = kind,
                 enabled = enabled ?: true,
                 grayFlag = routerTag == grayTag,
-                codeCCGrayFlag = otherRouterTagMap[SystemEnums.CODECC.name] == grayTag,
+                codeCCGrayFlag = otherRouterTagMap[SystemEnums.CODECC.name] == codeccGrayTag,
                 repoGrayFlag = otherRouterTagMap[SystemEnums.REPO.name] == grayTag,
                 hybridCCAppId = hybridCcAppId,
                 enableExternal = enableExternal,

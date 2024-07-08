@@ -289,7 +289,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.first,
                         region = null,
                         userName = repo.userName,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 } else {
                     val credInfo = getCredential(
@@ -306,7 +308,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.privateKey,
                         region = null,
                         userName = credInfo.username,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 }
             }
@@ -342,7 +346,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = getTGitAccessToken(repo.userName),
                         region = null,
                         userName = repo.userName,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 } else {
                     val credInfo = getCredential(
@@ -359,7 +365,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.privateKey,
                         region = null,
                         userName = credInfo.username,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 }
             }
