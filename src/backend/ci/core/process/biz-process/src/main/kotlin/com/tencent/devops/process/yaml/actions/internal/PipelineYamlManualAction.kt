@@ -147,6 +147,14 @@ class PipelineYamlManualAction : BaseAction {
 
     override fun getChangeSet(): Set<String>? = null
 
+    fun checkPushPermission(): Boolean {
+        return api.checkPushPermission(
+            userId = event().userId,
+            cred = this.getGitCred(),
+            gitProjectId = getGitProjectIdOrName()
+        )
+    }
+
     fun pushYamlFile(
         pipelineId: String,
         pipelineName: String,

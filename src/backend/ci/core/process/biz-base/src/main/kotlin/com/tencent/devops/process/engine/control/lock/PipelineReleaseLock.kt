@@ -25,23 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.pojo.code.svn
+package com.tencent.devops.process.engine.control.lock
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-@Suppress("ALL")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class SvnCommitEvent(
-    val userName: String,
-    val eventType: Int,
-    val log: String,
-    val rep_name: String,
-    val revision: Int,
-    val paths: List<String>,
-    val files: List<SvnCommitEventFile>,
-    val commitTime: Long?,
-    @JsonProperty("total_files_count")
-    val totalFilesCount: Int?
-) : CodeWebhookEvent
+/**
+ * 流水线发布锁
+ */
+class PipelineReleaseLock(redisOperation: RedisOperation, pipelineId: String) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "lock:pipeline:release:$pipelineId",
+        expiredTimeInSeconds = 30L,
+        sleepTime = 10L
+    ) {
+    override fun decorateKey(key: String): String {
+        // pipelineId在各集群唯一，key无需加上集群信息前缀来区分
+        return key
+    }
+}

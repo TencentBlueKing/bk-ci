@@ -53,6 +53,7 @@ import com.tencent.devops.process.yaml.git.pojo.tgit.TGitTreeFileInfo
 import com.tencent.devops.process.yaml.git.service.PacApiUtil.doRetryFun
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.git.GitOperationFile
@@ -284,6 +285,21 @@ class TGitApiService @Autowired constructor(
                 tokenType = cred.toTokenType()
             ).data
         }?.let { TGitFileInfo(content = it.content ?: "", blobId = it.blobId) }
+    }
+
+    override fun checkPushPermission(userId: String, cred: PacGitCred, gitProjectId: String): Boolean {
+        return try {
+            val member = client.get(ServiceGitResource::class).getProjectMembersAll(
+                gitProjectId = gitProjectId,
+                search = userId,
+                tokenType = TokenTypeEnum.OAUTH,
+                token = cred.toToken()
+            ).data?.find { it.username == userId }
+            member?.let { it.accessLevel >= GitAccessLevelEnum.DEVELOPER.level } ?: false
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to check push permission|$userId|$gitProjectId")
+            false
+        }
     }
 
     @Suppress("ComplexMethod")
