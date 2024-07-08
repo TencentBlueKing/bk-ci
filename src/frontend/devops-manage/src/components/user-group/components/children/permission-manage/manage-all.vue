@@ -118,7 +118,7 @@
   </bk-dialog>
   <bk-dialog
     :width="450"
-    theme="danger"
+    confirmButtonTheme="danger"
     :cancel-text="t('关闭')"
     :confirm-text="t('确认移出')"
     header-align="center"

@@ -146,9 +146,14 @@
   </bk-dialog>
   <bk-dialog
     :width="450"
+    confirmButtonTheme="danger"
+    :cancel-text="t('关闭')"
+    :confirm-text="t('确认移出')"
     header-align="center"
     footer-align="center"
     :is-show="isShowRemoveDialog"
+    @closed="() => isShowRemoveDialog = false"
+    @confirm="handleRemoveConfirm"
   >
     <template #header>
       <h2 class="dialog-header-text"> {{t("确认将组织移出本项目吗")}}？ </h2>
@@ -157,10 +162,6 @@
         <p class="remove-text">
           <span>{{t("待移出组织")}}：</span> {{ removeUser.name }}
         </p>
-    </template>
-    <template #footer>
-      <bk-button theme="danger" @click="handleRemoveConfirm"> {{t("确定移出")}} </bk-button>
-      <bk-button @click="() => isShowRemoveDialog = false"> {{t("关闭")}} </bk-button>
     </template>
   </bk-dialog>
 </template>

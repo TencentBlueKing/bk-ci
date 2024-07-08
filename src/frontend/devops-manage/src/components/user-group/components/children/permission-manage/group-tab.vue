@@ -13,6 +13,7 @@
           </template>
           <template #content>
             <TabTable
+              v-if="projectTable?.tableData.length"
               :is-show-operation="isShowOperation"
               :data="projectTable.tableData"
               :group-type="projectTable.resourceType"
@@ -47,6 +48,7 @@
           </template>
           <template #content>
             <TabTable
+              v-if="item.tableData.length"
               :is-show-operation="isShowOperation"
               :data="item.tableData"
               :group-type="item.resourceType"
@@ -73,7 +75,7 @@
 
 <script setup name="GroupTab">
 import { useI18n } from 'vue-i18n';
-import { ref, defineProps, defineEmits, computed, watch, reactive } from 'vue';
+import { ref, defineProps, defineEmits, computed } from 'vue';
 import userGroupTable from "@/store/userGroupTable";
 import TabTable from './tab-table.vue';
 
