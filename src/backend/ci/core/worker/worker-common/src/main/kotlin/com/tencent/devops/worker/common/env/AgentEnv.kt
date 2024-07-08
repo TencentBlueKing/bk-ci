@@ -99,7 +99,6 @@ object AgentEnv {
                         else -> {
                             getProperty(DOCKER_PROJECT_ID) ?: getProperty(PROJECT_ID)
                         }
-
                     }
                     if (projectId.isNullOrBlank()) {
                         throw PropertyNotExistException("$PROJECT_ID|$DOCKER_PROJECT_ID", "Empty project Id")
