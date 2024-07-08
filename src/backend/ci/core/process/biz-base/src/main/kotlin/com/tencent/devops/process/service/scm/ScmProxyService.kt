@@ -677,9 +677,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             status = status,
             startedAt = startedAt,
             conclusion = conclusion,
-            completedAt = completedAt,
-            reportData = Pair(listOf(), mutableMapOf()),
-            pullRequestNumber = null
+            completedAt = completedAt
         )
 
         return client.get(ServiceGithubResource::class).addCheckRuns(
@@ -716,9 +714,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             status = status,
             startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
             conclusion = conclusion,
-            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
-            reportData = Pair(listOf(), mutableMapOf()),
-            pullRequestNumber = null
+            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT)
         )
 
         client.get(ServiceGithubResource::class).updateCheckRuns(

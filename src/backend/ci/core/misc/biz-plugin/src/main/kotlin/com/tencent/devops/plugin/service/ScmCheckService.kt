@@ -53,6 +53,7 @@ import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.sdk.github.pojo.CheckRunOutput
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -154,8 +155,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         status: String,
         startedAt: LocalDateTime?,
         conclusion: String?,
-        completedAt: LocalDateTime?,
-        pullRequestNumber: Int?
+        completedAt: LocalDateTime?
     ): GithubCheckRunsResponse {
         logger.info("Project($projectId) add github commit($commitId) check runs")
 
@@ -171,17 +171,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
             status = status,
             startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
             conclusion = conclusion,
-            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
-            reportData = QualityUtils.getQualityGitMrResult(
-                client = client,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                startTime = startedAt?.timestampmilli() ?: 0L,
-                eventStatus = status,
-                triggerType = StartType.WEB_HOOK.name
-            ),
-            pullRequestNumber = pullRequestNumber
+            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT)
         )
 
         return client.get(ServiceGithubResource::class).addCheckRuns(
@@ -205,7 +195,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         startedAt: LocalDateTime?,
         conclusion: String?,
         completedAt: LocalDateTime?,
-        pullRequestNumber: Int?
+        pipelineName: String
     ) {
         logger.info("Project($projectId) update github commit($commitId) check runs")
 
@@ -222,16 +212,20 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
             startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
             conclusion = conclusion,
             completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
-            reportData = QualityUtils.getQualityGitMrResult(
-                client = client,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                startTime = startedAt?.timestampmilli() ?: 0L,
-                eventStatus = status,
-                triggerType = StartType.WEB_HOOK.name
-            ),
-            pullRequestNumber = pullRequestNumber
+            output = CheckRunOutput(
+                summary = "This check concluded as $conclusion.",
+                text = null, // github
+                title = pipelineName,
+                reportData = QualityUtils.getQualityGitMrResult(
+                    client = client,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    startTime = startedAt?.timestampmilli() ?: 0L,
+                    eventStatus = status,
+                    triggerType = StartType.WEB_HOOK.name
+                )
+            )
         )
 
         client.get(ServiceGithubResource::class).updateCheckRuns(

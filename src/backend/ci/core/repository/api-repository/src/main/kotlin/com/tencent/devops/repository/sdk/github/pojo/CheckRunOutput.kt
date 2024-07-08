@@ -1,13 +1,18 @@
 package com.tencent.devops.repository.sdk.github.pojo
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.Parameter
 
 data class CheckRunOutput(
     @JsonProperty("annotations_count")
-    val annotationsCount: Int,
+    val annotationsCount: Int? = 0,
     @JsonProperty("annotations_url")
-    val annotationsUrl: String,
+    val annotationsUrl: String? = "",
     val summary: String?,
-    val text: String?,
-    val title: String?
+    var text: String?,
+    val title: String?,
+    @JsonIgnore
+    @Parameter(description = "报表数据", required = true)
+    val reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>? = Pair(listOf(), mutableMapOf())
 )

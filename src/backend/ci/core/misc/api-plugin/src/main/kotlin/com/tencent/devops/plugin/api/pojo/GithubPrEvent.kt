@@ -47,7 +47,6 @@ data class GithubPrEvent(
     val startedAt: Long?,
     val conclusion: String?,
     val completedAt: Long?,
-    val pullRequestNumber: Int? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override val source: String,
     override val userId: String,

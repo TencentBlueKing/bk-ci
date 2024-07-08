@@ -45,7 +45,6 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
-import com.tencent.devops.common.webhook.pojo.code.GITHUB_PR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
@@ -155,8 +154,7 @@ class CodeWebhookService @Autowired constructor(
                                     status = GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS,
                                     startedAt = LocalDateTime.now().timestamp(),
                                     conclusion = null,
-                                    completedAt = null,
-                                    pullRequestNumber = pullRequestNumber
+                                    completedAt = null
                                 )
                             )
                         }
@@ -237,8 +235,7 @@ class CodeWebhookService @Autowired constructor(
                                     conclusion = conclusion,
                                     completedAt = LocalDateTime.now().timestamp(),
                                     userId = event.userId,
-                                    retryTime = 3,
-                                    pullRequestNumber = pullRequestNumber
+                                    retryTime = 3
                                 )
                             )
                         }
@@ -317,7 +314,6 @@ class CodeWebhookService @Autowired constructor(
             val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
             val targetBranch = variables[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH]
             val enableCheck = variables[BK_REPO_GIT_WEBHOOK_ENABLE_CHECK]?.toBoolean() ?: true
-            val pullRequestNumber = variables[GITHUB_PR_NUMBER]?.toInt()
             if (CodeEventType.valueOf(webhookEventTypeStr) == CodeEventType.MERGE_REQUEST && targetBranch == null) {
                 logger.warn(
                     "the webhook info miss targetBranch,commit check may not be added," +
@@ -340,8 +336,7 @@ class CodeWebhookService @Autowired constructor(
                     webhookType = webhookTypeStr,
                     webhookEventType = webhookEventTypeStr,
                     enableCheck = enableCheck,
-                    targetBranch = targetBranch,
-                    pullRequestNumber = pullRequestNumber
+                    targetBranch = targetBranch
                 )
             )
         } catch (ignore: Throwable) {
@@ -559,8 +554,7 @@ class CodeWebhookService @Autowired constructor(
                 status = event.status,
                 startedAt = startedAt,
                 conclusion = event.conclusion,
-                completedAt = completedAt,
-                pullRequestNumber = event.pullRequestNumber
+                completedAt = completedAt
             )
         } catch (t: Throwable) {
             logger.warn("Consume github pr event fail. $event", t)
@@ -585,8 +579,7 @@ class CodeWebhookService @Autowired constructor(
         status: String,
         startedAt: LocalDateTime?,
         conclusion: String?,
-        completedAt: LocalDateTime?,
-        pullRequestNumber: Int?
+        completedAt: LocalDateTime?
     ) {
         logger.info(
             "Code web hook add pr check [projectId=$projectId, pipelineId=$pipelineId, buildId=$buildId, " +
@@ -647,8 +640,7 @@ class CodeWebhookService @Autowired constructor(
                         conclusion = conclusion,
                         completedAt = completedAt,
                         pipelineId = pipelineId,
-                        buildId = buildId,
-                        pullRequestNumber = pullRequestNumber
+                        buildId = buildId
                     )
                     pluginGithubCheckDao.create(
                         dslContext = dslContext,
@@ -677,8 +669,7 @@ class CodeWebhookService @Autowired constructor(
                                 status = status,
                                 startedAt = startedAt,
                                 conclusion = conclusion,
-                                completedAt = completedAt,
-                                pullRequestNumber = pullRequestNumber
+                                completedAt = completedAt
                             )
                             result.id
                         } else {
@@ -697,7 +688,7 @@ class CodeWebhookService @Autowired constructor(
                                 startedAt = startedAt,
                                 conclusion = conclusion,
                                 completedAt = completedAt,
-                                pullRequestNumber = pullRequestNumber
+                                pipelineName = pipelineName
                             )
                             record.checkRunId
                         }

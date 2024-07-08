@@ -44,7 +44,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_ADD_CHECK_RUNS
-import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_ADD_GITHUB_REVIEWS
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_BRANCH
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_REPOS
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_TAG
@@ -55,7 +54,6 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubBranch
-import com.tencent.devops.repository.pojo.github.GithubPullRequestReviews
 import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubRepoBranch
 import com.tencent.devops.repository.pojo.github.GithubRepoTag
@@ -63,6 +61,7 @@ import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.repository.sdk.github.request.GetRepositoryContentRequest
 import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
 import com.tencent.devops.repository.sdk.github.service.GithubUserService
+import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
 import com.tencent.devops.scm.pojo.Project
@@ -139,7 +138,14 @@ class GithubService @Autowired constructor(
         ) {
             logger.warn("conclusion and completedAt must be null or not null together")
         }
-
+        checkRuns.output?.let {
+            if (it.reportData?.second?.isNotEmpty() == true) {
+                it.text = QualityUtils.getQualityReport(
+                    titleData = it.reportData!!.first,
+                    resultData = it.reportData!!.second
+                )
+            }
+        }
         val body = objectMapper.writeValueAsString(checkRuns)
         val request = buildPatch(token, "repos/$projectName/check-runs/$checkRunId", body)
         val operation = getMessageByLocale(OPERATION_UPDATE_CHECK_RUNS)
@@ -430,19 +436,6 @@ class GithubService @Autowired constructor(
         }
         logger.info("github isOAuth accessToken is: $accessToken")
         return AuthorizeResult(200, "")
-    }
-
-    override fun createPrReviews(
-        token: String,
-        projectName: String,
-        pullRequestNumber: Int,
-        review: GithubPullRequestReviews
-    ) {
-        logger.info("Github create pull request reviews [projectName=$projectName, review=$review]")
-        val body = objectMapper.writeValueAsString(review)
-        val request = buildPost(token, "repos/$projectName/pulls/$pullRequestNumber/reviews", body)
-        val operation = getMessageByLocale(OPERATION_ADD_GITHUB_REVIEWS)
-        callMethod(operation, request, GithubCheckRunsResponse::class.java)
     }
 
     companion object {

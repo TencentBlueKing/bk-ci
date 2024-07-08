@@ -34,15 +34,12 @@ import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.pojo.github.GithubBranch
-import com.tencent.devops.repository.pojo.github.GithubPullRequestReviews
-import com.tencent.devops.repository.pojo.github.GithubPullRequestReviewsEvent
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.github.IGithubService
-import com.tencent.devops.repository.utils.scm.QualityUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -88,24 +85,6 @@ class ServiceGithubResourceImpl @Autowired constructor(
         checkRuns: GithubCheckRuns
     ): Result<Boolean> {
         githubService.updateCheckRuns(accessToken, projectName, checkRunId, checkRuns)
-        with(checkRuns) {
-            // 上报质量红线报告
-            if (pullRequestNumber != null) {
-                if (reportData.second.isEmpty()) return Result(true)
-                githubService.createPrReviews(
-                    token = accessToken,
-                    projectName = projectName,
-                    pullRequestNumber = pullRequestNumber!!,
-                    review = GithubPullRequestReviews(
-                        body = QualityUtils.getQualityReport(
-                            titleData = reportData.first,
-                            resultData = reportData.second
-                        ),
-                        event = GithubPullRequestReviewsEvent.COMMENT
-                    )
-                )
-            }
-        }
         return Result(true)
     }
 

@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.repository.sdk.github.pojo.CheckRunOutput
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -54,8 +55,6 @@ data class GithubCheckRuns(
     @JsonProperty("completed_at")
     @get:Schema(title = "完成于", description = "completed_at")
     val completedAt: String?,
-    @Parameter(description = "报表数据", required = true)
-    val reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>,
-    @Parameter(description = "PR 编号", required = true)
-    val pullRequestNumber: Int?
+    @Parameter(description = "output", required = true)
+    val output: CheckRunOutput? = null
 )
