@@ -158,23 +158,11 @@ class PipelineBuildSummaryDao {
                 dslContext.update(this)
                     .set(numColumn, numColumn + 1)
                     .set(BUILD_NUM_ALIAS, buildNumAlias)
-                    .let {
-                        /* debug 模式构建不需要更新状态 */
-                        if (!debug) {
-                            it.set(LATEST_BUILD_ID, buildId).set(LATEST_STATUS, BuildStatus.QUEUE.ordinal)
-                        } else it
-                    }
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             } else {
                 dslContext.update(this)
                     .set(numColumn, buildNum)
                     .set(BUILD_NUM_ALIAS, buildNumAlias)
-                    .let {
-                        /* debug 模式构建不需要更新状态 */
-                        if (!debug) {
-                            it.set(LATEST_BUILD_ID, buildId).set(LATEST_STATUS, BuildStatus.QUEUE.ordinal)
-                        } else it
-                    }
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             }
             return dslContext.select(numColumn)

@@ -30,6 +30,7 @@ package com.tencent.devops.common.event.pojo.pipeline
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
+import java.time.LocalDateTime
 
 /**
  * 构建状态的广播事件，用于通知等
@@ -42,7 +43,14 @@ data class PipelineBuildStatusBroadCastEvent(
     override val userId: String,
     val buildId: String,
     val stageId: String? = null,
+    val containerHashId: String? = null,
+    val jobId: String? = null,
     val taskId: String? = null,
+    val stepId: String? = null,
+    val executeCount: Int?,
+    val buildStatus: String?,
+    val atomCode: String? = null,
+    val eventTime: LocalDateTime? = LocalDateTime.now(),
     override var actionType: ActionType,
     override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

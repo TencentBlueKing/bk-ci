@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_EXECUTE_COUNT
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -85,6 +86,9 @@ interface BuildSubPipelineResource {
         @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
+        @Parameter(description = "当前流水线执行次数", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_EXECUTE_COUNT)
+        executeCount: Int?,
         @Parameter(description = "要启动的流水线ID", required = true)
         @PathParam("callPipelineId")
         callPipelineId: String,
@@ -117,6 +121,9 @@ interface BuildSubPipelineResource {
         @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
+        @Parameter(description = "当前流水线执行次数", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_EXECUTE_COUNT)
+        executeCount: Int?,
         @Parameter(description = "要启动的流水线ID", required = true)
         @PathParam("callProjectId")
         callProjectId: String,

@@ -321,6 +321,7 @@ open class TestBase : BkCiAbstractTest() {
             stageId = stageId,
             containerId = id?.toString() ?: firstContainerId,
             containerHashId = containerHashId,
+            jobId = "job-123",
             seq = id ?: firstContainerIdInt,
             containerType = vmContainerType,
             status = status,
