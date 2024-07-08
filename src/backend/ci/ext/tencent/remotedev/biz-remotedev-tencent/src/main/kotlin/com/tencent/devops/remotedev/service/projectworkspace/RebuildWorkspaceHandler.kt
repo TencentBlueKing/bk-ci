@@ -124,6 +124,12 @@ class RebuildWorkspaceHandler @Autowired constructor(
             expiredTimeInSeconds
         ).tryLock().use {
             // 异常状态的允许直接重装，进行中的不允许。
+            workspaceCommon.fixUnexpectedStatus(
+                status = workspace.status,
+                userId = userId,
+                workspaceName = workspaceName,
+                mountType = workspace.workspaceMountType
+            )
             if (workspaceCommon.notOk2doNextAction(workspace)) {
                 logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
                 throw ErrorCodeException(
