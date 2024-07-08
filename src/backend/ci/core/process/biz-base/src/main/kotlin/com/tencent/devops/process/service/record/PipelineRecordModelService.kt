@@ -330,6 +330,7 @@ class PipelineRecordModelService @Autowired constructor(
         taskVarMap[Element::id.name] = taskId
         taskVarMap[Element::status.name] = containerRecordTask.status ?: ""
         taskVarMap[Element::executeCount.name] = containerRecordTask.executeCount
+        taskVarMap[Element::asyncStatus.name] = containerRecordTask.asyncStatus ?: ""
         val elementPostInfo = containerRecordTask.elementPostInfo
         if (elementPostInfo != null) {
             // 生成post类型task的变量模型

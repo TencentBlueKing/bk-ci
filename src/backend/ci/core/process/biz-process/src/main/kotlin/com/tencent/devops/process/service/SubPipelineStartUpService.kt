@@ -60,10 +60,12 @@ import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.utils.PIPELINE_START_SUB_RUN_MODE
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_EXECUTE_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
@@ -117,7 +119,8 @@ class SubPipelineStartUpService @Autowired constructor(
         taskId: String,
         runMode: String,
         channelCode: ChannelCode? = null,
-        values: Map<String, String>
+        values: Map<String, String>,
+        executeCount: Int?
     ): Result<ProjectBuildId> {
         val fixProjectId = callProjectId.ifBlank { projectId }
 
@@ -173,7 +176,9 @@ class SubPipelineStartUpService @Autowired constructor(
             pipelineId = callPipelineId,
             channelCode = callChannelCode,
             parameters = startParams,
-            triggerUser = triggerUser
+            triggerUser = triggerUser,
+            runMode = runMode,
+            parentExecuteCount = executeCount
         )
         pipelineTaskService.updateSubBuildId(
             projectId = projectId,
@@ -185,6 +190,7 @@ class SubPipelineStartUpService @Autowired constructor(
         if (runMode == SYNC_RUN_MODE) {
             subPipelineStatusService.onStart(subBuildId)
         }
+
         return Result(
             ProjectBuildId(
                 id = subBuildId,
@@ -204,7 +210,9 @@ class SubPipelineStartUpService @Autowired constructor(
         channelCode: ChannelCode,
         parameters: Map<String, String>,
         isMobile: Boolean = false,
-        triggerUser: String? = null
+        triggerUser: String? = null,
+        runMode: String,
+        parentExecuteCount: Int?
     ): String {
 
         val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
@@ -266,6 +274,17 @@ class SubPipelineStartUpService @Autowired constructor(
                 BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_NAME, value = parentPipelineInfo.pipelineName)
             params[PIPELINE_START_PARENT_BUILD_ID] =
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId)
+            params[PIPELINE_START_SUB_RUN_MODE] =
+                BuildParameters(key = PIPELINE_START_SUB_RUN_MODE, value = runMode, readOnly = true)
+            // 父流水线执行次数
+            parentExecuteCount?.let {
+                params[PIPELINE_START_PARENT_EXECUTE_COUNT] =
+                    BuildParameters(
+                        key = PIPELINE_START_PARENT_EXECUTE_COUNT,
+                        value = parentExecuteCount,
+                        readOnly = true
+                    )
+            }
             params[PIPELINE_START_PARENT_BUILD_NUM] =
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_NUM, value = parentBuildInfo.buildNum)
             params[PIPELINE_START_PARENT_BUILD_TASK_ID] =
