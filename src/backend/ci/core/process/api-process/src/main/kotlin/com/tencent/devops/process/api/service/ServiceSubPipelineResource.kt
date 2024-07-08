@@ -89,7 +89,7 @@ interface ServiceSubPipelineResource {
         @QueryParam("buildId")
         buildId: String,
         @Parameter(description = "当前流水线执行次数", required = false)
-        @QueryParam("parentProjectId")
+        @QueryParam("executeCount")
         executeCount: Int?,
         @Parameter(description = "插件ID", required = true)
         @QueryParam("taskId")
