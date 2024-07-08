@@ -467,6 +467,22 @@ class PipelineListFacadeService @Autowired constructor(
      * 根据视图ID获取流水线编
      * 其中 PIPELINE_VIEW_FAVORITE_PIPELINES，PIPELINE_VIEW_MY_PIPELINES，PIPELINE_VIEW_ALL_PIPELINES
      * 分别对应 我的收藏，我的流水线，全部流水线
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param page 页码（可选）
+     * @param pageSize 每页大小（可选）
+     * @param sortType 流水线排序类型
+     * @param channelCode 渠道代码
+     * @param viewId 视图ID
+     * @param checkPermission 是否检查权限，默认为true
+     * @param filterByPipelineName 根据流水线名称过滤（可选）
+     * @param filterByCreator 根据创建者过滤（可选）
+     * @param filterByLabels 根据标签过滤（可选）
+     * @param filterInvalid 是否过滤无效流水线，默认为false
+     * @param filterByViewIds 根据视图ID过滤（可选）
+     * @param collation 流水线排序规则，默认为DEFAULT
+     * @param showDelete 是否显示已删除的流水线，默认为false
+     * @param queryByWeb 默认为false, 从页面访问该方法时为true, 会针对页面访问做特殊处理。
      */
     fun listViewPipelines(
         userId: String,
@@ -483,7 +499,8 @@ class PipelineListFacadeService @Autowired constructor(
         filterInvalid: Boolean = false,
         filterByViewIds: String? = null,
         collation: PipelineCollation = PipelineCollation.DEFAULT,
-        showDelete: Boolean = false
+        showDelete: Boolean = false,
+        queryByWeb: Boolean = false
     ): PipelineViewPipelinePage<Pipeline> {
         val watcher = Watcher(id = "listViewPipelines|$projectId|$userId")
         watcher.start("perm_r_perm")
@@ -588,7 +605,8 @@ class PipelineListFacadeService @Autowired constructor(
                     pageSize = pageSize,
                     includeDelete = true,
                     collation = collation,
-                    userId = userId
+                    userId = userId,
+                    queryByWeb = queryByWeb
                 )
             } else if ((null != page && null != pageSize) && !(page == 1 && pageSize == -1)) {
                 // 判断可用的流水线是否已到最后一页
@@ -610,7 +628,8 @@ class PipelineListFacadeService @Autowired constructor(
                         pageSize = pageSize,
                         includeDelete = includeDelete,
                         collation = collation,
-                        userId = userId
+                        userId = userId,
+                        queryByWeb = queryByWeb
                     )
                 } else if (page == totalAvailablePipelinePage && totalAvailablePipelineSize > 0) {
                     //  查询可用流水线最后一页不满页的数量
@@ -630,7 +649,8 @@ class PipelineListFacadeService @Autowired constructor(
                         pageSize = pageSize,
                         includeDelete = includeDelete,
                         collation = collation,
-                        userId = userId
+                        userId = userId,
+                        queryByWeb = queryByWeb
                     )
                     // 可用流水线最后一页不满页的数量需用不可用的流水线填充
                     if (lastPageRemainNum > 0 && totalInvalidPipelineSize > 0) {
@@ -649,7 +669,8 @@ class PipelineListFacadeService @Autowired constructor(
                             pageSize = lastPageRemainNum.toInt(),
                             includeDelete = includeDelete,
                             collation = collation,
-                            userId = userId
+                            userId = userId,
+                            queryByWeb = queryByWeb
                         )
                     }
                 } else if (totalInvalidPipelineSize > 0) {
@@ -672,7 +693,8 @@ class PipelineListFacadeService @Autowired constructor(
                         pageOffsetNum = lastPageRemainNum.toInt(),
                         includeDelete = includeDelete,
                         collation = collation,
-                        userId = userId
+                        userId = userId,
+                        queryByWeb = queryByWeb
                     )
                 }
             } else {
@@ -692,7 +714,8 @@ class PipelineListFacadeService @Autowired constructor(
                     pageSize = pageSize,
                     includeDelete = includeDelete,
                     collation = collation,
-                    userId = userId
+                    userId = userId,
+                    queryByWeb = queryByWeb
                 )
 
                 if (filterInvalid) {
@@ -711,7 +734,8 @@ class PipelineListFacadeService @Autowired constructor(
                         pageSize = pageSize,
                         includeDelete = includeDelete,
                         collation = collation,
-                        userId = userId
+                        userId = userId,
+                        queryByWeb = queryByWeb
                     )
                 }
             }
@@ -903,7 +927,8 @@ class PipelineListFacadeService @Autowired constructor(
         pageOffsetNum: Int? = 0,
         includeDelete: Boolean? = false,
         collation: PipelineCollation = PipelineCollation.DEFAULT,
-        userId: String
+        userId: String,
+        queryByWeb: Boolean = false
     ) {
         val pipelineRecords = pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
             dslContext = dslContext,
@@ -928,7 +953,8 @@ class PipelineListFacadeService @Autowired constructor(
                 pipelineInfoRecords = pipelineRecords,
                 favorPipelines = favorPipelines,
                 authPipelines = authPipelines,
-                projectId = projectId
+                projectId = projectId,
+                queryByWeb = queryByWeb
             )
         )
     }
@@ -1301,7 +1327,8 @@ class PipelineListFacadeService @Autowired constructor(
         authPipelines: List<String> = emptyList(),
         excludePipelineId: String? = null,
         projectId: String,
-        queryModelFlag: Boolean? = false
+        queryModelFlag: Boolean? = false,
+        queryByWeb: Boolean = false
     ): MutableList<Pipeline> {
         // 初始化信息
         val pipelines = mutableListOf<Pipeline>()
@@ -1401,7 +1428,8 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineBuildMap = pipelineBuildMap,
             buildTaskTotalCountMap = buildTaskTotalCountMap,
             buildTaskFinishCountMap = buildTaskFinishCountMap,
-            pipelineYamlExistMap = pipelineYamlExistMap
+            pipelineYamlExistMap = pipelineYamlExistMap,
+            queryByWeb = queryByWeb
         )
 
         return pipelines
@@ -1418,7 +1446,8 @@ class PipelineListFacadeService @Autowired constructor(
         pipelineBuildMap: Map<String, BuildInfo>,
         buildTaskTotalCountMap: Map<String, Int>,
         buildTaskFinishCountMap: Map<String, Int>,
-        pipelineYamlExistMap: Map<String, Boolean>
+        pipelineYamlExistMap: Map<String, Boolean>,
+        queryByWeb: Boolean
     ) {
         pipelines.forEach {
             val pipelineId = it.pipelineId
@@ -1447,6 +1476,13 @@ class PipelineListFacadeService @Autowired constructor(
                 it.viewNames = pipelineViewNameMap[it.pipelineId]
             }
             pipelineBuildMap[pipelineId]?.let { lastBuild ->
+                if (queryByWeb) {
+                    /*针对web页面的访问特殊覆盖这部分数据*/
+                    it.latestBuildNum = lastBuild.buildNum
+                    it.latestBuildNumAlias = lastBuild.buildNumAlias
+                    it.latestBuildStartTime = lastBuild.startTime
+                    it.latestBuildEndTime = lastBuild.endTime
+                }
                 it.lastBuildMsg = BuildMsgUtils.getBuildMsg(
                     buildMsg = lastBuild.buildMsg,
                     startType = StartType.toStartType(lastBuild.trigger),

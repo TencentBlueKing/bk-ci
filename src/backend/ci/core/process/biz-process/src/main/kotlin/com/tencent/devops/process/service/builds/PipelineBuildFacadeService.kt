@@ -2221,7 +2221,8 @@ class PipelineBuildFacadeService(
             buildId = buildId,
             projectId = build.projectId,
             pipelineId = build.pipelineId,
-            pipelineVersion = build.version
+            pipelineVersion = build.version,
+            status = build.status
         )
     }
 

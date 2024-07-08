@@ -65,6 +65,7 @@ class MutexControlTest {
         buildId = buildId,
         stageId = stageId,
         containerId = containerId,
+        jobId = "job-123",
         containerHashId = containerHashId,
         containerType = "vmBuild",
         seq = containerId.toInt(),
