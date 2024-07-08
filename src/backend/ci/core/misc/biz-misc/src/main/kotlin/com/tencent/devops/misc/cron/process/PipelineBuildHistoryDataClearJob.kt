@@ -59,7 +59,6 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         private var executor: ThreadPoolExecutor? = null
     }
 
-
     @Scheduled(initialDelay = 10000, fixedDelay = 12000)
     fun pipelineBuildHistoryDataClear() {
         if (!miscBuildDataClearConfig.switch.toBoolean()) {
