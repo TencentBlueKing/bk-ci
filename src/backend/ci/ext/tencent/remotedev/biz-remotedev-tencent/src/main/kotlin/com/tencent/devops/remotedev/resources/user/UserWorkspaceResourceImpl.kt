@@ -272,4 +272,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>> {
         return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress))
     }
+
+    override fun createMoa2faRequest(userId: String, workspaceName: String): Result<String> {
+        TODO("Not yet implemented")
+    }
 }

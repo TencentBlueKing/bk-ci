@@ -106,6 +106,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
+import com.tencent.devops.remotedev.service.tai.TaiService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NOT_ASSIGN_AUTO_NOTIFY
@@ -154,7 +155,8 @@ class WorkspaceService @Autowired constructor(
     private val startWorkspaceService: StartWorkspaceService,
     private val bkBaseService: BKBaseService,
     private val holidayHelper: HolidayHelper,
-    private val taiClient: TaiClient
+    private val taiClient: TaiClient,
+    private val taiService: TaiService
 ) {
     @ActionAuditRecord(
         actionId = ActionId.CGS_EDIT,
@@ -1579,6 +1581,10 @@ class WorkspaceService @Autowired constructor(
             displayName = displayName,
             checkPermission = false
         )
+    }
+
+    fun createMoa2faRequest(userId: String, workspaceName: String): String {
+
     }
 
     companion object {

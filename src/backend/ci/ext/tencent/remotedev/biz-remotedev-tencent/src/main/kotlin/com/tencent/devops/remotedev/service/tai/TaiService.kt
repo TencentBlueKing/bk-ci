@@ -14,7 +14,7 @@ import com.tencentcloudapi.common.Sign.sha256Hex
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.Date
@@ -37,18 +37,18 @@ class TaiService {
 
     // 发起moa 2fa二次验证
     fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Moa2faRespData {
-        val url = taiUrl + "/ebus/tof4/api/2fa/public/request"
+        val url = "$taiUrl/ebus/tof4/api/2fa/public/request"
         val body = ObjectMapper().writeValueAsString(moa2faReqData)
         logger.info("User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(makeHeaders().toHeaders())
-            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
+            .post(body.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
-            OkhttpUtils.doHttp(request).use { response ->
+        return OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                logger.info("User $userId create environment response: " +
+                logger.info("User $userId create moa 2fa response: " +
                                 "|${response.code}|$responseContent")
                 if (!response.isSuccessful) {
                     throw RemoteServiceException(
@@ -63,24 +63,24 @@ class TaiService {
                         errorCode = response.code
                     )
                 }
-                return moa2faRespData
+                moa2faRespData
             }
     }
 
     // 验证结果
     fun verifyMoa2faRequest(userId: String, moa2faVerifyReqData: Moa2faVerifyReqData): Moa2faVerifyRespData {
-        val url = taiUrl + "/ebus/tof4/api/2fa/public/verify"
+        val url = "$taiUrl/ebus/tof4/api/2fa/public/verify"
         val body = ObjectMapper().writeValueAsString(moa2faVerifyReqData)
         logger.info("User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(makeHeaders().toHeaders())
-            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
+            .post(body.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
-        OkhttpUtils.doHttp(request).use { response ->
+        return OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
-            logger.info("User $userId create environment response: " +
+            logger.info("User $userId verify moa 2fa response: " +
                             "|${response.code}|$responseContent")
             if (!response.isSuccessful) {
                 throw RemoteServiceException(
@@ -95,7 +95,7 @@ class TaiService {
                     errorCode = response.code
                 )
             }
-            return moa2faVerifyRespData
+            moa2faVerifyRespData
         }
     }
 

@@ -405,7 +405,6 @@ interface UserWorkspaceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工作空间名称", required = true)
-        @QueryParam("workspaceName")
         workspaceName: String
     ): Result<String>
 }
