@@ -396,4 +396,16 @@ interface UserWorkspaceResource {
         @QueryParam("macAddress")
         macAddress: String
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>>
+
+    @Operation(summary = "发起moa 2fa二次验证")
+    @POST
+    @Path("/2fa/request")
+    fun createMoa2faRequest(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<String>
 }
