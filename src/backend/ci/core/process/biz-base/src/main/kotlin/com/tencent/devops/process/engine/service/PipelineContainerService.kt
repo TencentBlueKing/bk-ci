@@ -384,6 +384,7 @@ class PipelineContainerService @Autowired constructor(
             stageId = stage.id!!,
             containerId = container.id!!,
             containerHashId = container.containerHashId ?: "",
+            jobId = container.jobId,
             containerType = container.getClassType(),
             seq = context.containerSeq,
             status = BuildStatus.QUEUE,
@@ -654,6 +655,7 @@ class PipelineContainerService @Autowired constructor(
                             stageId = stage.id!!,
                             containerId = container.id!!,
                             containerHashId = container.containerHashId ?: "",
+                            jobId = container.jobId,
                             containerType = container.getClassType(),
                             seq = context.containerSeq,
                             status = BuildStatus.QUEUE,
@@ -931,7 +933,8 @@ class PipelineContainerService @Autowired constructor(
         subProjectId = null,
         subBuildId = null,
         atomCode = atomElement.getAtomCode(),
-        stepId = atomElement.stepId
+        stepId = atomElement.stepId,
+        jobId = container.jobId
     )
 
     fun setUpTriggerContainer(

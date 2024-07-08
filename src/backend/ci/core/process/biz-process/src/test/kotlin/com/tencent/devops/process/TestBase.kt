@@ -219,6 +219,7 @@ open class TestBase {
             buildId = buildId,
             stageId = stageId,
             containerId = id?.toString() ?: firstContainerId,
+            jobId = "job-123",
             seq = id ?: firstContainerIdInt,
             containerType = vmContainerType,
             status = status,

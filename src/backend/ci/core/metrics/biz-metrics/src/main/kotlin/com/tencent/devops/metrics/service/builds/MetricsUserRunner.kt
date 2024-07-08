@@ -23,31 +23,28 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.pojo
+package com.tencent.devops.metrics.service.builds
 
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.metrics.config.MetricsUserConfig
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.ApplicationArguments
+import org.springframework.boot.ApplicationRunner
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Component
 
-@Schema(title = "项目其他配置")
-data class ProjectProperties(
-    @get:Schema(title = "YAML流水线功能设置")
-    val pipelineAsCodeSettings: PipelineAsCodeSettings = PipelineAsCodeSettings(
-        enable = false
-    ),
-    @get:Schema(title = "是否启用云研发", required = false)
-    val remotedev: Boolean? = false,
-    @get:Schema(title = "可申请的云桌面数", required = false)
-    val cloudDesktopNum: Int = 0,
-    @get:Schema(title = "云研发管理员，多人用分号分隔", required = false)
-    val remotedevManager: String? = null,
-    @get:Schema(title = "是否开启流水线模板管理", required = false)
-    var enableTemplatePermissionManage: Boolean? = null,
-    @get:Schema(title = "数据标签，创建项目时会为该项目分配指定标签的db")
-    val dataTag: String? = null,
-    @get:Schema(title = "当项目不活跃时，是否禁用")
-    var disableWhenInactive: Boolean? = null,
-    @get:Schema(title = "该项目是否开启流水线可观测数据", required = false)
-    val buildMetrics: Boolean? = null
-)
+@Component
+@ConditionalOnProperty(name = ["metrics.user.enable"], havingValue = "true", matchIfMissing = false)
+class MetricsUserRunner @Autowired constructor(
+    private val metricsUserService: MetricsUserService,
+    private val metricsUserConfig: MetricsUserConfig
+) : ApplicationRunner {
+
+    override fun run(args: ApplicationArguments) {
+        if (metricsUserConfig.metricsUserEnabled) {
+            metricsUserService.init()
+        }
+    }
+}

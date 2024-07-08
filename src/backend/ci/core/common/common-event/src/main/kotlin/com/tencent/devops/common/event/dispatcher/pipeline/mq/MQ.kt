@@ -258,6 +258,7 @@ object MQ {
     // 回调
     const val EXCHANGE_PIPELINE_BUILD_CALL_BACK_FANOUT = "e.engine.pipeline.build.callback.fanout"
     const val QUEUE_PIPELINE_BUILD_STATUS_CHANGE = "e.engine.pipeline.build.callback.change"
+    const val QUEUE_PIPELINE_BUILD_STATUS_METRICS = "q.engine.pipeline.build.callback.metrics"
 
     // 蓝盾项目管理
     const val EXCHANGE_PROJECT_CREATE_FANOUT = "e.project.create.exchange.fanout"
