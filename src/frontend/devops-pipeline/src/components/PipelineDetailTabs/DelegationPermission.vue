@@ -46,7 +46,7 @@
                                 }
                             }"
                             @click="handleShowResetDialog">
-                            <logo class="mr10" name="refresh" size="14" />
+                            <logo class="refresh-icon" name="refresh" size="14" />
                             {{ $t('delegation.resetAuthorization') }}
                         </span>
                     </span>
@@ -254,11 +254,14 @@
             }
         }
         .refresh-auth {
-            display: inline-flex;
-            align-items: center;
             margin-left: 20px;
             cursor: pointer;
             color: #3A84FF;
+        }
+        .refresh-icon {
+            position: relative;
+            top: 2px;
+            margin-right: 2px;
         }
     }
     .reset-auth-confirm-dialog {
