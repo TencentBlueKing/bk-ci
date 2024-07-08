@@ -166,7 +166,8 @@ class WorkspaceBcsClient @Autowired constructor(
         userId: String,
         action: EnvironmentAction,
         workspaceName: String,
-        environmentOperate: EnvironmentOperate
+        environmentOperate: EnvironmentOperate,
+        actionMsg: String = ""
     ): EnvironmentOperateRsp.EnvironmentOperateRspData {
         val url = "$bcsCloudUrl/api/v1/remotedevenv/${action.action}"
         val body = JsonUtil.toJson(environmentOperate, false)
@@ -196,7 +197,8 @@ class WorkspaceBcsClient @Autowired constructor(
                         environmentUid = environmentOperate.uid,
                         operator = userId,
                         uid = environmentOpRsp.data!!.taskUid,
-                        action = action
+                        action = action,
+                        actionMsg = actionMsg
                     )
 
                     return environmentOpRsp.data!!
