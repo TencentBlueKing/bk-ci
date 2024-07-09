@@ -134,12 +134,6 @@ class StartControl @Autowired constructor(
                             userId, workspaceName,
                             workspace.workspaceMountType
                         )
-                    bkTicketServie.updateBkTicket(
-                        userId,
-                        bkTicket,
-                        workspaceInfo.data?.environmentHost,
-                        workspace.workspaceMountType
-                    )
 
                     return WorkspaceResponse(
                         workspaceName = workspaceName,
