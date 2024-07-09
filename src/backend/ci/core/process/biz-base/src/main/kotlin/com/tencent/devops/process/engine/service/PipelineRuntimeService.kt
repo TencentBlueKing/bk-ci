@@ -136,15 +136,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -527,11 +527,11 @@ class PipelineRuntimeService @Autowired constructor(
         }
 
         buildIds.forEach { buildId ->
-            result[buildId] = BuildBasicInfo(buildId, "", "", 0)
+            result[buildId] = BuildBasicInfo(buildId, "", "", 0, null)
         }
         records.forEach {
             with(it) {
-                result[it.buildId] = BuildBasicInfo(buildId, projectId, pipelineId, version)
+                result[it.buildId] = BuildBasicInfo(buildId, projectId, pipelineId, version, status)
             }
         }
         return result
@@ -1636,12 +1636,13 @@ class PipelineRuntimeService @Autowired constructor(
                     pipelineId = latestRunningBuild.pipelineId,
                     queueIncrement = -1
                 )
+            } else {
+                pipelineBuildSummaryDao.finishLatestRunningBuild(
+                    dslContext = dslContext,
+                    latestRunningBuild = latestRunningBuild,
+                    isStageFinish = currentBuildStatus.name == BuildStatus.STAGE_SUCCESS.name
+                )
             }
-            pipelineBuildSummaryDao.finishLatestRunningBuild(
-                dslContext = dslContext,
-                latestRunningBuild = latestRunningBuild,
-                isStageFinish = currentBuildStatus.name == BuildStatus.STAGE_SUCCESS.name
-            )
         }
         with(latestRunningBuild) {
             val executeTime = try {
@@ -2015,5 +2016,37 @@ class PipelineRuntimeService @Autowired constructor(
         } finally {
             redisLock.unlock()
         }
+    }
+
+    fun updateAsyncStatus(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int,
+        asyncStatus: String
+    ) {
+        taskBuildRecordService.updateAsyncStatus(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = executeCount,
+            asyncStatus = asyncStatus
+        )
+    }
+
+    fun getBuildVariableService(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        keys: Set<String>
+    ): Map<String, String> {
+        return buildVariableService.getAllVariable(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            keys = keys
+        )
     }
 }
