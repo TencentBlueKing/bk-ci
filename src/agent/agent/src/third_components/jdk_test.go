@@ -1,4 +1,4 @@
-package upgrade
+package third_components
 
 import (
 	"reflect"
@@ -44,7 +44,7 @@ func Test_trimJdkVersionList(t *testing.T) {
 }
 
 func loopTest(t *testing.T, name string, jdkVersionString string, want []string) {
-	tests := trimJdkVersionList(jdkVersionString)
+	tests := trimJdk8VersionList(jdkVersionString)
 	t.Run(name+"|length=3", func(t *testing.T) {
 		if len(tests) != len(want) {
 			t.Fatalf("\nFail: len(%d), want(%d)", len(tests), len(want))

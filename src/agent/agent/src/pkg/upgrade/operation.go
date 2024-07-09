@@ -28,6 +28,7 @@
 package upgrade
 
 import (
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"os"
 	"strconv"
 	"strings"
@@ -146,7 +147,7 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 		}
 		logs.Info("agentUpgrade|replace agent file done")
 
-		config.GAgentEnv.SlaveVersion = config.DetectWorkerVersion()
+		third_components.Worker.DetectWorkerVersion()
 	} else {
 		logs.Info("agentUpgrade|worker not changed, skip agent upgrade")
 	}

@@ -36,7 +36,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -110,7 +109,6 @@ type AgentEnv struct {
 	OsName           string
 	agentIp          string
 	HostName         string
-	SlaveVersion     string
 	AgentVersion     string
 	AgentInstallPath string
 }
@@ -165,7 +163,6 @@ func LoadAgentEnv() {
 
 	GAgentEnv.HostName = systemutil.GetHostName()
 	GAgentEnv.OsName = systemutil.GetOsName()
-	GAgentEnv.SlaveVersion = DetectWorkerVersion()
 	GAgentEnv.AgentVersion = DetectAgentVersion()
 }
 
@@ -201,130 +198,6 @@ func DetectAgentVersionByDir(workDir string) string {
 	logs.Info("agent version: ", agentVersion)
 
 	return strings.TrimSpace(agentVersion)
-}
-
-// DetectWorkerVersion 检查worker版本
-func DetectWorkerVersion() string {
-	return DetectWorkerVersionByDir(systemutil.GetWorkDir())
-}
-
-// DetectWorkerVersionByDir 检测指定目录下的Worker文件版本
-func DetectWorkerVersionByDir(workDir string) string {
-	jar := fmt.Sprintf("%s/%s", workDir, WorkAgentFile)
-	tmpDir, _ := systemutil.MkBuildTmpDir()
-	output, err := command.RunCommand(GetJava(),
-		[]string{"-Djava.io.tmpdir=" + tmpDir, "-Xmx256m", "-cp", jar, "com.tencent.devops.agent.AgentVersionKt"},
-		workDir, nil)
-
-	if err != nil {
-		logs.Errorf("detect worker version failed: %s, output: %s", err.Error(), string(output))
-		exitcode.CheckSignalWorkerError(err)
-		GAgentEnv.SlaveVersion = ""
-		return ""
-	}
-
-	detectVersion := parseWorkerVersion(string(output))
-
-	// 更新下 worker 的版本信息
-	if detectVersion == "" {
-		logs.Warn("parseWorkerVersion null")
-	} else {
-		GAgentEnv.SlaveVersion = detectVersion
-	}
-
-	return detectVersion
-}
-
-// parseWorkerVersion 解析worker版本
-func parseWorkerVersion(output string) string {
-	// 用函数匹配正确的版本信息, 主要解决tmp空间不足的情况下，jvm会打印出提示信息，导致识别不到worker版本号
-	// 兼容旧版本，防止新agent发布后无限升级
-	versionRegexp := regexp.MustCompile(`^v(\d+\.)(\d+\.)(\d+)((-RELEASE)|(-SNAPSHOT)?)$`)
-	lines := strings.Split(output, "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if !(line == "") && !strings.Contains(line, " ") && !strings.Contains(line, "OPTIONS") {
-			if len(line) > 64 {
-				line = line[:64]
-			}
-			// 先使用新版本的匹配逻辑匹配，匹配不通则使用旧版本
-			if matchWorkerVersion(line) {
-				logs.Info("match worker version: ", line)
-				return line
-			} else {
-				if versionRegexp != nil {
-					if versionRegexp.MatchString(line) {
-						logs.Info("regexp worker version: ", line)
-						return line
-					} else {
-						continue
-					}
-				} else {
-					// 当正则式出错时(versionRegexp = nil)，继续使用原逻辑
-					logs.Info("regexp nil worker version: ", line)
-					return line
-				}
-			}
-		}
-	}
-	return ""
-}
-
-// matchWorkerVersion 匹配worker版本信息
-// 版本号为 v数字.数字.数字 || v数字.数字.数字-字符.数字
-// 只匹配以v开头的数字版本即可
-func matchWorkerVersion(line string) bool {
-	if !strings.HasPrefix(line, "v") {
-		logs.Warnf("line %s matchWorkerVersion no start 'v'", line)
-		return false
-	}
-
-	// 去掉v方便后面计算
-	subline := strings.Split(strings.TrimPrefix(line, "v"), ".")
-	sublen := len(subline)
-	if sublen < 3 || sublen > 4 {
-		logs.Warnf("line %s matchWorkerVersion len no match", line)
-		return false
-	}
-
-	// v数字.数字.数字 这种去掉v后应该全是数字
-	if sublen == 3 {
-		return checkNumb(subline, line)
-	}
-
-	// v数字.数字.数字-字符.数字，按照 - 分隔，前面的与len 3一致，后面的两个分别判断，不是数字的是字符，不是字符的是数字
-	fSubline := strings.Split(strings.TrimPrefix(line, "v"), "-")
-	if len(fSubline) != 2 {
-		logs.Warnf("line %s matchWorkerVersion len no match", line)
-		return false
-	}
-
-	if !checkNumb(strings.Split(fSubline[0], "."), line) {
-		return false
-	}
-
-	fSubline2 := strings.Split(fSubline[1], ".")
-	if checkNumb([]string{fSubline2[0]}, line) {
-		logs.Warnf("line %s matchWorkerVersion not char", line)
-		return false
-	}
-
-	if !checkNumb([]string{fSubline2[1]}, line) {
-		return false
-	}
-
-	return true
-}
-
-func checkNumb(subs []string, line string) bool {
-	for _, s := range subs {
-		_, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			logs.Warnf("line %s matchWorkerVersion not numb", line)
-			return false
-		}
-	}
-	return true
 }
 
 // BuildAgentJarPath 生成jar寻址路径
@@ -554,15 +427,6 @@ func (a *AgentConfig) GetAuthHeaderMap() map[string]string {
 	authHeaderMap[AuthHeaderAgentId] = a.AgentId
 	authHeaderMap[AuthHeaderSecretKey] = a.SecretKey
 	return authHeaderMap
-}
-
-// GetJava 获取本地java命令路径
-func GetJava() string {
-	if systemutil.IsMacos() {
-		return GAgentConfig.JdkDirPath + "/Contents/Home/bin/java"
-	} else {
-		return GAgentConfig.JdkDirPath + "/bin/java"
-	}
 }
 
 func SaveJdkDir(dir string) {

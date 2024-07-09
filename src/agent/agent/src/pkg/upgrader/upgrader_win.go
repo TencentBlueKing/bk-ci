@@ -33,6 +33,7 @@ import (
 	"fmt"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/windows/svc/mgr"
 	"os"
@@ -51,7 +52,6 @@ import (
 
 	"github.com/gofrs/flock"
 
-	"github.com/capnspacehook/taskmaster"
 	"github.com/shirou/gopsutil/v4/process"
 )
 
@@ -74,6 +74,9 @@ const (
 func DoUpgradeAgent() error {
 	logs.Info("start upgrade agent")
 	config.Init(false)
+	if err := third_components.Init(); err != nil {
+		systemutil.ExitProcess(1)
+	}
 
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
 	err := totalLock.Lock()

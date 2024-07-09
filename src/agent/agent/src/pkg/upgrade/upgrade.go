@@ -28,6 +28,7 @@
 package upgrade
 
 import (
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
 	"os"
 	"time"
@@ -270,7 +271,7 @@ func downloadUpgradeWorker(workDir, upgradeDir string) (workAgentChanged bool) {
 
 	logs.Info("agentUpgrade|newWorkerMd5=" + newWorkerMd5 + ",workerMd5=" + workerMd5)
 
-	workerVersion := config.DetectWorkerVersionByDir(systemutil.GetUpgradeDir())
+	workerVersion := third_components.Worker.DetectWorkerVersionByDir(systemutil.GetUpgradeDir())
 	workAgentChanged = false
 	if len(workerVersion) > 0 {
 		workAgentChanged = workerMd5 != newWorkerMd5

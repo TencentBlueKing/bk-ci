@@ -29,6 +29,7 @@ package installer
 
 import (
 	"fmt"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
@@ -45,6 +46,9 @@ import (
 func DoInstallAgent() error {
 	logs.Info("start install agent...")
 	config.Init(false)
+	if err := third_components.Init(); err != nil {
+		systemutil.ExitProcess(1)
+	}
 
 	if len(config.GAgentConfig.BatchInstallKey) == 0 {
 		return errors.New("file .agent.properties 's devops.agent.batch.install key is null")
