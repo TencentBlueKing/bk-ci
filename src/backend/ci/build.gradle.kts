@@ -141,6 +141,7 @@ allprojects {
         it.exclude("org.bouncycastle", "bcutil-jdk15on")
         it.exclude("io.swagger", "swagger-annotations")
         it.exclude("io.swagger", "swagger-models")
+        it.exclude("commons-logging", "commons-logging")
     }
     dependencies {
         // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656

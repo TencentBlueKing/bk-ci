@@ -25,21 +25,22 @@ spring:
                 addresses: __BK_CI_RABBITMQ_ADDR__
       default-binder: extend-rabbit
 # redis config
-  redis:
-#   # Redis sentinel 集群方式配置
-#    sentinel:
-#      master: __BK_CI_REDIS_SENTINEL_MASTER_NAME__
-# 逗号分隔, master_IP:port
-#      nodes: __BK_CI_REDIS_SENTINEL_ADDR__
-#   # Redis 单机配置方式
-    host: __BK_CI_REDIS_HOST__
-    port: __BK_CI_REDIS_PORT__
-    password: __BK_CI_REDIS_PASSWORD__
-    database: __BK_CI_REDIS_DB__
-    ssl: __BK_CI_REDIS_SSL__
-    pool:
-      max-active: 16
-      max-wait:  2000
+  data:
+    redis:
+  #   # Redis sentinel 集群方式配置
+  #    sentinel:
+  #      master: __BK_CI_REDIS_SENTINEL_MASTER_NAME__
+  # 逗号分隔, master_IP:port
+  #      nodes: __BK_CI_REDIS_SENTINEL_ADDR__
+  #   # Redis 单机配置方式
+      host: __BK_CI_REDIS_HOST__
+      port: __BK_CI_REDIS_PORT__
+      password: __BK_CI_REDIS_PASSWORD__
+      database: __BK_CI_REDIS_DB__
+      ssl: __BK_CI_REDIS_SSL__
+      pool:
+        max-active: 16
+        max-wait:  2000
 # rabbitmq config
   rabbitmq:
     # 引擎核心业务MQ

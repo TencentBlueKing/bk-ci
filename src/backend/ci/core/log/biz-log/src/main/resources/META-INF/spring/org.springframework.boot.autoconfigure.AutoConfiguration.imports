@@ -1,0 +1,2 @@
+com.tencent.devops.log.es.ESAutoConfiguration
+com.tencent.devops.log.lucene.LuceneAutoConfiguration
