@@ -58,6 +58,4 @@ object BuildEnv {
     fun setBuildId(buildId: String) {
         System.setProperty(BUILD_ID, buildId)
     }
-
-    fun getProjectId(): String? = System.getProperty(AgentEnv.PROJECT_ID)
 }
