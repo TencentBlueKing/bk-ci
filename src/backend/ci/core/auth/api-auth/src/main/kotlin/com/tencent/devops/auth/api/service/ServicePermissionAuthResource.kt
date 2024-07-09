@@ -50,7 +50,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_SERVICE_PERMISSION", description = "权限--权限校验以及资源操作相关接口")
-@Path("/open/service/auth/permission")
+@Path("/service/auth/permission")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @SuppressWarnings("LongParameterList")
