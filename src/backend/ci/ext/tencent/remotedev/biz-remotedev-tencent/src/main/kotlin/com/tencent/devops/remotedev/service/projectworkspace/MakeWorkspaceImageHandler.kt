@@ -189,11 +189,12 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                     imageId = imageId
                 )
             }.onFailure {
-                makeImageFail(
-                    workspaceName = workspaceName,
-                    userId = userId,
-                    workspace = workspace,
+                // 更新镜像信息
+                imageManageDao.updateWorkspaceImage(
+                    projectId = workspace.projectId,
                     workspaceImageInfo = WorkspaceImageInfo(imageId),
+                    imageStatus = ImageStatus.FAILURE,
+                    dslContext = dslContext,
                     errorMsg = it.localizedMessage
                 )
             }
@@ -297,11 +298,32 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 )
             }
         } else {
-            makeImageFail(
+            // 启动失败,记录为EXCEPTION
+            logger.warn("Make workspaceImage $workspaceName failed")
+            workspaceDao.updateWorkspaceStatus(
                 workspaceName = workspaceName,
-                userId = userId,
-                workspace = workspace,
+                status = WorkspaceStatus.EXCEPTION,
+                dslContext = dslContext
+            )
+
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = userId,
+                action = WorkspaceAction.MAKE_IMAGE,
+                actionMessage = String.format(
+                    workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                    workspace.status.name,
+                    WorkspaceStatus.EXCEPTION.name
+                )
+            )
+
+            // 更新镜像信息
+            imageManageDao.updateWorkspaceImage(
+                projectId = workspace.projectId,
                 workspaceImageInfo = workspaceImageInfo,
+                imageStatus = ImageStatus.FAILURE,
+                dslContext = dslContext,
                 errorMsg = errorMsg
             )
         }
@@ -319,43 +341,6 @@ class MakeWorkspaceImageHandler @Autowired constructor(
             workspaceMountType = workspace.workspaceMountType,
             ownerType = workspace.ownerType,
             projectId = workspace.projectId
-        )
-    }
-
-    private fun makeImageFail(
-        workspaceName: String,
-        userId: String,
-        workspace: WorkspaceRecord,
-        workspaceImageInfo: WorkspaceImageInfo,
-        errorMsg: String?
-    ) {
-        // 启动失败,记录为EXCEPTION
-        logger.warn("Make workspaceImage $workspaceName failed")
-        workspaceDao.updateWorkspaceStatus(
-            workspaceName = workspaceName,
-            status = WorkspaceStatus.EXCEPTION,
-            dslContext = dslContext
-        )
-
-        workspaceOpHistoryDao.createWorkspaceHistory(
-            dslContext = dslContext,
-            workspaceName = workspaceName,
-            operator = userId,
-            action = WorkspaceAction.MAKE_IMAGE,
-            actionMessage = String.format(
-                workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                workspace.status.name,
-                WorkspaceStatus.EXCEPTION.name
-            )
-        )
-
-        // 更新镜像信息
-        imageManageDao.updateWorkspaceImage(
-            projectId = workspace.projectId,
-            workspaceImageInfo = workspaceImageInfo,
-            imageStatus = ImageStatus.FAILURE,
-            dslContext = dslContext,
-            errorMsg = errorMsg
         )
     }
 }
