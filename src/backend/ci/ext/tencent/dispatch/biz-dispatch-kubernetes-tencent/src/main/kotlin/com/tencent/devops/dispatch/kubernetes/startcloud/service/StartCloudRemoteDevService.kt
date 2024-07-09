@@ -271,8 +271,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         val startTime = System.currentTimeMillis()
         val timeout = if (
             type == UpdateEventType.CREATE ||
-            type == UpdateEventType.REBUILD ||
-            type == UpdateEventType.MAKE_IMAGE
+            type == UpdateEventType.REBUILD
         ) {
             START_CREATE_TIMEOUT
         } else {
