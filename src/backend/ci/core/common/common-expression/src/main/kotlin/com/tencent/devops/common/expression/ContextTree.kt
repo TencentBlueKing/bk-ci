@@ -22,6 +22,7 @@ import kotlin.jvm.Throws
  * 树中节点转换时默认会使用 map，除非其节点对应的json明确声明了当前节点是数组
  * @param nodes 所有的树根节点
  */
+@Suppress("ComplexMethod")
 class ContextTree(
     val nodes: MutableMap<String, ContextTreeNode> = mutableMapOf()
 ) {
