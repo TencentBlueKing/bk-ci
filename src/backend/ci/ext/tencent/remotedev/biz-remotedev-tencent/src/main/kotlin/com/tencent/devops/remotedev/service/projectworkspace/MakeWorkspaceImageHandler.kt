@@ -259,10 +259,11 @@ class MakeWorkspaceImageHandler @Autowired constructor(
             sourceCgsZone = taskInfo.image?.zoneId ?: ""
         )
 
-        val errorMsg = if (taskInfo.status != TaskStatusEnum.successed) {
-            taskInfo.logs.joinToString(";").substring(0, 1023)
-        } else {
-            null
+        var errorMsg: String? = taskInfo.logs.joinToString(";")
+        if (taskInfo.status == TaskStatusEnum.successed) {
+            errorMsg = null
+        } else if ((errorMsg?.length ?: 0) > 1023) {
+            errorMsg = errorMsg?.substring(0, 1023)
         }
 
         if (taskInfo.status == TaskStatusEnum.successed) {
