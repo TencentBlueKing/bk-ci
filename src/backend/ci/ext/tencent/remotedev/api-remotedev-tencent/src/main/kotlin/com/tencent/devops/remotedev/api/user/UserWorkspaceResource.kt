@@ -46,6 +46,10 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -404,7 +408,18 @@ interface UserWorkspaceResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工作空间名称", required = true)
-        workspaceName: String
-    ): Result<String>
+        @Parameter(description = "发起的验证数据", required = true)
+        moa2faReqData: Moa2faReqData
+    ): Result<Moa2faRespData>
+
+    @Operation(summary = "验证moa 2fa结果")
+    @POST
+    @Path("/2fa/verify")
+    fun verifyMoa2faResult(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "", required = true)
+        moa2faVerifyReqData: Moa2faVerifyReqData
+    ): Result<Moa2faVerifyRespData>
 }

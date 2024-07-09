@@ -98,6 +98,10 @@ import com.tencent.devops.remotedev.pojo.project.DepartmentsInfo
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -1583,23 +1587,12 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    fun createMoa2faRequest(userId: String, workspaceName: String): String {
-        val result = workspaceDao.fetchWorkspaceWithOwner(
-            dslContext = dslContext,
-            mountType = WorkspaceMountType.START,
-            workspaceName = workspaceName,
-            assignType = WorkspaceShared.AssignType.OWNER
-        ) ?: throw ErrorCodeException(
-            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-            params = arrayOf(workspaceName)
-        )
+    fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Moa2faRespData {
+        return taiService.createMoa2faRequest(userId = userId, moa2faReqData = moa2faReqData)
+    }
 
-        val owners = result.map { it["SHARED_USER"] as String }.toSet()
-        // TODO
-        owners.first()
-
-
-
+    fun verifyMoa2faResult(userId: String, moa2faVerifyReqData: Moa2faVerifyReqData): Moa2faVerifyRespData {
+        return taiService.verifyMoa2faRequest(userId = userId, moa2faVerifyReqData = moa2faVerifyReqData)
     }
 
     companion object {
