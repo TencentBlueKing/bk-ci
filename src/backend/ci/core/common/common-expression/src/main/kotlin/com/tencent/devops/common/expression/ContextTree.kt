@@ -5,7 +5,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.tencent.devops.common.expression.context.*
+import com.tencent.devops.common.expression.context.ContextValueNode
+import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.DictionaryContextDataWithVal
+import com.tencent.devops.common.expression.context.PipelineContextData
+import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import java.util.LinkedList
 import java.util.Queue
