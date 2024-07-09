@@ -49,7 +49,6 @@ import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
-import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -141,32 +140,6 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                     )
                 )
             }
-            workspaceOpHistoryDao.createWorkspaceHistory(
-                dslContext = dslContext,
-                workspaceName = workspaceName,
-                operator = userId,
-                action = WorkspaceAction.MAKE_IMAGE,
-                actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.MANUAL_STOP)
-            )
-
-            workspaceOpHistoryDao.createWorkspaceHistory(
-                dslContext = dslContext,
-                workspaceName = workspaceName,
-                operator = userId,
-                action = WorkspaceAction.MAKE_IMAGE,
-                actionMessage = String.format(
-                    workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                    workspace.status,
-                    WorkspaceStatus.MAKING_IMAGE.name
-                )
-            )
-
-            // 更新工作区状态
-            workspaceDao.updateWorkspaceStatus(
-                dslContext = dslContext,
-                workspaceName = workspaceName,
-                status = WorkspaceStatus.MAKING_IMAGE
-            )
 
             val imageId = "img_${RandomStringUtils.randomAlphabetic(8)}"
             // 新增镜像信息
@@ -197,8 +170,34 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                     dslContext = dslContext,
                     errorMsg = it.localizedMessage
                 )
+                return WorkspaceResponse(
+                    workspaceName = workspaceName,
+                    workspaceHost = "",
+                    status = WorkspaceAction.MAKE_IMAGE,
+                    systemType = WorkspaceSystemType.WINDOWS_GPU,
+                    workspaceMountType = WorkspaceMountType.START
+                )
             }
             logger.info("$workspaceName make image task $taskId")
+
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = userId,
+                action = WorkspaceAction.MAKE_IMAGE,
+                actionMessage = String.format(
+                    workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                    workspace.status,
+                    WorkspaceStatus.MAKING_IMAGE.name
+                )
+            )
+
+            // 更新工作区状态
+            workspaceDao.updateWorkspaceStatus(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                status = WorkspaceStatus.MAKING_IMAGE
+            )
 
             notifyControl.dispatchWebsocketPushEvent(
                 userId = userId,
