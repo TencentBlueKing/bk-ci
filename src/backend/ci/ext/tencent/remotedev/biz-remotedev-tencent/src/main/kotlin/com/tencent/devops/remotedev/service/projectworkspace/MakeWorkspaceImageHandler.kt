@@ -49,6 +49,7 @@ import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -179,33 +180,23 @@ class MakeWorkspaceImageHandler @Autowired constructor(
             )
 
             val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
-//            dispatcher.dispatch(
-//                WorkspaceOperateEvent(
-//                    userId = userId,
-//                    traceId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz(),
-//                    type = UpdateEventType.MAKE_IMAGE,
-//                    sshKeys = sshService.getSshPublicKeys4Ws(
-//                        workspaceDao.fetchWorkspaceUser(
-//                            dslContext,
-//                            workspaceName
-//                        ).toSet()
-//                    ),
-//                    workspaceName = workspaceName,
-//                    settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
-//                    bkTicket = "",
-//                    cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp ?: "",
-//                    imageId = imageId,
-//                    mountType = WorkspaceMountType.START,
-//                    gameId = gameId.first
-//                )
-//            )
-            val taskId = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.START).makeWorkspaceImage(
-                userId = userId,
-                workspaceName = workspaceName,
-                gameId = gameId.first,
-                cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp ?: "",
-                imageId = imageId
-            )
+            val taskId = kotlin.runCatching {
+                remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.START).makeWorkspaceImage(
+                    userId = userId,
+                    workspaceName = workspaceName,
+                    gameId = gameId.first,
+                    cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp ?: "",
+                    imageId = imageId
+                )
+            }.onFailure {
+                makeImageFail(
+                    workspaceName = workspaceName,
+                    userId = userId,
+                    workspace = workspace,
+                    workspaceImageInfo = WorkspaceImageInfo(imageId),
+                    errorMsg = it.localizedMessage
+                )
+            }
             logger.info("$workspaceName make image task $taskId")
 
             notifyControl.dispatchWebsocketPushEvent(
@@ -305,32 +296,11 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 )
             }
         } else {
-            // 启动失败,记录为EXCEPTION
-            logger.warn("Make workspaceImage $workspaceName failed")
-            workspaceDao.updateWorkspaceStatus(
+            makeImageFail(
                 workspaceName = workspaceName,
-                status = WorkspaceStatus.EXCEPTION,
-                dslContext = dslContext
-            )
-
-            workspaceOpHistoryDao.createWorkspaceHistory(
-                dslContext = dslContext,
-                workspaceName = workspaceName,
-                operator = userId,
-                action = WorkspaceAction.MAKE_IMAGE,
-                actionMessage = String.format(
-                    workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                    workspace.status.name,
-                    WorkspaceStatus.EXCEPTION.name
-                )
-            )
-
-            // 更新镜像信息
-            imageManageDao.updateWorkspaceImage(
-                projectId = workspace.projectId,
+                userId = userId,
+                workspace = workspace,
                 workspaceImageInfo = workspaceImageInfo,
-                imageStatus = ImageStatus.FAILURE,
-                dslContext = dslContext,
                 errorMsg = errorMsg
             )
         }
@@ -348,6 +318,43 @@ class MakeWorkspaceImageHandler @Autowired constructor(
             workspaceMountType = workspace.workspaceMountType,
             ownerType = workspace.ownerType,
             projectId = workspace.projectId
+        )
+    }
+
+    private fun makeImageFail(
+        workspaceName: String,
+        userId: String,
+        workspace: WorkspaceRecord,
+        workspaceImageInfo: WorkspaceImageInfo,
+        errorMsg: String?
+    ) {
+        // 启动失败,记录为EXCEPTION
+        logger.warn("Make workspaceImage $workspaceName failed")
+        workspaceDao.updateWorkspaceStatus(
+            workspaceName = workspaceName,
+            status = WorkspaceStatus.EXCEPTION,
+            dslContext = dslContext
+        )
+
+        workspaceOpHistoryDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            operator = userId,
+            action = WorkspaceAction.MAKE_IMAGE,
+            actionMessage = String.format(
+                workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                workspace.status.name,
+                WorkspaceStatus.EXCEPTION.name
+            )
+        )
+
+        // 更新镜像信息
+        imageManageDao.updateWorkspaceImage(
+            projectId = workspace.projectId,
+            workspaceImageInfo = workspaceImageInfo,
+            imageStatus = ImageStatus.FAILURE,
+            dslContext = dslContext,
+            errorMsg = errorMsg
         )
     }
 }
