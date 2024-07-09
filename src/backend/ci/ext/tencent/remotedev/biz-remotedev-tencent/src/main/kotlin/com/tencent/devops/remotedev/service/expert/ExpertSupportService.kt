@@ -1,10 +1,16 @@
 package com.tencent.devops.remotedev.service.expert
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -379,11 +385,30 @@ class ExpertSupportService @Autowired constructor(
         expertSupportDao.deleteExpertSupportConfigWithData(dslContext, data.type, data.content)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_EXPAND_DISK,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = ActionAuditContent.CGS_EXPAND_DISK_CONTENT
+    )
     fun expandDisk(
         workspaceName: String,
         userId: String,
         size: String
     ): ExpandDiskValidateResp? {
+
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .scopeId = workspace.projectId
+
         // 暂时定死 mountType
         val data = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java).expandDisk(
             workspaceName = workspaceName,
