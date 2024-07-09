@@ -26,35 +26,27 @@
  *
  */
 
-package com.tencent.devops.auth.api.user
+package com.tencent.devops.auth.resources.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.auth.api.user.UserAuthItsmCallbackResource
+import com.tencent.devops.auth.dao.AuthItsmCallbackDao
+import com.tencent.devops.auth.pojo.vo.AuthItsmCallbackInfo
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
 
-@Tag(name = "USER_PROJECT_MEMBER", description = "用户组—用户")
-@Path("/user/project/members")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface UserProjectMemberResource {
-    @GET
-    @Path("/projectIds/{projectId}/checkManager")
-    @Operation(summary = "判断是否是项目管理员或CI管理员")
-    fun checkManager(
-        @Parameter(description = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @PathParam("projectId")
-        @Parameter(description = "项目Id", required = true)
-        projectId: String
-    ): Result<Boolean>
+@RestResource
+class UserAuthItsmCallbackResourceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val authItsmCallbackDao: AuthItsmCallbackDao
+) : UserAuthItsmCallbackResource {
+
+    override fun get(projectId: String): Result<AuthItsmCallbackInfo?> {
+        val record = authItsmCallbackDao.getCallbackByEnglishName(
+            dslContext = dslContext,
+            projectCode = projectId
+        )
+        return Result(authItsmCallbackDao.convert(record))
+    }
 }

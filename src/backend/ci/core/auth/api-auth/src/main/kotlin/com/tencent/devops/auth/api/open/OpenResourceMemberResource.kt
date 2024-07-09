@@ -1,4 +1,4 @@
-package com.tencent.devops.auth.api.service
+package com.tencent.devops.auth.api.open
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.pojo.Result
@@ -22,10 +22,10 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_SERVICE_RESOURCE", description = "权限--资源相关接口")
-@Path("/service/auth/resource/member")
+@Path("/open/service/auth/resource/member")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceResourceMemberResource {
+interface OpenResourceMemberResource {
     /**
      * @param resourceType 是个枚举类型详见 AuthResourceType
      * @see AuthResourceType

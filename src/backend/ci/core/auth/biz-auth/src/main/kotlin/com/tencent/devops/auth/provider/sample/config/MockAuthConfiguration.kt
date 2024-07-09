@@ -15,9 +15,6 @@ import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceG
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceMemberService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceValidateService
-import com.tencent.devops.auth.provider.sample.service.SamplePermissionRoleMemberService
-import com.tencent.devops.auth.provider.sample.service.SamplePermissionRoleService
-import com.tencent.devops.auth.provider.sample.service.SamplePermissionUrlServiceImpl
 import com.tencent.devops.auth.provider.sample.service.SampleSuperManagerServiceImpl
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
@@ -36,10 +33,7 @@ import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
-import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
-import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.PermissionService
-import com.tencent.devops.auth.service.iam.PermissionUrlService
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 
@@ -60,10 +54,6 @@ class MockAuthConfiguration {
     fun permissionExtService() = SamplePermissionExtService()
 
     @Bean
-    @ConditionalOnMissingBean(PermissionUrlService::class)
-    fun permissionUrlService() = SamplePermissionUrlServiceImpl()
-
-    @Bean
     @ConditionalOnMissingBean(PermissionProjectService::class)
     fun sampleAuthPermissionProjectService() = SampleAuthPermissionProjectService()
 
@@ -82,14 +72,6 @@ class MockAuthConfiguration {
     @Bean
     @ConditionalOnMissingBean(PermissionGradeService::class)
     fun samplePermissionGradeService() = SamplePermissionGradeService()
-
-    @Bean
-    @ConditionalOnMissingBean(PermissionRoleMemberService::class)
-    fun samplePermissionRoleMemberService() = SamplePermissionRoleMemberService()
-
-    @Bean
-    @ConditionalOnMissingBean(PermissionRoleService::class)
-    fun samplePermissionRoleService() = SamplePermissionRoleService()
 
     @Bean
     @ConditionalOnMissingBean(OrganizationService::class)

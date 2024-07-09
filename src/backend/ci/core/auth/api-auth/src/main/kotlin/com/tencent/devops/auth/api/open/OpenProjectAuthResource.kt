@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.api.service
+package com.tencent.devops.auth.api.open
 
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
@@ -49,10 +49,10 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_SERVICE_PROJECT", description = "权限--项目相关接口")
-@Path("/service/auth/projects")
+@Path("/open/service/auth/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceProjectAuthResource {
+interface OpenProjectAuthResource {
     @GET
     @Path("/{projectCode}/users/byGroup")
     @Operation(summary = "获取项目成员 (需要对接的权限中心支持该功能才可以)")
