@@ -94,7 +94,7 @@ class StartAndBcsCommonService @Autowired constructor(
                     } else {
                         EnvironmentActionStatus.FAILED
                     },
-                    actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
+                    actionMsg = null
                 )
                 if (taskStatus.status == TaskStatusEnum.successed) {
                     dispatchWorkspaceDao.updateWorkspaceStatus(
