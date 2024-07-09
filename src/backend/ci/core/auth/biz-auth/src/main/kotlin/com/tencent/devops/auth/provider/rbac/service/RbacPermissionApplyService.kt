@@ -25,7 +25,6 @@ import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthRedirectGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
-import com.tencent.devops.auth.service.GroupUserService
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -591,7 +590,7 @@ class RbacPermissionApplyService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
+        private val logger = LoggerFactory.getLogger(RbacPermissionApplyService::class.java)
         private val executor = Executors.newFixedThreadPool(10)
     }
 }
