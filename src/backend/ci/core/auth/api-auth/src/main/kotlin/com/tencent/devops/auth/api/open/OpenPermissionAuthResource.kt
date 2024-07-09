@@ -372,20 +372,4 @@ interface OpenPermissionAuthResource {
         @Parameter(description = "资源Code")
         resourceCode: String
     ): Result<Boolean>
-
-    @Path("/projects/{projectCode}/grant")
-    @POST
-    @Operation(summary = "授权实例级别权限")
-    fun grantInstancePermission(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "操作用户ID", required = true)
-        userId: String,
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(description = "认证token", required = true)
-        token: String,
-        @PathParam("projectCode")
-        @Parameter(description = "项目Id")
-        projectCode: String,
-        grantInstance: GrantInstanceDTO
-    ): Result<Boolean>
 }

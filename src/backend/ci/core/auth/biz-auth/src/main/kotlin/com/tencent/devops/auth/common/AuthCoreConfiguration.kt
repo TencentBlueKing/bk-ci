@@ -77,13 +77,6 @@ class AuthCoreConfiguration {
         directExchange.isDelayed = true
         return directExchange
     }
-//
-//    @Bean
-//    fun authCoreExchange(): FanoutExchange {
-//        val directExchange = FanoutExchange(MQ.EXCHANGE_AUTH_REFRESH_FANOUT, true, false)
-//        directExchange.isDelayed = true
-//        return directExchange
-//    }
 
     @Bean
     fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
@@ -101,14 +94,6 @@ class AuthCoreConfiguration {
     ): Binding {
         return BindingBuilder.bind(authRefreshQueue).to(authCoreExchange).with(MQ.ROUTE_AUTH_REFRESH_FANOUT)
     }
-
-//    @Bean
-//    fun refreshQueueBind(
-//        @Autowired authRefreshQueue: Queue,
-//        @Autowired authCoreExchange: FanoutExchange
-//    ): Binding {
-//        return BindingBuilder.bind(authRefreshQueue).to(authCoreExchange)
-//    }
 
     @Bean
     fun authRefreshEventListenerContainer(

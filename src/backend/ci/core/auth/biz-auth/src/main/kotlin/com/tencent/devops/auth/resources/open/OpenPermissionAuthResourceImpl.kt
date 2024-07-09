@@ -28,9 +28,7 @@
 package com.tencent.devops.auth.resources.open
 
 import com.tencent.devops.auth.api.open.OpenPermissionAuthResource
-import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.auth.service.iam.PermissionExtService
-import com.tencent.devops.auth.service.iam.PermissionGrantService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -43,8 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class OpenPermissionAuthResourceImpl @Autowired constructor(
     val permissionService: PermissionService,
-    val permissionExtService: PermissionExtService,
-    val permissionGrantService: PermissionGrantService
+    val permissionExtService: PermissionExtService
 ) : OpenPermissionAuthResource {
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
@@ -290,21 +287,6 @@ class OpenPermissionAuthResourceImpl @Autowired constructor(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode
-            )
-        )
-    }
-
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun grantInstancePermission(
-        userId: String,
-        token: String,
-        projectCode: String,
-        grantInstance: GrantInstanceDTO
-    ): Result<Boolean> {
-        return Result(
-            permissionGrantService.grantInstancePermission(
-                projectId = projectCode,
-                grantInfo = grantInstance
             )
         )
     }
