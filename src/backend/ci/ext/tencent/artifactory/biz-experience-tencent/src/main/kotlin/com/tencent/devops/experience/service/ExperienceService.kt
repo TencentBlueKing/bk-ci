@@ -307,7 +307,8 @@ class ExperienceService @Autowired constructor(
             experienceName = experienceRecord.experienceName,
             versionTitle = experienceRecord.versionTitle,
             categoryId = experienceRecord.category,
-            productOwner = objectMapper.readValue(experienceRecord.productOwner)
+            productOwner = objectMapper.readValue(experienceRecord.productOwner),
+            classify = experienceRecord.classify
         )
     }
 
@@ -516,7 +517,8 @@ class ExperienceService @Autowired constructor(
             size = fileSize,
             scheme = scheme,
             buildId = propertyMap[ARCHIVE_PROPS_BUILD_ID] ?: "",
-            pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID] ?: ""
+            pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID] ?: "",
+            classify = experience.classify ?: ""
         )
         // IAM权限
         experiencePermissionService.createTaskResource(
@@ -647,7 +649,8 @@ class ExperienceService @Autowired constructor(
             experienceName = experience.experienceName ?: projectId,
             versionTitle = experience.versionTitle ?: experienceRecord.versionTitle,
             category = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
-            productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>())
+            productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>()),
+            classify = experience.classify ?: ""
         )
 
         // 更新组
@@ -866,7 +869,8 @@ class ExperienceService @Autowired constructor(
             versionTitle = experience.versionTitle,
             categoryId = experience.categoryId,
             productOwner = experience.productOwner,
-            sendNotification = experience.sendNotification
+            sendNotification = experience.sendNotification,
+            classify = experience.classify
         )
 
         val experienceId = createExperience(

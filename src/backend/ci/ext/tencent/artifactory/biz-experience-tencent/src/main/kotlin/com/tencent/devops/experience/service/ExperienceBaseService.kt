@@ -171,7 +171,8 @@ class ExperienceBaseService @Autowired constructor(
                 expired = now.isAfter(it.endDate),
                 subscribe = subscribeSet.contains("${it.projectId}-${it.bundleIdentifier}-${it.platform}") ||
                         userId == it.creator,
-                redPointEnabled = redPointIds.contains(it.id.toString())
+                redPointEnabled = redPointIds.contains(it.id.toString()),
+                classify = it.classify
             )
         }
 

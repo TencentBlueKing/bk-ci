@@ -65,5 +65,7 @@ data class ExperienceCreate(
     @get:Schema(title = "体验范围,0--公开体验 , 1--内部体验", required = false)
     val groupScope: Int? = null,
     @get:Schema(title = "是否发送通知", required = false)
-    val sendNotification: Boolean = true
+    val sendNotification: Boolean = true,
+    @get:Schema(title = "分类", required = false)
+    val classify: String? = null
 )
