@@ -29,11 +29,10 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -41,29 +40,17 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "build_SCM_GIT_CI", description = "Service Code GIT CI resource")
-@Path("/build/gitci/")
+@Path("/service/gitci/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildGitCiResource {
+interface ServiceStreamResource {
 
     @Operation(summary = "获取项目的token")
     @GET
     @Path("/getToken")
-    @Deprecated(
-        message = "not safe, use BuildStreamResource.getToken"
-    )
     fun getToken(
         @Parameter(description = "gitProjectId", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<GitToken?>
-
-    @Operation(summary = "销毁项目的token")
-    @DELETE
-    @Path("/clearToken")
-    fun clearToken(
-        @Parameter(description = "token", required = true)
-        @QueryParam("token")
-        token: String
-    ): Result<Boolean>
 }
