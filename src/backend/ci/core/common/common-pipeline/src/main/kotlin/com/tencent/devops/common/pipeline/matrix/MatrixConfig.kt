@@ -63,7 +63,7 @@ data class MatrixConfig(
             // 临时方案：支持解析value中的一级对象访问
             val resultCase = mutableMapOf<String, String>()
             contextCase.forEach { (key, value) ->
-                resultCase["${MATRIX_CONTEXT_KEY_PREFIX}$key"] = JsonUtil.toJson(value, false)
+                resultCase["${MATRIX_CONTEXT_KEY_PREFIX}$key"] = value
                 kotlin.runCatching {
                     YamlUtil.to<Map<String, Any>>(value)
                 }.getOrNull()?.forEach { (pair, _) ->
