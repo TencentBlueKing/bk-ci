@@ -1,5 +1,5 @@
 <template>
-    <bk-select @toggle="toggleVisible" @change="onChange" v-bind="selectProps">
+    <bk-select @toggle="toggleVisible" @change="onChange" v-bind="selectProps" :disabled="readOnly">
         <bk-option
             v-for="(item, index) in listData"
             :key="index"
@@ -69,7 +69,11 @@
             },
             searchUrl: String,
             replaceKey: String,
-            dataPath: String
+            dataPath: String,
+            readOnly: {
+                type: Boolean,
+                default: false
+            }
         },
         data () {
             return {

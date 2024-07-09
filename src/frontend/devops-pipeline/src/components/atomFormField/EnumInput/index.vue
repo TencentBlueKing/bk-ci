@@ -13,7 +13,7 @@
                     <bk-radio
                         :class="['bkdevops-radio', { mr15: lineNumber <= 0 }]"
                         :value="item.value"
-                        :disabled="disabled || item.disabled"
+                        :disabled="readOnly || item.disabled"
                     >
                         <span :class="{
                             'overflow': true,
@@ -42,7 +42,11 @@
                 type: Number,
                 default: 0
             },
-            value: [Number, Boolean, String]
+            value: [Number, Boolean, String],
+            readOnly: {
+                type: Boolean,
+                default: false
+            }
         },
         computed: {
             enumList () {
