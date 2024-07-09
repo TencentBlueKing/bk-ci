@@ -42,7 +42,7 @@ class CacheProjectInfoService @Autowired constructor(
 ) {
     private val projectVOCache = Caffeine.newBuilder()
         .maximumSize(10000)
-        .expireAfterWrite(1, TimeUnit.DAYS)
+        .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String, ProjectVO>()
 
     fun getProject(projectId: String): ProjectVO? {
