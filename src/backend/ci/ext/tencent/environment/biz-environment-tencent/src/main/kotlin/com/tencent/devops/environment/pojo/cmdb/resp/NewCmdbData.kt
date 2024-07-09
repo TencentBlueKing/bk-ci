@@ -25,23 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.cmdbres
+package com.tencent.devops.environment.pojo.cmdb.resp
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class InnerServerIpInfo(
-    @get:Schema(title = "IP地址")
-    val ip: String,
-    @get:Schema(title = "IP地址所属的网段")
-    val segmentName: String?,
-    @get:Schema(title = "网络类型名称（内网、外网）")
-    val netType: String?,
-    @get:Schema(title = "是否管理IP（0-否，1-是）")
-    val isManagementIp: Int?,
-    @get:Schema(title = "网关地址(多个用;号分隔)")
-    val gateway: String?,
-    @get:Schema(title = "子网掩码")
-    val subnetMask: String?,
-    @get:Schema(title = "网络运营商")
-    val netOperatorName: String?
+data class NewCmdbData(
+    @get:Schema(title = "结果主机列表", required = true)
+    var list: List<NewCmdbDataIns>,
+    @get:Schema(title = "游标值，用该值做入参请求下一页", description = "该字段不能为null或空字符串，否则会抛出异常")
+    var scrollId: String?,
+    @get:Schema(title = "是否有下一页（最后一页还是true，要再请求一次到list为空列表才为false）")
+    var hasNext: Boolean?
 )

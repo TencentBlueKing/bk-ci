@@ -43,11 +43,11 @@ import com.tencent.devops.environment.constant.T_NODE_OS_TYPE
 import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
 import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
 import com.tencent.devops.environment.model.CreateNodeModel
+import com.tencent.devops.environment.pojo.dto.NodeUpdateAttrDTO
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.job.AgentVersionInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
-import com.tencent.devops.environment.pojo.job.cmdbres.NewCmdbDataIns
 import com.tencent.devops.environment.pojo.job.jobreq.Host
 import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
 import com.tencent.devops.model.environment.tables.TNode
@@ -193,13 +193,13 @@ class CmdbNodeDao {
         }
     }
 
-    fun batchUpdateNodeMaintainerAndOsNameByServerId(dslContext: DSLContext, updateNodeInfoList: List<NewCmdbDataIns>) {
+    fun batchUpdateNodeMaintainerAndOsNameByServerId(dslContext: DSLContext, nodeAttrList: List<NodeUpdateAttrDTO>) {
         with(TNode.T_NODE) {
             val batchUpdate = dslContext.batch(
-                updateNodeInfoList.map {
+                nodeAttrList.map {
                     dslContext.update(this)
-                        .set(OPERATOR, it.maintainer)
-                        .set(BAK_OPERATOR, it.maintainerBak)
+                        .set(OPERATOR, it.operator)
+                        .set(BAK_OPERATOR, it.bakOperator)
                         .set(OS_NAME, it.osName)
                         .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
                         .where(SERVER_ID.eq(it.serverId))

@@ -25,17 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.cmdbreq
+package com.tencent.devops.environment.pojo.cmdb.resp
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class NewCmdbQueryInfoReq<T>(
-    @get:Schema(title = "")
-    val resultColumn: List<String>,
-    @get:Schema(title = "")
-    val condition: NewCmdbCondition<T>,
-    @get:Schema(title = "每页大小，取值<201")
-    val size: Int?,
-    @get:Schema(title = "分页游标")
-    val scrollId: String?
+data class NewCmdbResp(
+    @get:Schema(title = "状态码", required = true)
+    var code: Int,
+    @get:Schema(title = "请求ID", required = true)
+    var traceId: String,
+    @get:Schema(title = "结果消息", required = true)
+    var message: String?,
+    @get:Schema(title = "返回数据", required = true)
+    var data: NewCmdbData
 )

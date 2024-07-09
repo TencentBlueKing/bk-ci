@@ -35,12 +35,6 @@ import com.tencent.devops.environment.constant.Constants.FIELD_BK_HOST_ID
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_HOST_INNERIP
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_OS_TYPE
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_SVR_ID
-import com.tencent.devops.environment.constant.Constants.NEW_COLUMN_BAK_MAINTAINER
-import com.tencent.devops.environment.constant.Constants.NEW_COLUMN_HOST_NAME
-import com.tencent.devops.environment.constant.Constants.NEW_COLUMN_INNER_SERVER_IPV4
-import com.tencent.devops.environment.constant.Constants.NEW_COLUMN_MAINTAINER
-import com.tencent.devops.environment.constant.Constants.NEW_COLUMN_OS_NAME
-import com.tencent.devops.environment.constant.Constants.NEW_COLUMN_SERVER_ID
 import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
 import com.tencent.devops.environment.constant.T_NODE_BAK_OPERATOR
 import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
@@ -54,15 +48,14 @@ import com.tencent.devops.environment.constant.T_NODE_OS_TYPE
 import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.dao.job.JobDao
+import com.tencent.devops.environment.pojo.dto.NodeUpdateAttrDTO
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
-import com.tencent.devops.environment.pojo.job.cmdbreq.NewCmdbCondition
-import com.tencent.devops.environment.pojo.job.cmdbreq.NewCmdbConditionValue
-import com.tencent.devops.environment.pojo.job.cmdbres.NewCmdbDataIns
 import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
 import com.tencent.devops.environment.service.CmdbNodeService
+import com.tencent.devops.environment.service.cmdb.TencentCmdbService
 import com.tencent.devops.environment.service.gseagent.GSEAgentService
 import com.tencent.devops.environment.utils.ComputeTimeUtils
 import org.jooq.DSLContext
@@ -79,7 +72,7 @@ class TencentStockDataUpdateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val cmdbNodeDao: CmdbNodeDao,
     private val jobDao: JobDao,
-    private val tencentQueryFromCmdbService: TencentQueryFromCmdbService,
+    private val tencentCmdbService: TencentCmdbService,
     private val tencentQueryFromCCService: TencentQueryFromCCService,
     private val cmdbNodeService: CmdbNodeService,
     private val redisOperation: RedisOperation,
@@ -122,7 +115,7 @@ class TencentStockDataUpdateService @Autowired constructor(
      * cron：每10分钟执行一次。
      */
     @Scheduled(cron = "0 7/10 * * * ?")
-    fun checkDeployNodes() {
+    fun checkDeployNodesInCmdb() {
         taskWithRedisLock(SCHEDULED_CHECK_NODES_TIMEOUT_LOCK_KEY, ::checkDeployNodesIsInCmdb)
     }
 
@@ -134,8 +127,8 @@ class TencentStockDataUpdateService @Autowired constructor(
      * cron：每10分钟执行一次。
      */
     @Scheduled(cron = "0 8/10 * * * ?")
-    fun scheduledUpdateGseAgent() {
-        taskWithRedisLock(SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY, ::updateGseAgent)
+    fun updateGseAgentStatusAndVersionPeriodically() {
+        taskWithRedisLock(SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY, ::updateGseAgentStatusAndVersion)
     }
 
     /**
@@ -191,45 +184,37 @@ class TencentStockDataUpdateService @Autowired constructor(
         val cmdbNodesRecords = cmdbNodeDao.getDeployNodesLimit(dslContext, page, DEFAULT_PAGE_SIZE)
         // 节点serverId（只更新有serverId的部署节点，正常情况下，部署节点记录都应该有serverId）
         val nodeServerIdSet = cmdbNodesRecords.mapNotNull { it[T_NODE_SERVER_ID] as? Long }.toSet()
-        // 节点：cmdb信息（从cmdb查到的，节点在cmdb中）
-        val cmdbInfoList = tencentQueryFromCmdbService.queryNewCmdbInfoByBaseCondition(
-            newCmdbCondition = NewCmdbCondition(
-                serverId = NewCmdbConditionValue(
-                    operator = CmdbNodeService.CMDB_QUERY_OPERATION_IN,
-                    value = nodeServerIdSet.toList()
-                )
-            ),
-            NEW_COLUMN_SERVER_ID, NEW_COLUMN_MAINTAINER, NEW_COLUMN_BAK_MAINTAINER, NEW_COLUMN_OS_NAME
-        )
-        val serverIdToCmdbInfoMap = cmdbInfoList?.associateBy { it.serverId } ?: mapOf()
-        // 原UpdateCcNodeStatus类功能，定时更新(当有变更时)：节点主备负责人、操作系统名称
-        val updateNodeInfoList = cmdbNodesRecords.filter {
+        // 节点：cmdb服务器信息（从cmdb查到的，节点在cmdb中）
+        val serverIdToCmdbServerMap = tencentCmdbService.queryServerByServerId(nodeServerIdSet)
+
+        // 定时更新(当有变更时)：节点主备负责人、操作系统名称
+        val nodeAttrList = cmdbNodesRecords.filter {
             null != it[T_NODE_SERVER_ID]
         }.mapNotNull {
             val serverId = it[T_NODE_SERVER_ID] as Long
-            val maintainerNew = serverIdToCmdbInfoMap[serverId]?.maintainer
-            val maintainerBakNew = serverIdToCmdbInfoMap[serverId]?.maintainerBak
-            val osNameNew = serverIdToCmdbInfoMap[serverId]?.osName
+            val operatorNew = serverIdToCmdbServerMap[serverId]?.operator
+            val bakOperatorNew = serverIdToCmdbServerMap[serverId]?.getBakOperatorStr()
+            val osNameNew = serverIdToCmdbServerMap[serverId]?.osName
             if (
-                it[T_NODE_OPERATOR] != maintainerNew ||
-                it[T_NODE_BAK_OPERATOR] != maintainerBakNew ||
+                it[T_NODE_OPERATOR] != operatorNew ||
+                it[T_NODE_BAK_OPERATOR] != bakOperatorNew ||
                 it[T_NODE_OS_NAME] != osNameNew
             ) {
-                NewCmdbDataIns(
+                NodeUpdateAttrDTO(
                     serverId = serverId,
-                    maintainer = maintainerNew,
-                    maintainerBak = maintainerBakNew,
+                    operator = operatorNew,
+                    bakOperator = bakOperatorNew,
                     osName = osNameNew
                 )
             } else null
         }
-        cmdbNodeDao.batchUpdateNodeMaintainerAndOsNameByServerId(dslContext, updateNodeInfoList)
+        cmdbNodeDao.batchUpdateNodeMaintainerAndOsNameByServerId(dslContext, nodeAttrList)
         // 2.1.1 不在cmdb中，置空 host_id 和 云区域id, 对应节点的 NODE_STATUS字段 改成 NOT_IN_CMDB
-        val invalidServerIdList = nodeServerIdSet.filterNot { serverIdToCmdbInfoMap.containsKey(it) }
+        val invalidServerIdList = nodeServerIdSet.filterNot { serverIdToCmdbServerMap.containsKey(it) }
         cmdbNodeDao.updateNodeNotInCmdbByServerIdList(dslContext, invalidServerIdList)
         // 2.1.2 在CMDB中，但是节点状态是NOT_IN_CMDB，此类节点，此处更新为NOT_IN_CC，后面在checkDeployNodesIsInCC函数中再进一步更新
         // （正常不应出现这种情况，该逻辑是为防止CMDB接口返回的数据不稳定，导致将一些在CMDB中的节点更新为NOT_IN_CMDB）
-        val inCmdbServerIdList = serverIdToCmdbInfoMap.keys
+        val inCmdbServerIdList = serverIdToCmdbServerMap.keys
         if (inCmdbServerIdList.isNotEmpty()) {
             cmdbNodeDao.updateStatusIncorrectNodeByServerIdList(dslContext, inCmdbServerIdList)
         }
@@ -329,7 +314,7 @@ class TencentStockDataUpdateService @Autowired constructor(
         }
     }
 
-    private fun updateGseAgent() {
+    private fun updateGseAgentStatusAndVersion() {
         val startTime = LocalDateTime.now()
         val countCmdbNodes = cmdbNodeDao.countCmdbNodes(dslContext)
         logger.info("Update gse agent, node(s) quantity: $countCmdbNodes.")
@@ -396,7 +381,7 @@ class TencentStockDataUpdateService @Autowired constructor(
         val hostIdToAgentUpdateList = agentUpdateList.associateBy { it.bkHostId }
         val agentUpdateIpList = agentUpdateList.mapNotNull { it.ip }
         val agentUpdateHostIdList = agentUpdateList.mapNotNull { it.bkHostId }
-        val agentUpdateRecords = existNodeIdToAgentVersionMap.filter { (key, value) ->
+        val agentUpdateRecords = existNodeIdToAgentVersionMap.filter { (_, value) ->
             agentUpdateIpList.contains(value.ip) || agentUpdateHostIdList.contains(value.bkHostId)
         }.map { (key, value) ->
             UpdateTNodeInfo(
@@ -430,17 +415,9 @@ class TencentStockDataUpdateService @Autowired constructor(
         val cmdbNodesRecords = cmdbNodeDao.getCmdbNodesHostIdNullLimit(dslContext, page, DEFAULT_PAGE_SIZE)
         val cmdbNodeServerIdSet = cmdbNodesRecords.map { it[T_NODE_SERVER_ID] as Long }.toSet()
         val nodeServerIdToNodesRecords = cmdbNodesRecords.associateBy { it[T_NODE_SERVER_ID] as Long }
-        val cmdbInfoList = tencentQueryFromCmdbService.queryNewCmdbInfoByBaseCondition(
-            newCmdbCondition = NewCmdbCondition(
-                serverId = NewCmdbConditionValue(
-                    operator = CmdbNodeService.CMDB_QUERY_OPERATION_IN,
-                    value = cmdbNodeServerIdSet.toList()
-                )
-            ),
-            NEW_COLUMN_INNER_SERVER_IPV4, NEW_COLUMN_HOST_NAME, NEW_COLUMN_OS_NAME
-        ) // 所有"部署"节点 cmdb信息
-        val serverIdToCmdbInfoMap = cmdbInfoList?.associateBy { it.serverId }
-        if (!serverIdToCmdbInfoMap.isNullOrEmpty()) {
+        val serverIdToCmdbInfoMap = tencentCmdbService.queryServerByServerId(cmdbNodeServerIdSet)
+
+        if (serverIdToCmdbInfoMap.isNotEmpty()) {
             // 所有"部署"节点 用svrId查询在不在CC中
             val (_, _, notInCCSvrIdList) = cmdbNodeService.checkNodeInCCBySvrId(cmdbNodeServerIdSet.toList())
             // 不在CC中 - 通过节点svrId 添加到CC中，查出host_id和云区域id，写入db对应记录
@@ -503,20 +480,15 @@ class TencentStockDataUpdateService @Autowired constructor(
         // 1. 节点record："部署"类型
         val nodeRecords = cmdbNodeDao.getDeployNodesServerIdNullLimit(dslContext, page, DEFAULT_PAGE_SIZE)
         // 2. 要写入server id的所有节点ip
-        val nodeIpList = nodeRecords.map { it[T_NODE_NODE_IP] as String }.toSet()
+        val nodeIpSet = nodeRecords.map { it[T_NODE_NODE_IP] as String }.toSet()
         // 3. 请求cmdb，查询serverId，得到：ip - cmdbInfo
-        val cmdbInfo = tencentQueryFromCmdbService.queryNewCmdbInfoByBaseCondition(
-            newCmdbCondition = NewCmdbCondition(
-                serverIp = NewCmdbConditionValue(
-                    operator = CmdbNodeService.CMDB_QUERY_OPERATION_IN,
-                    value = nodeIpList.toList()
-                )
-            ),
-            NEW_COLUMN_INNER_SERVER_IPV4
-        )
-        val nodeIpToServerIdMap = cmdbInfo?.associate { (it.innerServerIpv4?.get(0)?.ip ?: "") to it.serverId }
+        val nodeIpToCmdbServerMap = tencentCmdbService.queryServerByIp(nodeIpSet)
+        val nodeIpToServerIdMap = mutableMapOf<String, Long?>()
+        nodeIpToCmdbServerMap.forEach { (ip, cmdbInfo) ->
+            nodeIpToServerIdMap[ip] = cmdbInfo.serverId
+        }
         // 4. 根据ip更新数据库中的部署节点
-        if (!nodeIpToServerIdMap.isNullOrEmpty()) {
+        if (nodeIpToServerIdMap.isNotEmpty()) {
             cmdbNodeDao.batchUpdateNodeSeverIdByIp(dslContext, nodeIpToServerIdMap)
         }
     }

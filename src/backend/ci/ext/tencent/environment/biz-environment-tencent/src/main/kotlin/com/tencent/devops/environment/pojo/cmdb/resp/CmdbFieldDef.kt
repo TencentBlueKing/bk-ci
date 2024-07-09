@@ -1,4 +1,4 @@
-package com.tencent.devops.environment.pojo.job.cmdbres
+package com.tencent.devops.environment.pojo.cmdb.resp
 
 import io.swagger.v3.oas.annotations.media.Schema
 

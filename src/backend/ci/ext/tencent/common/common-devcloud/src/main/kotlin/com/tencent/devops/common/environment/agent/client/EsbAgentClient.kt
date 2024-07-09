@@ -61,22 +61,54 @@ class EsbAgentClient {
         private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
     }
 
-    fun getCmdbNodeByIps(userId: String, ips: List<String>): CmdbServerPage {
-        return queryCmdbNode(
-            mapOf(
-                "app_code" to appCode,
-                "app_secret" to appSecret,
-                "operator" to userId,
-                "req_column" to listOf(
-                    "SvrBakOperator", "SvrOperator", "SvrIp", "SvrName", "SfwName", "serverLanIP", "DeptId"
-                ),
-                "key_values" to mapOf("SvrIp" to ips.joinToString(";")),
-                "paging_info" to mapOf("page_size" to 1000, "start_index" to 0, "return_total_rows" to 1)
-            )
+    fun queryCmdbServerByIps(userId: String, ips: Set<String>, start: Int, limit: Int): CmdbServerPage {
+        val requestData = buildQueryByIpReqData(userId, ips, start, limit)
+        return queryCmdbNode(requestData)
+    }
+
+    fun queryCmdbServerByServerIds(userId: String, serverIds: Set<Long>, start: Int, limit: Int): CmdbServerPage {
+        val requestData = buildQueryByServerIdReqData(userId, serverIds, start, limit)
+        return queryCmdbNode(requestData)
+    }
+
+    private fun buildQueryByIpReqData(userId: String, ips: Set<String>, start: Int, limit: Int): Map<String, Any> {
+        val basicRequestData = buildBasicRequestData(userId, start, limit)
+        return basicRequestData.plus("key_values" to mapOf("SvrIp" to ips.joinToString(";")))
+    }
+
+    private fun buildQueryByServerIdReqData(
+        userId: String,
+        serverIds: Set<Long>,
+        start: Int,
+        limit: Int
+    ): Map<String, Any> {
+        val basicRequestData = buildBasicRequestData(userId, start, limit)
+        return basicRequestData.plus("key_values" to mapOf("serverId" to serverIds.joinToString(";")))
+    }
+
+    private fun buildBasicRequestData(userId: String, start: Int, limit: Int): Map<String, Any> {
+        return mapOf(
+            "app_code" to appCode,
+            "app_secret" to appSecret,
+            "req_column" to listOf(
+                "SvrBakOperator", "SvrOperator", "SvrIp", "SvrName", "SfwName", "serverLanIP", "DeptId"
+            ),
+            "operator" to userId,
+            "paging_info" to mapOf("start_index" to start, "page_size" to limit, "return_total_rows" to 1)
         )
     }
 
-    fun queryCmdbNode(requestData: Map<String, Any>): CmdbServerPage {
+    fun getUserCmdbNodeNew(
+        userId: String,
+        bakOperator: Boolean,
+        ips: List<String>,
+        offset: Int,
+        limit: Int
+    ): CmdbServerPage {
+        return getUserCmdbNodeByOperator(userId, bakOperator, ips, offset, limit)
+    }
+
+    private fun queryCmdbNode(requestData: Map<String, Any>): CmdbServerPage {
         val url = "http://open.oa.com/component/compapi/cmdb/get_query_info/"
 
         val requestBody = ObjectMapper().writeValueAsString(requestData)
@@ -159,17 +191,7 @@ class EsbAgentClient {
         }
     }
 
-    fun getUserCmdbNodeNew(
-        userId: String,
-        bakOperator: Boolean,
-        ips: List<String>,
-        offset: Int,
-        limit: Int
-    ): CmdbServerPage {
-        return getUserCmdbNodeByOperator(userId, bakOperator, ips, offset, limit)
-    }
-
-    fun getUserCmdbNodeByOperator(
+    private fun getUserCmdbNodeByOperator(
         userId: String,
         isBakOperator: Boolean,
         ips: List<String>,

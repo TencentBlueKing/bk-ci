@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.cmdbreq
+package com.tencent.devops.environment.pojo.cmdb.req
 
 import io.swagger.v3.oas.annotations.media.Schema
 

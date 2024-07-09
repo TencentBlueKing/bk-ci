@@ -206,11 +206,11 @@ class TencentServiceJobResourceImpl @Autowired constructor(
 
     override fun checkDeployNodesInCmdb(userId: String) {
         if (userId.isBlank()) throw ParamBlankException("userId is blank.")
-        tencentStockDataUpdateService.checkDeployNodes()
+        tencentStockDataUpdateService.checkDeployNodesInCmdb()
     }
 
     override fun updateGseAgent(userId: String) {
-        tencentStockDataUpdateService.scheduledUpdateGseAgent()
+        tencentStockDataUpdateService.updateGseAgentStatusAndVersionPeriodically()
     }
 
     override fun addStockNodeToCC(userId: String) {

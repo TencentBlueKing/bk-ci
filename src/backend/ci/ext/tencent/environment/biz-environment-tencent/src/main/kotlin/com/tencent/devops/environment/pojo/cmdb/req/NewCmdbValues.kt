@@ -25,13 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.cmdbreq
+package com.tencent.devops.environment.pojo.cmdb.req
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class NewCmdbConditionValue<T>(
-    @get:Schema(title = "操作符，例如: IN")
-    val operator: String,
-    @get:Schema(title = "condition值列表")
-    val value: List<T>
+data class NewCmdbValues(
+    @get:Schema(title = "主机ID列表")
+    val serverIdList: List<Long>
 )

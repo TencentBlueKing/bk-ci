@@ -1,4 +1,4 @@
-package com.tencent.devops.environment.pojo.job.cmdbreq
+package com.tencent.devops.environment.pojo.cmdb.req
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.annotation.SkipLogField
