@@ -4,11 +4,9 @@ import com.tencent.devops.auth.provider.sample.service.SampleAuthAuthorizationSc
 import com.tencent.devops.auth.provider.sample.service.SampleAuthMonitorSpaceService
 import com.tencent.devops.auth.provider.sample.service.SampleAuthPermissionProjectService
 import com.tencent.devops.auth.provider.sample.service.SampleAuthPermissionService
-import com.tencent.devops.auth.provider.sample.service.SampleGrantPermissionServiceImpl
 import com.tencent.devops.auth.provider.sample.service.SampleOrganizationService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionApplyService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionExtService
-import com.tencent.devops.auth.provider.sample.service.SamplePermissionGradeService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionItsmCallbackService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionMigrateService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceGroupService
@@ -24,8 +22,6 @@ import com.tencent.devops.auth.service.OrganizationService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionExtService
-import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.auth.service.iam.PermissionGrantService
 import com.tencent.devops.auth.service.iam.PermissionItsmCallbackService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
@@ -62,16 +58,8 @@ class MockAuthConfiguration {
     fun sampleAuthPermissionService() = SampleAuthPermissionService()
 
     @Bean
-    @ConditionalOnMissingBean(PermissionGrantService::class)
-    fun sampleGrantPermissionServiceImpl() = SampleGrantPermissionServiceImpl()
-
-    @Bean
     @ConditionalOnMissingBean(SuperManagerService::class)
     fun sampleSuperManagerServiceImpl() = SampleSuperManagerServiceImpl()
-
-    @Bean
-    @ConditionalOnMissingBean(PermissionGradeService::class)
-    fun samplePermissionGradeService() = SamplePermissionGradeService()
 
     @Bean
     @ConditionalOnMissingBean(OrganizationService::class)
