@@ -37,7 +37,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.openapi.IgnoreProjectId
-import com.tencent.devops.openapi.config.OpenAPiConfiguration
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.PARAM_VERIFY_FAIL
 import com.tencent.devops.openapi.es.ESMessage
@@ -67,8 +66,7 @@ class ApiAspect(
     private val redisOperation: RedisOperation,
     private val bkTag: BkTag,
     private val permissionService: OpenapiPermissionService,
-    private val esService: IESService,
-    private val openAPiConfiguration: OpenAPiConfiguration
+    private val esService: IESService
 ) {
 
     companion object {
