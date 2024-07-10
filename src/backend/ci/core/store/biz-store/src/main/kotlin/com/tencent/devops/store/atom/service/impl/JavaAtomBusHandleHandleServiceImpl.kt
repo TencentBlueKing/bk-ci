@@ -28,9 +28,8 @@
 package com.tencent.devops.store.atom.service.impl
 
 import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.store.atom.service.AtomBusHandleService
-import com.tencent.devops.store.constant.StoreMessageCode
+import java.util.regex.Pattern
 
 class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
 
@@ -40,15 +39,6 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         } else {
             osName.lowercase()
         }
-    }
-
-    override fun checkTarget(target: String): Boolean {
-        if (!target.startsWith("java")) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.JAVA_ATOM_TASK_JSON_TARGET_IS_INVALID
-            )
-        }
-        return true
     }
 
     override fun handleOsArch(osName: String, osArch: String): String {
@@ -62,10 +52,19 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         }
         val javaPath = reqTarget.substringBefore("-jar").trim()
         // 获取插件配置的JVM指令
-        val jvmOptions = target.substringAfter("java").substringBefore("-jar").trim()
+        val pattern = Pattern.compile(" -[^\\s-]*(?=\\s|$)")
+        val matcher = pattern.matcher(target)
+        val builder = StringBuilder()
+        // 执行匹配并将jvm参数连接成字符串
+        while (matcher.find()) {
+            if (builder.isNotEmpty()) {
+                builder.append(" ")
+            }
+            builder.append(matcher.group())
+        }
         // 获取插件jar包路径
         val jarPath = reqTarget.substringAfter("-jar").trim()
 
-        return "$javaPath $jvmOptions -jar $jarPath"
+        return "$javaPath $builder $jarPath"
     }
 }
