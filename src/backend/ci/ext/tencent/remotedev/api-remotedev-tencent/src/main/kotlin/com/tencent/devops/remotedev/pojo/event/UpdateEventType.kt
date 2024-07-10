@@ -6,6 +6,5 @@ enum class UpdateEventType {
     STOP,
     DELETE,
     RESTART,
-    MAKE_IMAGE,
     REBUILD
 }

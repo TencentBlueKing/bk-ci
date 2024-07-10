@@ -86,7 +86,8 @@ class ImageManageService @Autowired constructor(
                     sourceCgsZoneName = sourceCgsZoneName?.zone ?: "",
                     creator = it.creator,
                     status = ImageStatus.values()[it.status],
-                    createdTime = it.createTime.timestamp()
+                    createdTime = it.createTime.timestamp(),
+                    errMsg = it.errorMsg
                 )
             )
         }

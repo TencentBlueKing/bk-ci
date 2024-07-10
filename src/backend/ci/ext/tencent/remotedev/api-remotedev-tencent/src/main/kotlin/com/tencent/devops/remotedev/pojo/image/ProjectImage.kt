@@ -58,5 +58,7 @@ data class ProjectImage(
     @get:Schema(title = "创建人")
     val creator: String,
     @get:Schema(title = "创建时间")
-    val createdTime: Long
+    val createdTime: Long,
+    @get:Schema(title = "失败信息")
+    val errMsg: String?
 )

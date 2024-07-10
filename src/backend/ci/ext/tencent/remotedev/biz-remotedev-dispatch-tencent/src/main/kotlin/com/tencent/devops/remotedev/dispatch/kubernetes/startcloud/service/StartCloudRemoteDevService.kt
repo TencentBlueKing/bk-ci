@@ -29,7 +29,6 @@ package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.RemoteDevInterface
@@ -63,7 +62,6 @@ import org.springframework.stereotype.Service
 
 @Service("startcloudRemoteDevService")
 class StartCloudRemoteDevService @Autowired constructor(
-    private val client: Client,
     private val dslContext: DSLContext,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao,
@@ -71,7 +69,6 @@ class StartCloudRemoteDevService @Autowired constructor(
     private val workspaceBcsClient: WorkspaceBcsClient,
     private val workspaceRedisUtils: WorkspaceRedisUtils,
     private val startCloudRedisUtils: StartCloudRedisUtils,
-    private val startCloudInterfaceService: StartCloudInterfaceService,
     private val startAndBcsCommonService: StartAndBcsCommonService
 ) : RemoteDevInterface {
     //
@@ -211,18 +208,25 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
-    override fun makeWorkspaceImage(userId: String, event: WorkspaceOperateEvent): String {
+    override fun makeWorkspaceImage(
+        userId: String,
+        workspaceName: String,
+        gameId: String,
+        cgsId: String,
+        imageId: String
+    ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.MAKE_IMAGE,
-            workspaceName = event.workspaceName,
+            workspaceName = workspaceName,
             environmentOperate = EnvironmentOperate(
-                uid = getEnvironmentUid(event.workspaceName),
-                appName = event.gameId,
+                uid = getEnvironmentUid(workspaceName),
+                appName = gameId,
                 userId = userId,
-                pipelineId = startCloudRedisUtils.getStartCloudOrder(event.workspaceName),
-                cgsId = event.cgsId
-            )
+                pipelineId = startCloudRedisUtils.getStartCloudOrder(workspaceName),
+                cgsId = cgsId
+            ),
+            actionMsg = imageId
         )
         return resp.taskUid
     }
@@ -266,8 +270,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         val startTime = System.currentTimeMillis()
         val timeout = if (
             type == UpdateEventType.CREATE ||
-            type == UpdateEventType.REBUILD ||
-            type == UpdateEventType.MAKE_IMAGE
+            type == UpdateEventType.REBUILD
         ) {
             START_CREATE_TIMEOUT
         } else {

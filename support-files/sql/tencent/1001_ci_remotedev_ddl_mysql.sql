@@ -304,6 +304,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_IMAGES` (
     `STATUS` int(11) default 0 not null comment '镜像状态,0-building,1-success,2-failure',
     `CREATOR` varchar(32) default '' not null comment '创建人',
     `CREATE_TIME` timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
+    `ERROR_MSG` varchar(1024) NULL COMMENT '制作镜像失败时的失败信息',
     PRIMARY KEY (`ID`) USING BTREE,
     UNIQUE KEY `uni_1` (`PROJECT_ID`,`IMAGE_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '控制台项目镜像模板信息';

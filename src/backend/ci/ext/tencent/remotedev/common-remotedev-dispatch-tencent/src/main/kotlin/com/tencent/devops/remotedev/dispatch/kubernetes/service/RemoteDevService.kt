@@ -43,9 +43,7 @@ import com.tencent.devops.remotedev.pojo.remotedev.WorkspaceResponse
 import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import com.tencent.devops.remotedev.pojo.image.WorkspaceImageInfo
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -194,44 +192,6 @@ class RemoteDevService @Autowired constructor(
             throw WorkspaceDispatchException(
                 envId = result.enviromentUid,
                 errorMessage = "errorMessage:$taskMessage"
-            )
-        }
-    }
-
-    fun makeWorkspaceImageWithBackEvent(event: WorkspaceOperateEvent, backEvent: RemoteDevUpdateEvent) {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .makeWorkspaceImage(event.userId, event)
-        val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .waitTaskFinish(event.userId, taskId, event.type)
-
-        if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
-            dispatchWorkspaceOpHisDao.update(
-                dslContext, taskId, EnvironmentActionStatus.SUCCEEDED
-            )
-            logger.info("${event.userId} make workspaceImage success. ${event.workspaceName}")
-            val image = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).image
-            // 更新db状态
-            dispatchWorkspaceDao.updateWorkspaceStatus(
-                workspaceName = event.workspaceName,
-                status = EnvStatusEnum.stopped,
-                dslContext = dslContext
-            )
-
-            backEvent.status = true
-            backEvent.workspaceImageInfo = WorkspaceImageInfo(
-                imageId = event.imageId ?: "",
-                imageCosFile = image?.cosFile ?: "",
-                size = image?.size ?: "",
-                sourceCgsId = image?.sourceCgsId ?: "",
-                sourceCgsType = image?.sourceType ?: "",
-                sourceCgsZone = image?.zoneId ?: ""
-            )
-        } else {
-            dispatchWorkspaceOpHisDao.update(
-                dslContext, taskId, EnvironmentActionStatus.FAILED
-            )
-            throw WorkspaceDispatchException(
-                "errorMessage:$taskMessage"
             )
         }
     }

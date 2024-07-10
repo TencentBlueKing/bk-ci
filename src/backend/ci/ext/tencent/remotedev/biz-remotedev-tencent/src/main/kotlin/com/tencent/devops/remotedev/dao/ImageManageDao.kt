@@ -63,17 +63,21 @@ class ImageManageDao {
         projectId: String,
         workspaceImageInfo: WorkspaceImageInfo,
         imageStatus: ImageStatus,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        errorMsg: String?
     ) {
         with(TProjectImages.T_PROJECT_IMAGES) {
-            dslContext.update(this)
+            val dsl = dslContext.update(this)
                 .set(IMAGE_COS_FILE, workspaceImageInfo.imageCosFile)
                 .set(SOURCE_CGS_ID, workspaceImageInfo.sourceCgsId)
                 .set(SOURCE_CGS_TYPE, workspaceImageInfo.sourceCgsType)
                 .set(SOURCE_CGS_ZONE, workspaceImageInfo.sourceCgsZone)
                 .set(SIZE, workspaceImageInfo.size)
                 .set(STATUS, imageStatus.ordinal)
-                .where(PROJECT_ID.eq(projectId))
+            if (!errorMsg.isNullOrBlank()) {
+                dsl.set(ERROR_MSG, errorMsg)
+            }
+            dsl.where(PROJECT_ID.eq(projectId))
                 .and(IMAGE_ID.eq(workspaceImageInfo.imageId))
                 .execute()
         }
