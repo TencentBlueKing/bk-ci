@@ -56,7 +56,7 @@
                 :value="param.defaultValue">
             </enum-input>
             <vuex-input
-                v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isFileParam(param.type) || isArtifactoryParam(param.type)"
+                v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type)"
                 :disabled="disabled"
                 :handle-change="(name, value) => handleUpdateParam(name, value)"
                 name="defaultValue"
@@ -66,6 +66,30 @@
                 :placeholder="$t('editPage.defaultValueTips')"
                 :value="param.defaultValue"
             />
+            <div class="file-param" v-if="isFileParam(param.type)">
+                <vuex-input
+                    class="path-input"
+                    :disabled="disabled"
+                    :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    name="defaultValue"
+                    v-validate="{ required: valueRequired }"
+                    :data-vv-scope="'pipelineParam'"
+                    :click-unfold="true"
+                    :placeholder="$t(`fef.${param.filePathTips}`)"
+                    :value="param.defaultValue"
+                />
+                <vuex-input
+                    class="file-name"
+                    disabled
+                    :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    name="defaultValue"
+                    v-validate="{ required: valueRequired }"
+                    :data-vv-scope="'pipelineParam'"
+                    :click-unfold="true"
+                    :placeholder="$t(`editPage.${param.fileNameTips}`)"
+                    :value="param.defaultValue"
+                />
+            </div>
             <vuex-textarea
                 v-if="isTextareaParam(param.type)"
                 :disabled="disabled"
@@ -415,3 +439,16 @@
         }
     }
 </script>
+
+<style lang="scss" scoped>
+    .file-param {
+        display: flex;
+        .path-input {
+            border-radius: 2px 0 0 2px;
+        }
+        .file-name {
+            border-radius: 0 2px 2px 0;
+            border-left: 0;
+        }
+    }
+</style>

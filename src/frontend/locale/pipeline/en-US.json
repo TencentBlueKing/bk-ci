@@ -1021,7 +1021,9 @@
     "branches": "Branch",
     "codelibConfigs": "Code Repositories Config",
     "timerTriggerCodelibTips": "- Git repository: Branch is optional, defaults to the default branch when not specified.\n-SVN repository: Branch is mandatory, must be a first-level subdirectory under the repository root path.",
-    "timerTriggerBranchTips": "If multiple branches have changes, each branch will trigger once when conditions are met."
+    "timerTriggerBranchTips": "If multiple branches have changes, each branch will trigger once when conditions are met.",
+    "filePathTips": "Please enter the directory where the file is stored",
+    "fileNameTips": "File name, will be automatically read after file upload"
   },
   "storeMap": {
     "textarea": "Textarea",

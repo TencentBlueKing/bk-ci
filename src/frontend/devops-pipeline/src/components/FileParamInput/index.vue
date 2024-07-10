@@ -11,7 +11,7 @@
         :url="uploadAcrtifactUrl"
         @on-success="handleUploadDone"
         @on-error="handleUploadDone"
-        :size="10"
+        :size="100"
     >
     </bk-upload>
 </template>
@@ -22,7 +22,7 @@
             filePath: String,
             size: {
                 type: Number,
-                default: 10
+                default: 100
             }
         },
         data () {
@@ -41,6 +41,7 @@
                 return response.data
             },
             handleUploadDone ({ name, errorMsg }) {
+                console.log(name, '123')
                 this.$showTips({
                     theme: errorMsg ? 'error' : 'success',
                     message: errorMsg || `${name}文件上传成功`
