@@ -26,6 +26,7 @@ import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
@@ -71,17 +72,17 @@ class ExpertSupportService @Autowired constructor(
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val permissionService: PermissionService,
     private val rabbitTemplate: RabbitTemplate,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val workspaceJoinDao: WorkspaceJoinDao
 ) {
     @Suppress("ComplexMethod")
     fun createSupport(
         data: CreateSupportData
     ) {
         // 校验机器在不在
-        val record = workspaceDao.fetchAnyWorkspace(
+        val record = workspaceJoinDao.fetchAnyWindowsWorkspace(
             dslContext = dslContext,
-            workspaceName = data.workspaceName,
-            mountType = WorkspaceMountType.START
+            workspaceName = data.workspaceName
         )
         if (record == null || record.status.checkDeleted() || record.status.checkInProcess()) {
             throw ErrorCodeException(
@@ -135,11 +136,6 @@ class ExpertSupportService @Autowired constructor(
             .getOrElse { null }?.data ?: throw RemoteServiceException(
             "not find project ${data.projectId}", HTTP_400
         )
-        val detail = workspaceCommon.getWorkspaceDetail(record.workspaceName)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
-                params = arrayOf(record.workspaceName)
-            )
 
         // 异步执行流水线完成其他动作
         /**
@@ -173,7 +169,7 @@ class ExpertSupportService @Autowired constructor(
 
         info.buildParam.forEach { (k, v) ->
             when (v) {
-                "ip" -> newParam[k] = detail.regionId.toString().plus(":").plus(ip)
+                "ip" -> newParam[k] = record.regionId.toString().plus(":").plus(ip)
                 "projectId" -> newParam[k] = data.projectId
                 "projectName" -> newParam[k] = projectInfo.projectName
                 "ticketId" -> newParam[k] = id.toString()
@@ -185,7 +181,7 @@ class ExpertSupportService @Autowired constructor(
                     LocalDateTime.now(), DateTimeUtil.YYYY_MM_DD_HH_MM_SS
                 )
 
-                "zone" -> newParam[k] = detail.regionId.toString()
+                "zone" -> newParam[k] = record.regionId.toString()
                 "workspaceName" -> newParam[k] = data.workspaceName
                 "phone" -> newParam[k] = taiUserCN[data.creator]?.second ?: ""
                 "phoneCountryCode" -> newParam[k] = taiUserCN[data.creator]?.third ?: ""
@@ -442,7 +438,7 @@ class ExpertSupportService @Autowired constructor(
         }.getOrThrow()
 
         val owner = permissionService.getWorkspaceOwner(workspaceName)
-        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, null, workspaceName, null, null) ?: run {
+        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName) ?: run {
             logger.warn("expandDiskCallback workspace is null $workspaceName")
             return
         }
@@ -474,7 +470,7 @@ class ExpertSupportService @Autowired constructor(
                 "operator" to operator,
                 "taskStatus" to (taskInfo.status?.name ?: ""),
                 "taskLogs" to taskInfo.logs.joinToString(";"),
-                "host" to (workspace.hostName ?: ""),
+                "host" to (workspace.hostIp ?: ""),
                 "dsize" to dSize
             )
         )

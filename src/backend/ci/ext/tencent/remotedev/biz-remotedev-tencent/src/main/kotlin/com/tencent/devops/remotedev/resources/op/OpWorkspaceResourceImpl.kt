@@ -92,13 +92,6 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         return Result(res)
     }
 
-    override fun deleteInactivityWorkspace(userId: String): Result<Boolean> {
-        deleteControl.deleteLinuxInactivityWorkspace()
-        /*暂时去掉个人win的控制*/
-//        deleteControl.deleteWinInactivityWorkspace()
-        return Result(true)
-    }
-
     override fun autoCleanJob4Windows(userId: String, type: String?): Result<Boolean> {
         when (type) {
             "delete" -> {

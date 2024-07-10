@@ -37,6 +37,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
+@Deprecated("LINUX 待删除")
 class ImageSpecConfigDao {
 
     fun fetchImageSpec(

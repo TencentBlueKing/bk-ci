@@ -1,4 +1,4 @@
-/*
+ /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
@@ -25,37 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.service.redis
+package com.tencent.devops.remotedev.pojo
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
-import org.slf4j.LoggerFactory
+import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- * 用于等待dispatch k8s返回消息
- */
-open class RedisWaiting4K8s(
-    private val redisOperation: RedisOperation,
-    private val lockKey: String,
-    private val expiredCount: Long = 120L
-) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(RedisWaiting4K8s::class.java)
-    }
-
-    fun waiting(): RemoteDevUpdateEvent? {
-        var expired = expiredCount
-        while (expired-- > 0L) {
-            val result = redisOperation.get(lockKey)
-            if (result != null) {
-                redisOperation.delete(lockKey)
-                logger.info("RedisWaiting4K8s get $lockKey for $result")
-                return JsonUtil.to(result, RemoteDevUpdateEvent::class.java)
-            }
-            Thread.sleep(1000)
-        }
-        logger.info("RedisWaiting4K8s get $lockKey time out")
-        return null
-    }
-}
+@Schema(title = "调整工作空间配额接口请求")
+data class WorkspaceUpgradeReq(
+    @get:Schema(title = "目的机型")
+    val machineType: String
+)

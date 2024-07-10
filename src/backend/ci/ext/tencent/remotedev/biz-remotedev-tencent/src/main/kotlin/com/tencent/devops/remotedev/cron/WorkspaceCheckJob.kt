@@ -1,27 +1,19 @@
 package com.tencent.devops.remotedev.cron
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
-import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WorkspaceService
-import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
@@ -29,7 +21,6 @@ import org.springframework.stereotype.Component
 
 @Component
 class WorkspaceCheckJob @Autowired constructor(
-    private val redisHeartBeat: RedisHeartBeat,
     private val redisOperation: RedisOperation,
     private val workspaceService: WorkspaceService,
     private val remoteDevSettingService: RemoteDevSettingService,
@@ -66,8 +57,8 @@ class WorkspaceCheckJob @Autowired constructor(
     @Scheduled(cron = "0 0/5 * * * ?")
     fun stopInactiveWorkspace() {
         logger.info("=========>> Stop inactive workspace <<=========")
-        // 无心跳工作空间休眠
-        checkLinuxInactiveWorkspace()
+        // 定时修复异常状态
+        checkWorkspaceStatus()
         /*暂时取消个人云桌面控制*/
         // 计算用户 win-gpu 可用时长
 //        computeAllUserWinUsageTime()
@@ -95,120 +86,17 @@ class WorkspaceCheckJob @Autowired constructor(
         }
     }
 
-    private fun checkUnavailableWorkspace() {
-        val redisLock = RedisLock(redisOperation, stopJobLockKeyD + bkTag.getLocalTag(), 3600L)
-        try {
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
-                logger.info("Stop Unavailable workspace get lock.")
-                val sleepWorkspaceList = workspaceService.getUnavailableWorkspace()
-                sleepWorkspaceList.parallelStream().forEach { workspaceName ->
-                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-                    logger.info(
-                        "workspace $workspaceName usage time exceeds limit, ready to sleep"
-                    )
-                    kotlin.runCatching {
-                        sleepControl.heartBeatStopWS(workspaceName, OpHistoryCopyWriting.EXPERIENCE_TIMEOUT_SLEEP)
-                    }.onFailure {
-                        logger.warn("heart beat stop ws $workspaceName fail, ${it.message}")
-                    }
-                }
-            }
-        } catch (e: Throwable) {
-            logger.error("Stop inactive workspace failed", e)
-        } finally {
-            redisLock.unlock()
-        }
-    }
-
-    private fun checkLinuxInactiveWorkspace() {
+    private fun checkWorkspaceStatus() {
         val redisLock = RedisLock(redisOperation, stopJobLockKeyH + bkTag.getLocalTag(), 3600L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                logger.info("Stop inactive workspace get lock.")
-                if (redisHeartBeat.autoHeartbeat()) {
-                    workspaceCommon.fixUnexpectedWorkspace()
-                    return
-                }
-                val sleepWorkspaceList = redisHeartBeat.getSleepWorkspaceHeartbeats()
-                sleepWorkspaceList.parallelStream().forEach { (workspaceName, time) ->
-                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-                    logger.info(
-                        "workspace $workspaceName last active is ${
-                            DateTimeUtil.formatMilliTime(
-                                time.toLong(),
-                                DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-                            )
-                        } ready to sleep"
-                    )
-                    kotlin.runCatching {
-                        sleepControl.heartBeatStopWS(workspaceName, OpHistoryCopyWriting.TIMEOUT_SLEEP)
-                    }.onFailure {
-                        logger.warn("heart beat stop ws $workspaceName fail, ${it.message}")
-                        // 针对已经休眠或销毁的容器，删除上报心跳记录。
-                        if (it is ErrorCodeException &&
-                            (
-                                it.errorCode == ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode ||
-                                    it.errorCode == ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode
-                                )
-                        ) {
-                            redisHeartBeat.deleteWorkspaceHeartbeat(ADMIN_NAME, workspaceName)
-                        }
-                    }
-                }
-                // 保留在此：处理休眠失败的情况
                 workspaceCommon.fixUnexpectedWorkspace()
             }
         } catch (e: Throwable) {
             logger.error("Stop inactive workspace failed", e)
         } finally {
             redisLock.unlock()
-        }
-    }
-
-    /**
-     * 每天凌晨2点触发，检测空闲超过14天的工作空间并销毁
-     */
-    @Scheduled(cron = "0 0 2 * * ?")
-    fun clearIdleWorkspace() {
-        logger.info("=========>> Clear idle workspace <<=========")
-        val redisLock = RedisLock(redisOperation, deleteJobLockKey + bkTag.getLocalTag(), 3600L)
-        try {
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
-                logger.info("Clear idle workspace get lock.")
-                deleteControl.deleteLinuxInactivityWorkspace()
-                /*暂时去掉个人win的控制*/
-//                deleteControl.deleteWinInactivityWorkspace()
-            }
-        } catch (e: Throwable) {
-            logger.error("Clear idle workspace failed", e)
-        } finally {
-            redisLock.unlock()
-        }
-    }
-
-    /**
-     * 每天10点触发，检测即将空闲超过14天的工作空间并做邮件推送
-     */
-    @Scheduled(cron = "0 0 10 * * ?")
-    fun sendIdleWorkspaceNotify() {
-        logger.info("=========>> send idle workspace notify <<=========")
-        if (!SpringContextUtil.getBean(Profile::class.java).isProd()) {
-            return
-        }
-        val redisLock = RedisLock(redisOperation, nofityJobLockKey, 60L)
-        try {
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
-                logger.info("send idle workspace notify get lock.")
-                workspaceService.sendLinuxInactivityWorkspaceNotify()
-                /*暂时去掉个人win的控制*/
-//                workspaceService.sendWinInactivityWorkspaceNotify()
-            }
-        } catch (e: Throwable) {
-            logger.error("send idle workspace notify failed", e)
         }
     }
 

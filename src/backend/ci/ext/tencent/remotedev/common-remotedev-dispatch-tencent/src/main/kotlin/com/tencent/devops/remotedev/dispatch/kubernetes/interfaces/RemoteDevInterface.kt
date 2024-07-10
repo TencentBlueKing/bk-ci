@@ -85,6 +85,11 @@ interface RemoteDevInterface {
     ): String
 
     /**
+     * 工作空间机型转换
+     */
+    fun upgradeWorkspaceVm(userId: String, workspaceName: String, machineType: String, pipelineId: String): String
+
+    /**
      * 获取工作空间web端链接
      */
     fun getWorkspaceUrl(userId: String, workspaceName: String): String?
