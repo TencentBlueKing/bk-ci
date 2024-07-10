@@ -88,5 +88,7 @@ data class NodeWithPermission(
     @get:Schema(title = "hostID")
     val bkHostId: Long? = null,
     @get:Schema(title = "job任务ID")
-    val taskId: Long?
+    val taskId: Long?,
+    @get:Schema(title = "主机serverId")
+    val serverId: Long?
 )
