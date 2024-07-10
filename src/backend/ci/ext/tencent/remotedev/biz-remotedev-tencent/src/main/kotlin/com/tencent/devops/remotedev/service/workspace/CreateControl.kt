@@ -89,7 +89,6 @@ import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -203,7 +202,11 @@ class CreateControl @Autowired constructor(
         }
 
         // 检查是否有特殊机型的配额限制
-        windowsResourceConfigService.createCheckSpecLimit(workspaceCreate.windowsType, projectInfo.englishName, workspaceNames)
+        windowsResourceConfigService.createCheckSpecLimit(
+            workspaceCreate.windowsType,
+            projectInfo.englishName,
+            workspaceNames
+        )
 
         prepareWindowsCreate(
             creator = pmUserId,

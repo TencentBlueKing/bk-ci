@@ -30,7 +30,6 @@ package com.tencent.devops.remotedev.dao
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
@@ -776,7 +775,6 @@ class WorkspaceDao {
             return this.get(index)
         }
     }
-
 
     companion object {
         val workspaceMapper = TWorkspaceRecordJooqMapper()
