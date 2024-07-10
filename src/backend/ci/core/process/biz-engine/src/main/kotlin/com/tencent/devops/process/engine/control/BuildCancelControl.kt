@@ -50,13 +50,12 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
-import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
@@ -76,7 +75,6 @@ class BuildCancelControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val buildVariableService: BuildVariableService,
@@ -117,7 +115,13 @@ class BuildCancelControl @Autowired constructor(
             return false
         }
 
-        val model = pipelineBuildDetailService.getBuildModel(projectId = event.projectId, buildId = buildId)
+        val model = pipelineBuildRecordService.getRecordModel(
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            version = buildInfo.version,
+            buildId = buildId,
+            executeCount = buildInfo.executeCount
+        )
         return if (model != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|CANCEL|status=${event.status}")
             if (event.actionType != ActionType.TERMINATE) {

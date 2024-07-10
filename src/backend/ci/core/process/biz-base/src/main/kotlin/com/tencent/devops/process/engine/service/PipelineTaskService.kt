@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
@@ -37,7 +38,6 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
@@ -52,7 +52,6 @@ import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
@@ -90,7 +89,6 @@ class PipelineTaskService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val taskBuildDetailService: TaskBuildDetailService,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
@@ -522,7 +520,14 @@ class PipelineTaskService @Autowired constructor(
     fun createFailTaskVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
         val taskRecord = getBuildTask(projectId, buildId, taskId)
             ?: return
-        val model = taskBuildDetailService.getBuildModel(projectId, buildId)
+        val buildRecordContainer = containerBuildRecordService.getRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = taskRecord.containerId,
+            executeCount = taskRecord.executeCount
+        ) ?: return
+        val containerName = buildRecordContainer.containerVar[NAME]?.toString() ?: taskRecord.containerId
         val failTask = pipelineVariableService.getVariable(
             projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKS
         )
@@ -530,7 +535,7 @@ class PipelineTaskService @Autowired constructor(
             projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKNAMES
         )
         try {
-            val errorElement = findElementMsg(model, taskRecord)
+            val errorElement = findElementMsg(containerName, taskRecord)
 
             // 存在的不重复添加 fix：流水线设置的变量重试一次就会叠加一次变量值 #6058
             if (inFailTasks(failTasks = failTask, failTask = errorElement.first)) {
@@ -615,10 +620,9 @@ class PipelineTaskService @Autowired constructor(
     }
 
     private fun findElementMsg(
-        model: Model?,
+        containerName: String,
         taskRecord: PipelineBuildTask
     ): Pair<String, String> {
-        val containerName = model?.getContainer(taskRecord.containerId)?.name ?: ""
         val failTask = "[${taskRecord.stageId}][$containerName]${taskRecord.taskName} \n"
         val failTaskName = taskRecord.taskName
 

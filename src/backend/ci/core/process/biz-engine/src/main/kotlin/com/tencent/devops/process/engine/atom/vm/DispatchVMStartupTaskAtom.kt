@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ENV_NOT_YET_SUPPORTED
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -62,11 +61,9 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
@@ -87,10 +84,8 @@ import java.util.concurrent.TimeUnit
 class DispatchVMStartupTaskAtom @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
-    private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val buildVariableService: BuildVariableService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeBuilder: DispatchTypeBuilder,
@@ -202,7 +197,20 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             )
         )
 
-        val container = containerBuildDetailService.getBuildModel(projectId, buildId)?.getContainer(vmSeqId)
+        val buildRecordContainer = containerBuildRecordService.getRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = vmSeqId,
+            executeCount = task.executeCount ?: 1
+        )
+        val container = containerBuildRecordService.getRecordModel(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = buildRecordContainer?.resourceVersion ?: 1,
+            buildId = buildId,
+            executeCount = task.executeCount ?: 1
+        )?.getContainer(vmSeqId)
         Preconditions.checkNotNull(
             obj = container,
             exception = BuildTaskException(
@@ -335,14 +343,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             }
         }
         return true
-    }
-
-    private fun getBuildZone(container: Container): Zone? {
-        return when {
-            container !is VMBuildContainer -> null
-            container.enableExternal == true -> Zone.EXTERNAL
-            else -> null
-        }
     }
 
     override fun tryFinish(

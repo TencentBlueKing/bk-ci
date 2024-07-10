@@ -42,8 +42,8 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
@@ -70,7 +70,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineBuildMaintainFacadeService: PipelineBuildMaintainFacadeService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val engineVMBuildService: EngineVMBuildService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) : ServiceBuildResource {
@@ -79,7 +79,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId, it must not empty.")
         }
         return Result(
-            pipelineBuildDetailService.getBuildDetailPipelineId(projectId, buildId)
+            pipelineBuildRecordService.getPipelineIdByBuildId(projectId, buildId)
                 ?: throw ParamBlankException("Invalid buildId, please check if projectId & buildId are related")
         )
     }

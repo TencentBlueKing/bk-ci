@@ -41,8 +41,8 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TIME_TRIGGER_KIND
 import com.tencent.devops.process.engine.control.ControlUtils
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.utils.JOB_RETRY_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
@@ -62,7 +62,7 @@ import org.springframework.stereotype.Service
 )
 @Service
 class PipelineContextService @Autowired constructor(
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val containerBuildRecordService: ContainerBuildRecordService
 ) {
@@ -79,7 +79,9 @@ class PipelineContextService @Autowired constructor(
         model: Model? = null,
         executeCount: Int? = 1
     ): MutableMap<String, String> {
-        val modelDetail = model ?: pipelineBuildDetailService.get(projectId, buildId)?.model ?: return mutableMapOf()
+        val modelDetail = model ?: pipelineBuildRecordService.getBuildRecord(
+            projectId = projectId, pipelineId = pipelineId, buildId = buildId
+        )?.model ?: return mutableMapOf()
         val contextMap = mutableMapOf<String, String>()
         var previousStageStatus = BuildStatus.RUNNING
         val failTaskNameList = mutableListOf<String>()
@@ -156,7 +158,9 @@ class PipelineContextService @Autowired constructor(
         buildId: String,
         variables: Map<String, String>
     ): Map<String, String> {
-        val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
+        val modelDetail = pipelineBuildRecordService.getBuildRecord(
+            projectId = projectId, pipelineId = pipelineId, buildId = buildId
+        ) ?: return emptyMap()
         val contextMap = mutableMapOf<String, String>()
         var previousStageStatus = BuildStatus.RUNNING
         val failTaskNameList = mutableListOf<String>()

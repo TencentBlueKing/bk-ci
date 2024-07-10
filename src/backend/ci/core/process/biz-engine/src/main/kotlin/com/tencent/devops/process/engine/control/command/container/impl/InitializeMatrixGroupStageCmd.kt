@@ -63,7 +63,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
@@ -93,7 +92,6 @@ import kotlin.math.min
 @Service
 class InitializeMatrixGroupStageCmd(
     private val dslContext: DSLContext,
-    private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val templateAcrossInfoService: PipelineBuildTemplateAcrossInfoService,
     private val pipelineContainerService: PipelineContainerService,
@@ -178,17 +176,6 @@ class InitializeMatrixGroupStageCmd(
         val event = commandContext.event
         val variables = commandContext.variables
         val asCodeEnabled = commandContext.pipelineAsCodeEnabled ?: false
-        val modelStage = containerBuildDetailService.getBuildModel(
-            projectId = parentContainer.projectId,
-            buildId = parentContainer.buildId
-        )?.getStage(parentContainer.stageId) ?: throw DependNotFoundException(
-            "stage(${parentContainer.stageId}) cannot be found in model"
-        )
-        val modelContainer = modelStage.getContainer(
-            vmSeqId = parentContainer.seq.toString()
-        ) ?: throw DependNotFoundException(
-            "container(${parentContainer.containerId}) cannot be found in model"
-        )
         val recordContainer = containerBuildRecordService.getRecord(
             transactionContext = null,
             projectId = parentContainer.projectId,
@@ -196,6 +183,20 @@ class InitializeMatrixGroupStageCmd(
             buildId = parentContainer.buildId,
             containerId = parentContainer.containerId,
             executeCount = parentContainer.executeCount
+        )
+        val modelStage = containerBuildRecordService.getRecordModel(
+            projectId = parentContainer.projectId,
+            pipelineId = parentContainer.pipelineId,
+            version = recordContainer?.resourceVersion ?: 1,
+            buildId = parentContainer.buildId,
+            executeCount = parentContainer.executeCount
+        )?.getStage(parentContainer.stageId) ?: throw DependNotFoundException(
+            "stage(${parentContainer.stageId}) cannot be found in model"
+        )
+        val modelContainer = modelStage.getContainer(
+            vmSeqId = parentContainer.seq.toString()
+        ) ?: throw DependNotFoundException(
+            "container(${parentContainer.containerId}) cannot be found in model"
         )
         // #4518 待生成的分裂后container表和task表记录
         val buildContainerList = mutableListOf<PipelineBuildContainer>()

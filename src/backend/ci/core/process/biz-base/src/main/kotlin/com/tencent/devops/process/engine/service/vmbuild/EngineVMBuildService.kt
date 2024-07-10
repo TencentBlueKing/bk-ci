@@ -79,7 +79,6 @@ import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineProgressRateService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
@@ -92,7 +91,6 @@ import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
-import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
@@ -118,7 +116,6 @@ import org.springframework.stereotype.Service
 @Service
 class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val buildVariableService: BuildVariableService,
@@ -128,7 +125,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineTaskService: PipelineTaskService,
-    private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val jmxElements: JmxElements,
     private val buildExtService: PipelineBuildExtService,
     private val client: Client,
@@ -189,7 +185,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val pipelineId = buildInfo.pipelineId
         val variables = buildVariableService.getAllVariable(projectId, buildInfo.pipelineId, buildId)
         val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
-        val model = containerBuildDetailService.getBuildModel(projectId, buildId)
+        val model = containerBuildRecordService.getRecordModel(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = buildInfo.version,
+            buildId = buildId,
+            executeCount = buildInfo.executeCount
+        )
         val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
             projectId, buildInfo.pipelineId, buildId, buildInfo
         )

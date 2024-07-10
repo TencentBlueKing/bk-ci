@@ -75,7 +75,7 @@ import javax.ws.rs.core.Response
 open class BaseBuildRecordService(
     private val dslContext: DSLContext,
     private val buildRecordModelDao: BuildRecordModelDao,
-    private val pipelineBuildDao: PipelineBuildDao,
+    val pipelineBuildDao: PipelineBuildDao,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
     private val stageTagService: StageTagService,

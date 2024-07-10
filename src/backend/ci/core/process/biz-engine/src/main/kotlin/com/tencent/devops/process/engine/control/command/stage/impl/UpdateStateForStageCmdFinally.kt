@@ -47,7 +47,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
 import com.tencent.devops.process.engine.service.record.StageBuildRecordService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -62,7 +61,6 @@ class UpdateStateForStageCmdFinally(
     private val pipelineStageService: PipelineStageService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContainerService: PipelineContainerService,
-    private val stageBuildDetailService: StageBuildDetailService,
     private val stageBuildRecordService: StageBuildRecordService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,

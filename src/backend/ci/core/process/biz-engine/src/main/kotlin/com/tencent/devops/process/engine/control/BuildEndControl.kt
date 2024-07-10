@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
@@ -66,7 +67,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -100,7 +100,6 @@ class BuildEndControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineStageService: PipelineStageService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
@@ -279,10 +278,14 @@ class BuildEndControl @Autowired constructor(
     }
 
     private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String, debug: Boolean) {
-        val model = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val buildNoObj = triggerContainer.buildNo ?: return
-
+        val triggerRecordContainer = containerBuildRecordService.getRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = "0"
+        ) ?: return
+        val buildNoStr = triggerRecordContainer.containerVar[TriggerContainer::buildNo.name]?.toString() ?: return
+        val buildNoObj = JsonUtil.to(buildNoStr, BuildNo::class.java)
         if (buildNoObj.buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
             // 使用分布式锁防止并发更新
             PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId).use { buildNoLock ->
@@ -417,12 +420,17 @@ class BuildEndControl @Autowired constructor(
         }
 
         LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|next build: ${nextBuild.buildId} ${nextBuild.status}")
-        val model = pipelineBuildDetailService.getBuildModel(nextBuild.projectId, nextBuild.buildId)
-            ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                params = arrayOf(nextBuild.buildId)
-            )
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerRecordContainer = containerBuildRecordService.getRecord(
+            projectId = projectId, pipelineId = pipelineId, buildId = buildId, containerId = "0"
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(nextBuild.buildId)
+        )
+        val buildNoStr = triggerRecordContainer.containerVar[TriggerContainer::buildNo.name]?.toString()
+        val buildNoObj = if (!buildNoStr.isNullOrBlank()) {
+            JsonUtil.to(buildNoStr, BuildNo::class.java)
+        } else {
+            null
+        }
         pipelineEventDispatcher.dispatch(
             PipelineBuildStartEvent(
                 source = "build_finish_$buildId",
@@ -433,7 +441,7 @@ class BuildEndControl @Autowired constructor(
                 taskId = nextBuild.firstTaskId,
                 status = nextBuild.status,
                 actionType = ActionType.START,
-                buildNoType = triggerContainer.buildNo?.buildNoType
+                buildNoType = buildNoObj?.buildNoType
             )
         )
     }

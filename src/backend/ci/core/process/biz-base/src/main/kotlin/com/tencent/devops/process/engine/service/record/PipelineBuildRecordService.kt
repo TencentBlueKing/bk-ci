@@ -69,7 +69,6 @@ import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.ContainerUtils
@@ -158,6 +157,47 @@ class PipelineBuildRecordService @Autowired constructor(
             return true
         }
         return (System.currentTimeMillis() - startTime) < TimeUnit.DAYS.toMillis(retryLimitDays.toLong())
+    }
+
+    /**
+     * 查询ModelRecord
+     * @param projectId: 项目Id
+     * @param pipelineId: 流水线Id
+     * @param buildId: 构建Id
+     * @param refreshStatus: 是否刷新状态
+     * @param executeCount: 执行次数
+     * @param queryDslContext: 查询jooq上下文
+     */
+    fun getBuildRecord(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        refreshStatus: Boolean = true,
+        executeCount: Int? = null,
+        queryDslContext: DSLContext? = null
+    ): ModelRecord? {
+        val buildInfo = pipelineBuildDao.getBuildInfo(
+            dslContext = queryDslContext ?: dslContext,
+            projectId = projectId,
+            buildId = buildId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            params = arrayOf(buildId)
+        )
+        if (projectId != buildInfo.projectId || pipelineId != buildInfo.pipelineId) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
+                params = arrayOf(buildId)
+            )
+        }
+        return getBuildRecord(
+            buildInfo = buildInfo,
+            executeCount = executeCount,
+            refreshStatus = refreshStatus,
+            queryDslContext = queryDslContext
+        )
     }
 
     /**
@@ -690,5 +730,13 @@ class PipelineBuildRecordService @Autowired constructor(
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordModel.timestamps) }
             )
         }
+    }
+
+    fun getPipelineIdByBuildId(projectId: String, buildId: String): String? {
+        return pipelineBuildDao.getBuildInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId
+        )?.pipelineId
     }
 }

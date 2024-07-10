@@ -30,12 +30,14 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -52,20 +54,20 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineSettingService
 import com.tencent.devops.process.engine.service.PipelineStageService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import kotlin.math.min
 
 /**
@@ -82,7 +84,7 @@ class BuildMonitorControl @Autowired constructor(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineStageService: PipelineStageService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
@@ -458,12 +460,17 @@ class BuildMonitorControl @Autowired constructor(
             if (canStart) {
                 val buildId = event.buildId
                 LOG.info("ENGINE|$buildId|BUILD_QUEUE_TRY_START")
-                val model = pipelineBuildDetailService.getBuildModel(event.projectId, buildInfo.buildId)
-                    ?: throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                        params = arrayOf(buildInfo.buildId)
-                    )
-                val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+                val triggerRecordContainer = containerBuildRecordService.getRecord(
+                    projectId = event.projectId, pipelineId = event.pipelineId, buildId = buildId, containerId = "0"
+                ) ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(buildId)
+                )
+                val buildNoStr = triggerRecordContainer.containerVar[TriggerContainer::buildNo.name]?.toString()
+                val buildNoObj = if (!buildNoStr.isNullOrBlank()) {
+                    JsonUtil.to(buildNoStr, BuildNo::class.java)
+                } else {
+                    null
+                }
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStartEvent(
                         source = "start_monitor",
@@ -474,7 +481,7 @@ class BuildMonitorControl @Autowired constructor(
                         taskId = buildInfo.firstTaskId,
                         status = BuildStatus.RUNNING,
                         actionType = ActionType.START,
-                        buildNoType = triggerContainer.buildNo?.buildNoType
+                        buildNoType = buildNoObj?.buildNoType
                     )
                 )
             }

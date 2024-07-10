@@ -68,7 +68,6 @@ import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
@@ -172,7 +171,6 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineStageService: PipelineStageService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
-    private val buildDetailDao: BuildDetailDao,
     private val recordModelDao: BuildRecordModelDao,
     private val buildVariableService: BuildVariableService,
     private val pipelineSettingService: PipelineSettingService,
@@ -890,8 +888,6 @@ class PipelineRuntimeService @Autowired constructor(
         context.pipelineParamMap[PIPELINE_START_TASK_ID] =
             BuildParameters(PIPELINE_START_TASK_ID, context.firstTaskId, readOnly = true)
 
-        val modelJson = JsonUtil.toJson(fullModel, formatted = false)
-
         val retryInfo = if (buildInfo != null) {
             context.buildNum = buildInfo.buildNum
             BuildRetryInfo(
@@ -926,15 +922,6 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = context.buildId,
                     retryInfo = retryInfo!!
                 )
-                // 重置状态和人
-                buildDetailDao.update(
-                    dslContext = transactionContext,
-                    projectId = context.projectId,
-                    buildId = context.buildId,
-                    model = modelJson,
-                    buildStatus = context.startBuildStatus,
-                    cancelUser = ""
-                )
             } else {
                 context.watcher.start("updateBuildNum")
                 // 构建号递增
@@ -949,18 +936,6 @@ class PipelineRuntimeService @Autowired constructor(
                 context.watcher.stop()
                 // 创建构建记录
                 pipelineBuildDao.create(dslContext = transactionContext, startBuildContext = context)
-
-                // detail记录,未正式启动，先排队状态
-                buildDetailDao.create(
-                    dslContext = transactionContext,
-                    projectId = context.projectId,
-                    buildId = context.buildId,
-                    startUser = context.userId,
-                    startType = context.startType,
-                    buildNum = context.buildNum,
-                    model = modelJson,
-                    buildStatus = context.startBuildStatus
-                )
             }
 
             context.pipelineParamMap[PIPELINE_BUILD_NUM] = BuildParameters(
@@ -1219,13 +1194,6 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildInfo.buildId,
                 buildStatus = newBuildStatus,
                 executeCount = executeCount
-            )
-            buildDetailDao.updateStatus(
-                dslContext = transactionContext,
-                projectId = buildInfo.projectId,
-                buildId = buildInfo.buildId,
-                buildStatus = newBuildStatus,
-                startTime = now
             )
             buildLogPrinter.addYellowLine(
                 buildId = buildInfo.buildId, message = "Approved by user($userId)",
@@ -1562,13 +1530,6 @@ class PipelineRuntimeService @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             val startTime = LocalDateTime.now()
-            buildDetailDao.updateStatus(
-                dslContext = transactionContext,
-                projectId = latestRunningBuild.projectId,
-                buildId = latestRunningBuild.buildId,
-                buildStatus = BuildStatus.RUNNING,
-                startTime = startTime
-            )
             recordModelDao.updateStatus(
                 dslContext = transactionContext,
                 projectId = latestRunningBuild.projectId,

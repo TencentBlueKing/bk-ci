@@ -49,7 +49,6 @@ import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.engine.service.PipelineElementService
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
@@ -77,7 +76,6 @@ class TaskBuildRecordService(
     private val dslContext: DSLContext,
     private val recordTaskDao: BuildRecordTaskDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
-    private val taskBuildDetailService: TaskBuildDetailService,
     recordModelService: PipelineRecordModelService,
     pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
@@ -112,14 +110,6 @@ class TaskBuildRecordService(
         operation: String,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
     ) {
-        taskBuildDetailService.updateTaskStatus(
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
-            taskStatus = buildStatus,
-            buildStatus = BuildStatus.RUNNING,
-            operation = operation
-        )
         updateTaskRecord(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -140,7 +130,6 @@ class TaskBuildRecordService(
         taskId: String,
         executeCount: Int
     ) {
-        taskBuildDetailService.taskStart(projectId, buildId, taskId)
         update(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             executeCount = executeCount, buildStatus = BuildStatus.RUNNING,
@@ -230,14 +219,6 @@ class TaskBuildRecordService(
         taskId: String,
         executeCount: Int
     ) {
-        taskBuildDetailService.taskPause(
-            projectId = projectId,
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            taskId = taskId,
-            buildStatus = BuildStatus.PAUSE
-        )
         updateTaskRecord(
             projectId = projectId,
             pipelineId = pipelineId,

@@ -5,6 +5,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.pojo.BuildStageProgressInfo
@@ -18,11 +19,11 @@ import javax.ws.rs.core.Response
 @Suppress("LongParameterList")
 class PipelineProgressRateService constructor(
     private val taskBuildRecordService: TaskBuildRecordService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildRecordService: ContainerBuildRecordService,
     private val buildRecordTaskDao: BuildRecordTaskDao,
+    private val pipelineBuildDao: PipelineBuildDao,
     private val dslContext: DSLContext
 ) {
     fun reportProgressRate(
@@ -34,7 +35,9 @@ class PipelineProgressRateService constructor(
         logger.info("report progress rate:$projectId|$buildId|$executeCount|$jobHeartbeatRequest")
         val task2ProgressRate = jobHeartbeatRequest?.task2ProgressRate ?: return
         if (task2ProgressRate.isEmpty()) return
-        val pipelineId = pipelineBuildDetailService.getBuildDetailPipelineId(projectId, buildId) ?: return
+        val pipelineId = pipelineBuildDao.getBuildInfo(
+            dslContext = dslContext, projectId = projectId, buildId = buildId
+        )?.pipelineId ?: return
         task2ProgressRate.forEach { (taskId, progressRate) ->
             taskBuildRecordService.updateTaskRecord(
                 projectId = projectId,
