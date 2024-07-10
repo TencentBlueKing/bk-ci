@@ -21,6 +21,7 @@
             <bk-date-picker
               v-model="dateTimeRange"
               type="datetimerange"
+              :placeholder="t('授权时间')"
               @clear="handleClearDaterange"
               @change="handleChangeDaterange"
               @pick-success="handlePickSuccess"
@@ -33,31 +34,35 @@
               class="content-btn-search"
               :placeholder="filterTips"
               :key="searchName"
+              value-behavior="need-key"
             />
           </div>
         </div>
         <bk-loading class="content-table" :loading="isLoading">
           <bk-table
             ref="refTable"
-            checked
             :data="tableData"
             :columns="columns"
             height="100%"
             show-overflow-tooltip
             :key="resourceType"
-            :scroll-loading="isScrollLoading"
+            :pagination="pagination"
+            remote-pagination
             @select-all="handleSelectAll"
             @selection-change="handleSelectionChange"
-            @scroll-bottom="getTableList"
+            @page-value-change="handlePageChange"
+            @page-limit-change="handlePageLimitChange"
           >
+            <!-- :scroll-loading="isScrollLoading"
+            @scroll-bottom="getTableList" -->
             <template #prepend>
               <div v-if="isSelectAll" class="prepend">
-                {{ t('已选择全量数据X条', [totalCount]) }}
+                {{ t('已选择全量数据X条', [pagination.count]) }}
                 <span @click="handleClear">{{ t('清除选择') }}</span>
               </div>
               <div v-else-if="selectList.length" class="prepend">
                 {{ t('已选择X条数据，', [selectList.length]) }}
-                <span @click="handleSelectAllData"> {{ t('选择全量数据X条', [totalCount]) }}</span> 
+                <span @click="handleSelectAllData"> {{ t('选择全量数据X条', [pagination.count]) }}</span> 
                 &nbsp; | &nbsp;
                 <span @click="handleClear">{{ t('清除选择') }}</span> 
               </div>
@@ -75,7 +80,7 @@
       @closed="dialogClose"
     >
       <div class="dialog">
-        <bk-tag radius="20px" class="tag">{{ t('已选择X个XX', [isSelectAll ? totalCount : selectList.length, searchName]) }}</bk-tag>
+        <bk-tag radius="20px" class="tag">{{ t('已选择X个XX', [isSelectAll ? pagination.count : selectList.length, searchName]) }}</bk-tag>
         <bk-form
           ref="formRef"
           :model="resetFormData"
@@ -89,15 +94,20 @@
           >
             <bk-input
               v-model="resetFormData.name"
-              :placeholder="t('输入授权人，按回车进行校验')"
+              :placeholder="t('输入授权人，输入框失焦进行校验')"
               clearable
               :disabled="dialogLoading"
-              @enter="handleCheckReset()"
+              @change="(val) => handleClearName(val)"
+              @blur="handleCheckReset()"
             />
           </bk-form-item>
         </bk-form>
-  
-        <div v-if="isResetFailure" class="check-failure">
+
+        <div v-if="isChecking">
+          <Spinner class="check-checking-icon" />
+          <span>{{ t('授权校验中') }}</span>
+        </div>
+        <div v-else-if="isResetFailure" class="check-failure">
           <div class="failed-tips">
             <div class="manage-icon manage-icon-warning-circle-fill warning-icon"></div>
             <i18n-t keypath="检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权" tag="div">
@@ -144,14 +154,13 @@
 </template>
 
 <script setup name="PermissionManage">
+import { ref, onMounted, computed, h, watch } from 'vue';
 import http from '@/http/api';
 import { useI18n } from 'vue-i18n';
-import { ref, onMounted, computed, h, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { convertTime } from '@/utils/util'
 import { Message } from 'bkui-vue';
-import { Success } from 'bkui-vue/lib/icon';
-
+import { Success, Spinner } from 'bkui-vue/lib/icon';
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
@@ -168,18 +177,19 @@ const showResetDialog = ref(false);
 const dialogLoading = ref(false);
 const isResetFailure = ref(false);
 const isResetSuccess = ref(false);
-const isScrollLoading = ref(false);
-const page = ref(1);
-const pageSize = ref(20);
+const isChecking = ref(false);
 const projectId = computed(() => route.params?.projectCode);
 const resourceType = ref('repertory');
-const hasNext = ref(true);
-const totalCount = ref(0);
 const isSelectAll = ref(false);  // 选择全量数据
 const dateTimeRange = ref(['', '']);
 const daterangeCache = ref(['', '']);
 const disabledResetBtn = ref(true);
 const failedCount = ref(0);
+const pagination = ref({
+  count: 0,
+  limit: 20,
+  current: 1,
+});
 const searchName = computed(() => {
   const nameMap = {
     'pipeline': t('流水线'),
@@ -235,16 +245,6 @@ const permissionList = ref([
     resourceType: 'env_node'
   },
 ]);
-const searchData = ref([
-  {
-    name: searchName,
-    id: 'resourceName', 
-  },
-  {
-    name: t('授权人'),
-    id: 'handoverFrom',
-  },
-]);
 const columns = ref([
   {
     type: "selection",
@@ -254,6 +254,28 @@ const columns = ref([
   {
     label: searchName,
     field: "resourceName",
+    render ({ cell, row }) {
+      return h(
+        'span',
+        {
+          style: resourceType.value === 'env_node' ? {} : {
+            cursor: 'pointer',
+            color: '#3a84ff',
+          },
+          onClick () {
+            if (resourceType.value === 'env_node') return
+            if (resourceType.value === 'repertory') {
+              window.open(`${location.origin}/console/codelib/${row.projectCode}?searchName=${row.resourceName}&id=${row.resourceCode}`, '_blank')
+            } else {
+              window.open(`${location.origin}/console/pipeline/${row.projectCode}/${row.resourceCode}/history/delegation`, '_blank')
+            }
+          }
+        },
+        [
+          cell
+        ]
+      )
+    }
   },
   {
     label: t('授权人'),
@@ -280,11 +302,29 @@ const filterQuery = computed(() => {
       query[item.id] = item.values?.map(value => value.id).join(',');
       return query;
   }, {})
-})
+});
+
+const searchData = computed(() => {
+  const data = [
+    {
+      name: t('授权人'),
+      id: 'handoverFrom',
+      default: true,
+    },
+    {
+      name: searchName.value,
+      id: 'resourceName',
+    },
+  ]
+  return data.filter(data => {
+    return !searchValue.value.find(val => val.id === data.id)
+  })
+});
 watch(() => searchValue.value, (val, oldVal) => {
-  page.value = 1;
+  pagination.value.current = 1;
   isSelectAll.value = false;
-  hasNext.value = true;
+  refTable.value.clearSelection();
+  selectList.value = [];
   getTableList();
 });
 
@@ -293,9 +333,8 @@ onMounted(() => {
 });
 
 function init () {
-  page.value = 1;
+  pagination.value.current = 1;
   tableData.value = [];
-  hasNext.value = true;
   searchValue.value = [];
   isSelectAll.value = false;
   selectList.value = [];
@@ -305,36 +344,23 @@ function init () {
  * 获取列表数据
  */
 async function getTableList () {
-  if (!hasNext.value) return;
-
-  if (page.value === 1) {
-    isLoading.value = true;
-    refTable.value.clearSelection();
-    selectList.value = [];
-    tableData.value = [];
-  } else {
-    isScrollLoading.value = true;
-  }
   try {
+    isLoading.value = true;
     const res = await http.getResourceAuthList(projectId.value, {
-      page: page.value,
-      pageSize: pageSize.value,
+      page: pagination.value.current,
+      pageSize: pagination.value.limit,
       projectCode: projectId.value,
       resourceType: resourceType.value,
       ...filterQuery.value,
       greaterThanHandoverTime: dateTimeRange.value[0],
       lessThanHandoverTime: dateTimeRange.value[1],
     });
-    tableData.value = [...tableData.value, ...res.records];
-    page.value += 1;
-    hasNext.value = res.count > tableData.value.length;
-    totalCount.value = res.count;
+    tableData.value = res.records;
+    pagination.value.count = res.count;
 
     isLoading.value = false;
-    isScrollLoading.value = false;
   } catch (e) {
     isLoading.value = false;
-    isScrollLoading.value = false;
     console.error(e);
   }
 }
@@ -405,13 +431,27 @@ function dialogClose() {
   isResetFailure.value = false;
   isResetSuccess.value = false;
   isSelectAll.value = false;
+  disabledResetBtn.value = true;
   resetFormData.value.name = '';
   formRef.value?.clearValidate();
+}
+
+function handleClearName (val) {
+  if (!val) {
+    isResetFailure.value = false;
+    isResetSuccess.value = false;
+    disabledResetBtn.value = true;
+    resetTableData.value = [];
+    failedCount.value = 0;
+  }
 }
 
 async function handleCheckReset () {
   if (!resetFormData.value.name) return
   try {
+    isChecking.value = true;
+    disabledResetBtn.value = true;
+
     const res = await http.resetAuthorization(projectId.value, {
       ...resetParams.value,
       preCheck: true
@@ -423,6 +463,7 @@ async function handleCheckReset () {
     }
     isResetFailure.value = !!failedCount.value;
     isResetSuccess.value = !failedCount.value;
+    isChecking.value = false;
 
     disabledResetBtn.value = failedCount.value === selectList.value.length;
   } catch (e) {
@@ -446,14 +487,14 @@ function confirmReset() {
         message: t('授权已成功重置', [searchName.value]),
       });
 
-      page.value = 1;
-      getTableList();
+      await getTableList();
       
-      isSelectAll.value = false;
-      hasNext.value = true;
       disabledResetBtn.value = true;
       isResetSuccess.value = false;
       isResetFailure.value = false;
+      refTable.value.clearSelection();
+      selectList.value = [];
+      isSelectAll.value = false;
     } catch (e) {
       console.error(e)
     }
@@ -467,14 +508,29 @@ function handleChangeDaterange (date) {
 }
 function handleClearDaterange () {
   dateTimeRange.value = ['', '']
-  page.value = 1;
-  hasNext.value = true;
+  pagination.value.current = 1;
   getTableList();
 }
 function handlePickSuccess () {
   dateTimeRange.value = daterangeCache.value;
-  page.value = 1;
-  hasNext.value = true;
+  pagination.value.current = 1;
+  getTableList();
+}
+
+function handlePageChange (page) {
+  refTable.value.clearSelection();
+  isSelectAll.value = false;
+  selectList.value = [];
+  pagination.value.current = page;
+  getTableList();
+}
+
+function handlePageLimitChange (limit) {
+  refTable.value.clearSelection();
+  isSelectAll.value = false;
+  selectList.value = [];
+  pagination.value.current = 1;
+  pagination.value.limit = limit;
   getTableList();
 }
 
@@ -512,9 +568,8 @@ function handlePickSuccess () {
   }
 
   .content {
-    flex: 1;
     padding: 24px;
-
+    width: calc(100% - 240px);
     .content-btn {
       display: flex;
       justify-content: space-between;
@@ -594,6 +649,10 @@ function handlePickSuccess () {
 }
 .check-success-icon {
   color: #2DCB56;
+  margin-right: 5px;
+}
+.check-checking-icon {
+  color: #3A84FF;
   margin-right: 5px;
 }
 .reset-form {

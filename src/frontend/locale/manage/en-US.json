@@ -147,7 +147,7 @@
     "部署节点": "Deployment Node",
     "流水线": "Pipeline",
     "授权已成功重置": "{0} authorization has been successfully reset",
-    "输入授权人，按回车进行校验": "Enter the authorizer and press Enter to validate",
+    "输入授权人，输入框失焦进行校验": "Enter authorized person, validation occurs on input field blur",
     "批量重置": "Batch reset",
     "重置授权人": "Reset authorizer",
     "已选择全量数据X条": "{0} records of full data selected",
