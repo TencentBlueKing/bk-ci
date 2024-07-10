@@ -111,6 +111,7 @@ allprojects {
             dependency("io.mockk:mockk:${Versions.mockk}")
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
+                entry("resilience4j-core")
             }
             dependencySet("org.eclipse.jgit:${Versions.jgit}") {
                 entry("org.eclipse.jgit")
