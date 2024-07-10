@@ -28,8 +28,8 @@
 package systemutil
 
 import (
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"net"
 	"net/url"
 	"os"
@@ -229,7 +229,7 @@ func CheckProcess(name string) bool {
 	processLock = flock.New(processLockFile)
 	ok, err := processLock.TryLock()
 	if err != nil {
-		logs.Errorf("failed to get process lock(%s), exit: %v", processLockFile, err)
+		logs.WithError(err).Errorf("failed to get process lock(%s), exit", processLockFile)
 		return false
 	}
 
@@ -240,7 +240,7 @@ func CheckProcess(name string) bool {
 
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", GetRuntimeDir(), TotalLock))
 	if err = totalLock.Lock(); err != nil {
-		logs.Error("get total lock failed, exit", err.Error())
+		logs.WithError(err).Error("get total lock failed, exit")
 		return false
 	}
 	defer func() {
@@ -248,7 +248,7 @@ func CheckProcess(name string) bool {
 	}()
 
 	if err = fileutil.WriteString(pidFile, fmt.Sprintf("%d", os.Getpid())); err != nil {
-		logs.Errorf("failed to save pid file(%s): %v", pidFile, err)
+		logs.WithError(err).Errorf("failed to save pid file(%s)", pidFile)
 		return false
 	}
 

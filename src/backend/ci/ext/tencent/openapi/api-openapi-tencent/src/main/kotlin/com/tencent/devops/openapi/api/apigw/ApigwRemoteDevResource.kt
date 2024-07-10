@@ -10,6 +10,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -19,6 +20,7 @@ import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
@@ -130,6 +132,9 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "拥有者，为空则表示不分配，只交付项目", required = false)
         @QueryParam("owner")
         owner: String?,
+        @Parameter(description = "zoneType", required = false)
+        @QueryParam("zoneType")
+        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
@@ -224,6 +229,9 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @Parameter(description = "zoneType", required = false)
+        @QueryParam("zoneType")
+        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "创建内容", required = true)
         data: WindowsWorkspaceCreate
     ): Result<Boolean>
@@ -262,6 +270,9 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "项目id", required = true)
         @QueryParam("projectId")
         projectId: String,
+        @Parameter(description = "zoneType", required = false)
+        @QueryParam("zoneType")
+        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "创建内容", required = true)
         data: WindowsWorkspaceCreate
     ): Result<Boolean>
@@ -474,5 +485,37 @@ interface ApigwRemoteDevResource {
         workspaceName: String,
         @Parameter(description = "请求报文", required = true)
         makeImageReq: MakeWorkspaceImageReq
+    ): Result<Boolean>
+
+    @Operation(summary = "修改工作空间属性", tags = ["v4_app_remotedev_modify_property"])
+    @POST
+    @Path("/modify_property")
+    fun modifyWorkspaceProperty(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "实例IP", required = true)
+        @QueryParam("ip")
+        ip: String?,
+        @Parameter(description = "备注名称", required = true)
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean>
+
+    @Operation(summary = "删除项目的自定义镜像", tags = ["v4_app_remotedev_delete_project_image"])
+    @DELETE
+    @Path("/delete/image")
+    fun deleteProjectImage(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "镜像ID", required = true)
+        @QueryParam("imageId")
+        imageId: String
     ): Result<Boolean>
 }

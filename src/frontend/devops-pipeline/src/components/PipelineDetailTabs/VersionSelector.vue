@@ -31,7 +31,7 @@
                         {{ activeDisplayName }}
                     </template>
                 </span>
-                <i v-if="isCurrentVersion(activeVersion)" class="pipeline-release-version-tag">
+                <i v-if="activeVersion?.latestReleasedFlag" class="pipeline-release-version-tag">
                     {{ $t('latest') }}
                 </i>
                 <i v-else-if="isActiveDraft && showDraftTag" class="pipeline-draft-version-tag">
@@ -81,9 +81,9 @@
 </template>
 <script>
     import Logo from '@/components/Logo'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
-    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { convertTime } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
     export default {

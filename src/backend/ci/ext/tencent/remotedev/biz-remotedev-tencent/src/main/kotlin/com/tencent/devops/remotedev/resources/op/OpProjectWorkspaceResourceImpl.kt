@@ -16,7 +16,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
@@ -24,6 +23,7 @@ import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
@@ -32,6 +32,7 @@ import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
+import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
@@ -74,6 +75,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     )
     override fun assignWorkspace(
         userId: String,
+        zoneType: WindowsResourceZoneConfigType?,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
         logger.info("op assignWorkspace|$userId|$data")
@@ -81,8 +83,13 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         workspaceCommon.syncStartCloudResourceList()
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
         when (data.type) {
-            WorkspaceOwnerType.PROJECT -> assignProjectWorkspace(data, userId, cgsData)
-            WorkspaceOwnerType.PERSONAL -> assignPersonalWorkspace(data, cgsData)
+            WorkspaceOwnerType.PROJECT -> assignProjectWorkspace(
+                data = data,
+                userId = userId,
+                cgsData = cgsData,
+                zoneType = zoneType
+            )
+            WorkspaceOwnerType.PERSONAL -> assignPersonalWorkspace(data = data, cgsData = cgsData, zoneType = zoneType)
         }
 
         // 启动流水线完成剩下的分配工作
@@ -171,7 +178,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private fun assignProjectWorkspace(
         data: OpProjectWorkspaceAssignData,
         userId: String,
-        cgsData: List<EnvironmentResourceData>
+        cgsData: List<EnvironmentResourceData>,
+        zoneType: WindowsResourceZoneConfigType?
     ) {
         val projectId = checkNotNull(data.projectId)
         // 增加可以分配的配额
@@ -229,7 +237,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                     windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
                     baseImageId = 0,
                     count = 1
-                )
+                ),
+                zoneType = zoneType
             )
             Thread.sleep(200)
         }
@@ -237,7 +246,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
 
     private fun assignPersonalWorkspace(
         data: OpProjectWorkspaceAssignData,
-        cgsData: List<EnvironmentResourceData>
+        cgsData: List<EnvironmentResourceData>,
+        zoneType: WindowsResourceZoneConfigType?
     ) {
         val owner = checkNotNull(data.owner)
         cgsData.forEach { cgs ->
@@ -266,7 +276,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                     baseImageId = 0,
                     count = 1
                 ),
-                cgsId = cgs.cgsId
+                cgsId = cgs.cgsId,
+                zoneType = zoneType
             )
             Thread.sleep(200)
         }

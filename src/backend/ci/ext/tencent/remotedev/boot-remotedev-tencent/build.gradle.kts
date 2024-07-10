@@ -27,5 +27,6 @@
 
 dependencies {
     api(project(":ext:tencent:remotedev:biz-remotedev-tencent"))
+    api(project(":ext:tencent:remotedev:biz-remotedev-dispatch-tencent"))
     testImplementation(project(":core:common:common-test"))
 }

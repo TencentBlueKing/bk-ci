@@ -89,3 +89,5 @@ class ContextNotFoundException(override val message: String?) : ExpressionExcept
         )
     }
 }
+
+class ContextJsonFormatException(override val message: String?) : ExpressionException()

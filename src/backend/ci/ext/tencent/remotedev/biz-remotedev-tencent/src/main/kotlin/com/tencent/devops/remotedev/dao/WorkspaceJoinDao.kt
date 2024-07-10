@@ -1,12 +1,15 @@
 package com.tencent.devops.remotedev.dao
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupport
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
+import com.tencent.devops.model.remotedev.tables.TWorkspaceLabels
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
@@ -20,16 +23,18 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record1
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
 import org.jooq.SelectSelectStep
+import org.jooq.Table
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 /**
  * 针对 workspace 需要连表查询的复杂场景独立出来的 dao 方便整理代码
@@ -65,12 +70,12 @@ class WorkspaceJoinDao {
             // 没有包含其他表的条件
             if (search.onlyNeedCheckWorkspace()) {
                 val dsl = (
-                        genFetchProjectWorkspaceCond(
-                            dslContext = dslContext,
-                            queryType = queryType,
-                            search = search
-                        ) as SelectConditionStep<TWorkspaceRecord>
-                        ).orderBy(CREATE_TIME.desc(), ID.desc())
+                    genFetchProjectWorkspaceCond(
+                        dslContext = dslContext,
+                        queryType = queryType,
+                        search = search
+                    ) as SelectConditionStep<TWorkspaceRecord>
+                    ).orderBy(CREATE_TIME.desc(), ID.desc())
                 if (limit != null) {
                     dsl.limit(limit.limit).offset(limit.offset)
                 }
@@ -200,9 +205,9 @@ class WorkspaceJoinDao {
         search.owner?.ifEmpty { null }?.let { owners ->
             val sql = if (search.onFuzzyMatch) {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(owners.joinToString("|")))
-                        )
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(owners.joinToString("|")))
+                    )
                     .or(
                         TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(
                             WorkspaceShared.AssignType.OWNER.name
@@ -214,9 +219,9 @@ class WorkspaceJoinDao {
                     )
             } else {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
-                        ).or(
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
+                    ).or(
                         TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
                             .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
                     )
@@ -228,9 +233,9 @@ class WorkspaceJoinDao {
         search.viewers?.ifEmpty { null }?.let { viewers ->
             val sql = if (search.onFuzzyMatch) {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(viewers.joinToString("|")))
-                        ).or(
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(viewers.joinToString("|")))
+                    ).or(
                         TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.likeRegex("VIEWER|OWNER")
                             .and(
                                 TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
@@ -239,9 +244,9 @@ class WorkspaceJoinDao {
                     )
             } else {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers))
-                        ).or(
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers))
+                    ).or(
                         TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name)
                             .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
                     ).or(
@@ -303,6 +308,12 @@ class WorkspaceJoinDao {
             )
         }
 
+        if (search.needCheckLabels()) {
+            val label = labelsTable(search.labels!!)
+            this.rightJoin(label)
+                .on(TWorkspace.T_WORKSPACE.NAME.eq(label.field(TWorkspaceLabels.T_WORKSPACE_LABELS.WORKSPACE_NAME)))
+        }
+
         if (!search.size.isNullOrEmpty()) {
             this.leftJoin(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE).on(
                 TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
@@ -316,6 +327,42 @@ class WorkspaceJoinDao {
             )
         }
         return this
+    }
+
+    /**
+     * labels 的交集查询子句
+     *
+     * sql示例：
+     * ```sql
+     * select alias_107434951.`WORKSPACE_NAME`
+     * from (select `devops_remotedev`.`T_WORKSPACE_LABELS`.`WORKSPACE_NAME`
+     *      from `devops_remotedev`.`T_WORKSPACE_LABELS`
+     *      where `devops_remotedev`.`T_WORKSPACE_LABELS`.`LABEL` = '2121') as `alias_107434951`
+     * group by alias_107434951.`WORKSPACE_NAME`
+     * having count(*) = 1;
+     * ```
+     **/
+    private fun labelsTable(labels: List<String>): Table<Record1<String>> {
+        kotlin.run { }
+        with(TWorkspaceLabels.T_WORKSPACE_LABELS) {
+            val subquery = DSL.select(WORKSPACE_NAME)
+                .from(this)
+                .where(LABEL.eq(labels.first()))
+                .also { dsl ->
+                    labels.drop(1).forEach {
+                        dsl.unionAll(
+                            DSL.select(WORKSPACE_NAME)
+                                .from(this)
+                                .where(LABEL.eq(it))
+                        )
+                    }
+                }.asTable()
+            return DSL.select(subquery.field(WORKSPACE_NAME))
+                .from(subquery)
+                .groupBy(subquery.field(WORKSPACE_NAME))
+                .having(DSL.count().eq(labels.count()))
+                .asTable()
+        }
     }
 
     fun fetchProjectFromUser(
@@ -388,7 +435,7 @@ class WorkspaceJoinDao {
                 creatorDeptName = record["CREATOR_DEPT_NAME"] as String,
                 creatorCenterName = record["CREATOR_CENTER_NAME"] as String,
                 creatorGroupName = record["CREATOR_GROUP_NAME"] as String,
-                status = WorkspaceStatus.values()[record["STATUS"] as Int],
+                status = WorkspaceStatus.load(record["STATUS"] as Int),
                 createTime = record["CREATE_TIME"] as LocalDateTime,
                 updateTime = record["UPDATE_TIME"] as LocalDateTime,
                 lastStatusUpdateTime = record["LAST_STATUS_UPDATE_TIME"] as LocalDateTime?,
@@ -396,7 +443,10 @@ class WorkspaceJoinDao {
                 workspaceMountType = WorkspaceMountType.valueOf(record["WORKSPACE_MOUNT_TYPE"] as String),
                 workspaceSystemType = WorkspaceSystemType.valueOf(record["SYSTEM_TYPE"] as String),
                 ownerType = WorkspaceOwnerType.valueOf(record["OWNER_TYPE"] as String),
-                remark = record["REMARK"] as String?
+                remark = record["REMARK"] as String?,
+                labels = (record["LABELS"] as String?)?.let { self ->
+                    JsonUtil.getObjectMapper().readValue(self) as List<String>
+                }
             )
         }
     }
@@ -433,7 +483,7 @@ class WorkspaceJoinDao {
                 creatorDeptName = record["CREATOR_DEPT_NAME"] as String,
                 creatorCenterName = record["CREATOR_CENTER_NAME"] as String,
                 creatorGroupName = record["CREATOR_GROUP_NAME"] as String,
-                status = WorkspaceStatus.values()[record["STATUS"] as Int],
+                status = WorkspaceStatus.load(record["STATUS"] as Int),
                 createTime = record["CREATE_TIME"] as LocalDateTime,
                 updateTime = record["UPDATE_TIME"] as LocalDateTime,
                 lastStatusUpdateTime = record["LAST_STATUS_UPDATE_TIME"] as LocalDateTime?,
@@ -442,7 +492,10 @@ class WorkspaceJoinDao {
                 workspaceSystemType = WorkspaceSystemType.valueOf(record["SYSTEM_TYPE"] as String),
                 ownerType = WorkspaceOwnerType.valueOf(record["OWNER_TYPE"] as String),
                 workSpaceDetail = record["DETAIL"] as String,
-                remark = record["REMARK"] as String?
+                remark = record["REMARK"] as String?,
+                labels = (record["LABELS"] as String?)?.let { self ->
+                    JsonUtil.getObjectMapper().readValue(self) as List<String>
+                }
             )
         }
     }
@@ -465,7 +518,7 @@ class WorkspaceJoinDao {
         ).addResourceJoin(projectId).groupBy(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE).fetch()
             .map {
                 it.getValue(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE) to
-                        it.get("COUNT").toString().toLong().toInt()
+                    it.get("COUNT").toString().toLong().toInt()
             }.toMap()
     }
 

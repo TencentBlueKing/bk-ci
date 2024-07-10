@@ -405,10 +405,11 @@ watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], ()
 });
 
 watch(() => projectData.value.productId, (id) => {
-  emits('productIdChange', {
-    id,
-    list: operationalList.value,
-  });
+  if (!id) {
+    projectData.value.productName = ''
+    return
+  }
+  projectData.value.productName = operationalList.value.find(i => i?.ProductId === id)?.ProductName;
 }, {
   deep: true,
 });

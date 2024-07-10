@@ -85,4 +85,18 @@ class WorkspaceOpHistoryDao {
                 .limit(limit.limit).offset(limit.offset).fetch()
         }
     }
+
+    fun fetchLastOp(
+        dslContext: DSLContext,
+        workspaceName: String,
+        action: WorkspaceAction
+    ): TWorkspaceOpHisRecord? {
+        with(TWorkspaceOpHis.T_WORKSPACE_OP_HIS) {
+            return dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .and(ACTION.eq(action.ordinal))
+                .orderBy(CREATED_TIME.desc(), ID.desc())
+                .limit(1).fetchAny()
+        }
+    }
 }

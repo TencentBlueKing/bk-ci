@@ -10,6 +10,7 @@ import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -19,6 +20,7 @@ import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import java.time.LocalDateTime
@@ -87,12 +89,14 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         apigwType: String?,
         operator: String,
         owner: String?,
+        zoneType: WindowsResourceZoneConfigType?,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
         logger.info("assign workspace|operator|$operator|owner|$owner|data|$data")
         return client.get(ServiceRemoteDevResource::class).assignWorkspace(
             operator = operator,
             owner = owner,
+            zoneType = zoneType,
             data = data
         )
     }
@@ -165,9 +169,13 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
-    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<Boolean> {
+    override fun createPersonalWorkspace(
+        userId: String,
+        zoneType: WindowsResourceZoneConfigType?,
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean> {
         logger.info("createPersonalWorkspace $userId|$data")
-        return client.get(ServiceRemoteDevResource::class).createPersonalWorkspace(userId, data)
+        return client.get(ServiceRemoteDevResource::class).createPersonalWorkspace(userId, zoneType, data)
     }
 
     override fun deletePersonalWorkspace(userId: String, workspaceName: String): Result<Boolean> {
@@ -183,10 +191,16 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun createProjectWorkspace(
         userId: String,
         projectId: String,
+        zoneType: WindowsResourceZoneConfigType?,
         data: WindowsWorkspaceCreate
     ): Result<Boolean> {
         logger.info("createProjectWorkspace $userId|$projectId|$data")
-        return client.get(ServiceRemoteDevResource::class).createProjectWorkspace(userId, projectId, data)
+        return client.get(ServiceRemoteDevResource::class).createProjectWorkspace(
+            userId = userId,
+            projectId = projectId,
+            zoneType = zoneType,
+            data = data
+        )
     }
 
     override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
@@ -323,5 +337,29 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Boolean> {
         logger.info("makeImageByVm $userId|$workspaceName|$makeImageReq")
         return client.get(ServiceRemoteDevResource::class).makeImageByVm(userId, workspaceName, makeImageReq)
+    }
+
+    override fun modifyWorkspaceProperty(
+        userId: String,
+        workspaceName: String?,
+        ip: String?,
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean> {
+        logger.info("modifyWorkspaceProperty $userId|$workspaceName|$ip|$workspaceProperty")
+        return client.get(ServiceRemoteDevResource::class).modifyWorkspaceProperty(
+            userId = userId,
+            workspaceName = workspaceName,
+            ip = ip,
+            workspaceProperty = workspaceProperty
+        )
+    }
+
+    override fun deleteProjectImage(userId: String, projectId: String, imageId: String): Result<Boolean> {
+        logger.info("deleteProjectImage $userId|$projectId|$imageId")
+        return client.get(ServiceRemoteDevResource::class).deleteProjectImage(
+            userId = userId,
+            projectId = projectId,
+            imageId = imageId
+        )
     }
 }

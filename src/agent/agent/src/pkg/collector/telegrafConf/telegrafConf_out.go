@@ -32,9 +32,9 @@ package telegrafconf
 
 const TelegrafConf = `
 [global_tags]
-  projectId = "###{projectId}###"
-  agentId = "###{agentId}###"
-  agentSecret = "###{agentSecret}###"
+  projectId = "{{.ProjectId}}"
+  agentId = "{{.AgentId}}"
+  agentSecret = "{{.AgentSecret}}"
 [agent]
   interval = "1m"
   round_interval = true
@@ -50,10 +50,10 @@ const TelegrafConf = `
   hostname = ""
   omit_hostname = false
 [[outputs.influxdb]]
-  urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
+  urls = ["{{.Gateway}}/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
   database = "agentMetrix"
   skip_database_creation = true
-  ###{tls_ca}###
+  {{.TlsCa}}
 [[inputs.cpu]]
   percpu = true
   totalcpu = true

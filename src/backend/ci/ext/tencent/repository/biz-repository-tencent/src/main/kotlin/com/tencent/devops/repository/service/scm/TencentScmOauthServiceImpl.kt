@@ -82,7 +82,9 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String?
+        search: String?,
+        page: Int,
+        pageSize: Int
     ): List<String> {
         return client.getScm(ServiceScmOauthResource::class).listBranches(
             projectName = projectName,

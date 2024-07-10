@@ -22,9 +22,10 @@ import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.config.async.AsyncExecute
-import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.DesktopTokenSign
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
@@ -38,6 +39,7 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -51,12 +53,12 @@ import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
-import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
@@ -184,6 +186,7 @@ class ServiceRemoteDevResourceImpl(
     override fun assignWorkspace(
         operator: String,
         owner: String?,
+        zoneType: WindowsResourceZoneConfigType?,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
         val projectId = checkNotNull(data.projectId)
@@ -227,7 +230,8 @@ class ServiceRemoteDevResourceImpl(
                     baseImageId = 0,
                     count = 1,
                     assignOwners = owner?.let { listOf(owner) } ?: emptyList()
-                )
+                ),
+                zoneType = zoneType
             )
             Thread.sleep(500)
         }
@@ -299,8 +303,19 @@ class ServiceRemoteDevResourceImpl(
         return Result(windowsResourceConfigService.getAllType(true, null))
     }
 
-    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<Boolean> {
-        return Result(createControl.devcloudCreateWorkspace(userId = userId, workspaceCreate = data, projectId = null))
+    override fun createPersonalWorkspace(
+        userId: String,
+        zoneType: WindowsResourceZoneConfigType?,
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean> {
+        return Result(
+            createControl.devcloudCreateWorkspace(
+                userId = userId,
+                workspaceCreate = data,
+                projectId = null,
+                zoneType = zoneType
+            )
+        )
     }
 
     override fun deletePersonalWorkspace(userId: String, workspaceName: String): Result<Boolean> {
@@ -320,14 +335,21 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getPersonalWorkspace(userId: String, workspaceName: String): Result<WeSecProjectWorkspace?> {
-        val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
-        if (record == null || record.ownerType != WorkspaceOwnerType.PERSONAL) {
+        val workspace = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
+        if (workspace == null || workspace.ownerType != WorkspaceOwnerType.PERSONAL) {
             logger.warn("get personal workspace with invalid workspace type: $userId|$workspaceName")
             return Result(null)
         }
+
+        if (!permissionService.hasManagerOrViewerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to get $workspaceName info")
+            )
+        }
         return Result(
             workspaceService.getWorkspaceList4WeSec(
-                workspaceName = workspaceName,
+                workspaceName = workspace.workspaceName,
                 notStatus = null
             ).firstOrNull()
         )
@@ -336,11 +358,17 @@ class ServiceRemoteDevResourceImpl(
     override fun createProjectWorkspace(
         userId: String,
         projectId: String,
+        zoneType: WindowsResourceZoneConfigType?,
         data: WindowsWorkspaceCreate
     ): Result<Boolean> {
         permissionService.checkUserManager(userId, projectId)
         return Result(
-            createControl.devcloudCreateWorkspace(userId = userId, workspaceCreate = data, projectId = projectId)
+            createControl.devcloudCreateWorkspace(
+                userId = userId,
+                workspaceCreate = data,
+                projectId = projectId,
+                zoneType = zoneType
+            )
         )
     }
 
@@ -374,15 +402,21 @@ class ServiceRemoteDevResourceImpl(
         projectId: String,
         workspaceName: String
     ): Result<WeSecProjectWorkspace?> {
-        val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
-        if (record == null || record.ownerType != WorkspaceOwnerType.PROJECT || record.projectId != projectId) {
+        val workspace = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
+        if (workspace == null || workspace.ownerType != WorkspaceOwnerType.PROJECT || workspace.projectId != projectId) {
             logger.warn("get project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(null)
         }
-        permissionService.checkViewerPermission(userId, workspaceName, projectId)
+
+        if (!permissionService.hasManagerOrViewerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to get $workspaceName info")
+            )
+        }
         return Result(
             workspaceService.getWorkspaceList4WeSec(
-                workspaceName = workspaceName,
+                workspaceName = workspace.workspaceName,
                 notStatus = null
             ).firstOrNull()
         )
@@ -560,6 +594,22 @@ class ServiceRemoteDevResourceImpl(
         return Result(RsaUtil.rsaEncrypt(dToken, rsaPublicKey))
     }
 
+    override fun modifyWorkspaceProperty(
+        userId: String,
+        workspaceName: String?,
+        ip: String?,
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean> {
+        return Result(
+            workspaceService.modifyWorkspaceProperty(
+                userId = userId,
+                workspaceName = workspaceName,
+                ip = ip,
+                workspaceProperty = workspaceProperty
+            )
+        )
+    }
+
     @ActionAuditRecord(
         actionId = ActionId.CGS_TOKEN_GENERATE,
         instance = AuditInstanceRecord(
@@ -607,5 +657,13 @@ class ServiceRemoteDevResourceImpl(
     private fun throwTokenFail(desktopIP: String, failMessage: String, failDetailMessage: String): Nothing {
         logger.warn("$desktopIP get token fail:$failMessage.<$failDetailMessage>")
         throw CustomException(Response.Status.FORBIDDEN, failMessage)
+    }
+
+    override fun workspaceExpandDiskCallback(taskId: String, workspaceName: String, operator: String) {
+        expertSupportService.expandDiskCallback(taskId, workspaceName, operator)
+    }
+
+    override fun deleteProjectImage(userId: String, projectId: String, imageId: String): Result<Boolean> {
+        return Result(imageManageService.deleteProjectImage(userId, projectId, imageId))
     }
 }

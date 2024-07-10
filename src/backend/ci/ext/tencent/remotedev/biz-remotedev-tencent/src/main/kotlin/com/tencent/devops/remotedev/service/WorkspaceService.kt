@@ -46,7 +46,7 @@ import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -65,6 +65,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
@@ -164,6 +165,7 @@ class WorkspaceService @Autowired constructor(
         ),
         content = ActionAuditContent.CGS_EDIT_CONTENT
     )
+    @Deprecated("不要新增功能，希望废弃该方法")
     // 修改workspace备注名称
     fun editWorkspace(
         userId: String,
@@ -197,27 +199,42 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
-    fun modifyWorkspaceProperty(userId: String, workspaceName: String, workspaceProperty: WorkspaceProperty): Boolean {
+    fun modifyWorkspaceProperty(
+        userId: String,
+        workspaceName: String?,
+        ip: String?,
+        workspaceProperty: WorkspaceProperty
+    ): Boolean {
         logger.info("$userId modify workspace property $workspaceName|$workspaceProperty")
 
-        val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-            ?: throw ErrorCodeException(
+        val ws = when {
+            workspaceName != null -> workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ip != null -> workspaceDao.fetchWorkspaceByIp(dslContext, ip).firstOrNull()
+            else -> throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(workspaceName)
+                params = arrayOf("null workspaceName and null ip")
             )
+        } ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(workspaceName ?: ip ?: "unknown")
+        )
         // 审计
         ActionAuditContext.current()
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
             .scopeId = ws.projectId
 
-        if (!permissionService.hasUserManager(userId, ws.projectId)) {
-            permissionService.checkViewerPermission(userId, workspaceName, ws.projectId)
+        if (!permissionService.hasManagerOrViewerPermission(userId, ws.projectId, ws.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to modify $workspaceName property")
+            )
         }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceDao.modifyWorkspaceProperty(
                 dslContext = transactionContext,
-                workspaceName = workspaceName,
+                projectId = ws.projectId,
+                workspaceName = ws.workspaceName,
                 workspaceProperty = workspaceProperty
             )
         }
@@ -292,7 +309,7 @@ class WorkspaceService @Autowired constructor(
             // 共享时创建START云桌面的用户
             if (workspace.workspaceMountType == WorkspaceMountType.START) {
                 val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
-                client.get(ServiceStartCloudResource::class)
+                SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
                     .createStartCloudUser(sharedUser, gameId.first)
             }
             if (workspaceSharedDao.existWorkspaceSharedInfo(workspaceName, sharedUser, dslContext)) {
@@ -369,7 +386,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceName = workspaceName?.let { listOf(it) },
                 workspaceSystemType = systemType?.let { listOf(it) },
                 ips = ips,
-                owner = owner?.let { listOf(it) },
+                owner = owners?.toList() ?: owner?.let { listOf(it) },
                 status = status?.let { listOf(it) },
                 zoneShortName = zoneId?.let { listOf(it) },
                 size = machineType?.let { listOf(it) },
@@ -515,7 +532,8 @@ class WorkspaceService @Autowired constructor(
                     currentLoginUsers = detail?.hostIP?.let { ip -> loginUserMap[ip] } ?: emptyList(),
                     expertSupportList = expertMap?.get(it.workspaceName),
                     macAddress = allWindows[it.workspaceName]?.macAddress,
-                    remark = it.remark
+                    remark = it.remark,
+                    labels = it.labels
                 )
             )
         }
@@ -632,7 +650,7 @@ class WorkspaceService @Autowired constructor(
                 createTime = DateTimeUtil.toDateTime(res["CREATE_TIME"] as LocalDateTime),
                 owner = owners[name] ?: res["CREATOR"] as String,
                 realOwner = owner,
-                status = WorkspaceStatus.values()[res["STATUS"] as Int],
+                status = WorkspaceStatus.load(res["STATUS"] as Int),
                 displayName = res["DISPLAY_NAME"] as String,
                 ownerDepartments = depInfo,
                 currentLoginUsers = currUser,
@@ -1542,6 +1560,7 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
+    @Deprecated("不要新增功能，希望废弃该接口")
     fun modifyWorkspaceDisplayName(userId: String, ip: String, displayName: String): Boolean {
         logger.info("$userId modifyWorkspaceDisplayName $ip|$displayName")
         val record = workspaceDao.fetchWorkspaceByIp(dslContext, ip).ifEmpty {
@@ -1556,7 +1575,7 @@ class WorkspaceService @Autowired constructor(
         }
         return editWorkspace(
             userId = userId,
-            workspaceName = record.first().name,
+            workspaceName = record.first().workspaceName,
             displayName = displayName,
             checkPermission = false
         )

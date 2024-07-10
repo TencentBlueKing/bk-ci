@@ -3,14 +3,14 @@ package com.tencent.devops.remotedev.utils
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Container
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Credentials
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.RunsOn
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.PreDevfile
 import com.tencent.devops.remotedev.pojo.PreRunsOn
+import com.tencent.devops.remotedev.pojo.remotedev.Container
+import com.tencent.devops.remotedev.pojo.remotedev.Credentials
+import com.tencent.devops.remotedev.pojo.remotedev.Devfile
+import com.tencent.devops.remotedev.pojo.remotedev.RunsOn
 import org.slf4j.LoggerFactory
 
 object DevfileUtil {

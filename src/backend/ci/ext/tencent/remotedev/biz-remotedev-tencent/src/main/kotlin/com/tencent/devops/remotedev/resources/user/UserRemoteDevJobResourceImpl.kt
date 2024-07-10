@@ -8,6 +8,7 @@ import com.tencent.devops.remotedev.api.user.UserRemoteDevJobResource
 import com.tencent.devops.remotedev.pojo.job.CronJob
 import com.tencent.devops.remotedev.pojo.job.CronJobSearchParam
 import com.tencent.devops.remotedev.pojo.job.JobCreateData
+import com.tencent.devops.remotedev.pojo.job.JobDetail
 import com.tencent.devops.remotedev.pojo.job.JobRecord
 import com.tencent.devops.remotedev.pojo.job.JobRecordSearchParam
 import com.tencent.devops.remotedev.pojo.job.JobSchema
@@ -72,5 +73,9 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
     override fun recordRerun(userId: String, id: Long): Result<Boolean> {
         remoteDevJobService.recordRerun(id)
         return Result(true)
+    }
+
+    override fun fetchJobDetail(userId: String, id: Long): Result<JobDetail?> {
+        return Result(remoteDevJobService.fetchJobDetail(id))
     }
 }
