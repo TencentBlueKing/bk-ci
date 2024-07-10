@@ -30,5 +30,5 @@ dependencies {
     api(project(":core:common:common-db-base"))
     api(project(":core:common:common-event"))
     api("org.springframework.boot:spring-boot-starter-amqp")
-    api("org.apache.shardingsphere:shardingsphere-jdbc-core:${Versions.ShardingSphere}")
+    api("org.apache.shardingsphere:shardingsphere-jdbc-core")
 }

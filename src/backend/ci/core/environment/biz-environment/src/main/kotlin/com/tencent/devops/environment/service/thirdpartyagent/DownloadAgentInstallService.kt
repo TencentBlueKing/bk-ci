@@ -38,9 +38,14 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.StreamingOutput
 import org.apache.commons.compress.archivers.ArchiveOutputStream
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
 import org.apache.commons.compress.utils.IOUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -52,10 +57,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.nio.charset.Charset
-import jakarta.ws.rs.NotFoundException
-import jakarta.ws.rs.core.MediaType
-import jakarta.ws.rs.core.Response
-import jakarta.ws.rs.core.StreamingOutput
 
 @Service
 @Suppress("TooManyFunctions", "LongMethod")
@@ -137,7 +138,10 @@ class DownloadAgentInstallService @Autowired constructor(
         logger.info("Get the script files (${scriptFiles.keys})")
 
         return Response.ok(StreamingOutput { output ->
-            val zipOut = ArchiveStreamFactory().createArchiveOutputStream(ArchiveStreamFactory.ZIP, output)
+            val zipOut = ArchiveStreamFactory().createArchiveOutputStream<ZipArchiveOutputStream>(
+                ArchiveStreamFactory.ZIP,
+                output
+            )
 
             if (!certFilePath.isNullOrBlank()) {
                 val certFile = File(certFilePath)
@@ -184,7 +188,12 @@ class DownloadAgentInstallService @Autowired constructor(
             .build()
     }
 
-    private fun zipBinaryFile(os: String, goAgentFile: File, fileName: String, zipOut: ArchiveOutputStream) {
+    private fun zipBinaryFile(
+        os: String,
+        goAgentFile: File,
+        fileName: String,
+        zipOut: ArchiveOutputStream<ZipArchiveEntry>
+    ) {
         val finalFilename = if (os == OS.WINDOWS.name) {
             "$fileName.exe"
         } else {
@@ -333,7 +342,10 @@ class DownloadAgentInstallService @Autowired constructor(
         val record = getAgentRecord(agentHashId)
 
         return Response.ok(StreamingOutput { output ->
-            val zipOut = ArchiveStreamFactory().createArchiveOutputStream(ArchiveStreamFactory.ZIP, output)
+            val zipOut = ArchiveStreamFactory().createArchiveOutputStream<ZipArchiveOutputStream>(
+                ArchiveStreamFactory.ZIP,
+                output
+            )
 
             if (!certFilePath.isNullOrBlank()) {
                 val certFile = File(certFilePath)

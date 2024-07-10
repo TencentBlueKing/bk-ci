@@ -69,6 +69,7 @@ allprojects {
             dependency("com.tencent.bk.sdk:crypto-java-sdk:${Versions.BkCrypto}")
             dependency("mysql:mysql-connector-java:${Versions.MysqlDriver}")
             dependency("org.jolokia:jolokia-core:${Versions.jakarta}")
+            dependency("org.apache.shardingsphere:shardingsphere-jdbc-core:${Versions.ShardingSphere}")
             dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}") {
                 entry("jersey-container-servlet-core")
                 entry("jersey-container-servlet")

@@ -1,10 +1,6 @@
 {
   "allowedLicenses": [
     {
-      "moduleName": "javax.ws.rs:javax.ws.rs-api",
-      "desc": "Javax 类库 , 可以直接引用"
-    },
-    {
       "moduleLicense": "GNU GPL v2.0 license with classpath exception",
       "moduleName": "com.tencent.kona:kona-crypto",
       "desc": "Tencent 类库 , 可以直接引用"
@@ -314,6 +310,11 @@
       "desc": ""
     },
     {
+      "moduleLicense": "CDDL 1.1",
+      "category": "CDDL",
+      "desc": ""
+    },
+    {
       "moduleLicense": "Eclipse Distribution License (New BSD License)",
       "category": "BSD"
     },
@@ -348,6 +349,11 @@
       "desc": "本项目仅Maven依赖, 不涉及修改源码,EPL协议允许被链接或调用EPL程序，不构成传染"
     },
     {
+      "moduleLicense": "Eclipse Public License, Version 2.0",
+      "category": "EPL",
+      "desc": "本项目仅Maven依赖, 不涉及修改源码,EPL协议允许被链接或调用EPL程序，不构成传染"
+    },
+    {
       "moduleLicense": "MIT",
       "category": "MIT"
     },
@@ -365,6 +371,12 @@
     },
     {
       "moduleLicense": "MIT-0"
+    },
+    {
+      "moduleLicense": "SPDX-License-Identifier: MIT"
+    },
+    {
+      "moduleLicense": "Plexus"
     },
     {
       "moduleLicense": "Creative Commons Legal Code",
