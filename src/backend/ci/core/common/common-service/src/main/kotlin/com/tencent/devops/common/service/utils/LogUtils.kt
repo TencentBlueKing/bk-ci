@@ -29,7 +29,6 @@ package com.tencent.devops.common.service.utils
 
 import com.tencent.devops.common.api.util.Watcher
 import org.slf4j.LoggerFactory
-import kotlin.math.log
 
 object LogUtils {
 

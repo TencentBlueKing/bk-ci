@@ -68,7 +68,7 @@ data class InstallTaskService @Autowired constructor(
     private val cmdbNodeDao: CmdbNodeDao,
     private val queryAgentStatusService: QueryAgentStatusService,
     private val agentStatusUpdateThreadMetrics: AgentStatusUpdateThreadMetrics,
-    private val environmentProperties: EnvironmentProperties,
+    private val environmentProperties: EnvironmentProperties
 ) {
 
     companion object {

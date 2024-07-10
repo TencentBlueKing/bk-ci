@@ -60,5 +60,4 @@ data class CmdbServerDTO(
         }
         return bakOperatorList.joinToString(";")
     }
-
 }

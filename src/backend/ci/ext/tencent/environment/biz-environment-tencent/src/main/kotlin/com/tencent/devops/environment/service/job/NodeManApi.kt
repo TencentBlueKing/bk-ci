@@ -231,5 +231,4 @@ class NodeManApi(
         else
             logOrigin
     }
-
 }

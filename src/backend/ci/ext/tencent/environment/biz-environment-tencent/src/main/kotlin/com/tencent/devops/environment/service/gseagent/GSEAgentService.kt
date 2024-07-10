@@ -98,7 +98,6 @@ data class GSEAgentService @Autowired constructor(
 
         const val NODEMAN_COMMAND_NOT_READY_CODE = 3800015
         const val NODEMAN_LOG_NOT_READY_CODE = 3800007
-
     }
 
     /**
@@ -354,5 +353,4 @@ data class GSEAgentService @Autowired constructor(
     private fun getNetworkPolicyDocLink(): String? {
         return environmentProperties.nodeman.networkPolicyDocLink
     }
-
 }

@@ -129,7 +129,7 @@ class EsbCmdbClient(
     }
 
     private fun queryCmdbNode(requestData: Map<String, Any>): CmdbServerPage {
-        val url = "${cmdbApiBaseUrl}/get_query_info/"
+        val url = "$cmdbApiBaseUrl/get_query_info/"
 
         val requestBody = ObjectMapper().writeValueAsString(requestData)
         logger.info("[queryCmdbServer]POST url: $url")
@@ -228,5 +228,4 @@ class EsbCmdbClient(
             else -> allOperators.joinToString(";")
         }
     }
-
 }

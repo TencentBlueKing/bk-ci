@@ -36,6 +36,4 @@ import org.springframework.core.Ordered
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureAfter(RedisAutoConfiguration::class)
-class DevCloudConfiguration {
-
-}
+class DevCloudConfiguration

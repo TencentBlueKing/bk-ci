@@ -52,5 +52,5 @@ data class EnvironmentProperties(
     /**
      * 查询GSE Agent状态相关配置
      */
-    val checkAgentStatus: CheckAgentStatusProperties,
+    val checkAgentStatus: CheckAgentStatusProperties
 )

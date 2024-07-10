@@ -106,7 +106,7 @@ object I18nUtil {
     /**
      * 获取蓝鲸标准的语言Header Key
      */
-    fun getBKLanguageKey():String{
+    fun getBKLanguageKey(): String {
         return BK_LANGUAGE
     }
 
