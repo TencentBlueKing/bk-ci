@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
 /**
  * 调用Api Gateway上面的Api
  */
-abstract class BaseApiGwApi(
+open class BaseApiGwApi(
     private val apiBaseUrl: String,
     private val appCode: String,
     private val appSecret: String,

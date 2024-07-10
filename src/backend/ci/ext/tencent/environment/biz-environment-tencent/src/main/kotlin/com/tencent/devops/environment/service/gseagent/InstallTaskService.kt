@@ -300,9 +300,8 @@ data class InstallTaskService @Autowired constructor(
                 jobId = jobId,
                 instanceId = instanceId
             )
-        } catch (e: RemoteServiceException) { // 最初未获取到日志，节点管理抛出的"订阅任务未准备好"异常，该情况可重试，后台不抛出异常
-            if (logger.isDebugEnabled)
-                logger.debug("e.errorCode: ${e.errorCode}, isEq: ${GSEAgentService.NODEMAN_LOG_NOT_READY_CODE == e.errorCode}")
+        } catch (e: RemoteServiceException) {
+            // 最初未获取到日志，节点管理抛出的"订阅任务未准备好"异常，该情况可重试，后台不抛出异常
             if (GSEAgentService.NODEMAN_LOG_NOT_READY_CODE == e.errorCode) {
                 AgentOriginalResult(
                     code = GSEAgentService.NODEMAN_LOG_NOT_READY_CODE,
