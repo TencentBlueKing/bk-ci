@@ -56,7 +56,7 @@ interface ServiceRemoteDevResource {
         ticket: String
     ): Result<Boolean>
 
-    @Operation(summary = "提供给wesec获取项目下云桌面信息")
+    @Operation(summary = "提供给wesec获取项目下批量云桌面信息")
     @GET
     @Path("/project/workspace")
     fun getProjectWorkspace(
@@ -314,7 +314,7 @@ interface ServiceRemoteDevResource {
         available: Boolean?
     ): Result<QuotaInApiRes>
 
-    @Operation(summary = "DevcloudCvm列表")
+    @Operation(summary = "获取DevcloudCvm列表")
     @GET
     @Path("/devcloud/cvmList")
     fun fetchCvmList(
@@ -358,7 +358,7 @@ interface ServiceRemoteDevResource {
         projectId: String?
     ): Result<Map<String, Any>>
 
-    @Operation(summary = "修改工作空间")
+    @Operation(summary = "修改工作空间别名")
     @POST
     @Path("/modify/display_name")
     @Deprecated("不要新增功能，希望废弃该接口")

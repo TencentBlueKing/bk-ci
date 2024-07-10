@@ -139,6 +139,10 @@ class WorkspaceListener @Autowired constructor(
                     backEvent.status = remoteDevService.rebuildWorkspace(event)
                 }
 
+                UpdateEventType.UPGRADE -> {
+                    remoteDevService.upgradeWorkspace(event)
+                }
+
                 else -> {
                 }
             }
@@ -147,6 +151,10 @@ class WorkspaceListener @Autowired constructor(
             backEvent.errorMsg = e.message
             logger.error("Fail to handle workspace operate ($event)", e)
         } finally {
+            if (event.type == UpdateEventType.UPGRADE) {
+                // 不进行等待回写操作
+                return
+            }
             if (!backEvent.status) {
                 logger.warn("WORKSPACE_CHANGE_FAILED|${event.type}|event=$event")
             }

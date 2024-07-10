@@ -8,6 +8,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
+@Deprecated("LINUX 可删")
 class WorkspaceTemplateDao {
 
     // 新增模板

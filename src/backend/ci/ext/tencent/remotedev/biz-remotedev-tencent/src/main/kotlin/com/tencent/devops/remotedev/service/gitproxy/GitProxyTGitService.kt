@@ -7,6 +7,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.model.remotedev.tables.records.TProjectTgitIdLinkRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -15,33 +16,32 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.TGitConfig
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ProjectTGitLinkDao
-import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.TGitRepoDaoData
-import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
-import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclIp
 import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclUser
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import java.time.Duration
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.time.Duration
 
 @Suppress("ALL")
 @Service
 class GitProxyTGitService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val workspaceDao: WorkspaceDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val projectTGitLinkDao: ProjectTGitLinkDao,
     private val bkitsmService: BKItsmService,
@@ -208,7 +208,16 @@ class GitProxyTGitService @Autowired constructor(
         val result = mutableMapOf<Long, Boolean>()
 
         // 获取项目下正在跑的所有机器IP
-        val ips = workspaceDao.fetchProjectIp(dslContext, setOf(projectId)).map { it.substringAfter(".") }.toSet()
+        val ips = workspaceJoinDao.fetchWindowsWorkspacesSimple(
+            dslContext = dslContext,
+            projectId = projectId,
+            checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP),
+            notStatus = listOf(
+                WorkspaceStatus.PREPARING,
+                WorkspaceStatus.DELETED,
+                WorkspaceStatus.DELIVERING_FAILED
+            )
+        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toSet()
         // 获取项目下正在跑的所有机器的用户
         val users = fetchProjectSpecAclUsers(setOf(projectId))
 
@@ -407,10 +416,16 @@ class GitProxyTGitService @Autowired constructor(
             return ok
         }
 
-        val ips = workspaceDao.fetchProjectIp(
+        val ips = workspaceJoinDao.fetchWindowsWorkspaces(
             dslContext = dslContext,
-            projectIds = otherProjects
-        ).map { it.substringAfter(".") }.toSet()
+            projectIds = otherProjects,
+            checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP),
+            notStatus = setOf(
+                WorkspaceStatus.PREPARING,
+                WorkspaceStatus.DELETED,
+                WorkspaceStatus.DELIVERING_FAILED
+            )
+        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toSet()
         val users = fetchProjectSpecAclUsers(otherProjects)
 
         val ok = incUpdateTGitProjectAcl(
@@ -576,7 +591,17 @@ class GitProxyTGitService @Autowired constructor(
         val data = offshoreTGitApiClient.createProject(token.accessToken, info.name, info.namespaceId, info.svnProject)
 
         // 关联
-        val ips = workspaceDao.fetchProjectIp(dslContext, setOf(info.projectId)).map { it.substringAfter(".") }.toSet()
+
+        val ips = workspaceJoinDao.fetchWindowsWorkspacesSimple(
+            dslContext = dslContext,
+            projectId = info.projectId,
+            checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP),
+            notStatus = listOf(
+                WorkspaceStatus.PREPARING,
+                WorkspaceStatus.DELETED,
+                WorkspaceStatus.DELIVERING_FAILED
+            )
+        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toSet()
         val users = fetchProjectSpecAclUsers(setOf(info.projectId))
 
         val ok = incUpdateTGitProjectAcl(

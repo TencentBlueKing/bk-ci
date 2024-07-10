@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
@@ -55,11 +54,8 @@ import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
-import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
-import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
-import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import java.time.Duration
 import java.time.LocalDateTime
@@ -80,13 +76,9 @@ class StartControl @Autowired constructor(
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val permissionService: PermissionService,
-    private val sshService: SshPublicKeysService,
-    private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
-    private val bkTicketServie: BkTicketService,
     private val workspaceCommon: WorkspaceCommon,
     private val notifyControl: NotifyControl
 ) {
@@ -177,12 +169,6 @@ class StartControl @Autowired constructor(
                             userId = userId,
                             traceId = bizId,
                             type = UpdateEventType.START,
-                            sshKeys = sshService.getSshPublicKeys4Ws(
-                                workspaceDao.fetchWorkspaceUser(
-                                    dslContext,
-                                    workspaceName
-                                ).toSet()
-                            ),
                             workspaceName = workspace.workspaceName,
                             settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                             bkTicket = bkTicket,
@@ -261,9 +247,6 @@ class StartControl @Autowired constructor(
             }
         }
         doStartWS(event.status, event.userId, event.workspaceName, event.environmentHost, event.errorMsg)
-        if (event.status) {
-            bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost, event.mountType)
-        }
     }
 
     fun doStartWS(
@@ -321,16 +304,6 @@ class StartControl @Autowired constructor(
                         WorkspaceStatus.RUNNING.name
                     )
                 )
-            }
-
-            workspaceCommon.updateWorkspaceDetail(
-                workspaceName,
-                workspace.projectId,
-                workspace.workspaceMountType,
-                workspace.ownerType
-            )
-            if (workspace.workspaceSystemType.needHeartbeat()) {
-                redisHeartBeat.refreshHeartbeat(workspaceName)
             }
         } else {
             // 启动失败,记录为EXCEPTION

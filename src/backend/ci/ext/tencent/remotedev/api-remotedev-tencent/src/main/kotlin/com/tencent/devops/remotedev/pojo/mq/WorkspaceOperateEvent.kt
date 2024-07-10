@@ -41,15 +41,19 @@ data class WorkspaceOperateEvent(
     override val traceId: String = TraceTag.buildBiz(),
     val type: UpdateEventType,
     @get:Schema(title = "用户设置里云开发的环境变量")
+    @Deprecated("LINUX 待删除")
     val settingEnvs: Map<String, String> = emptyMap(),
     @get:Schema(title = "包含了创建者 ssh key 的字符串")
     val sshKeys: String = "",
+    @Deprecated("LINUX 待删除")
     val bkTicket: String? = null,
     val cgsId: String? = null,
     val imageId: String? = null,
     val imageCosFile: String? = null,
     val mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD,
     val gameId: String?,
+    val machineType: String? = null,
+    val projectId: String? = null,
     override val workspaceName: String,
     override val delayMills: Int = 0,
     override val retryTime: Int = 0

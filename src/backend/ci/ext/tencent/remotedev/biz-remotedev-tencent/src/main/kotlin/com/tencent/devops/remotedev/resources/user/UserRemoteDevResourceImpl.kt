@@ -76,14 +76,6 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(watermarkService.getWatermark(userId, watermark))
     }
 
-    override fun preCiAgent(
-        userId: String,
-        workspaceName: String,
-        agentId: String
-    ): Result<Boolean> {
-        return Result(workspaceService.preCiAgent(agentId, workspaceName))
-    }
-
     override fun getUser(userId: String): Result<String> {
         return Result(userId)
     }

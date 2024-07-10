@@ -48,13 +48,17 @@ data class WorkspaceDetail(
     @get:Schema(title = "休眠时间（秒）")
     val sleepingTime: Long,
     @get:Schema(title = "CPU 核心数")
-    val cpu: Int,
+    @Deprecated("LINUX 待删除")
+    val cpu: Int = 0,
     @get:Schema(title = "内存大小（MB）")
-    val memory: Int,
+    @Deprecated("LINUX 待删除")
+    val memory: Int = 0,
     @get:Schema(title = "存储空间大小（GB）")
-    val disk: Int,
+    @Deprecated("LINUX 待删除")
+    val disk: Int = 0,
     @get:Schema(title = "yaml 配置内容")
-    val yaml: String?,
+    @Deprecated("LINUX 待删除")
+    val yaml: String? = null,
     @get:Schema(title = "操作系统类型")
     val systemType: WorkspaceSystemType,
     @get:Schema(title = "挂载平台类型")

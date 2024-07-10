@@ -197,15 +197,23 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
+        return deleteWorkspace(userId, event.workspaceName, event.gameId)
+    }
+
+    private fun deleteWorkspace(
+        userId: String,
+        workspaceName: String,
+        gameId: String?
+    ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.DELETE_VM,
-            workspaceName = event.workspaceName,
+            workspaceName = workspaceName,
             environmentOperate = EnvironmentOperate(
-                uid = getEnvironmentUid(event.workspaceName),
-                appName = event.gameId,
+                uid = getEnvironmentUid(workspaceName),
+                appName = gameId,
                 userId = userId,
-                pipelineId = startCloudRedisUtils.getStartCloudOrder(event.workspaceName)
+                pipelineId = startCloudRedisUtils.getStartCloudOrder(workspaceName)
             )
         )
         return resp.taskUid
@@ -222,6 +230,26 @@ class StartCloudRemoteDevService @Autowired constructor(
                 userId = userId,
                 pipelineId = startCloudRedisUtils.getStartCloudOrder(event.workspaceName),
                 cgsId = event.cgsId
+            )
+        )
+        return resp.taskUid
+    }
+
+    override fun upgradeWorkspaceVm(
+        userId: String,
+        workspaceName: String,
+        machineType: String,
+        pipelineId: String
+    ): String {
+        val resp = workspaceBcsClient.startOperateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.UPGRADE_VM,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName),
+                machineType = machineType,
+                userId = userId,
+                pipelineId = pipelineId
             )
         )
         return resp.taskUid

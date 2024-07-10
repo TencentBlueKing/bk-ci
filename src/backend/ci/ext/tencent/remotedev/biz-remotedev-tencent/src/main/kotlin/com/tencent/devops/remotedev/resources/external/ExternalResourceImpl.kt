@@ -31,36 +31,18 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.external.ExternalResource
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
-import com.tencent.devops.remotedev.service.WorkspaceService
-import com.tencent.devops.remotedev.service.workspace.DeliverControl
+import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
 
 @RestResource
 class ExternalResourceImpl @Autowired constructor(
-    private val workspaceService: WorkspaceService,
-    private val deliverControl: DeliverControl
+    private val softwareManageService: SoftwareManageService
 ) : ExternalResource {
 
     /*请求合法性校验时使用的密钥*/
     @Value("\${externalKey:}")
     val externalKey = ""
-
-    override fun getDevfile(): Response {
-        val result = workspaceService.getDevfile()
-        return Response.ok(
-            StreamingOutput { output ->
-                output.write(result.toByteArray())
-                output.flush()
-            },
-            MediaType.APPLICATION_OCTET_STREAM_TYPE
-        )
-            .header("content-disposition", "attachment; filename = devfile")
-            .build()
-    }
 
     override fun softwareInstallCallback(
         type: String,
@@ -71,7 +53,7 @@ class ExternalResourceImpl @Autowired constructor(
         softwareList: SoftwareCallbackRes
     ): Result<Boolean> {
         if (key != externalKey) return Result(false)
-        deliverControl.softwareInstallationCompleteCallback(
+        softwareManageService.softwareInstallationCompleteCallback(
             type = type,
             workspaceName = workspaceName,
             projectId = projectId,
