@@ -37,7 +37,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.environment.agent.client.EsbAgentClient
+import com.tencent.devops.common.environment.agent.client.EsbCmdbClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_CLOUD_ID
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_HOST_ID
@@ -101,7 +101,7 @@ class CmdbNodeService @Autowired constructor(
     private val cmdbNodeDao: CmdbNodeDao,
     private val projectConfigDao: ProjectConfigDao,
     private val redisOperation: RedisOperation,
-    private val esbAgentClient: EsbAgentClient,
+    private val esbCmdbClient: EsbCmdbClient,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val tencentCmdbService: TencentCmdbService,
     private val tencentQueryFromCCService: TencentQueryFromCCService,
@@ -141,7 +141,7 @@ class CmdbNodeService @Autowired constructor(
         // 准备要替换掉
         val cmdbNodePage =
             ImportServerNodeUtils.getUserCmdbNodeNew(
-                esbAgentClient = esbAgentClient,
+                esbCmdbClient = esbCmdbClient,
                 redisOperation = redisOperation,
                 userId = userId,
                 bakOperator = bakOperator,

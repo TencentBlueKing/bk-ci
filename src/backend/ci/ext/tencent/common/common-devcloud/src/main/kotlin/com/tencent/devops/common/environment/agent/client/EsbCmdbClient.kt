@@ -34,30 +34,28 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_GET_CM
 import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_GET_CMDB_NODE
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.environment.agent.pojo.agent.CmdbServerPage
+import com.tencent.devops.common.environment.agent.pojo.agent.EsbAuthReq
 import com.tencent.devops.common.environment.agent.pojo.agent.RawCmdbNode
 import com.tencent.devops.common.web.utils.I18nUtil
+import okhttp3.Headers
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
 import javax.ws.rs.core.Response
 
-@Component
-class EsbAgentClient {
-
-    @Value("\${esb.appCode}")
-    private val appCode = "bkci"
-
-    @Value("\${esb.appSecret}")
-    private val appSecret = ""
+class EsbCmdbClient(
+    private val cmdbApiBaseUrl: String,
+    private val appCode: String,
+    private val appSecret: String
+) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(EsbAgentClient::class.java)
+        private val logger = LoggerFactory.getLogger(EsbCmdbClient::class.java)
         private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
     }
 
@@ -68,6 +66,39 @@ class EsbAgentClient {
 
     fun queryCmdbServerByServerIds(userId: String, serverIds: Set<Long>, start: Int, limit: Int): CmdbServerPage {
         val requestData = buildQueryByServerIdReqData(userId, serverIds, start, limit)
+        return queryCmdbNode(requestData)
+    }
+
+    fun getUserCmdbNodeNew(
+        userId: String,
+        bakOperator: Boolean,
+        ips: List<String>,
+        offset: Int,
+        limit: Int
+    ): CmdbServerPage {
+        return getUserCmdbNodeByOperator(userId, bakOperator, ips, offset, limit)
+    }
+
+    private fun getUserCmdbNodeByOperator(
+        userId: String,
+        isBakOperator: Boolean,
+        ips: List<String>,
+        start: Int,
+        limit: Int
+    ): CmdbServerPage {
+        val operatorCondition = if (isBakOperator) {
+            mutableMapOf("serverBakOperator" to userId)
+        } else {
+            mutableMapOf("SvrOperator" to userId)
+        }
+
+        if (ips.isNotEmpty()) {
+            operatorCondition["SvrIp"] = ips.joinToString(";")
+        }
+
+        val basicRequestData = buildBasicRequestData(userId, start, limit)
+        val requestData = basicRequestData.plus("key_values" to operatorCondition)
+
         return queryCmdbNode(requestData)
     }
 
@@ -88,8 +119,6 @@ class EsbAgentClient {
 
     private fun buildBasicRequestData(userId: String, start: Int, limit: Int): Map<String, Any> {
         return mapOf(
-            "app_code" to appCode,
-            "app_secret" to appSecret,
             "req_column" to listOf(
                 "SvrBakOperator", "SvrOperator", "SvrIp", "SvrName", "SfwName", "serverLanIP", "DeptId"
             ),
@@ -98,33 +127,27 @@ class EsbAgentClient {
         )
     }
 
-    fun getUserCmdbNodeNew(
-        userId: String,
-        bakOperator: Boolean,
-        ips: List<String>,
-        offset: Int,
-        limit: Int
-    ): CmdbServerPage {
-        return getUserCmdbNodeByOperator(userId, bakOperator, ips, offset, limit)
-    }
-
     private fun queryCmdbNode(requestData: Map<String, Any>): CmdbServerPage {
-        val url = "http://open.oa.com/component/compapi/cmdb/get_query_info/"
+        val url = "${cmdbApiBaseUrl}/get_query_info/"
 
         val requestBody = ObjectMapper().writeValueAsString(requestData)
-        logger.info("[queryCmdbNode]POST url: $url")
-        logger.info("[queryCmdbNode]requestBody: $requestBody")
+        logger.info("[queryCmdbServer]POST url: $url")
+        logger.info("[queryCmdbServer]requestBody: $requestBody")
 
-        val request = Request.Builder().url(url).post(requestBody.toRequestBody(JSON)).build()
+        val request = Request.Builder()
+            .url(url)
+            .headers(buildBasicHeaders())
+            .post(requestBody.toRequestBody(JSON))
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 val responseBody = response.body?.string()
-                logger.info("[queryCmdbNode]responseBody: $responseBody")
+                logger.info("[queryCmdbServer]responseBody: $responseBody")
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
                 if (responseData["result"] == false) {
                     val msg = responseData["msg"]
-                    logger.error("get cmdb nodes failed: $msg")
+                    logger.error("get cmdb servers failed: $msg")
                     throw CustomException(
                         Response.Status.INTERNAL_SERVER_ERROR,
                         I18nUtil.getCodeLanMessage(messageCode = FAILED_TO_GET_CMDB_NODE)
@@ -182,6 +205,18 @@ class EsbAgentClient {
         }
     }
 
+    private fun buildBasicHeaders(): Headers {
+        val esbAuthReq = EsbAuthReq(appCode, appSecret)
+        val esbAuthStr = JsonUtil.toJson(esbAuthReq)
+            .replace("\r\n", "")
+            .replace("\n", "")
+        return Headers.Builder()
+            .add("accept", "*/*")
+            .add("Content-Type", "application/json")
+            .add("X-Bkapi-Authorization", esbAuthStr)
+            .build()
+    }
+
     private fun checkAndGetOperator(bakOperator: String): String {
         val allOperators = bakOperator.split(",", ";").filterNot { it.isBlank() }.map { it.trim() }.toList()
         return when {
@@ -191,34 +226,4 @@ class EsbAgentClient {
         }
     }
 
-    private fun getUserCmdbNodeByOperator(
-        userId: String,
-        isBakOperator: Boolean,
-        ips: List<String>,
-        start: Int,
-        limit: Int
-    ): CmdbServerPage {
-        val operatorCondition = if (isBakOperator) {
-            mutableMapOf("serverBakOperator" to userId)
-        } else {
-            mutableMapOf("SvrOperator" to userId)
-        }
-
-        if (ips.isNotEmpty()) {
-            operatorCondition["SvrIp"] = ips.joinToString(";")
-        }
-
-        return queryCmdbNode(
-            mapOf(
-                "app_code" to appCode,
-                "app_secret" to appSecret,
-                "operator" to userId,
-                "req_column" to listOf(
-                    "SvrBakOperator", "SvrOperator", "SvrIp", "SvrName", "SfwName", "serverLanIP", "DeptId"
-                ),
-                "key_values" to operatorCondition,
-                "paging_info" to mapOf("page_size" to limit, "start_index" to start, "return_total_rows" to 1)
-            )
-        )
-    }
 }

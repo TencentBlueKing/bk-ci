@@ -576,6 +576,7 @@ class CmdbNodeDao {
                 SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .and(SERVER_ID.isNotNull)
                 .and(HOST_ID.isNull)
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()

@@ -27,33 +27,9 @@
 
 package com.tencent.devops.environment.config
 
-import com.tencent.devops.common.environment.agent.client.EsbCmdbClient
-import com.tencent.devops.common.environment.agent.config.EsbProperties
-import com.tencent.devops.environment.service.job.NodeManApi
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-
-@Configuration
-class TencentEnvironmentConfig {
-
-    @Bean
-    @ConditionalOnMissingBean(NodeManApi::class)
-    fun nodeManApi(environmentProperties: EnvironmentProperties): NodeManApi {
-        return NodeManApi(
-            environmentProperties.nodeman.nodemanApiBaseUrl,
-            environmentProperties.apigw.bkAppCode,
-            environmentProperties.apigw.bkAppSecret,
-            environmentProperties.nodeman.defaultUser
-        )
-    }
-
-    @Bean
-    fun esbCmdbClient(environmentProperties: EnvironmentProperties, esbProperties: EsbProperties): EsbCmdbClient {
-        return EsbCmdbClient(
-            environmentProperties.cmdb.baseUrl,
-            esbProperties.appCode,
-            esbProperties.appSecret
-        )
-    }
-}
+data class CmdbProperties(
+    /**
+     * 公司CMDB API根地址
+     */
+    val baseUrl: String
+)

@@ -30,7 +30,7 @@ package com.tencent.devops.environment.utils
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.environment.agent.client.EsbAgentClient
+import com.tencent.devops.common.environment.agent.client.EsbCmdbClient
 import com.tencent.devops.common.environment.agent.pojo.agent.CmdbServerPage
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_IMPORT_EXCEED
@@ -42,7 +42,7 @@ import org.jooq.DSLContext
 object ImportServerNodeUtils {
 
     fun getUserCmdbNodeNew(
-        esbAgentClient: EsbAgentClient,
+        esbCmdbClient: EsbCmdbClient,
         redisOperation: RedisOperation,
         userId: String,
         bakOperator: Boolean,
@@ -57,12 +57,12 @@ object ImportServerNodeUtils {
             if (buffer != null) {
                 jacksonObjectMapper().readValue(buffer)
             } else {
-                val cmdbNodePage = esbAgentClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
+                val cmdbNodePage = esbCmdbClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
                 redisOperation.set(key, jacksonObjectMapper().writeValueAsString(cmdbNodePage), 60)
                 cmdbNodePage
             }
         } else {
-            esbAgentClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
+            esbCmdbClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
         }
     }
 

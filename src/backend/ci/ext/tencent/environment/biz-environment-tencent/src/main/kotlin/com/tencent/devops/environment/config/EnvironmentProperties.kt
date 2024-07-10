@@ -42,6 +42,10 @@ data class EnvironmentProperties(
      */
     val nodeman: NodeManProperties,
     /**
+     * 公司CMDB相关配置
+     */
+    val cmdb: CmdbProperties,
+    /**
      * CC相关配置
      */
     val cc: CCProperties,

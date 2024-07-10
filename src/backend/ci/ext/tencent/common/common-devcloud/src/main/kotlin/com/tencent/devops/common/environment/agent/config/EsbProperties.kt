@@ -25,35 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.config
+package com.tencent.devops.common.environment.agent.config
 
-import com.tencent.devops.common.environment.agent.client.EsbCmdbClient
-import com.tencent.devops.common.environment.agent.config.EsbProperties
-import com.tencent.devops.environment.service.job.NodeManApi
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
 
-@Configuration
-class TencentEnvironmentConfig {
-
-    @Bean
-    @ConditionalOnMissingBean(NodeManApi::class)
-    fun nodeManApi(environmentProperties: EnvironmentProperties): NodeManApi {
-        return NodeManApi(
-            environmentProperties.nodeman.nodemanApiBaseUrl,
-            environmentProperties.apigw.bkAppCode,
-            environmentProperties.apigw.bkAppSecret,
-            environmentProperties.nodeman.defaultUser
-        )
-    }
-
-    @Bean
-    fun esbCmdbClient(environmentProperties: EnvironmentProperties, esbProperties: EsbProperties): EsbCmdbClient {
-        return EsbCmdbClient(
-            environmentProperties.cmdb.baseUrl,
-            esbProperties.appCode,
-            esbProperties.appSecret
-        )
-    }
-}
+@ConstructorBinding
+@ConfigurationProperties(prefix = "esb")
+data class EsbProperties(
+    /**
+     * 蓝鲸应用代码
+     */
+    val appCode: String,
+    /**
+     * 蓝鲸应用密钥
+     */
+    val appSecret: String
+)

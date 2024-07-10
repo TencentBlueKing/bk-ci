@@ -27,11 +27,9 @@
 
 package com.tencent.devops.common.environment.agent.config
 
-import com.tencent.devops.common.environment.agent.client.EsbAgentClient
 import com.tencent.devops.common.redis.RedisAutoConfiguration
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
@@ -40,6 +38,4 @@ import org.springframework.core.Ordered
 @AutoConfigureAfter(RedisAutoConfiguration::class)
 class DevCloudConfiguration {
 
-    @Bean
-    fun esbAgentClient() = EsbAgentClient()
 }

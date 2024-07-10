@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.service.cmdb.impl
 
-import com.tencent.devops.common.environment.agent.client.EsbAgentClient
+import com.tencent.devops.common.environment.agent.client.EsbCmdbClient
 import com.tencent.devops.common.environment.agent.pojo.agent.CmdbServerPage
 import com.tencent.devops.environment.pojo.cmdb.common.CmdbServerDTO
 import com.tencent.devops.environment.service.cmdb.TencentCmdbService
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service
  */
 @Service
 class TencentCmdbServiceImpl @Autowired constructor(
-    private val esbAgentClient: EsbAgentClient
+    private val esbCmdbClient: EsbCmdbClient
 ) : TencentCmdbService {
 
     companion object {
@@ -34,7 +34,7 @@ class TencentCmdbServiceImpl @Autowired constructor(
     override fun queryServerByServerId(serverIdSet: Set<Long>): Map<Long, CmdbServerDTO> {
         return queryCmdbServerByBatch(
             fetchRawCmdbDataFunc = { start, limit ->
-                esbAgentClient.queryCmdbServerByServerIds(
+                esbCmdbClient.queryCmdbServerByServerIds(
                     userId = DEFAULT_USER,
                     serverIds = serverIdSet,
                     start = start,
@@ -48,7 +48,7 @@ class TencentCmdbServiceImpl @Autowired constructor(
     override fun queryServerByIp(ipSet: Set<String>): Map<String, CmdbServerDTO> {
         return queryCmdbServerByBatch(
             fetchRawCmdbDataFunc = { start, limit ->
-                esbAgentClient.queryCmdbServerByIps(
+                esbCmdbClient.queryCmdbServerByIps(
                     userId = DEFAULT_USER,
                     ips = ipSet,
                     start = start,
