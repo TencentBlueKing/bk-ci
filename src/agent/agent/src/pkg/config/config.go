@@ -280,6 +280,10 @@ func LoadAgentConfig() error {
 	if jdkDirPath == "" {
 		jdkDirPath = getJavaDir()
 	}
+	jdk17DirPath := conf.Section("").Key(KeyJdk17DirPath).String()
+	if jdk17DirPath == "" {
+		jdk17DirPath = systemutil.GetWorkDir() + "/jdk17"
+	}
 
 	// 兼容旧版本 .agent.properties 没有这个键
 	dockerParallelTaskCount := 4

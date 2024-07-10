@@ -110,13 +110,13 @@ func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 		return
 	}
 
-	logs.Info("agentUpgrade|download upgrade files start")
+	logs.Infof("agentUpgrade|download upgrade files start %+v", upgradeItem)
 	changeItems := downloadUpgradeFiles(upgradeItem)
 	if changeItems.checkNoChange() {
 		return
 	}
 
-	logs.Info("agentUpgrade|download upgrade files done")
+	logs.Infof("agentUpgrade|download upgrade files done %+v", changeItems)
 	err := DoUpgradeOperation(changeItems)
 	if err != nil {
 		logs.WithError(err).Error("agentUpgrade|do upgrade operation failed")

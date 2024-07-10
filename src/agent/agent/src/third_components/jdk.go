@@ -41,7 +41,7 @@ type JdkVersionType struct {
 }
 
 func (j *JdkVersionType) IsNull() bool {
-	return commonutil.IsStringSliceBlank(j.version)
+	return commonutil.IsStringSliceBlank(j.GetVersion())
 }
 
 func (j *JdkVersionType) GetVersion() []string {
@@ -131,6 +131,7 @@ func (j *JdkVersionType) getJdkVersion() ([]string, error) {
 	case jdk17:
 		jdkV = trimJdk17VersionList(versionOutputString)
 	}
+	j.logs.Infof("%d getJdkVersion %+v", j.vNum, jdkVersion)
 	return jdkV, nil
 }
 
