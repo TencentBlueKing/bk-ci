@@ -448,6 +448,7 @@ class GitProxyTGitService @Autowired constructor(
         ips: Set<String>,
         remove: Boolean
     ) {
+        logger.info("doAddOrRemoveAclIp $projectId|$ips|remove=$remove")
         fetchProjectTGit(projectId) { repo, token ->
             val lock = updateTGitLock(repo.tgitId)
             try {
@@ -489,6 +490,7 @@ class GitProxyTGitService @Autowired constructor(
     fun doRefreshProjectTGitSpecUser(
         projectId: String
     ) {
+        logger.info("doRefreshProjectTGitSpecUser $projectId")
         // 获取所有关联项目下正在跑的所有机器的用户
         val usersMap = mutableMapOf<String, Set<String>>()
         fetchProjectTGit(projectId) { repo, token ->
