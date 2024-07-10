@@ -23,6 +23,8 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.DesktopTokenSign
+import com.tencent.devops.remotedev.pojo.OperateCvmData
+import com.tencent.devops.remotedev.pojo.OperateCvmDataType
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
@@ -53,6 +55,7 @@ import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
+import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
@@ -93,6 +96,7 @@ class ServiceRemoteDevResourceImpl(
     private val deliverControl: DeliverControl,
     private val imageManageService: ImageManageService,
     private val whiteListService: WhiteListService,
+    private val tGitService: GitProxyTGitService,
     private val rebuildWorkspaceHandler: RebuildWorkspaceHandler,
     private val startWorkspaceHandler: StartWorkspaceHandler,
     private val stopWorkspaceHandler: StopWorkspaceHandler,
@@ -665,5 +669,17 @@ class ServiceRemoteDevResourceImpl(
 
     override fun deleteProjectImage(userId: String, projectId: String, imageId: String): Result<Boolean> {
         return Result(imageManageService.deleteProjectImage(userId, projectId, imageId))
+    }
+
+    override fun opCvm(data: OperateCvmData): Result<Boolean> {
+        tGitService.addOrRemoveAclIp(
+            projectId = data.projectId,
+            ips = data.ipList,
+            remove = when (data.opType) {
+                OperateCvmDataType.ADD -> false
+                OperateCvmDataType.DELETE -> true
+            }
+        )
+        return Result(true)
     }
 }

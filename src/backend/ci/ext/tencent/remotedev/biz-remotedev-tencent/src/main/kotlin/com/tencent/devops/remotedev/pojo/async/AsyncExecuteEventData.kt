@@ -29,7 +29,7 @@ data class AsyncJobEndEvent(
 
 data class AsyncTGitAclIp(
     val projectId: String,
-    val ip: String,
+    val ips: Set<String>,
     val remove: Boolean
 ) : AsyncExecuteEventData {
     override fun toType() = AsyncExecuteEventType.ASYNC_TGIT_ACL_IP
