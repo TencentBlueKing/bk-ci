@@ -251,7 +251,7 @@ func (j *JdkVersionType) GetJava() string {
 func GetJavaLatest() string {
 	jdk17path := Jdk.Jdk17.GetJava()
 	if _, err := os.Stat(jdk17path); err != nil {
-		logs.WithError(err).Errorf("stat %s error", jdk17path)
+		logs.WithError(err).Warnf("jdk17 stat %s error", jdk17path)
 		return Jdk.Jdk8.GetJava()
 	}
 	return jdk17path

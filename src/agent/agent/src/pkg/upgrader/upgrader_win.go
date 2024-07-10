@@ -34,6 +34,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
+	"github.com/capnspacehook/taskmaster"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/windows/svc/mgr"
 	"os"

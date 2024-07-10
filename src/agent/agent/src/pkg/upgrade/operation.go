@@ -190,36 +190,40 @@ func DoUpgradeJdk() error {
 	logs.Info("agentUpgrade|jdk changed, replace jdk file")
 
 	workDir := systemutil.GetWorkDir()
-	// 复制出来jdk.zip
+	// 复制出来jdk17.zip
 	_, err := fileutil.CopyFile(
-		systemutil.GetUpgradeDir()+"/"+config.JdkClientFile,
-		workDir+"/"+config.JdkClientFile,
+		systemutil.GetUpgradeDir()+"/"+config.Jdk17ClientFile,
+		workDir+"/"+config.Jdk17ClientFile,
 		true,
 	)
 	if err != nil {
-		return errors.Wrap(err, "upgrade jdk copy new jdk file error")
+		return errors.Wrap(err, "upgrade jdk17 copy new jdk file error")
 	}
 
-	// 解压缩为一个新文件取代旧文件路径
-	jdkTmpName := "jdk" + strconv.FormatInt(time.Now().Unix(), 10)
-	err = fileutil.Unzip(workDir+"/"+config.JdkClientFile, workDir+"/"+jdkTmpName)
+	// 解压缩为一个新文件取代旧文件路径，优先使用标准路径
+	jdkTmpName := "jdk17"
+	_, err = os.Stat(workDir + "/" + jdkTmpName)
+	if err != nil || errors.Is(err, os.ErrNotExist) {
+		jdkTmpName = "jdk17-" + strconv.FormatInt(time.Now().Unix(), 10)
+	}
+	err = fileutil.Unzip(workDir+"/"+config.Jdk17ClientFile, workDir+"/"+jdkTmpName)
 	if err != nil {
-		return errors.Wrap(err, "upgrade jdk unzip error")
+		return errors.Wrap(err, "upgrade jdk17 unzip error")
 	}
 
 	// 删除老的jdk文件，以及之前解压缩或者改名失败残留的，异步删除，删除失败也不影响主进程
 	go func() {
 		files, err := os.ReadDir(workDir)
 		if err != nil {
-			logs.WithError(err).Error("agentUpgrade|upgrade jdk remove old jdk file error")
+			logs.WithError(err).Error("agentUpgrade|upgrade jdk17 remove old jdk file error")
 			return
 		}
 		for _, file := range files {
-			if (strings.HasPrefix(file.Name(), "jdk") || strings.HasPrefix(file.Name(), "jre")) &&
+			if (strings.HasPrefix(file.Name(), "jdk17-") || file.Name() == "jdk17") &&
 				file.Name() != jdkTmpName {
 				err = os.RemoveAll(workDir + "/" + file.Name())
 				if err != nil {
-					logs.WithError(err).Error("agentUpgrade|upgrade jdk remove old jdk file error")
+					logs.WithError(err).Error("agentUpgrade|upgrade jdk17 remove old jdk file error")
 				}
 			}
 		}
