@@ -2,6 +2,7 @@ package com.tencent.devops.environment.service.api
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.exception.ApiGwException
 import com.tencent.devops.environment.pojo.apigw.ApiGwBasicReq
@@ -20,11 +21,6 @@ abstract class BaseApiGwApi(
 ) {
 
     companion object {
-        /**
-         * 打印的Body最大长度
-         */
-        private const val BODY_MAX_LENGTH = 4000
-
         private val log = LoggerFactory.getLogger(BaseApiGwApi::class.java)
     }
 
@@ -67,7 +63,7 @@ abstract class BaseApiGwApi(
     private fun logUrlAndReq(url: String, req: ApiGwReq? = null) {
         val reqStr: String?
         if (req != null) {
-            reqStr = bodyWithLengthLimit(JsonUtil.skipLogFields(req))
+            reqStr = LogUtils.getLogWithLengthLimit(JsonUtil.skipLogFields(req))
             log.info("request: url=$url, body=$reqStr")
         } else {
             log.info("request: url=$url")
@@ -121,16 +117,12 @@ abstract class BaseApiGwApi(
     }
 
     private fun getRespDesc(resp: Response): String {
-        return "(code=" + resp.code + ",message=" + resp.message + ",body=" + bodyWithLengthLimit(resp.body?.string()) + ")"
+        val builder = StringBuilder()
+        builder.append("(code=").append(resp.code)
+        builder.append(",message=").append(resp.message)
+        builder.append(",body=").append(LogUtils.getLogWithLengthLimit(resp.body?.string()))
+        builder.append(")")
+        return builder.toString()
     }
 
-    private fun bodyWithLengthLimit(bodyStr: String?): String? {
-        if (bodyStr == null) {
-            return null
-        }
-        return if (bodyStr.length > BODY_MAX_LENGTH)
-            bodyStr.substring(0, BODY_MAX_LENGTH)
-        else
-            bodyStr
-    }
 }

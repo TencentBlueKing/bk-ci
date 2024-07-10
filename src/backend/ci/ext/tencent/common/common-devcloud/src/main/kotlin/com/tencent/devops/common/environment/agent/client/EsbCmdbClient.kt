@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.environment.agent.pojo.agent.CmdbServerPage
 import com.tencent.devops.common.environment.agent.pojo.agent.EsbAuthReq
 import com.tencent.devops.common.environment.agent.pojo.agent.RawCmdbNode
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import okhttp3.Headers
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -132,7 +133,8 @@ class EsbCmdbClient(
 
         val requestBody = ObjectMapper().writeValueAsString(requestData)
         logger.info("[queryCmdbServer]POST url: $url")
-        logger.info("[queryCmdbServer]requestBody: $requestBody")
+        val limitedRequestBody = LogUtils.getLogWithLengthLimit(requestBody)
+        logger.info("[queryCmdbServer]requestBody: $limitedRequestBody")
 
         val request = Request.Builder()
             .url(url)
@@ -142,7 +144,8 @@ class EsbCmdbClient(
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 val responseBody = response.body?.string()
-                logger.info("[queryCmdbServer]responseBody: $responseBody")
+                val limitedResponseBody = LogUtils.getLogWithLengthLimit(responseBody)
+                logger.info("[queryCmdbServer]responseBody: $limitedResponseBody")
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
                 if (responseData["result"] == false) {
