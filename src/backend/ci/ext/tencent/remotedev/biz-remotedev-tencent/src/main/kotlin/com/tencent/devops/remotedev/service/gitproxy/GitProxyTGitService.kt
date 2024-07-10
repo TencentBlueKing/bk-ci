@@ -815,7 +815,7 @@ class GitProxyTGitService @Autowired constructor(
                         notifyType = mutableSetOf(NotifyType.EMAIL.name),
                         bodyParams = mapOf(
                             "userId" to userId,
-                            "urls" to idAndUrls.keys.joinToString(separator = "\n"),
+                            "urls" to idAndUrls.values.joinToString(separator = "\n"),
                             "projectId" to projectId,
                             "projectName" to project.projectName
                         ),
