@@ -13,7 +13,7 @@
                     <bk-radio
                         :class="['bkdevops-radio', { mr15: lineNumber <= 0 }]"
                         :value="item.value"
-                        :disabled="disabled || item.disabled || readOnly"
+                        :disabled="disabled || item.disabled"
                     >
                         <span :class="{
                             'overflow': true,
