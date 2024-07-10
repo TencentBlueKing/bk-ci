@@ -219,7 +219,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                 projectId = ws.projectId,
                 workspaceName = workspaceName,
                 workspaceProperty = WorkspaceProperty(
-                    old.displayName, old.remark
+                    old.displayName, old.remark, old.labels
                 )
             )
         }
