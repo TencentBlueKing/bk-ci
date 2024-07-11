@@ -49,7 +49,8 @@ class StartWorkspaceService @Autowired constructor(
             workspaceJoinDao.fetchWindowsWorkspacesSimple(
                 dslContext = dslContext,
                 projectId = projectId,
-                checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
+                checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP),
+                notStatus = listOf(WorkspaceStatus.DELETED, WorkspaceStatus.UNUSED)
             ).forEach {
                 if (it.hostIp.isNullOrBlank()) {
                     return@forEach
