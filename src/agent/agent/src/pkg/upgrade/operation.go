@@ -203,7 +203,7 @@ func DoUpgradeJdk() error {
 	// 解压缩为一个新文件取代旧文件路径，优先使用标准路径
 	jdkTmpName := "jdk17"
 	_, err = os.Stat(workDir + "/" + jdkTmpName)
-	if err != nil || errors.Is(err, os.ErrExist) {
+	if !(err != nil && errors.Is(err, os.ErrNotExist)) {
 		jdkTmpName = "jdk17-" + strconv.FormatInt(time.Now().Unix(), 10)
 	}
 	err = fileutil.Unzip(workDir+"/"+config.Jdk17ClientFile, workDir+"/"+jdkTmpName)
