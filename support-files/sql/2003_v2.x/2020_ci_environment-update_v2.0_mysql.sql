@@ -125,15 +125,6 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
-                  FROM information_schema.statistics
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_NODE'
-                    AND INDEX_NAME = 'SERVER_ID') THEN
-        ALTER TABLE `T_NODE`
-            ADD INDEX `SERVER_ID` (`SERVER_ID`);
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_ENV_NODE'
