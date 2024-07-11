@@ -160,7 +160,7 @@ class AgentReuseMutexCmd @Autowired constructor(
                     commandContext.cmdFlowState = CmdFlowState.LOOP // 循环消息命令 延时10秒钟
                 }
 
-                ContainerMutexStatus.FIRST_LOG -> { // 增加可视化的互斥状态打印
+                ContainerMutexStatus.FIRST_LOG -> { // 增加可视化的互斥状态打印，注：这里进行了Job状态流转！
                     commandContext.latestSummary = "agent_reuse_mutex_print"
                     commandContext.cmdFlowState = CmdFlowState.LOOP
                 }
