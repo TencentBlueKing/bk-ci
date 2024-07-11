@@ -101,6 +101,11 @@ const infoBoxInstance = ref();
 const updateProject = async () => {
   infoBoxInstance.value?.hide();
   btnLoading.value = true;
+  await fetchOperationalList(projectData.value.bgName);
+  await checkProductIdName({
+    id: projectData.value?.productId,
+    list: operationalList.value,
+  });
   const result = await http
     .requestUpdateProject({
       projectId: projectData.value?.englishName,
@@ -132,6 +137,21 @@ const updateProject = async () => {
     });
   }
   return Promise.resolve(false);
+};
+
+const fetchOperationalList = async (bgName) => {
+  if (!bgName) return
+  const res = await http.getOperationalList(bgName)
+  operationalList.value = res.map(i => ({
+    ...i,
+    value: i.ProductId,
+    label: i.ProductName,
+    id: i.ProductId,
+  }));
+};
+
+const checkProductIdName = ({ id, list }) => {
+  projectData.value.productName = list.find(i => i.ProductId === id)?.ProductName || '';
 };
 
 const showNeedApprovedTips = () => {

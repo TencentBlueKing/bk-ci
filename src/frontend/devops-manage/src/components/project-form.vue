@@ -404,15 +404,6 @@ watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], ()
   deep: true,
 });
 
-watch(() => projectData.value.productId, (id) => {
-  if (!id) {
-    projectData.value.productName = ''
-    return
-  }
-  projectData.value.productName = operationalList.value.find(i => i?.ProductId === id)?.ProductName;
-}, {
-  deep: true,
-});
 
 onMounted(async () => {
   const deptInfos = await fetchUserDetail();
