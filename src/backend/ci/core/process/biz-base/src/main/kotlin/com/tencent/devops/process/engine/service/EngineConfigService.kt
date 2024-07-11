@@ -24,7 +24,7 @@ class EngineConfigService @Autowired constructor(
         localCache.get(ENGINE_CONFIG_MUTEX_MAX_QUEUE_KEY)?.ifBlank { null }?.toIntOrNull() ?: MUTEX_MAX_QUEUE_DEFAULT
 
     companion object {
-        private const val ENGINE_CONFIG_MUTEX_MAX_QUEUE_KEY = "engine.config.mutex.maxQueue"
+        private const val ENGINE_CONFIG_MUTEX_MAX_QUEUE_KEY = "engine:config:mutex:maxQueue"
         const val MUTEX_MAX_QUEUE_DEFAULT = 50
 
         private const val CACHE_EXPIRE_MIN = 10L
