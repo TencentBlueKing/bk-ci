@@ -115,7 +115,7 @@ func (j *JdkVersionType) SyncJdkVersion() error {
 }
 
 func (j *JdkVersionType) getJdkVersion() ([]string, error) {
-	var jdkVersion []byte
+	var jdkVersion = make([]byte, 0)
 	var err error
 	switch j.vNum {
 	case jdk8:

@@ -365,7 +365,7 @@ func LoadAgentConfig() error {
 	GAgentConfig.JdkDirPath = jdkDirPath
 	logs.Info("jdkDirPath: ", GAgentConfig.JdkDirPath)
 
-	GAgentConfig.Jdk17DirPath = jdkDirPath
+	GAgentConfig.Jdk17DirPath = jdk17DirPath
 	logs.Info("jdk17DirPath: ", GAgentConfig.Jdk17DirPath)
 
 	GAgentConfig.DockerParallelTaskCount = dockerParallelTaskCount
