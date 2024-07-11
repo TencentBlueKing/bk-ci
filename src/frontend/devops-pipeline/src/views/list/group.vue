@@ -69,7 +69,7 @@
                                 />
                             </div>
                             <div class="group-card-tools">
-                                <i class="devops-icon icon-edit2 group-card-icon" v-bk-tooltips="toolTips.rename" @click="tagEdit($event, groupIndex, tagIndex)"></i>
+                                <i class="devops-icon icon-edit group-card-icon" v-bk-tooltips="toolTips.rename" @click="tagEdit($event, groupIndex, tagIndex)"></i>
                                 <i class="group-card-icon devops-icon icon-delete" v-bk-tooltips="toolTips.delete" @click="deleteTag(groupIndex, tagIndex)"></i>
                             </div>
                             <div v-show="active.isGroupEdit" class="group-card-edit-tools">

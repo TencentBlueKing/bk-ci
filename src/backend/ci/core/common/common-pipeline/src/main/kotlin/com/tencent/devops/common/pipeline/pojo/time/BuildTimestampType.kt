@@ -44,6 +44,7 @@ enum class BuildTimestampType(
     STAGE_CHECK_IN_WAITING("stageCheckInWaiting"), // stage准入等待
     STAGE_CHECK_OUT_WAITING("stageCheckOutWaiting"), // stage准出等待
     JOB_MUTEX_QUEUE("jobMutexQueue"), // job互斥并发排队
+    JOB_AGENT_REUSE_MUTEX_QUEUE("jobAgentReuseMutexQueue"), // jobAgent复用互斥排队
     JOB_THIRD_PARTY_QUEUE("jobThirdPartyQueue"), // job第三方构建机资源排队
     JOB_CONTAINER_STARTUP("jobContainerStartup"), // job构建机启动（包含了第三方构建机资源等待）
     JOB_CONTAINER_SHUTDOWN("jobContainerShutdown"), // job构建机关闭

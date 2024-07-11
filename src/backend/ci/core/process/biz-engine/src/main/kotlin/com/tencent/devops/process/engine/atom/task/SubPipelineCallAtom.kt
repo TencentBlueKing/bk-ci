@@ -89,7 +89,9 @@ class SubPipelineCallAtom constructor(
                 buildLogPrinter.addRedLine(
                     buildId = task.buildId,
                     message = "Can not found sub pipeline build record(${task.subBuildId})",
-                    tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                    tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -113,7 +115,9 @@ class SubPipelineCallAtom constructor(
                 buildLogPrinter.addYellowLine(
                     buildId = task.buildId,
                     message = "sub pipeline status: ${status.name}",
-                    tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                    tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
 
                 if (force && !status.isFinish()) { // 补充强制终止对子流水线插件的处理
@@ -196,14 +200,16 @@ class SubPipelineCallAtom constructor(
             } else {
                 "syn"
             },
-            values = startParams
+            values = startParams,
+            executeCount = task.executeCount
         )
 
         if (result.isNotOk()) {
             buildLogPrinter.addErrorLine(
                 buildId = task.buildId,
                 message = result.message ?: result.status.toString(),
-                tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+                jobId = null, stepId = task.stepId
             )
             return defaultFailAtomResponse
         }
@@ -214,7 +220,8 @@ class SubPipelineCallAtom constructor(
             buildId = task.buildId,
             message = "<a target='_blank' href='/console/pipeline/${task.projectId}/" +
                 "$subPipelineId/detail/$subBuildId'>Click Link[${pipelineInfo.pipelineName}]</a>",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         return AtomResponse(if (param.asynchronous) BuildStatus.SUCCEED else BuildStatus.CALL_WAITING)
     }

@@ -132,7 +132,7 @@
 
     .params-opt {
         position: absolute;
-        left: 85px;
+        left: 125px;
         top: -31px;
         font-size: 12px;
         ::v-deep .bk-icon {

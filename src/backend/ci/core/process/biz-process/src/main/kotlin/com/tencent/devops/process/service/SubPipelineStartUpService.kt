@@ -60,10 +60,12 @@ import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.utils.PIPELINE_START_SUB_RUN_MODE
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_EXECUTE_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
@@ -117,7 +119,8 @@ class SubPipelineStartUpService @Autowired constructor(
         taskId: String,
         runMode: String,
         channelCode: ChannelCode? = null,
-        values: Map<String, String>
+        values: Map<String, String>,
+        executeCount: Int?
     ): Result<ProjectBuildId> {
         val fixProjectId = callProjectId.ifBlank { projectId }
 
@@ -173,7 +176,9 @@ class SubPipelineStartUpService @Autowired constructor(
             pipelineId = callPipelineId,
             channelCode = callChannelCode,
             parameters = startParams,
-            triggerUser = triggerUser
+            triggerUser = triggerUser,
+            runMode = runMode,
+            parentExecuteCount = executeCount
         )
         pipelineTaskService.updateSubBuildId(
             projectId = projectId,
@@ -185,6 +190,7 @@ class SubPipelineStartUpService @Autowired constructor(
         if (runMode == SYNC_RUN_MODE) {
             subPipelineStatusService.onStart(subBuildId)
         }
+
         return Result(
             ProjectBuildId(
                 id = subBuildId,
@@ -204,7 +210,9 @@ class SubPipelineStartUpService @Autowired constructor(
         channelCode: ChannelCode,
         parameters: Map<String, String>,
         isMobile: Boolean = false,
-        triggerUser: String? = null
+        triggerUser: String? = null,
+        runMode: String,
+        parentExecuteCount: Int?
     ): String {
 
         val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
@@ -213,7 +221,14 @@ class SubPipelineStartUpService @Autowired constructor(
                 params = arrayOf(pipelineId),
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
-
+        if (readyToBuildPipelineInfo.locked == true) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
+        if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+            )
+        }
         val parentPipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = parentProjectId,
             pipelineId = parentPipelineId
@@ -234,12 +249,20 @@ class SubPipelineStartUpService @Autowired constructor(
 
         val startEpoch = System.currentTimeMillis()
         try {
-
-            val model = getModel(projectId, pipelineId = pipelineId, version = readyToBuildPipelineInfo.version)
+            val resource = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId, pipelineId, readyToBuildPipelineInfo.version
+            ) ?: throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+                )
+            val model = resource.model
 
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             // #6090 拨乱反正
-            val params = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, parameters)
+            val params = buildParamCompatibilityTransformer.parseTriggerParam(
+                userId = userId, projectId = projectId, pipelineId = pipelineId,
+                paramProperties = triggerContainer.params, paramValues = parameters
+            )
 
             params[PIPELINE_START_PIPELINE_USER_ID] =
                 BuildParameters(key = PIPELINE_START_PIPELINE_USER_ID, value = triggerUser ?: userId)
@@ -251,6 +274,17 @@ class SubPipelineStartUpService @Autowired constructor(
                 BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_NAME, value = parentPipelineInfo.pipelineName)
             params[PIPELINE_START_PARENT_BUILD_ID] =
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId)
+            params[PIPELINE_START_SUB_RUN_MODE] =
+                BuildParameters(key = PIPELINE_START_SUB_RUN_MODE, value = runMode, readOnly = true)
+            // 父流水线执行次数
+            parentExecuteCount?.let {
+                params[PIPELINE_START_PARENT_EXECUTE_COUNT] =
+                    BuildParameters(
+                        key = PIPELINE_START_PARENT_EXECUTE_COUNT,
+                        value = parentExecuteCount,
+                        readOnly = true
+                    )
+            }
             params[PIPELINE_START_PARENT_BUILD_NUM] =
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_NUM, value = parentBuildInfo.buildNum)
             params[PIPELINE_START_PARENT_BUILD_TASK_ID] =
@@ -287,7 +321,9 @@ class SubPipelineStartUpService @Autowired constructor(
                 channelCode = channelCode,
                 isMobile = isMobile,
                 model = model,
-                frequencyLimit = false
+                frequencyLimit = false,
+                versionName = resource.versionName,
+                yamlVersion = resource.yamlVersion
             ).id
             // 更新父流水线关联子流水线构建id
             pipelineTaskService.updateSubBuildId(
@@ -304,7 +340,7 @@ class SubPipelineStartUpService @Autowired constructor(
     }
 
     private fun getModel(projectId: String, pipelineId: String, version: Int? = null) =
-        pipelineRepositoryService.getModel(projectId, pipelineId, version)
+        pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version)?.model
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -343,7 +379,9 @@ class SubPipelineStartUpService @Autowired constructor(
         }
         existPipelines.add(pipelineId)
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
-        val existModel = pipelineRepositoryService.getModel(projectId, pipelineId, pipeline.version) ?: return
+        val existModel = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId, pipelineId, pipeline.version
+        )?.model ?: return
 
         val currentExistPipelines = HashSet(existPipelines)
         existModel.stages.forEachIndexed stage@{ index, stage ->
@@ -415,14 +453,20 @@ class SubPipelineStartUpService @Autowired constructor(
     fun subPipelineManualStartupInfo(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        includeConst: Boolean?,
+        includeNotRequired: Boolean?
     ): Result<List<SubPipelineStartUpInfo>> {
         if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
         }
         val result = pipelineBuildFacadeService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS)
         val parameter = ArrayList<SubPipelineStartUpInfo>()
-        val prop = result.properties
+        val prop = result.properties.filter {
+            val const = if (includeConst == false) { it.constant != true } else { true }
+            val required = if (includeNotRequired == false) { it.required } else { true }
+            const && required
+        }
 
         for (item in prop) {
             if (item.type == BuildFormPropertyType.MULTIPLE || item.type == BuildFormPropertyType.ENUM) {

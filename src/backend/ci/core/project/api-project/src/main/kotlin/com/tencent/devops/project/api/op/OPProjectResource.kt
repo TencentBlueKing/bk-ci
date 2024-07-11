@@ -136,6 +136,9 @@ interface OPProjectResource {
         @Parameter(description = "运营产品ID", required = true)
         @QueryParam(value = "product_id")
         productId: Int?,
+        @Parameter(description = "渠道", required = true)
+        @QueryParam(value = "channelCode")
+        channelCode: String?,
         @Context request: HttpServletRequest
     ): Result<Map<String, Any?>?>
 
@@ -221,4 +224,11 @@ interface OPProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<OperationalProductVO>>
+
+    @PUT
+    @Path("/setDisableWhenInactiveFlag")
+    fun setDisableWhenInactiveFlag(
+        @Parameter(description = "项目ID列表", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
 }

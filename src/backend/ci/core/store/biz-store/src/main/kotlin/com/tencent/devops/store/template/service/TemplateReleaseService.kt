@@ -29,7 +29,7 @@ package com.tencent.devops.store.template.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
-import com.tencent.devops.store.pojo.common.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
 import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
 import org.jooq.DSLContext

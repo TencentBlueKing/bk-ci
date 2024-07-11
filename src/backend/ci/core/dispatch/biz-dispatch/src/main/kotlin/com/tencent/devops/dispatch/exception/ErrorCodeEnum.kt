@@ -118,6 +118,16 @@ enum class ErrorCodeEnum(
         ErrorType.USER,
         2103021,
         "构建机环境中所有可用节点{0}启动构建进程失败，暂无可用节点"
+    ),
+    AGENT_REUSE_MUTEX_AGENT_NOT_FOUND(
+        ErrorType.USER,
+        2103022,
+        "构建机复用互斥，未找到Job: {0}对应的构建节点"
+    ),
+    GET_BUILD_RESOURCE_ERROR(
+        ErrorType.USER,
+        2103023,
+        "获取构建资源超时"
     );
 
     fun getErrorMessage(params: Array<String>? = null, language: String? = null): String {

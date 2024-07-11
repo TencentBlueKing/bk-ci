@@ -61,6 +61,10 @@ const atomFieldMixin = {
         descTooltips: {
             type: String,
             default: ''
+        },
+        readOnly: {
+            type: Boolean,
+            default: false
         }
     },
     data () {

@@ -3,18 +3,15 @@
     [
       "@babel/preset-env",
       {
+        "targets": {
+            "chrome": "90"
+        },
         "useBuiltIns": "usage",
         "corejs": 3
       }
     ]
   ],
   "plugins": [
-    [
-      "babel-plugin-import-bk-magic-vue",
-      {
-        "baseLibName": "bk-magic-vue"
-      }
-    ],
     "@babel/plugin-transform-runtime",
     "@babel/plugin-transform-object-assign",
     "@babel/plugin-syntax-dynamic-import",

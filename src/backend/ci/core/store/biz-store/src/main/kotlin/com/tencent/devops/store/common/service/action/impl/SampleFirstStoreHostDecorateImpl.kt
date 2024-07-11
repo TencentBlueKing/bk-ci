@@ -31,7 +31,7 @@ import javax.annotation.Priority
 import org.springframework.stereotype.Component
 
 @Component
-@Priority(Int.MAX_VALUE)
+@Priority(1)
 @Suppress("UNUSED")
 class SampleFirstStoreHostDecorateImpl : AbstractStoreHostDecorateImpl() {
 

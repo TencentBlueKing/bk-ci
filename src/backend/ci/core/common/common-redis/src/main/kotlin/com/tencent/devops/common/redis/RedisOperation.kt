@@ -29,14 +29,15 @@ package com.tencent.devops.common.redis
 
 import com.tencent.devops.common.redis.split.RedisSplitProperties
 import io.micrometer.core.instrument.util.NamedThreadFactory
+import java.util.Date
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.springframework.data.redis.core.Cursor
+import org.springframework.data.redis.core.DefaultTypedTuple
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.core.ScanOptions
 import org.springframework.data.redis.core.script.RedisScript
-import java.util.Date
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 @Suppress("TooManyFunctions", "UNUSED", "ComplexMethod")
 class RedisOperation(
@@ -227,6 +228,11 @@ class RedisOperation(
         return masterRedisTemplate.opsForHash<String, String>().get(getFinalKey(key, isDistinguishCluster), hashKey)
     }
 
+    fun hmGet(key: String, hashKeys: Collection<String>, isDistinguishCluster: Boolean? = false): List<String>? {
+        return masterRedisTemplate.opsForHash<String, String>()
+            .multiGet(getFinalKey(key, isDistinguishCluster), hashKeys)
+    }
+
     fun hdelete(key: String, hashKey: String, isDistinguishCluster: Boolean? = false) {
         // 双写
         writeSlaveIfNeed {
@@ -235,12 +241,12 @@ class RedisOperation(
         masterRedisTemplate.opsForHash<String, String>().delete(getFinalKey(key, isDistinguishCluster), hashKey)
     }
 
-    fun hdelete(key: String, hashKeys: Collection<String>, isDistinguishCluster: Boolean? = false) {
+    fun hdelete(key: String, hashKeys: Array<String>, isDistinguishCluster: Boolean? = false) {
         // 双写
         writeSlaveIfNeed {
-            slaveRedisTemplate!!.opsForHash<String, String>().delete(getFinalKey(key, isDistinguishCluster), hashKeys)
+            slaveRedisTemplate!!.opsForHash<String, String>().delete(getFinalKey(key, isDistinguishCluster), *hashKeys)
         }
-        masterRedisTemplate.opsForHash<String, String>().delete(getFinalKey(key, isDistinguishCluster), hashKeys)
+        masterRedisTemplate.opsForHash<String, String>().delete(getFinalKey(key, isDistinguishCluster), *hashKeys)
     }
 
     fun hhaskey(key: String, hashKey: String, isDistinguishCluster: Boolean? = false): Boolean {
@@ -307,12 +313,37 @@ class RedisOperation(
         return masterRedisTemplate.opsForZSet().add(getFinalKey(key, isDistinguishCluster), values, score)
     }
 
-    fun zremove(key: String, values: String, isDistinguishCluster: Boolean? = false): Long? {
+    fun zaddTuples(
+        key: String,
+        values: Set<DefaultTypedTuple<String>>,
+        isDistinguishCluster: Boolean? = false
+    ): Long? {
+        writeSlaveIfNeed {
+            slaveRedisTemplate!!.opsForZSet().add(getFinalKey(key, isDistinguishCluster), values)
+        }
+        return masterRedisTemplate.opsForZSet().add(getFinalKey(key, isDistinguishCluster), values)
+    }
+
+    /**
+     * redis version >= 3.0
+     */
+    fun zaddIfAbsent(
+        key: String,
+        values: Set<DefaultTypedTuple<String>>,
+        isDistinguishCluster: Boolean? = false
+    ): Long? {
+        writeSlaveIfNeed {
+            slaveRedisTemplate!!.opsForZSet().addIfAbsent(getFinalKey(key, isDistinguishCluster), values)
+        }
+        return masterRedisTemplate.opsForZSet().addIfAbsent(getFinalKey(key, isDistinguishCluster), values)
+    }
+
+    fun zremove(key: String, vararg values: String, isDistinguishCluster: Boolean? = false): Long? {
         // 双写
         writeSlaveIfNeed {
-            slaveRedisTemplate!!.opsForZSet().remove(getFinalKey(key, isDistinguishCluster), values)
+            slaveRedisTemplate!!.opsForZSet().remove(getFinalKey(key, isDistinguishCluster), *values)
         }
-        return masterRedisTemplate.opsForZSet().remove(getFinalKey(key, isDistinguishCluster), values)
+        return masterRedisTemplate.opsForZSet().remove(getFinalKey(key, isDistinguishCluster), *values)
     }
 
     fun zsize(key: String, isDistinguishCluster: Boolean? = false): Long? {
@@ -325,6 +356,10 @@ class RedisOperation(
 
     fun zrange(key: String, start: Long, end: Long, isDistinguishCluster: Boolean? = false): Set<String>? {
         return masterRedisTemplate.opsForZSet().range(getFinalKey(key, isDistinguishCluster), start, end)
+    }
+
+    fun zscore(key: String, item: String, isDistinguishCluster: Boolean? = false): Double? {
+        return masterRedisTemplate.opsForZSet().score(getFinalKey(key, isDistinguishCluster), item)
     }
 
     fun zrank(key: String, values: String, isDistinguishCluster: Boolean? = false): Long? {

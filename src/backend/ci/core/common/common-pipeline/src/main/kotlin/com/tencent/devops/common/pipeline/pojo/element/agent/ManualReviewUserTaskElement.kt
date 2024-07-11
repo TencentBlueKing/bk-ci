@@ -29,8 +29,12 @@ package com.tencent.devops.common.pipeline.pojo.element.agent
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.utils.TransferUtil
 import io.swagger.v3.oas.annotations.media.Schema
+import org.json.JSONObject
 
+@Suppress("ComplexMethod")
 @Schema(title = "人工审核", description = ManualReviewUserTaskElement.classType)
 data class ManualReviewUserTaskElement(
     @get:Schema(title = "任务名称", required = true)
@@ -65,6 +69,29 @@ data class ManualReviewUserTaskElement(
     }
 
     override fun getTaskAtom() = "manualReviewTaskAtom"
+
+    override fun transferYaml(defaultValue: JSONObject?): PreStep {
+        val input = mutableMapOf<String, Any>().apply {
+            reviewUsers.ifEmpty { null }?.run { put(::reviewUsers.name, this) }
+            desc?.ifEmpty { null }?.run { put(::desc.name, this) }
+            suggest?.ifEmpty { null }?.run { put(::suggest.name, this) }
+            params.ifEmpty { null }?.run { put(::params.name, this) }
+            namespace?.ifEmpty { null }?.run { put(::namespace.name, this) }
+            notifyType?.ifEmpty { null }?.run { put(::notifyType.name, this) }
+            notifyTitle?.ifEmpty { null }?.run { put(::notifyTitle.name, this) }
+            markdownContent?.run { put(::markdownContent.name, this) }
+            notifyGroup?.ifEmpty { null }?.run { put(::notifyGroup.name, this) }
+            reminderTime?.run { put(::reminderTime.name, this) }
+        }
+        return PreStep(
+            name = name,
+            id = stepId,
+            // 插件上的
+            ifFiled = TransferUtil.parseStepIfFiled(this),
+            uses = "${getAtomCode()}@$version",
+            with = TransferUtil.simplifyParams(defaultValue, input).ifEmpty { null }
+        )
+    }
 
     override fun getClassType() = classType
 }

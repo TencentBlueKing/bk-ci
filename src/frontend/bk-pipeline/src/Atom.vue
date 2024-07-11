@@ -6,13 +6,13 @@
                 <span>{{ t("quality") }}</span>
                 <i></i>
             </span>
-            <template v-if="atom.isReviewing">
+            <template v-if="isReviewing">
                 <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
                 <span
                     v-else
                     :class="{
                         'handler-list': true,
-                        'disabled-review': atom.isReviewing && !hasReviewPerm
+                        'disabled-review': isReviewing && !hasReviewPerm
                     }"
                 >
                     <span class="revire-btn" @click.stop="qualityApprove('PROCESS')">{{
@@ -31,8 +31,19 @@
                 size="18"
                 class="active-atom-location-icon"
             />
+            <bk-round-progress
+                v-if="showProgress"
+                ext-cls="atom-progress"
+                v-bind="progressConf"
+                :percent="atom.progressRate"
+            />
+            <Logo
+                v-else-if="atom.asyncStatus && atom.asyncStatus !== 'SUCCEED'"
+                class="atom-progress"
+                :name="`sub_pipeline_${atom.asyncStatus.toLowerCase()}`"
+            />
             <status-icon
-                v-if="!isSkip && !!atomStatus"
+                v-else-if="!isSkip && !!atomStatus"
                 type="element"
                 :status="atomStatus"
                 :is-hook="isHookAtom"
@@ -45,9 +56,11 @@
                     {{ atom.atomCode ? atom.name : t("pendingAtom") }}
                 </span>
             </p>
-            <span class="atom-execounter" v-if="isExecuting">{{ execTime }}</span>
+            <template v-if="isExecuting">
+                <span class="atom-execounter">{{ execTime }}</span>
+            </template>
             <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
-            <bk-popover :delay="[300, 0]" v-else-if="atom.isReviewing" placement="top">
+            <bk-popover :delay="[300, 0]" v-else-if="isReviewing" placement="top">
                 <span
                     @click.stop="reviewAtom"
                     class="atom-reviewing-tips atom-operate-area"
@@ -56,7 +69,7 @@
                     {{ t("manualCheck") }}
                 </span>
                 <template slot="content">
-                    <p>{{ t("checkUser") }}{{ atom.computedReviewers.join(";") }}</p>
+                    <p>{{ t("checkUser") }}{{ reviewUsers.join(";") }}</p>
                 </template>
             </bk-popover>
             <bk-popover :delay="[300, 0]" v-else-if="isReviewAbort" placement="top">
@@ -100,8 +113,7 @@
                     :disabled="!atom.timeCost.executeCost"
                 >
                     <span class="atom-execute-time">
-                        <span v-if="isElapsedGt1h">&gt;</span>
-                        {{ isElapsedGt1h ? "1h" : formatTime }}
+                        {{ formatTime }}
                     </span>
                     <template slot="content">
                         <p>{{ formatTime }}</p>
@@ -110,7 +122,7 @@
             </span>
 
             <Logo
-                v-if="reactiveData.editable && stageIndex !== 0 && !atom.isError"
+                v-if="reactiveData.editable && !atom.isError"
                 name="clipboard"
                 class="copy"
                 size="14"
@@ -298,10 +310,11 @@
                     readonly: !this.reactiveData.editable,
                     'bk-pipeline-atom': true,
                     'trigger-atom': isTriggerContainer(this.container),
-                    [STATUS_MAP.REVIEWING]: this.atom.isReviewing,
+                    [STATUS_MAP.REVIEWING]: this.isReviewing,
                     [this.qualityStatus]: this.isQualityGateAtom && !!this.qualityStatus,
                     [this.atomStatusCls]: !!this.atomStatusCls,
                     'quality-atom': this.isQualityGateAtom,
+                    'is-sub-pipeline-atom': this.atom.atomCode === 'SubPipelineExec',
                     'is-error': this.atom.isError,
                     'is-intercept': this.isQualityCheckAtom,
                     'template-compare-atom': this.atom.templateModify,
@@ -321,7 +334,7 @@
                 return atomCode
             },
             hasReviewPerm () {
-                return this.atom.computedReviewers.includes(this.reactiveData.userName)
+                return this.reviewUsers.includes(this.reactiveData.userName)
             },
             hasExecPerm () {
                 const hasPauseReviewer = Array.isArray(this.atom.pauseReviewers)
@@ -337,9 +350,6 @@
                 return (
                     Array.isArray(this.atom.pauseReviewers) && this.atom.pauseReviewers.join(';')
                 )
-            },
-            isElapsedGt1h () {
-                return this.atom?.timeCost?.totalCost >= 36e5
             },
             formatTime () {
                 try {
@@ -365,6 +375,43 @@
             },
             isUnExecThisTime () {
                 return this.atom?.executeCount < this.reactiveData.currentExecCount
+            },
+            isReviewing () {
+                return this.atom?.status === STATUS_MAP.REVIEWING
+            },
+            reviewUsers () {
+                try {
+                    const list
+                        = this.atom?.reviewUsers ?? this.atom?.data?.input?.reviewers ?? []
+                    const reviewUsers = list
+                        .map((user) => user.split(';').map((val) => val.trim()))
+                        .reduce((prev, curr) => {
+                            return prev.concat(curr)
+                        }, [])
+                    return reviewUsers
+                } catch (error) {
+                    console.error(error)
+                    return []
+                }
+            },
+            showProgress () {
+                return this.isExecuting && typeof this.atom.progressRate === 'number' && this.atom.progressRate < 1
+            },
+            progressConf () {
+                return {
+                    width: 28,
+                    numUnit: '',
+                    numStyle: {
+                        fontSize: '10px',
+                        color: '#333',
+                        transform: 'translate(-50%, -50%)'
+                    },
+                    config: {
+                        strokeWidth: 12,
+                        bgColor: '#f0f1f5',
+                        activeColor: '#459fff'
+                    }
+                }
             }
         },
         watch: {
@@ -405,7 +452,9 @@
                 }, 1000)
             },
             reviewAtom () {
-                eventBus.$emit(ATOM_REVIEW_EVENT_NAME, this.atom)
+                if (this.hasReviewPerm) {
+                    eventBus.$emit(ATOM_REVIEW_EVENT_NAME, this.atom, this.reviewUsers)
+                }
             },
             isQualityGate (atom) {
                 try {
@@ -522,6 +571,14 @@
   transition: all 0.4s ease-in-out;
   z-index: 2;
   border: 1px solid $fontLighterColor;
+
+  .atom-progress {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+  }
 
   .active-atom-location-icon {
     position: absolute;

@@ -52,6 +52,7 @@ import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.Credential
 import com.tencent.devops.dispatch.docker.pojo.Pool
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
+import com.tencent.devops.dispatch.docker.service.ExtDockerResourceService
 import com.tencent.devops.dispatch.docker.utils.DispatchDockerCommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
@@ -79,6 +80,7 @@ class DockerVMListener @Autowired constructor(
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val dockerRoutingSdkService: DockerRoutingSdkService,
+    private val extDockerResourceService: ExtDockerResourceService,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : BuildListener {
 
@@ -176,11 +178,16 @@ class DockerVMListener @Autowired constructor(
             imageType = dispatchType.imageType?.type
         )
 
-        val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(event.projectId)
-        if (dockerRoutingType == DockerRoutingType.VM) {
-            startup(dispatchMessage, containerPool)
-        } else {
-            startKubernetesDocker(dispatchMessage, containerPool, dockerRoutingType, demoteFlag)
+        when (val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(event.projectId)) {
+            DockerRoutingType.VM -> {
+                startup(dispatchMessage, containerPool)
+            }
+            DockerRoutingType.DEVCLOUD -> {
+                extDockerResourceService.startExtDocker(dispatchMessage.event, containerPool, dockerRoutingType, demoteFlag)
+            }
+            else -> {
+                startKubernetesDocker(dispatchMessage, containerPool, dockerRoutingType, demoteFlag)
+            }
         }
     }
 
@@ -218,7 +225,9 @@ class DockerVMListener @Autowired constructor(
                     containerHashId = containerHashId,
                     customBuildEnv = customBuildEnv,
                     dockerRoutingType = dockerRoutingType.name,
-                    jobId = null
+                    jobId = null,
+                    singleNodeConcurrency = null,
+                    allNodeConcurrency = null
                 )
             )
         }
@@ -234,8 +243,10 @@ class DockerVMListener @Autowired constructor(
             buildId = event.buildId,
             message = "Start docker ${dockerDispatch.dockerBuildVersion} for the build",
             tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = event.jobId,
+            stepId = VMUtils.genStartVMTaskId(event.vmSeqId)
         )
 
         var poolNo = 0

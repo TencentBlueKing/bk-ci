@@ -74,7 +74,9 @@ data class BuildRecordTask(
     @get:Schema(title = "结束时间", required = true)
     var endTime: LocalDateTime? = null,
     @get:Schema(title = "业务时间戳集合", required = true)
-    var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
+    var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>,
+    @get:Schema(title = "异步执行状态", required = true)
+    var asyncStatus: String? = null
 ) {
     companion object {
         fun MutableList<BuildRecordTask>.addRecords(
@@ -94,7 +96,8 @@ data class BuildRecordTask(
                         taskVar = element.initTaskVar(), timestamps = mapOf(),
                         elementPostInfo = it.additionalOptions?.elementPostInfo?.takeIf { info ->
                             info.parentElementId != it.taskId
-                        }
+                        },
+                        startTime = it.startTime, endTime = it.endTime
                     )
                 )
             }

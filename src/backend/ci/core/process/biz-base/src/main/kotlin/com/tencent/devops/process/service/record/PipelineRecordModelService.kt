@@ -274,29 +274,33 @@ class PipelineRecordModelService @Autowired constructor(
                 // 当开机任务的序号大于1时，说明第一个任务不是开机任务，job含有内置插件任务，需要重新调整开机任务前面的task任务的taskSeq值
                 containerRecordTask.taskSeq += 1
             }
-            while (containerRecordTask.taskSeq - preContainerRecordTaskSeq > 1) {
-                // 补充跳过的task对象
-                val taskBaseMap = taskBaseMaps[preContainerRecordTaskSeq - 1]
-                val taskVarMap = generateSkipTaskVarModel(matrixTaskFlag, taskBaseMap, containerRecordTask.executeCount)
-                if (taskVarMap[Element::id.name].toString() == lastElementTaskId) {
-                    supplementSkipTaskFlag = false
-                }
-                tasks.add(taskVarMap)
-                preContainerRecordTaskSeq++
-            }
-            val taskId = containerRecordTask.taskId
-            if (containerRecordTask.elementPostInfo != null || taskId == lastElementTaskId) {
-                // 当job含有post任务或者db中存在model最后一个插件的任务记录，则不需要再补充跳过的task任务
-                supplementSkipTaskFlag = false
-            }
-            preContainerRecordTaskSeq = containerRecordTask.taskSeq
             val taskVarMap = generateTaskVarMap(
                 containerRecordTask = containerRecordTask,
-                taskId = taskId,
+                taskId = containerRecordTask.taskId,
                 containerBaseMap = containerBaseMap,
                 matrixTaskFlag = matrixTaskFlag,
                 taskBaseMaps = taskBaseMaps
             )
+            while (containerRecordTask.taskSeq - preContainerRecordTaskSeq > 1) {
+                // 补充跳过的task对象
+                val taskBaseMap = taskBaseMaps[preContainerRecordTaskSeq - 1]
+                val skipTaskVarMap = generateSkipTaskVarModel(
+                    matrixTaskFlag = matrixTaskFlag,
+                    taskBaseMap = taskBaseMap,
+                    executeCount = containerRecordTask.executeCount,
+                    mergeFlag = containerBaseMap[QUALITY_FLAG] == true
+                )
+                if (skipTaskVarMap[Element::id.name].toString() == lastElementTaskId) {
+                    supplementSkipTaskFlag = false
+                }
+                tasks.add(skipTaskVarMap)
+                preContainerRecordTaskSeq++
+            }
+            if (containerRecordTask.elementPostInfo != null || containerRecordTask.taskId == lastElementTaskId) {
+                // 当job含有post任务或者db中存在model最后一个插件的任务记录，则不需要再补充跳过的task任务
+                supplementSkipTaskFlag = false
+            }
+            preContainerRecordTaskSeq = containerRecordTask.taskSeq
             tasks.add(taskVarMap)
         }
         // 判断当前job执行的task任务后是否还有跳过的task任务，有则继续补充跳过的task对象
@@ -326,6 +330,7 @@ class PipelineRecordModelService @Autowired constructor(
         taskVarMap[Element::id.name] = taskId
         taskVarMap[Element::status.name] = containerRecordTask.status ?: ""
         taskVarMap[Element::executeCount.name] = containerRecordTask.executeCount
+        taskVarMap[Element::asyncStatus.name] = containerRecordTask.asyncStatus ?: ""
         val elementPostInfo = containerRecordTask.elementPostInfo
         if (elementPostInfo != null) {
             // 生成post类型task的变量模型

@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -112,4 +112,19 @@ interface OpPipelineSettingResource {
         @Parameter(description = "YAML流水线设置", required = true)
         pipelineAsCodeSettings: PipelineAsCodeSettings
     ): Result<Int>
+
+    @Operation(summary = "更新构建指标配置")
+    @POST
+    @Path("/updateBuildMetricsSettings")
+    fun updateBuildMetricsSettings(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "是否开启", required = true)
+        @QueryParam("enabled")
+        enabled: Boolean
+    ): Result<Boolean>
 }

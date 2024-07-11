@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.docker.client.context
 
 import com.tencent.devops.buildless.pojo.RejectedExecutionType
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 
 class BuildLessStartHandlerContext(
@@ -36,12 +37,12 @@ class BuildLessStartHandlerContext(
     var buildLessPort: Int = 80,
     var retryTime: Int = 0,
     var retryMaxTime: Int = 3,
-    var buildLogKey: String = "",
     var rejectedExecutionType: RejectedExecutionType = RejectedExecutionType.ABORT_POLICY,
     var unAvailableIpList: Set<String>? = emptySet(),
-    override var grayEnv: Boolean = false,
+    override var buildLogKey: String = "",
     override var agentId: String = "",
-    override var secretKey: String = ""
+    override var secretKey: String = "",
+    override var clusterType: DockerHostClusterType = DockerHostClusterType.BUILD_LESS
 ) : HandlerContext(
-    grayEnv, agentId, secretKey
+    buildLogKey, agentId, secretKey, clusterType
 )

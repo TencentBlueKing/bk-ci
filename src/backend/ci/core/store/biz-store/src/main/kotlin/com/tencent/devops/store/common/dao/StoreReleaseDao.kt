@@ -28,7 +28,7 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreRelease
-import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
+import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime

@@ -3,6 +3,7 @@ package kubeclient
 import (
 	"context"
 	"disaptch-k8s-manager/pkg/config"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,12 +17,13 @@ func CreateDeployment(dep *Deployment) error {
 	var containers []corev1.Container
 	for _, con := range dep.Pod.Containers {
 		containers = append(containers, corev1.Container{
-			Name:         dep.Name,
-			Image:        con.Image,
-			Resources:    con.Resources,
-			Env:          con.Env,
-			Command:      con.Command,
-			VolumeMounts: con.VolumeMounts,
+			Name:          dep.Name,
+			Image:         con.Image,
+			Resources:     con.Resources,
+			Env:           con.Env,
+			Command:       con.Command,
+			VolumeMounts:  con.VolumeMounts,
+			LivenessProbe: con.LivenessProbe,
 		})
 	}
 
@@ -94,6 +96,32 @@ func CreateDeployment(dep *Deployment) error {
 	return nil
 }
 
+func CreateNativeDeployment(namespace string, deployment *appsv1.Deployment) error {
+	_, err := kubeClient.AppsV1().Deployments(namespace).Create(
+		context.TODO(),
+		deployment,
+		metav1.CreateOptions{},
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func UpdateNativeDeployment(namespace string, deployment *appsv1.Deployment) error {
+	_, err := kubeClient.AppsV1().Deployments(namespace).Update(
+		context.TODO(),
+		deployment,
+		metav1.UpdateOptions{},
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func PatchDeployment(deploymentName string, jsonPatch []byte) error {
 	_, err := kubeClient.AppsV1().Deployments(config.Config.Kubernetes.NameSpace).Patch(
 		context.TODO(),
@@ -138,4 +166,26 @@ func ListDeployment(workloadCoreLabel string) ([]*appsv1.Deployment, error) {
 	}
 
 	return list, nil
+}
+
+func GetNativeDeployment(namespace string, deploymentName string) (*appsv1.Deployment, error) {
+	deployment, err := kubeClient.AppsV1().Deployments(namespace).Get(
+		context.TODO(),
+		deploymentName,
+		metav1.GetOptions{},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return deployment, nil
+}
+
+func DeleteNativeDeployment(namespace string, deploymentName string) error {
+	return kubeClient.AppsV1().Deployments(namespace).Delete(
+		context.TODO(),
+		deploymentName,
+		metav1.DeleteOptions{},
+	)
 }

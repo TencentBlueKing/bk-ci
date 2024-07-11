@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.atom.dao.MarketAtomDao
-import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.impl.StoreMemberServiceImpl
 import org.slf4j.LoggerFactory
@@ -150,7 +150,7 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
 
     abstract fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean>
 
-    override fun getStoreName(storeCode: String): String {
+    override fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String {
         return marketAtomDao.getLatestAtomByCode(dslContext, storeCode)?.name ?: ""
     }
 }

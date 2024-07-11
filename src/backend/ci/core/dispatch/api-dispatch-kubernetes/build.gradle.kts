@@ -28,6 +28,8 @@
 dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-web"))
+    api(project(":core:buildless:api-buildless"))
+    api("io.fabric8:kubernetes-client")
 }
 
 plugins {

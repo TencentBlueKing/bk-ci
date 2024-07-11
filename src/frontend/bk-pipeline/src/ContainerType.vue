@@ -44,14 +44,13 @@
                 switch (true) {
                     case container.timeCost !== undefined: {
                         const { totalCost, executeCost, systemCost } = container.timeCost
-                        const lt1Hour = totalCost < 36e5
                         tooltip = {
                             delay: [300, 0],
                             content: `${this.t('userTime')}：${convertMStoString(executeCost)} + ${this.t(
                                 'systemTime'
                             )}： ${convertMStoString(systemCost)}`
                         }
-                        content = lt1Hour ? convertMStoString(totalCost) : '>1h'
+                        content = convertMStoString(totalCost)
                         showIcon = false
                         break
                     }
@@ -87,3 +86,9 @@
         }
     }
 </script>
+
+<style lang="scss" scoped>
+.is-danger {
+  color: #ff5656;
+}
+</style>

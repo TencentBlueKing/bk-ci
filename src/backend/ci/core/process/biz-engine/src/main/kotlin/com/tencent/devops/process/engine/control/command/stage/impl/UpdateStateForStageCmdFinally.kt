@@ -49,9 +49,9 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
 import com.tencent.devops.process.engine.service.record.StageBuildRecordService
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 /**
  * 每一个Stage结束后续命令处理
@@ -94,10 +94,10 @@ class UpdateStateForStageCmdFinally(
         if (commandContext.buildStatus == BuildStatus.STAGE_SUCCESS) {
             if (event.source != BS_STAGE_CANCELED_END_SOURCE && event.source != BS_CANCEL_BUILD_SOURCE) {
                 // 不是 stage cancel 或取消构建，则进行暂停逻辑
-                pipelineStageService.pauseStage(stage)
+                pipelineStageService.pauseStage(stage, commandContext.debug)
             } else {
                 nextOrFinish(event, stage, commandContext, false)
-                sendStageEndCallBack(stage, event)
+                sendStageEndCallBack(commandContext)
             }
         } else if (commandContext.buildStatus.isFinish()) { // 当前Stage结束
             if (commandContext.buildStatus == BuildStatus.SKIP) { // 跳过
@@ -106,15 +106,19 @@ class UpdateStateForStageCmdFinally(
                 pipelineStageService.refreshCheckStageStatus(userId = event.userId, buildStage = stage, inOrOut = false)
             }
             nextOrFinish(event, stage, commandContext, commandContext.buildStatus.isSuccess())
-            sendStageEndCallBack(stage, event)
+            sendStageEndCallBack(commandContext)
         }
     }
 
-    private fun sendStageEndCallBack(stage: PipelineBuildStage, event: PipelineBuildStageEvent) {
+    private fun sendStageEndCallBack(commandContext: StageContext) {
+        val event = commandContext.event
+        val stage = commandContext.stage
         pipelineEventDispatcher.dispatch(
+            // stage 结束
             PipelineBuildStatusBroadCastEvent(
                 source = "UpdateStateForStageCmdFinally", projectId = stage.projectId, pipelineId = stage.pipelineId,
-                userId = event.userId, buildId = stage.buildId, stageId = stage.stageId, actionType = ActionType.END
+                userId = event.userId, buildId = stage.buildId, stageId = stage.stageId, actionType = ActionType.END,
+                buildStatus = commandContext.buildStatus.name, executeCount = stage.executeCount
             )
         )
     }
@@ -197,9 +201,11 @@ class UpdateStateForStageCmdFinally(
             event.source == BS_QUALITY_PASS_STAGE -> {
                 qualityCheckOutPass(commandContext)
             }
+
             event.source == BS_QUALITY_ABORT_STAGE || event.actionType.isEnd() -> {
                 qualityCheckOutFailed(commandContext)
             }
+
             else -> {
                 val checkStatus = pipelineStageService.checkStageQuality(
                     event = event,
@@ -211,11 +217,13 @@ class UpdateStateForStageCmdFinally(
                     BuildStatus.QUALITY_CHECK_PASS -> {
                         qualityCheckOutPass(commandContext)
                     }
+
                     BuildStatus.QUALITY_CHECK_WAIT -> {
                         // #5246 如果设置了把关人则卡在运行状态等待审核
                         qualityCheckOutNeedReview(commandContext)
                         needBreak = true
                     }
+
                     else -> {
                         qualityCheckOutFailed(commandContext)
                     }
@@ -331,9 +339,11 @@ class UpdateStateForStageCmdFinally(
                     buildLogPrinter.addYellowLine(
                         buildId = c.buildId,
                         tag = VMUtils.genStartVMTaskId(c.containerId),
-                        jobId = c.containerHashId,
+                        containerHashId = c.containerHashId,
                         executeCount = c.executeCount,
-                        message = "job(${c.containerId}) stop by fast kill"
+                        message = "job(${c.containerId}) stop by fast kill",
+                        jobId = null,
+                        stepId = VMUtils.genStartVMTaskId(c.containerId)
                     )
                 }
             }

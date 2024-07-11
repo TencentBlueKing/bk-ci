@@ -65,7 +65,8 @@ object NodeStringIdUtils {
             operator = nodeRecord.operator,
             bakOperator = nodeRecord.bakOperator,
             gateway = "",
-            displayName = getRefineDisplayName(nodeStringId, nodeRecord.displayName)
+            displayName = getRefineDisplayName(nodeStringId, nodeRecord.displayName),
+            envEnableNode = null
         )
     }
 }

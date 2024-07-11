@@ -45,9 +45,10 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
+import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
@@ -78,9 +79,10 @@ class TaskBuildRecordService(
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val taskBuildDetailService: TaskBuildDetailService,
     recordModelService: PipelineRecordModelService,
-    pipelineResDao: PipelineResDao,
+    pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
-    pipelineResVersionDao: PipelineResVersionDao,
+    pipelineResourceVersionDao: PipelineResourceVersionDao,
+    pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -92,9 +94,10 @@ class TaskBuildRecordService(
     pipelineEventDispatcher = pipelineEventDispatcher,
     redisOperation = redisOperation,
     recordModelService = recordModelService,
-    pipelineResDao = pipelineResDao,
+    pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResVersionDao = pipelineResVersionDao
+    pipelineResourceVersionDao = pipelineResourceVersionDao,
+    pipelineElementService = pipelineElementService
 ) {
 
     fun updateTaskStatus(
@@ -371,6 +374,7 @@ class TaskBuildRecordService(
         ) {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
+                val now = LocalDateTime.now()
                 val recordTask = recordTaskDao.getRecord(
                     dslContext = context,
                     projectId = projectId,
@@ -384,6 +388,8 @@ class TaskBuildRecordService(
                     )
                     return@transaction
                 }
+                // 插件存在自动重试，永远更新一次当前时间为结束时间
+                recordTask.endTime = now
                 val taskVar = mutableMapOf<String, Any>()
                 if (atomVersion != null) {
                     // 将插件的执行版本刷新
@@ -404,7 +410,7 @@ class TaskBuildRecordService(
                         recordTask.timestamps,
                         mapOf(
                             BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
-                                BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                                BuildRecordTimeStamp(null, now.timestampmilli())
                         )
                     )
                 }
@@ -428,7 +434,7 @@ class TaskBuildRecordService(
                     taskVar = recordTask.taskVar.plus(taskVar),
                     buildStatus = buildStatus,
                     startTime = null,
-                    endTime = LocalDateTime.now(),
+                    endTime = now,
                     timestamps = timestamps
                 )
             }
@@ -513,6 +519,25 @@ class TaskBuildRecordService(
             buildId = buildId,
             taskId = taskId,
             executeCount = executeCount
+        )
+    }
+
+    fun updateAsyncStatus(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int,
+        asyncStatus: String
+    ) {
+        recordTaskDao.updateAsyncStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = executeCount,
+            asyncStatus = asyncStatus
         )
     }
 

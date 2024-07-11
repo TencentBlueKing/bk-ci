@@ -46,6 +46,7 @@ import com.tencent.devops.process.utils.CredentialUtils
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -58,6 +59,7 @@ import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -223,6 +225,35 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         }
     }
 
+    fun getDefaultBranch(
+        projectId: String,
+        repositoryConfig: RepositoryConfig
+    ): String? {
+        checkRepoID(repositoryConfig)
+        val repo = getRepo(projectId, repositoryConfig)
+        return when (repo) {
+            is CodeGitRepository -> {
+                val isOauth = repo.authType == RepoAuthType.OAUTH
+                val (token, tokenType) = if (isOauth) {
+                    val credInfo = getAccessToken(repo.userName)
+                    credInfo.first to TokenTypeEnum.OAUTH
+                } else {
+                    val credInfo = getCredential(projectId, repo)
+                    credInfo.privateKey to TokenTypeEnum.PRIVATE_KEY
+                }
+                client.get(ServiceGitResource::class).getProjectInfo(
+                    token = token,
+                    tokenType = tokenType,
+                    gitProjectId = repo.projectName
+                ).data?.defaultBranch
+            }
+
+            else -> {
+                null
+            }
+        }
+    }
+
     fun listBranches(
         projectId: String,
         repositoryConfig: RepositoryConfig,
@@ -258,7 +289,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.first,
                         region = null,
                         userName = repo.userName,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 } else {
                     val credInfo = getCredential(
@@ -275,7 +308,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.privateKey,
                         region = null,
                         userName = credInfo.username,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 }
             }
@@ -311,7 +346,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = getTGitAccessToken(repo.userName),
                         region = null,
                         userName = repo.userName,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 } else {
                     val credInfo = getCredential(
@@ -328,7 +365,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.privateKey,
                         region = null,
                         userName = credInfo.username,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 }
             }
@@ -347,7 +386,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig)
         when (repo) {
             is CodeSvnRepository -> {
-                throw ErrorCodeException(errorCode = ProcessMessageCode.SVN_NOT_SUPPORT_TAG)
+                return Result(emptyList())
             }
             is CodeGitRepository -> {
                 val isOauth = repo.authType == RepoAuthType.OAUTH
@@ -435,7 +474,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitRepository
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.GIT_INVALID)
-        val isOauth = repo.credentialId.isEmpty()
+        val isOauth = repo.authType == RepoAuthType.OAUTH
         val token = if (isOauth) {
             getAccessToken(repo.userName).first
         } else {

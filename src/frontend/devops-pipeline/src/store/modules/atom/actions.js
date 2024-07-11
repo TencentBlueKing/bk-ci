@@ -21,10 +21,13 @@ import {
     LOG_API_URL_PREFIX,
     MACOS_API_URL_PREFIX,
     PROCESS_API_URL_PREFIX,
-    STORE_API_URL_PREFIX
+    STORE_API_URL_PREFIX,
+    UPDATE_PIPELINE_MODE
 } from '@/store/constants'
+import { UI_MODE } from '@/utils/pipelineConst'
 import request from '@/utils/request'
 import { hashID, randomString } from '@/utils/util'
+import { areDeeplyEqual } from '../../../utils/util'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import {
     ADD_CONTAINER,
@@ -32,55 +35,61 @@ import {
     CLEAR_ATOM_DATA,
     DELETE_ATOM,
     DELETE_ATOM_PROP,
-    DELETE_CONTAINER,
     DELETE_STAGE,
     FETCHING_ATOM_LIST,
     FETCHING_ATOM_MORE_LOADING,
     FETCHING_ATOM_VERSION,
     INSERT_ATOM,
+    PIPELINE_SETTING_MUTATION,
     PROPERTY_PANEL_VISIBLE,
+    RESET_ATOM_MODAL_MAP,
+    RESET_PIPELINE_SETTING_MUNTATION,
+    SELECT_PIPELINE_VERSION,
     SET_ATOMS,
     SET_ATOMS_CLASSIFY,
+    SET_ATOM_EDITING,
     SET_ATOM_MODAL,
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
+    SET_COMMON_PARAMS,
     SET_COMMON_SETTING,
     SET_CONTAINER_DETAIL,
     SET_DEFAULT_STAGE_TAG,
     SET_EDIT_FROM,
-    SET_EXECUTE_STATUS,
     SET_GLOBAL_ENVS,
     SET_HIDE_SKIP_EXEC_TASK,
-    SET_IMPORTED_JSON,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
-    SET_PIPELINE_CONTAINER,
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
-    SET_PIPELINE_STAGE,
+    SET_PIPELINE_INFO,
+    SET_PIPELINE_WITHOUT_TRIGGER,
+    SET_PIPELINE_YAML,
+    SET_PIPELINE_YAML_HIGHLIGHT_MAP,
     SET_REMOTE_TRIGGER_TOKEN,
     SET_REQUEST_ATOM_DATA,
     SET_SAVE_STATUS,
+    SET_SHOW_VARIABLE,
     SET_STAGE_TAG_LIST,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
+    SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
     UPDATE_ATOM,
     UPDATE_ATOM_INPUT,
-    UPDATE_ATOM_OUTPUT,
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     UPDATE_ATOM_TYPE,
     UPDATE_CONTAINER,
+    UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 
-function rootCommit (commit,
-    ACTION_CONST, payload) {
+function rootCommit (commit, ACTION_CONST, payload) {
     commit(ACTION_CONST, payload, { root: true })
 }
 
@@ -116,11 +125,16 @@ export default {
             console.log(error)
         }
     },
-    setExecuteStatus ({ commit }, status) {
-        commit(SET_EXECUTE_STATUS, status)
-    },
     setSaveStatus ({ commit }, status) {
         commit(SET_SAVE_STATUS, status)
+    },
+    requestPipelineSummary ({ commit }, { projectId, pipelineId }) {
+        const url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/detail`
+
+        return request.get(url).then(response => {
+            commit(SET_PIPELINE_INFO, response.data)
+            return response.data
+        })
     },
     toggleStageReviewPanel: actionCreator(TOGGLE_STAGE_REVIEW_PANEL),
 
@@ -128,24 +142,39 @@ export default {
         commit(SET_STORE_SEARCH, str)
     },
 
+    setShowVariable ({ commit }, isShow) {
+        commit(SET_SHOW_VARIABLE, !!isShow)
+    },
+
     setRequestAtomData ({ commit }, data) {
         commit(SET_REQUEST_ATOM_DATA, data)
     },
-
-    setPipelineStage ({ commit }, stages) {
-        commit(SET_PIPELINE_STAGE, stages)
-    },
-
-    setPipelineContainer ({ commit }, { oldContainers, containers }) {
-        commit(SET_PIPELINE_CONTAINER, { oldContainers, containers })
-    },
-    requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
+    requestTemplate: async ({ commit, dispatch, getters }, { projectId, templateId, version }) => {
         try {
-            const url = version ? `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}?version=${version}` : `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`
-            const response = await request.get(url)
-            dispatch('setPipeline', response.data.template)
+            const versionQuery = version
+                ? {
+                    version
+                }
+                : null
+            const [templateRes, atomPropRes] = await Promise.all([
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`, {
+                    params: versionQuery
+                }),
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/template/atoms/projects/${projectId}/templates/${templateId}/atom/prop/list`, {
+                    params: versionQuery
+                })
+            ])
+            const template = templateRes.data.template
+            const atomProp = atomPropRes.data
+            const elements = getters.getAllElements(template.stages)
+            elements.forEach(element => { // 将os属性设置到model内
+                Object.assign(element, {
+                    ...atomProp[element.atomCode]
+                })
+            })
+            dispatch('setPipeline', template)
             commit(SET_TEMPLATE, {
-                template: response.data
+                template: templateRes.data
             })
         } catch (e) {
             if (e.code === 403) {
@@ -164,21 +193,41 @@ export default {
             return response.data
         })
     },
-    requestPipeline: async ({ commit, dispatch, getters }, { projectId, pipelineId }) => {
+    requestPipeline: async ({ commit, dispatch, getters, state }, { projectId, pipelineId, version }) => {
         try {
             const [pipelineRes, atomPropRes] = await Promise.all([
-                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`),
-                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`)
+                request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`),
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`, {
+                    params: version ? { version } : {}
+                })
             ])
-            const pipeline = pipelineRes.data
+            const { setting, model } = pipelineRes.data.modelAndSetting
             const atomProp = atomPropRes.data
-            const elements = getters.getAllElements(pipeline.stages)
+            const elements = getters.getAllElements(model.stages)
             elements.forEach(element => { // 将os属性设置到model内
                 Object.assign(element, {
                     ...atomProp[element.atomCode]
                 })
             })
-            dispatch('setPipeline', pipeline)
+            dispatch('setPipeline', model)
+            if (!areDeeplyEqual(state.pipelineWithoutTrigger?.stages, model.stages.slice(1))) {
+                commit(SET_PIPELINE_WITHOUT_TRIGGER, {
+                    ...model,
+                    stages: model.stages.slice(1)
+                })
+            }
+
+            commit(PIPELINE_SETTING_MUTATION, setting)
+            if (!pipelineRes.data.yamlSupported) {
+                rootCommit(commit, UPDATE_PIPELINE_MODE, UI_MODE)
+            }
+            if (pipelineRes?.data?.yamlSupported) {
+                const { yaml, ...highlightMap } = pipelineRes.data.yamlPreview
+                if (pipelineRes?.data?.yamlPreview?.yaml) {
+                    commit(SET_PIPELINE_YAML, yaml)
+                }
+                commit(SET_PIPELINE_YAML_HIGHLIGHT_MAP, highlightMap)
+            }
         } catch (e) {
             if (e.code === 403) {
                 e.message = ''
@@ -186,7 +235,106 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
+    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version }) {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`).then(res => {
+            return res.data
+        })
+    },
+    async canSwitchToYaml (_, { projectId, pipelineId, actionType, ...params }) {
+        try {
+            const { data } = await request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
+                params: {
+                    pipelineId,
+                    actionType: 'FULL_MODEL2YAML'
+                }
+            })
+            return {
+                newYaml: data.newYaml,
+                yamlSupported: data.yamlSupported,
+                yamlInvalidMsg: data.yamlInvalidMsg
+            }
+        } catch (error) {
+            return {
+                yamlSupported: false,
+                yamlInvalidMsg: error.message
+            }
+        }
+    },
+    async transfer ({ getters }, { projectId, pipelineId, actionType, ...params }) {
+        const apis = [
+            request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
+                params: {
+                    pipelineId,
+                    actionType
+                }
+            })
+        ]
+        if (actionType === 'FULL_YAML2MODEL') {
+            apis.push(
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`, {
+                    params: params.version ? { version: params.version } : {}
+                })
+            )
+        }
+        const [{ data }, atomPropRes] = await Promise.all(apis)
+        if (data.yamlInvalidMsg) {
+            throw new Error(data.yamlInvalidMsg)
+        }
+        if (actionType === 'FULL_YAML2MODEL' && atomPropRes?.data) {
+            const atomProp = atomPropRes.data
+            const elements = getters.getAllElements(data.modelAndSetting?.model.stages)
+            elements.forEach(element => { // 将os属性设置到model内
+                Object.assign(element, {
+                    ...atomProp[element.atomCode]
+                })
+            })
+        }
+        return data
+    },
+    async transferPipeline ({ commit, dispatch }, { projectId, pipelineId, actionType, ...params }) {
+        try {
+            const data = await dispatch('transfer', { projectId, pipelineId, actionType, ...params })
 
+            switch (actionType) {
+                case 'FULL_YAML2MODEL':
+                    if (data?.modelAndSetting?.model) {
+                        commit(SET_PIPELINE, data?.modelAndSetting?.model)
+                        commit(SET_PIPELINE_WITHOUT_TRIGGER, {
+                            ...(data?.modelAndSetting?.model ?? {}),
+                            stages: data?.modelAndSetting?.model.stages.slice(1)
+                        })
+                        commit(PIPELINE_SETTING_MUTATION, data?.modelAndSetting?.setting)
+                    }
+                    break
+                case 'FULL_MODEL2YAML':
+                    if (data?.newYaml) {
+                        commit(SET_PIPELINE_YAML, data?.newYaml)
+                    }
+                    break
+            }
+            return data
+        } catch (error) {
+            rootCommit(commit, UPDATE_PIPELINE_MODE, UI_MODE)
+            throw error
+        }
+    },
+    requestCommonParams: async ({ commit }) => {
+        try {
+            const { data } = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/common`)
+            commit(SET_COMMON_PARAMS, data)
+            return data
+        } catch (e) {
+            rootCommit(commit, FETCH_ERROR, e)
+        }
+    },
+    requestTriggerParams: async ({ commit }, params) => {
+        try {
+            const { data } = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/trigger`, params)
+            return data
+        } catch (e) {
+            rootCommit(commit, FETCH_ERROR, e)
+        }
+    },
     requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
         try {
             const { data } = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)
@@ -198,6 +346,11 @@ export default {
     setPipeline: ({ commit }, payload = null) => {
         commit(SET_PIPELINE, payload)
     },
+    setPipelineWithoutTrigger: actionCreator(SET_PIPELINE_WITHOUT_TRIGGER),
+    setPipelineYaml: actionCreator(SET_PIPELINE_YAML),
+    updatePipelineSetting: PipelineEditActionCreator(UPDATE_PIPELINE_SETTING_MUNTATION),
+    resetPipelineSetting: actionCreator(RESET_PIPELINE_SETTING_MUNTATION),
+    setPipelineSetting: actionCreator(PIPELINE_SETTING_MUTATION),
     setEditFrom: actionCreator(SET_EDIT_FROM),
     setPipelineEditing: actionCreator(SET_PIPELINE_EDITING),
     fetchContainers: async ({ commit }, { projectCode }) => {
@@ -217,6 +370,7 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
+
     fetchBuildResourceByType: ({ commit }, { projectCode, containerId, os, buildType }) => {
         return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${projectCode}/containers/${containerId}/oss/${os}?buildType=${buildType}`)
     },
@@ -356,7 +510,7 @@ export default {
     clearAtomData: ({ commit }) => {
         commit(CLEAR_ATOM_DATA)
     },
-
+    resetAtomModalMap: actionCreator(RESET_ATOM_MODAL_MAP),
     fetchAtomModal: async ({ commit, dispatch }, { projectCode, atomCode, version, atomIndex, container, queryOfflineFlag = false }) => {
         try {
             commit(SET_ATOM_MODAL_FETCHING, true)
@@ -438,10 +592,6 @@ export default {
             commit(SET_PIPELINE_EDITING, true)
         }
     },
-    deleteContainer: ({ commit }, payload) => {
-        commit(DELETE_CONTAINER, payload)
-        commit(SET_PIPELINE_EDITING, true)
-    },
     updateContainer: PipelineEditActionCreator(UPDATE_CONTAINER),
     updateStage: PipelineEditActionCreator(UPDATE_STAGE),
     addAtom: ({ commit }, { stageIndex, containerIndex, atomIndex, container }) => {
@@ -465,13 +615,19 @@ export default {
         commit(DELETE_ATOM, { elements: container.elements, atomIndex })
         commit(SET_PIPELINE_EDITING, true)
     },
-    updateAtomType: PipelineEditActionCreator(UPDATE_ATOM_TYPE),
-    updateAtom: (action, { element: atom, newParam }) => {
-        PipelineEditActionCreator(UPDATE_ATOM)(action, { atom, newParam })
+    updateAtomType: ({ commit }, payload) => {
+        commit(UPDATE_ATOM_TYPE, payload)
+        commit(SET_PIPELINE_EDITING, true)
+    },
+    updateAtom: (action, { element: atom, newParam, changeEditStatus = true }) => {
+        if (changeEditStatus) {
+            PipelineEditActionCreator(UPDATE_ATOM)(action, { atom, newParam })
+        } else {
+            action.commit(UPDATE_ATOM, { atom, newParam })
+        }
     },
     updateAtomInput: PipelineEditActionCreator(UPDATE_ATOM_INPUT),
     updateWholeAtomInput: PipelineEditActionCreator(UPDATE_WHOLE_ATOM_INPUT),
-    updateAtomOutput: PipelineEditActionCreator(UPDATE_ATOM_OUTPUT),
     updateAtomOutputNameSpace: PipelineEditActionCreator(UPDATE_ATOM_OUTPUT_NAMESPACE),
     deleteAtomProps: PipelineEditActionCreator(DELETE_ATOM_PROP),
     togglePropertyPanel: ({ commit }, payload) => {
@@ -493,9 +649,13 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    requestPipelineExecDetailByBuildNum: async ({ commit, dispatch }, { projectId, buildNum, pipelineId }) => {
+    requestPipelineExecDetailByBuildNum: async ({ commit, dispatch }, { projectId, buildNum, pipelineId, version }) => {
         try {
-            return request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/record/${buildNum}`)
+            return request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/record/${buildNum}`, {
+                params: {
+                    version
+                }
+            })
         } catch (e) {
             if (e.code === 403) {
                 e.message = ''
@@ -619,10 +779,6 @@ export default {
         })
     },
 
-    setImportedPipelineJson ({ commit }, importedJson) {
-        commit(SET_IMPORTED_JSON, importedJson)
-    },
-
     pausePlugin ({ commit }, { projectId, pipelineId, buildId, taskId, isContinue, stageId, containerId, element }) {
         return request.post(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildId}/taskIds/${taskId}/execution/pause?isContinue=${isContinue}&stageId=${stageId}&containerId=${containerId}`, element)
     },
@@ -648,5 +804,51 @@ export default {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/quality/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`).then(response => {
             return response.data
         })
+    },
+    saveDraftPipeline ({ commit }, { projectId, ...draftPipeline }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/saveDraft`, draftPipeline)
+    },
+    releaseDraftPipeline ({ commit }, { projectId, pipelineId, version, params }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}`, params)
+    },
+    async prefetchPipelineVersion ({ commit }, { projectId, pipelineId, version }) {
+        const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}/prefetch`)
+        return res.data
+    },
+    yamlNavToPipelineModel ({ commit }, { projectId, body, ...params }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}/position`, {
+            yaml: body
+        }, {
+            params
+        })
+    },
+    previewAtomYAML ({ commit }, { projectId, pipelineId, ...params }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}/pipelines/${pipelineId}/task2yaml`, params)
+    },
+    insertAtomYAML ({ commit }, { projectId, pipelineId, line, column, ...params }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}/pipelines/${pipelineId}/taskInsert`, params, {
+            params: {
+                line,
+                column
+            }
+        })
+    },
+    listPermissionStaticViews ({ commit }, { projectId, pipelineId }) {
+        return request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/pipelines/${pipelineId}/listPermissionStaticViews`).then(response => {
+            return response.data
+        })
+    },
+    selectPipelineVersion ({ commit }, version) {
+        commit(SELECT_PIPELINE_VERSION, version)
+    },
+    setSwitchingPipelineVersion ({ commit }, isSwitching) {
+        commit(SWITCHING_PIPELINE_VERSION, isSwitching)
+    },
+    getPipelineVersionInfo ({ commit }, { projectId, pipelineId, version }) {
+        return request.get(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version}/info`)
+    },
+    setAtomEditing ({ commit }, isEditing) {
+        return commit(SET_ATOM_EDITING, isEditing)
     }
+
 }

@@ -45,16 +45,30 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
+import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
+import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.utils.BkInitProjectCacheUtil
+import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_FAIL_POLICY
+import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_RETRY_POLICY
+import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_TIMEOUT
+import com.tencent.devops.store.constant.StoreConstants.BK_RETRY_TIMES
+import com.tencent.devops.store.constant.StoreConstants.DEFAULT_PARAM_FIELD_IS_INVALID
+import com.tencent.devops.store.constant.StoreConstants.TASK_JSON_CONFIG_POLICY_FIELD_IS_INVALID
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
+import com.tencent.devops.store.pojo.atom.enums.AtomFailPolicyEnum
+import com.tencent.devops.store.pojo.atom.enums.AtomRetryPolicyEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_INPUT
@@ -65,6 +79,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
+import com.tencent.devops.store.pojo.common.KEY_CONFIG
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT_FLAG
 import com.tencent.devops.store.pojo.common.KEY_DEMANDS
@@ -80,17 +95,12 @@ import com.tencent.devops.store.pojo.common.KEY_TARGET
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.atom.service.MarketAtomCommonService
-import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.common.utils.BkInitProjectCacheUtil
-import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.VersionUtils
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -125,6 +135,21 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
 
     @Value("\${pipeline.setting.common.stage.job.task.maxOutputNum:100}")
     private val maxOutputNum: Int = 100
+
+    @Value("\${store.atom.maxTimeout:10080}")
+    private val maxAtomTimeout: Int = 10080
+
+    @Value("\${store.atom.defaultTimeout:900}")
+    private val defaultAtomTimeout: Int = 900
+
+    @Value("\${store.atom.minTimeout:1}")
+    private val minAtomTimeout: Int = 1
+
+    @Value("\${store.atom.maxRetryNum:5}")
+    private val maxAtomRetryTimes: Int = 5
+
+    @Value("\${store.atom.minRetryNum:1}")
+    private val minAtomRetryTimes: Int = 1
 
     private val logger = LoggerFactory.getLogger(MarketAtomCommonServiceImpl::class.java)
 
@@ -371,6 +396,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 params = arrayOf(KEY_LANGUAGE)
             )
         }
+        val config = taskDataMap[KEY_CONFIG] as? Map<String, Any>
+        config?.let { validateConfigMap(config) }
         val atomPostMap = executionInfoMap[ATOM_POST] as? Map<String, Any>
         if (null != atomPostMap) {
             try {
@@ -407,6 +434,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         } else {
             runtimeVersion
         }
+        val atomBusHandleService = AtomBusHandleFactory.createAtomBusHandleService(language)
         if (null != osList) {
             val osDefaultEnvNumMap = mutableMapOf<String, Int>()
             osList.forEach { osExecutionInfoMap ->
@@ -426,6 +454,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                         params = arrayOf(KEY_TARGET)
                     )
                 }
+                atomBusHandleService.checkTarget(target)
                 val osArch = osExecutionInfoMap[KEY_OS_ARCH] as? String
                 val defaultFlag = osExecutionInfoMap[KEY_DEFAULT_FLAG] as? Boolean ?: false
                 // 统计每种操作系统默认环境配置数量
@@ -472,6 +501,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     params = arrayOf(KEY_TARGET)
                 )
             }
+            atomBusHandleService.checkTarget(target)
             val pkgLocalPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: ""
             val atomEnvRequest = AtomEnvRequest(
                 userId = userId,
@@ -506,6 +536,83 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             )
         }
         return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequests)
+    }
+
+    private fun validateConfigMap(configMap: Map<String, Any>) {
+        val message: String?
+        val defaultTimeout = configMap[BK_DEFAULT_TIMEOUT] as? Int ?: defaultAtomTimeout
+        if (defaultTimeout !in minAtomTimeout..maxAtomTimeout) {
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = DEFAULT_PARAM_FIELD_IS_INVALID,
+                params = arrayOf("defaultTimeout", "$minAtomTimeout~$maxAtomTimeout")
+            )
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
+                params = arrayOf(message)
+            )
+        }
+        val defaultFailPolicy = configMap[BK_DEFAULT_FAIL_POLICY] as? String
+        if (defaultFailPolicy !in listOf(
+                AtomFailPolicyEnum.AUTO_CONTINUE.name,
+                AtomFailPolicyEnum.MANUALLY_CONTINUE.name, null)
+        ) {
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = DEFAULT_PARAM_FIELD_IS_INVALID,
+                params = arrayOf(
+                    "defaultFailPolicy",
+                    "${AtomFailPolicyEnum.AUTO_CONTINUE}/${AtomFailPolicyEnum.MANUALLY_CONTINUE}"
+                )
+            )
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
+                params = arrayOf(message)
+            )
+        }
+        val defaultRetryPolicy = configMap[BK_DEFAULT_RETRY_POLICY]
+        if (defaultRetryPolicy != null) {
+            if (defaultRetryPolicy !is List<*>) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
+                    params = arrayOf("defaultRetryPolicy not is List")
+                )
+            }
+            val invalidValues = defaultRetryPolicy.filter {
+                it !in setOf(AtomRetryPolicyEnum.AUTO_RETRY.name, AtomRetryPolicyEnum.MANUALLY_RETRY.name)
+            }
+            if (invalidValues.isNotEmpty()) {
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = DEFAULT_PARAM_FIELD_IS_INVALID,
+                    params = arrayOf(
+                        "defaultRetryPolicy",
+                        "${AtomRetryPolicyEnum.AUTO_RETRY}/${AtomRetryPolicyEnum.MANUALLY_RETRY}"
+                    )
+                )
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
+                    params = arrayOf(message)
+                )
+            }
+            if (defaultFailPolicy == AtomFailPolicyEnum.AUTO_CONTINUE.name &&
+                AtomRetryPolicyEnum.MANUALLY_RETRY.name in defaultRetryPolicy) {
+                message = I18nUtil.getCodeLanMessage(messageCode = TASK_JSON_CONFIG_POLICY_FIELD_IS_INVALID)
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
+                    params = arrayOf(message)
+                )
+            }
+            val retryTimes = configMap[BK_RETRY_TIMES] as? Int ?: minAtomRetryTimes
+            if (AtomRetryPolicyEnum.AUTO_RETRY.name in defaultRetryPolicy &&
+                retryTimes !in minAtomRetryTimes..maxAtomRetryTimes) {
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = DEFAULT_PARAM_FIELD_IS_INVALID,
+                    params = arrayOf("retryTimes", "$minAtomRetryTimes~$maxAtomRetryTimes")
+                )
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
+                    params = arrayOf(message)
+                )
+            }
+        }
     }
 
     private fun getPkgRepoPath(pkgLocalPath: String, projectCode: String, atomCode: String, version: String) =

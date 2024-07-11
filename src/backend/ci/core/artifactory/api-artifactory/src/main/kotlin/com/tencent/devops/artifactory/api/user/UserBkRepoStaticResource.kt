@@ -29,9 +29,11 @@ package com.tencent.devops.artifactory.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
@@ -40,6 +42,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "USER_BK_REPO", description = "版本仓库-BkRepo静态文件")
@@ -59,6 +62,10 @@ interface UserBkRepoStaticResource {
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        @Parameter(description = "类型", required = false)
+        @QueryParam("type")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE, required = false)
+        type: String? = null
     ): Result<String?>
 }

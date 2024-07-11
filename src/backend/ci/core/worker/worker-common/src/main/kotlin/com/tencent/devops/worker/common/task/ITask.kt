@@ -27,19 +27,23 @@
 
 package com.tencent.devops.worker.common.task
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
-import com.tencent.devops.worker.common.expression.SpecialFunctions
+import com.tencent.devops.worker.common.logger.LoggerService
 import java.io.File
+import java.util.stream.Collectors
+import org.slf4j.LoggerFactory
 
 @Suppress("NestedBlockDepth", "TooManyFunctions")
 abstract class ITask {
+
+    private val logger = LoggerFactory.getLogger(ITask::class.java)
 
     private val environment = HashMap<String, String>()
 
@@ -51,43 +55,19 @@ abstract class ITask {
 
     private var finishKillFlag: Boolean? = null
 
+    /* 存储常量的key */
+    private lateinit var constVar: List<String>
+
     fun run(
         buildTask: BuildTask,
         buildVariables: BuildVariables,
         workspace: File
     ) {
-        val params = buildTask.params
-        val newVariables = combineVariables(buildTask, buildVariables)
-        if (params != null && null != params["additionalOptions"]) {
-            val additionalOptionsStr = params["additionalOptions"]
-            val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
-            if (additionalOptions?.enableCustomEnv == true && additionalOptions.customEnv?.isNotEmpty() == true) {
-                val variables = buildTask.buildVariable?.toMutableMap()
-                val variablesBuild = newVariables.variables.toMutableMap()
-                if (variables != null) {
-                    additionalOptions.customEnv!!.forEach {
-                        if (!it.key.isNullOrBlank()) {
-                            // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
-                            val value = EnvReplacementParser.parse(
-                                value = it.value ?: "",
-                                contextMap = variablesBuild,
-                                onlyExpression = buildVariables.pipelineAsCodeSettings?.enable,
-                                functions = SpecialFunctions.functions,
-                                output = SpecialFunctions.output
-                            )
-                            variablesBuild["envs.${it.key}"] = value
-                            variables[it.key!!] = value
-                        }
-                    }
-                    return execute(
-                        buildTask.copy(buildVariable = variables),
-                        newVariables.copy(variables = variablesBuild),
-                        workspace
-                    )
-                }
-            }
-        }
-        execute(buildTask, newVariables, workspace)
+        constVar = buildVariables.variablesWithType.stream()
+            .filter { it.readOnly == true }
+            .map { it.key }
+            .collect(Collectors.toList())
+        execute(buildTask, buildVariables, workspace)
     }
 
     /**
@@ -115,6 +95,23 @@ abstract class ITask {
     )
 
     protected fun addEnv(env: Map<String, String>) {
+        if (this::constVar.isInitialized) {
+            var errFlag = false
+            env.forEach { (key, _) ->
+                if (key in constVar) {
+                    LoggerService.addErrorLine("Variable $key is read-only and cannot be modified.")
+                    errFlag = true
+                }
+            }
+            if (errFlag) {
+                throw TaskExecuteException(
+                    errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
+                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: read-only cannot be modified.",
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_INPUT_INVAILD
+                )
+            }
+        }
         environment.putAll(env)
     }
 

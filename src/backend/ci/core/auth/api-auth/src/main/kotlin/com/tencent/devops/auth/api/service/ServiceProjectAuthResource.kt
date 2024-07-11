@@ -35,9 +35,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -53,7 +53,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceProjectAuthResource {
-
     @GET
     @Path("/{projectCode}/users/byGroup")
     @Operation(summary = "获取项目成员 (需要对接的权限中心支持该功能才可以)")
@@ -133,6 +132,22 @@ interface ServiceProjectAuthResource {
         @QueryParam("group")
         @Parameter(description = "用户组类型", required = false)
         group: BkAuthGroup? = null
+    ): Result<Boolean>
+
+    @GET
+    @Path("/{projectCode}/users/{userId}/checkUserInProjectLevelGroup")
+    @Operation(summary = "是否该用户在项目级别的组中")
+    fun checkUserInProjectLevelGroup(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @Parameter(description = "认证token", required = true)
+        token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @PathParam("userId")
+        @Parameter(description = "用户Id", required = true)
+        userId: String,
+        @PathParam("projectCode")
+        @Parameter(description = "项目Code", required = true)
+        projectCode: String
     ): Result<Boolean>
 
     @GET

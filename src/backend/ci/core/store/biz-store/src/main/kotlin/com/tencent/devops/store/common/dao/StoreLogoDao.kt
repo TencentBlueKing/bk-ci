@@ -30,8 +30,8 @@ package com.tencent.devops.store.common.dao
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.model.store.tables.TLogo
 import com.tencent.devops.model.store.tables.records.TLogoRecord
-import com.tencent.devops.store.pojo.common.Logo
-import com.tencent.devops.store.pojo.common.StoreLogoReq
+import com.tencent.devops.store.pojo.common.logo.Logo
+import com.tencent.devops.store.pojo.common.logo.StoreLogoReq
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import org.jooq.DSLContext
 import org.jooq.Result

@@ -41,16 +41,16 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.BuildAgentBuildResource
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyAskInfo
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyAskResp
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugDoneInfo
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskResp
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildWithStatus
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyDockerDebugDoneInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyDockerDebugInfo
 import com.tencent.devops.dispatch.service.ThirdPartyAgentDockerService
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentUpgradeByVersionInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
@@ -170,6 +170,7 @@ class BuildAgentBuildResourceImpl @Autowired constructor(
         val requestAgentId = agentAskRequestCache.getIfPresent(agentId)
         if (requestAgentId != null) {
             logger.warn("agentHeartbeat|$projectId|$agentId| request too frequently")
+            thirdPartyAgentBuildService.agentRepeatedInstallAlarm(projectId, agentId, data.heartbeat.agentIp)
             return AgentResult(1, "request too frequently")
         } else {
             val lockKey = "environment:thirdPartyAgent:agentHeartbeatRequestLock_$agentId"
@@ -177,6 +178,7 @@ class BuildAgentBuildResourceImpl @Autowired constructor(
             if (redisLock.tryLock()) {
                 agentAskRequestCache.put(agentId, agentId)
             } else {
+                thirdPartyAgentBuildService.agentRepeatedInstallAlarm(projectId, agentId, data.heartbeat.agentIp)
                 return AgentResult(1, "request too frequently")
             }
         }

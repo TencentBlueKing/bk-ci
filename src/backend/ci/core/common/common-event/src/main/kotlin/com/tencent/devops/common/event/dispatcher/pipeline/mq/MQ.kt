@@ -117,6 +117,7 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_FINISH_GITCI = "q.engine.pipeline.build.gitci"
     const val QUEUE_PIPELINE_BUILD_FINISH_LOG = "q.engine.pipeline.build.log"
     const val QUEUE_PIPELINE_BUILD_FINISH_SUBPIPEINE = "q.engine.pipeline.build.subpipeline"
+    const val QUEUE_PIPELINE_BUILD_QUEUE_SUBPIPEINE = "q.engine.pipeline.build.queue.subpipeline"
     const val QUEUE_PIPELINE_BUILD_FINISH_WEBHOOK_QUEUE = "q.engine.pipeline.build.finish.webhook.queue"
     const val QUEUE_PIPELINE_BUILD_FINISH_NOTIFY_QUEUE = "q.engine.pipeline.build.finish.notify.queue"
 
@@ -257,6 +258,7 @@ object MQ {
     // 回调
     const val EXCHANGE_PIPELINE_BUILD_CALL_BACK_FANOUT = "e.engine.pipeline.build.callback.fanout"
     const val QUEUE_PIPELINE_BUILD_STATUS_CHANGE = "e.engine.pipeline.build.callback.change"
+    const val QUEUE_PIPELINE_BUILD_STATUS_METRICS = "q.engine.pipeline.build.callback.metrics"
 
     // 蓝盾项目管理
     const val EXCHANGE_PROJECT_CREATE_FANOUT = "e.project.create.exchange.fanout"
@@ -266,6 +268,10 @@ object MQ {
     const val QUEUE_PROJECT_CREATE_EVENT = "q.project.create.project.queue"
     const val QUEUE_PROJECT_UPDATE_EVENT = "q.project.update.project.queue"
     const val QUEUE_PROJECT_UPDATE_LOGO_EVENT = "q.project.update.logo.project.queue"
+    const val QUEUE_PROJECT_ENABLE_EVENT = "q.project.enable.project.queue"
+    const val QUEUE_PROJECT_CREATE_CALLBACK_EVENT = "q.project.create.project.callback.queue"
+    const val QUEUE_PROJECT_UPDATE_CALLBACK_EVENT = "q.project.update.project.callback.queue"
+    const val QUEUE_PROJECT_ENABLE_CALLBACK_EVENT = "q.project.enable.project.callback.queue"
 
     // 蓝盾监控数据上报事件广播
     const val EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT = "e.engine.atom.monitor.data.report.fanout"
@@ -320,4 +326,16 @@ object MQ {
 
     // 数据库分片
     const val EXCHANGE_SHARDING_ROUTING_RULE_FANOUT = "e.sharding.routing.rule.exchange.fanout"
+
+    // pac每条流水线触发事件
+    const val EXCHANGE_PIPELINE_YAML_LISTENER = "e.pipeline.yaml.listener"
+    // pac开启流水线事件
+    const val ROUTE_PIPELINE_YAML_ENABLE_EVENT = "r.pipeline.yaml.enable.event"
+    const val QUEUE_PIPELINE_YAML_ENABLE_EVENT = "q.pipeline.yaml.enable.event"
+    // pac触发事件
+    const val ROUTE_PIPELINE_YAML_TRIGGER_EVENT = "r.pipeline.yaml.trigger.event"
+    const val QUEUE_PIPELINE_YAML_TRIGGER_EVENT = "q.pipeline.yaml.trigger.event"
+    // pac关闭流水线事件
+    const val ROUTE_PIPELINE_YAML_DISABLE_EVENT = "r.pipeline.yaml.disable.event"
+    const val QUEUE_PIPELINE_YAML_DISABLE_EVENT = "q.pipeline.yaml.disable.event"
 }

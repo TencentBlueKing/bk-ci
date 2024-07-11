@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpSensitiveApiResource
-import com.tencent.devops.store.pojo.common.SensitiveApiApproveReq
-import com.tencent.devops.store.pojo.common.SensitiveApiInfo
-import com.tencent.devops.store.pojo.common.SensitiveApiSearchDTO
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiApproveReq
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiSearchDTO
 import com.tencent.devops.store.pojo.common.enums.ApiLevelEnum
 import com.tencent.devops.store.pojo.common.enums.ApiStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
