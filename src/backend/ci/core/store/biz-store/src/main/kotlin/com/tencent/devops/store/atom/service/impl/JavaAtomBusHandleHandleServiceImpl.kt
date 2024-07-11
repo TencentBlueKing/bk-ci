@@ -50,7 +50,7 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         if (reqTarget.isNullOrBlank()) {
             return target
         }
-        val javaPath = reqTarget.substringBefore("-jar").trim()
+        val javaPath = target.substringBefore(" -").trim()
         // 获取插件配置的JVM指令
         val pattern = Pattern.compile(" -[^\\s-]*(?=\\s|$)")
         val matcher = pattern.matcher(target)
@@ -65,6 +65,6 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         // 获取插件jar包路径
         val jarPath = reqTarget.substringAfter("-jar").trim()
 
-        return "$javaPath $builder $jarPath"
+        return "$javaPath $builder $jarPath".trim()
     }
 }
