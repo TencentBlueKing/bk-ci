@@ -91,24 +91,4 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         )
         return Result(res)
     }
-
-    override fun autoCleanJob4Windows(userId: String, type: String?): Result<Boolean> {
-        when (type) {
-            "delete" -> {
-                logger.info("read to delete not use workspace")
-                deleteControl.autoDeleteWhenNotAssign(true)
-                deleteControl.autoDeleteWhenSleep14Day(true)
-            }
-
-            "sleep" -> {
-                logger.info("read to sleep not login workspace")
-                sleepControl.autoSleepWhenNotLogin(true)
-            }
-
-            else -> {
-                jobService.projectWinJob()
-            }
-        }
-        return Result(true)
-    }
 }

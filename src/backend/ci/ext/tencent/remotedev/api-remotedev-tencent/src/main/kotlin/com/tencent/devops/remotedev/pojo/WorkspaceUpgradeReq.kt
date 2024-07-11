@@ -29,7 +29,7 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "调整工作空间配额接口请求")
+@Schema(title = "调整工作空间配置接口请求")
 data class WorkspaceUpgradeReq(
     @get:Schema(title = "目的机型")
     val machineType: String
