@@ -61,7 +61,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
 ) {
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_UPGRADE_VM,
+        actionId = ActionId.CGS_EDIT_TYPE,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS,
             instanceNames = "#workspaceName",
@@ -69,7 +69,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
         ),
         attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
         scopeId = "#projectId",
-        content = ActionAuditContent.CGS_UPGRADE_VM
+        content = ActionAuditContent.CGS_EDIT_TYPE_CONTENT
     )
     fun upgradeWorkspace(
         userId: String,
