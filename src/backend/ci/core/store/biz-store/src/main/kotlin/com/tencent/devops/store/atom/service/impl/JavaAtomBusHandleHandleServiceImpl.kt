@@ -49,17 +49,15 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         if (reqTarget.isNullOrBlank()) {
             return target
         }
+        // 获取启动命令的java路径
+        val javaPath = reqTarget.substringBefore(" -").trim()
         // 获取启动命令的前缀路径
-        val prefixPath = reqTarget.substringBefore(" -").trim()
-        // 获取插件配置的JVM参数
-        val jvmParam = target.substringBefore("-jar").substringAfter(target.substringBefore(" -")).trim()
+        val prefixPath = target.substringBefore(getJarName(target)).substringAfter(target.substringBefore(" -")).trim()
         // 获取插件jar包名称
         val jarName = getJarName(reqTarget)
-        // 获取插件配置的系统程序参数
-        val sysParam = target.substringBefore(getJarName(target)).substringAfter("-jar").trim()
         // 获取启动命令的后缀路径
         val suffixPath = target.substringAfter(".jar").trim()
-        return "$prefixPath $jvmParam -jar $sysParam $jarName $suffixPath".trim()
+        return "$javaPath $prefixPath $jarName $suffixPath".trim()
     }
 
     private fun getJarName(target: String): String {
