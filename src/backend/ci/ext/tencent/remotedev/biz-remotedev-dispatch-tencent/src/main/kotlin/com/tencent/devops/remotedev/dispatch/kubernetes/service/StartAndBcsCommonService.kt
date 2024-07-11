@@ -29,12 +29,16 @@ class StartAndBcsCommonService @Autowired constructor(
     private val bcsClient: WorkspaceBcsClient,
     private val workspaceRedisUtils: WorkspaceRedisUtils
 ) {
+    @Suppress("ComplexMethod")
     fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
         logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
-        val task = workspaceOpHisDao.getTask(dslContext, taskStatus.uid)
+        val task = workspaceOpHisDao.getTask(dslContext, taskStatus.uid) ?: kotlin.run {
+            logger.warn("workspaceTaskCallback|fail with wrong task|$taskStatus")
+            return false
+        }
         workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
         when {
-            task?.action == EnvironmentAction.EXPAND_DISK -> {
+            task.action == EnvironmentAction.EXPAND_DISK -> {
                 kotlin.runCatching {
                     SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceExpandDiskCallback(
                         taskId = taskStatus.uid,
@@ -57,7 +61,33 @@ class StartAndBcsCommonService @Autowired constructor(
                 return true
             }
 
-            task?.action == EnvironmentAction.CREATE && task.status.needFix() -> {
+            task.action == EnvironmentAction.UPGRADE_VM && task.status == EnvironmentActionStatus.PENDING -> {
+                val result = kotlin.runCatching {
+                    SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java)
+                        .createWinWorkspaceByVm(
+                            userId = task.operator,
+                            oldWorkspaceName = task.workspaceName,
+                            projectId = null,
+                            ownerType = null,
+                            uid = taskStatus.uid
+                        ).data!!
+                }.onFailure {
+                    logger.warn("workspaceTaskCallback|upgradeVm error ${it.message}", it)
+                }.getOrElse { false }
+                if (result) {
+                    workspaceOpHisDao.update(
+                        dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
+                    )
+                } else {
+                    workspaceOpHisDao.update(
+                        dslContext, task.uid, EnvironmentActionStatus.FAILED
+                    )
+                    logger.error("workspaceTaskCallback $task error $taskStatus")
+                }
+                return true
+            }
+
+            task.action == EnvironmentAction.CREATE && task.status.needFix() -> {
                 val oldWs = dispatchWorkspaceDao.getWorkspaceInfo(task.workspaceName, dslContext) ?: kotlin.run {
                     logger.warn("workspaceTaskCallback|try to fix fail with wrong workspace|$task")
                     return false
@@ -75,7 +105,7 @@ class StartAndBcsCommonService @Autowired constructor(
                 }
             }
 
-            task?.action == EnvironmentAction.MAKE_IMAGE -> {
+            task.action == EnvironmentAction.MAKE_IMAGE -> {
                 kotlin.runCatching {
                     SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).makeImageCallback(
                         taskId = taskStatus.uid,

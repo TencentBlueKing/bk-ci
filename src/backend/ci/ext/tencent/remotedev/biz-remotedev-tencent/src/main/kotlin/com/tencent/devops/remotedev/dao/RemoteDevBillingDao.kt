@@ -41,6 +41,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 
 @Repository
+@Deprecated("LINUX 待删除")
 class RemoteDevBillingDao {
 
     companion object {

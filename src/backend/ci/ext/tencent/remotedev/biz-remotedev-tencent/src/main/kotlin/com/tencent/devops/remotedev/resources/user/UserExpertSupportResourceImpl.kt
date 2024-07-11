@@ -16,7 +16,7 @@ class UserExpertSupportResourceImpl @Autowired constructor(
     private val expertSupportService: ExpertSupportService
 ) : UserExpertSupportResource {
     override fun addExpertSup(userId: String, data: CreateSupportData): Result<Boolean> {
-        expertSupportService.createSupport(data)
+        expertSupportService.createSupport(userId, data)
         return Result(true)
     }
 

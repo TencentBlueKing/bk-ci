@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.service
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.DispatchBuildTaskStatusEnum
@@ -214,15 +215,17 @@ class RemoteDevService @Autowired constructor(
 
     fun deleteWorkspace(
         userId: String,
-        workspaceName: String
+        workspaceName: String,
+        bakWorkspaceName: String?
     ) {
-        dispatchWorkspaceDao.deleteWorkspace(workspaceName, dslContext)
+        dispatchWorkspaceDao.deleteWorkspace(dslContext, workspaceName, bakWorkspaceName)
     }
 
     fun workspaceTaskCallback(
         taskStatus: TaskStatus,
         mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
     ): Boolean {
+        logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
         return remoteDevServiceFactory.loadRemoteDevService(mountType).workspaceTaskCallback(taskStatus)
     }
 
@@ -386,5 +389,16 @@ class RemoteDevService @Autowired constructor(
         mountType: WorkspaceMountType
     ): ExpandDiskValidateResp {
         return remoteDevServiceFactory.loadRemoteDevService(mountType).expandDisk(workspaceName, userId, size)
+    }
+
+    fun upgradeWorkspace(event: WorkspaceOperateEvent) {
+        // 需要生成一个新的 pipelineId 进行操作
+        val orderId = "${event.projectId}_${event.projectId}_${UUIDUtil.generate().takeLast(16)}"
+        remoteDevServiceFactory.loadRemoteDevService(event.mountType).upgradeWorkspaceVm(
+            userId = event.userId,
+            workspaceName = event.workspaceName,
+            machineType = event.machineType!!,
+            pipelineId = orderId
+        )
     }
 }
