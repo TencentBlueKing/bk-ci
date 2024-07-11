@@ -5,10 +5,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WorkspaceService
-import com.tencent.devops.remotedev.service.workspace.DeleteControl
-import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,28 +17,15 @@ import org.springframework.stereotype.Component
 class WorkspaceCheckJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceService: WorkspaceService,
-    private val remoteDevSettingService: RemoteDevSettingService,
     private val bkTag: BkTag,
-    private val sleepControl: SleepControl,
-    private val workspaceCommon: WorkspaceCommon,
-    private val deleteControl: DeleteControl,
-    private val holidayHelper: HolidayHelper
+    private val workspaceCommon: WorkspaceCommon
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceCheckJob::class.java)
 
         // 根据心跳操作工作空间
         private const val stopJobLockKeyH = "dispatch_devcloud_cron_workspace_clear_job_heartbeats"
-
-        // 根据用户使用时长操作工作空间
-        private const val stopJobLockKeyD = "dispatch_devcloud_cron_workspace_clear_job_duration"
-        private const val deleteJobLockKey = "dispatch_devcloud_cron_workspace_delete_job"
-        private const val nofityJobLockKey = "dispatch_devcloud_cron_workspace_nofity_job"
-        private const val winJobLockKey = "dispatch_devcloud_cron_workspace_win_job"
-        private const val billJobLockKey = "dispatch_devcloud_cron_workspace_init_bill"
         private const val syncJobLockKey = "remotedev_cron_sync_start_resource_job"
-        private const val computeAllUserWinUsageTime = "dispatch_devcloud_cron_workspace_computeAllUserWinUsageTime"
-        private const val notifyWinBeforeSleep = "dispatch_devcloud_cron_notify_win_before_sleep"
         private const val backupCgsDataLockKey = "remotedev_cron_backup_csg_data_job"
     }
 
