@@ -59,13 +59,6 @@ class WorkspaceCheckJob @Autowired constructor(
         logger.info("=========>> Stop inactive workspace <<=========")
         // 定时修复异常状态
         checkWorkspaceStatus()
-        /*暂时取消个人云桌面控制*/
-        // 计算用户 win-gpu 可用时长
-//        computeAllUserWinUsageTime()
-        // win-gpu 无可用时长休眠
-//        checkUnavailableWorkspace()
-        // win-gpu 提醒
-//        notifyWinBeforeSleep()
     }
 
     private fun notifyWinBeforeSleep() {
