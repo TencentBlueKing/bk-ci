@@ -933,13 +933,7 @@ class CreateControl @Autowired constructor(
         }
 
     private fun generateWorkspaceName(userId: String): String {
-        val subUserId = if (userId.length > Constansts.subUserIdLimitLen) {
-            userId.substring(0 until Constansts.subUserIdLimitLen)
-        } else {
-            userId
-        }
-        return subUserId.replace(Regex("[@_]"), "-") +
-            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+        return "ins-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中
