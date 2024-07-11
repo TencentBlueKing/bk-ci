@@ -53,7 +53,7 @@ class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
     }
 
     override fun getProjectImageList(userId: String, projectId: String): Result<List<ProjectImage>> {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)){
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
@@ -74,7 +74,7 @@ class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
     }
 
     override fun updateImageName(userId: String, projectId: String, data: UpdateImageNameInfo): Result<Boolean> {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)){
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")

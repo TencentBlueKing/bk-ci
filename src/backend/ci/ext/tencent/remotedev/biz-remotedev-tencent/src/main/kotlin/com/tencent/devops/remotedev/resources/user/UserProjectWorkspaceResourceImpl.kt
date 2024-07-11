@@ -185,7 +185,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun computerStatus(userId: String, projectId: String): Result<ComputerStatusResp> {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)){
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
@@ -195,7 +195,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun userLoginTime(userId: String, projectId: String, timeScope: TimeScope?): Result<UserLoginTimeResp> {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)){
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
@@ -207,7 +207,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun exportWorkspaceList(userId: String, projectId: String, page: Int?, pageSize: Int?): Response {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)){
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
@@ -237,7 +237,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<WindowsSpecResInfo>> {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)){
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")

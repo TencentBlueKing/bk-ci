@@ -34,7 +34,7 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
     }
 
     override fun fetchMachineTypeList(userId: String, projectId: String): Result<Set<String>> {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)){
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
@@ -44,7 +44,7 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
     }
 
     override fun fetchOwners(userId: String, projectId: String): Result<Set<String>> {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)){
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
@@ -58,7 +58,7 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
     }
 
     override fun createJob(userId: String, data: JobCreateData): Result<Boolean> {
-        if (!permissionService.checkUserVisitPermission(userId, data.projectId)){
+        if (!permissionService.checkUserVisitPermission(userId, data.projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project ${data.projectId}")
@@ -85,7 +85,7 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
     }
 
     override fun fetchJobRecord(userId: String, search: JobRecordSearchParam): Result<Page<JobRecord>> {
-        if (!permissionService.checkUserVisitPermission(userId, search.projectId)){
+        if (!permissionService.checkUserVisitPermission(userId, search.projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project ${search.projectId}")
@@ -95,7 +95,7 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
     }
 
     override fun fetchCronList(userId: String, search: CronJobSearchParam): Result<Page<CronJob>> {
-        if (!permissionService.checkUserVisitPermission(userId, search.projectId)){
+        if (!permissionService.checkUserVisitPermission(userId, search.projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project ${search.projectId}")

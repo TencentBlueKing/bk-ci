@@ -261,14 +261,15 @@ class RemoteDevJobService @Autowired constructor(
     }
 
     fun recordRerun(
-        userId: String, id: Long
+        userId: String,
+        id: Long
     ) {
         val record = remoteDevJobExecRecordDao.getRecord(dslContext, id) ?: throw ErrorCodeException(
             errorCode = ErrorCodeEnum.REMOTEDEV_JOB_ERROR.errorCode,
             params = arrayOf(I18nUtil.getCodeLanMessage(REMOTEDEV_JOB_NOT_FOUND, params = arrayOf(id.toString())))
         )
 
-        if (!permissionService.checkUserVisitPermission(userId, record.projectId)){
+        if (!permissionService.checkUserVisitPermission(userId, record.projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project ${record.projectId}")
