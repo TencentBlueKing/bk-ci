@@ -633,7 +633,7 @@ class WorkspaceService @Autowired constructor(
                 innerIp = res.hostIp,
                 createTime = DateTimeUtil.toDateTime(res.createTime),
                 owner = owners[name] ?: res.createUserId,
-                realOwner = owner,
+                realOwner = owner ?: "",
                 status = res.status,
                 displayName = res.displayName,
                 ownerDepartments = depInfo,
