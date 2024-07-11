@@ -55,11 +55,11 @@
 
 <script>
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
-import {
-    RESOURCE_ACTION
-} from '@/utils/permission'
-import { pipelineTabIdMap } from '@/utils/pipelineConst'
-import { mapActions, mapGetters, mapState } from 'vuex'
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
+    import { pipelineTabIdMap } from '@/utils/pipelineConst'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         props: {

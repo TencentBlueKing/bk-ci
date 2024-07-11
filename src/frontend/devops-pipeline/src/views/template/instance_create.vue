@@ -276,7 +276,6 @@
             }
         },
         async mounted () {
-            console.log(this.$route.params)
             this.requestTemplateDatail(this.curVersionId)
             this.handlePipeLineName()
             if (this.hashVal) {
@@ -404,6 +403,7 @@
                             return values
                         }, {})
                         pipelineItem.params = [].concat(this.deepCopy(data[item].param))
+                        debugger
                         pipelineItem.pipelineParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) === -1)
                         pipelineItem.versionParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) > -1)
                         pipelineItem.paramValues = paramValues
@@ -491,7 +491,10 @@
                 this.$set(this.pipelineNameList[index], 'isEditing', false)
             },
             confirmHandler (data) {
-                const tmpParam = [].concat(this.deepCopy(this.paramList))
+                const tmpParam = [].concat(this.deepCopy(this.paramList)).map(p => ({
+                    ...p,
+                    readOnly: false
+                }))
                 const pipelineParams = tmpParam.filter(item => this.buildNoParams.indexOf(item.id) === -1)
                 const versionParams = tmpParam.filter(item => this.buildNoParams.indexOf(item.id) > -1)
 
