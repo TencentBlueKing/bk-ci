@@ -29,6 +29,7 @@ import org.jooq.Table
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultExecuteListener
 import org.jooq.impl.DefaultExecuteListenerProvider
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 /**
@@ -179,7 +180,7 @@ class WorkspaceJoinDao {
     ): SelectConditionStep<*> {
         dslContext.configuration().set(DefaultExecuteListenerProvider(object : DefaultExecuteListener() {
             override fun executeEnd(ctx: ExecuteContext) {
-                println("genFetchProjectWorkspaceCond Executed SQL|${ctx.sql()}|${ctx.rows()}")
+                logger.info("genFetchProjectWorkspaceCond Executed SQL|${ctx.sql()}|${ctx.rows()}")
                 super.executeEnd(ctx)
             }
         }))
@@ -529,6 +530,7 @@ class WorkspaceJoinDao {
     }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(WorkspaceJoinDao::class.java)
         val windowsFullFields = TWorkspace.T_WORKSPACE.fields()
             .plus(TWorkspaceWindows.T_WORKSPACE_WINDOWS.fields())
             .toList()
