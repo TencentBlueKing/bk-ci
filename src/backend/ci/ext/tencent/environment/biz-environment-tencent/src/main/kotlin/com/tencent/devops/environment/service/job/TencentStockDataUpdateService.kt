@@ -58,12 +58,14 @@ import com.tencent.devops.environment.service.CmdbNodeService
 import com.tencent.devops.environment.service.cmdb.TencentCmdbService
 import com.tencent.devops.environment.service.gseagent.GSEAgentService
 import com.tencent.devops.environment.utils.ComputeTimeUtils
+import org.apache.commons.io.ThreadUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.LocalDateTime
 
 @Service("TencentStockDataUpdateService")
@@ -153,7 +155,14 @@ class TencentStockDataUpdateService @Autowired constructor(
     }
 
     private fun clearExpiredJobTask() {
-        jobDao.deleteExpiredJobTaskRecord(dslContext, JOB_TASK_EXPIRED_DAYS)
+        var deletedRowNum: Int
+        var totalDeletedRowNum = 0
+        do {
+            deletedRowNum = jobDao.deleteExpiredJobTaskRecord(dslContext, JOB_TASK_EXPIRED_DAYS)
+            ThreadUtils.sleep(Duration.ofMillis(1000))
+            totalDeletedRowNum += deletedRowNum
+        } while (deletedRowNum > 0)
+        logger.info("{} expired job task(s) deleted.", totalDeletedRowNum)
     }
 
     private fun checkDeployNodesIsInCmdb() {

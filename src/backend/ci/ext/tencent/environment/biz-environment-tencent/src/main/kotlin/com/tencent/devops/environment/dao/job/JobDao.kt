@@ -73,10 +73,12 @@ class JobDao {
         }
     }
 
-    fun deleteExpiredJobTaskRecord(dslContext: DSLContext, days: Long) {
+    fun deleteExpiredJobTaskRecord(dslContext: DSLContext, days: Long): Int {
+        val maxDeleteRowNum = 10000
         with(TProjectJob.T_PROJECT_JOB) {
-            dslContext.deleteFrom(this)
+            return dslContext.deleteFrom(this)
                 .where(CREATED_TIME.lessOrEqual(timestampSubDay(days)))
+                .limit(maxDeleteRowNum)
                 .execute()
         }
     }
