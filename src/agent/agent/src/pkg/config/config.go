@@ -278,7 +278,11 @@ func LoadAgentConfig() error {
 	jdkDirPath := conf.Section("").Key(KeyJdkDirPath).String()
 	// 如果路径为空，是第一次，需要主动去拿一次
 	if jdkDirPath == "" {
-		jdkDirPath = getJavaDir()
+		workDir := systemutil.GetWorkDir()
+		if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
+			jdkDirPath = workDir + "/jre"
+		}
+		jdkDirPath = workDir + "/jdk"
 	}
 	jdk17DirPath := conf.Section("").Key(KeyJdk17DirPath).String()
 	if jdk17DirPath == "" {
@@ -431,27 +435,6 @@ func (a *AgentConfig) GetAuthHeaderMap() map[string]string {
 	authHeaderMap[AuthHeaderAgentId] = a.AgentId
 	authHeaderMap[AuthHeaderSecretKey] = a.SecretKey
 	return authHeaderMap
-}
-
-func SaveJdkDir(dir string) {
-	if dir == GAgentConfig.JdkDirPath {
-		return
-	}
-	GAgentConfig.JdkDirPath = dir
-	err := GAgentConfig.SaveConfig()
-	if err != nil {
-		logs.Errorf("config.go|SaveJdkDir(dir=%s) failed: %s", dir, err.Error())
-		return
-	}
-}
-
-// getJavaDir 获取本地java文件夹
-func getJavaDir() string {
-	workDir := systemutil.GetWorkDir()
-	if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
-		return workDir + "/jre"
-	}
-	return workDir + "/jdk"
 }
 
 func GetDockerInitFilePath() string {

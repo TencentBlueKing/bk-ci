@@ -85,6 +85,7 @@ func (j *JdkVersionType) SyncJdkVersion() error {
 
 	// 如果为空则必获取
 	if j.IsNull() {
+		logs.Debugf("is null get jdkversion %+v", j.GetVersion())
 		version, err := j.getJdkVersion()
 		if err != nil {
 			// 拿取错误时直接下载新的
@@ -92,6 +93,7 @@ func (j *JdkVersionType) SyncJdkVersion() error {
 			return nil
 		}
 		j.SetVersionAndTime(version, nowModTime)
+		logs.Debugf("is null set jdkversion %+v", j.GetVersion())
 		return nil
 	}
 
@@ -113,11 +115,18 @@ func (j *JdkVersionType) SyncJdkVersion() error {
 }
 
 func (j *JdkVersionType) getJdkVersion() ([]string, error) {
-	jdkVersion, err := command.RunCommand(j.GetJava(), []string{"-version"}, "", nil)
+	var jdkVersion []byte
+	var err error
+	switch j.vNum {
+	case jdk8:
+		jdkVersion, err = command.RunCommand(j.GetJava(), []string{"-version"}, "", nil)
+	case jdk17:
+		jdkVersion, err = command.RunCommand(j.GetJava(), []string{"--version"}, "", nil)
+	}
+
 	if err != nil {
-		j.logs.WithError(err).Error("agent get jdk version failed")
 		exitcode.CheckSignalJdkError(err)
-		return nil, errors.Wrap(err, "agent get jdk version failed")
+		return nil, errors.Wrapf(err, "agent get jdk %d version failed", j.vNum)
 	}
 	var jdkV []string
 	if jdkVersion == nil {
@@ -131,7 +140,7 @@ func (j *JdkVersionType) getJdkVersion() ([]string, error) {
 	case jdk17:
 		jdkV = trimJdk17VersionList(versionOutputString)
 	}
-	j.logs.Infof("%d getJdkVersion %+v", j.vNum, jdkVersion)
+	j.logs.Infof("getJdkVersion %d %+v", j.vNum, string(jdkVersion))
 	return jdkV, nil
 }
 
@@ -256,4 +265,29 @@ func GetJavaLatest() string {
 		return Jdk.Jdk8.GetJava()
 	}
 	return jdk17path
+}
+
+func (j *JdkVersionType) SetJavaDir(dir string) {
+	switch j.vNum {
+	case jdk8:
+		if dir == config.GAgentConfig.JdkDirPath {
+			return
+		}
+		config.GAgentConfig.JdkDirPath = dir
+		err := config.GAgentConfig.SaveConfig()
+		if err != nil {
+			j.logs.WithError(err).Errorf("saveJdk %d Dir %s failed", j.vNum, dir)
+			return
+		}
+	default:
+		if dir == config.GAgentConfig.Jdk17DirPath {
+			return
+		}
+		config.GAgentConfig.Jdk17DirPath = dir
+		err := config.GAgentConfig.SaveConfig()
+		if err != nil {
+			j.logs.WithError(err).Errorf("saveJdk %d Dir %s failed", j.vNum, dir)
+			return
+		}
+	}
 }

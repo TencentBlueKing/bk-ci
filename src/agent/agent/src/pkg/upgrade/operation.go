@@ -203,7 +203,7 @@ func DoUpgradeJdk() error {
 	// 解压缩为一个新文件取代旧文件路径，优先使用标准路径
 	jdkTmpName := "jdk17"
 	_, err = os.Stat(workDir + "/" + jdkTmpName)
-	if err != nil || errors.Is(err, os.ErrNotExist) {
+	if err != nil || errors.Is(err, os.ErrExist) {
 		jdkTmpName = "jdk17-" + strconv.FormatInt(time.Now().Unix(), 10)
 	}
 	err = fileutil.Unzip(workDir+"/"+config.Jdk17ClientFile, workDir+"/"+jdkTmpName)
@@ -230,7 +230,7 @@ func DoUpgradeJdk() error {
 	}()
 
 	// 修改启动worker的jdk路径
-	config.SaveJdkDir(workDir + "/" + jdkTmpName)
+	third_components.Jdk.Jdk17.SetJavaDir(workDir + "/" + jdkTmpName)
 
 	logs.Info("agentUpgrade|replace jdk file done")
 
