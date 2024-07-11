@@ -507,7 +507,7 @@ class WindowsResourceConfigService @Autowired constructor(
                 params = arrayOf(windowsConfig.size)
             )
         }
-        val windowsZone = getZoneConfig(zoneId)
+        val windowsZone = getZoneConfig(zoneId.replace(Regex("\\d+"), ""))
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
                 params = arrayOf(zoneId)

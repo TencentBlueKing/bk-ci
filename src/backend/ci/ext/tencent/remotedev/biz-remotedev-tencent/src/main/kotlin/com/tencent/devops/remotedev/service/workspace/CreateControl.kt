@@ -677,7 +677,7 @@ class CreateControl @Autowired constructor(
             workspaceSystemType = systemType,
             ownerType = checkOwnerType,
             winConfigId = windowsConfig.id?.toInt(),
-            zoneId = vm.zoneId.replace(Regex("\\d+"), "")
+            zoneId = vm.zoneId
         )
         if (oldWs != null) {
             // 直接硬删除记录。新的工作空间会复用原先的name
