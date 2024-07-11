@@ -50,10 +50,19 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         if (reqTarget.isNullOrBlank()) {
             return target
         }
-        val javaPath = target.substringBefore(" -").trim()
+        val javaPath = reqTarget.substringBefore(" -").trim()
         // 获取插件配置的JVM指令
+        val jvmParam = subParam(target.substringBefore(".jar"))
+        val sysParam = subParam(target.substringAfter(".jar"))
+        // 获取插件jar包路径
+        val jarPath = reqTarget.substringAfter("-jar").trim()
+
+        return "$javaPath $jvmParam $jarPath $sysParam".trim()
+    }
+
+    private fun subParam(str: String): String {
         val pattern = Pattern.compile(" -[^\\s-]*(?=\\s|$)")
-        val matcher = pattern.matcher(target)
+        val matcher = pattern.matcher(str)
         val builder = StringBuilder()
         // 执行匹配并将jvm参数连接成字符串
         while (matcher.find()) {
@@ -62,9 +71,6 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
             }
             builder.append(matcher.group())
         }
-        // 获取插件jar包路径
-        val jarPath = reqTarget.substringAfter("-jar").trim()
-
-        return "$javaPath $builder $jarPath".trim()
+        return builder.toString()
     }
 }
