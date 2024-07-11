@@ -54,11 +54,18 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         // 获取插件配置的JVM参数
         val jvmParam = target.substringBefore("-jar").substringAfter(target.substringBefore(" -")).trim()
         // 获取插件jar包名称
-        val regex = Regex("(\\S+\\.jar)")
-        val matchResult = regex.find(reqTarget)
-        val jarName = matchResult?.value ?: ""
+        val jarName = getJarName(reqTarget)
+        // 获取插件配置的系统程序参数
+        val sysParam = target.substringBefore(getJarName(target)).substringAfter("-jar").trim()
         // 获取启动命令的后缀路径
         val suffixPath = target.substringAfter(".jar").trim()
-        return "$prefixPath $jvmParam -jar $jarName $suffixPath".trim()
+        return "$prefixPath $jvmParam -jar $sysParam $jarName $suffixPath".trim()
+    }
+
+    private fun getJarName(target: String): String {
+        val regex = Regex("(\\S+\\.jar)")
+        val matchResult = regex.find(target)
+        val jarName = matchResult?.value ?: ""
+        return jarName
     }
 }
