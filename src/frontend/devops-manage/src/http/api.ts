@@ -232,14 +232,15 @@ export default {
   /**
    * 获取项目成员有权限的用户组数量
    */
-  async getMemberGroups(projectId: string, { type, member }) {
-    return http.get(`${IAM_PERFIX}/group/${projectId}/getMemberGroupCountWithPermissions?type=${type}&member=${member}`);
+  async getMemberGroups(projectId: string, memberId: string) {
+    return http.get(`${IAM_PERFIX}/member/${projectId}/getMemberGroupCount?memberId=${memberId}`);
   },
   /**
    * 获取项目成员有权限的用户组
    */
-  async getMemberGroupsWithPermissions({ projectId, resourceType, start, end }: any, member: string) {
-    return http.get(`${IAM_PERFIX}/group/${projectId}/${resourceType}/getMemberGroupsWithPermissions/${start}/${end}?member=${member}`);
+  async getMemberGroupsDetails(params) {
+    const { projectId, resourceType, memberId, start, limit } = params;
+    return http.get(`${IAM_PERFIX}/group/${projectId}/${resourceType}/getMemberGroupsDetails?start=${start}&limit=${limit}&memberId=${memberId}`);
   },
   /**
    * 批量续期组成员权限--无需进行审批

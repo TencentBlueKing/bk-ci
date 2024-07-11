@@ -6,6 +6,7 @@
         :data="searchData"
         unique-select
         class="multi-search"
+        value-behavior="need-key"
         :placeholder="t('用户/组织架构')"
       />
     </div>
@@ -40,7 +41,7 @@
             @handle-hand-over="handleHandOver"
             @handle-remove="handleRemove"
             @get-select-list="getSelectList"
-            @handle-select-all-data="handleSelectAllData"
+            @handle-select-all-data="handleSelectAll"
             @handle-load-more="handleLoadMore"
             @handle-clear="handleClear"
           />
@@ -66,14 +67,14 @@
     </template>
     <template #default>
       <p class="renewal-text">
-        <span>{{t("用户组名")}}：</span> 开发人员
+        <span>{{t("用户组名")}}：</span> {{ selectedRow?.groupName }}
       </p>
       <p class="renewal-text">
         <span class="required">{{t("授权期限")}}</span>
         <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
       </p>
       <p class="renewal-text">
-        <span>{{t("到期时间")}}：</span> 已过期
+        <span>{{t("到期时间")}}：</span> 已过期 ——> {{ selectedRow?.expiredAt }}
       </p>
     </template>
   </bk-dialog>
@@ -92,7 +93,7 @@
     </template>
     <template #default>
       <p class="handover-text">
-        <span>{{t("用户组名")}}：</span> 开发人员
+        <span>{{t("用户组名")}}：</span> {{ selectedRow?.groupName }}
       </p>
       <p class="handover-text">
         <bk-form
@@ -136,7 +137,7 @@
         <span>{{t("待移出用户")}}：</span> {{asideItem.name}}
       </p>
       <p class="remove-text">
-        <span>{{t("所在用户组")}}：</span> 开发人员
+        <span>{{t("所在用户组")}}：</span> {{ selectedRow?.groupName }}
       </p>
     </template>
   </bk-dialog>
@@ -165,7 +166,6 @@
           <GroupTab
             :source-list="selectSourceList"
             :is-show-operation="false"
-            :pagination="pagination"
             :aside-item="asideItem"
             @page-limit-change="pageLimitChange"
             @page-value-change="pageValueChange"
@@ -291,7 +291,6 @@ const groupTableStore = userGroupTable();
 const manageAsideStore = useManageAside();
 
 const {
-  pagination,
   sourceList,
   isShowRenewal,
   isShowHandover,
@@ -300,6 +299,7 @@ const {
   selectedLength,
   unableMoveLength,
   selectSourceList,
+  selectedRow,
 } = storeToRefs(groupTableStore);
 const {
   handleRenewal,
@@ -398,6 +398,9 @@ function handleRemoveConfirm() {
 function handleChangeTime(value) {
   expiredAt.value = value;
 };
+function handleSelectAll(resourceType, asideItem){
+  handleSelectAllData(resourceType, asideItem)
+}
 /**
  * 批量续期
  */
@@ -504,7 +507,8 @@ function asideRemoveConfirm(value) {
     box-shadow: 0 2px 4px 0 #1919290d;
 
     .multi-search {
-      flex: 1;
+      width: 50%;
+      // flex: 1;
     }
   }
 

@@ -16,11 +16,14 @@
               v-if="projectTable?.tableData.length"
               :is-show-operation="isShowOperation"
               :data="projectTable.tableData"
-              :group-type="projectTable.resourceType"
+              :resource-type="projectTable.resourceType"
               :group-total="projectTable.count"
-              :pagination="pagination"
+              :limit="projectTable.limit"
+              :pagination="projectTable.pagination"
+              :current="projectTable.current"
               :selected-data="selectedData"
               :has-next="projectTable.hasNext"
+              :remaining-count="projectTable.remainingCount"
               @handle-renewal="handleRenewal"
               @handle-hand-over="handleHandOver"
               @handle-remove="handleRemove"
@@ -48,14 +51,17 @@
           </template>
           <template #content>
             <TabTable
-              v-if="item.tableData.length"
               :is-show-operation="isShowOperation"
               :data="item.tableData"
-              :group-type="item.resourceType"
+              :resource-type="item.resourceType"
               :group-total="item.count"
-              :pagination="pagination"
+              :pagination="item.pagination"
+              :limit="item.limit"
+              :current="item.current"
               :selected-data="selectedData"
               :has-next="item.hasNext"
+              :loading="item.tableLoading"
+              :remaining-count="item.remainingCount"
               @handle-renewal="handleRenewal"
               @handle-hand-over="handleHandOver"
               @handle-remove="handleRemove"
@@ -103,9 +109,6 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
-  pagination: {
-    type: Object,
-  },
   selectedData: {
     type: Object,
   },
@@ -124,7 +127,7 @@ const emit = defineEmits(['collapseClick']);
  * @param id 折叠面板唯一标志
  */
 function collapseClick(resourceType) {
-  emit('collapseClick', resourceType.name, props.asideItem);
+  emit('collapseClick', resourceType.name);
 }
 </script>
 

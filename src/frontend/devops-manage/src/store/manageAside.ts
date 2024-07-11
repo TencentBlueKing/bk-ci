@@ -8,7 +8,7 @@ export interface GroupTableType {
   groupId: number;
   groupName: string;
   groupDesc: string;
-  validityPeriod: string;
+  expiredAtDisplay: string;
   joinedTime: string;
   operateSource: string;
   operator: string;
@@ -97,45 +97,20 @@ export default defineStore('manageAside', () => {
   /**
    * 获取项目下全体成员
    */
-  async function getProjectMembers(projectId) {
-    const params = {
-      page: memberPagination.value.current,
-      pageSize: memberPagination.value.limit,
-    };
-
-    if (userName.value) {
-      params.userName = userName.value;
+  async function getProjectMembers(projectId: string) {
+    try {
+      isLoading.value = true;
+      const params = {
+        page: memberPagination.value.current,
+        pageSize: memberPagination.value.limit,
+        ...(userName.value && { userName: userName.value }),
+      };
+      const res = await http.getProjectMembers(projectId, params);
+      isLoading.value = false;
+      memberList.value = res.records
+    } catch (error) {
+      isLoading.value = false;
     }
-    // const res = await http.getProjectMembers(projectId, params);
-    // memberList.value = res.records
-    memberList.value = [
-      {
-        id: 12345,
-        name: 'IEG互动娱乐事业群',
-        type: 'DEPARTMENT',
-      }, {
-        id: 2,
-        name: '赵六',
-        type: 'USER',
-      }, {
-        id: 3,
-        name: '王五',
-        type: 'USER',
-      },
-      {
-        id: 4,
-        name: 'SRE平台研发中心',
-        type: 'DEPARTMENT',
-      }, {
-        id: 5,
-        name: '张三',
-        type: 'USER',
-      }, {
-        id: 6,
-        name: '李四',
-        type: 'USER',
-      },
-    ];
   }
 
   return {

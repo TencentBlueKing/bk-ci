@@ -1,5 +1,5 @@
 <template>
-  <div class="aside">
+  <bk-loading class="aside" :loading="manageAsideStore.isLoading" >
     <div
       :class="{'group-active': activeTab == item.id }"
       class="group-item"
@@ -51,7 +51,7 @@
       :show-total-count="false"
       @change="pageChange"
     />
-  </div>
+  </bk-loading>
   <bk-dialog
     :is-show="isShowhandOverDialog"
     :width="640"
@@ -169,7 +169,9 @@
 <script setup name="ManageAside">
 import { useI18n } from 'vue-i18n';
 import { ref, defineProps, defineEmits, computed, watch, defineExpose } from 'vue';
+import useManageAside from "@/store/manageAside";
 
+const manageAsideStore = useManageAside();
 const { t } = useI18n();
 const current = ref(1);
 const pageCount = ref();
@@ -223,8 +225,8 @@ const props = defineProps({
 const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm']);
 
 watch(() => props.memberList, (newData) => {
-  activeTab.value = newData[0].id;
-  pageCount.value = newData.length;
+  activeTab.value = newData[0]?.id;
+  pageCount.value = newData?.length;
   emit('handleClick', newData[0]);
 });
 

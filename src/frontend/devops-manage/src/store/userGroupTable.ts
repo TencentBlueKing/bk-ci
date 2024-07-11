@@ -2,23 +2,33 @@ import http from '@/http/api';
 import { defineStore } from 'pinia';
 import { useRoute } from 'vue-router';
 import { ref, reactive, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 export interface GroupTableType {
   groupId: string | number;
   groupName: string;
   groupDesc: string;
-  validityPeriod: string;
+  expiredAtDisplay: string;
   joinedTime: string;
   operateSource: string;
   operator: string;
   removeMemberButtonControl: 'OTHER' | 'TEMPLATE' | 'UNIQUE_MANAGER';
 };
+interface Pagination {
+  limit: string | number;
+  current: string | number;
+  count: number;
+}
 interface SourceType {
-  count: string | number;
-  resourceTypeName: string;
+  pagination?: Pagination;
+  count?: number;
+  isAll?: boolean;
+  remainingCount?: number;
+  resourceTypeName?: string;
   resourceType: string,
   hasNext?: boolean,
   activeFlag?: boolean;
+  tableLoading?: boolean;
   tableData: GroupTableType[];
 }
 interface SelectedDataType {
@@ -29,21 +39,26 @@ interface CollapseListType {
   resourceTypeName: string;
   count: number;
 }
+interface AsideItem {
+  id: string,
+  name: string,
+  type: string
+}
 
 export default defineStore('userGroupTable', () => {
+  const { t } = useI18n();
   const route = useRoute();
-
   const isLoading = ref(true);
-  const pagination = ref({ limit: 10, current: 1, count: 0 });
 
   const projectId = computed(() => route.params?.projectCode as string);
-  const sourceGroup = ref({
+  const paginations = ref({
     'project': [1, 10],
-    'pipelineGroup': [1, 5]
+    'pipeline': [1, 10]
   })
 
   const sourceList = ref<SourceType[]>([]);
   const collapseList = ref<CollapseListType[]>([]);
+  const memberId = ref();
 
   const isShowRenewal = ref(false);
   const isShowHandover = ref(false);
@@ -57,6 +72,16 @@ export default defineStore('userGroupTable', () => {
   const selectedTableGroupType = ref('');
   const selectedLength = computed(() => Object.keys(selectedData).length);
 
+  watch(sourceList, () => {
+    sourceList.value.forEach(item => {
+      if((item.count! > item.tableData.length)) {
+        item.hasNext = true;
+        item.remainingCount = item.count! - item.tableData.length
+      } else {
+        item.hasNext = false;
+      }
+    })
+  })
   /**
    * 初始化数据
    */
@@ -71,171 +96,65 @@ export default defineStore('userGroupTable', () => {
     });
   }
   /**
-   * 获取折叠数据
+   * 获取项目成员有权限的用户组数量
    */
-  async function getCollapseList({ type, name }) {
-    // const res = await http.getMemberGroups(projectId.value, { type, member: name });
-    // collapseList.value = res;
-    collapseList.value = [
-      {
-        resourceType: 'project',
-        resourceTypeName: '项目（project）',
-        count: 10,
-      },
-      {
-        resourceType: 'pipilineGroup',
-        resourceTypeName: '流水线 (Pipiline) - 流水线组',
-        count: 2,
-      },
-      {
-        resourceType: 'pipiline',
-        resourceTypeName: '流水线 (Pipiline)',
-        count: 3,
-      },
-      {
-        resourceType: 'ticket',
-        resourceTypeName: '凭证管理(Ticket)-凭据',
-        count: 0,
-      },
-    ];
-
-    sourceList.value = collapseList.value.map((item) => ({
-      ...item,
-      tableData: [],
-    }))
-  }
-  async function getGroupList(resourceType, asideItem) {
-    const pathParams = {
-      projectId: projectId.value,
-      resourceType,
-      start: sourceGroup.value[resourceType][0],
-      end: sourceGroup.value[resourceType][1],
+  async function getCollapseList(memberId: string) {
+    try {
+      const res = await http.getMemberGroups(projectId.value, memberId);
+      collapseList.value = res;
+      sourceList.value = collapseList.value.map((item) => ({
+        ...item,
+        tableLoading: false,
+        tableData: [],
+      }))
+    } catch (error) {
+      console.log(error);
     }
-    return await http.getMemberGroupsWithPermissions(pathParams, asideItem.name);
   }
   /**
-   * 获取sourceList（需处理数据），collapseList
+   * 获取项目成员有权限的用户组
+   * @param resourceType 资源类型
    */
-  async function fetchUserGroupList(asideItem) {
+  async function getGroupList(resourceType: string) {
+    try {
+      const params = {
+        projectId: projectId.value,
+        resourceType,
+        memberId: memberId.value,
+        start: paginations.value[resourceType][0],
+        limit: paginations.value[resourceType][1],
+      }
+      return await http.getMemberGroupsDetails(params);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  /**
+   * 获取项目成员页面数据
+   */
+  async function fetchUserGroupList(asideItem: AsideItem) {
     initData();
-    getCollapseList(asideItem);
+    getCollapseList(asideItem.id);
+    memberId.value = asideItem.id;
     try {
       isLoading.value = true;
-      setTimeout(async () => {
-        const resourceTypes = ['project', 'pipelineGroup'];
-        // const results = await Promise.all(
-        //   resourceTypes.map(resourceType => getGroupList(resourceType, asideItem))
-        // );
-        // const [projectResult, pipelineGroupResult] = results;
+      const resourceTypes = ['project', 'pipeline'];
+      const results = await Promise.all(
+        resourceTypes.map(resourceType => getGroupList(resourceType))
+      );
+      const [projectResult, pipelineGroupResult] = results;
 
-        // sourceList.value[0].tableData = projectResult.records;
-        // sourceList.value[0].hasNext = projectResult.hasNext;
-        // sourceList.value[1].tableData = pipelineGroupResult.records;
-        // sourceList.value[1].hasNext = pipelineGroupResult.hasNext;
-        sourceList.value[1].activeFlag = true;
-
-        // 模拟数据
-        sourceList.value[0].hasNext = true;
-        sourceList.value[0].tableData = [{
-          groupId: 1,
-          groupName: '11',
-          groupDesc: 'kjkjkjk',
-          validityPeriod: '0505',
-          joinedTime: '08-18',
-          operateSource: '加入组',
-          operator: '张三',
-          removeMemberButtonControl: 'UNIQUE_MANAGER',
-        },
-        {
-          groupId: 2,
-          groupName: '22',
-          groupDesc: 'kjkjkjk',
-          validityPeriod: '0505',
-          joinedTime: '08-18',
-          operateSource: '加入组',
-          operator: '张三',
-          removeMemberButtonControl: 'OTHER',
-        }, {
-          groupId: 3,
-          groupName: '33',
-          groupDesc: 'kjkjkjk',
-          validityPeriod: '0505',
-          joinedTime: '08-18',
-          operateSource: '加入组',
-          operator: '张三',
-          removeMemberButtonControl: 'OTHER',
-        },
-        {
-          groupId: 4,
-          groupName: '44',
-          groupDesc: 'kjkjkjk',
-          validityPeriod: '0505',
-          joinedTime: '08-18',
-          operateSource: '加入组',
-          operator: '张三',
-          removeMemberButtonControl: 'OTHER',
-        }, {
-          groupId: 5,
-          groupName: '55',
-          groupDesc: 'kjkjkjk',
-          validityPeriod: '0505',
-          joinedTime: '08-18',
-          operateSource: '加入组',
-          operator: '张三',
-          removeMemberButtonControl: 'OTHER',
-        },
-        {
-          groupId: 6,
-          groupName: '66',
-          groupDesc: 'kjkjkjk',
-          validityPeriod: '0505',
-          joinedTime: '08-18',
-          operateSource: '加入组',
-          operator: '张三',
-          removeMemberButtonControl: 'TEMPLATE',
-        }, {
-          groupId: 7,
-          groupName: '77',
-          groupDesc: 'kjkjkjk',
-          validityPeriod: '0505',
-          joinedTime: '08-18',
-          operateSource: '加入组',
-          operator: '张三',
-          removeMemberButtonControl: 'OTHER',
-        },
-        {
-          groupId: 8,
-          groupName: '88',
-          groupDesc: 'kjkjkjk',
-          validityPeriod: '0505',
-          joinedTime: '08-18',
-          operateSource: '加入组',
-          operator: '张三',
-          removeMemberButtonControl: 'OTHER',
-        }];
-        sourceList.value[1].tableData = [{
-          groupId: 1,
-          groupName: '11',
-          groupDesc: 'kjkjkjk',
-          validityPeriod: '0505',
-          joinedTime: '08-18',
-          operateSource: '加入组',
-          operator: '张三',
-          removeMemberButtonControl: 'TEMPLATE',
-        },
-        {
-          groupId: 2,
-          groupName: '12',
-          groupDesc: 'kjkjkjk',
-          validityPeriod: '0505',
-          joinedTime: '08-18',
-          operateSource: '加入组',
-          operator: '张三',
-          removeMemberButtonControl: 'OTHER',
-        }];
-
-        isLoading.value = false;
-      }, 1000)
+      sourceList.value.forEach(item => {
+        if(item.resourceType === "project") {
+          item.tableData = projectResult.records;
+          
+        }
+        if(item.resourceType === "pipeline") {
+          item.tableData = pipelineGroupResult.records;
+          item.activeFlag = true;
+        }
+      })
+      isLoading.value = false;
     } catch (error: any) {
       console.error(error);
     }
@@ -244,29 +163,29 @@ export default defineStore('userGroupTable', () => {
    * 续期按钮点击
    * @param row 行数据
    */
-  function handleRenewal(row: GroupTableType, groupType: string) {
+  function handleRenewal(row: GroupTableType, resourceType: string) {
     selectedRow.value = row;
-    selectedTableGroupType.value = groupType;
+    selectedTableGroupType.value = resourceType;
     isShowRenewal.value = true;
   }
   /**
    * 移交按钮点击
    * @param row 行数据
    */
-  function handleHandOver(row: GroupTableType, groupType: string, index) {
+  function handleHandOver(row: GroupTableType, resourceType: string, index: number) {
     selectedRow.value = row;
     rowIndex.value = index;
-    selectedTableGroupType.value = groupType;
+    selectedTableGroupType.value = resourceType;
     isShowHandover.value = true;
   }
   /**
    * 移出按钮点击
    * @param row 行数据
    */
-  function handleRemove(row: GroupTableType, groupType: string, index) {
+  function handleRemove(row: GroupTableType, resourceType: string, index: number) {
     selectedRow.value = row;
     rowIndex.value = index;
-    selectedTableGroupType.value = groupType;
+    selectedTableGroupType.value = resourceType;
     isShowRemove.value = true;
   }
   /**
@@ -277,13 +196,16 @@ export default defineStore('userGroupTable', () => {
     const activeTable = sourceList.value.find(group => group.resourceType === selectedTableGroupType.value);
     const activeTableRow = activeTable?.tableData.find(item => item.groupId === selectedRow.value?.groupId);
     if (activeTableRow) {
-      activeTableRow.joinedTime = expiredAt
+      activeTableRow.expiredAtDisplay = expiredAt
     }
   }
   /**
    * 删除行数据
    */
   function handleRemoveRow() {
+    const current = paginations.value[selectedTableGroupType.value];
+    current[2] = (current[2] ?? 0) + 1;
+
     const activeTableData = sourceList.value.find(group => group.resourceType === selectedTableGroupType.value);
     if (activeTableData) {
       activeTableData.tableData?.splice(rowIndex.value as number, 1);
@@ -293,10 +215,10 @@ export default defineStore('userGroupTable', () => {
   /**
    * 获取表格选择的数据
    */
-  function getSelectList(selections, groupType: string) {
-    selectedData[groupType] = selections
-    if (!selectedData[groupType].length) {
-      delete selectedData[groupType]
+  function getSelectList(selections, resourceType: string) {
+    selectedData[resourceType] = selections
+    if (!selectedData[resourceType].length) {
+      delete selectedData[resourceType]
     }
     console.log('表格选择的数据', selectedData);
     unableMoveLength.value = countNonOtherObjects(selectedData);
@@ -315,95 +237,109 @@ export default defineStore('userGroupTable', () => {
    */
   function getSourceList() {
     selectSourceList.value = Object.entries(selectedData)
-      .map(([key, tableData]: [string, GroupTableType[]]) => ({
-        count: tableData.length,
-        resourceTypeName: sourceList.value.find((item: SourceType) => item.resourceType == key)?.resourceTypeName || '',
-        resourceType: sourceList.value.find((item: SourceType) => item.resourceType == key)?.resourceType || '',
-        activeFlag: true,
-        tableData,
-      }));
+      .map(([key, tableData]: [string, GroupTableType[]]) => {
+        const sourceItem = sourceList.value.find((item: SourceType) => item.resourceType == key) as SourceType;
+        return {
+          pagination: {
+            limit: 10,
+            current: 1,
+            count: sourceItem.isAll ? sourceItem.count! : tableData.length 
+          },
+          ...sourceItem,
+          tableData,
+        };
+      });
   }
   /**
    * 加载更多
    */
-  function handleLoadMore(groupType: string) {
-    console.log('加载更多', groupType);
+  async function handleLoadMore(resourceType: string) {
+    const pagination = paginations.value[resourceType];
+    const currentOffset = pagination[0];
+    const nextOffsetAdjustment = pagination[2] || 0;
+
+    const newOffset = currentOffset + 10 - nextOffsetAdjustment;
+    pagination[0] = newOffset;
+
+    let item = sourceList.value.find((item: SourceType) => item.resourceType == resourceType);
+    const res = await getGroupList(resourceType);
+
+    if(item){
+      item.tableData = [...item.tableData, ...res.records];
+
+      if(pagination[2]){
+        pagination.pop();
+      }
+    }
   }
   /**
    * 全量数据选择
    */
-  function handleSelectAllData(groupType: string) {
-    console.log('全量数据选择', groupType);
-    // 不需调用接口获取selectedData[groupType]数据
-    pagination.value.count = 20;
-
+  function handleSelectAllData(resourceType: string) {
+    let item = sourceList.value.find((item: SourceType) => item.resourceType == resourceType);
+    if(item){
+      item.isAll = true;
+      selectedData[resourceType] = item.tableData
+    }
   }
   /**
    * 清除选择
    */
-  function handleClear(groupType: string) {
-    delete selectedData[groupType]
+  function handleClear(resourceType: string) {
+    let item = sourceList.value.find((item: SourceType) => item.resourceType == resourceType);
+    if(item){
+      item.isAll = false;
+    }
+    delete selectedData[resourceType]
   }
   /**
    * 折叠面板调用接口获取表格数据
    */
-  async function collapseClick(resourceType, asideItem) {
+  async function collapseClick(resourceType: string) {
     let item = sourceList.value.find((item: SourceType) => item.resourceType == resourceType);
-
     if (!item || item.tableData.length) return;
     try {
-      sourceGroup.value[resourceType] = [1, 10]
-      const res = await getGroupList(resourceType, asideItem);
-      // item.tableData = res.records;
-      item.tableData = [{
-        groupId: 1,
-        groupName: '21',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'UNIQUE_MANAGER',
-      },
-      {
-        groupId: 2,
-        groupName: '22',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'OTHER',
-      },
-      {
-        groupId: 2,
-        groupName: '23',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'OTHER',
-      }]
+      item.tableLoading = true;
+      paginations.value[resourceType] = [1, 10]
+      const res = await getGroupList(resourceType);
+      item.tableLoading = false;
+      item.tableData = res.records;
       item.activeFlag = true;
-      item.hasNext = res.hasNext;
     } catch (e) {
       console.error(e)
     }
   }
-
-  function pageLimitChange(limit, groupType) {
-    pagination.value.limit = limit;
-    // 调用获取表格数据的接口
+  async function pageLimitChange(limit: number, resourceType: string) {
+    paginations.value[resourceType][1] = limit;
+    try {
+      let item = selectSourceList.value.find((item: SourceType) => item.resourceType == resourceType);
+      if(item){
+        item.tableLoading = true;
+        const res = await getGroupList(resourceType)
+        item.tableLoading = false;
+        item.tableData = res.records;
+      }
+    } catch (error) {
+      
+    }
   }
-  function pageValueChange(value, groupType) {
-    pagination.value.current = value;
-    // 调用获取表格数据的接口
+  async function pageValueChange(value: number, resourceType: string) {
+    paginations.value[resourceType][0] = (value - 1) * 10 + 1;
+    try {
+      let item = selectSourceList.value.find((item: SourceType) => item.resourceType == resourceType);
+      if(item){
+        item.tableLoading = true;
+        const res = await getGroupList(resourceType)
+        item.tableLoading = false;
+        item.tableData = res.records;
+      }
+    } catch (error) {
+      
+    }
   }
 
   return {
     isLoading,
-    pagination,
     sourceList,
     collapseList,
     isShowRenewal,
@@ -413,6 +349,7 @@ export default defineStore('userGroupTable', () => {
     unableMoveLength,
     selectedLength,
     selectSourceList,
+    selectedRow,
     fetchUserGroupList,
     handleRenewal,
     handleHandOver,

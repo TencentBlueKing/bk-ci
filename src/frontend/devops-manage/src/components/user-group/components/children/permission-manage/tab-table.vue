@@ -1,93 +1,102 @@
 <template>
-  <bk-table
-    ref="refTable"
-    max-height="464"
-    min-height="84"
-    :fixed-bottom="fixedBottom"
-    :data="data"
-    show-overflow-tooltip
-    :pagination="pagination"
-    @select-all="handleSelectAll"
-    @selection-change="handleSelectionChange"
-    @page-limit-change="pageLimitChange"
-    @page-value-change="pageValueChange"
-  >
-    <template #prepend>
-      <div v-if="isCurrentAll" class="prepend">
-        {{t('已选择全量数据X条', [groupTotal])}}
-        &nbsp; | &nbsp;
-        <span @click="handleClear">{{t("清除选择")}}</span>
-      </div>
-      <div v-else-if="isShowOperation && selectedData[groupType]?.length" class="prepend">
-        {{t('已选择X条数据，', [selectedData[groupType].length])}}
-        <span @click="handleSelectAllData">{{ t('选择全量数据X条', [groupTotal]) }}</span>
-        &nbsp; | &nbsp;
-        <span @click="handleClear">{{t("清除选择")}}</span>
-      </div>
-    </template>
-    <template #fixedBottom v-if="hasNext">
-      <div class="prepend">
-        {{ t("剩余X条数据",["22"]) }}
-        <span @click="handleLoadMore"> {{t("加载更多")}} </span>
-      </div>
-    </template>
-    <bk-table-column type="selection" :min-width="30" width="30" align="center" v-if="isShowOperation" />
-    <bk-table-column :label="t('用户组')" prop="groupName">
-      <template #default="{row}">
-        {{ row.groupName }}
-        <div v-if="!isShowOperation && row.removeMemberButtonControl !== 'OTHER'"  class="overlay">{{t("唯一管理员无法移出")}}</div>
+  <bk-loading :loading="loading">
+    <bk-table
+      ref="refTable"
+      max-height="464"
+      min-height="84"
+      :fixed-bottom="fixedBottom"
+      :data="data"
+      show-overflow-tooltip
+      :pagination="pagination"
+      :border="['row', 'outer']"
+      remote-pagination
+      @select-all="handleSelectAll"
+      @selection-change="handleSelectionChange"
+      @page-limit-change="pageLimitChange"
+      @page-value-change="pageValueChange"
+    >
+      <template #prepend>
+        <div v-if="isCurrentAll" class="prepend">
+          {{t('已选择全量数据X条', [groupTotal])}}
+          &nbsp; | &nbsp;
+          <span @click="handleClear">{{t("清除选择")}}</span>
+        </div>
+        <div v-else-if="isShowOperation && selectedData[resourceType]?.length" class="prepend">
+          {{t('已选择X条数据，', [selectedData[resourceType].length])}}
+          <span @click="handleSelectAllData">{{ t('选择全量数据X条', [groupTotal]) }}</span>
+          &nbsp; | &nbsp;
+          <span @click="handleClear">{{t("清除选择")}}</span>
+        </div>
       </template>
-    </bk-table-column>
-    <bk-table-column :label="t('用户描述')" prop="groupDesc" />
-    <bk-table-column :label="t('有效期')" prop="validityPeriod" />
-    <bk-table-column :label="t('加入时间')" prop="joinedTime" />
-    <bk-table-column :label="t('加入方式/操作人')" prop="operateSource">
-      <template #default="{row}">
-        {{ row.operateSource }}/{{ row.operator }}
+      <template #fixedBottom v-if="hasNext && !pagination">
+        <div class="prepend">
+          {{ t("剩余X条数据",[remainingCount]) }}
+          <span @click="handleLoadMore"> {{t("加载更多")}} </span>
+        </div>
       </template>
-    </bk-table-column>
-    <bk-table-column :label="t('操作')" v-if="isShowOperation">
-      <template #default="{row, index}">
-        <div class="operation-btn">
-          <bk-button
-            text
-            theme="primary"
-            @click="handleRenewal(row)"
-          >{{t("续期")}}</bk-button>
-          <bk-button
-            text
-            theme="primary"
-            style="margin:0 8px"
-            @click="handleHandOver(row, index)"
-          >{{t("移交")}}</bk-button>
-          <span
-            v-bk-tooltips="{
-              content: row.removeMemberButtonControl==='UNIQUE_MANAGER'?
-                '唯一管理员，不可移出。请添加新的管理员后再移出。':
-                row.removeMemberButtonControl==='TEMPLATE'?
-                '通过用户组加入，不可直接移出。如需调整，请编辑用户组。':
-                row.removeMemberButtonControl==='UNIQUE_MANAGER'?
-                '唯一拥有者，不可移出。请添加新的拥有者后再移出。': ''
-                ,
-              disabled: row.removeMemberButtonControl === 'OTHER'
-            }"
-          >
+      <bk-table-column type="selection" :min-width="30" width="30" align="center" v-if="isShowOperation" />
+      <bk-table-column :label="t('用户组')" prop="groupName">
+        <template #default="{row}">
+          {{ row.groupName }}
+          <div v-if="!isShowOperation && row.removeMemberButtonControl !== 'OTHER'"  class="overlay">{{t("唯一管理员无法移出")}}</div>
+        </template>
+      </bk-table-column>
+      <bk-table-column :label="t('用户描述')" prop="groupDesc" />
+      <bk-table-column :label="t('有效期')" prop="expiredAtDisplay" />
+      <bk-table-column :label="t('加入时间')" prop="joinedTime" >
+        <template #default="{row}">
+          {{ timeFormatter(row.joinedTime) }}
+        </template>
+      </bk-table-column>
+      <bk-table-column :label="t('加入方式/操作人')" prop="operateSource">
+        <template #default="{row}">
+          {{ row.operateSource === "DIRECT" ? "直接加入" : "API加入" }}/{{ row.operator }}
+        </template>
+      </bk-table-column>
+      <bk-table-column :label="t('操作')" v-if="isShowOperation">
+        <template #default="{row, index}">
+          <div class="operation-btn">
             <bk-button
               text
               theme="primary"
-              :disabled="row.removeMemberButtonControl!='OTHER'"
-              @click="handleRemove(row, index)"
-            >{{t("移出")}}</bk-button>
-          </span>
-        </div>
-      </template>
-    </bk-table-column>
-  </bk-table>
+              @click="handleRenewal(row)"
+            >{{t("续期")}}</bk-button>
+            <bk-button
+              text
+              theme="primary"
+              style="margin:0 8px"
+              @click="handleHandOver(row, index)"
+            >{{t("移交")}}</bk-button>
+            <span
+              v-bk-tooltips="{
+                content: row.removeMemberButtonControl==='UNIQUE_MANAGER'?
+                  '唯一管理员，不可移出。请添加新的管理员后再移出。':
+                  row.removeMemberButtonControl==='TEMPLATE'?
+                  '通过用户组加入，不可直接移出。如需调整，请编辑用户组。':
+                  row.removeMemberButtonControl==='UNIQUE_MANAGER'?
+                  '唯一拥有者，不可移出。请添加新的拥有者后再移出。': ''
+                  ,
+                disabled: row.removeMemberButtonControl === 'OTHER'
+              }"
+            >
+              <bk-button
+                text
+                theme="primary"
+                :disabled="row.removeMemberButtonControl!='OTHER'"
+                @click="handleRemove(row, index)"
+              >{{t("移出")}}</bk-button>
+            </span>
+          </div>
+        </template>
+      </bk-table-column>
+    </bk-table>
+  </bk-loading>
 </template>
 
 <script setup name="TabTable">
 import { useI18n } from 'vue-i18n';
 import { ref, defineProps, defineEmits, computed } from 'vue';
+import { timeFormatter } from '@/common/util.ts'
 
 const { t } = useI18n();
 const fixedBottom = {
@@ -96,7 +105,7 @@ const fixedBottom = {
 };
 const refTable = ref(null);
 const isCurrentAll = ref(false);
-const groupType = computed(() => props.groupType);
+const resourceType = computed(() => props.resourceType);
 const groupTotal = computed(() => props.groupTotal);
 
 const props = defineProps({
@@ -105,13 +114,12 @@ const props = defineProps({
     default: true,
     required: true,
   },
-  pagination: {
-    type: Object,
-  },
+  pagination: Object,
+  remainingCount: Number,
   data: {
     type: Array,
   },
-  groupType: {
+  resourceType: {
     type: String,
   },
   groupTotal: {
@@ -122,7 +130,8 @@ const props = defineProps({
   },
   hasNext: {
     type: Boolean,
-  }
+  },
+  loading: Boolean
 });
 const emit = defineEmits([
   'handleRenewal',
@@ -139,14 +148,14 @@ const emit = defineEmits([
  * 当前页全选事件
  */
 function handleSelectAll({ checked, data }) {
-  emit('getSelectList', refTable.value.getSelection(), groupType.value);
+  emit('getSelectList', refTable.value.getSelection(), resourceType.value);
   isCurrentAll.value = false;
 }
 /**
  * 多选事件
  */
 function handleSelectionChange({checked}) {
-  emit('getSelectList', refTable.value.getSelection(), groupType.value);
+  emit('getSelectList', refTable.value.getSelection(), resourceType.value);
   isCurrentAll.value = props.data.length === refTable.value.getSelection()
 };
 /**
@@ -157,7 +166,7 @@ function handleSelectAllData() {
   if (selectLength != props.data.length) {
     refTable.value.toggleAllSelection();
   }
-  emit('handleSelectAllData', groupType.value)
+  emit('handleSelectAllData', resourceType.value)
   isCurrentAll.value = true;
 }
 /**
@@ -166,41 +175,41 @@ function handleSelectAllData() {
 function handleClear() {
   refTable.value.clearSelection();
   isCurrentAll.value = false;
-  emit('handleClear', groupType.value);
+  emit('handleClear', resourceType.value);
 }
 /**
  * 续期按钮点击
  * @param row 行数据
  */
 function handleRenewal(row) {
-  emit('handleRenewal', row, groupType.value);
+  emit('handleRenewal', row, resourceType.value);
 }
 /**
  * 移交按钮点击
  * @param row 行数据
  */
 function handleHandOver(row, index) {
-  emit('handleHandOver', row, groupType.value, index);
+  emit('handleHandOver', row, resourceType.value, index);
 }
 /**
  * 移出按钮点击
  * @param row 行数据
  */
 function handleRemove(row, index) {
-  emit('handleRemove', row, groupType.value, index);
+  emit('handleRemove', row, resourceType.value, index);
 }
 /**
  * 加载更多
  */
 function handleLoadMore() {
-  emit('handleLoadMore',groupType.value);
+  emit('handleLoadMore',resourceType.value);
 }
 
 function pageLimitChange(limit) {
-  emit('pageLimitChange',limit, groupType.value);
+  emit('pageLimitChange',limit, resourceType.value);
 }
 function pageValueChange(value) {
-  emit('pageValueChange',value, groupType.value);
+  emit('pageValueChange',value, resourceType.value);
 }
 
 </script>

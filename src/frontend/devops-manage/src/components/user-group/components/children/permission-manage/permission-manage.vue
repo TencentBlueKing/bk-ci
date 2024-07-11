@@ -11,11 +11,11 @@
       @close-manage="handleCloseManage"
       @change-group-detail-tab="handleChangeGroupDetailTab"
     />
-    <ManageAll />
-    <!-- <iam-iframe
+    <iam-iframe
       v-if="path && !isAllMember"
       :path="path"
-    /> -->
+    />
+    <ManageAll />
   </section>
 </template>
 
@@ -73,12 +73,12 @@ export default {
     },
     handleChooseGroup(payload) {
       // this.path = `user-group-detail/${payload.groupId}?role_id=${payload.managerId}&tab=${this.tabName}`;
-      // if (!payload.allProjectMembersFlag) {
-      //   this.isAllMember = false;
-      //   this.path = `user-group-detail/${payload.groupId}?role_id=${payload.managerId}&tab=${this.tabName}`;
-      // } else {
-      //   this.isAllMember = true;
-      // }
+      if (!payload.projectMemberGroup) {
+        this.isAllMember = false;
+        this.path = `user-group-detail/${payload.groupId}?role_id=${payload.managerId}&tab=${this.tabName}`;
+      } else {
+        this.isAllMember = true;
+      }
     },
     handleCreateGroup() {
       this.activeIndex = '';
