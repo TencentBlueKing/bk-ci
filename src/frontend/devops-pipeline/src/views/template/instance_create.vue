@@ -368,7 +368,7 @@
 
                 if (!this.hashVal) {
                     this.pipelineNameList.forEach(item => {
-                        item.params = [].concat(this.deepCopy(this.paramList))
+                        item.params = this.deepCopyParams(this.paramList)
                         item.pipelineParams = item.params.filter(item => this.buildNoParams.indexOf(item.id) === -1)
                         item.versionParams = item.params.filter(item => this.buildNoParams.indexOf(item.id) > -1)
                         item.paramValues = this.deepCopy(this.paramValues)
@@ -402,8 +402,7 @@
                             values[param.id] = param.defaultValue
                             return values
                         }, {})
-                        pipelineItem.params = [].concat(this.deepCopy(data[item].param))
-                        debugger
+                        pipelineItem.params = this.deepCopyParams(data[item].param)
                         pipelineItem.pipelineParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) === -1)
                         pipelineItem.versionParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) > -1)
                         pipelineItem.paramValues = paramValues
@@ -491,10 +490,7 @@
                 this.$set(this.pipelineNameList[index], 'isEditing', false)
             },
             confirmHandler (data) {
-                const tmpParam = [].concat(this.deepCopy(this.paramList)).map(p => ({
-                    ...p,
-                    readOnly: false
-                }))
+                const tmpParam = this.deepCopyParams(this.paramList)
                 const pipelineParams = tmpParam.filter(item => this.buildNoParams.indexOf(item.id) === -1)
                 const versionParams = tmpParam.filter(item => this.buildNoParams.indexOf(item.id) > -1)
 
@@ -526,6 +522,12 @@
             // 对象深拷贝
             deepCopy (value, target) {
                 return JSON.parse(JSON.stringify(value))
+            },
+            deepCopyParams (params) {
+                return [].concat(this.deepCopy(params)).map(p => ({
+                    ...p,
+                    readOnly: false
+                }))
             },
             async submit () {
                 if (!this.pipelineNameList.length) {
