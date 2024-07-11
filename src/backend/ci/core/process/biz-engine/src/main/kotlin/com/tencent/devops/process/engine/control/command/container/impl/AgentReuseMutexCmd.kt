@@ -23,6 +23,7 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.engine.service.EngineConfigService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
@@ -38,7 +39,8 @@ class AgentReuseMutexCmd @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineUrlBean: PipelineUrlBean,
-    private val buildVariableService: BuildVariableService
+    private val buildVariableService: BuildVariableService,
+    private val engineConfigService: EngineConfigService
 ) : ContainerCmd {
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
@@ -102,7 +104,7 @@ class AgentReuseMutexCmd @Autowired constructor(
         // 超时时间限制，0表示排队不等待直接超时
         val timeOut = MutexControl.parseTimeoutVar(mutex.timeout, mutex.timeoutVar, variables)
         // 排队任务数量限制，0表示不排队
-        val queue = mutex.queue.coerceAtLeast(0).coerceAtMost(MutexControl.MUTEX_MAX_QUEUE)
+        val queue = mutex.queue.coerceAtLeast(0).coerceAtMost(engineConfigService.getMutexMaxQueue())
         // 替换环境变量
         var runtimeAgentOrEnvId = if (!mutex.agentOrEnvId.isNullOrBlank()) {
             EnvUtils.parseEnv(mutex.agentOrEnvId, variables)
@@ -158,7 +160,7 @@ class AgentReuseMutexCmd @Autowired constructor(
                     commandContext.cmdFlowState = CmdFlowState.LOOP // 循环消息命令 延时10秒钟
                 }
 
-                ContainerMutexStatus.FIRST_LOG -> { // 增加可视化的互斥状态打印
+                ContainerMutexStatus.FIRST_LOG -> { // 增加可视化的互斥状态打印，注：这里进行了Job状态流转！
                     commandContext.latestSummary = "agent_reuse_mutex_print"
                     commandContext.cmdFlowState = CmdFlowState.LOOP
                 }
