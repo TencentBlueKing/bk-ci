@@ -53,7 +53,7 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         val javaPath = reqTarget.substringBefore(" -").trim()
         // 获取插件配置的JVM指令
         val jvmParam = subParam(target.substringBefore(".jar"))
-        val sysParam = subParam(target.substringAfter(".jar"))
+        val sysParam = target.substringAfter(".jar")
         // 获取插件jar包路径
         val jarPath = reqTarget.substringAfter("-jar").trim()
 
