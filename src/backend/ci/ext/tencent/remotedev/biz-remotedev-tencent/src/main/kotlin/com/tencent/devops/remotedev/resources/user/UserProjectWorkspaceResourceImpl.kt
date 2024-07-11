@@ -28,11 +28,13 @@
 package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceResource
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
@@ -183,16 +185,34 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun computerStatus(userId: String, projectId: String): Result<ComputerStatusResp> {
+        if (!permissionService.checkUserVisitPermission(userId, projectId)){
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
+            )
+        }
         return Result(startWorkspaceService.computerStatus(projectId))
     }
 
     override fun userLoginTime(userId: String, projectId: String, timeScope: TimeScope?): Result<UserLoginTimeResp> {
+        if (!permissionService.checkUserVisitPermission(userId, projectId)){
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
+            )
+        }
         return Result(
             bkBaseService.fetchOnlineUserMin(timeScope, projectId) ?: UserLoginTimeResp(0, emptyList())
         )
     }
 
     override fun exportWorkspaceList(userId: String, projectId: String, page: Int?, pageSize: Int?): Response {
+        if (!permissionService.checkUserVisitPermission(userId, projectId)){
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
+            )
+        }
         return xlsxExportService.exportProjectWorkspaceListWeb(userId, projectId, page, pageSize)
     }
 
@@ -212,11 +232,17 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
 
     override fun fetchSpec(
         userId: String,
-        projectId: String?,
+        projectId: String,
         machineType: String?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<WindowsSpecResInfo>> {
+        if (!permissionService.checkUserVisitPermission(userId, projectId)){
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
+            )
+        }
         return Result(windowsResourceConfigService.fetchSpec(projectId, machineType, page, pageSize))
     }
 

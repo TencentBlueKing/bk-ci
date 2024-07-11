@@ -77,14 +77,25 @@ class ExpertSupportService @Autowired constructor(
 ) {
     @Suppress("ComplexMethod")
     fun createSupport(
+        userId: String,
         data: CreateSupportData
     ) {
         // 校验机器在不在
         val record = workspaceJoinDao.fetchAnyWindowsWorkspace(
             dslContext = dslContext,
             workspaceName = data.workspaceName
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(data.workspaceName)
         )
-        if (record == null || record.status.checkDeleted() || record.status.checkInProcess()) {
+
+        if (!permissionService.hasManagerOrViewerPermission(userId, record.projectId, record.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to apply for assistance in ${record.workspaceName}")
+            )
+        }
+        if (record.status.checkDeleted() || record.status.checkInProcess()) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
                 params = arrayOf(data.workspaceName)
@@ -395,12 +406,18 @@ class ExpertSupportService @Autowired constructor(
         userId: String,
         size: String
     ): ExpandDiskValidateResp? {
-
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+
+        if (!permissionService.hasManagerOrOwnerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to expand disk in $workspaceName")
+            )
+        }
         ActionAuditContext.current()
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId

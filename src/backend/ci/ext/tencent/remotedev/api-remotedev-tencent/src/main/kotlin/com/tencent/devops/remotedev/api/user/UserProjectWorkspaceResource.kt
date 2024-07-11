@@ -295,7 +295,7 @@ interface UserProjectWorkspaceResource {
         userId: String,
         @Parameter(description = "项目ID", required = false)
         @PathParam("projectId")
-        projectId: String?,
+        projectId: String,
         @Parameter(description = "机型", required = false)
         @QueryParam("machineType")
         machineType: String?,

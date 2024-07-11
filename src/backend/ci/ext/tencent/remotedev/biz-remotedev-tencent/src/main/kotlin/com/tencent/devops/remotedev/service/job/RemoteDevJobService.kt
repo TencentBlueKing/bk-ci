@@ -36,6 +36,7 @@ import com.tencent.devops.remotedev.pojo.job.KeyMapDataType
 import com.tencent.devops.remotedev.pojo.job.NotifyRemoteDevDesktopParam
 import com.tencent.devops.remotedev.pojo.job.PipelineJobReceiptInfo
 import com.tencent.devops.remotedev.pojo.job.PipelineParam
+import com.tencent.devops.remotedev.service.PermissionService
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import org.jooq.DSLContext
@@ -55,7 +56,8 @@ class RemoteDevJobService @Autowired constructor(
     private val remoteDevActionService: RemoteDevJobActionService,
     private val workspaceDao: WorkspaceDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val permissionService: PermissionService
 ) {
     fun getMachineTypes(projectId: String): Set<String> {
         return workspaceJoinDao.fetchProjectMachineType(dslContext, projectId)
@@ -259,12 +261,19 @@ class RemoteDevJobService @Autowired constructor(
     }
 
     fun recordRerun(
-        id: Long
+        userId: String, id: Long
     ) {
         val record = remoteDevJobExecRecordDao.getRecord(dslContext, id) ?: throw ErrorCodeException(
             errorCode = ErrorCodeEnum.REMOTEDEV_JOB_ERROR.errorCode,
             params = arrayOf(I18nUtil.getCodeLanMessage(REMOTEDEV_JOB_NOT_FOUND, params = arrayOf(id.toString())))
         )
+
+        if (!permissionService.checkUserVisitPermission(userId, record.projectId)){
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project ${record.projectId}")
+            )
+        }
         remoteDevJobExecRecordDao.updateStatus(dslContext, id, JobRecordStatus.RUNNING, null, null)
         when (val param = objectMapper.readValue<JobSchemaParam>(record.jobSchemaParam.data())) {
             is NotifyRemoteDevDesktopParam -> {

@@ -116,7 +116,11 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                     projectId = workspace.projectId,
                     ownerType = WorkspaceOwnerType.PROJECT
                 )
-                windowsResourceConfigService.createCheckSpecLimit(rebuildReq.machineType, workspace.projectId, workspaceNames)
+                windowsResourceConfigService.createCheckSpecLimit(
+                    windowsType = rebuildReq.machineType,
+                    projectId = workspace.projectId,
+                    workspaceNames = workspaceNames
+                )
             }
             windowsResourceConfigService.createCheckWhenWinNotAlready(
                 zoneId = checkNotNull(workspace.zoneId),

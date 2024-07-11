@@ -29,6 +29,7 @@ class StartAndBcsCommonService @Autowired constructor(
     private val bcsClient: WorkspaceBcsClient,
     private val workspaceRedisUtils: WorkspaceRedisUtils
 ) {
+    @Suppress("ComplexMethod")
     fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
         logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
         val task = workspaceOpHisDao.getTask(dslContext, taskStatus.uid) ?: kotlin.run {
