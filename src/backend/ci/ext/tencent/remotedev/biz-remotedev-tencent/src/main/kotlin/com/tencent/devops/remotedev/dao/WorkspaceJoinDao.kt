@@ -354,7 +354,7 @@ class WorkspaceJoinDao {
     }
 
     private fun SelectJoinStep<*>.joinTable(search: WorkspaceSearch): SelectJoinStep<*> {
-        this.leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS).on(
+        this.innerJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS).on(
             TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME)
         )
         if (search.needCheckShared()) {
