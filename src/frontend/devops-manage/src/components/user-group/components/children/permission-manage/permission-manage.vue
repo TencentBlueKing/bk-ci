@@ -15,7 +15,7 @@
       v-if="path && !isAllMember"
       :path="path"
     />
-    <ManageAll />
+    <ManageAll v-else />
   </section>
 </template>
 
