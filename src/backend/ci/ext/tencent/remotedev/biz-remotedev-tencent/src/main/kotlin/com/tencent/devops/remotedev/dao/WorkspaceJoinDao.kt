@@ -179,8 +179,9 @@ class WorkspaceJoinDao {
         checkField: List<Field<*>>
     ): SelectConditionStep<*> {
         dslContext.configuration().set(DefaultExecuteListenerProvider(object : DefaultExecuteListener() {
-            override fun executeEnd(ctx: ExecuteContext) {
-                logger.info("genFetchProjectWorkspaceCond Executed SQL|${ctx.sql()}|${ctx.rows()}")
+            override fun resultEnd(ctx: ExecuteContext) {
+                val sql = DSL.using(ctx.configuration()).renderInlined(ctx.query())
+                logger.info("genFetchProjectWorkspaceCond Executed SQL|$sql|${ctx.result()?.size}")
                 super.executeEnd(ctx)
             }
         }))
