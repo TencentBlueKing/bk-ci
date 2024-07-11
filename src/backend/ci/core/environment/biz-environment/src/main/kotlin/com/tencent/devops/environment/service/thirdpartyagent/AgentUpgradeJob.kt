@@ -174,7 +174,9 @@ class AgentUpgradeJob @Autowired constructor(
                     val props = agentPropsScope.parseAgentProps(record.agentProps) ?: return@forEach
                     val currentJdkVersion =
                         agentPropsScope.getJdkVersion(record.os, props.arch)?.ifBlank { null } ?: return@forEach
-                    if (props.jdkVersion.size > 2) {
+                    if (props.jdkVersion.isEmpty()) {
+                        true
+                    } else if (props.jdkVersion.size > 2) {
                         currentJdkVersion.trim() != props.jdkVersion.last().trim()
                     } else {
                         false
