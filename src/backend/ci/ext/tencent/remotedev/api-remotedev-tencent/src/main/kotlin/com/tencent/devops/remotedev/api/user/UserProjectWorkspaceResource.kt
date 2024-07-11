@@ -307,7 +307,7 @@ interface UserProjectWorkspaceResource {
         pageSize: Int?
     ): Result<Page<WindowsSpecResInfo>>
 
-    @Operation(summary = "云桌面调整配额")
+    @Operation(summary = "云桌面调整配置")
     @POST
     @Path("/workspace/{workspaceName}/upgrade")
     fun upgradeWorkspace(
