@@ -392,7 +392,7 @@ class StoreProjectServiceImpl @Autowired constructor(
                 userId = userId,
                 storeType = storeProjectInfo.storeType.type.toByte(),
                 storeCode = storeProjectInfo.storeCode,
-                projectCode = initProjectInfo.projectCode,
+                projectCode = storeProjectInfo.projectId,
                 type = StoreProjectTypeEnum.TEST.type.toByte()
             )
             val storePipelineRel = storePipelineRelDao.getStorePipelineRel(
