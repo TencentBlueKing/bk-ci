@@ -25,28 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.constant
+USE devops_ci_environment;
+SET NAMES utf8mb4;
 
-const val THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL = 5L
-const val DEFAULT_SYTEM_USER = "devops"
-const val BK_PROJECT_NO_ENVIRONMENT = "bkProjectNoEnvironment" // 项目下无环境
-const val BK_PROJECT_NO_NODE = "bkProjectNoNode" // 项目下无节点
-const val T_NODE_NODE_IP = "nodeIp"
-const val T_NODE_HOST_ID = "hostId"
-const val T_NODE_NODE_ID = "nodeId"
-const val T_NODE_NODE_TYPE = "nodeType"
-const val T_NODE_CLOUD_AREA_ID = "cloudAreaId"
-const val T_NODE_NODE_STATUS = "nodeStatus"
-const val T_NODE_AGENT_VERSION = "agentVersion"
-const val T_NODE_AGENT_STATUS = "agentStatus"
-const val T_NODE_PROJECT_ID = "projectId"
-const val T_NODE_CREATED_USER = "createdUser"
-const val T_NODE_OS_TYPE = "osType"
-const val T_NODE_OS_NAME = "osName"
-const val T_NODE_SERVER_ID = "serverId"
-const val T_NODE_OPERATOR = "operator"
-const val T_NODE_BAK_OPERATOR = "bakOperator"
-const val T_ENV_ENV_ID = "envId"
-const val T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID = "nodeId"
-const val T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION = "masterVersion"
-const val BATCH_TOKEN_HEADER = "X-DEVOPS-AGENT-INSTALL-TOKEN" // 批量安装agent token的header
+DROP PROCEDURE IF EXISTS ci_environment_schema_update;
+
+DELIMITER <CI_UBF>
+
+CREATE PROCEDURE ci_environment_schema_update()
+BEGIN
+
+    DECLARE db VARCHAR(100);
+    SET AUTOCOMMIT = 0;
+    SELECT DATABASE() INTO db;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND INDEX_NAME = 'SERVER_ID') THEN
+        ALTER TABLE `T_NODE`
+            ADD INDEX `SERVER_ID` (`SERVER_ID`);
+    END IF;
+
+    COMMIT;
+END <CI_UBF>
+DELIMITER ;
+COMMIT;
+CALL ci_environment_schema_update();
