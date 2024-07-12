@@ -347,14 +347,14 @@ class WorkspaceJoinDao {
             conditions.add(sql)
         }
 
-        return dslContext.select(checkField)
+        return dslContext.selectDistinct(checkField)
             .from(TWorkspace.T_WORKSPACE)
             .joinTable(search)
             .where(conditions)
     }
 
     private fun SelectJoinStep<*>.joinTable(search: WorkspaceSearch): SelectJoinStep<*> {
-        this.leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS).on(
+        this.innerJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS).on(
             TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME)
         )
         if (search.needCheckShared()) {
