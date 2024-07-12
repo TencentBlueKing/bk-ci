@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
@@ -36,18 +35,16 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
-import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.atom.plugin.IElementBizPluginService
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.service.pipeline.SubPipelineRefService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.regex.Pattern
 
 /**
  * 子流水线插件扩展点处理类
@@ -55,12 +52,11 @@ import java.util.regex.Pattern
 @Service
 class SubPipelineElementBizPluginService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val subPipelineRefService: SubPipelineRefService
 ) : IElementBizPluginService {
 
     companion object {
         private const val SUB_PIPELINE_EXEC_ATOM_CODE = "SubPipelineExec"
-        private val pattern = Pattern.compile("(p-)?[a-f\\d]{32}")
         private val logger = LoggerFactory.getLogger(SubPipelineElementBizPluginService::class.java)
     }
 
@@ -96,30 +92,11 @@ class SubPipelineElementBizPluginService @Autowired constructor(
     ): ElementCheckResult {
         // 模板保存时不需要校验子流水线权限
         if (isTemplate || projectId.isNullOrBlank()) return ElementCheckResult(true)
-        val (subProjectId, subPipelineId, subPipelineName) = when (element) {
-            is SubPipelineCallElement -> {
-                resolveSubPipelineCall(
-                    projectId = projectId,
-                    element = element,
-                    contextMap = contextMap
-                )
-            }
-            is MarketBuildAtomElement -> {
-                resolveSubPipelineExec(
-                    projectId = projectId,
-                    inputMap = element.data["input"] as Map<String, Any>,
-                    contextMap = contextMap
-                )
-            }
-            is MarketBuildLessAtomElement -> {
-                resolveSubPipelineExec(
-                    projectId = projectId,
-                    inputMap = element.data["input"] as Map<String, Any>,
-                    contextMap = contextMap
-                )
-            }
-            else -> null
-        } ?: return ElementCheckResult(true)
+        val (subProjectId, subPipelineId, subPipelineName) = subPipelineRefService.getSubPipelineInfo(
+            element = element,
+            projectId = projectId,
+            contextMap = contextMap
+        ) ?: return ElementCheckResult(true)
 
         logger.info(
             "check the sub-pipeline permissions when deploying pipeline|" +
@@ -151,103 +128,6 @@ class SubPipelineElementBizPluginService @Autowired constructor(
                     )
                 )
             )
-        }
-    }
-
-    private fun resolveSubPipelineCall(
-        projectId: String,
-        element: SubPipelineCallElement,
-        contextMap: Map<String, String>
-    ): Triple<String, String, String>? {
-        val subPipelineType = element.subPipelineType ?: SubPipelineType.ID
-        val subPipelineId = element.subPipelineId
-        val subPipelineName = element.subPipelineName
-        return getSubPipelineInfo(
-            projectId = projectId,
-            subProjectId = projectId,
-            subPipelineType = subPipelineType,
-            subPipelineId = subPipelineId,
-            subPipelineName = subPipelineName,
-            contextMap = contextMap
-        )
-    }
-
-    private fun resolveSubPipelineExec(
-        projectId: String,
-        inputMap: Map<String, Any>,
-        contextMap: Map<String, String>
-    ): Triple<String, String, String>? {
-        val subProjectId = inputMap.getOrDefault("projectId", projectId).toString()
-        val subPipelineTypeStr = inputMap.getOrDefault("subPipelineType", "ID")
-        val subPipelineName = inputMap["subPipelineName"]?.toString()
-        val subPipelineId = inputMap["subPip"]?.toString()
-        val subPipelineType = when (subPipelineTypeStr) {
-            "ID" -> SubPipelineType.ID
-            "NAME" -> SubPipelineType.NAME
-            else -> return null
-        }
-        return getSubPipelineInfo(
-            projectId = projectId,
-            subProjectId = subProjectId,
-            subPipelineType = subPipelineType,
-            subPipelineId = subPipelineId,
-            subPipelineName = subPipelineName,
-            contextMap = contextMap
-        )
-    }
-
-    private fun getSubPipelineInfo(
-        projectId: String,
-        subProjectId: String,
-        subPipelineType: SubPipelineType,
-        subPipelineId: String?,
-        subPipelineName: String?,
-        contextMap: Map<String, String>
-    ): Triple<String, String, String>? {
-        return when (subPipelineType) {
-            SubPipelineType.ID -> {
-                if (subPipelineId.isNullOrBlank()) {
-                    return null
-                }
-                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
-                    projectId = subProjectId, pipelineId = subPipelineId
-                ) ?: run {
-                    logger.info(
-                        "sub-pipeline not found|projectId:$projectId|subPipelineType:$subPipelineType|" +
-                            "subProjectId:$subProjectId|subPipelineId:$subPipelineId"
-                    )
-                    return null
-                }
-                Triple(subProjectId, subPipelineId, pipelineInfo.pipelineName)
-            }
-
-            SubPipelineType.NAME -> {
-                if (subPipelineName.isNullOrBlank()) {
-                    return null
-                }
-                val finalSubProjectId = EnvUtils.parseEnv(subProjectId, contextMap)
-                var finalSubPipelineName = EnvUtils.parseEnv(subPipelineName, contextMap)
-                var finalSubPipelineId = pipelineRepositoryService.listPipelineIdByName(
-                    projectId = finalSubProjectId,
-                    pipelineNames = setOf(finalSubPipelineName),
-                    filterDelete = true
-                )[finalSubPipelineName]
-                // 流水线名称直接使用流水线ID代替
-                if (finalSubPipelineId.isNullOrBlank() && pattern.matcher(finalSubPipelineName).matches()) {
-                    finalSubPipelineId = finalSubPipelineName
-                    finalSubPipelineName = pipelineRepositoryService.getPipelineInfo(
-                        projectId = finalSubProjectId, pipelineId = finalSubPipelineName
-                    )?.pipelineName ?: ""
-                }
-                if (finalSubPipelineId.isNullOrBlank() || finalSubPipelineName.isEmpty()) {
-                    logger.info(
-                        "sub-pipeline not found|projectId:$projectId|subPipelineType:$subPipelineType|" +
-                            "subProjectId:$subProjectId|subPipelineName:$subPipelineName"
-                    )
-                    return null
-                }
-                Triple(finalSubProjectId, finalSubPipelineId, finalSubPipelineName)
-            }
         }
     }
 }
