@@ -25,29 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.environment.agent.client
+package com.tencent.devops.environment.service.cmdb
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_GET_CMDB_LIST
-import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_GET_CMDB_NODE
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.environment.agent.pojo.agent.CmdbServerPage
-import com.tencent.devops.common.environment.agent.pojo.agent.EsbAuthReq
-import com.tencent.devops.common.environment.agent.pojo.agent.RawCmdbNode
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_CMDB_INTERFACE_TIME_OUT
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_CMDB_RESPONSE
+import com.tencent.devops.environment.pojo.cmdb.req.EsbAuthReq
+import com.tencent.devops.environment.pojo.cmdb.resp.CmdbServerPage
+import com.tencent.devops.environment.pojo.cmdb.resp.RawCmdbNode
 import okhttp3.Headers
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import java.net.SocketTimeoutException
-import javax.ws.rs.core.Response
 
 class EsbCmdbClient(
     private val cmdbApiBaseUrl: String,
@@ -151,9 +149,9 @@ class EsbCmdbClient(
                 if (responseData["result"] == false) {
                     val msg = responseData["msg"]
                     logger.error("get cmdb servers failed: $msg")
-                    throw CustomException(
-                        Response.Status.INTERNAL_SERVER_ERROR,
-                        I18nUtil.getCodeLanMessage(messageCode = FAILED_TO_GET_CMDB_NODE)
+                    throw ErrorCodeException(
+                        errorCode = ERROR_CMDB_RESPONSE,
+                        defaultMessage = I18nUtil.getCodeLanMessage(messageCode = ERROR_CMDB_RESPONSE)
                     )
                 }
 
@@ -196,13 +194,15 @@ class EsbCmdbClient(
                 )
             } catch (timeoutError: SocketTimeoutException) {
                 logger.error("Query CMDB interface time out. Error:", timeoutError)
-                throw OperationException(
-                    I18nUtil.getCodeLanMessage(messageCode = FAILED_TO_GET_CMDB_LIST)
+                throw ErrorCodeException(
+                    errorCode = ERROR_CMDB_INTERFACE_TIME_OUT,
+                    defaultMessage = I18nUtil.getCodeLanMessage(messageCode = ERROR_CMDB_INTERFACE_TIME_OUT)
                 )
             } catch (e: Exception) {
                 logger.error("get cmdb nodes error", e)
-                throw OperationException(
-                    I18nUtil.getCodeLanMessage(messageCode = FAILED_TO_GET_CMDB_LIST)
+                throw ErrorCodeException(
+                    errorCode = ERROR_CMDB_RESPONSE,
+                    defaultMessage = I18nUtil.getCodeLanMessage(messageCode = ERROR_CMDB_RESPONSE)
                 )
             }
         }

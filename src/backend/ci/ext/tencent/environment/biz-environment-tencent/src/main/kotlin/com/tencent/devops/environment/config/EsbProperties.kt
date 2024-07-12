@@ -25,16 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.environment.agent.pojo.agent
+package com.tencent.devops.environment.config
 
-data class RawCmdbNode(
-    val name: String,
-    val operator: String,
-    val bakOperator: String,
-    var ip: String,
-    val displayIp: String,
-    val osName: String,
-    var agentStatus: Boolean,
-    val serverId: Long,
-    val deptId: Int
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
+
+@ConstructorBinding
+@ConfigurationProperties(prefix = "esb")
+data class EsbProperties(
+    /**
+     * 蓝鲸应用代码
+     */
+    val appCode: String,
+    /**
+     * 蓝鲸应用密钥
+     */
+    val appSecret: String
 )

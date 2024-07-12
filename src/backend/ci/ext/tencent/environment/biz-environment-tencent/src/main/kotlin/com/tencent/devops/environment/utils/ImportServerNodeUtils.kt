@@ -30,8 +30,8 @@ package com.tencent.devops.environment.utils
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.environment.agent.client.EsbCmdbClient
-import com.tencent.devops.common.environment.agent.pojo.agent.CmdbServerPage
+import com.tencent.devops.environment.service.cmdb.EsbCmdbClient
+import com.tencent.devops.environment.pojo.cmdb.resp.CmdbServerPage
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_IMPORT_EXCEED
 import com.tencent.devops.environment.dao.ProjectConfigDao

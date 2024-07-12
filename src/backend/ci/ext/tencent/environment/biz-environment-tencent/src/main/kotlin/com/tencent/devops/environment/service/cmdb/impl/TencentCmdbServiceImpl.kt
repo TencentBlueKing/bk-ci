@@ -1,7 +1,7 @@
 package com.tencent.devops.environment.service.cmdb.impl
 
-import com.tencent.devops.common.environment.agent.client.EsbCmdbClient
-import com.tencent.devops.common.environment.agent.pojo.agent.CmdbServerPage
+import com.tencent.devops.environment.service.cmdb.EsbCmdbClient
+import com.tencent.devops.environment.pojo.cmdb.resp.CmdbServerPage
 import com.tencent.devops.environment.pojo.cmdb.common.CmdbServerDTO
 import com.tencent.devops.environment.service.cmdb.TencentCmdbService
 import org.slf4j.LoggerFactory

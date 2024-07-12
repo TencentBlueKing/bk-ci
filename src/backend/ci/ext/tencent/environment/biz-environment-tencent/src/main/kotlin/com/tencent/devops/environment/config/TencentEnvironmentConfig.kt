@@ -27,8 +27,7 @@
 
 package com.tencent.devops.environment.config
 
-import com.tencent.devops.common.environment.agent.client.EsbCmdbClient
-import com.tencent.devops.common.environment.agent.config.EsbProperties
+import com.tencent.devops.environment.service.cmdb.EsbCmdbClient
 import com.tencent.devops.environment.service.job.NodeManApi
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean

@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.pojo.cmdb.common
 
-import com.tencent.devops.common.environment.agent.pojo.agent.RawCmdbNode
+import com.tencent.devops.environment.pojo.cmdb.resp.RawCmdbNode
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "公司CMDB机器信息")

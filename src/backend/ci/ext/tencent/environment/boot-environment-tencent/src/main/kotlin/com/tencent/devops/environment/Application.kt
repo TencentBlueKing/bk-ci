@@ -27,7 +27,7 @@
 
 package com.tencent.devops.environment
 
-import com.tencent.devops.common.environment.agent.config.EsbProperties
+import com.tencent.devops.environment.config.EsbProperties
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 import com.tencent.devops.environment.config.EnvironmentProperties

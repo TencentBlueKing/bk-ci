@@ -1,4 +1,4 @@
-package com.tencent.devops.common.environment.agent.pojo.agent
+package com.tencent.devops.environment.pojo.cmdb.req
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
