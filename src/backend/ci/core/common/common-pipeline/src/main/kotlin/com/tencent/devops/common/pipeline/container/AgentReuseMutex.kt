@@ -59,7 +59,7 @@ data class AgentReuseMutex(
             "lock:agent:reuse:project:$projectId:agent:$agentId:queue"
 
         fun genAgentReuseMutexLinkTipKey(buildId: String): String {
-            return "linkTip:$buildId"
+            return "agent:reuse:linkTip:$buildId"
         }
     }
 }

@@ -42,9 +42,11 @@ import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
+import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
@@ -63,7 +65,8 @@ class WindowsResourceConfigService @Autowired constructor(
     private val windowsSpecResourceDao: WindowsSpecResourceDao,
     private val workspaceCommon: WorkspaceCommon,
     private val client: Client,
-    private val workspaceJoinDao: WorkspaceJoinDao
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val workspaceWindowsDao: WorkspaceWindowsDao
 ) {
 
     companion object {
@@ -451,5 +454,75 @@ class WindowsResourceConfigService @Autowired constructor(
                 }
             )
         ).data == true
+    }
+
+    fun createCheckSpecLimit(
+        windowsType: String,
+        projectId: String,
+        workspaceNames: Set<String>
+    ) {
+        val allSpecSize = getAllType(true, true).map { it.size }.toSet()
+        if (windowsType.trim() in allSpecSize) {
+            val specQuota = windowsSpecResourceDao.fetchQuota(
+                dslContext = dslContext,
+                projectId = projectId,
+                size = windowsType.trim()
+            )
+            if (specQuota != null) {
+                val count = workspaceWindowsDao.fetchUsedSizeCount(
+                    dslContext = dslContext,
+                    workspaceNames = workspaceNames,
+                    size = windowsType.trim()
+                )
+                if (count >= specQuota) {
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
+                        params = arrayOf(windowsType.trim(), specQuota.toString(), count.toString())
+                    )
+                }
+            } else {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
+                    params = arrayOf(windowsType.trim(), "0", "0")
+                )
+            }
+        }
+    }
+
+    fun createCheckWhenWinNotAlready(
+        zoneId: String,
+        winConfigId: Int,
+        newNum: Int,
+        ownerType: WorkspaceOwnerType
+    ) {
+        val windowsConfig = getTypeConfig(winConfigId)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(winConfigId.toString())
+            )
+
+        if (windowsConfig.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(windowsConfig.size)
+            )
+        }
+        val windowsZone = getZoneConfig(zoneId.replace(Regex("\\d+"), ""))
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(zoneId)
+            )
+        if (windowsZone.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(zoneId)
+            )
+        }
+        createCheckWhenWinNotAlready(
+            windowsZone = windowsZone,
+            windowsConfig = windowsConfig,
+            newNum = newNum,
+            quotaType = QuotaType.parse(ownerType)
+        )
     }
 }

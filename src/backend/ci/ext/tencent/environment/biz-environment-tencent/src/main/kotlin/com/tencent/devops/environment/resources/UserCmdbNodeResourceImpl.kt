@@ -35,6 +35,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserCmdbNodeResource
 import com.tencent.devops.environment.pojo.CmdbNode
 import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
+import com.tencent.devops.environment.pojo.job.ImportCmdbNodeInfo
 import com.tencent.devops.environment.pojo.job.ReImportCmdbNodeInfo
 import com.tencent.devops.environment.service.CmdbNodeService
 import org.springframework.beans.factory.annotation.Autowired
@@ -66,8 +67,22 @@ class UserCmdbNodeResourceImpl @Autowired constructor(
 
     @AuditEntry(actionId = ActionId.ENV_NODE_CREATE)
     override fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): Result<AddCmdbNodesRes> {
-        val addCmdbNodesRes = cmdbNodeService.addCmdbNodes(userId = userId, projectId = projectId, nodeIps = nodeIps)
+        val addCmdbNodesRes = cmdbNodeService.addCmdbNodesByIp(
+            userId = userId, projectId = projectId, nodeIpList = nodeIps
+        )
         return Result(addCmdbNodesRes)
+    }
+
+    @AuditEntry(actionId = ActionId.ENV_NODE_CREATE)
+    override fun addCmdbNode(
+        userId: String,
+        projectId: String,
+        importCmdbNodeInfoList: List<ImportCmdbNodeInfo>
+    ): Result<AddCmdbNodesRes> {
+        val addCmdbNodeRes = cmdbNodeService.addCmdbNodesByServerId(
+            userId = userId, projectId = projectId, nodeServerIdList = importCmdbNodeInfoList.map { it.serverId }
+        )
+        return Result(addCmdbNodeRes)
     }
 
     override fun reImportCmdbNodes(
@@ -75,12 +90,32 @@ class UserCmdbNodeResourceImpl @Autowired constructor(
         projectId: String,
         reImportCmdbNodeInfoList: List<ReImportCmdbNodeInfo>
     ): Result<AddCmdbNodesRes> {
-        val reImportCmdbNodesRes = cmdbNodeService.reImportCmdbNodes(
-            userId = userId, projectId = projectId,
-            reImportCmdbNodeInfoList = reImportCmdbNodeInfoList.map {
-                ReImportCmdbNodeInfo(nodeIp = it.nodeIp, nodeId = it.nodeId)
+        var importTag = true // true - reImportCmdbNodesByServerId, false - reImportCmdbNodesByIp
+        run {
+            reImportCmdbNodeInfoList.forEach {
+                if (null == it.serverId) {
+                    importTag = false
+                    return@run
+                }
             }
-        )
+        }
+        val reImportCmdbNodesRes = if (importTag) {
+            cmdbNodeService.reImportCmdbNodesByServerId(
+                userId = userId,
+                projectId = projectId,
+                reImportCmdbNodeInfoList = reImportCmdbNodeInfoList.map {
+                    ReImportCmdbNodeInfo(nodeId = it.nodeId, serverId = it.serverId)
+                }
+            )
+        } else {
+            cmdbNodeService.reImportCmdbNodesByIp(
+                userId = userId,
+                projectId = projectId,
+                reImportCmdbNodeInfoList = reImportCmdbNodeInfoList.map {
+                    ReImportCmdbNodeInfo(nodeIp = it.nodeIp, nodeId = it.nodeId)
+                }
+            )
+        }
         return Result(reImportCmdbNodesRes)
     }
 }

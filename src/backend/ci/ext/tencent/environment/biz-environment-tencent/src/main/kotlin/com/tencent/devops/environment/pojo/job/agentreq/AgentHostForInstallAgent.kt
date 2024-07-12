@@ -29,7 +29,7 @@ package com.tencent.devops.environment.pojo.job.agentreq
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-
+import com.tencent.devops.common.api.annotation.SkipLogField
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "安装agent的请求信息中的 host信息")
@@ -49,9 +49,9 @@ data class AgentHostForInstallAgent(
     @JsonProperty("bk_addressing")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val bkAddressing: String?,
-    @get:Schema(title = "接入点ID", required = true)
+    @get:Schema(title = "接入点ID")
     @JsonProperty("ap_id")
-    val apId: Int,
+    val apId: Int? = null,
     @get:Schema(title = "安装通道ID")
     @JsonProperty("install_channel_id")
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -92,6 +92,7 @@ data class AgentHostForInstallAgent(
     val account: String?,
     @get:Schema(title = "密码")
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @SkipLogField
     val password: String?,
     @get:Schema(title = "端口")
     @JsonInclude(JsonInclude.Include.NON_NULL)

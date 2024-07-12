@@ -11,6 +11,7 @@ import org.jooq.JSON
 import org.springframework.stereotype.Repository
 
 @Repository
+@Deprecated("LINUX 待删除")
 class RemoteDevCodeProxyDao {
     fun addCodeProxy(
         dslContext: DSLContext,

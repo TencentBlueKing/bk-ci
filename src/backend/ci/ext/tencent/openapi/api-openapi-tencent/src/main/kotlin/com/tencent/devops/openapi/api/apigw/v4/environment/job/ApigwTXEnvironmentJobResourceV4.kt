@@ -6,10 +6,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.jobreq.OpOperateReq
+import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
 import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.jobreq.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.jobreq.TaskTerminateReq
@@ -296,6 +298,26 @@ interface ApigwTXEnvironmentJobResourceV4 {
         @QueryParam("tag")
         tag: String?
     ): JobResult<GetStepInstanceStatusResult>
+
+    @Operation(summary = "对执行的实例的步骤进行操作的接口", tags = ["v4_app_job_operate_step_instance"])
+    @POST
+    @Path("/{projectId}/operate_step_instance")
+    fun operateStepInstance(
+        @Parameter(description = "appCode", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "操作执行实例步骤的信息", required = true)
+        operateStepInstanceReq: OperateStepInstanceReq
+    ): JobResult<OperateStepInstanceResult>
 
     @Operation(summary = "操作项目灰度状态的OP接口", tags = ["v4_app_job_operate_op_project"])
     @POST

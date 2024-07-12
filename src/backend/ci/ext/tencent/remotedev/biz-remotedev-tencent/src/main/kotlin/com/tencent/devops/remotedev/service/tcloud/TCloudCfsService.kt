@@ -6,10 +6,8 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ProjectTCloudCfsDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
-import com.tencent.devops.remotedev.pojo.WorkspaceSearch
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncTCloudCfs
-import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.tcloud.ProjectCfsData
 import com.tencentcloudapi.cfs.v20190719.CfsClient
 import com.tencentcloudapi.cfs.v20190719.models.CreateCfsRuleRequest
@@ -122,20 +120,15 @@ class TCloudCfsService @Autowired constructor(
         projectTCloudCfsDao.add(dslContext, projectId, cfsId, region, pgId)
 
         // 将所有这个项目下的ip都添加到权限组
-        val ips = workspaceJoinDao.limitFetchProjectWorkspace(
+        val ips = workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext = dslContext,
-            null,
-            queryType = QueryType.WEB,
-            search = WorkspaceSearch(
-                projectId = listOf(projectId),
-                workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU),
-                onFuzzyMatch = false
-            )
-        )?.filter { !it.hostName.isNullOrBlank() }?.map {
-            it.hostName?.split(".")?.let { host ->
+            projectId = projectId,
+            notStatus = listOf(WorkspaceStatus.DELETED, WorkspaceStatus.UNUSED)
+        ).filter { !it.hostIp.isNullOrBlank() }.map {
+            it.hostIp?.split(".")?.let { host ->
                 host.subList(1, host.size).joinToString(separator = ".")
             }!!
-        }?.toSet() ?: return
+        }.toSet()
 
         // 获取下现有的rule过滤
         val rules = try {

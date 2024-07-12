@@ -68,5 +68,7 @@ data class AppExperience(
     @get:Schema(title = "是否订阅", required = true)
     val subscribe: Boolean,
     @get:Schema(title = "是否展示红点", required = false)
-    val redPointEnabled: Boolean = false
+    val redPointEnabled: Boolean = false,
+    @get:Schema(title = "分类标签", required = false)
+    val classify: String = ""
 )

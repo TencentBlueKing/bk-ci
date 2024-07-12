@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.service
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.DispatchBuildTaskStatusEnum
@@ -43,9 +44,7 @@ import com.tencent.devops.remotedev.pojo.remotedev.WorkspaceResponse
 import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import com.tencent.devops.remotedev.pojo.image.WorkspaceImageInfo
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -198,44 +197,6 @@ class RemoteDevService @Autowired constructor(
         }
     }
 
-    fun makeWorkspaceImageWithBackEvent(event: WorkspaceOperateEvent, backEvent: RemoteDevUpdateEvent) {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .makeWorkspaceImage(event.userId, event)
-        val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .waitTaskFinish(event.userId, taskId, event.type)
-
-        if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
-            dispatchWorkspaceOpHisDao.update(
-                dslContext, taskId, EnvironmentActionStatus.SUCCEEDED
-            )
-            logger.info("${event.userId} make workspaceImage success. ${event.workspaceName}")
-            val image = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).image
-            // 更新db状态
-            dispatchWorkspaceDao.updateWorkspaceStatus(
-                workspaceName = event.workspaceName,
-                status = EnvStatusEnum.stopped,
-                dslContext = dslContext
-            )
-
-            backEvent.status = true
-            backEvent.workspaceImageInfo = WorkspaceImageInfo(
-                imageId = event.imageId ?: "",
-                imageCosFile = image?.cosFile ?: "",
-                size = image?.size ?: "",
-                sourceCgsId = image?.sourceCgsId ?: "",
-                sourceCgsType = image?.sourceType ?: "",
-                sourceCgsZone = image?.zoneId ?: ""
-            )
-        } else {
-            dispatchWorkspaceOpHisDao.update(
-                dslContext, taskId, EnvironmentActionStatus.FAILED
-            )
-            throw WorkspaceDispatchException(
-                "errorMessage:$taskMessage"
-            )
-        }
-    }
-
     fun getWorkspaceUrl(
         userId: String,
         workspaceName: String,
@@ -254,15 +215,17 @@ class RemoteDevService @Autowired constructor(
 
     fun deleteWorkspace(
         userId: String,
-        workspaceName: String
+        workspaceName: String,
+        bakWorkspaceName: String?
     ) {
-        dispatchWorkspaceDao.deleteWorkspace(workspaceName, dslContext)
+        dispatchWorkspaceDao.deleteWorkspace(dslContext, workspaceName, bakWorkspaceName)
     }
 
     fun workspaceTaskCallback(
         taskStatus: TaskStatus,
         mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
     ): Boolean {
+        logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
         return remoteDevServiceFactory.loadRemoteDevService(mountType).workspaceTaskCallback(taskStatus)
     }
 
@@ -426,5 +389,16 @@ class RemoteDevService @Autowired constructor(
         mountType: WorkspaceMountType
     ): ExpandDiskValidateResp {
         return remoteDevServiceFactory.loadRemoteDevService(mountType).expandDisk(workspaceName, userId, size)
+    }
+
+    fun upgradeWorkspace(event: WorkspaceOperateEvent) {
+        // 需要生成一个新的 pipelineId 进行操作
+        val orderId = "${event.projectId}_${event.projectId}_${UUIDUtil.generate().takeLast(16)}"
+        remoteDevServiceFactory.loadRemoteDevService(event.mountType).upgradeWorkspaceVm(
+            userId = event.userId,
+            workspaceName = event.workspaceName,
+            machineType = event.machineType!!,
+            pipelineId = orderId
+        )
     }
 }

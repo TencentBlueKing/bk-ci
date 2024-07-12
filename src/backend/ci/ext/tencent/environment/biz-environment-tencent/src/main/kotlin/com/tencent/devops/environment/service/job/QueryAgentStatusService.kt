@@ -35,9 +35,7 @@ import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromJobR
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromNodemanResult
 import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.agentreq.AgentCondition
-import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentStatusFromNodemanReq
-import com.tencent.devops.environment.pojo.job.agentres.AgentOriginalResult
-import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusFromNodemanResult
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromNodeManReq
 import com.tencent.devops.environment.pojo.job.agentres.ExtraData
 import com.tencent.devops.environment.pojo.job.agentres.FilterHostInfo
 import com.tencent.devops.environment.pojo.job.agentres.IdentityInfo
@@ -47,6 +45,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+/**
+ * 查询GSE Agent的状态与版本信息
+ */
 @Service("QueryAgentStatusService")
 class QueryAgentStatusService @Autowired constructor(
     private val jobService: JobService,
@@ -91,6 +92,7 @@ class QueryAgentStatusService @Autowired constructor(
                 val jobResAgentVersion = jobRes.data?.agentInfoList?.map {
                     hostIdMutableList.remove(it.bkHostId)
                     AgentVersion(
+                        serverId = hostIdToAgentVersionMap[it.bkHostId]?.serverId,
                         ip = hostIdToAgentVersionMap[it.bkHostId]?.ip,
                         bkHostId = it.bkHostId,
                         installedTag = INSTALLED_AGENT_TAG,
@@ -102,6 +104,7 @@ class QueryAgentStatusService @Autowired constructor(
                 val agentAbnormalList = if (hostIdMutableList.isNotEmpty()) {
                     hostIdMutableList.map {
                         AgentVersion(
+                            serverId = hostIdToAgentVersionMap[it]?.serverId,
                             ip = hostIdToAgentVersionMap[it]?.ip,
                             bkHostId = it,
                             installedTag = INSTALLED_AGENT_TAG,
@@ -126,6 +129,7 @@ class QueryAgentStatusService @Autowired constructor(
             else {
                 notInstalledAgentHostIdList.map {
                     AgentVersion(
+                        serverId = hostIdToAgentVersionMap[it]?.serverId,
                         ip = hostIdToAgentVersionMap[it]?.ip,
                         bkHostId = it,
                         installedTag = NOT_INSTALLED_AGENT_TAG
@@ -163,8 +167,8 @@ class QueryAgentStatusService @Autowired constructor(
     private fun queryAgentStatusFromNodeman(
         queryAgentStatusFromNodemanReq: QueryAgentStatusFromNodemanReq
     ): AgentResult<QueryAgentStatusFromNodemanResult> {
-        NodeManApi.setNodemanOperationName("queryAgentStatusFromNodeman")
-        val queryAgentStatusFromNodemanRequest = AgentQueryAgentStatusFromNodemanReq(
+        NodeManApi.setNodemanOperationName(::queryAgentStatusFromNodeman.name)
+        val queryAgentStatusFromNodeManReq = QueryAgentStatusFromNodeManReq(
             bkHostId = queryAgentStatusFromNodemanReq.bkHostId,
             conditions = queryAgentStatusFromNodemanReq.conditions?.map {
                 AgentCondition(key = it.key, value = it.value)
@@ -175,16 +179,13 @@ class QueryAgentStatusService @Autowired constructor(
             onlyIp = queryAgentStatusFromNodemanReq.onlyIp,
             runningCount = queryAgentStatusFromNodemanReq.runningCount
         )
-        val agentQueryAgentStatusRes: AgentOriginalResult<AgentQueryAgentStatusFromNodemanResult> =
-            nodeManApi.executePostRequest(
-                queryAgentStatusFromNodemanRequest, AgentQueryAgentStatusFromNodemanResult::class.java
-            )
+        val agentStatusFromNodeManResp = nodeManApi.queryAgentStatus(queryAgentStatusFromNodeManReq)
         val queryAgentStatusRes: AgentResult<QueryAgentStatusFromNodemanResult> = AgentResult(
-            code = agentQueryAgentStatusRes.code,
-            result = agentQueryAgentStatusRes.result,
-            message = agentQueryAgentStatusRes.message,
-            errors = agentQueryAgentStatusRes.errors,
-            data = agentQueryAgentStatusRes.data?.let {
+            code = agentStatusFromNodeManResp.code,
+            result = agentStatusFromNodeManResp.result,
+            message = agentStatusFromNodeManResp.message,
+            errors = agentStatusFromNodeManResp.errors,
+            data = agentStatusFromNodeManResp.data?.let {
                 QueryAgentStatusFromNodemanResult(
                     total = it.total,
                     list = it.list?.map { filterHostInfo ->

@@ -34,6 +34,7 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
+@Deprecated("LINUX 待删除")
 class RemoteDevFileDao {
 
     fun createFile(

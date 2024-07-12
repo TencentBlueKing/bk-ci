@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
 
 @Service
+@Deprecated("LINUX 待删除")
 class GitProxyService @Autowired constructor(
     private val gitproxyBkRepoClient: GitproxyBkRepoClient,
     private val redisOperation: RedisOperation,

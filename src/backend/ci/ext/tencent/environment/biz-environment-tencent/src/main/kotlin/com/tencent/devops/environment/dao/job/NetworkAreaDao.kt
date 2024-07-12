@@ -31,6 +31,7 @@ import com.tencent.devops.model.environment.tables.TNetworkArea
 import com.tencent.devops.model.environment.tables.records.TNetworkAreaRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 
 import org.springframework.stereotype.Repository
 
@@ -41,6 +42,56 @@ class NetworkAreaDao {
             return dslContext.selectFrom(this)
                 .where(NET_AREA.`in`("OSS", "DEVNET"))
                 .fetch()
+        }
+    }
+
+    fun getAllNetworkArea(
+        dslContext: DSLContext,
+        page: Int,
+        pageSize: Int,
+        keyword: String? = null
+    ): Result<TNetworkAreaRecord> {
+        with(TNetworkArea.T_NETWORK_AREA) {
+            val queryNetworkArea = dslContext.selectFrom(this)
+            if (!keyword.isNullOrEmpty())
+                queryNetworkArea.where(NET_AREA.like("%$keyword%"))
+            queryNetworkArea.orderBy(NET_AREA_ID.desc()).limit(pageSize).offset((page - 1) * pageSize)
+            return queryNetworkArea.fetch()
+        }
+    }
+
+    fun insertNetworkArea(dslContext: DSLContext, netArea: String, netSegment: String): Int {
+        with(TNetworkArea.T_NETWORK_AREA) {
+            return dslContext.insertInto(this)
+                .set(NET_AREA, netArea)
+                .set(NET_SEGMENT, netSegment)
+                .execute()
+        }
+    }
+
+    fun addNetWorkSegment(dslContext: DSLContext, netArea: String, netSegment: String): Int {
+        with(TNetworkArea.T_NETWORK_AREA) {
+            return dslContext.update(this)
+                .set(NET_SEGMENT, DSL.concat(NET_SEGMENT, netSegment))
+                .where(NET_AREA.eq(netArea))
+                .execute()
+        }
+    }
+
+    fun replaceNetworkAreaSegment(dslContext: DSLContext, netArea: String, netSegment: String): Int {
+        with(TNetworkArea.T_NETWORK_AREA) {
+            return dslContext.update(this)
+                .set(NET_SEGMENT, netSegment)
+                .where(NET_AREA.eq(netArea))
+                .execute()
+        }
+    }
+
+    fun deleteNetworkArea(dslContext: DSLContext, netArea: String): Int {
+        with(TNetworkArea.T_NETWORK_AREA) {
+            return dslContext.deleteFrom(this)
+                .where(NET_AREA.eq(netArea))
+                .execute()
         }
     }
 }

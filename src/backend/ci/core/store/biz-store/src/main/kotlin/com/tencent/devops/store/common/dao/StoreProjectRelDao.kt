@@ -574,4 +574,19 @@ class StoreProjectRelDao {
                 .execute()
         }
     }
+
+    fun getInitProjectInfoByStoreCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte
+    ): TStoreProjectRelRecord? {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode)
+                    .and(STORE_TYPE.eq(storeType))
+                    .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+                )
+                .fetchOne()
+        }
+    }
 }
