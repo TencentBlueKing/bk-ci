@@ -520,6 +520,8 @@ class PipelineBuildSummaryDao {
                                 )
                             }
                         }
+                        .set(LATEST_TASK_COUNT, taskCount)
+                        .set(LATEST_START_USER, userId)
                         .set(QUEUE_COUNT, QUEUE_COUNT - 1)
                         .set(RUNNING_COUNT, RUNNING_COUNT + 1)
                         .set(LATEST_START_TIME, LocalDateTime.now())
