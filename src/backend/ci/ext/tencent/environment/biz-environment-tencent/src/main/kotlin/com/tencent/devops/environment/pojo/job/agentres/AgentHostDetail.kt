@@ -68,5 +68,8 @@ data class AgentHostDetail(
     val status: String?,
     @get:Schema(title = "任务执行状态名称")
     @JsonProperty("status_display")
-    val statusDisplay: String?
+    val statusDisplay: String?,
+    @get:Schema(title = "是否手动安装")
+    @JsonProperty("is_manual")
+    val isManual: Boolean?
 )

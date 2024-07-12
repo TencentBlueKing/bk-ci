@@ -3,21 +3,24 @@ package com.tencent.devops.environment.api.job
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
-import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
-import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResult
-import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
+import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
+import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
-import com.tencent.devops.environment.pojo.job.jobresp.JobResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
-import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
-import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
+import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
+import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
+import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResult
+import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
+import com.tencent.devops.environment.pojo.job.jobresp.JobResult
+import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResult
+import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -127,6 +130,20 @@ interface TencentUserJobResource {
         tag: String?
     ): JobResult<GetStepInstanceStatusResult>
 
+    @Operation(summary = "请求上云版job - 对执行的实例的步骤进行操作的接口")
+    @POST
+    @Path("/{projectId}/operate_step_instance")
+    fun operateStepInstance(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "操作执行实例步骤的信息", required = true)
+        operateStepInstanceReq: OperateStepInstanceReq
+    ): JobResult<OperateStepInstanceResult>
+
     @Operation(summary = "安装agent的接口")
     @POST
     @Path("/{projectId}/install_agent")
@@ -229,4 +246,22 @@ interface TencentUserJobResource {
         @QueryParam("withHidden")
         withHidden: Boolean
     ): AgentResult<QueryAgentInstallChannelResult>
+
+    @Operation(summary = "获取手动安装agent的命令")
+    @GET
+    @Path("/{projectId}/{jobId}/obtain_manual_installation_command")
+    fun obtainManualInstallationCommand(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "JOB ID", required = true)
+        @PathParam("jobId")
+        jobId: Int,
+        @Parameter(description = "HOST ID", required = true)
+        @QueryParam("hostId")
+        hostId: Long
+    ): AgentResult<ObtainManualCommandResult>
 }
