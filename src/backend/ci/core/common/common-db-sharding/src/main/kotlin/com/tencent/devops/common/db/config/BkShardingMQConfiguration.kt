@@ -27,71 +27,27 @@
 
 package com.tencent.devops.common.db.config
 
-import com.tencent.devops.common.db.listener.BkShardingRoutingRuleListener
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.common.service.utils.BkServiceUtil
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.common.db.service.ShardingRoutingRuleManageService
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.pojo.sharding.ShardingRoutingRuleBroadCastEvent
+import com.tencent.devops.common.stream.ScsConsumerBuilder
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-@AutoConfigureAfter(BkShardingRoutingRuleListener::class)
 class BkShardingMQConfiguration {
 
-    @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
-
-    @Bean
-    fun shardingRoutingRuleQueue() = Queue(BkServiceUtil.getDynamicMqQueue(), true, false, true)
-
-    @Bean
-    fun shardingRoutingRuleExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_SHARDING_ROUTING_RULE_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun shardingRoutingRuleQueueBind(
-        @Autowired shardingRoutingRuleQueue: Queue,
-        @Autowired shardingRoutingRuleExchange: FanoutExchange
-    ): Binding = BindingBuilder.bind(shardingRoutingRuleQueue).to(shardingRoutingRuleExchange)
-
-    @Bean
-    fun shardingRoutingRuleListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired messageConverter: Jackson2JsonMessageConverter,
-        @Autowired shardingRoutingRuleQueue: Queue,
-        @Autowired bkShardingRoutingRuleListener: BkShardingRoutingRuleListener
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(bkShardingRoutingRuleListener, bkShardingRoutingRuleListener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = shardingRoutingRuleQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 10,
-            concurrency = 1,
-            maxConcurrency = 5
+    @EventConsumer(true)
+    fun shardingRoutingRuleListener(
+        @Autowired shardingRoutingRuleManageService: ShardingRoutingRuleManageService
+    ) = ScsConsumerBuilder.build<ShardingRoutingRuleBroadCastEvent> {
+        shardingRoutingRuleManageService.handleShardingRoutingRuleLocalCache(
+            routingName = it.routingName,
+            routingRule = it.routingRule,
+            actionType = it.actionType
         )
     }
 }

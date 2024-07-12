@@ -48,8 +48,8 @@ import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KE
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_BUILD_ID
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_PROJECT_ID
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -70,7 +70,7 @@ import org.slf4j.LoggerFactory
 class DispatchService constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     private val gateway: String?,
     private val client: Client,
     private val channelUtils: ChannelUtils,
@@ -221,7 +221,7 @@ class DispatchService constructor(
         }
     }
 
-    fun redispatch(event: IPipelineEvent) {
+    fun redispatch(event: IEvent) {
         logger.info("Re-dispatch the agent event - ($event)")
         pipelineEventDispatcher.dispatch(event)
     }

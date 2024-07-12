@@ -27,9 +27,13 @@
 
 package com.tencent.devops.process.websocket
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.websocket.listener.PipelineWebSocketListener
 import com.tencent.devops.process.websocket.page.DefaultDetailPageBuild
 import com.tencent.devops.process.websocket.page.DefaultHistoryPageBuild
@@ -38,20 +42,12 @@ import com.tencent.devops.process.websocket.page.DefaultStatusPageBuild
 import com.tencent.devops.process.websocket.page.GithubDetailPageBuild
 import com.tencent.devops.process.websocket.page.GithubHistoryPageBuild
 import com.tencent.devops.process.websocket.page.GithubStatusPageBuild
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.process.websocket.service.PipelineWebsocketService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
@@ -64,52 +60,29 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class PipelineWebSocketConfiguration {
 
-    @Bean
-    fun webSocketDispatcher(@Autowired rabbitTemplate: RabbitTemplate) = WebSocketDispatcher(rabbitTemplate)
+    /**
+     * webhook构建触发广播监听
+     */
+    @EventConsumer
+    fun pipelineWebSocketPushEventListener(
+        @Autowired pipelineWebSocketListener: PipelineWebSocketListener
+    ) = ScsConsumerBuilder.build<PipelineBuildWebSocketPushEvent> { pipelineWebSocketListener.run(it) }
 
     @Bean
-    @ConditionalOnMissingBean(name = ["pipelineMonitorExchange"])
-    fun pipelineMonitorExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_PIPELINE_MONITOR_DIRECT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
+    fun pipelineWebSocketListener(
+        @Autowired pipelineWebsocketService: PipelineWebsocketService,
+        @Autowired webSocketDispatcher: WebSocketDispatcher,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
+        @Autowired pipelineInfoFacadeService: PipelineInfoFacadeService
+    ) = PipelineWebSocketListener(
+        pipelineWebsocketService = pipelineWebsocketService,
+        webSocketDispatcher = webSocketDispatcher,
+        pipelineEventDispatcher = pipelineEventDispatcher,
+        pipelineInfoFacadeService = pipelineInfoFacadeService
+    )
 
     @Bean
-    fun pipelineBuildWebSocketQueue(): Queue {
-        return Queue(MQ.QUEUE_PIPELINE_BUILD_WEBSOCKET)
-    }
-
-    @Bean
-    fun pipelineBuildWebSocketQueueBind(
-        @Autowired pipelineBuildWebSocketQueue: Queue,
-        @Autowired pipelineMonitorExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildWebSocketQueue)
-            .to(pipelineMonitorExchange).with(MQ.ROUTE_PIPELINE_BUILD_WEBSOCKET)
-    }
-
-    @Bean
-    fun pipelineWebSocketListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildWebSocketQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired pipelineWebSocketListener: PipelineWebSocketListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildWebSocketQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = pipelineWebSocketListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 1,
-            maxConcurrency = 20
-        )
-    }
+    fun websocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "github")

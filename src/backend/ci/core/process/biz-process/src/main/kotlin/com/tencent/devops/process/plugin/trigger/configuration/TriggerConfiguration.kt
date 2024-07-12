@@ -28,32 +28,23 @@
 package com.tencent.devops.process.plugin.trigger.configuration
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
+import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerChangeEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.plugin.trigger.timer.SchedulerManager
 import com.tencent.devops.process.plugin.trigger.timer.listener.PipelineTimerBuildListener
 import com.tencent.devops.process.plugin.trigger.timer.listener.PipelineTimerChangerListener
 import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineJobBean
 import com.tencent.devops.process.plugin.trigger.timer.quartz.QuartzSchedulerManager
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.core.QueueBuilder
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.quartz.QuartzProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -65,7 +56,6 @@ import org.springframework.context.annotation.Configuration
 @EnableConfigurationProperties(QuartzProperties::class)
 @SuppressWarnings("TooManyFunctions")
 class TriggerConfiguration {
-
     @Bean
     @SuppressWarnings("LongParameterList")
     fun pipelineJobBean(
@@ -88,102 +78,21 @@ class TriggerConfiguration {
     fun schedulerManager(quartzProperties: QuartzProperties) = QuartzSchedulerManager(quartzProperties)
 
     @Bean
-    fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
-
-    @Value("\${queueConcurrency.timerTrigger:5}")
-    private val timerConcurrency: Int? = null
-
-    @Bean
-    fun pipelineCoreExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
+    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
 
     /**
      * 定时构建队列--- 并发一般
      */
-    @Bean
-    fun pipelineTimerBuildQueue() = Queue(MQ.QUEUE_PIPELINE_TIMER)
-
-    @Bean
-    fun pipelineTimerBuildQueueBind(
-        @Autowired pipelineTimerBuildQueue: Queue,
-        @Autowired pipelineCoreExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineTimerBuildQueue).to(pipelineCoreExchange).with(MQ.ROUTE_PIPELINE_TIMER)
-    }
-
-    @Bean
-    fun pipelineTimerBuildListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineTimerBuildQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: PipelineTimerBuildListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineTimerBuildQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = buildListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 3,
-            concurrency = timerConcurrency!!,
-            maxConcurrency = 30
-        )
-    }
+    @EventConsumer
+    fun timerTriggerListener(
+        @Autowired buildListener: PipelineTimerBuildListener
+    ) = ScsConsumerBuilder.build<PipelineTimerBuildEvent> { buildListener.run(it) }
 
     /**
      * 构建定时构建定时变化的广播交换机
      */
-    @Bean
-    fun pipelineTimerChangeFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_TIMER_CHANGE_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Value("\${queueConcurrency.timerChanger:3}")
-    private val timerChangerConcurrency: Int? = null
-
-    /**
-     * 用于接收定时任务状态变化广播的临时队列，队列将自动销毁
-     */
-    @Bean
-    fun timerChangeQueueTemp(): Queue {
-        return QueueBuilder.nonDurable().autoDelete().build()
-    }
-
-    @Bean
-    fun timerChangeQueueTempBind(
-        @Autowired timerChangeQueueTemp: Queue,
-        @Autowired pipelineTimerChangeFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(timerChangeQueueTemp).to(pipelineTimerChangeFanoutExchange)
-    }
-
-    @Bean
-    fun timerChangeQueueListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired timerChangeQueueTemp: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: PipelineTimerChangerListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = timerChangeQueueTemp,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = buildListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 20000,
-            consecutiveActiveTrigger = 3,
-            concurrency = timerChangerConcurrency!!,
-            maxConcurrency = 10
-        )
-    }
+    @EventConsumer(true)
+    fun timerChangeListener(
+        @Autowired buildListener: PipelineTimerChangerListener
+    ) = ScsConsumerBuilder.build<PipelineTimerChangeEvent> { buildListener.run(it) }
 }

@@ -27,111 +27,23 @@
 
 package com.tencent.devops.dispatch.docker.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.dispatch.docker.listener.BuildLessListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
 class BuildLessMQConfiguration @Autowired constructor() {
+    @EventConsumer
+    fun startListener(
+        @Autowired buildLessListener: BuildLessListener
+    ) = ScsConsumerBuilder.build<PipelineBuildLessStartupEvent> { buildLessListener.listenAgentStartUpEvent(it) }
 
-    @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
-
-    @Bean
-    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
-
-    /**
-     * 构建无编译构建机启动交换机
-     */
-    @Bean
-    fun buildLessDispatchExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Bean
-    fun buildLessDispatchStartQueue() = Queue(MQ.QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
-
-    @Bean
-    fun buildLessDispatchStartQueueBind(
-        @Autowired buildLessDispatchStartQueue: Queue,
-        @Autowired buildLessDispatchExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(buildLessDispatchStartQueue).to(buildLessDispatchExchange)
-            .with(MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
-    }
-
-    @Bean
-    fun buildLessDispatchStartListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired buildLessDispatchStartQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildLessListener: BuildLessListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(buildLessListener, buildLessListener::listenAgentStartUpEvent.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = buildLessDispatchStartQueue,
-            rabbitAdmin = rabbitAdmin,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 50,
-            maxConcurrency = 100,
-            adapter = adapter,
-            prefetchCount = 1
-        )
-    }
-
-    @Bean
-    fun buildLessDispatchShutdownQueue() = Queue(MQ.QUEUE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH)
-
-    @Bean
-    fun buildLessDispatchShutdownQueueBind(
-        @Autowired buildLessDispatchShutdownQueue: Queue,
-        @Autowired buildLessDispatchExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(buildLessDispatchShutdownQueue).to(buildLessDispatchExchange)
-            .with(MQ.ROUTE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH)
-    }
-
-    @Bean
-    fun buildLessDispatchShutdownListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired buildLessDispatchShutdownQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildLessListener: BuildLessListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(buildLessListener, buildLessListener::listenAgentShutdownEvent.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = buildLessDispatchShutdownQueue,
-            rabbitAdmin = rabbitAdmin,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 50,
-            maxConcurrency = 100,
-            adapter = adapter,
-            prefetchCount = 1
-        )
-    }
+    @EventConsumer
+    fun shutdownListener(
+        @Autowired buildLessListener: BuildLessListener
+    ) = ScsConsumerBuilder.build<PipelineBuildLessShutdownEvent> { buildLessListener.listenAgentShutdownEvent(it) }
 }

@@ -28,7 +28,6 @@
 package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.expression.ExpressionParseException
@@ -40,6 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_CONDITION_INVALID
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_UNEXECUTE_POSTACTION_TASK
@@ -484,13 +484,17 @@ class StartActionTaskContainerCmd(
     ): Boolean {
 
         if (this.taskId != VMUtils.genStartVMTaskId(this.containerId)) { // 非开机插件,检查条件
+
             return ControlUtils.checkTaskSkip(
+                projectId = projectId,
+                pipelineId = pipelineId,
                 buildId = buildId,
                 additionalOptions = additionalOptions,
                 containerFinalStatus = containerContext.buildStatus,
                 variables = contextMap,
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                message = message
+                message = message,
+                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
             )
         }
 
@@ -500,12 +504,15 @@ class StartActionTaskContainerCmd(
             val it = containerContext.containerTasks[idx]
             if (!VMUtils.isVMTask(it.taskId)) {
                 skip = ControlUtils.checkTaskSkip(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
                     buildId = buildId,
                     additionalOptions = it.additionalOptions,
                     containerFinalStatus = containerContext.buildStatus,
                     variables = contextMap,
                     hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                    message = message
+                    message = message,
+                    asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
                 )
                 if (LOG.isDebugEnabled) {
                     LOG.debug("ENGINE|$buildId|CHECK_QUICK_SKIP|$stageId|j($containerId)|${it.taskName}|$skip")

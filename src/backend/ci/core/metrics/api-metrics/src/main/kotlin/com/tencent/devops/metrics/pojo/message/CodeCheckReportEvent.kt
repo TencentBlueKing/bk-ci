@@ -27,9 +27,13 @@
 
 package com.tencent.devops.metrics.pojo.message
 
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "CodeCC上报消息")
+@Event(StreamBinding.METRICS_STATISTIC_CODE_CHECK_DAILY)
 data class CodeCheckReportEvent(
     @get:Schema(title = "统计日期")
     val statisticsTime: String,
@@ -39,4 +43,4 @@ data class CodeCheckReportEvent(
     val repoCodeccAvgScore: Double,
     @get:Schema(title = "已解决缺陷数量")
     val resolvedDefectNum: Int
-)
+) : IEvent()

@@ -42,6 +42,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
 import org.springframework.boot.test.context.SpringBootTest
 import java.time.LocalDateTime
 

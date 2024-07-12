@@ -79,7 +79,8 @@ class MutexControlTest {
         redisOperation = redisOperation,
         containerBuildRecordService = mockk(),
         pipelineUrlBean = mockk(),
-        pipelineContainerService = mockk()
+        pipelineContainerService = mockk(),
+        engineConfigService = mockk()
     )
 
     @Test

@@ -250,6 +250,8 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getUserDeptInfo(userId: String): Set<String> {
+        if (userId.endsWith("@tai"))
+            return emptySet()
         if (userDeptCache.getIfPresent(userId) != null) {
             return userDeptCache.getIfPresent(userId)!!
         }
