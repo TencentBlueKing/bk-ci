@@ -240,6 +240,8 @@
         },
         beforeDestroy () {
             this.setPipeline(null)
+            this.setPipelineEditing(false)
+            this.setAtomEditing(false)
             this.removeLeaveListenr()
             this.errors.clear()
         },
@@ -254,6 +256,7 @@
             ...mapActions('atom', [
                 'setPipeline',
                 'setPipelineEditing',
+                'setAtomEditing',
                 'requestTemplate',
                 'updateContainer'
             ]),
@@ -335,7 +338,7 @@
                             theme: 'error'
                         })
                     }
-                   
+
                     result = false
                 } finally {
                     this.isSaving = false

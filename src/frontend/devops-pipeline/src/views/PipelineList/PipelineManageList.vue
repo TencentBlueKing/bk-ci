@@ -323,7 +323,7 @@
                 this.filters = {}
             }
         },
-        
+
         created () {
             this.$updateTabTitle?.(this.$t('documentTitlePipeline'))
             this.goList()
