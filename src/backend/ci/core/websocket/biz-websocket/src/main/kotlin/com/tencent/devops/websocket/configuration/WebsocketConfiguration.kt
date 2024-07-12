@@ -34,13 +34,20 @@ import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.listener.CacheSessionListener
 import com.tencent.devops.websocket.listener.WebSocketListener
+import com.tencent.devops.websocket.servcie.ProjectProxyService
+import com.tencent.devops.websocket.servcie.ProjectProxyServiceImpl
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
 class WebsocketConfiguration {
+    @Bean
+    @ConditionalOnMissingBean(ProjectProxyService::class)
+    fun projectProxyService(): ProjectProxyService = ProjectProxyServiceImpl()
+
     @Bean
     fun websocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)
 

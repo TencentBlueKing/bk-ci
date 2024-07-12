@@ -33,20 +33,18 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class PipelineYamlMQConfig {
-
+class PipelineYamlMQConfig @Autowired constructor(
+    private val pipelineYamlTriggerListener: PipelineYamlTriggerListener
+) {
     @EventConsumer
     fun pipelineYamlEnableListener(
-        @Autowired pipelineYamlTriggerListener: PipelineYamlTriggerListener
     ) = ScsConsumerBuilder.build<PipelineYamlEnableEvent> { pipelineYamlTriggerListener.execute(it) }
 
     @EventConsumer
     fun pipelineYamlDisableListener(
-        @Autowired pipelineYamlTriggerListener: PipelineYamlTriggerListener
     ) = ScsConsumerBuilder.build<PipelineYamlDisableEvent> { pipelineYamlTriggerListener.execute(it) }
 
     @EventConsumer
     fun pipelineYamlTriggerListener(
-        @Autowired pipelineYamlTriggerListener: PipelineYamlTriggerListener
     ) = ScsConsumerBuilder.build<PipelineYamlTriggerEvent> { pipelineYamlTriggerListener.execute(it) }
 }
