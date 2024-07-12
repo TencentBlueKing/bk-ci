@@ -190,23 +190,14 @@ func DoUpgradeJdk() error {
 	logs.Info("agentUpgrade|jdk changed, replace jdk file")
 
 	workDir := systemutil.GetWorkDir()
-	// 复制出来jdk17.zip
-	_, err := fileutil.CopyFile(
-		systemutil.GetUpgradeDir()+"/"+config.Jdk17ClientFile,
-		workDir+"/"+config.Jdk17ClientFile,
-		true,
-	)
-	if err != nil {
-		return errors.Wrap(err, "upgrade jdk17 copy new jdk file error")
-	}
 
 	// 解压缩为一个新文件取代旧文件路径，优先使用标准路径
 	jdkTmpName := "jdk17"
-	_, err = os.Stat(workDir + "/" + jdkTmpName)
+	_, err := os.Stat(workDir + "/" + jdkTmpName)
 	if !(err != nil && errors.Is(err, os.ErrNotExist)) {
 		jdkTmpName = "jdk17-" + strconv.FormatInt(time.Now().Unix(), 10)
 	}
-	err = fileutil.Unzip(workDir+"/"+config.Jdk17ClientFile, workDir+"/"+jdkTmpName)
+	err = fileutil.Unzip(systemutil.GetUpgradeDir()+"/"+config.Jdk17ClientFile, workDir+"/"+jdkTmpName)
 	if err != nil {
 		return errors.Wrap(err, "upgrade jdk17 unzip error")
 	}
