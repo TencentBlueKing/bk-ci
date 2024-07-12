@@ -7,7 +7,7 @@
       :key="item.id"
       @click="handleClick(item)"
     >
-      <span v-if="item.type === 'DEPARTMENT'">
+      <span v-if="item.type === 'department'">
         <img :src="activeTab === item.id ? organizationActiveIcon : organizationIcon" class="group-icon">
       </span>
       <span v-else>
@@ -23,7 +23,7 @@
         <template #content>
           <div class="menu-content">
             <bk-button
-              v-if="item.type === 'DEPARTMENT'"
+              v-if="item.type === 'department'"
               class="btn"
               text
               @click="handleShowPerson(item)"

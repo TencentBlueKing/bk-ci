@@ -7,13 +7,13 @@
           <template #header>
             <p class="group-title">
               <i class="permission-icon permission-icon-down-shape"></i>
-              {{ projectTable.resourceTypeName }}
+              {{ projectTable.resourceTypeName }} ({{ projectTable.resourceType }})
               <span class="group-num">{{projectTable.count}}</span>
             </p>
           </template>
           <template #content>
             <TabTable
-              v-if="projectTable?.tableData.length"
+              v-if="projectTable.count && projectTable.tableData.length"
               :is-show-operation="isShowOperation"
               :data="projectTable.tableData"
               :resource-type="projectTable.resourceType"
@@ -24,6 +24,7 @@
               :selected-data="selectedData"
               :has-next="projectTable.hasNext"
               :remaining-count="projectTable.remainingCount"
+              :group-name="t('用户组')"
               @handle-renewal="handleRenewal"
               @handle-hand-over="handleHandOver"
               @handle-remove="handleRemove"
@@ -45,12 +46,13 @@
           <template #header>
             <p class="group-title">
               <i class="permission-icon permission-icon-down-shape"></i>
-              {{item.resourceTypeName}}
+              {{item.resourceTypeName}} ({{ item.resourceType }})
               <span class="group-num">{{item.count}}</span>
             </p>
           </template>
           <template #content>
             <TabTable
+              v-if="item.count"
               :is-show-operation="isShowOperation"
               :data="item.tableData"
               :resource-type="item.resourceType"
@@ -62,6 +64,7 @@
               :has-next="item.hasNext"
               :loading="item.tableLoading"
               :remaining-count="item.remainingCount"
+              :group-name="item.resourceTypeName"
               @handle-renewal="handleRenewal"
               @handle-hand-over="handleHandOver"
               @handle-remove="handleRemove"
@@ -172,7 +175,7 @@ function collapseClick(resourceType) {
     }
   
     ::v-deep .bk-collapse-content {
-      padding: 5px 0 !important;
+      padding: 0 !important;
     }
   
     .group-title {

@@ -1,14 +1,14 @@
 <template>
   <div class="bk-button-group">
     <bk-button
-      v-for="(item, key, index) in timeFilters"
+      v-for="(item, key, index) in TIME_FILTERS"
       :key="index"
       @click="handleChangeTime(key)"
       :class="{
         'is-selected': currentActive === Number(key),
         'deadline-btn': true
       }">
-      {{ item }}
+      {{ t(item) }}
     </bk-button>
     <bk-button
       class="deadline-btn"
@@ -40,18 +40,13 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
 import { ref, defineExpose, defineEmits, onMounted, nextTick } from 'vue';
+import { TIME_FILTERS } from "@/utils/constants";
 
 const { t } = useI18n();
 const emit = defineEmits(['changeTime']);
 
 const customTime = ref(1);
-const currentActive = ref(2592000);
-const timeFilters = ref({
-  2592000: t('1个月'),
-  7776000: t('3个月'),
-  15552000: t('6个月'),
-  31104000: t('12个月'),
-});
+const currentActive = ref(30);
 defineExpose({
   initTime,
 });
@@ -61,16 +56,16 @@ onMounted(()=>{
 })
 
 function initTime(){
-  currentActive.value = 2592000;
+  currentActive.value = 30;
 }
-/**
- * 传入的值与当前时间戳秒数相加
- * @param value 传入的值
- */
-function formatTimes(value) {
-  const nowSecond = Math.floor(Date.now() / 1000);
-  return Number(value) + nowSecond;
-}
+// /**
+//  * 传入的值与当前时间戳秒数相加
+//  * @param value 传入的值
+//  */
+// function formatTimes(value) {
+//   const nowSecond = Math.floor(Date.now() / 1000);
+//   return Number(value) + nowSecond;
+// }
 /**
  * 授权期限选择
  */
@@ -83,7 +78,7 @@ const handleChangeTime = (value) => {
  */
 const handleChangCustom = () => {
   currentActive.value = 'custom'
-  emit('changeTime', formatTimes(customTime.value))
+  emit('changeTime', customTime.value)
 };
 /**
  * 自定义期限输入事件
@@ -96,9 +91,8 @@ const handleChangeCustomTime = (value) => {
   } else if (value > 365) {
     newValue = 365;
   }
-  const timestamp = newValue * 24 * 3600;
   nextTick(() => {
-    emit('changeTime', formatTimes(timestamp));
+    emit('changeTime', newValue);
   });
 };
 </script>

@@ -220,5 +220,6 @@
     "移交并移出": "Transfer and Remove",
     "确认将组织移出本项目吗": "Confirm to remove the organization from this project?",
     "待移出组织": "Organizations to be removed",
-    "正在校验授权": "Validating authorization"
+    "正在校验授权": "Validating authorization",
+    "已过期": "expired"
 }

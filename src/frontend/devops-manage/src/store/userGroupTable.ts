@@ -147,11 +147,10 @@ export default defineStore('userGroupTable', () => {
       sourceList.value.forEach(item => {
         if(item.resourceType === "project") {
           item.tableData = projectResult.records;
-          
         }
         if(item.resourceType === "pipeline") {
           item.tableData = pipelineGroupResult.records;
-          item.activeFlag = true;
+          item.count && (item.activeFlag = true);
         }
       })
       isLoading.value = false;
@@ -196,7 +195,13 @@ export default defineStore('userGroupTable', () => {
     const activeTable = sourceList.value.find(group => group.resourceType === selectedTableGroupType.value);
     const activeTableRow = activeTable?.tableData.find(item => item.groupId === selectedRow.value?.groupId);
     if (activeTableRow) {
-      activeTableRow.expiredAtDisplay = expiredAt
+      const currentDisplay = activeTableRow.expiredAtDisplay;
+      if (currentDisplay !== t('已过期')) {
+        const days = Number(currentDisplay.split('天')[0]);
+        activeTableRow.expiredAtDisplay = `${days + expiredAt}天`;
+      } else {
+        activeTableRow.expiredAtDisplay = `${expiredAt}天`;
+      }
     }
   }
   /**
@@ -262,11 +267,11 @@ export default defineStore('userGroupTable', () => {
     pagination[0] = newOffset;
 
     let item = sourceList.value.find((item: SourceType) => item.resourceType == resourceType);
-    const res = await getGroupList(resourceType);
-
     if(item){
+      item.tableLoading = true;
+      const res = await getGroupList(resourceType);
+      item.tableLoading = false;
       item.tableData = [...item.tableData, ...res.records];
-
       if(pagination[2]){
         pagination.pop();
       }
@@ -297,16 +302,21 @@ export default defineStore('userGroupTable', () => {
    */
   async function collapseClick(resourceType: string) {
     let item = sourceList.value.find((item: SourceType) => item.resourceType == resourceType);
-    if (!item || item.tableData.length) return;
-    try {
-      item.tableLoading = true;
-      paginations.value[resourceType] = [1, 10]
-      const res = await getGroupList(resourceType);
-      item.tableLoading = false;
-      item.tableData = res.records;
-      item.activeFlag = true;
-    } catch (e) {
-      console.error(e)
+    if(item){
+      if (!item.count || item.tableData.length) {
+        return;
+      } else {
+        item.activeFlag = true;
+        try {
+          item.tableLoading = true;
+          paginations.value[resourceType] = [1, 10]
+          const res = await getGroupList(resourceType);
+          item.tableLoading = false;
+          item.tableData = res.records;
+        } catch (e) {
+          console.error(e)
+        }
+      }
     }
   }
   async function pageLimitChange(limit: number, resourceType: string) {

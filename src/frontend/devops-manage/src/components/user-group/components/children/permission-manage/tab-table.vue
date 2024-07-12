@@ -35,7 +35,7 @@
         </div>
       </template>
       <bk-table-column type="selection" :min-width="30" width="30" align="center" v-if="isShowOperation" />
-      <bk-table-column :label="t('用户组')" prop="groupName">
+      <bk-table-column :label="groupName" prop="groupName">
         <template #default="{row}">
           {{ row.groupName }}
           <div v-if="!isShowOperation && row.removeMemberButtonControl !== 'OTHER'"  class="overlay">{{t("唯一管理员无法移出")}}</div>
@@ -73,7 +73,7 @@
                   '唯一管理员，不可移出。请添加新的管理员后再移出。':
                   row.removeMemberButtonControl==='TEMPLATE'?
                   '通过用户组加入，不可直接移出。如需调整，请编辑用户组。':
-                  row.removeMemberButtonControl==='UNIQUE_MANAGER'?
+                  row.removeMemberButtonControl==='UNIQUE_OWNER'?
                   '唯一拥有者，不可移出。请添加新的拥有者后再移出。': ''
                   ,
                 disabled: row.removeMemberButtonControl === 'OTHER'
@@ -131,7 +131,8 @@ const props = defineProps({
   hasNext: {
     type: Boolean,
   },
-  loading: Boolean
+  loading: Boolean,
+  groupName: String,
 });
 const emit = defineEmits([
   'handleRenewal',

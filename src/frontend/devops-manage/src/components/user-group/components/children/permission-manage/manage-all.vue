@@ -27,7 +27,7 @@
       <div class="manage-content">
         <div class="manage-content-btn">
           <bk-button :disabled="!isPermission" @click="batchRenewal">{{t("批量续期")}}</bk-button>
-          <bk-button :disabled="!isPermission" @click="batchHandover" v-if="asideItem?.type==='USER'">{{t("批量移交")}}</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchHandover" v-if="asideItem?.type==='user'">{{t("批量移交")}}</bk-button>
           <bk-button :disabled="!isPermission" @click="batchRemove">{{t("批量移出")}}</bk-button>
         </div>
         <div v-if="isPermission" class="group-tab">
@@ -74,7 +74,15 @@
         <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
       </p>
       <p class="renewal-text">
-        <span>{{t("到期时间")}}：</span> 已过期 ——> {{ selectedRow?.expiredAt }}
+        <span>{{t("到期时间")}}：</span> 
+        <template v-if="selectedRow?.expiredAtDisplay === t('已过期')">
+          <span class="text-gray">{{t("已过期")}}</span>
+          <span class="text-blue"> &nbsp; -> &nbsp; {{ expiredAt }}天</span>
+        </template>
+        <template v-else>
+          <span class="text-gray">{{ selectedRow?.expiredAtDisplay }}</span class="text-blue">
+          <span> &nbsp; -> &nbsp; {{ Number(selectedRow?.expiredAtDisplay.split('天')[0]) + expiredAt }}天</span>
+        </template>
       </p>
     </template>
   </bk-dialog>
@@ -162,7 +170,6 @@
           </i18n-t>
         </p>
         <div>
-          <!-- 这个要有分页的点击事件 -->
           <GroupTab
             :source-list="selectSourceList"
             :is-show-operation="false"
@@ -217,9 +224,7 @@
           </div>
         </div>
         <div class="footer-btn">
-          <bk-button v-if="batchFlag === 'renewal'" theme="primary" @click="batchConfirm('renewal')">{{t("确定续期")}}</bk-button>
-          <bk-button v-if="batchFlag === 'handover'" theme="primary" @click="batchConfirm('handover')">{{t("确定移交")}}</bk-button>
-          <bk-button v-if="batchFlag === 'remove'" theme="danger" @click="batchConfirm('remove')">{{t("确定移出")}}</bk-button>
+          <bk-button :theme="batchFlag === 'remove' ? 'danger' : 'primary'" @click="batchConfirm(batchFlag)">{{t(btnTexts[batchFlag])}}</bk-button>
           <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
         </div>
       </div>
@@ -241,12 +246,17 @@ import userGroupTable from "@/store/userGroupTable";
 import useManageAside from "@/store/manageAside";
 import { storeToRefs } from 'pinia';
 
+const btnTexts = {
+  renewal: "确定续期",
+  handover: "确定移交",
+  remove: "确定移出"
+}
 const { t } = useI18n();
 const route = useRoute();
 const formRef = ref('');
 const renewalRef = ref(null);
 const projectId = computed(() => route.params?.projectCode);
-const expiredAt = ref();
+const expiredAt = ref(30);
 const isLoading = ref(false);
 const isShowSlider = ref(false);
 const sliderTitle = ref();
@@ -352,11 +362,10 @@ function asideClick(item){
  * 续期弹窗提交事件
  */
 function handleRenewalConfirm() {
-  console.log(expiredAt.value, '授权期限');
-  // expiredAt 需要处理下
   handleUpDateRow(expiredAt.value);
   renewalRef.value.initTime();
   isShowRenewal.value = false;
+  expiredAt.value = 30;
 };
 /**
  * 续期弹窗关闭
@@ -396,7 +405,7 @@ function handleRemoveConfirm() {
  * 授权期限选择
  */
 function handleChangeTime(value) {
-  expiredAt.value = value;
+  expiredAt.value = Number(value);
 };
 function handleSelectAll(resourceType, asideItem){
   handleSelectAllData(resourceType, asideItem)
@@ -603,8 +612,17 @@ function asideRemoveConfirm(value) {
 
     span {
       display: inline-block;
+      font-family: MicrosoftYaHei;
       text-align: right;
+      font-size: 12px;
       color: #63656E;
+    }
+
+    .text-gray{
+      color: #979BA5;
+    }
+    .text-blue{
+      color: #699DF4;
     }
   }
 }
