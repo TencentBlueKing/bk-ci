@@ -620,6 +620,22 @@ class WorkspaceCommon @Autowired constructor(
             sharedUsers = sharedUsers,
             assignType = assignType
         )
+        // 解绑后对原先的共享人推送websocket刷新客户端列表
+        sharedUsers.forEach { it ->
+            notifyControl.dispatchWebsocketPushEvent(
+                userId = it,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_ASSIGN,
+                status = true,
+                action = WorkspaceAction.ASSIGN,
+                systemType = null,
+                workspaceMountType = mountType,
+                ownerType = null,
+                projectId = ""
+            )
+        }
     }
 
     private fun checkUserNeedUnShare(ws: List<WorkspaceShared>, assignType: WorkspaceShared.AssignType): Boolean {
