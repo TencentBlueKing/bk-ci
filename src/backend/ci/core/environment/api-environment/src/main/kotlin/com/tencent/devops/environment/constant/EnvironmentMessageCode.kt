@@ -94,8 +94,6 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_NO_USE_PERMISSSION = "2105045" // 环境管理：节点[{0}]没有使用权限
     // "2105046" 环境管理: 不在CMDB中的IP [{0}]; 无权限的IP [{1}], 请确认当前用户[{2}]或节点导入人[{3}]是否为这些节点的主备负责人 - 脚本执行｜文件分发
     const val ERROR_NODE_IP_ILLEGAL = "2105046"
-    const val ERROR_CMDB_INTERFACE_TIME_OUT = "2105047" // 环境管理: CMDB接口请求超时，请重试
-    const val ERROR_CMDB_RESPONSE = "2105048" // 环境管理: CMDB接口请求异常，请重试
     const val ERROR_SCRIPT_EXECUTE_HOST_EMPTY = "2105049" // 环境管理: 脚本执行: 主机为空
     const val ERROR_DISTRIBUTE_FILE_EXECUTE_TARGET_HOST_EMPTY = "2105050" // 环境管理: 文件分发: 执行目标主机为空
     const val ERROR_DISTRIBUTE_FILE_FILE_SOURCE_HOST_EMPTY = "2105051" // 环境管理: 文件分发: 文件源主机为空
