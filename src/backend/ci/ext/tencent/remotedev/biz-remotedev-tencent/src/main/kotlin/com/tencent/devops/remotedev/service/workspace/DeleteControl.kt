@@ -669,9 +669,9 @@ class DeleteControl @Autowired constructor(
         // 删除cfs的权限组规则
         tCloudCfsService.addOrRemoveCfsPermissionRule(workspace.projectId, ip, true)
 
-        // 关联tgit相关
-        gitProxyTGitService.addOrRemoveAclIp(workspace.projectId, ip, true)
-    }
+            // 关联tgit相关
+            gitProxyTGitService.addOrRemoveAclIp(workspace.projectId, setOf(ip), true)
+        }
 
     private fun checkWorkspaceStatusForDelete(workspace: WorkspaceRecord, userId: String): Boolean {
 

@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.DesktopTokenSign
+import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
@@ -490,5 +491,12 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "镜像ID", required = true)
         @QueryParam("imageId")
         imageId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "增删cvm回调")
+    @POST
+    @Path("/op_cvm_callback")
+    fun opCvm(
+        data: OperateCvmData
     ): Result<Boolean>
 }
