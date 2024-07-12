@@ -71,6 +71,7 @@ class SubPipelineRefService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineRefService::class.java)
         private val pattern = Pattern.compile("(p-)?[a-f\\d]{32}")
+        private val SUB_PIPELINE_ATOM_CODES = listOf("SubPipelineExec", "subPipelineCall")
     }
 
     fun createAllSubPipelineRef(projectId: String?, userId: String) {
@@ -85,7 +86,7 @@ class SubPipelineRefService @Autowired constructor(
                         val records = modelTaskDao.batchGetPipelineIdByAtomCode(
                             dslContext = dslContext,
                             projectId = projectId,
-                            atomCodeList = listOf("SubPipelineExec"),
+                            atomCodeList = SUB_PIPELINE_ATOM_CODES,
                             limit = limit,
                             offset = offset
                         )
