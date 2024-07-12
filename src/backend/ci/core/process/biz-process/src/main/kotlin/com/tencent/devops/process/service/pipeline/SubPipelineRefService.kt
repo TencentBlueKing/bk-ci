@@ -177,9 +177,22 @@ class SubPipelineRefService @Autowired constructor(
                     )
                 }
             }
+
             dslContext.transaction { configuration ->
+                val transaction = DSL.using(configuration)
+                val existsRefs = subPipelineRefDao.list(
+                    dslContext = transaction,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )
+                val targetRefs = subPipelineRefList.associateBy { "${it.pipelineId}_${it.taskId}" }
+                val needDeleteIds = existsRefs.filter { !targetRefs.containsKey("${it.pipelineId}_${it.taskId}") }
+                    .map { it.id }
+                // 删除无效数据
+                subPipelineRefDao.batchDelete(dslContext = transaction,ids = needDeleteIds)
+                // 添加新数据
                 subPipelineRefDao.batchAdd(
-                    dslContext = DSL.using(configuration),
+                    dslContext = transaction,
                     subPipelineRefList = subPipelineRefList
                 )
             }
