@@ -39,7 +39,7 @@ import org.springframework.stereotype.Repository
 class SubPipelineRefDao {
     fun batchAdd(
         dslContext: DSLContext,
-        subPipelineRefList: List<SubPipelineRef>
+        subPipelineRefList: Collection<SubPipelineRef>
     ) {
         if (subPipelineRefList.isEmpty()) {
             return
