@@ -430,11 +430,6 @@ class PipelineBuildFacadeService(
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
-            if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-                )
-            }
             if (!readyToBuildPipelineInfo.canManualStartup && checkManualStartup == false) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
@@ -580,6 +575,7 @@ class PipelineBuildFacadeService(
                 yamlVersion = buildInfo.yamlVersion,
                 frequencyLimit = true,
                 handlePostFlag = false,
+                debug = buildInfo.debug,
                 webHookStartParam = webHookStartParam
             )
         }
