@@ -52,6 +52,8 @@ class ProjectBillsService constructor(
         private const val PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE = "PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE"
         private const val IS_DISABLE_FLAG = "is_disable_flag"
         private const val IEG_BG_ID = 956L
+        private const val BILL_DATA_SOURCE_NAME = "蓝盾服务货币化"
+        private const val BILL_DATA_SERVICE_TYPE = "流水线服务"
     }
 
     private val project2Status = Caffeine.newBuilder()
@@ -398,7 +400,7 @@ class ProjectBillsService constructor(
                                 costDate = yearAndMonthOfReportStr,
                                 projectId = it.englishName,
                                 projectName = it.projectName,
-                                serviceType = "流水线服务",
+                                serviceType = BILL_DATA_SERVICE_TYPE,
                                 kind = billKind.name,
                                 usage = usage,
                                 bgName = projectInfo.bgName ?: "",
@@ -414,7 +416,7 @@ class ProjectBillsService constructor(
                     count += 1
                 }
                 val dataSourceBillsDTO = BkDataSourceBillsDTO(
-                    dataSourceName = "蓝盾服务",
+                    dataSourceName = BILL_DATA_SOURCE_NAME,
                     bills = bills
                 )
                 val summaryBillDTO = BkSummaryBillDTO(
