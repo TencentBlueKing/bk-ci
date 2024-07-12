@@ -51,6 +51,7 @@ import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -175,10 +176,12 @@ class SubPipelineRefService @Autowired constructor(
                     )
                 }
             }
-            subPipelineRefDao.batchAdd(
-                dslContext = dslContext,
-                subPipelineRefList = subPipelineRefList
-            )
+            dslContext.transaction { configuration ->
+                subPipelineRefDao.batchAdd(
+                    dslContext = DSL.using(configuration),
+                    subPipelineRefList = subPipelineRefList
+                )
+            }
         } catch (e: Exception) {
             logger.warn("analysisSubPipelineRefAndSave failed", e)
         }

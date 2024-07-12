@@ -41,6 +41,10 @@ class SubPipelineRefDao {
         dslContext: DSLContext,
         subPipelineRefList: List<SubPipelineRef>
     ) {
+        if (subPipelineRefList.isEmpty()) {
+            return
+        }
+
         with(TSubPipelineRef.T_SUB_PIPELINE_REF) {
             dslContext.batch(
                 subPipelineRefList.map {
@@ -68,8 +72,8 @@ class SubPipelineRefDao {
                         it.subProjectId,
                         it.subPipelineId
                     ).onDuplicateKeyUpdate()
-                        .set(STAGE_NAME,it.stageName)
-                        .set(CONTAINER_NAME,it.containerName)
+                        .set(STAGE_NAME, it.stageName)
+                        .set(CONTAINER_NAME, it.containerName)
                         .set(TASK_NAME, it.taskName)
                         .set(PIPELINE_NAME, it.pipelineName)
                         .set(SUB_PROJECT_ID, it.subProjectId)
@@ -81,10 +85,10 @@ class SubPipelineRefDao {
 
     fun list(
         dslContext: DSLContext,
-        projectId:String,
-        pipelineId:String
-    ) :Result<TSubPipelineRefRecord>{
-        return with(TSubPipelineRef.T_SUB_PIPELINE_REF){
+        projectId: String,
+        pipelineId: String
+    ): Result<TSubPipelineRefRecord> {
+        return with(TSubPipelineRef.T_SUB_PIPELINE_REF) {
             dslContext.selectFrom(this).where(
                 PROJECT_ID.eq(projectId).and(
                     PIPELINE_ID.eq(pipelineId)
