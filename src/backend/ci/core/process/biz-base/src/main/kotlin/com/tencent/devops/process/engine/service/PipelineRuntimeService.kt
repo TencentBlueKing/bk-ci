@@ -886,7 +886,7 @@ class PipelineRuntimeService @Autowired constructor(
         }
 
         // #10082 使用互斥树节点重新回写Control和Container
-        agentReuseMutexTree.rewriteModel(buildContainersWithDetail, fullModel, buildTaskList)
+        agentReuseMutexTree.rewriteModel(context, buildContainersWithDetail, fullModel, buildTaskList)
 
         context.pipelineParamMap[PIPELINE_START_TASK_ID] =
             BuildParameters(PIPELINE_START_TASK_ID, context.firstTaskId, readOnly = true)
