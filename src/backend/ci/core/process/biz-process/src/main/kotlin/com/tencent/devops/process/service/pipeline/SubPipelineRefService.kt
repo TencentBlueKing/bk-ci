@@ -164,13 +164,12 @@ class SubPipelineRefService @Autowired constructor(
                 ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB)
             val contextMap = getContextMap(triggerStage)
             if (stageSize > 1) {
-                model.stages.subList(1, stageSize).forEach {
+                model.stages.subList(1, stageSize).forEach { stage ->
                     analysisSubPipelineRefAndSave(
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        pipelineName = pipelineId,
                         channel = channel,
-                        stage = it,
+                        stage = stage,
                         subPipelineRefList = subPipelineRefList,
                         contextMap = contextMap
                     )
@@ -188,7 +187,6 @@ class SubPipelineRefService @Autowired constructor(
     private fun analysisSubPipelineRefAndSave(
         projectId: String,
         pipelineId: String,
-        pipelineName: String,
         stage: Stage,
         channel: String,
         subPipelineRefList: MutableList<SubPipelineRef>,
@@ -211,7 +209,7 @@ class SubPipelineRefService @Autowired constructor(
                         SubPipelineRef(
                             pipelineId = pipelineId,
                             projectId = projectId,
-                            pipelineName = pipelineName,
+                            pipelineName = it.third,
                             taskId = element.id ?: "",
                             taskName = element.name,
                             stageName = stage.name ?: "",

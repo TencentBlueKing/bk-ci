@@ -68,9 +68,12 @@ class SubPipelineRefDao {
                         it.subProjectId,
                         it.subPipelineId
                     ).onDuplicateKeyUpdate()
+                        .set(STAGE_NAME,it.stageName)
+                        .set(CONTAINER_NAME,it.containerName)
                         .set(TASK_NAME, it.taskName)
                         .set(PIPELINE_NAME, it.pipelineName)
-                        .set(CHANNEL, it.channel)
+                        .set(SUB_PROJECT_ID, it.subProjectId)
+                        .set(SUB_PIPELINE_ID, it.subPipelineId)
                 }
             ).execute()
         }
