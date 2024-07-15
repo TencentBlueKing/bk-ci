@@ -1,57 +1,65 @@
 <template>
-  <bk-loading class="aside" :loading="manageAsideStore.isLoading" >
-    <div
-      :class="{'group-active': activeTab == item.id }"
-      class="group-item"
-      v-for="item in memberList"
-      :key="item.id"
-      @click="handleClick(item)"
-    >
-      <span v-if="item.type === 'department'">
-        <img :src="activeTab === item.id ? organizationActiveIcon : organizationIcon" class="group-icon">
+  <div>
+    <div class="group">
+      <span>组织/用户</span>
+      <span class="refresh" @click="refresh">
+        刷新
       </span>
-      <span v-else>
-        <img :src="activeTab === item.id ? userActiveIcon : userIcon" class="group-icon">
-      </span>
-      <p>{{ item.name }}</p>
-      <bk-popover
-        :arrow="false"
-        placement="bottom"
-        theme="light dot-menu"
-      >
-        <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
-        <template #content>
-          <div class="menu-content">
-            <bk-button
-              v-if="item.type === 'department'"
-              class="btn"
-              text
-              @click="handleShowPerson(item)"
-            >
-              {{t("人员列表")}}
-            </bk-button>
-            <bk-button
-              class="btn"
-              text
-              @click="handleRemoval(item)">
-              {{t("移出项目")}}
-            </bk-button>
-          </div>
-        </template>
-      </bk-popover>
     </div>
-
-    <bk-pagination
-      class="pagination"
-      v-model="current"
-      align="center"
-      :count="pageCount"
-      small
-      :show-limit="false"
-      :show-total-count="false"
-      @change="pageChange"
-    />
-  </bk-loading>
+    <bk-loading class="aside" :loading="manageAsideStore.isLoading" >
+      <div
+        :class="{'group-active': activeTab == item.id }"
+        class="group-item"
+        v-for="item in memberList"
+        :key="item.id"
+        @click="handleClick(item)"
+      >
+        <span v-if="item.type === 'department'">
+          <img :src="activeTab === item.id ? organizationActiveIcon : organizationIcon" class="group-icon">
+        </span>
+        <span v-else>
+          <img :src="activeTab === item.id ? userActiveIcon : userIcon" class="group-icon">
+        </span>
+        <p>{{ item.name }}</p>
+        <bk-popover
+          :arrow="false"
+          placement="bottom"
+          theme="light dot-menu"
+        >
+          <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
+          <template #content>
+            <div class="menu-content">
+              <bk-button
+                v-if="item.type === 'department'"
+                class="btn"
+                text
+                @click="handleShowPerson(item)"
+              >
+                {{t("人员列表")}}
+              </bk-button>
+              <bk-button
+                class="btn"
+                text
+                @click="handleRemoval(item)">
+                {{t("移出项目")}}
+              </bk-button>
+            </div>
+          </template>
+        </bk-popover>
+      </div>
+  
+      <bk-pagination
+        class="pagination"
+        v-model="current"
+        align="center"
+        :count="pageCount"
+        small
+        :show-limit="false"
+        :show-total-count="false"
+        @change="pageChange"
+      />
+    </bk-loading>
+  </div>
   <bk-dialog
     :is-show="isShowhandOverDialog"
     :width="640"
@@ -222,7 +230,7 @@ const props = defineProps({
     type: String,
   }
 });
-const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm']);
+const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm', 'refresh']);
 
 watch(() => props.memberList, (newData) => {
   activeTab.value = newData[0]?.id;
@@ -309,7 +317,13 @@ function handOverInputBlur(){
   },2000)
 }
 /**
- * 刷新
+ * 组织刷新
+ */
+function refresh(){
+  emit('refresh');
+}
+/**
+ * 移出刷新
  */
 function refreshHandOverfail() {
 
@@ -353,6 +367,29 @@ function handleRemoveConfirm() {
   &::-webkit-scrollbar {
     width: 4px !important;
     height: 4px !important;
+  }
+}
+.group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 18px;
+  height: 40px;
+  font-family: MicrosoftYaHei-Bold;
+  font-weight: 700;
+  font-size: 14px;
+  color: #63656E;
+  letter-spacing: 0;
+  line-height: 22px;
+
+  .refresh{
+    font-family: MicrosoftYaHei;
+    font-size: 12px;
+    color: #3A84FF;
+    letter-spacing: 0;
+    line-height: 20px;
+    cursor: pointer;
   }
 }
 .group-item {

@@ -23,7 +23,6 @@
               :current="projectTable.current"
               :selected-data="selectedData"
               :has-next="projectTable.hasNext"
-              :remaining-count="projectTable.remainingCount"
               :group-name="t('用户组')"
               @handle-renewal="handleRenewal"
               @handle-hand-over="handleHandOver"
@@ -63,7 +62,6 @@
               :selected-data="selectedData"
               :has-next="item.hasNext"
               :loading="item.tableLoading"
-              :remaining-count="item.remainingCount"
               :group-name="item.resourceTypeName"
               @handle-renewal="handleRenewal"
               @handle-hand-over="handleHandOver"
@@ -84,7 +82,7 @@
 
 <script setup name="GroupTab">
 import { useI18n } from 'vue-i18n';
-import { ref, defineProps, defineEmits, computed } from 'vue';
+import { ref, defineProps, defineEmits, computed, watch } from 'vue';
 import userGroupTable from "@/store/userGroupTable";
 import TabTable from './tab-table.vue';
 
@@ -183,7 +181,6 @@ function collapseClick(resourceType) {
       height: 26px;
       line-height: 26px;
       padding-left: 10px;
-      margin-bottom: 4px;
       background: #EAEBF0;
       border-radius: 2px;
       font-family: MicrosoftYaHei;

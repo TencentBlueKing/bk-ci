@@ -18,6 +18,7 @@
           :member-list="memberList"
           :person-list="personList"
           :over-table="overTable"
+          @refresh="refresh"
           @handle-click="asideClick"
           @page-change="handleAsidePageChange"
           @get-person-list="handleShowPerson"
@@ -26,9 +27,9 @@
       </div>
       <div class="manage-content">
         <div class="manage-content-btn">
-          <bk-button :disabled="!isPermission" @click="batchRenewal">{{t("批量续期")}}</bk-button>
-          <bk-button :disabled="!isPermission" @click="batchHandover" v-if="asideItem?.type==='user'">{{t("批量移交")}}</bk-button>
-          <bk-button :disabled="!isPermission" @click="batchRemove">{{t("批量移出")}}</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchOperator('renewal')">{{t("批量续期")}}</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchOperator('handover')" v-if="asideItem?.type==='user'">{{t("批量移交")}}</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchOperator('remove')">{{t("批量移出")}}</bk-button>
         </div>
         <div v-if="isPermission" class="group-tab">
           <GroupTab
@@ -43,7 +44,7 @@
             @get-select-list="getSelectList"
             @handle-select-all-data="handleSelectAll"
             @handle-load-more="handleLoadMore"
-            @handle-clear="handleClear"
+            @handle-cancleClear="handleClear"
           />
         </div>
         <div v-else class="no-permission">
@@ -224,7 +225,7 @@
           </div>
         </div>
         <div class="footer-btn">
-          <bk-button :theme="batchFlag === 'remove' ? 'danger' : 'primary'" @click="batchConfirm(batchFlag)">{{t(btnTexts[batchFlag])}}</bk-button>
+          <bk-button :theme="batchFlag === 'remove' ? 'danger' : 'primary'" @click="batchConfirm(batchFlag)" :loading="batchBtnLoading">{{t(btnTexts[batchFlag])}}</bk-button>
           <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
         </div>
       </div>
@@ -251,6 +252,17 @@ const btnTexts = {
   handover: "确定移交",
   remove: "确定移出"
 }
+const batchTitle = {
+  renewal: "批量续期",
+  handover: "批量移交",
+  remove: "批量移出"
+}
+const batchMassageText = {
+  renewal: '用户组权限已续期',
+  handover: '用户组权限已移交',
+  remove: '用户组已移出',
+}
+const batchBtnLoading = ref(false);
 const { t } = useI18n();
 const route = useRoute();
 const formRef = ref('');
@@ -312,6 +324,7 @@ const {
   selectedRow,
 } = storeToRefs(groupTableStore);
 const {
+  fetchUserGroupList,
   handleRenewal,
   handleHandOver,
   handleRemove,
@@ -358,48 +371,71 @@ watch(searchValue, (nv) => {
 function asideClick(item){
   handleAsideClick(item, projectId.value);
 }
+function refresh(){
+  isLoading.value = true;
+  setTimeout(()=>{
+    isLoading.value = false;
+  },1000)
+}
 /**
  * 续期弹窗提交事件
  */
-function handleRenewalConfirm() {
+async function handleRenewalConfirm() {
   handleUpDateRow(expiredAt.value);
-  renewalRef.value.initTime();
+  const param = formatSelectParams(selectedRow.value.groupId);
+  showMessage('success', t('用户组权限已续期。'));
+  cancleClear('renewal');
   isShowRenewal.value = false;
   expiredAt.value = 30;
+  try {
+    await http.batchRenewal(projectId.value, param);
+  } catch (error) {
+    console.log(error);
+  }
 };
 /**
  * 续期弹窗关闭
  */
 function handleRenewalClosed() {
-  renewalRef.value.initTime();
+  cancleClear('renewal');
   isShowRenewal.value = false;
 }
 /**
  * 移交弹窗提交事件
  */
 async function handleHandoverConfirm() {
-  console.log(handOverForm.value, '移交数据');
   const isValidate = await formRef.value.validate();
   if(!isValidate) return;
   handleRemoveRow();
-  handOverForm.value.name = '';
+  showMessage('success', t('用户组权限已移交给X。',[handOverForm.value.name]));
+  cancleClear('handover');
   isShowHandover.value = false;
+  try {
+    await http.batchHandover(projectId.value, param);
+  } catch (error) {
+    console.log(error);
+  }
 };
 /**
  * 移交弹窗关闭
  */
  function handleHandoverClosed() {
-   handOverForm.value.name = '';
-   formRef.value?.clearValidate();
-   isShowHandover.value = false;
+  cancleClear('handover');
+  formRef.value?.clearValidate();
+  isShowHandover.value = false;
 }
 /**
  * 移出弹窗提交事件
  */
-function handleRemoveConfirm() {
-  console.log(asideItem,'移出的数据');
+async function handleRemoveConfirm() {
+  showMessage('success', t('X 已移出X用户组。', [asideItem.value.name, selectedRow.value.groupName]));
   handleRemoveRow();
   isShowRemove.value = false;
+  try {
+    await http.batchRemove(projectId.value, param);
+  } catch (error) {
+    console.log(error);
+  }
 }
 /**
  * 授权期限选择
@@ -411,91 +447,103 @@ function handleSelectAll(resourceType, asideItem){
   handleSelectAllData(resourceType, asideItem)
 }
 /**
- * 批量续期
+ * 批量操作
+ * @param flag 按钮标识
  */
-function batchRenewal() {
+function batchOperator(flag){
   if (!selectedLength.value) {
     Message(t('请先选择用户组'));
     return;
   }
-  sliderTitle.value = t('批量续期');
-  batchFlag.value = 'renewal';
+  sliderTitle.value = t(batchTitle[flag]);
+  batchFlag.value = flag;
   isShowSlider.value = true;
   getSourceList();
 }
-/**
- * 批量移交
- */
-function batchHandover() {
-  if (!selectedLength.value) {
-    Message(t('请先选择用户组'));
-    return;
-  }
-  sliderTitle.value = t('批量移交');
-  batchFlag.value = 'handover';
-  isShowSlider.value = true;
-  getSourceList();
-}
-/**
- * 批量移出
- */
-function batchRemove() {
-  if (!selectedLength.value) {
-    Message(t('请先选择用户组'));
-    return;
-  }
-  sliderTitle.value = t('批量移出');
-  batchFlag.value = 'remove';
-  isShowSlider.value = true;
-  getSourceList();
-}
-/**
- * sideslider 关闭
- */
+
 function batchCancel() {
-  if(formRef.value){
-    handOverForm.value.name = '';
-    formRef.value.clearValidate();
-  }
-  isShowSlider.value = false;
+  cancleClear(batchFlag.value);
 }
 /**
- *  侧边栏确认事件
+ * 批量操作请求参数获取
+ * @param batchFlag 按钮标识
+ */
+function formatSelectParams(rowGroupId){
+  let groupIds = [];
+  let resourceTypes = [];
+  if(rowGroupId) {
+    groupIds.push(rowGroupId);
+  } else {
+    selectSourceList.value.forEach(item => {
+      if (item.isAll && !item.groupIds) {
+        resourceTypes.push(item.resourceType);
+      } else {
+        groupIds.push(...item.groupIds);
+      }
+    })
+  }
+  const params = {
+    groupIds: groupIds,
+    resourceTypes: resourceTypes || [],
+    allSelection: resourceTypes.length ? true : false,
+    excludedUniqueManagerGroup: true,
+    targetMember: asideItem.value,
+    ...(expiredAt.value && {renewalDuration: expiredAt.value}),
+    ...(handOverForm.value.id && {handoverTo: handOverForm.value}),
+  }
+  return params;
+}
+/**
+ * 批量操作clear事件
+ * @param batchFlag 按钮标识
+ */
+function cancleClear(batchFlag) {
+  isShowSlider.value = false;
+
+  if (batchFlag === 'handover') {
+    handOverForm.value.name = '';
+    formRef.value?.clearValidate()
+  } else if (batchFlag === 'renewal') {
+    renewalRef.value.initTime();
+  }
+}
+/**
+ * 侧边栏确认事件
+ * @param batchFlag 按钮标识
  */
 async function batchConfirm(batchFlag) {
-  if (batchFlag === 'renewal') {
-    const params = [{
-      member: asideItem.value.name,
-      groupId: asideItem.value.id,
-      expiredAt: expiredAt.value,
-    }];
-    console.log(params,'参数',asideItem.value);
-    const res = await http.batchRenewal(projectId.value, params);
-    renewalRef.value.initTime(); 
-  } else if (batchFlag === 'handover') {
-    const flag = await formRef.value.validate();
-    if (flag) {
-      const params = [{
-        groupId: asideItem.value.id,
-        handoverFrom: asideItem.value.name,
-        handoverTo: handOverForm.value.name,
-      }];
-      const res = await http.batchHandover(projectId.value, params);
+  batchBtnLoading.value = true;
+
+  let res = null;
+  const params = formatSelectParams();
+
+  try {
+    if (batchFlag === 'renewal') {
+      res = await http.batchRenewal(projectId.value, params);
+    } else if (batchFlag === 'handover') {
+      const flag = await formRef.value.validate();
+      if (!flag) return;
+      res = await http.batchHandover(projectId.value, params);
+    } else if (batchFlag === 'remove') {
+      res = await http.batchRemove(projectId.value, params);
     }
-    handOverForm.value.name = '';
-  } else if (batchFlag === 'remove') {
-    const params = [{
-      groupId: asideItem.value.id,
-      member: asideItem.value.name,
-    }];
-    const res = await http.batchRemove(projectId.value, params);
+
+    if (res) {
+      fetchUserGroupList(asideItem.value);
+      showMessage('success', t(batchMassageText[batchFlag]));
+      batchBtnLoading.value = false;
+      cancleClear(batchFlag);
+    }
+  } catch (error) {
+    batchBtnLoading.value = false;
   }
-
-  setTimeout(() => {
-    isShowSlider.value = false;
-  }, 1000);
 }
-
+function showMessage(theme, message) {
+  Message({
+    theme: theme,
+    message: message,
+  });
+}
 function asideRemoveConfirm(value) {
   handleAsideRemoveConfirm(value, manageAsideRef.value);
 }

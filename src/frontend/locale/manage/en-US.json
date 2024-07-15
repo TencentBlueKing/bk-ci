@@ -221,5 +221,11 @@
     "确认将组织移出本项目吗": "Confirm to remove the organization from this project?",
     "待移出组织": "Organizations to be removed",
     "正在校验授权": "Validating authorization",
-    "已过期": "expired"
+    "已过期": "expired",
+    "用户组权限已续期。": "User group permissions have been renewed.",
+    "用户组权限已移交给X。": "User group permissions have been transferred to {0}.",
+    "X 已移出X用户组。": "{0} has been removed from the {1} user group.",
+    "用户组权限已续期": "User group permissions have been renewed",
+    "用户组权限已移交": "User group permissions have been transferred",
+    "用户组已移出": "User group has been removed"
 }

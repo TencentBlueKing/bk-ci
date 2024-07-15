@@ -1,6 +1,7 @@
 <template>
   <bk-loading :loading="loading">
     <bk-table
+      class="table"
       ref="refTable"
       max-height="464"
       min-height="84"
@@ -28,7 +29,7 @@
           <span @click="handleClear">{{t("清除选择")}}</span>
         </div>
       </template>
-      <template #fixedBottom v-if="hasNext && !pagination">
+      <template #fixedBottom v-if="remainingCount && !pagination">
         <div class="prepend">
           {{ t("剩余X条数据",[remainingCount]) }}
           <span @click="handleLoadMore"> {{t("加载更多")}} </span>
@@ -38,7 +39,7 @@
       <bk-table-column :label="groupName" prop="groupName">
         <template #default="{row}">
           {{ row.groupName }}
-          <div v-if="!isShowOperation && row.removeMemberButtonControl !== 'OTHER'"  class="overlay">{{t("唯一管理员无法移出")}}</div>
+          <div v-if="!isShowOperation && row.removeMemberButtonControl === 'UNIQUE_MANAGER'"  class="overlay">{{t("唯一管理员无法移出")}}</div>
         </template>
       </bk-table-column>
       <bk-table-column :label="t('用户描述')" prop="groupDesc" />
@@ -50,7 +51,7 @@
       </bk-table-column>
       <bk-table-column :label="t('加入方式/操作人')" prop="operateSource">
         <template #default="{row}">
-          {{ row.operateSource === "DIRECT" ? "直接加入" : "API加入" }}/{{ row.operator }}
+          {{ row.operateSource === "DIRECT" ? "直接加入" : "API加入" }}{{ row.operator ? '/' + row.operator : '' }}
         </template>
       </bk-table-column>
       <bk-table-column :label="t('操作')" v-if="isShowOperation">
@@ -60,6 +61,7 @@
               text
               theme="primary"
               @click="handleRenewal(row)"
+              :disabled="row.expiredAtDisplay == t('永久')"
             >{{t("续期")}}</bk-button>
             <bk-button
               text
@@ -107,6 +109,7 @@ const refTable = ref(null);
 const isCurrentAll = ref(false);
 const resourceType = computed(() => props.resourceType);
 const groupTotal = computed(() => props.groupTotal);
+const remainingCount = computed(()=> props.groupTotal - props.data.length)
 
 const props = defineProps({
   isShowOperation: {
@@ -115,7 +118,7 @@ const props = defineProps({
     required: true,
   },
   pagination: Object,
-  remainingCount: Number,
+  // remainingCount: Number,
   data: {
     type: Array,
   },
@@ -216,6 +219,10 @@ function pageValueChange(value) {
 </script>
 
 <style lang="less" scoped>
+.table{
+  margin-top: 4px;
+  border: 1px solid #DCDEE5;
+}
 .prepend {
   width: 100%;
   height: 32px;

@@ -258,7 +258,7 @@ export default {
    * 批量交接用户组成员
    */
   async batchHandover(projectId: string, params?: any) {
-    return http.DELETE(`${IAM_PERFIX}/member/${projectId}/batch/handover`, params);
+    return http.put(`${IAM_PERFIX}/member/${projectId}/batch/handover`, params);
   },
   /**
    * 根据组织ID获取成员

@@ -5,18 +5,22 @@ import { ref, reactive, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 export interface GroupTableType {
-  groupId: string | number;
+  resourceCode: string,
+  resourceName: string,
+  resourceType: string,
+  groupId: number;
   groupName: string;
   groupDesc: string;
   expiredAtDisplay: string;
-  joinedTime: string;
+  joinedTime: number;
+  expiredAt: number,
   operateSource: string;
   operator: string;
-  removeMemberButtonControl: 'OTHER' | 'TEMPLATE' | 'UNIQUE_MANAGER';
+  removeMemberButtonControl: 'OTHER' | 'TEMPLATE' | 'UNIQUE_MANAGER' | 'UNIQUE_OWNER';
 };
 interface Pagination {
-  limit: string | number;
-  current: string | number;
+  limit: number;
+  current: number;
   count: number;
 }
 interface SourceType {
@@ -52,8 +56,8 @@ export default defineStore('userGroupTable', () => {
 
   const projectId = computed(() => route.params?.projectCode as string);
   const paginations = ref({
-    'project': [1, 10],
-    'pipeline': [1, 10]
+    'project': [0, 10],
+    'pipeline': [0, 10]
   })
 
   const sourceList = ref<SourceType[]>([]);
@@ -74,9 +78,9 @@ export default defineStore('userGroupTable', () => {
 
   watch(sourceList, () => {
     sourceList.value.forEach(item => {
-      if((item.count! > item.tableData.length)) {
+      if(item.count && (item.count > item.tableData.length)) {
         item.hasNext = true;
-        item.remainingCount = item.count! - item.tableData.length
+        item.remainingCount = item.count - item.tableData.length
       } else {
         item.hasNext = false;
       }
@@ -105,6 +109,7 @@ export default defineStore('userGroupTable', () => {
       sourceList.value = collapseList.value.map((item) => ({
         ...item,
         tableLoading: false,
+        scrollLoading: false,
         tableData: [],
       }))
     } catch (error) {
@@ -191,7 +196,7 @@ export default defineStore('userGroupTable', () => {
    * 更新表格行数据
    * @param expiredAt 续期时间
    */
-  function handleUpDateRow(expiredAt) {
+  function handleUpDateRow(expiredAt: number) {
     const activeTable = sourceList.value.find(group => group.resourceType === selectedTableGroupType.value);
     const activeTableRow = activeTable?.tableData.find(item => item.groupId === selectedRow.value?.groupId);
     if (activeTableRow) {
@@ -215,17 +220,17 @@ export default defineStore('userGroupTable', () => {
     if (activeTableData) {
       activeTableData.tableData?.splice(rowIndex.value as number, 1);
       activeTableData.tableData = [...activeTableData.tableData];
+      activeTableData.count = activeTableData.count! - 1;
     }
   }
   /**
    * 获取表格选择的数据
    */
-  function getSelectList(selections, resourceType: string) {
+  function getSelectList(selections: GroupTableType[], resourceType: string) {
     selectedData[resourceType] = selections
     if (!selectedData[resourceType].length) {
       delete selectedData[resourceType]
     }
-    console.log('表格选择的数据', selectedData);
     unableMoveLength.value = countNonOtherObjects(selectedData);
   }
   /**
@@ -252,6 +257,7 @@ export default defineStore('userGroupTable', () => {
           },
           ...sourceItem,
           tableData,
+          ...(!sourceItem.isAll && { groupIds: tableData.map(item => item.groupId) })
         };
       });
   }
@@ -309,7 +315,7 @@ export default defineStore('userGroupTable', () => {
         item.activeFlag = true;
         try {
           item.tableLoading = true;
-          paginations.value[resourceType] = [1, 10]
+          paginations.value[resourceType] = [0, 10]
           const res = await getGroupList(resourceType);
           item.tableLoading = false;
           item.tableData = res.records;
