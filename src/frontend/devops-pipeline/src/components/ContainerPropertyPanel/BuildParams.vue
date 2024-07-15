@@ -89,23 +89,25 @@
                                         </bk-form-item>
                                     </div>
 
-                                    <bk-form-item label-width="auto" v-if="isFileParam(param.type)" :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)">
-                                        <file-param-input
-                                            v-if="isFileParam(param.type)"
-                                            name="defaultValue"
-                                            :required="valueRequired"
-                                            :disabled="disabled"
-                                            :value="param.defaultValue"
-                                            :upload-file-name="uploadFileName"
-                                            :handle-change="(name, value) => handleUpdateParam(name, value, index)"
-                                        />
-                                        <file-upload
-                                            class="file-upload"
-                                            name="fileName"
-                                            :file-path="param.defaultValue"
-                                            @handle-change="(value) => uploadPathFromFileName(value)"
-                                        ></file-upload>
-                                    </bk-form-item>
+                                    <div class="params-flex-col pt10">
+                                        <bk-form-item label-width="auto" v-if="isFileParam(param.type)" :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)">
+                                            <file-param-input
+                                                v-if="isFileParam(param.type)"
+                                                name="defaultValue"
+                                                :required="valueRequired"
+                                                :disabled="disabled"
+                                                :value="param.defaultValue"
+                                                :upload-file-name="uploadFileName"
+                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                            />
+                                            <file-upload
+                                                class="file-upload"
+                                                name="fileName"
+                                                :file-path="param.defaultValue"
+                                                @handle-change="(value) => uploadPathFromFileName(value)"
+                                            ></file-upload>
+                                        </bk-form-item>
+                                    </div>
 
                                     <bk-form-item label-width="auto" v-if="isSelectorParam(param.type)" :label="$t('editPage.selectOptions')" :desc="$t('editPage.optionsDesc')" :is-error="errors.has(`param-${param.id}.options`)" :error-msg="errors.first(`param-${param.id}.options`)">
                                         <vuex-textarea v-validate.initial="'excludeComma'" :disabled="disabled" :handle-change="(name, value) => editOption(name, value, index)" name="options" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.optionTips')" :value="getOptions(param)"></vuex-textarea>
