@@ -30,12 +30,9 @@ jobs:
         with:
           node-version: 18
           cache: "pnpm"
-      - name: prefer offline
-        if: steps.pnpm-cache.outputs.cache-hit != 'true'
-        run: pnpm --prefer-offline && pnpm install
-        working-directory: src/frontend
       - run: |
           pnpm -v
+          pnpm install
           export NODE_OPTIONS=--openssl-legacy-provider
           pnpm public
         working-directory: src/frontend
