@@ -514,7 +514,6 @@ class CreateControl @Autowired constructor(
                     status = ws.workspaceSystemType.afterCreateStatus(ws.ownerType),
                     hostName = event.environmentHost
                 )
-                remoteDevBillingDao.newBilling(transactionContext, event.workspaceName, event.userId)
                 workspaceHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
                     workspaceName = event.workspaceName,

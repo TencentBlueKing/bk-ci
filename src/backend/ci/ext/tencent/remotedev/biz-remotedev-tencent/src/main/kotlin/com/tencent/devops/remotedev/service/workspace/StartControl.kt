@@ -284,8 +284,6 @@ class StartControl @Autowired constructor(
                     dslContext = transactionContext
                 )
 
-                remoteDevBillingDao.newBilling(transactionContext, workspaceName, operator)
-
                 val lastHistory = workspaceHistoryDao.fetchAnyHistory(
                     dslContext = transactionContext,
                     workspaceName = workspaceName
