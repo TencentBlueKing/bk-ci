@@ -55,7 +55,7 @@
                                         <bk-form-item label-width="auto" class="flex-col-span-1" :label="$t('name')" :is-error="errors.has(`param-${param.id}.id`)" :error-msg="errors.first(`param-${param.id}.id`)">
                                             <vuex-input :ref="`paramId${index}Input`" :data-vv-scope="`param-${param.id}`" :disabled="disabled" :handle-change="(name, value) => handleUpdateParamId(name, value, index)" v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(',')}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
                                         </bk-form-item>
-                                        <bk-form-item label-width="auto" class="flex-col-span-1" :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)">
+                                        <bk-form-item v-if="!isFileParam(param.type)" label-width="auto" class="flex-col-span-1" :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)">
                                             <selector
                                                 style="max-width: 250px"
                                                 :popover-min-width="250"
@@ -81,13 +81,31 @@
                                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 :value="param.defaultValue">
                                             </enum-input>
-                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isFileParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :click-unfold="true" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
+                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :click-unfold="true" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
                                             <vuex-textarea v-if="isTextareaParam(param.type)" :click-unfold="true" :hover-unfold="true" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
                                             <request-selector v-if="isCodelibParam(param.type)" style="max-width: 250px" :popover-min-width="250" :url="getCodeUrl(param.scmType)" v-bind="codelibOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
                                             <request-selector v-if="isBuildResourceParam(param.type)" style="max-width: 250px" :popover-min-width="250" :url="getBuildResourceUrl(param.containerType)" param-id="name" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" :replace-key="param.replaceKey" :search-url="param.searchUrl"></request-selector>
                                             <request-selector v-if="isSubPipelineParam(param.type)" style="max-width: 250px" :popover-min-width="250" v-bind="subPipelineOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" :replace-key="param.replaceKey" :search-url="param.searchUrl"></request-selector>
                                         </bk-form-item>
                                     </div>
+
+                                    <bk-form-item label-width="auto" v-if="isFileParam(param.type)" :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)">
+                                        <file-param-input
+                                            v-if="isFileParam(param.type)"
+                                            name="defaultValue"
+                                            :required="valueRequired"
+                                            :disabled="disabled"
+                                            :value="param.defaultValue"
+                                            :upload-file-name="uploadFileName"
+                                            :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                        />
+                                        <file-upload
+                                            class="file-upload"
+                                            name="fileName"
+                                            :file-path="param.defaultValue"
+                                            @handle-change="(value) => uploadPathFromFileName(value)"
+                                        ></file-upload>
+                                    </bk-form-item>
 
                                     <bk-form-item label-width="auto" v-if="isSelectorParam(param.type)" :label="$t('editPage.selectOptions')" :desc="$t('editPage.optionsDesc')" :is-error="errors.has(`param-${param.id}.options`)" :error-msg="errors.first(`param-${param.id}.options`)">
                                         <vuex-textarea v-validate.initial="'excludeComma'" :disabled="disabled" :handle-change="(name, value) => editOption(name, value, index)" name="options" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.optionTips')" :value="getOptions(param)"></vuex-textarea>
@@ -119,12 +137,6 @@
                                         </bk-form-item>
                                     </template>
 
-                                    <bk-form-item label-width="auto" v-if="isFileParam(param.type)">
-                                        <file-param-input
-                                            :file-path="param.defaultValue"
-                                        ></file-param-input>
-                                    </bk-form-item>
-
                                     <bk-form-item label-width="auto" :label="$t('desc')">
                                         <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="desc" :placeholder="$t('editPage.descTips')" :value="param.desc" />
                                     </bk-form-item>
@@ -143,6 +155,7 @@
 </template>
 
 <script>
+    import FileUpload from '@/components/FileUpload'
     import FileParamInput from '@/components/FileParamInput'
     import Accordion from '@/components/atomFormField/Accordion'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
@@ -202,6 +215,7 @@
             draggable,
             VuexTextarea,
             RequestSelector,
+            FileUpload,
             FileParamInput
         },
         mixins: [validMixins],
@@ -235,7 +249,8 @@
         data () {
             return {
                 paramIdCount: 0,
-                renderParams: []
+                renderParams: [],
+                uploadFileName: ''
             }
         },
 
@@ -552,6 +567,10 @@
                         return false
                     }).map(opt => ({ id: opt.key, name: opt.value }))
                     : []
+            },
+
+            uploadPathFromFileName (value) {
+                this.uploadFileName = value
             }
         }
     }
@@ -585,6 +604,9 @@
         .content .text-link {
             font-size: 14px;
             cursor: pointer;
+        }
+        .file-upload {
+            margin-top: 10px;
         }
     }
     .no-prop {

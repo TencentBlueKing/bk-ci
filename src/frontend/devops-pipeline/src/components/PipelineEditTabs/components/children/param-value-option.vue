@@ -66,30 +66,15 @@
                 :placeholder="$t('editPage.defaultValueTips')"
                 :value="param.defaultValue"
             />
-            <div class="file-param" v-if="isFileParam(param.type)">
-                <vuex-input
-                    class="path-input"
-                    :disabled="disabled"
-                    :handle-change="(name, value) => handleUpdateParam(name, value)"
-                    name="defaultValue"
-                    v-validate="{ required: valueRequired }"
-                    :data-vv-scope="'pipelineParam'"
-                    :click-unfold="true"
-                    :placeholder="$t(`fef.${param.filePathTips}`)"
-                    :value="param.defaultValue"
-                />
-                <vuex-input
-                    class="file-name"
-                    disabled
-                    :handle-change="(name, value) => handleUpdateParam(name, value)"
-                    name="defaultValue"
-                    v-validate="{ required: valueRequired }"
-                    :data-vv-scope="'pipelineParam'"
-                    :click-unfold="true"
-                    :placeholder="$t(`editPage.${param.fileNameTips}`)"
-                    :value="param.defaultValue"
-                />
-            </div>
+            <file-param-input
+                v-if="isFileParam(param.type)"
+                name="defaultValue"
+                :required="valueRequired"
+                :disabled="disabled"
+                :value="param.defaultValue"
+                :upload-file-name="uploadFileName"
+                :handle-change="(name, value) => handleChange(name, value)"
+            />
             <vuex-textarea
                 v-if="isTextareaParam(param.type)"
                 :disabled="disabled"
@@ -188,9 +173,11 @@
         </template>
 
         <form-field :hide-colon="true" v-if="isFileParam(param.type)">
-            <file-param-input
+            <file-upload
+                name="fileName"
                 :file-path="param.defaultValue"
-            ></file-param-input>
+                @handle-change="(value) => uploadPathFromFileName(value)"
+            ></file-upload>
         </form-field>
     </section>
 </template>
@@ -204,6 +191,7 @@
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
+    import FileUpload from '@/components/FileUpload'
     import FileParamInput from '@/components/FileParamInput'
     import validMixins from '@/components/validMixins'
     import {
@@ -248,6 +236,7 @@
             Selector,
             VuexTextarea,
             RequestSelector,
+            FileUpload,
             FileParamInput
         },
         mixins: [validMixins],
@@ -274,7 +263,8 @@
             return {
                 optionList: [],
                 selectDefautVal: '',
-                remoteParamOption: {}
+                remoteParamOption: {},
+                uploadFileName: ''
             }
         },
         computed: {
@@ -433,22 +423,10 @@
                 }
                 this.handleUpdateParam(key, value)
             },
-            handleUpdateParam (key, value) {
-                this.handleChange(key, value)
+
+            uploadPathFromFileName (value) {
+                this.uploadFileName = value
             }
         }
     }
 </script>
-
-<style lang="scss" scoped>
-    .file-param {
-        display: flex;
-        .path-input {
-            border-radius: 2px 0 0 2px;
-        }
-        .file-name {
-            border-radius: 0 2px 2px 0;
-            border-left: 0;
-        }
-    }
-</style>

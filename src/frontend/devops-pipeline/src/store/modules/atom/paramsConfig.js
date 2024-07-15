@@ -174,8 +174,6 @@ export const DEFAULT_PARAM = {
         defaultValue: '',
         defalutValueLabel: 'fileDefaultValueLabel',
         defaultValueLabelTips: 'customFileLabelTips',
-        filePathTips: 'filePathTips',
-        fileNameTips: 'fileNameTips',
         desc: '',
         type: CUSTOM_FILE,
         typeDesc: 'custom_file',
@@ -256,7 +254,7 @@ export const ParamComponentMap = {
     [CONTAINER_TYPE]: 'Selector',
     [ARTIFACTORY]: 'Selector',
     [SUB_PIPELINE]: 'Selector',
-    [CUSTOM_FILE]: 'VuexInput'
+    [CUSTOM_FILE]: 'FileParamInput'
 }
 
 export const BOOLEAN_LIST = [
