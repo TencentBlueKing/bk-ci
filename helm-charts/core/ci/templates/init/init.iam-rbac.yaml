@@ -21,13 +21,13 @@ spec:
         - name: init-iam
           image: {{ include "bkci-backend.image" . }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
-          workingDir: /data/workspace/support-files/
+          workingDir: /data/workspace/support-files/bkiam-rbac
           command:
             - "/bin/bash"
             - "-c"
             - |
               # 修改auth链接
-              sed -i 's/ci-auth.service.consul:21936/{{- .Values.config.bkCiHost -}}\/auth/g' bkiam-rbac/*.json
+              sed -i 's/ci-auth.service.consul:21936/{{- .Values.config.bkCiHost -}}\/auth/g' *.json
               # 导入模型
               for i in $(find . -name '*.json'|sort)
               do
@@ -47,8 +47,8 @@ spec:
               
               # 注册auth回调
               echo "{{ include "bkci.names.fullname" . }}-auth is available";
-              sed -i 's/bk-ci.service.consul/{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}/g' ms-init/auth/iam-callback-resource-registere.conf
-              iam_json_file="ms-init/auth/iam-callback-resource-registere.conf"
+              sed -i 's/bk-ci.service.consul/{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}/g' ../ms-init/auth/iam-callback-resource-registere.conf
+              iam_json_file="../ms-init/auth/iam-callback-resource-registere.conf"
               curl -X POST -H "Content-Type:application/json" -d "@$iam_json_file" "http://{{ include "bkci.names.fullname" . }}-auth.{{ .Release.Namespace }}.svc.cluster.local/api/op/auth/iam/callback/" 
       restartPolicy: OnFailure
 {{- end -}}
