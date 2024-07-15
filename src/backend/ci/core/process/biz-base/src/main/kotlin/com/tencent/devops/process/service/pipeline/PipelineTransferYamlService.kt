@@ -141,7 +141,6 @@ class PipelineTransferYamlService @Autowired constructor(
                             aspectWrapper = PipelineTransferAspectWrapper(aspects)
                         )
                     )
-                    val newYaml = TransferMapper.mergeYaml(data.oldYaml, TransferMapper.toYaml(response))
                     if (invalidElement.isNotEmpty()) {
                         throw PipelineTransferException(
                             ELEMENT_NOT_SUPPORT_TRANSFER,
@@ -149,6 +148,7 @@ class PipelineTransferYamlService @Autowired constructor(
                         )
                     }
                     watcher.start("step_2|mergeYaml")
+                    val newYaml = TransferMapper.mergeYaml(data.oldYaml, TransferMapper.toYaml(response))
                     watcher.stop()
                     logger.info(watcher.toString())
                     return TransferResponse(
