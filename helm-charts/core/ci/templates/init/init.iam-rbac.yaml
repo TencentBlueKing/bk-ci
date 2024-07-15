@@ -26,7 +26,6 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
-              cd bkiam-rbac
               # 修改auth链接
               sed -i 's/ci-auth.service.consul:21936/{{- .Values.config.bkCiHost -}}\/auth/g' *.json
               # 导入模型
