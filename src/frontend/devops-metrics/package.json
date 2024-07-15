@@ -25,8 +25,8 @@
     "bkui-vue": "0.0.1-beta.416",
     "dayjs": "^1.11.2",
     "pinia": "^2.0.13",
-    "vue": "^3.2.33",
-    "vue-i18n": "^9.1.10",
+    "vue": "catalog:vue3",
+    "vue-i18n": "catalog:vue3",
     "vue-router": "^4.0.14"
   },
   "devDependencies": {

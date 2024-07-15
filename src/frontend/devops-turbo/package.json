@@ -41,8 +41,8 @@
     "sass-loader": "^12.1.0",
     "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.3.6",
-    "vue-loader": "^15.10.0",
-    "webpack": "^5.76.1"
+    "vue-loader": "catalog:vue2",
+    "webpack": "catalog:webpack5"
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
@@ -53,6 +53,6 @@
   },
   "dependencies": {
     "@blueking/bkcharts": "^2.0.10",
-    "vue": "~2.7.16"
+    "vue": "catalog:vue2"
   }
 }
