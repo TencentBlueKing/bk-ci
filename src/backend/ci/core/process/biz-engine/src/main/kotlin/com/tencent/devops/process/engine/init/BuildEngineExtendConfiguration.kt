@@ -35,6 +35,7 @@ import com.tencent.devops.process.engine.listener.run.finish.SubPipelineBuildFin
 import com.tencent.devops.process.engine.listener.run.start.SubPipelineBuildQueueListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Lazy
 
 /**
  * 流水线构建扩展配置
@@ -43,11 +44,11 @@ import org.springframework.context.annotation.Configuration
 class BuildEngineExtendConfiguration {
     @EventConsumer
     fun subPipelineBuildFinishListener(
-        @Autowired buildListener: SubPipelineBuildFinishListener
+        @Lazy @Autowired buildListener: SubPipelineBuildFinishListener
     ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> { buildListener.run(it) }
 
     @EventConsumer
     fun subPipelineQueueFinishListener(
-        @Autowired buildListener: SubPipelineBuildQueueListener
+        @Lazy @Autowired buildListener: SubPipelineBuildQueueListener
     ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { buildListener.run(it) }
 }

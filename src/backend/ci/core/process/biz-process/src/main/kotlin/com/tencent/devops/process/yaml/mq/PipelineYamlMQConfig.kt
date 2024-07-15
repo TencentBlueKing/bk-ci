@@ -31,10 +31,11 @@ import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Lazy
 
 @Configuration
 class PipelineYamlMQConfig @Autowired constructor(
-    private val pipelineYamlTriggerListener: PipelineYamlTriggerListener
+    @Lazy private val pipelineYamlTriggerListener: PipelineYamlTriggerListener
 ) {
     @EventConsumer
     fun pipelineYamlEnableListener(
