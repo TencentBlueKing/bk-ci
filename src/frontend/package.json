@@ -29,7 +29,7 @@
     "svg-sprite-loader": "^6.0.9",
     "typescript": "3.4.5",
     "vue-eslint-parser": "^9.0.2",
-    "webpack": "^5.76.1",
+    "webpack": "catalog:webpack5",
     "webpack-bundle-analyzer": "^4.4.2",
     "webpack-cli": "^4.10.0",
     "webpack-dev-server": "^4.3.1"
@@ -38,6 +38,7 @@
     "glob-parent": "5.1.2"
   },
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "build:dev": "pnpm -r run public:dev",
     "build:test": "pnpm -r run public:test",
     "build:master": "pnpm -r run public:master",
@@ -52,9 +53,8 @@
   },
   "dependencies": {
     "axios": "0.28.0",
-    "bk-magic-vue": "2.5.9-beta.9",
+    "bk-magic-vue": "catalog:bkMagicVue",
     "js-cookie": "^3.0.1",
-    "uuid": "^8.3.2",
-    "vue-i18n": "^8.18.1"
+    "vue-i18n": "catalog:vue2"
   }
 }

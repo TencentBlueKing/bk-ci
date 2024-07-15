@@ -42,12 +42,11 @@
     "sass-loader": "^12.1.0",
     "style-loader": "^4.0.0",
     "svg-inline-loader": "^0.8.2",
-    "vue-loader": "15.10.1"
-  },
-  "dependencies": {
-    "vue-demi": "^0.14.8"
+    "vue-loader": "catalog:vue2",
+    "webpack": "catalog:webpack5"
   },
   "peerDependencies": {
-    "vue": "~2.7.16"
+    "vue": "catalog:vue2",
+    "axios": "0.28.0"
   }
 }
