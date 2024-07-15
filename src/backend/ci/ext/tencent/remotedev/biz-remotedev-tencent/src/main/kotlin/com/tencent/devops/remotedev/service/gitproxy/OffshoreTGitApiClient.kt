@@ -103,7 +103,7 @@ class OffshoreTGitApiClient @Autowired constructor(
                 return null
             }
         } catch (e: Exception) {
-            logger.error("getProjectList error", e)
+            logger.error("getProjectMemberAll error", e)
             return null
         }
     }
@@ -130,7 +130,7 @@ class OffshoreTGitApiClient @Autowired constructor(
                 return JsonUtil.to(data, object : TypeReference<TGitSvnAuth>() {})
             }
         } catch (e: Exception) {
-            logger.error("getProjectList error", e)
+            logger.error("getSvnProjectAuth error", e)
             return null
         }
     }
@@ -245,7 +245,7 @@ class OffshoreTGitApiClient @Autowired constructor(
                 return JsonUtil.to(data, object : TypeReference<TGitAclConfig>() {})
             }
         } catch (e: Exception) {
-            logger.error("getProjectList error", e)
+            logger.error("getProjectAcl error", e)
             return null
         }
     }

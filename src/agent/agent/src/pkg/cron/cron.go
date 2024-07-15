@@ -145,7 +145,7 @@ func cleanLogFile(timeBeforeInHours int) {
 	}
 	dockerFiles, err := os.ReadDir(dockerLogDir)
 	if err != nil {
-		logs.Error("read docker log dir error: ", err.Error())
+		logs.WithError(err).Error("read docker log dir error")
 		return
 	}
 

@@ -48,5 +48,9 @@ enum class WorkspaceAction {
     NOTIFY,
     ASSIGN,
     REBUILD,
-    REBUILDING
+    REBUILDING,
+    EXPAND_DISK,
+    // 升级配置
+    UPGRADE,
+    UPGRADING
 }

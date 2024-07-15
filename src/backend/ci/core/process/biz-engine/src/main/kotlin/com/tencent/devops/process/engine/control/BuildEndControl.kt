@@ -240,7 +240,7 @@ class BuildEndControl @Autowired constructor(
         buildInfo.endTime = endTime.timestampmilli()
         buildInfo.status = buildStatus
 
-        buildDurationTime(buildInfo.startTime!!)
+        buildDurationTime(buildInfo.startTime ?: 0L)
         callBackParentPipeline(buildInfo)
 
         // 广播结束事件
@@ -253,13 +253,16 @@ class BuildEndControl @Autowired constructor(
                     JsonUtil.toJson(buildInfo.errorInfoList!!)
                 } else null
             ),
+            // build 结束
             PipelineBuildStatusBroadCastEvent(
                 source = source,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
                 buildId = buildId,
-                actionType = ActionType.END
+                actionType = ActionType.END,
+                buildStatus = buildStatus.name,
+                executeCount = buildInfo.executeCount
             ),
             PipelineBuildWebSocketPushEvent(
                 source = "pauseTask",

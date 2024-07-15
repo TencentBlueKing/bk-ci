@@ -3,10 +3,12 @@ package com.tencent.devops.openapi.resources.apigw.v4.environment.job
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
+import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.jobreq.OpOperateReq
+import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
 import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.jobreq.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.jobreq.TaskTerminateReq
@@ -154,6 +156,18 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         return client.get(TencentServiceJobResource::class).getStepInstanceStatus(
             userId, projectId, jobInstanceId, stepInstanceId, executeCount,
             batch, maxHostNumPerGroup, keyword, searchIp, status, tag
+        )
+    }
+
+    override fun operateStepInstance(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        operateStepInstanceReq: OperateStepInstanceReq
+    ): JobResult<OperateStepInstanceResult> {
+        return client.get(TencentServiceJobResource::class).operateStepInstance(
+            userId, projectId, operateStepInstanceReq
         )
     }
 

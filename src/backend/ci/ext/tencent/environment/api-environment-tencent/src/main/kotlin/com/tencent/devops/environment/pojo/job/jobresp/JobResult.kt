@@ -11,6 +11,8 @@ data class JobResult<out T>(
     val result: Boolean? = null,
     @get:Schema(title = "请求ID", required = true)
     val jobRequestId: String?,
+    @get:Schema(title = "提示信息")
+    val message: String? = null,
     @get:Schema(title = "数据")
     @BkFieldI18n
     val data: T? = null

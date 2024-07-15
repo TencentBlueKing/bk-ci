@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.pipeline.Model
@@ -701,20 +702,10 @@ class PipelineRepositoryService constructor(
                             setting.pipelineName = model.name
                             setting.version = settingVersion
                             if (useSubscriptionSettings != true) {
-                                setting.successSubscription = Subscription(
-                                    types = setOf(),
-                                    groups = emptySet(),
-                                    users = "\${{ci.actor}}",
-                                    content = NotifyTemplateUtils.getCommonShutdownSuccessContent()
-                                )
+                                setting.successSubscription = null
                                 setting.successSubscriptionList = null
-                                setting.failSubscription = Subscription(
-                                    types = setOf(PipelineSubscriptionType.EMAIL, PipelineSubscriptionType.RTX),
-                                    groups = emptySet(),
-                                    users = "\${{ci.actor}}",
-                                    content = NotifyTemplateUtils.getCommonShutdownFailureContent()
-                                )
-                                setting.failSubscriptionList = listOf(setting.failSubscription)
+                                setting.failSubscription = null
+                                setting.failSubscriptionList = newSetting.failSubscriptionList
                             }
                             if (useConcurrencyGroup != true) {
                                 setting.concurrencyGroup = null
@@ -728,14 +719,18 @@ class PipelineRepositoryService constructor(
                             newSetting = setting
                         }
                         // 如果不需要覆盖模板内容，则直接保存传值或默认值
-                        pipelineSettingDao.saveSetting(transactionContext, newSetting)
-                        pipelineSettingVersionDao.saveSetting(
-                            dslContext = transactionContext,
-                            setting = newSetting,
-                            id = client.get(ServiceAllocIdResource::class)
-                                .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
-                            version = settingVersion
-                        )
+                        JooqUtils.retryWhenDeadLock {
+                            pipelineSettingDao.saveSetting(transactionContext, newSetting)
+                        }
+                        JooqUtils.retryWhenDeadLock {
+                            pipelineSettingVersionDao.saveSetting(
+                                dslContext = transactionContext,
+                                setting = newSetting,
+                                id = client.get(ServiceAllocIdResource::class)
+                                    .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
+                                version = settingVersion
+                            )
+                        }
                     } else {
                         pipelineSettingDao.updateSetting(
                             dslContext = transactionContext,
@@ -744,13 +739,16 @@ class PipelineRepositoryService constructor(
                             name = model.name,
                             desc = model.desc ?: ""
                         )?.let { setting ->
-                            pipelineSettingVersionDao.saveSetting(
-                                dslContext = transactionContext,
-                                setting = setting,
-                                id = client.get(ServiceAllocIdResource::class)
-                                    .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
-                                version = settingVersion
-                            )
+                            JooqUtils.retryWhenDeadLock {
+                                pipelineSettingVersionDao.saveSetting(
+                                    dslContext = transactionContext,
+                                    setting = setting,
+                                    id = client.get(ServiceAllocIdResource::class)
+                                        .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME)
+                                        .data,
+                                    version = settingVersion
+                                )
+                            }
                             newSetting = setting
                         }
                     }
@@ -1184,12 +1182,11 @@ class PipelineRepositoryService constructor(
                 yamlVersion = releaseResource.yamlVersion,
                 yamlStr = releaseResource.yaml,
                 baseVersion = baseVersion,
-                versionName = releaseResource.versionName ?: PipelineVersionUtils.getVersionName(
-                    releaseResource.version, releaseResource.version, 0, 0
-                ) ?: "",
+                versionName = releaseResource.versionName ?: "init",
                 versionNum = releaseResource.versionNum,
-                pipelineVersion = null,
+                pipelineVersion = releaseResource.version,
                 triggerVersion = null,
+                // 不写入版本状态和关联的setting版本，标识是兼容非常老的数据补全
                 settingVersion = null,
                 versionStatus = null,
                 branchAction = null,
@@ -1248,13 +1245,20 @@ class PipelineRepositoryService constructor(
         ).map { it.key to str2model(it.value, it.key) }.toMap()
     }
 
+    /**
+     * 获取编排版本的通用方法
+     * 1 如果指定了[version]则一定按照version号查询版本
+     * 2 如果没有指定版本，则通过[includeDraft]控制是否过滤掉草稿，获得最新版本流水线
+     * 3 默认情况，[version]=null 且 [includeDraft]=false 时，直接返回当前正式版本
+     */
     fun getPipelineResourceVersion(
         projectId: String,
         pipelineId: String,
         version: Int? = null,
         includeDraft: Boolean? = false
     ): PipelineResourceVersion? {
-        val resource = if (version == null) { // 取最新版，直接从旧版本表读
+        // TODO 取不到则直接从旧版本表读，待下架
+        val resource = if (version == null) {
             if (includeDraft == true) pipelineResourceVersionDao.getDraftVersionResource(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -1323,7 +1327,7 @@ class PipelineRepositoryService constructor(
     fun getBranchVersionResource(
         projectId: String,
         pipelineId: String,
-        branchName: String
+        branchName: String?
     ): PipelineResourceVersion? {
         val resource = pipelineResourceVersionDao.getBranchVersionResource(
             dslContext = dslContext,
@@ -1401,7 +1405,7 @@ class PipelineRepositoryService constructor(
             val now = LocalDateTime.now()
             val newDraft = targetVersion.copy(
                 version = latestResource.version + 1,
-                versionNum = releaseResource.version + 1,
+                versionNum = null,
                 pipelineVersion = null,
                 triggerVersion = null,
                 versionName = null,
@@ -1478,7 +1482,6 @@ class PipelineRepositoryService constructor(
                     if (deleteName.length > MAX_LEN_FOR_NAME) { // 超过截断，且用且珍惜
                         deleteName = deleteName.substring(0, MAX_LEN_FOR_NAME)
                     }
-                    pipelineResourceVersionDao.clearDraftVersion(transactionContext, projectId, pipelineId)
                     pipelineResourceVersionDao.clearActiveBranchVersion(transactionContext, projectId, pipelineId)
                     pipelineInfoDao.softDelete(
                         dslContext = transactionContext,
@@ -1714,19 +1717,23 @@ class PipelineRepositoryService constructor(
                         maxPipelineResNum = old.maxPipelineResNum
                     )
                 }
-                pipelineSettingVersionDao.saveSetting(
-                    dslContext = transactionContext,
-                    setting = setting,
-                    version = version,
-                    isTemplate = isTemplate,
-                    id = client.get(ServiceAllocIdResource::class).generateSegmentId(
-                        PIPELINE_SETTING_VERSION_BIZ_TAG_NAME
-                    ).data
+                JooqUtils.retryWhenDeadLock {
+                    pipelineSettingVersionDao.saveSetting(
+                        dslContext = transactionContext,
+                        setting = setting,
+                        version = version,
+                        isTemplate = isTemplate,
+                        id = client.get(ServiceAllocIdResource::class).generateSegmentId(
+                            PIPELINE_SETTING_VERSION_BIZ_TAG_NAME
+                        ).data
+                    )
+                }
+            }
+            if (versionStatus.isReleasing()) JooqUtils.retryWhenDeadLock {
+                pipelineSettingDao.saveSetting(
+                    transactionContext, setting, isTemplate
                 )
             }
-            if (versionStatus.isReleasing()) pipelineSettingDao.saveSetting(
-                transactionContext, setting, isTemplate
-            ).toString()
         }
 
         return PipelineName(name = setting.pipelineName, oldName = oldName)
@@ -1975,11 +1982,8 @@ class PipelineRepositoryService constructor(
                         )
                     ).yamlWithVersion
                 } catch (ignore: Throwable) {
-                    if (ignore is ErrorCodeException) throw ignore
                     logger.warn("TRANSFER_YAML_SETTING|$projectId|$userId|$pipelineId", ignore)
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
-                    )
+                    null
                 }
                 watcher.start("updatePipelineInfo")
                 pipelineInfoDao.update(
@@ -2064,6 +2068,22 @@ class PipelineRepositoryService constructor(
             pipelineId = pipelineId,
             branchName = branchName,
             branchVersionAction = branchVersionAction
+        )
+    }
+
+    fun updateLocked(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        locked: Boolean,
+        transactionContext: DSLContext? = null
+    ): Boolean {
+        return pipelineInfoDao.update(
+            dslContext = transactionContext ?: dslContext,
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            locked = locked
         )
     }
 }

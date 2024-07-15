@@ -31,6 +31,8 @@ object CodeccUtils {
 
     const val BK_CI_CODECC_TASK_ID = "BK_CI_CODECC_TASK_ID"
 
+    const val BK_CI_CODECC_ATOM_ID_TO_TASK_ID = "BK_CI_CODECC_ATOM_ID_TO_TASK_ID"
+
     const val BK_CI_CODECC_V3_ATOM = "CodeccCheckAtomDebug"
 
     const val BK_CI_CODECC_COMMUNITY_ATOM = "CodeCCCheckAtom"

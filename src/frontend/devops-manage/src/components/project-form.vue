@@ -404,14 +404,6 @@ watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], ()
   deep: true,
 });
 
-watch(() => projectData.value.productId, (id) => {
-  emits('productIdChange', {
-    id,
-    list: operationalList.value,
-  });
-}, {
-  deep: true,
-});
 
 onMounted(async () => {
   const deptInfos = await fetchUserDetail();

@@ -2,7 +2,7 @@ package com.tencent.devops.remotedev.service.devcloud
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.core.type.TypeReference
-import com.sun.org.slf4j.internal.LoggerFactory
+import org.slf4j.LoggerFactory
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
@@ -55,7 +55,7 @@ class DevcloudService {
                     "APPID" to devcloudAppId,
                     "USERID" to userId,
                     "RANDOM" to random,
-                    "TIMESTP" to (System.currentTimeMillis() / 1000).toString(),
+                    "TIMESTP" to timestamp,
                     "ENCKEY" to md5Hash
                 ).toHeaders()
             )

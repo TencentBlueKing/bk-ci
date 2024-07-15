@@ -85,6 +85,7 @@ import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
@@ -266,7 +267,7 @@ class BuildStartControl @Autowired constructor(
                         debug = buildInfo.debug
                     )
                 )
-                broadcastStartEvent(buildInfo)
+                broadcastStartEvent(buildInfo, executeCount)
             } else {
                 pipelineRuntimeService.updateExecuteCount(
                     projectId = projectId,
@@ -358,10 +359,14 @@ class BuildStartControl @Autowired constructor(
                     needShortUrl = false
                 )
                 buildLogPrinter.addLine(
-                    message = "Mode: ${setting.runLockType}," +
-                        "concurrency for group($concurrencyGroup) " +
-                        "and queue: ${concurrencyGroupRunning.count()}, now waiting for " +
-                        "<a target='_blank' href='$detailUrl'>${concurrencyGroupRunning.first().second}</a>",
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_BUILD_QUEUE_WAIT_FOR_CONCURRENCY,
+                        params = arrayOf(
+                            setting.runLockType.name, concurrencyGroup,
+                            concurrencyGroupRunning.count().toString(),
+                            "<a target='_blank' href='$detailUrl'>${concurrencyGroupRunning.first().second}</a>"
+                        )
+                    ),
                     buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
                     jobId = null, stepId = TAG
                 )
@@ -395,7 +400,10 @@ class BuildStartControl @Autowired constructor(
                 )
 
                 buildLogPrinter.addLine(
-                    message = "Mode: ${setting.runLockType}, queue: ${buildSummaryRecord.runningCount}",
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_BUILD_QUEUE_WAIT,
+                        params = arrayOf(setting.runLockType.name, buildSummaryRecord.runningCount.toString())
+                    ),
                     buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
                     jobId = null, stepId = TAG
                 )
@@ -464,7 +472,7 @@ class BuildStartControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildStartEvent.broadcastStartEvent(buildInfo: BuildInfo) {
+    private fun PipelineBuildStartEvent.broadcastStartEvent(buildInfo: BuildInfo, executeCount: Int) {
         pipelineEventDispatcher.dispatch(
             // 广播构建即将启动消息给订阅者
             PipelineBuildStartBroadCastEvent(
@@ -476,14 +484,16 @@ class BuildStartControl @Autowired constructor(
                 startTime = buildInfo.startTime,
                 triggerType = buildInfo.trigger
             ),
-            // 根据状态做响应的扩展广播消息给订阅者
+            // build 启动，根据状态做响应的扩展广播消息给订阅者
             PipelineBuildStatusBroadCastEvent(
                 source = source,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
                 buildId = buildId,
-                actionType = ActionType.START
+                actionType = ActionType.START,
+                executeCount = executeCount,
+                buildStatus = BuildStatus.RUNNING.name
             )
         )
     }

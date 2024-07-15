@@ -41,7 +41,8 @@ data class ListCgsRespDataBasic(
     val cpuCores: Int?,
     val memoryLimit: String?,
     val registeCgsTime: String?,
-    val internal: Boolean?
+    val internal: Boolean?,
+    val macAddress: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

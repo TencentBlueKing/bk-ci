@@ -44,7 +44,6 @@ import com.tencent.devops.artifactory.util.EmailUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RegionUtil
 import com.tencent.devops.artifactory.util.RepoUtils
-import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.exception.CustomException
@@ -76,12 +75,13 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.net.URLEncoder
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 
-@Suppress("LongParameterList", "ComplexMethod", "LongMethod", "MagicNumber")
+@Suppress("LongParameterList", "ComplexMethod", "LongMethod", "MagicNumber", "TooManyFunctions")
 open class BkRepoDownloadService @Autowired constructor(
     private val pipelineService: PipelineService,
     private val bkRepoService: BkRepoService,
@@ -107,7 +107,7 @@ open class BkRepoDownloadService @Autowired constructor(
     ): Url {
         logger.info(
             "outerBkrepoDownloadUrl, creatorId: $creatorId, userId:$userId, projectId: $projectId, " +
-                "artifactoryType: $artifactoryType, path: $path, ttl: $ttl"
+                    "artifactoryType: $artifactoryType, path: $path, ttl: $ttl"
         )
         val normalizedPath = getNormalizePath(path, artifactoryType, creatorId ?: userId, projectId)
         val url = bkRepoService.externalDownloadUrl(
@@ -125,7 +125,7 @@ open class BkRepoDownloadService @Autowired constructor(
             artifactoryType = artifactoryType,
             path = normalizedPath
         )
-        return Url(StringUtil.chineseUrlEncode(url))
+        return Url(url)
     }
 
     @ActionAuditRecord(
@@ -146,17 +146,18 @@ open class BkRepoDownloadService @Autowired constructor(
     ): String {
         logger.info(
             "getPlistFile, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-                "argPath: $argPath, experienceHashId: $experienceHashId"
+                    "argPath: $argPath, experienceHashId: $experienceHashId"
         )
 
         if (experienceHashId != null) {
             val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId, organization)
             if (!check.isOk() || !check.data!!) {
                 throw CustomException(
-                    Response.Status.BAD_REQUEST, MessageUtil.getMessageByLocale(
-                    messageCode = ArtifactoryMessageCode.NO_EXPERIENCE_PERMISSION,
-                    language = I18nUtil.getLanguage(userId)
-                )
+                    Response.Status.BAD_REQUEST,
+                    MessageUtil.getMessageByLocale(
+                        messageCode = ArtifactoryMessageCode.NO_EXPERIENCE_PERMISSION,
+                        language = I18nUtil.getLanguage(userId)
+                    )
                 )
             }
         }
@@ -181,14 +182,16 @@ open class BkRepoDownloadService @Autowired constructor(
             path = argPath,
             ttl = ttl
         )
-        val ipaExternalDownloadUrlEncode = StringUtil.chineseUrlEncode(ipaExternalDownloadUrl.url)
 
         // 获取IPA属性
         val fileProperties = bkRepoClient.listMetadata(
             creatorId,
             projectId,
             RepoUtils.getRepoByType(artifactoryType),
-            argPath
+            URLEncoder.encode(
+                argPath,
+                "utf-8"
+            ).replace("+", "%20")
         )
         val bundleIdentifier = fileProperties[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: ""
         val appTitle = fileProperties[ARCHIVE_PROPS_APP_NAME] ?: fileProperties[ARCHIVE_PROPS_APP_APP_TITLE] ?: ""
@@ -208,7 +211,7 @@ open class BkRepoDownloadService @Autowired constructor(
                                 <key>kind</key>
                                 <string>software-package</string>
                                 <key>url</key>
-                                <string>${getCdataStr(ipaExternalDownloadUrlEncode)}</string>
+                                <string>${getCdataStr(ipaExternalDownloadUrl.url)}</string>
                             </dict>
                             <dict>
                                 <key>kind</key>
@@ -253,14 +256,15 @@ open class BkRepoDownloadService @Autowired constructor(
     ): Url {
         logger.info(
             "getExternalPlistDownloadUrl, userId: $userId, projectId: $projectId, " +
-                "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
+                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
         )
-        val normalizedPath = getNormalizePath(argPath, artifactoryType, userId, projectId)
-        val url =
-            StringUtil.chineseUrlEncode(
-                "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/" +
-                    "$artifactoryType/filePlist?path=$normalizedPath&x-devops-project-id=$projectId"
-            )
+        val normalizedPath = URLEncoder.encode(
+            argPath,
+            "utf-8"
+        ).replace("+", "%20")
+        val url = HomeHostUtil.outerApiServerHost() + "/artifactory/api/app/artifactories/$projectId/" +
+                "$artifactoryType/filePlist?path=$normalizedPath" +
+                "&x-devops-project-id=$projectId"
         // 审计
         audit(
             userId = userId,
@@ -287,7 +291,7 @@ open class BkRepoDownloadService @Autowired constructor(
     ): Url {
         logger.info(
             "innerBkrepoDownloadUrl, userId: $userId, projectId: $projectId, " +
-                "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
+                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
         )
         val normalizedPath = getNormalizePath(argPath, artifactoryType, userId, projectId)
         // 审计
@@ -312,7 +316,7 @@ open class BkRepoDownloadService @Autowired constructor(
     ): List<Url> {
         logger.info(
             "serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId," +
-                " artifactoryType: $artifactoryType, argPathSet: $argPathSet, ttl: $ttl, permits: $permits"
+                    " artifactoryType: $artifactoryType, argPathSet: $argPathSet, ttl: $ttl, permits: $permits"
         )
         val normalizedPaths = mutableSetOf<String>()
         argPathSet.forEach { path ->
@@ -434,7 +438,7 @@ open class BkRepoDownloadService @Autowired constructor(
     ) {
         logger.info(
             "shareUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-                "argPath: $argPath, ttl: $ttl, downloadUsers: $downloadUsers"
+                    "argPath: $argPath, ttl: $ttl, downloadUsers: $downloadUsers"
         )
         val path = getNormalizePath(argPath, artifactoryType, userId, projectId)
         val downloadUrl = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, path, ttl)
@@ -492,10 +496,10 @@ open class BkRepoDownloadService @Autowired constructor(
         userId: String?
     ): List<String> {
         logger.info(
-            "getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
-                ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
-                "ttl: $ttl, crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, crossBuildId: $crossBuildId, " +
-                "region：$region, userId: $userId"
+            "getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, " +
+                    "artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
+                    "ttl: $ttl, crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, " +
+                    "crossBuildId: $crossBuildId, region：$region, userId: $userId"
         )
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
@@ -548,7 +552,7 @@ open class BkRepoDownloadService @Autowired constructor(
         }
         logger.info(
             "accessUserId: $accessUserId, targetProjectId: $targetProjectId, " +
-                "targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId"
+                    "targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId"
         )
 
         // 校验用户权限, auth权限优化实施后可以去掉

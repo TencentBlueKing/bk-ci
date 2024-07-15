@@ -64,12 +64,10 @@ data class ProjectWorkspace(
     override val viewers: List<String>? = emptyList(),
     @get:Schema(title = "查看者_CN")
     override val viewersCN: List<String>? = emptyList(),
-    override val gpu: Int = 0,
-    override val cpu: Int = 8,
-    override val memory: Int = 32,
-    override val disk: Int = 100,
     @get:Schema(title = "当前登陆者信息")
     override var currentLoginUsers: List<String>,
+    @get:Schema(title = "备份的workspace name")
+    override var bakWorkspaceName: String? = null,
     @get:Schema(title = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
     @get:Schema(title = "专家协助")
@@ -77,5 +75,7 @@ data class ProjectWorkspace(
     @get:Schema(title = "云桌面对应的mac地址")
     val macAddress: String? = null,
     @get:Schema(title = "工作空间备注")
-    val remark: String? = null
+    val remark: String? = null,
+    @get:Schema(title = "标签")
+    var labels: List<String>? = null
 ) : IWorkspace

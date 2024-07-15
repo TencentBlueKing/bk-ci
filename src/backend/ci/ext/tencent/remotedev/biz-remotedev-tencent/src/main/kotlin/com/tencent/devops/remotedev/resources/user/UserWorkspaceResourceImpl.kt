@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
-import com.tencent.devops.remotedev.pojo.BkTicketInfo
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
@@ -46,12 +45,9 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
-import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceService
-import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
-import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
@@ -59,7 +55,6 @@ import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.StartControl
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
-import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -67,15 +62,12 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserWorkspaceResourceImpl @Autowired constructor(
     private val gitTransfer: RemoteDevGitTransfer,
     private val workspaceService: WorkspaceService,
-    private val redisHeartBeat: RedisHeartBeat,
     private val permissionService: PermissionService,
     private val repositoryService: RepositoryService,
-    private val bkTicketService: BkTicketService,
     private val createControl: CreateControl,
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
-    private val deleteControl: DeleteControl,
-    private val xlsxExportService: WorkspaceXlsxExportService
+    private val deleteControl: DeleteControl
 ) : UserWorkspaceResource {
 
     @AuditEntry(actionId = ActionId.CGS_CREATE)
@@ -109,11 +101,29 @@ class UserWorkspaceResourceImpl @Autowired constructor(
 
     @AuditEntry(actionId = ActionId.CGS_EDIT)
     override fun editWorkspace(userId: String, workspaceName: String, displayName: String): Result<Boolean> {
-        return Result(workspaceService.editWorkspace(userId, workspaceName, displayName))
+        return Result(
+            workspaceService.modifyWorkspaceProperty(
+                userId = userId,
+                workspaceName = workspaceName,
+                ip = null,
+                workspaceProperty = WorkspaceProperty(displayName)
+            )
+        )
     }
 
-    override fun modifyWorkspaceProperty(userId: String, workspaceName: String, workspaceProperty: WorkspaceProperty): Result<Boolean> {
-        return Result(workspaceService.modifyWorkspaceProperty(userId, workspaceName, workspaceProperty))
+    override fun modifyWorkspaceProperty(
+        userId: String,
+        workspaceName: String,
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean> {
+        return Result(
+            workspaceService.modifyWorkspaceProperty(
+                userId = userId,
+                workspaceName = workspaceName,
+                ip = null,
+                workspaceProperty = workspaceProperty
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.CGS_DELETE)
@@ -132,10 +142,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         search: WorkspaceSearch
     ): Result<Page<Workspace>> {
         return Result(workspaceService.getWorkspaceList(userId, page, pageSize, search))
-    }
-
-    override fun getWorkspaceListXlsx(userId: String, page: Int?, pageSize: Int?, search: WorkspaceSearch): Response {
-        return xlsxExportService.exportProjectWorkspaceListUser(userId, page, pageSize, search)
     }
 
     @AuditEntry(actionId = ActionId.CGS_VIEW)
@@ -227,11 +233,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun workspaceHeartbeat(userId: String, workspaceName: String): Result<Boolean> {
-        redisHeartBeat.refreshHeartbeat(workspaceName)
-        return Result(true)
-    }
-
     override fun checkUserPermission(userId: String, workspaceName: String): Result<Boolean> {
         return Result(permissionService.checkUserPermission(userId, workspaceName))
     }
@@ -240,13 +241,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(permissionService.checkUserCreate(userId))
     }
 
-    override fun updateBkTicket(userId: String, bkTicketInfo: BkTicketInfo): Result<Boolean> {
-        bkTicketService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName, bkTicketInfo.mountType)
-        return Result(true)
-    }
-
+    @Deprecated("LINUX 待删除")
     override fun updateAllBkTicket(userId: String, bkTicket: String): Result<Boolean> {
-        bkTicketService.updateAllBkTicket(userId, bkTicket)
         return Result(true)
     }
 

@@ -47,7 +47,8 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.dispatch.kubernetes.service.StartAndBcsCommonService
 import com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
@@ -56,7 +57,6 @@ import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
 import com.tencent.devops.dispatch.kubernetes.startcloud.utils.StartCloudRedisUtils
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
-import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -74,7 +74,8 @@ class StartCloudRemoteDevService @Autowired constructor(
     private val workspaceBcsClient: WorkspaceBcsClient,
     private val workspaceRedisUtils: WorkspaceRedisUtils,
     private val startCloudRedisUtils: StartCloudRedisUtils,
-    private val startCloudInterfaceService: StartCloudInterfaceService
+    private val startCloudInterfaceService: StartCloudInterfaceService,
+    private val startAndBcsCommonService: StartAndBcsCommonService
 ) : RemoteDevInterface {
     //
     @Value("\${startCloud.appName}")
@@ -115,7 +116,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         // 生产创建start资源的订单号
         val orderId = checkNotNull(event.appName) + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
         val zoneId = if (event.devFile.cgsId.isNullOrBlank()) {
-            checkZoneId(event)
+            event.devFile.zoneId
         } else {
             checkNotNull(event.devFile.cgsId).substringBefore(".")
         }
@@ -142,46 +143,6 @@ class StartCloudRemoteDevService @Autowired constructor(
         startCloudRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
 
         return CreateWorkspaceRes(res.environmentUid, res.taskUid, 0, "")
-    }
-
-    private fun checkZoneId(event: WorkspaceCreateEvent): String {
-        // 先检查基础镜像在池子中是否有配额，再看有没有可以新生产的显卡
-        var zoneId = ""
-        var createFlag = false
-        if (event.devFile.imageCosFile.isNullOrBlank()) {
-            val random = startCloudInterfaceService.syncStartCloudResourceList().filter {
-                it.status == 11 &&
-                    it.machineType == event.devFile.machineType &&
-                    it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
-                    it.locked != true && it.internal == event.devFile.quotaType?.getInternal()
-            }.randomOrNull()
-            if (random != null) {
-                logger.info("get random resource to running|$random")
-                createFlag = true
-                zoneId = random.zoneId
-            }
-        }
-        // 说明池子中没有，或者是自定义镜像，需要使用显卡重新创建
-        if (!createFlag) {
-            val random = workspaceBcsClient.startGetResourceVm(
-                ResourceVmReq(
-                    zoneId = event.devFile.zoneId,
-                    machineType = event.devFile.machineType,
-                    internal = event.devFile.quotaType?.getInternal()
-                )
-            )?.filter {
-                (it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId) &&
-                    (it.machineResources?.any { ma -> ma.machineType == event.devFile.machineType } == true)
-            }?.randomOrNull() ?: throw BuildFailureException(
-                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
-                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
-                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                " ${event.devFile.zoneId}地区${event.devFile.machineType}型云桌面资源不足"
-            )
-            logger.info("get random resource to running|$random")
-            zoneId = random.zoneId
-        }
-        return zoneId
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
@@ -273,28 +234,7 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
-        val task = dispatchWorkspaceOpHisDao.getTask(dslContext, taskStatus.uid)
-        workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
-        if (task?.status?.needFix() == true && task.action == EnvironmentAction.CREATE) {
-            val oldWs = dispatchWorkspaceDao.getWorkspaceInfo(task.workspaceName, dslContext) ?: kotlin.run {
-                logger.warn("workspaceTaskCallback|try to fix fail with wrong workspace|$task")
-                return false
-            }
-            kotlin.runCatching {
-                client.get(ServiceRemoteDevResource::class)
-                    .createWinWorkspaceByVm(
-                        userId = oldWs.userId,
-                        oldWorkspaceName = oldWs.workspaceName,
-                        projectId = null,
-                        ownerType = null,
-                        uid = taskStatus.uid
-                    )
-            }.onFailure {
-                logger.warn("workspaceTaskCallback|createWinWorkspaceByVm fail ${it.message}", it)
-            }
-        }
-        return true
+        return startAndBcsCommonService.workspaceTaskCallback(taskStatus)
     }
 
     override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
@@ -331,9 +271,8 @@ class StartCloudRemoteDevService @Autowired constructor(
         val startTime = System.currentTimeMillis()
         val timeout = if (
             type == UpdateEventType.CREATE ||
-            type == UpdateEventType.REBUILD ||
-            type == UpdateEventType.MAKE_IMAGE
-            ) {
+            type == UpdateEventType.REBUILD
+        ) {
             START_CREATE_TIMEOUT
         } else {
             START_OTHER_TIMEOUT
@@ -370,6 +309,10 @@ class StartCloudRemoteDevService @Autowired constructor(
                 }
             }
         }
+    }
+
+    override fun expandDisk(workspaceName: String, userId: String, size: String): ExpandDiskValidateResp {
+        return startAndBcsCommonService.expandDisk(userId, workspaceName, size)
     }
 
     fun refreshStartCloudOrderId(userId: String): Boolean {

@@ -67,6 +67,8 @@ CREATE TABLE IF NOT EXISTS T_WINDOWS_GPU_POOL
     NODE varchar(64)  DEFAULT '' NOT NULL COMMENT '母机IP',
     IMAGE varchar(256)  DEFAULT '' NOT NULL COMMENT '镜像地址',
     REGISTER_TIME  timestamp NULL DEFAULT NULL COMMENT '注册cgs时间',
+    INTERNAL tinyint(1) NOT NULL DEFAULT '0' COMMENT 'true表示devcloud区域，false离岸专区',
+    MAC_ADDRESS varchar(64) NOT NULL DEFAULT '' COMMENT 'mac地址',
     UNIQUE KEY `uni_1` (`ZONE_ID`,`CGS_IP`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='START云桌面的资源列表';
 

@@ -39,39 +39,44 @@ data class WorkspaceSearch(
     val workspaceSystemType: List<WorkspaceSystemType>? = null,
     @get:Schema(title = "工作空间状态")
     val status: List<WorkspaceStatus>? = null,
+    @get:Schema(title = "工作空间状态 not")
+    val notStatus: List<WorkspaceStatus>? = null,
     @get:Schema(title = "区域简称，SZ,NJ")
     var zoneShortName: List<String>? = null,
     @get:Schema(title = "资源类型：M，L，XL，S")
     val size: List<String>? = null,
-    @get:Schema(title = "工作空间对应的IP")
+    @get:Schema(title = "工作空间对应的IP，可带区域，也可不带区域进行模糊匹配, 可能NJ1.12.123.12.132")
     val ips: List<String>? = null,
+    @get:Schema(title = "工作空间对应的IP 不带区域, 只能12.123.12.132")
+    val sips: List<String>? = null,
     @get:Schema(title = "云桌面对应的mac地址")
     val macAddress: List<String>? = null,
-    @get:Schema(title = "拥有者_CN")
-    val ownerCN: List<String>? = null,
     @get:Schema(title = "拥有者")
     val owner: List<String>? = null,
-    @get:Schema(title = "查看者_CN")
-    val viewersCN: List<String>? = null,
     @get:Schema(title = "查看者")
     var viewers: List<String>? = null,
     @get:Schema(title = "项目id")
     var projectId: List<String>? = null,
     @get:Schema(title = "协助工单，仅op有效")
     var expertSupId: List<Long>? = null,
+    @get:Schema(title = "标签ids")
+    var labels: List<String>? = null,
+    @get:Schema(title = "工作空间所在部门")
+    var businessLineNames: List<String>? = null,
     @get:Schema(title = "是否模糊匹配，可以关闭，查询会更快。")
     val onFuzzyMatch: Boolean = true,
     @get:Schema(title = "是否匹配owner类型")
     val workspaceOwnerType: List<WorkspaceOwnerType>? = null
 ) {
-    fun onlyNeedCheckWorkspace() = !needCheckDetail() &&
-            owner.isNullOrEmpty() &&
-            ownerCN.isNullOrEmpty() &&
-            viewers.isNullOrEmpty() &&
-            viewersCN.isNullOrEmpty() &&
-            size.isNullOrEmpty() &&
-            expertSupId.isNullOrEmpty() &&
-            macAddress.isNullOrEmpty()
+    fun onlyNeedCheckWorkspace() = !needCheckWindows() && !needCheckShared() && expertSupId.isNullOrEmpty()
+
+    fun needCheckLabels() = !labels.isNullOrEmpty()
 
     fun needCheckDetail() = !ips.isNullOrEmpty() || !zoneShortName.isNullOrEmpty()
+    fun needCheckShared() = !owner.isNullOrEmpty() || !viewers.isNullOrEmpty()
+
+    fun needCheckWindows() = !ips.isNullOrEmpty() ||
+        !zoneShortName.isNullOrEmpty() ||
+        !macAddress.isNullOrEmpty() ||
+        !size.isNullOrEmpty()
 }

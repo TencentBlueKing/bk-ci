@@ -51,5 +51,7 @@ data class QualityRuleInterceptRecord(
     @get:Schema(title = "指标详情", required = true)
     val detail: String?,
     @get:Schema(title = "指标日志输出详情", required = false)
-    var logPrompt: String?
+    var logPrompt: String?,
+    @get:Schema(title = "控制点的插件id", required = false)
+    val controlPointElementId: String? = ""
 )

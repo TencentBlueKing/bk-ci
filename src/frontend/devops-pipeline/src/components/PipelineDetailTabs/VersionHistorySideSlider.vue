@@ -198,10 +198,11 @@
             }
         },
         mounted () {
+            this.preZIndex = window.__bk_zIndex_manager.zIndex
             window.__bk_zIndex_manager.zIndex = 2500
         },
         beforeDestroy () {
-            window.__bk_zIndex_manager.zIndex = 2000
+            window.__bk_zIndex_manager.zIndex = this.preZIndex
         },
         methods: {
             ...mapActions('pipelines', [

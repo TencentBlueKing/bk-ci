@@ -28,9 +28,7 @@
 package com.tencent.devops.store.atom.service.impl
 
 import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.store.atom.service.AtomBusHandleService
-import com.tencent.devops.store.constant.StoreMessageCode
 
 class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
 
@@ -42,15 +40,6 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         }
     }
 
-    override fun checkTarget(target: String): Boolean {
-        if (!target.startsWith("java")) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.JAVA_ATOM_TASK_JSON_TARGET_IS_INVALID
-            )
-        }
-        return true
-    }
-
     override fun handleOsArch(osName: String, osArch: String): String {
         // worker就是通过java取的osArch，故无需转换
         return osArch
@@ -60,12 +49,21 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         if (reqTarget.isNullOrBlank()) {
             return target
         }
-        val javaPath = reqTarget.substringBefore("-jar").trim()
-        // 获取插件配置的JVM指令
-        val jvmOptions = target.substringAfter("java").substringBefore("-jar").trim()
-        // 获取插件jar包路径
-        val jarPath = reqTarget.substringAfter("-jar").trim()
+        // 获取启动命令的java路径
+        val javaPath = reqTarget.substringBefore(" -").trim()
+        // 获取启动命令的前缀路径
+        val prefixPath = target.substringBefore(getJarName(target)).substringAfter(target.substringBefore(" -")).trim()
+        // 获取插件jar包名称
+        val jarName = getJarName(reqTarget)
+        // 获取启动命令的后缀路径
+        val suffixPath = target.substringAfter(".jar").trim()
+        return "$javaPath $prefixPath $jarName $suffixPath".trim()
+    }
 
-        return "$javaPath $jvmOptions -jar $jarPath"
+    private fun getJarName(target: String): String {
+        val regex = Regex("(\\S+\\.jar)")
+        val matchResult = regex.find(target)
+        val jarName = matchResult?.value ?: ""
+        return jarName
     }
 }

@@ -31,5 +31,6 @@ enum class NotifyType {
     RTX,
     EMAIL,
     WECHAT,
-    WECHAT_GROUP
+    WECHAT_GROUP,
+    PUSH
 }

@@ -119,8 +119,7 @@ interface UserStoreComponentQueryResource {
     @GET
     @Path("/types/{storeType}/ids/{storeId}/component/detail")
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
+        keyPrefixNames = ["{data.storeType}", "{data.storeCode}", "{data.version}", "releaseInfo"]
     )
     fun getComponentDetailInfoById(
         @Parameter(description = "userId", required = true)
@@ -140,8 +139,7 @@ interface UserStoreComponentQueryResource {
     @GET
     @Path("/types/{storeType}/codes/{storeCode}/component/detail")
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
+        keyPrefixNames = ["{data.storeType}", "{data.storeCode}", "{data.version}", "releaseInfo"]
     )
     fun getComponentDetailInfoByCode(
         @Parameter(description = "userId", required = true)
@@ -161,8 +159,9 @@ interface UserStoreComponentQueryResource {
     @Path("/types/{storeType}/component/main/page/list")
     @GET
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
+        keyPrefixNames = ["{data[*].records[*].type}", "{data[*].records[*].code}", "{data[*].records[*].version}",
+            "releaseInfo"
+        ]
     )
     @Suppress("LongParameterList")
     fun getMainPageComponents(
@@ -193,8 +192,10 @@ interface UserStoreComponentQueryResource {
     @Path("/types/{storeType}/component/list")
     @GET
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
+        keyPrefixNames = [
+            "{data.records[*].type}", "{data.records[*].code}", "{data.records[*].version}",
+            "releaseInfo"
+        ]
     )
     @Suppress("LongParameterList")
     fun queryComponents(

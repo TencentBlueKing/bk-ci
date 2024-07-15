@@ -38,6 +38,7 @@
         />
         <import-pipeline-popup
             :handle-import-success="handleImportModifyPipeline"
+            :pipeline-id="$route.params.pipelineId"
             :pipeline-name="pipelineName"
             :is-show.sync="showImportDialog"
         ></import-pipeline-popup>
@@ -263,7 +264,7 @@
             },
             afterDisablePipeline (enable) {
                 this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                    runLockType: enable ? 'MULTIPLE' : 'LOCK'
+                    locked: !enable
                 })
             },
 

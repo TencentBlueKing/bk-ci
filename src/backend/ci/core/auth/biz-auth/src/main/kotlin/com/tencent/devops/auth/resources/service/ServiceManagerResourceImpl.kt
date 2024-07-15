@@ -31,12 +31,15 @@ import com.tencent.devops.auth.api.service.ServiceManagerResource
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceManagerResourceImpl @Autowired constructor(
     val superManagerService: SuperManagerService
 ) : ServiceManagerResource {
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun validateManagerPermission(
         userId: String,
         token: String,

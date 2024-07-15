@@ -62,6 +62,7 @@ request.interceptors.response.use((response: AxiosResponse) => {
     } else if (httpStatus >= 400) {
         const err = {
             message: message || `unknow Error httpStatus: ${httpStatus}`,
+            status,
             httpStatus
         }
         return Promise.reject(err)

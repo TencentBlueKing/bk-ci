@@ -55,7 +55,6 @@ import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
-import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
@@ -172,7 +171,8 @@ class ExperienceBaseService @Autowired constructor(
                 expired = now.isAfter(it.endDate),
                 subscribe = subscribeSet.contains("${it.projectId}-${it.bundleIdentifier}-${it.platform}") ||
                         userId == it.creator,
-                redPointEnabled = redPointIds.contains(it.id.toString())
+                redPointEnabled = redPointIds.contains(it.id.toString()),
+                classify = it.classify
             )
         }
 
@@ -464,9 +464,9 @@ class ExperienceBaseService @Autowired constructor(
         val deptUsers = mutableSetOf<String>()
         val depts = experienceGroupDepartmentDao.listByGroupIds(dslContext, groupIds)
         for (dept in depts) {
-            client.get(ServiceProjectOrganizationResource::class)
-                .getDeptStaffsWithLevel(dept.deptId, 10)
-                .data?.forEach { deptUsers.add(it.loginName) }
+            client.get(ServiceUserResource::class)
+                .usernamesByParentId(dept.deptId.toInt())
+                .data?.forEach { deptUsers.add(it) }
         }
         return deptUsers
     }

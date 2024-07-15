@@ -141,7 +141,7 @@ interface AppPipelineResource {
         materialBranch: List<String>?,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        debugVersion: Int?
+        customVersion: Int?
     ): Result<Page<AppPipelineHistory>>
 
     @Operation(summary = "获取流水线构建中的查询条件-分支")

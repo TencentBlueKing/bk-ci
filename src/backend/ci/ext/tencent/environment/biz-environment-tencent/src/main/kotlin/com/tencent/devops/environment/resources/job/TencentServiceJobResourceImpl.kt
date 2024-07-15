@@ -30,11 +30,15 @@ package com.tencent.devops.environment.resources.job
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT
+import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.jobreq.OpOperateReq
+import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
 import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.jobreq.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.jobreq.TaskTerminateReq
@@ -186,6 +190,15 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         )
     }
 
+    override fun operateStepInstance(
+        userId: String,
+        projectId: String,
+        operateStepInstanceReq: OperateStepInstanceReq
+    ): JobResult<OperateStepInstanceResult> {
+        checkParamBlank(userId, projectId)
+        return jobService.operateStepInstance(operateStepInstanceReq)
+    }
+
     override fun operateOpProject(userId: String, opOperateReq: OpOperateReq): OpOperateResult {
         if (userId.isBlank()) throw ParamBlankException("userId is blank.")
         return opService.operateOpProject(userId, opOperateReq)
@@ -193,11 +206,11 @@ class TencentServiceJobResourceImpl @Autowired constructor(
 
     override fun checkDeployNodesInCmdb(userId: String) {
         if (userId.isBlank()) throw ParamBlankException("userId is blank.")
-        tencentStockDataUpdateService.checkDeployNodes()
+        tencentStockDataUpdateService.checkDeployNodesInCmdb()
     }
 
     override fun updateGseAgent(userId: String) {
-        tencentStockDataUpdateService.scheduledUpdateGseAgent()
+        tencentStockDataUpdateService.updateGseAgentStatusAndVersionPeriodically()
     }
 
     override fun addStockNodeToCC(userId: String) {
@@ -223,8 +236,7 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         if (!permissionManageService.isJobInsBelongToProj(projectId, jobInstanceId)) {
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
-                message = "The job instance you have queried doesn't belong to the current project " +
-                    "or more than one month."
+                message = I18nUtil.getCodeLanMessage(ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT)
             )
         }
     }

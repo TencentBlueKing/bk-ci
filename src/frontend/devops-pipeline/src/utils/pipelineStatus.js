@@ -12,7 +12,7 @@ export const statusIconMap = {
     UNEXEC: 'circle', // 10 从未执行（最终态）
     SKIP: 'redo-arrow', // 11 跳过（最终态）
     QUALITY_CHECK_FAIL: 'close-circle', // 12 质量红线检查失败（最终态）
-    QUEUE: 'circle-2-1', // 13 排队（初始状态）
+    QUEUE: 'hourglass', // 13 排队（初始状态）
     LOOP_WAITING: 'circle-2-1', // 14 轮循等待中 互斥组抢锁轮循 （中间状态）
     CALL_WAITING: 'circle-2-1', // 15 等待回调 用于启动构建环境插件等待构建机回调启动结果（中间状态）
     TRY_FINALLY: 'circle-2-1', // 16 不可见的后台状态（未使用）

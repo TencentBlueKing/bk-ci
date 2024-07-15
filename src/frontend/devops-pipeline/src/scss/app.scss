@@ -1192,3 +1192,10 @@ table tr:hover {
         }
     }
 }
+
+.hourglass-queue {
+    animation: hourglassSpin;
+    animation-delay: 0.5s, 0.5s;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+}

@@ -56,8 +56,9 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.dispatch.kubernetes.service.StartAndBcsCommonService
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
-import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -74,7 +75,8 @@ class BcsRemoteDevService @Autowired constructor(
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao,
     private val workspaceBcsClient: WorkspaceBcsClient,
-    private val profile: Profile
+    private val profile: Profile,
+    private val startAndBcsCommonService: StartAndBcsCommonService
 ) : RemoteDevInterface {
 
     @Value("\${bcsCloud.workspace.environment.cpu:8000}")
@@ -258,28 +260,7 @@ class BcsRemoteDevService @Autowired constructor(
     }
 
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
-        val task = dispatchWorkspaceOpHisDao.getTask(dslContext, taskStatus.uid)
-        workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
-        if (task?.status?.needFix() == true && task.action == EnvironmentAction.CREATE) {
-            val oldWs = dispatchWorkspaceDao.getWorkspaceInfo(task.workspaceName, dslContext) ?: kotlin.run {
-                logger.warn("workspaceTaskCallback|try to fix fail with wrong workspace|$task")
-                return false
-            }
-            kotlin.runCatching {
-                client.get(ServiceRemoteDevResource::class)
-                    .createWinWorkspaceByVm(
-                        userId = oldWs.userId,
-                        oldWorkspaceName = oldWs.workspaceName,
-                        projectId = null,
-                        ownerType = null,
-                        uid = taskStatus.uid
-                    )
-            }.onFailure {
-                logger.warn("workspaceTaskCallback|createWinWorkspaceByVm fail ${it.message}", it)
-            }
-        }
-        return true
+        return startAndBcsCommonService.workspaceTaskCallback(taskStatus)
     }
 
     override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
@@ -331,6 +312,10 @@ class BcsRemoteDevService @Autowired constructor(
                 }
             }
         }
+    }
+
+    override fun expandDisk(workspaceName: String, userId: String, size: String): ExpandDiskValidateResp {
+        return startAndBcsCommonService.expandDisk(userId, workspaceName, size)
     }
 
     private fun getEnvironmentHost(clusterId: String, workspaceName: String): String {

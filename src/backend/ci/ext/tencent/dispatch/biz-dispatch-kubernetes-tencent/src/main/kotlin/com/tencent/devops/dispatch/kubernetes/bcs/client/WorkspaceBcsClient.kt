@@ -1,9 +1,12 @@
 package com.tencent.devops.dispatch.kubernetes.bcs.client
 
+import com.fasterxml.jackson.core.JacksonException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_CREATION_FAILED_EXCEPTION_INFORMATION
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
@@ -24,6 +27,10 @@ import com.tencent.devops.dispatch.kubernetes.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum as startErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.bcs.pojo.UidReq
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.BcsResp
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.BcsTaskData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmResp
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
@@ -615,14 +622,18 @@ class WorkspaceBcsClient @Autowired constructor(
     /**
      * first： 成功or失败
      * second：成功时为containerName，失败时为错误信息
+     * @param timeOut 超时时间，单位 millis
+     * @param timeInterval 轮训等待时间，单位 millis
      */
     fun waitTaskFinish(
         userId: String,
-        taskId: String
+        taskId: String,
+        timeOut: Long = 10 * 60 * 1000,
+        timeInterval: Long = 1 * 1000
     ): Triple<TaskStatusEnum, String, ErrorCodeEnum> {
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
-            if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
+            if (System.currentTimeMillis() - startTime > timeOut) {
                 logger.error("Wait task: $taskId finish timeout(10min)")
                 return Triple(
                     first = TaskStatusEnum.abort,
@@ -630,7 +641,7 @@ class WorkspaceBcsClient @Autowired constructor(
                     third = ErrorCodeEnum.CREATE_ENV_ERROR
                 )
             }
-            Thread.sleep(1 * 1000)
+            Thread.sleep(timeInterval)
             val (isFinish, success, msg, errorCodeEnum) = getTaskResult(
                 userId = userId,
                 taskId = taskId
@@ -829,6 +840,49 @@ class WorkspaceBcsClient @Autowired constructor(
                 formatErrorMessage = startErrorCodeEnum.LIST_IMAGE_INTERFACE_ERROR.formatErrorMessage,
                 errorMessage = " 接口超时, url: $url"
             )
+        }
+    }
+
+    fun expandDiskValidate(
+        data: ExpandDiskData
+    ): ExpandDiskValidateResp? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/expanddisk/validate"
+        val body = JsonUtil.toJson(data, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<ExpandDiskValidateResp>>().data
+    }
+
+    fun expandDisk(
+        data: ExpandDiskData
+    ): BcsTaskData? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/expanddisk"
+        val body = JsonUtil.toJson(data, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<BcsTaskData>>().data
+    }
+
+    private inline fun <reified T> okhttp3.Response.resolveResponse(): T {
+        this.use {
+            val responseContent = this.body!!.string()
+            logger.info("request bcs ${this.request.url} resp ${this.rid()}|$responseContent}")
+            if (this.isSuccessful) {
+                return objectMapper.readValue(responseContent, jacksonTypeRef<T>())
+            }
+
+            val responseData = try {
+                objectMapper.readValue<BcsResp<Void>>(responseContent)
+            } catch (e: JacksonException) {
+                throw RemoteServiceException(responseContent, this.code)
+            }
+            throw RemoteServiceException(responseData.message ?: responseData.code.toString(), this.code)
         }
     }
 
