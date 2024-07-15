@@ -138,7 +138,7 @@ class SubPipelineRefService @Autowired constructor(
         )
     }
 
-    fun cleanSubPipelineRef(userId: String, projectId: String, pipelineId: String){
+    fun cleanSubPipelineRef(userId: String, projectId: String, pipelineId: String) {
         val changeCount = subPipelineRefDao.deleteAll(
             dslContext = dslContext,
             pipelineId = pipelineId,
@@ -170,6 +170,7 @@ class SubPipelineRefService @Autowired constructor(
         try {
             // 解析model，读取子流水线引用信息
             val stageSize = model.stages.size
+            val pipelineName = model.name
             val subPipelineRefList = mutableListOf<SubPipelineRef>()
             val triggerStage = model.stages.getOrNull(0)
                 ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB)
@@ -181,6 +182,7 @@ class SubPipelineRefService @Autowired constructor(
                         pipelineId = pipelineId,
                         channel = channel,
                         stage = stage,
+                        pipelineName = pipelineName,
                         subPipelineRefList = subPipelineRefList,
                         contextMap = contextMap
                     )
@@ -198,7 +200,7 @@ class SubPipelineRefService @Autowired constructor(
                 val needDeleteIds = existsRefs.filter { !targetRefs.containsKey("${it.pipelineId}_${it.taskId}") }
                     .map { it.id }
                 // 删除无效数据
-                subPipelineRefDao.batchDelete(dslContext = transaction,ids = needDeleteIds)
+                subPipelineRefDao.batchDelete(dslContext = transaction, ids = needDeleteIds)
                 // 添加新数据
                 subPipelineRefDao.batchAdd(
                     dslContext = transaction,
@@ -215,6 +217,7 @@ class SubPipelineRefService @Autowired constructor(
         pipelineId: String,
         stage: Stage,
         channel: String,
+        pipelineName: String,
         subPipelineRefList: MutableList<SubPipelineRef>,
         contextMap: Map<String, String>
     ) {
@@ -235,14 +238,15 @@ class SubPipelineRefService @Autowired constructor(
                         SubPipelineRef(
                             pipelineId = pipelineId,
                             projectId = projectId,
-                            pipelineName = it.third,
+                            pipelineName = pipelineName,
                             taskId = element.id ?: "",
                             taskName = element.name,
                             stageName = stage.name ?: "",
                             containerName = container.name,
                             subProjectId = it.first,
                             subPipelineId = it.second,
-                            channel = channel
+                            channel = channel,
+                            subPipelineName = it.third
                         )
                     )
                 }

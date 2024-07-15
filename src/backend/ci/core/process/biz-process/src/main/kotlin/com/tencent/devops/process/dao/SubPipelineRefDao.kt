@@ -59,7 +59,8 @@ class SubPipelineRefDao {
                         TASK_ID,
                         TASK_NAME,
                         SUB_PROJECT_ID,
-                        SUB_PIPELINE_ID
+                        SUB_PIPELINE_ID,
+                        SUB_PIPELINE_NAME
                     ).values(
                         it.projectId,
                         it.pipelineId,
@@ -70,7 +71,8 @@ class SubPipelineRefDao {
                         it.taskId,
                         it.taskName,
                         it.subProjectId,
-                        it.subPipelineId
+                        it.subPipelineId,
+                        it.subPipelineName
                     ).onDuplicateKeyUpdate()
                         .set(STAGE_NAME, it.stageName)
                         .set(CONTAINER_NAME, it.containerName)
@@ -78,6 +80,7 @@ class SubPipelineRefDao {
                         .set(PIPELINE_NAME, it.pipelineName)
                         .set(SUB_PROJECT_ID, it.subProjectId)
                         .set(SUB_PIPELINE_ID, it.subPipelineId)
+                        .set(SUB_PIPELINE_NAME, it.subPipelineName)
                 }
             ).execute()
         }
@@ -115,6 +118,9 @@ class SubPipelineRefDao {
         dslContext: DSLContext,
         ids: List<Long>
     ) {
+        if (ids.isEmpty()) {
+            return
+        }
         with(TSubPipelineRef.T_SUB_PIPELINE_REF) {
             dslContext.deleteFrom(this).where(
                 ID.`in`(ids)

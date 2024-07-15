@@ -49,6 +49,8 @@ data class SubPipelineRef(
     val containerName: String,
     @get:Schema(title = "子流水线流水线Id", required = true)
     val subPipelineId: String,
-    @get:Schema(title = "子流水线流水线项目Id", required = true)
-    val subProjectId: String
+    @get:Schema(title = "子流水线项目Id", required = true)
+    val subProjectId: String,
+    @get:Schema(title = "子流水线名称", required = true)
+    val subPipelineName: String
 )
