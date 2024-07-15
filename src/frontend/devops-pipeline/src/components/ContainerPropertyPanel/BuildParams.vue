@@ -89,10 +89,9 @@
                                         </bk-form-item>
                                     </div>
 
-                                    <div class="params-flex-col pt10">
-                                        <bk-form-item label-width="auto" v-if="isFileParam(param.type)" :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)">
+                                    <div v-if="isFileParam(param.type)" class="params-flex-col pt10">
+                                        <bk-form-item label-width="auto" :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)">
                                             <file-param-input
-                                                v-if="isFileParam(param.type)"
                                                 name="defaultValue"
                                                 :required="valueRequired"
                                                 :disabled="disabled"
