@@ -28,15 +28,12 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.model.remotedev.tables.TRemoteDevBilling
-import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.Duration
 import java.time.LocalDateTime
 
 @Repository
@@ -45,71 +42,6 @@ class RemoteDevBillingDao {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RemoteDevBillingDao::class.java)
-    }
-
-    /**
-     * 工作空间启动时创建billing
-     */
-    fun newBilling(
-        dslContext: DSLContext,
-        workspaceName: String,
-        userId: String
-    ) {
-        val res = with(TRemoteDevBilling.T_REMOTE_DEV_BILLING) {
-            dslContext.selectCount().from(this).where(
-                WORKSPACE_NAME.eq(workspaceName)
-            ).and(USER.eq(userId)).and(END_TIME.isNull).fetchOne(DSL.count())!! > 0
-        }
-        if (res) {
-            logger.info("newBilling fail, task exist|$workspaceName|$userId")
-            return
-        }
-        return with(TRemoteDevBilling.T_REMOTE_DEV_BILLING) {
-            dslContext.insertInto(
-                this,
-                WORKSPACE_NAME,
-                USER,
-                START_TIME
-            ).values(
-                workspaceName,
-                userId,
-                LocalDateTime.now()
-            ).execute()
-        }
-    }
-
-    /**
-     * 工作空间结束时调用
-     */
-    fun endBilling(
-        dslContext: DSLContext,
-        workspaceName: String,
-        computeUsageTime: Boolean = true
-    ) {
-        val now = LocalDateTime.now()
-        val res = with(TRemoteDevBilling.T_REMOTE_DEV_BILLING) {
-            dslContext.selectFrom(this)
-                .where(WORKSPACE_NAME.eq(workspaceName)).and(END_TIME.isNull)
-                .fetch()
-        }
-        res.forEach { record ->
-            val add = Duration.between(record.startTime, now).seconds.toInt()
-            with(TRemoteDevBilling.T_REMOTE_DEV_BILLING) {
-                dslContext.update(this)
-                    .set(END_TIME, now)
-                    .set(USAGE_TIME, add)
-                    .where(ID.eq(record.id))
-                    .execute()
-            }
-            if (computeUsageTime) {
-                with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
-                    dslContext.update(this)
-                        .set(CUMULATIVE_USAGE_TIME, CUMULATIVE_USAGE_TIME + add)
-                        .where(USER_ID.eq(record.user))
-                        .execute()
-                }
-            }
-        }
     }
 
     fun fetchNotEndBilling(dslContext: DSLContext, userId: String): List<LocalDateTime> {
