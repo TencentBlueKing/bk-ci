@@ -138,6 +138,15 @@ class SubPipelineRefService @Autowired constructor(
         )
     }
 
+    fun cleanSubPipelineRef(userId: String, projectId: String, pipelineId: String){
+        val changeCount = subPipelineRefDao.deleteAll(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            projectId = projectId
+        )
+        logger.info("user[$userId] delete sub pipeline ref|$projectId|$pipelineId|$changeCount")
+    }
+
     fun updateSubPipelineRef(userId: String, projectId: String, pipelineId: String) {
         logger.info("update sub pipeline ref|$userId|$projectId|$pipelineId")
         val model: Model?

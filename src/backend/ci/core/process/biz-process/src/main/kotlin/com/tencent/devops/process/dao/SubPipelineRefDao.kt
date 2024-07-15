@@ -97,6 +97,20 @@ class SubPipelineRefDao {
         }
     }
 
+    fun deleteAll(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): Int {
+        return with(TSubPipelineRef.T_SUB_PIPELINE_REF) {
+            dslContext.deleteFrom(this).where(
+                PROJECT_ID.eq(projectId).and(
+                    PIPELINE_ID.eq(pipelineId)
+                )
+            ).execute()
+        }
+    }
+
     fun batchDelete(
         dslContext: DSLContext,
         ids: List<Long>
