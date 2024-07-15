@@ -1,10 +1,15 @@
 <template>
     <div v-if="artifactoryType !== 'IMAGE'">
         <bk-popover
-            :disabled="!hasPermission || !disabled"
+            :disabled="!btnDisabled || isLoading"
         >
             <i
-                v-if="downloadIcon"
+                v-if="isLoading"
+                class="devops-icon icon-circle-2-1 spin-icon"
+                @click.stop=""
+            />
+            <i
+                v-else-if="downloadIcon"
                 :class="['devops-icon icon-download', {
                     'artifactory-download-icon-disabled': btnDisabled
                 }]"
@@ -19,9 +24,7 @@
                 {{ $t("download") }}
             </bk-button>
             <template slot="content">
-                <template v-if="disabled">
-                    <p>{{ disabled ? $t('downloadDisabledTips') : $t('details.noDownloadPermTips') }}</p>
-                </template>
+                <p>{{ disabled ? $t('downloadDisabledTips') : $t('details.noDownloadPermTips') }}</p>
             </template>
         </bk-popover>
         <bk-dialog
@@ -72,7 +75,8 @@
         data () {
             return {
                 visible: false,
-                signingMap: new Map()
+                signingMap: new Map(),
+                isLoading: false
             }
         },
         computed: {
@@ -85,7 +89,7 @@
                 return false
             },
             btnDisabled () {
-                return !this.hasPermission || this.disabled
+                return !this.hasPermission || this.disabled || this.isLoading
             }
         },
         beforeDestroy () {
@@ -98,11 +102,13 @@
             },
             async downLoadFile () {
                 try {
+                    if (this.btnDisabled) return
                     if (this.signingMap.get(this.path)) {
                         // this.apkSigningDialogVisible = true
                         this.setVisible(true)
                         return
                     }
+                    this.isLoading = true
                     const { url2 } = await this.$store
                         .dispatch('common/requestDownloadUrl', {
                             projectId: this.$route.params.projectId,
@@ -131,6 +137,8 @@
                     }
                 } catch (err) {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
+                } finally {
+                    this.isLoading = false
                 }
             },
             pollingCheckSignedApk (url) {

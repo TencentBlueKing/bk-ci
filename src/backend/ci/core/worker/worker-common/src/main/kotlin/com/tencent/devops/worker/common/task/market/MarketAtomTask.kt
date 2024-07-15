@@ -68,6 +68,7 @@ import com.tencent.devops.process.utils.PIPELINE_ATOM_VERSION
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_STEP_ID
 import com.tencent.devops.process.utils.PIPELINE_TASK_NAME
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
@@ -239,7 +240,12 @@ open class MarketAtomTask : ITask() {
 
         buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }
 
-        val inputVariables = variables.plus(inputParams).toMutableMap<String, Any>()
+        val inputVariables = if (asCodeEnabled) {
+            // 如果开启PAC,插件入参增加旧变量，防止开启PAC后,插件获取参数失败
+            PipelineVarUtil.mixOldVarAndNewVar(variables.toMutableMap())
+        } else {
+            variables
+        }.plus(inputParams).toMutableMap<String, Any>()
         val atomSensitiveConfWriteSwitch = System.getProperty("BK_CI_ATOM_PRIVATE_CONFIG_WRITE_SWITCH")?.toBoolean()
         if (atomSensitiveConfWriteSwitch != false) {
             // 开关关闭则不再写入插件私有配置到input.json中
@@ -508,6 +514,7 @@ open class MarketAtomTask : ITask() {
             }
         } catch (e: Throwable) {
             logger.error("plugin input illegal! ", e)
+            LoggerService.addErrorLine("plugin input illegal! ${e.message}")
             throw TaskExecuteException(
                 errorMsg = "plugin input illegal",
                 errorType = ErrorType.SYSTEM,
@@ -597,7 +604,8 @@ open class MarketAtomTask : ITask() {
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway(),
                     fileGateway = getFileGateway(buildVariables.containerType),
-                    taskId = buildTask.taskId ?: ""
+                    taskId = buildTask.taskId ?: "",
+                    executeCount = buildTask.executeCount ?: 1
                 )
             }
             BuildType.WORKER -> {
@@ -610,7 +618,8 @@ open class MarketAtomTask : ITask() {
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway(),
                     fileGateway = getFileGateway(buildVariables.containerType),
-                    taskId = buildTask.taskId ?: ""
+                    taskId = buildTask.taskId ?: "",
+                    executeCount = buildTask.executeCount ?: 1
                 )
             }
         }
@@ -672,14 +681,14 @@ open class MarketAtomTask : ITask() {
         val buildId: String,
         val vmSeqId: String,
         val fileGateway: String,
-        val taskId: String
+        val taskId: String,
+        val executeCount: Int
     )
 
     private fun writeInputFile(
         workspace: File,
         inputVariables: Map<String, Any>
     ) {
-//        logger.info("runtimeVariables is:$runtimeVariables") // 有敏感信息
         val inputFileFile = File(workspace, inputFile)
         inputFileFile.writeText(JsonUtil.toJson(inputVariables))
     }

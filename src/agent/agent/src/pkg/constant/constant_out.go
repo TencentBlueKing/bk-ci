@@ -33,6 +33,5 @@ package constant
 // 用来放一些常量，可能内外部不一致
 
 const (
-	DockerDataDir    = "/data/devops/workspace"
-	DAEMON_EXIT_CODE = 88
+	DockerDataDir = "/data/devops/workspace"
 )

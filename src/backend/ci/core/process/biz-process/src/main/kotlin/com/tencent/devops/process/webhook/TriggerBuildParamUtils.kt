@@ -89,6 +89,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PIPELINE_NAM
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PIPELINE_VERSION
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PROJECT_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PROJECT_NAME
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_REMARK
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_REPO
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_REPO_ALIAS_NAME
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_REPO_GROUP
@@ -150,7 +151,8 @@ object TriggerBuildParamUtils {
             CI_BUILD_START_TYPE,
             CI_WORKSPACE,
             CI_FAILED_TASKNAMES,
-            CI_FAILED_TASKS
+            CI_FAILED_TASKS,
+            CI_REMARK
         ).sortedBy {
             it
         }.map {

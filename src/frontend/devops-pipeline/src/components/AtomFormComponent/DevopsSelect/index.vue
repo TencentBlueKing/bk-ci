@@ -349,7 +349,7 @@
                 }
                 if (defaultVal && !this.loading) {
                     this.showValValidTips(defaultVal)
-                    this.handleChange(this.name, '')
+                    // this.handleChange(this.name, '')
                 }
                 return ''
             },

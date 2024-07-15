@@ -522,6 +522,25 @@ class TaskBuildRecordService(
         )
     }
 
+    fun updateAsyncStatus(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int,
+        asyncStatus: String
+    ) {
+        recordTaskDao.updateAsyncStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = executeCount,
+            asyncStatus = asyncStatus
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TaskBuildRecordService::class.java)
         private const val TASK_PAUSE_TAG_VAR = "taskPause"

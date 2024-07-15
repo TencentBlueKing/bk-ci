@@ -221,6 +221,7 @@ class PipelineRepositoryVersionService(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                pipelineInfo = pipelineInfo,
                 creator = creator,
                 description = description,
                 versionName = versionName,
@@ -299,6 +300,7 @@ class PipelineRepositoryVersionService(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                pipelineInfo = pipelineInfo,
                 creator = creator,
                 description = description,
                 versionName = versionName,
@@ -461,6 +463,9 @@ class PipelineRepositoryVersionService(
     private fun updatePipelineReferFlag(projectId: String, pipelineId: String) {
         var offset = 0
         val limit = PageUtil.DEFAULT_PAGE_SIZE
+        val pipelineInfo = pipelineInfoDao.convert(
+            pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId), null
+        ) ?: return
         val lock = PipelineModelLock(redisOperation, pipelineId)
         try {
             lock.lock()
@@ -470,6 +475,7 @@ class PipelineRepositoryVersionService(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
+                    pipelineInfo = pipelineInfo,
                     queryUnknownRelatedFlag = true,
                     offset = offset,
                     limit = limit
