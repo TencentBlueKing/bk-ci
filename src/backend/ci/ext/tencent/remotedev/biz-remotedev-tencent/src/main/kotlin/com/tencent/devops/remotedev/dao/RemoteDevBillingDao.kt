@@ -33,7 +33,6 @@ import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import org.jooq.DSLContext
-import org.jooq.Record2
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -136,38 +135,6 @@ class RemoteDevBillingDao {
                 .and(ws.OWNER_TYPE.eq(ownerType.name))
                 .let { if (userId != null) it.and(this.USER.eq(userId)) else it }
                 .fetch().map { Triple(it.value1(), it.value2(), it.value3()) }
-        }
-    }
-
-    fun monthlyInit(dslContext: DSLContext, freeTime: Int) {
-        val res = with(TRemoteDevBilling.T_REMOTE_DEV_BILLING) {
-            dslContext.select(WORKSPACE_NAME, USER).from(this)
-                .where(END_TIME.isNull)
-                .fetch()
-        }
-        /**
-         * 每月结束还没有结束的task，并创建一个新的task。这样做便于按月区分粒度
-         */
-        res.forEach { record2: Record2<String/*WORKSPACE_NAME*/, String/*USER*/> ->
-            endBilling(dslContext = dslContext, workspaceName = record2.value1(), computeUsageTime = false)
-            newBilling(dslContext = dslContext, workspaceName = record2.value1(), userId = record2.value2())
-        }
-        /**
-         * 初始化每个人的计费数据
-         */
-        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
-            dslContext.update(this)
-                .set(CUMULATIVE_USAGE_TIME, 0)
-                .set(
-                    CUMULATIVE_BILLING_TIME,
-                    CUMULATIVE_BILLING_TIME + DSL.iif(
-                        CUMULATIVE_BILLING_TIME.gt(freeTime),
-                        CUMULATIVE_BILLING_TIME - freeTime,
-                        0
-                    )
-                )
-                .where(CUMULATIVE_USAGE_TIME.gt(0))
-                .execute()
         }
     }
 }

@@ -686,11 +686,6 @@ class WorkspaceCommon @Autowired constructor(
         ) {
             return
         }
-        remoteDevBillingDao.endBilling(
-            dslContext = dslContext,
-            workspaceName = workspace.workspaceName,
-            computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL
-        )
     }
 
     // 按天备份数据

@@ -1049,13 +1049,6 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    fun initBilling(freeTime: Int? = null) {
-        remoteDevBillingDao.monthlyInit(
-            dslContext,
-            (freeTime ?: redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: DISCOUNT_TIME) * 60
-        )
-    }
-
     fun getShareWorkspace(workspaceName: String?): List<WorkspaceShared> {
         logger.info("get all shared workspace")
         return workspaceSharedDao.fetchSharedWorkspace(dslContext, workspaceName)?.map {
