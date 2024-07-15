@@ -105,6 +105,20 @@ class StartControl @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        // 启动时先刷新状态，
+        val fix = workspaceCommon.fixUnexpectedStatus(
+            userId = userId,
+            workspaceName = workspaceName,
+            status = workspace.status,
+            mountType = workspace.workspaceMountType
+        )
+        if (fix.checkException()) {
+            logger.info("$workspaceName is EXCEPTION and not repaired, return error.")
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_ERROR.errorCode
+            )
+        }
+
         // 审计
         ActionAuditContext.current()
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
@@ -120,7 +134,6 @@ class StartControl @Autowired constructor(
             when {
                 workspace.status.checkRunning() -> {
                     logger.info("${workspace.workspaceName} is running.")
-                    remoteDevBillingDao.newBilling(dslContext, workspaceName, userId)
                     val workspaceInfo = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
                         .getWorkspaceInfo(
                             userId, workspaceName,
