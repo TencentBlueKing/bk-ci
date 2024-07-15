@@ -29,18 +29,15 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      - uses: actions/cache@v3
-        id: yarn-cache
-        with:
-          path: src/frontend/**/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('src/frontend/**/package.json') }}
+          cache: "pnpm"
+          pnpm: 9.5
       - name: prefer offline
-        if: steps.yarn-cache.outputs.cache-hit != 'true'
-        run: yarn --prefer-offline && yarn install
+        if: steps.pnpm-cache.outputs.cache-hit != 'true'
+        run: pnpm --prefer-offline && pnpm install
         working-directory: src/frontend
       - run: |
           export NODE_OPTIONS=--openssl-legacy-provider
-          yarn public
+          pnpm public
         working-directory: src/frontend
       - uses: actions/upload-artifact@v3
         if: ${{ inputs.upload == 'true'  }}
