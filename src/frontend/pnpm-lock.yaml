@@ -1243,8 +1243,8 @@ importers:
   devops-pipeline:
     dependencies:
       '@blueking/log':
-        specifier: 2.1.4
-        version: 2.1.4(vue@2.7.16)
+        specifier: 2.1.5
+        version: 2.1.5(vue@2.7.16)
       '@blueking/search-select':
         specifier: 0.0.1-beta.2
         version: 0.0.1-beta.2
@@ -1623,8 +1623,8 @@ importers:
         specifier: 0.0.42-beta.1
         version: 0.0.42-beta.1
       '@blueking/log':
-        specifier: 2.1.4
-        version: 2.1.4(vue@2.7.16)
+        specifier: 2.1.5
+        version: 2.1.5(vue@2.7.16)
       '@blueking/user-selector':
         specifier: ^1.0.6
         version: 1.0.14
@@ -2863,8 +2863,8 @@ packages:
   '@blueking/eslint-config-bk@2.1.0-beta.6':
     resolution: {integrity: sha512-M8ZFDKPNs4cIJtloYLLm7gaj/DryjDjfjJKkuJ0I8tRxoNdRYaQoO/gsddZfH0l0tL0sPO5L2oJvFcRnJfqpVA==}
 
-  '@blueking/log@2.1.4':
-    resolution: {integrity: sha512-y4qRtc4NCK6q7xCQlbCRZpch7sb9PAWo1N4RKX81PR6UlR1ffhElHV5BH93EwtRxdq9oWCVIYLnLXvOS6MtwHw==}
+  '@blueking/log@2.1.5':
+    resolution: {integrity: sha512-Ow0OX6Eztx9dXksJBmBCMCMoDqClpefypvMU+3QwjfVfDEUhHYgVLRQdiOPoWjt8SHC7DPBjmgGihz2Bg5pgKA==}
     peerDependencies:
       vue: ^2.5.22
 
@@ -15116,7 +15116,7 @@ snapshots:
       - supports-color
       - webpack
 
-  '@blueking/log@2.1.4(vue@2.7.16)':
+  '@blueking/log@2.1.5(vue@2.7.16)':
     dependencies:
       '@icon-cool/bk-icon-bk-log': 0.0.7
       core-js: 3.26.0
@@ -16519,7 +16519,7 @@ snapshots:
 
   '@socket.io/component-emitter@3.1.2': {}
 
-  '@stylelint/postcss-css-in-js@0.37.3(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39)':
+  '@stylelint/postcss-css-in-js@0.37.3(postcss-syntax@0.36.2(postcss-html@0.36.0(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39))(postcss-less@3.1.4)(postcss-scss@2.1.1)(postcss@7.0.39))(postcss@7.0.39)':
     dependencies:
       '@babel/core': 7.24.6
       postcss: 7.0.39
@@ -16527,7 +16527,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@stylelint/postcss-markdown@0.36.2(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39)':
+  '@stylelint/postcss-markdown@0.36.2(postcss-syntax@0.36.2(postcss-html@0.36.0(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39))(postcss-less@3.1.4)(postcss-scss@2.1.1)(postcss@7.0.39))(postcss@7.0.39)':
     dependencies:
       postcss: 7.0.39
       postcss-syntax: 0.36.2(postcss-html@0.36.0(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39))(postcss-less@3.1.4)(postcss-scss@2.1.1)(postcss@7.0.39)
@@ -27267,8 +27267,8 @@ snapshots:
 
   stylelint@13.13.1:
     dependencies:
-      '@stylelint/postcss-css-in-js': 0.37.3(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39)
-      '@stylelint/postcss-markdown': 0.36.2(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39)
+      '@stylelint/postcss-css-in-js': 0.37.3(postcss-syntax@0.36.2(postcss-html@0.36.0(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39))(postcss-less@3.1.4)(postcss-scss@2.1.1)(postcss@7.0.39))(postcss@7.0.39)
+      '@stylelint/postcss-markdown': 0.36.2(postcss-syntax@0.36.2(postcss-html@0.36.0(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39))(postcss-less@3.1.4)(postcss-scss@2.1.1)(postcss@7.0.39))(postcss@7.0.39)
       autoprefixer: 9.8.8
       balanced-match: 2.0.0
       chalk: 4.1.2
