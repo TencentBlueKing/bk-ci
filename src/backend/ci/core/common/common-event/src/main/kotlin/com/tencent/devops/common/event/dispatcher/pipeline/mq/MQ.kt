@@ -117,6 +117,7 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_FINISH_GITCI = "q.engine.pipeline.build.gitci"
     const val QUEUE_PIPELINE_BUILD_FINISH_LOG = "q.engine.pipeline.build.log"
     const val QUEUE_PIPELINE_BUILD_FINISH_SUBPIPEINE = "q.engine.pipeline.build.subpipeline"
+    const val QUEUE_PIPELINE_BUILD_QUEUE_SUBPIPEINE = "q.engine.pipeline.build.queue.subpipeline"
     const val QUEUE_PIPELINE_BUILD_FINISH_WEBHOOK_QUEUE = "q.engine.pipeline.build.finish.webhook.queue"
     const val QUEUE_PIPELINE_BUILD_FINISH_NOTIFY_QUEUE = "q.engine.pipeline.build.finish.notify.queue"
 
@@ -257,6 +258,7 @@ object MQ {
     // 回调
     const val EXCHANGE_PIPELINE_BUILD_CALL_BACK_FANOUT = "e.engine.pipeline.build.callback.fanout"
     const val QUEUE_PIPELINE_BUILD_STATUS_CHANGE = "e.engine.pipeline.build.callback.change"
+    const val QUEUE_PIPELINE_BUILD_STATUS_METRICS = "q.engine.pipeline.build.callback.metrics"
 
     // 蓝盾项目管理
     const val EXCHANGE_PROJECT_CREATE_FANOUT = "e.project.create.exchange.fanout"

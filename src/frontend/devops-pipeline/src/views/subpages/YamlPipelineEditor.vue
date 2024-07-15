@@ -230,7 +230,6 @@
             },
             async handleStepClick (editingElementPos) {
                 const { stageIndex, containerIndex, elementIndex } = editingElementPos
-                
                 try {
                     // TODO: 需要先把当前的yaml转化为Model,展示侧边栏
                     const model = await this.transfer({
@@ -253,7 +252,6 @@
                         this.isUpdateElement = true
                         return
                     }
-               
                     this.isUpdateElement = true
                     this.togglePropertyPanel({
                         isShow: true,

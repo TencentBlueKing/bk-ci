@@ -218,6 +218,7 @@ data class StartBuildContext(
     }
 
     fun needRerunStage(stage: Stage): Boolean {
+        // 重试所在stage的后续stage都需要
         return stage.finally || retryStartTaskId == null || stage.id!! == retryStartTaskId
     }
 

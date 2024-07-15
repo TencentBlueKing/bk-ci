@@ -253,13 +253,16 @@ class BuildEndControl @Autowired constructor(
                     JsonUtil.toJson(buildInfo.errorInfoList!!)
                 } else null
             ),
+            // build 结束
             PipelineBuildStatusBroadCastEvent(
                 source = source,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
                 buildId = buildId,
-                actionType = ActionType.END
+                actionType = ActionType.END,
+                buildStatus = buildStatus.name,
+                executeCount = buildInfo.executeCount
             ),
             PipelineBuildWebSocketPushEvent(
                 source = "pauseTask",

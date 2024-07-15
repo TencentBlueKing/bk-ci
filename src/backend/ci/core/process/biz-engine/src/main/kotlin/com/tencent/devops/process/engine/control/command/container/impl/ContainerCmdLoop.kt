@@ -57,7 +57,9 @@ class ContainerCmdLoop(
             commandContext.event.copy(delayMills = DEFAULT_LOOP_TIME_MILLS, source = commandContext.latestSummary)
         )
         // #5454 增加可视化的互斥状态打印
-        if (commandContext.latestSummary == "mutex_print") {
+        if (commandContext.latestSummary == "mutex_print" ||
+            commandContext.latestSummary == "agent_reuse_mutex_print"
+        ) {
             commandContext.cmdFlowState = CmdFlowState.FINALLY
         }
     }
