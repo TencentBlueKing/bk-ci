@@ -133,6 +133,7 @@
   - "EMAIL"
   - "WEWORK"
   - "VOICE"
+  - "WEWORK_GROUP"
   priority: 1
   source: 0
   emailTemplate:
@@ -151,6 +152,11 @@
     id: "jgj46v0knzlkhcah57rcutao30tqza5v"
     taskName: "Build Success"
     content: "${successContent}"
+  weworkGroupTemplate:
+    id: "3ffdfe998646421ba8672a9268069e4c"
+    sender: "DevOps"
+    title: "BK-CI pipeline [${pipelineName}] # ${buildNum} built successfully"
+    body: "✔️ ${successContent}\nView details: ${detailUrl}"
   creator: "system"
   modifior: "system"
 - index: 7
@@ -337,6 +343,7 @@
   - "EMAIL"
   - "WEWORK"
   - "VOICE"
+  - "WEWORK_GROUP"
   priority: 1
   source: 0
   emailTemplate:
@@ -355,6 +362,11 @@
     id: "qlzxaotr2zvr8gnj1dkpj2x5lx19wkpt"
     taskName: "Build Failure"
     content: "${failContent}"
+  weworkGroupTemplate:
+    id: "3cfc1a1ca58f4b92bf4c6d3fc8bcf790"
+    sender: "DevOps"
+    title: "Failed to build Blue Shield pipeline [${pipelineName}] # ${buildNum}"
+    body: "❌${failContent}"
   creator: "system"
   modifior: "system"
 - index: 17
@@ -460,6 +472,7 @@
   - "EMAIL"
   - "WEWORK"
   - "VOICE"
+  - "WEWORK_GROUP"
   priority: 1
   source: 0
   emailTemplate:
@@ -478,6 +491,11 @@
     id: "x79oetbqquqfjhep7zifheqe9b3tkwvx"
     taskName: "Build Failure"
     content: "${failContent}"
+  weworkGroupTemplate:
+    id: "391b2aed3ca1479b9fd78b609b23f49b"
+    sender: "DevOps"
+    title: "Failed to build Blue Shield pipeline [${pipelineName}] # ${buildNum}"
+    body: "❌ ${failContent}\n\nView details: ${detailUrl}"
   creator: "system"
   modifior: "system"
 - index: 23
@@ -603,6 +621,7 @@
   - "EMAIL"
   - "WEWORK"
   - "VOICE"
+  - "WEWORK_GROUP"
   priority: 1
   source: 0
   emailTemplate:
@@ -621,6 +640,11 @@
     id: "zjeufw8tfnf53tnibu4s43leju8xgnor"
     taskName: "Build Success"
     content: "${successContent}"
+  weworkGroupTemplate:
+    id: "9c424b5784f54ba9b75e89a266951659"
+    sender: "DevOps"
+    title: "Blue Shield pipeline [${pipelineName}] # ${buildNum} built successfully"
+    body: "✔️${successContent}"
   creator: "system"
   modifior: "system"
 - index: 29
