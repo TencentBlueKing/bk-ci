@@ -264,12 +264,19 @@ class PipelineRetryFacadeService @Autowired constructor(
             )
         } else {
             BuildRecordContainer(
-                projectId = containerInfo.projectId, pipelineId = containerInfo.pipelineId,
-                resourceVersion = resourceVersion, buildId = containerInfo.buildId,
-                stageId = containerInfo.stageId, containerId = containerInfo.containerId,
-                containerType = containerInfo.containerType, executeCount = executeCount,
-                matrixGroupFlag = containerInfo.matrixGroupFlag, status = BuildStatus.QUEUE.name,
-                containerVar = mutableMapOf(), timestamps = mapOf()
+                projectId = containerInfo.projectId,
+                pipelineId = containerInfo.pipelineId,
+                resourceVersion = resourceVersion,
+                buildId = containerInfo.buildId,
+                stageId = containerInfo.stageId,
+                containerId = containerInfo.containerId,
+                containerType = containerInfo.containerType,
+                executeCount = executeCount,
+                containPostTaskFlag = containerInfo.containPostTaskFlag,
+                matrixGroupFlag = containerInfo.matrixGroupFlag,
+                status = BuildStatus.QUEUE.name,
+                containerVar = mutableMapOf(),
+                timestamps = mapOf()
             )
         }
         pipelineBuildRecordService.batchSave(

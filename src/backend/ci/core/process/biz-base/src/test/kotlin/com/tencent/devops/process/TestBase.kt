@@ -333,6 +333,7 @@ open class TestBase : BkCiAbstractTest() {
                 mutexGroup = null
             ),
             cost = containerCost,
+            containPostTaskFlag = null,
             matrixGroupId = null,
             matrixGroupFlag = null
         )

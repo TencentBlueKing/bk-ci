@@ -265,13 +265,6 @@ class TaskBuildRecordService(
         executeCount: Int,
         cancelUser: String
     ) {
-        taskBuildDetailService.taskCancel(
-            projectId = projectId,
-            buildId = buildId,
-            containerId = containerId,
-            taskId = taskId,
-            cancelUser = cancelUser // fix me: 是否要直接更新取消人，暂时维护原有逻辑
-        )
         updateTaskRecord(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -298,14 +291,6 @@ class TaskBuildRecordService(
         executeCount: Int,
         element: Element?
     ) {
-        taskBuildDetailService.taskContinue(
-            projectId = projectId,
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            taskId = taskId,
-            element = element
-        )
         // #7983 此处需要保持Container状态独立刷新，不能放进更新task的并发锁
         containerBuildRecordService.updateContainerStatus(
             projectId = projectId,
@@ -420,8 +405,23 @@ class TaskBuildRecordService(
                 )
             }
         }
+        val pipelineTaskStatusInfos = mutableListOf<PipelineTaskStatusInfo>()
+        val buildRecordContainer = containerBuildRecordService.getRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = taskBuildEndParam.containerId,
+            executeCount = executeCount
+        )
+        buildRecordContainer?.let {
+            val containPostTaskFlag = buildRecordContainer.containPostTaskFlag
+            // 判断取消的task任务对应的container是否包含post任务
+            val cancelTaskPostFlag = buildStatus == BuildStatus.CANCELED && containPostTaskFlag == true
+            if (cancelTaskPostFlag) {
 
-        return taskBuildDetailService.taskEnd(taskBuildEndParam)
+            }
+        }
+        return pipelineTaskStatusInfos
     }
 
     fun updateTaskRecord(

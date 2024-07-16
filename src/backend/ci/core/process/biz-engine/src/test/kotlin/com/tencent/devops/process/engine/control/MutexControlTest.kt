@@ -70,6 +70,7 @@ class MutexControlTest {
         seq = containerId.toInt(),
         status = BuildStatus.RUNNING,
         controlOption = PipelineBuildContainerControlOption(jobControlOption = JobControlOption()),
+        containPostTaskFlag = null,
         matrixGroupId = null,
         matrixGroupFlag = false
     )
