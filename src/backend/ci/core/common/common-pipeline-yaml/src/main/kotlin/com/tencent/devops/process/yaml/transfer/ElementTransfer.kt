@@ -166,6 +166,11 @@ class ElementTransfer @Autowired(required = false) constructor(
                         } else {
                             element.advanceExpression
                         },
+                        repoType = if (element.repositoryType == null) {
+                            TriggerRepositoryType.NONE.name
+                        } else {
+                            element.repositoryType!!.name
+                        },
                         repoId = repoHashId,
                         repoName = repoName,
                         branches = element.branches,

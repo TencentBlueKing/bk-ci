@@ -718,7 +718,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     !timer.repoName.isNullOrBlank() ->
                         TriggerRepositoryType.NAME
 
-                    else -> TriggerRepositoryType.SELF
+                    timer.repoType == TriggerRepositoryType.SELF.name ->
+                        TriggerRepositoryType.SELF
+
+                    else -> null
                 }
                 elementQueue.add(
                     TimerTriggerElement(
