@@ -107,9 +107,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                         sendNotifyByTemplate(
                             templateCode = getNotifyTemplateCode(shutdownType, successSubscription.detailFlag),
                             receivers = receivers,
-                            notifyType = successSubscription.types.filter {
-                                it != PipelineSubscriptionType.WEWORK_GROUP
-                            }.map { it.name }.toMutableSet(),
+                            notifyType = setOf(PipelineSubscriptionType.WEWORK_GROUP.name),
                             titleParams = commandContext.notifyValue,
                             bodyParams = commandContext.notifyValue,
                             markdownContent = successSubscription.wechatGroupMarkdownFlag
@@ -162,9 +160,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                         sendNotifyByTemplate(
                             templateCode = getNotifyTemplateCode(shutdownType, failSubscription.detailFlag),
                             receivers = receivers,
-                            notifyType = failSubscription.types.filter {
-                                it != PipelineSubscriptionType.WEWORK_GROUP
-                            }.map { it.name }.toMutableSet(),
+                            notifyType = setOf(PipelineSubscriptionType.WEWORK_GROUP.name),
                             titleParams = commandContext.notifyValue,
                             bodyParams = commandContext.notifyValue,
                             markdownContent = failSubscription.wechatGroupMarkdownFlag
