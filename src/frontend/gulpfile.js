@@ -70,7 +70,7 @@ function getScopeStr (scope) {
             default:
                 scopeArray = scope
         }
-        return `--filter=${scopeArray.map(item => `devops-${item}`).join(',')}`
+        return `${scopeArray.map(item => `--filter devops-${item}`).join(' ')}`
     } catch (e) {
         console.error(e)
         return ''
@@ -93,8 +93,8 @@ task('build', series([cb => {
         acc += ` --env ${key}=${envConfMap[key]}`
         return acc
     }, '')
-    console.log(envQueryStr)
-    require('child_process').exec(`pnpm run ${scopeStr} public:${env}`, {
+    console.log(`${envQueryStr} \n pnpm ${scopeStr} run public:${env}`)
+    require('child_process').exec(`pnpm ${scopeStr} run public:${env}`, {
         maxBuffer: 5000 * 1024,
         env: {
             ...process.env,
@@ -110,17 +110,23 @@ task('build', series([cb => {
         cb()
     })
 }], () => {
-    const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(`${dist}/assets_bundle.json`, 'utf8')}`
-    fs.writeFileSync(`${dist}/assetsBundles.js`, fileContent)
-    return src(`${dist}/assetsBundles.js`)
-        .pipe(hash())
-        .pipe(dest(`${dist}/`))
+    try {
+        const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(`${dist}/assets_bundle.json`, 'utf8')}`
+        fs.writeFileSync(`${dist}/assetsBundles.js`, fileContent)
+        return src(`${dist}/assetsBundles.js`)
+            .pipe(hash())
+            .pipe(dest(`${dist}/`))
+    } catch (error) {
+        console.error(error)
+    }
 }, (cb) => {
     ['console', 'pipeline'].map(prefix => {
         const dir = path.join(dist, prefix)
         const spriteNameGlob = `${prefix === 'console' ? 'devops' : 'pipeline'}_sprite-*.js`
         const fileName = `frontend#${prefix}#index.html`
-        return src(path.join(dir, fileName))
+        return src(path.join(dir, fileName), {
+            allowEmpty: true
+        })
             .pipe(inject(src([
                 ...(prefix === 'console' ? [`${dist}/assetsBundles-*.js`] : []),
                 `${dist}/svg-sprites/${spriteNameGlob}`

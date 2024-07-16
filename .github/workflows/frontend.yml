@@ -35,7 +35,6 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: src/frontend/pnpm-lock.yaml
       - run: |
-          pnpm -v
           pnpm install
           export NODE_OPTIONS=--openssl-legacy-provider
           pnpm public
