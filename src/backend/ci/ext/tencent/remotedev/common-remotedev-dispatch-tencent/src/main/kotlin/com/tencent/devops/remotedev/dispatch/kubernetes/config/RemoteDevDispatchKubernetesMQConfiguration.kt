@@ -40,7 +40,7 @@ import org.springframework.core.Ordered
 @Suppress("ALL")
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class RemoteDevMQConfiguration @Autowired constructor() {
+class RemoteDevDispatchKubernetesMQConfiguration @Autowired constructor() {
     @EventConsumer
     fun workspaceCreateListener(
         @Autowired workspaceListener: WorkspaceListener
