@@ -8,7 +8,7 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 
 @Service
-class Oauth2AccessTokenService constructor(
+class Oauth2AccessTokenService(
     private val oauth2AccessTokenDao: AuthOauth2AccessTokenDao,
     private val dslContext: DSLContext
 ) {
@@ -31,6 +31,7 @@ class Oauth2AccessTokenService constructor(
         clientId: String,
         refreshToken: String? = null,
         userName: String? = null,
+        passWord: String? = null,
         grantType: String? = null
     ): TAuthOauth2AccessTokenRecord? {
         return oauth2AccessTokenDao.get(
@@ -38,6 +39,7 @@ class Oauth2AccessTokenService constructor(
             clientId = clientId,
             refreshToken = refreshToken,
             userName = userName,
+            passWord = passWord,
             grantType = grantType
         )
     }
@@ -46,6 +48,7 @@ class Oauth2AccessTokenService constructor(
     fun create(
         clientId: String,
         userName: String?,
+        passWord: String?,
         grantType: String,
         accessToken: String,
         refreshToken: String?,
@@ -56,6 +59,7 @@ class Oauth2AccessTokenService constructor(
             dslContext = dslContext,
             clientId = clientId,
             userName = userName,
+            passWord = passWord,
             grantType = grantType,
             accessToken = accessToken,
             refreshToken = refreshToken,
