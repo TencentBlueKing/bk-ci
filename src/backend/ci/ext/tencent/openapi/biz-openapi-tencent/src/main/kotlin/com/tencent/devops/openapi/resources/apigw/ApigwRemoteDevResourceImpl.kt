@@ -125,7 +125,8 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         logger.info("notify workspace|notifyData|$notifyData")
         if ((notifyData.projectId.isNullOrEmpty() || notifyData.projectId?.all { it.isBlank() } == true) &&
             (notifyData.ip.isNullOrEmpty() || notifyData.ip?.all { it.isBlank() } == true) &&
-            (notifyData.owner.isNullOrEmpty() || notifyData.owner?.all { it.isBlank() } == true)) {
+            (notifyData.owner.isNullOrEmpty() || notifyData.owner?.all { it.isBlank() } == true)
+        ) {
             return Result(false)
         }
         return client.get(ServiceRemoteDevResource::class).notifyWorkspaceInfo(
