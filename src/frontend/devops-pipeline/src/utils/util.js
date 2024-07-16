@@ -903,19 +903,15 @@ export function showPipelineCheckMsg (showTooltips, message, h) {
     })
 }
 
-export function copyToClipboard (text) {
-    try {
-        if (navigator.clipboard?.writeText) {
-            navigator.clipboard.writeText(text)
-        } else {
-            const textArea = document.createElement('textarea')
-            textArea.value = text
-            document.body.appendChild(textArea)
-            textArea.select()
-            document.execCommand('Copy')
-            document.body.removeChild(textArea)
-        }
-    } catch (error) {
-        console.error('copyToClipboard error: ', error)
+export async function copyToClipboard (text) {
+    if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+    } else {
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand('Copy')
+        document.body.removeChild(textArea)
     }
 }

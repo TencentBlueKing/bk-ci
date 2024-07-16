@@ -54,14 +54,22 @@
         },
         methods: {
             bkVarWrapper,
-            handleCopy (con) {
+            async handleCopy (con) {
                 if (this.disabledCopy) return
-                copyToClipboard(con)
-                this.$bkMessage({
-                    theme: 'success',
-                    message: this.$t('copySuc'),
-                    limit: 1
-                })
+                try {
+                    await copyToClipboard(con)
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('copySuc'),
+                        limit: 1
+                    })
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message,
+                        limit: 1
+                    })
+                }
             }
         }
     }

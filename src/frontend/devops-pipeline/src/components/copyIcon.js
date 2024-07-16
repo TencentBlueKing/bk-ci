@@ -7,8 +7,12 @@ const messages = i18n.messages[locale]
 const message = messages.copySuc
 
 async function copyTxt (value) {
-    copyToClipboard(value)
-    bkMessage({ theme: 'success', message })
+    try {
+        await copyToClipboard(value)
+        bkMessage({ theme: 'success', message })
+    } catch (error) {
+        bkMessage({ theme: 'error', message: error.message })
+    }
 }
 
 export default {
