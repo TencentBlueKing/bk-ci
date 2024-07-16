@@ -117,7 +117,7 @@
                                     :ref="`paramsForm${index}`"
                                     :build-no="param.buildParams"
                                     :disabled="disabled"
-                                    :version-param-values="versionValues"
+                                    :version-param-values="param.paramValues"
                                     :handle-version-change="handleParamChange"
                                     :handle-build-no-change="handleBuildNoChange"
                                 ></pipeline-versions-form>
@@ -188,8 +188,7 @@
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import instanceMessage from '@/components/template/instance-message.vue'
     import instancePipelineName from '@/components/template/instance-pipeline-name.vue'
-    import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
-    import { getParamsValuesMap } from '@/utils/util'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
     import { mapGetters } from 'vuex'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
 
@@ -261,19 +260,6 @@
                     return pipeline
                 }
                 return ''
-            },
-            allVersionKeyList () {
-                return allVersionKeyList
-            },
-            versionConfig () {
-                return getVersionConfig()
-            },
-            versions () {
-                const params = this.pipelineNameList.find(item => item.pipelineName === this.currentPipelineParams.pipelineName)
-                return params.versionParams.filter(p => allVersionKeyList.includes(p.id))
-            },
-            versionValues () {
-                return getParamsValuesMap(this.versions)
             }
         },
         async mounted () {
