@@ -38,5 +38,5 @@ enum class PipelineSubscriptionType {
     WEWORK,
     VOICE,
     // 企业微信群通知
-    WECHAT_GROUP
+    WEWORK_GROUP
 }
