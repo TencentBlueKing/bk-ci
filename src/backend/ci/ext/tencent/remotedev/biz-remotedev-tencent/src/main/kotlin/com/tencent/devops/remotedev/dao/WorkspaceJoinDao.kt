@@ -259,7 +259,7 @@ class WorkspaceJoinDao {
         }
 
         if (!search.sips.isNullOrEmpty()) {
-            conditions.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.likeRegex(search.sips?.joinToString("|")))
+            conditions.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.likeRegex(search.sips?.joinToString("$|", postfix = "$")))
         }
 
         // TODO windows表已经存在Zone id字段，但是数据没有补齐，后续可以切换过来就不使用HOST_IP进行模糊查询了
