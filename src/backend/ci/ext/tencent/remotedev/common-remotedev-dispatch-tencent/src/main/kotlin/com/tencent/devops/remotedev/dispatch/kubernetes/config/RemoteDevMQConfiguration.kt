@@ -27,28 +27,13 @@
 
 package com.tencent.devops.remotedev.dispatch.kubernetes.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.common.remotedev.MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT
-import com.tencent.devops.common.remotedev.MQ.QUEUE_WORKSPACE_CREATE_STARTUP
-import com.tencent.devops.common.remotedev.MQ.QUEUE_WORKSPACE_OPERATE_STARTUP
-import com.tencent.devops.common.remotedev.MQ.ROUTE_WORKSPACE_CREATE_STARTUP
-import com.tencent.devops.common.remotedev.MQ.ROUTE_WORKSPACE_OPERATE_STARTUP
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.remotedev.dispatch.kubernetes.listener.WorkspaceListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
+import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
@@ -56,101 +41,13 @@ import org.springframework.core.Ordered
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class RemoteDevMQConfiguration @Autowired constructor() {
-
-    @Value("\${dispatch.agentStartQueue.concurrency:60}")
-    private val agentStartQueueConcurrency: Int = 60
-
-    @Value("\${dispatch.agentStartQueue.maxConcurrency:100}")
-    private val agentStartQueueMaxConcurrency: Int = 100
-
-    @Bean
-    @ConditionalOnMissingBean(RabbitAdmin::class)
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
-
-    @Bean
-    fun remoteDevExchange(): DirectExchange {
-        val directExchange = DirectExchange(EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    /**
-     * 启动构建队列
-     */
-    @Bean
-    fun buildWorkspaceCreateStartQueue(): Queue {
-        return Queue(QUEUE_WORKSPACE_CREATE_STARTUP)
-    }
-
-    @Bean
-    fun buildWorkspaceCreateQueueBind(
-        @Autowired buildWorkspaceCreateStartQueue: Queue,
-        @Autowired remoteDevExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(buildWorkspaceCreateStartQueue).to(remoteDevExchange).with(ROUTE_WORKSPACE_CREATE_STARTUP)
-    }
-
-    @Bean
-    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
-
-    @Bean
+    @EventConsumer
     fun workspaceCreateListener(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired buildWorkspaceCreateStartQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired workspaceListener: WorkspaceListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(workspaceListener, workspaceListener::handleWorkspaceCreate.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = buildWorkspaceCreateStartQueue,
-            rabbitAdmin = rabbitAdmin,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = agentStartQueueConcurrency,
-            maxConcurrency = agentStartQueueMaxConcurrency,
-            adapter = adapter,
-            prefetchCount = 1
-        )
-    }
+        @Autowired workspaceListener: WorkspaceListener
+    ) = ScsConsumerBuilder.build<WorkspaceCreateEvent> { workspaceListener.handleWorkspaceCreate(it) }
 
-    @Bean
-    fun buildWorkspaceOperateQueue(): Queue {
-        return Queue(QUEUE_WORKSPACE_OPERATE_STARTUP)
-    }
-
-    @Bean
-    fun buildWorkspaceOperateQueueBind(
-        @Autowired buildWorkspaceOperateQueue: Queue,
-        @Autowired remoteDevExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(buildWorkspaceOperateQueue).to(remoteDevExchange).with(ROUTE_WORKSPACE_OPERATE_STARTUP)
-    }
-
-    @Bean
+    @EventConsumer
     fun workspaceOperateListener(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired buildWorkspaceOperateQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired workspaceListener: WorkspaceListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(workspaceListener, workspaceListener::handleWorkspaceOperate.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = buildWorkspaceOperateQueue,
-            rabbitAdmin = rabbitAdmin,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 60,
-            maxConcurrency = 100,
-            adapter = adapter,
-            prefetchCount = 1
-        )
-    }
+        @Autowired workspaceListener: WorkspaceListener
+    ) = ScsConsumerBuilder.build<WorkspaceOperateEvent> { workspaceListener.handleWorkspaceOperate(it) }
 }

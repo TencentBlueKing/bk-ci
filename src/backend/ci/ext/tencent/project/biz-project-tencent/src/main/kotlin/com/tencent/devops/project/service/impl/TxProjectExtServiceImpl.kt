@@ -7,7 +7,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.service.BkAccessTokenApi
-import com.tencent.devops.project.dispatch.ProjectDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -27,7 +27,7 @@ class TxProjectExtServiceImpl(
     private val bkRepoClient: BkRepoClient,
     private val projectPaasCCService: ProjectPaasCCService,
     private val bkAccessTokenApi: BkAccessTokenApi,
-    private val projectDispatcher: ProjectDispatcher,
+    private val projectDispatcher: SampleEventDispatcher,
     private val authProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper
 ) : ProjectExtService {

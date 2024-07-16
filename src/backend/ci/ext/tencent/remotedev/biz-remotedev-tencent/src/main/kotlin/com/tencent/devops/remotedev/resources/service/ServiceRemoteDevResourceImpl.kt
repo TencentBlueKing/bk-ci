@@ -71,6 +71,7 @@ import javax.ws.rs.core.Response
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 
 @RestResource
 @Suppress("ALL")
@@ -87,7 +88,7 @@ class ServiceRemoteDevResourceImpl(
     private val redisOperation: RedisOperation,
     private val workspaceLoginService: WorkspaceLoginService,
     private val startWorkspaceService: StartWorkspaceService,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val expertSupportService: ExpertSupportService,
     private val devcloudService: DevcloudService,
     private val deliverControl: DeliverControl,
@@ -261,7 +262,7 @@ class ServiceRemoteDevResourceImpl(
                 }
             }
             AsyncExecute.dispatch(
-                rabbitTemplate, AsyncPipelineEvent(
+                streamBridge, AsyncPipelineEvent(
                     userId = info.userId ?: operator,
                     projectId = info.projectId,
                     pipelineId = info.pipelineId,

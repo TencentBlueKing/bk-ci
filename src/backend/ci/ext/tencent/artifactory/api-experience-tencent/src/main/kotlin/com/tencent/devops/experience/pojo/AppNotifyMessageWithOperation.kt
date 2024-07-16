@@ -27,7 +27,11 @@
 
 package com.tencent.devops.experience.pojo
 
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.experience.constant.ExperienceConstant.EXPERIENCE_PUSH
+
 // 消息重试机制封装类
+@Event(EXPERIENCE_PUSH)
 class AppNotifyMessageWithOperation : AppNotifyMessage() {
     var id: String? = null
     var retryCount: Int = 0

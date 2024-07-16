@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -45,7 +46,6 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -65,14 +65,14 @@ class TXStreamTriggerRequestService @Autowired constructor(
     gitRequestEventDao: GitRequestEventDao,
     gitPipelineResourceDao: GitPipelineResourceDao,
     streamPipelineTriggerDao: StreamPipelineTriggerDao,
-    rabbitTemplate: RabbitTemplate,
+    eventDispatcher: SampleEventDispatcher,
     streamGitConfig: StreamGitConfig,
     private val objectMapper: ObjectMapper,
     private val txPreTrigger: TXPreTrigger
 ) : StreamTriggerRequestService(
     objectMapper = objectMapper,
     dslContext = dslContext,
-    rabbitTemplate = rabbitTemplate,
+    eventDispatcher = eventDispatcher,
     actionFactory = actionFactory,
     streamTriggerCache = streamTriggerCache,
     exHandler = exHandler,

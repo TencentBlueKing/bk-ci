@@ -19,9 +19,9 @@ import com.tencentcloudapi.common.profile.ClientProfile
 import com.tencentcloudapi.common.profile.HttpProfile
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
 
 @Suppress("ALL")
@@ -31,7 +31,7 @@ class TCloudCfsService @Autowired constructor(
     private val projectTCloudCfsDao: ProjectTCloudCfsDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) {
     @Value("\${tcloud.apiSecretId:}")
     val secretId = ""
@@ -157,7 +157,7 @@ class TCloudCfsService @Autowired constructor(
         delete: Boolean
     ) {
         AsyncExecute.dispatch(
-            rabbitTemplate, AsyncTCloudCfs(
+            streamBridge, AsyncTCloudCfs(
                 pgId = pgId,
                 ip = ip,
                 ruleId = ruleId,

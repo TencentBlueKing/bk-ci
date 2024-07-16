@@ -28,14 +28,14 @@
 package com.tencent.devops.remotedev.pojo.mq
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.remotedev.MQ
+import com.tencent.devops.common.remotedev.RemoteDevMQ
 import com.tencent.devops.common.remotedev.WorkspaceEvent
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.ROUTE_WORKSPACE_OPERATE_STARTUP)
+@Event(RemoteDevMQ.WORKSPACE_OPERATE_STARTUP)
 data class WorkspaceOperateEvent(
     override val userId: String,
     override val traceId: String = TraceTag.buildBiz(),
@@ -55,6 +55,6 @@ data class WorkspaceOperateEvent(
     val machineType: String? = null,
     val projectId: String? = null,
     override val workspaceName: String,
-    override val delayMills: Int = 0,
-    override val retryTime: Int = 0
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 0
 ) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)

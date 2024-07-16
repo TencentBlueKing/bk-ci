@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.JobWrapper
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.SendWechatNotifyElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -39,11 +38,10 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_COMPUTER_VIEW_DETAILS
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_INVALID_NOTIFICATION_RECIPIENT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_SEND_WECOM_CONTENT
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_SEND_WECOM_CONTENT_FAILED
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_SEND_WECOM_CONTENT_SUCCESSFULLY
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_WECOM_NOTICE
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -141,40 +139,29 @@ class WechatTaskAtom @Autowired constructor(
         )
 
         message.addAllReceivers(receiversStr.split(",").toSet())
-
-        val success = (object : JobWrapper {
-            override fun doIt(): Boolean {
-                val resp = client.get(ServiceNotifyResource::class).sendWechatNotify(message)
-                if (resp.isOk()) {
-                    if (resp.data!!) {
-                        buildLogPrinter.addLine(
-                            buildId = buildId,
-                            message = I18nUtil.getCodeLanMessage(
-                                messageCode = BK_SEND_WECOM_CONTENT_SUCCESSFULLY,
-                                params = arrayOf(message.body, receiversStr),
-                                language = I18nUtil.getDefaultLocaleLanguage()
-                            ), tag = taskId, containerHashId = task.containerHashId,
+        var success = false
+        val resp = client.get(ServiceNotifyResource::class).sendWechatNotify(message)
+        if (resp.isOk() && resp.data == true) {
+            buildLogPrinter.addLine(buildId =buildId,
+                message =I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_SEND_WECOM_CONTENT_SUCCESSFULLY,
+                    params = arrayOf(message.body, receiversStr),
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ), tag = taskId, containerHashId = task.containerHashId,
                             executeCount = task.executeCount ?: 1,
                             jobId = null,
-                            stepId = task.stepId
-                        )
-                        return true
-                    }
-                }
-                buildLogPrinter.addRedLine(
-                    buildId = buildId, message = I18nUtil.getCodeLanMessage(
-                        messageCode = BK_SEND_WECOM_CONTENT_FAILED,
-                        params = arrayOf(message.body, receiversStr),
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ) + "${resp.message}", tag = taskId, containerHashId = task.containerHashId,
+                            stepId = task.stepId)
+            success = true
+        } else {
+            buildLogPrinter.addRedLine(buildId= buildId, message = I18nUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.BK_SEND_WECOM_CONTENT_FAILED,
+                params = arrayOf(message.body, receiversStr),
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ) + "${resp.message}", tag = taskId, containerHashId = task.containerHashId,
                     executeCount = task.executeCount ?: 1,
                     jobId = null,
-                    stepId = task.stepId
-                )
-                return false
-            }
-        }).tryDoIt()
-
+                    stepId = task.stepId)
+        }
         return if (success) AtomResponse(BuildStatus.SUCCEED) else defaultFailAtomResponse
     }
 }

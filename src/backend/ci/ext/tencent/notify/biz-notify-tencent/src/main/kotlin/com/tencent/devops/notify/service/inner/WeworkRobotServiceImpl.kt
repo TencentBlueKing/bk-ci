@@ -35,8 +35,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.ROUTE_WEWORK
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_CONTROL_MESSAGE_LENGTH
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
@@ -49,21 +47,21 @@ import com.tencent.devops.notify.pojo.WeworkRobotSingleTextMessage
 import com.tencent.devops.notify.pojo.WeworkSendMessageResp
 import com.tencent.devops.notify.service.WeworkService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Configuration
 import java.util.Optional
+import org.springframework.cloud.stream.function.StreamBridge
 
 @Configuration
 @ConditionalOnProperty(prefix = "notify", name = ["weworkChannel"], havingValue = "weworkRobot")
 class WeworkRobotServiceImpl @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val weworkNotifyDao: WeworkNotifyDao
 ) : WeworkService {
     override fun sendMqMsg(message: WeworkNotifyMessageWithOperation) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_WEWORK, message)
+        message.sendTo(streamBridge)
     }
 
     @Value("\${wework.apiUrl:https://qyapi.weixin.qq.com}")

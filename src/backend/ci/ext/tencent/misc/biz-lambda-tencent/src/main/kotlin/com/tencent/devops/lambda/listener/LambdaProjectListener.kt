@@ -26,7 +26,7 @@
  */
 package com.tencent.devops.lambda.listener
 
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.lambda.service.project.LambdaProjectService
 import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
@@ -37,7 +37,7 @@ import org.springframework.stereotype.Component
 @Component
 class LambdaProjectListener @Autowired constructor(
     private val lambdaProjectService: LambdaProjectService
-) : Listener<ProjectBroadCastEvent> {
+) : EventListener<ProjectBroadCastEvent> {
 
     override fun execute(event: ProjectBroadCastEvent) {
         when (event) {

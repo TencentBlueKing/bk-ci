@@ -28,8 +28,12 @@
 package com.tencent.devops.project.config
 
 import com.tencent.devops.common.auth.service.BkAccessTokenApi
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.project.listener.CountLoginConsumer
 import com.tencent.devops.project.listener.ProjectEventListener
 import com.tencent.devops.project.listener.TencentProjectEventListener
+import com.tencent.devops.project.pojo.UserCountLogin
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.iam.IamV3Service
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +48,6 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class TencentProjectMQConfiguration {
-
     @Bean
     fun projectEventListener(
         @Autowired projectPaasCCService: ProjectPaasCCService,
@@ -55,4 +58,9 @@ class TencentProjectMQConfiguration {
         bkAccessTokenApi = bkAccessTokenApi,
         iamV3Service = iamV3Service
     )
+
+    @EventConsumer
+    fun mqCountLoginConsumer(
+        @Autowired countLoginConsumer: CountLoginConsumer
+    ) = ScsConsumerBuilder.build<UserCountLogin> { countLoginConsumer.onConsume(it) }
 }

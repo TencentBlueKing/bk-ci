@@ -3,6 +3,7 @@ package com.tencent.devops.dispatch.devcloud.listener
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_PREPARE_CREATE_TENCENT_CLOUD_BUILD_MACHINE
@@ -50,6 +51,9 @@ class DevCloudBuildListener @Autowired constructor(
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
+        if (event.dispatchType !is PublicDevCloudDispathcType) {
+            return
+        }
         dcContainerShutdownHandler.handlerRequest(
             DcShutdownHandlerContext(
                 userId = event.userId,
@@ -61,6 +65,10 @@ class DevCloudBuildListener @Autowired constructor(
                 shutdownEvent = event
             )
         )
+    }
+
+    override fun consumerFilter(dispatchType: DispatchType): Boolean {
+        return dispatchType is PublicDevCloudDispathcType
     }
 
     private fun startUp(dispatchMessage: DispatchMessage) {

@@ -28,7 +28,7 @@
 package com.tencent.devops.dispatch.kubernetes.listener
 
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
@@ -45,7 +45,7 @@ import org.springframework.stereotype.Component
 @Suppress("ALL")
 class WorkspaceListener @Autowired constructor(
     private val remoteDevService: RemoteDevService,
-    private val remoteDevDispatcher: RemoteDevDispatcher
+    private val remoteDevDispatcher: SampleEventDispatcher
 ) {
 
     @BkTimed

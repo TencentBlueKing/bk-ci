@@ -29,13 +29,13 @@ import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import java.time.Duration
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.Duration
 
 @Suppress("ALL")
 @Service
@@ -48,7 +48,7 @@ class GitProxyTGitService @Autowired constructor(
     private val offshoreTGitApiClient: OffshoreTGitApiClient,
     private val tGitConfig: TGitConfig,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) {
     // 校验当前凭据的用户是否拥有连接项目的 master 及以上权限
     fun checkUserPermission(
@@ -451,7 +451,7 @@ class GitProxyTGitService @Autowired constructor(
         remove: Boolean
     ) {
         AsyncExecute.dispatch(
-            rabbitTemplate, AsyncTGitAclIp(
+            streamBridge, AsyncTGitAclIp(
                 projectId = projectId, ip = ip, remove = remove
             )
         )
@@ -497,7 +497,7 @@ class GitProxyTGitService @Autowired constructor(
     fun refreshProjectTGitSpecUser(
         projectId: String
     ) {
-        AsyncExecute.dispatch(rabbitTemplate, AsyncTGitAclUser(projectId))
+        AsyncExecute.dispatch(streamBridge, AsyncTGitAclUser(projectId))
     }
 
     // 如果一个项目只绑定了一个tGit那么直接使用这个项目的所有的人，否则需要计算所有项目的所有的人

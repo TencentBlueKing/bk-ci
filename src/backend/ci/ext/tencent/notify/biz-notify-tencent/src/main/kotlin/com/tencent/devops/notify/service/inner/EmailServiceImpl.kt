@@ -43,8 +43,6 @@ import com.tencent.devops.common.notify.utils.TOFConfiguration
 import com.tencent.devops.common.notify.utils.TOFService
 import com.tencent.devops.common.notify.utils.TOFService.Companion.EMAIL_URL
 import com.tencent.devops.model.notify.tables.records.TNotifyEmailRecord
-import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.ROUTE_EMAIL
 import com.tencent.devops.notify.dao.EmailNotifyDao
 import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
@@ -53,14 +51,14 @@ import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.service.EmailService
 import com.tencent.devops.notify.utils.TofUtil
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.stream.Collectors
+import org.springframework.cloud.stream.function.StreamBridge
 
 class EmailServiceImpl @Autowired constructor(
     private val tofService: TOFService,
     private val emailNotifyDao: EmailNotifyDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val configuration: TOFConfiguration,
     private val tof4Service: TOF4Service
 ) : EmailService {
@@ -68,7 +66,7 @@ class EmailServiceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(EmailServiceImpl::class.java)
 
     override fun sendMqMsg(message: EmailNotifyMessage) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_EMAIL, message)
+        message.sendTo(streamBridge)
     }
 
     @SuppressWarnings("ComplexMethod")
@@ -90,7 +88,7 @@ class EmailServiceImpl @Autowired constructor(
             return
         }
         val id = emailNotifyMessageWithOperation.id ?: UUIDUtil.generate()
-        val retryCount = emailNotifyMessageWithOperation.retryCount
+        val retryCount = emailNotifyMessageWithOperation.retryTime
         val result = if (tofConfig["tof4Enabled"] == "true") {
             if (emailNotifyPost.codeccAttachFileContent != null) {
                 tof4Service.postCodeccEmailFormData(TOF4_EMAIL_URL_WITH_ATTACH, emailNotifyPost, tofConfig)
@@ -148,7 +146,7 @@ class EmailServiceImpl @Autowired constructor(
         val emailNotifyMessageWithOperation = EmailNotifyMessageWithOperation()
         emailNotifyMessageWithOperation.apply {
             this.id = id
-            this.retryCount = retryCount
+            this.retryTime = retryCount
             this.source = source
             title = post.title
             body = post.content
@@ -165,22 +163,16 @@ class EmailServiceImpl @Autowired constructor(
             fromSysId = post.fromSysId
             this.v2ExtInfo = v2ExtInfo
         }
-        rabbitTemplate.convertAndSend(
-            EXCHANGE_NOTIFY,
-            ROUTE_EMAIL,
-            emailNotifyMessageWithOperation
-        ) { message ->
-            var delayTime = 0
-            when (retryCount) {
-                1 -> delayTime = 30000
-                2 -> delayTime = 120000
-                3 -> delayTime = 300000
-            }
-            if (delayTime > 0) {
-                message.messageProperties.setHeader("x-delay", delayTime)
-            }
-            message
+        var delayTime = 0
+        when (retryCount) {
+            1 -> delayTime = 30000
+            2 -> delayTime = 120000
+            3 -> delayTime = 300000
         }
+        if (delayTime > 0) {
+            emailNotifyMessageWithOperation.delayMills = delayTime
+        }
+        emailNotifyMessageWithOperation.sendTo(streamBridge)
     }
 
     private fun generateEmailNotifyPost(emailNotifyMessage: EmailNotifyMessage): EmailNotifyPost? {
@@ -309,7 +301,7 @@ class EmailServiceImpl @Autowired constructor(
             title = record.title
             priority = EnumNotifyPriority.parse(record.priority.toString())
             source = EnumNotifySource.parseName(record.source)
-            retryCount = record.retryCount
+            retryTime = record.retryCount
             lastError = record.lastError
             addAllReceivers(receivers)
             addAllCcs(cc)

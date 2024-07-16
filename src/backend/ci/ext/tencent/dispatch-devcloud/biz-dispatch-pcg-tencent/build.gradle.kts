@@ -27,4 +27,6 @@
 
 dependencies {
     api(project(":core:common:common-dispatch-sdk"))
+
+    api(project(":ext:tencent:common:common-pipeline-tencent"))
 }

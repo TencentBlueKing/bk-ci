@@ -41,8 +41,6 @@ import com.tencent.devops.common.notify.utils.TOFConfiguration
 import com.tencent.devops.common.notify.utils.TOFService
 import com.tencent.devops.common.notify.utils.TOFService.Companion.RTX_URL
 import com.tencent.devops.model.notify.tables.records.TNotifyRtxRecord
-import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.ROUTE_RTX
 import com.tencent.devops.notify.dao.RtxNotifyDao
 import com.tencent.devops.notify.model.RtxNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.NotificationResponse
@@ -51,20 +49,20 @@ import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.notify.utils.TofUtil
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.util.LinkedList
 import java.util.stream.Collectors
+import org.springframework.cloud.stream.function.StreamBridge
 
 @Primary
 @Service
 class RtxServiceImpl @Autowired constructor(
     private val tofService: TOFService,
     private val rtxNotifyDao: RtxNotifyDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val tofConfiguration: TOFConfiguration,
     private val tof4Service: TOF4Service
 ) : RtxService {
@@ -74,7 +72,7 @@ class RtxServiceImpl @Autowired constructor(
     private lateinit var defaultRtxSender: String
 
     override fun sendMqMsg(message: RtxNotifyMessage) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, message)
+        message.sendTo(streamBridge)
     }
 
     /**
@@ -168,19 +166,16 @@ class RtxServiceImpl @Autowired constructor(
             this.fromSysId = post.fromSysId
             this.v2ExtInfo = v2ExtInfo
         }
-
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, rtxNotifyMessageWithOperation) { message ->
-            var delayTime = 0
-            when (retryCount) {
-                1 -> delayTime = 30000
-                2 -> delayTime = 120000
-                3 -> delayTime = 300000
-            }
-            if (delayTime > 0) {
-                message.messageProperties.setHeader("x-delay", delayTime)
-            }
-            message
+        var delayTime = 0
+        when (retryCount) {
+            1 -> delayTime = 30000
+            2 -> delayTime = 120000
+            3 -> delayTime = 300000
         }
+        if (delayTime > 0) {
+            rtxNotifyMessageWithOperation.delayMills = delayTime
+        }
+        rtxNotifyMessageWithOperation.sendTo(streamBridge)
     }
 
     @SuppressWarnings("NestedBlockDepth")
