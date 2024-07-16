@@ -354,9 +354,16 @@ class PipelineSettingDao {
         override fun map(record: TPipelineSettingRecord?): PipelineSetting? {
             return record?.let { t ->
                 val successType = t.successType?.split(",")?.filter { i -> i.isNotBlank() }
-                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
+                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toMutableSet() ?: mutableSetOf()
+                // 老数据兼容,老数据的启用企业微信群通知,转换成微信组通知类型
+                if (t.successWechatGroupFlag == true) {
+                    successType.add(PipelineSubscriptionType.WECHAT_GROUP)
+                }
                 val failType = t.failType?.split(",")?.filter { i -> i.isNotBlank() }
-                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
+                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toMutableSet() ?: mutableSetOf()
+                if (t.failWechatGroupFlag == true) {
+                    failType.add(PipelineSubscriptionType.WECHAT_GROUP)
+                }
                 var oldSuccessSubscription = Subscription(
                     types = successType,
                     groups = t.successGroup?.split(",")?.toSet() ?: emptySet(),
