@@ -497,7 +497,7 @@
                     })
                     this.commandStatus = res.status
                     this.commandStep = res || {}
-                    if (['PENDING'].includes(this.commandStatus)) {
+                    if (res.code === 3800015 || ['PENDING'].includes(this.commandStatus)) {
                         this.timeoutIdTask2 = setTimeout(async () => {
                             this.fetchInstallCommand()
                         }, 5000)
@@ -575,7 +575,7 @@
             },
 
             async fetchInstallAgentTaskLog () {
-                if (!this.jobId) return
+                if (!this.jobId || !this.instanceId) return
                 const res = await this.$store.dispatch('environment/getAgentTaskLog', {
                     projectId: this.projectId,
                     jobId: this.jobId,
