@@ -111,25 +111,16 @@
                 <section v-for="(param, index) in pipelineNameList" :key="index">
                     <template v-if="param.pipelineName === currentPipelineParams.pipelineName">
                         <section class="params-item" v-if="param.buildParams">
-                            <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('template.newPipelineName') }}</div>
+                            <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('versionNum') }}</div>
                             <div v-if="param.buildParams" class="build-params-content">
-                                <div class="buildNo-params-content">
-                                    <pipeline-params-form
-                                        :ref="`paramsForm${index}`"
-                                        :param-values="param.paramValues"
-                                        :handle-param-change="handleParamChange"
-                                        :params="param.versionParams">
-                                    </pipeline-params-form>
-                                </div>
-                                <div class="params-flex-col" ref="buildForm">
-                                    <form-field :required="true" :label="$t('buildNum')">
-                                        <vuex-input :disabled="disabled" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="'required|numeric'" :value="param.buildParams.buildNo" :handle-change="handleBuildNoChange" />
-                                        <p v-if="errors.has('buildNo')" :class="errors.has('buildNo') ? 'error-tips' : 'normal-tips'">{{ $t('template.buildNumErrTips') }}</p>
-                                    </form-field>
-                                    <form-field class="flex-colspan-2" :required="true" :is-error="errors.has('buildNoType')" :error-msg="errors.first('buildNoType')">
-                                        <enum-input :list="buildNoRules" :disabled="disabled" name="buildNoType" v-validate.initial="'required|string'" :value="param.buildParams.buildNoType" :handle-change="handleBuildNoChange" />
-                                    </form-field>
-                                </div>
+                                <pipeline-versions-form
+                                    :ref="`paramsForm${index}`"
+                                    :build-no="param.buildParams"
+                                    :disabled="disabled"
+                                    :version-param-values="versionValues"
+                                    :handle-version-change="handleParamChange"
+                                    :handle-build-no-change="handleBuildNoChange"
+                                ></pipeline-versions-form>
                             </div>
                         </section>
                         <section class="params-item" v-if="param.params && param.params.filter(item => buildNoParams.indexOf(item.id) === -1 ).length">
@@ -192,16 +183,15 @@
 </template>
 
 <script>
-    import FormField from '@/components/AtomPropertyPanel/FormField'
     import Logo from '@/components/Logo'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import VuexInput from '@/components/atomFormField/VuexInput'
     import innerHeader from '@/components/devops/inner_header'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import instanceMessage from '@/components/template/instance-message.vue'
     import instancePipelineName from '@/components/template/instance-pipeline-name.vue'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
+    import { getParamsValuesMap } from '@/utils/util'
     import { mapGetters } from 'vuex'
+    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
 
     export default {
         components: {
@@ -209,10 +199,8 @@
             PipelineParamsForm,
             instancePipelineName,
             instanceMessage,
-            VuexInput,
-            FormField,
-            EnumInput,
-            Logo
+            Logo,
+            PipelineVersionsForm
         },
         data () {
             return {
@@ -273,6 +261,18 @@
                     return pipeline
                 }
                 return ''
+            },
+            allVersionKeyList () {
+                return allVersionKeyList
+            },
+            versionConfig () {
+                return getVersionConfig()
+            },
+            versions () {
+                return this.pipelineNameList[0].versionParams
+            },
+            versionValues () {
+                return getParamsValuesMap(this.versions)
             }
         },
         async mounted () {
@@ -553,6 +553,10 @@
                             param: pipeline.params
                         })
                     })
+
+                    if (params[0].buildNo && !params[0].buildNo.buildNo) {
+                        return
+                    }
 
                     loading.isLoading = true
 
@@ -878,48 +882,8 @@
             border: 1px solid #EBF0F5;
         }
         .build-params-content {
-            padding-bottom: 20px;
+            padding: 20px 0 20px 20px;
             background: #fff;
-        }
-        .buildNo-params-content {
-            min-width: 940px;
-            padding: 20px 0 0;
-            padding-left: 20px;
-            .bk-form-item {
-                float: left;
-                width: 320px;
-                margin-top: 20px;
-                margin-left: 10px;
-                .bk-label {
-                    width: 160px;
-                }
-                .bk-form-input {
-                    width: 145px !important;
-                }
-            }
-        }
-        .params-flex-col {
-            display: flex;
-            padding: 0 40px;
-            background: #fff;
-            .bk-form-item {
-                display: flex;
-                margin: 20px 30px 0 20px;
-                font-size: 14px;
-                .bk-label {
-                    width: 108px;
-                    margin-right: 22px;
-                    line-height: 36px;
-                    text-align: right;
-                    font-weight: bold;
-                }
-                .bk-form-input {
-                    width: 145px;
-                }
-                &:last-child {
-                    min-width: 420px;
-                }
-            }
         }
         .create-instance-footer {
             margin-top: 20px;

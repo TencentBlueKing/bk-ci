@@ -409,7 +409,7 @@
                 }
                 if (this.isEditing) {
                     navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
-                        .then(() => next())
+                        .then(next)
                         .catch(() => next(false))
                 } else {
                     next(true)
