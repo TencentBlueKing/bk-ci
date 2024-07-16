@@ -24,7 +24,7 @@
 </template>
 
 <script>
-    import { bkVarWrapper } from '@/utils/util'
+    import { bkVarWrapper, copyToClipboard } from '@/utils/util'
     export default {
         props: {
             name: {
@@ -56,7 +56,7 @@
             bkVarWrapper,
             handleCopy (con) {
                 if (this.disabledCopy) return
-                window.navigator.clipboard.writeText(con)
+                copyToClipboard(con)
                 this.$bkMessage({
                     theme: 'success',
                     message: this.$t('copySuc'),
