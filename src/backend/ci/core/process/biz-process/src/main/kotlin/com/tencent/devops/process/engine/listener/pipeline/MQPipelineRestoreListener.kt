@@ -36,7 +36,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.service.AgentPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.RepoPipelineRefService
-import com.tencent.devops.process.service.pipeline.SubPipelineRefService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -51,7 +50,6 @@ class MQPipelineRestoreListener @Autowired constructor(
     private val pipelineAtomStatisticsService: PipelineAtomStatisticsService,
     private val callBackControl: CallBackControl,
     private val repoPipelineRefService: RepoPipelineRefService,
-    private val subPipelineRefService: SubPipelineRefService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineRestoreEvent>(pipelineEventDispatcher) {
 
@@ -76,8 +74,6 @@ class MQPipelineRestoreListener @Autowired constructor(
             callBackControl.pipelineRestoreEvent(projectId = event.projectId, pipelineId = event.pipelineId)
             with(event) {
                 repoPipelineRefService.updateRepoPipelineRef(userId, "restore_pipeline", projectId, pipelineId)
-                // 更新子流水线关联关系
-                subPipelineRefService.updateSubPipelineRef(userId, projectId, pipelineId)
             }
         } finally {
             watcher.stop()

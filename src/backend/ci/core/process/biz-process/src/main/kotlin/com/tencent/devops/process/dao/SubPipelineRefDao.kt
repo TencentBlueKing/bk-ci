@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.dao
 
-import com.tencent.devops.model.process.tables.TSubPipelineRef
-import com.tencent.devops.model.process.tables.records.TSubPipelineRefRecord
+import com.tencent.devops.model.process.tables.TPipelineSubRef
+import com.tencent.devops.model.process.tables.records.TPipelineSubRefRecord
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -45,7 +45,7 @@ class SubPipelineRefDao {
             return
         }
 
-        with(TSubPipelineRef.T_SUB_PIPELINE_REF) {
+        with(TPipelineSubRef.T_PIPELINE_SUB_REF) {
             dslContext.batch(
                 subPipelineRefList.map {
                     dslContext.insertInto(
@@ -90,8 +90,8 @@ class SubPipelineRefDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String
-    ): Result<TSubPipelineRefRecord> {
-        return with(TSubPipelineRef.T_SUB_PIPELINE_REF) {
+    ): Result<TPipelineSubRefRecord> {
+        return with(TPipelineSubRef.T_PIPELINE_SUB_REF) {
             dslContext.selectFrom(this).where(
                 PROJECT_ID.eq(projectId).and(
                     PIPELINE_ID.eq(pipelineId)
@@ -105,10 +105,27 @@ class SubPipelineRefDao {
         projectId: String,
         pipelineId: String
     ): Int {
-        return with(TSubPipelineRef.T_SUB_PIPELINE_REF) {
+        return with(TPipelineSubRef.T_PIPELINE_SUB_REF) {
             dslContext.deleteFrom(this).where(
                 PROJECT_ID.eq(projectId).and(
                     PIPELINE_ID.eq(pipelineId)
+                )
+            ).execute()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        taskId: String
+    ): Int {
+        return with(TPipelineSubRef.T_PIPELINE_SUB_REF) {
+            dslContext.deleteFrom(this).where(
+                listOf(
+                    PROJECT_ID.eq(projectId),
+                    PIPELINE_ID.eq(pipelineId),
+                    TASK_ID.eq(taskId)
                 )
             ).execute()
         }
@@ -121,7 +138,7 @@ class SubPipelineRefDao {
         if (ids.isEmpty()) {
             return
         }
-        with(TSubPipelineRef.T_SUB_PIPELINE_REF) {
+        with(TPipelineSubRef.T_PIPELINE_SUB_REF) {
             dslContext.deleteFrom(this).where(
                 ID.`in`(ids)
             ).execute()
