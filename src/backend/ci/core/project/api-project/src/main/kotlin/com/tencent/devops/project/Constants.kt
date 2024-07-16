@@ -27,7 +27,4 @@
 
 package com.tencent.devops.project
 
-const val EXCHANGE_PROJECT_COUNT_LOGIN = "exchange_project_count_login"
-const val ROUTE_PROJECT_COUNT_LOGIN = "route_project_count_login"
-const val QUEUE_PROJECT_COUNT_LOGIN = "queue_project_count_login"
 const val SECRECY_PROJECT_REDIS_KEY = "SECRECY_PROJECT_REDIS_KEY" // 保密项目Key

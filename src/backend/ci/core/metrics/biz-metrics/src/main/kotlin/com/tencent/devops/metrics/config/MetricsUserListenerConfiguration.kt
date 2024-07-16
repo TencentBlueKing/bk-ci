@@ -27,67 +27,19 @@
 
 package com.tencent.devops.metrics.config
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.metrics.listener.BuildMetricsUserListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.event.EventListener
 
 @Configuration
 @ConditionalOnProperty(name = ["metrics.user.enable"], havingValue = "true", matchIfMissing = false)
 class MetricsUserListenerConfiguration {
-    /**
-     * 构建构建回调广播交换机
-     */
-    @Bean
-    fun pipelineBuildStatusCallbackFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_CALL_BACK_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun pipelineBuildStatusMetricsQueue(): Queue {
-        return Queue(MQ.QUEUE_PIPELINE_BUILD_STATUS_METRICS)
-    }
-
-    @Bean
-    fun pipelineBuildStatusMetricsQueueBind(
-        @Autowired pipelineBuildStatusMetricsQueue: Queue,
-        @Autowired pipelineBuildStatusCallbackFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildStatusMetricsQueue).to(pipelineBuildStatusCallbackFanoutExchange)
-    }
-
-    @Bean
-    fun pipelineBuildCallBackListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildStatusMetricsQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: BuildMetricsUserListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildStatusMetricsQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = buildListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 1,
-            maxConcurrency = 50
-        )
-    }
+    @EventListener
+    fun buildMetricsUserListener(
+        @Autowired buildMetricsUserListener: BuildMetricsUserListener
+    ) = ScsConsumerBuilder.build<PipelineBuildStatusBroadCastEvent> { buildMetricsUserListener.execute(it) }
 }

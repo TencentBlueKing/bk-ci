@@ -28,19 +28,6 @@ package com.tencent.devops.notify.consumer
 
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
-import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.QUEUE_NOTIFY_EMAIL
-import com.tencent.devops.notify.QUEUE_NOTIFY_RTX
-import com.tencent.devops.notify.QUEUE_NOTIFY_SMS
-import com.tencent.devops.notify.QUEUE_NOTIFY_VOICE
-import com.tencent.devops.notify.QUEUE_NOTIFY_WECHAT
-import com.tencent.devops.notify.QUEUE_NOTIFY_WEWORK
-import com.tencent.devops.notify.ROUTE_EMAIL
-import com.tencent.devops.notify.ROUTE_RTX
-import com.tencent.devops.notify.ROUTE_SMS
-import com.tencent.devops.notify.ROUTE_VOICE
-import com.tencent.devops.notify.ROUTE_WECHAT
-import com.tencent.devops.notify.ROUTE_WEWORK
 import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
 import com.tencent.devops.notify.model.RtxNotifyMessageWithOperation
 import com.tencent.devops.notify.model.SmsNotifyMessageWithOperation
@@ -55,10 +42,6 @@ import com.tencent.devops.notify.service.VoiceService
 import com.tencent.devops.notify.service.WechatService
 import com.tencent.devops.notify.service.WeworkService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.annotation.Exchange
-import org.springframework.amqp.rabbit.annotation.Queue
-import org.springframework.amqp.rabbit.annotation.QueueBinding
-import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -75,16 +58,6 @@ class NotifyMessageConsumer @Autowired constructor(
         private val logger = LoggerFactory.getLogger(NotifyMessageConsumer::class.java)
     }
 
-    @RabbitListener(
-        containerFactory = "rabbitListenerContainerFactory",
-        bindings = [
-            QueueBinding(
-                key = [ROUTE_RTX],
-                value = Queue(value = QUEUE_NOTIFY_RTX, durable = "true"),
-                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
-            )
-        ]
-    )
     fun onReceiveRtxMessage(rtxNotifyMessageWithOperation: RtxNotifyMessageWithOperation) {
         try {
             rtxService.sendMessage(rtxNotifyMessageWithOperation)
@@ -93,16 +66,6 @@ class NotifyMessageConsumer @Autowired constructor(
         }
     }
 
-    @RabbitListener(
-        containerFactory = "rabbitListenerContainerFactory",
-        bindings = [
-            QueueBinding(
-                key = [ROUTE_EMAIL],
-                value = Queue(value = QUEUE_NOTIFY_EMAIL, durable = "true"),
-                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
-            )
-        ]
-    )
     fun onReceiveEmailMessage(emailNotifyMessageWithOperation: EmailNotifyMessageWithOperation) {
         try {
             emailService.sendMessage(emailNotifyMessageWithOperation)
@@ -111,16 +74,6 @@ class NotifyMessageConsumer @Autowired constructor(
         }
     }
 
-    @RabbitListener(
-        containerFactory = "rabbitListenerContainerFactory",
-        bindings = [
-            QueueBinding(
-                key = [ROUTE_SMS],
-                value = Queue(value = QUEUE_NOTIFY_SMS, durable = "true"),
-                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
-            )
-        ]
-    )
     fun onReceiveSmsMessage(smsNotifyMessageWithOperation: SmsNotifyMessageWithOperation) {
         try {
             smsService.sendMessage(smsNotifyMessageWithOperation)
@@ -129,16 +82,6 @@ class NotifyMessageConsumer @Autowired constructor(
         }
     }
 
-    @RabbitListener(
-        containerFactory = "rabbitListenerContainerFactory",
-        bindings = [
-            QueueBinding(
-                key = [ROUTE_VOICE],
-                value = Queue(value = QUEUE_NOTIFY_VOICE, durable = "true"),
-                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
-            )
-        ]
-    )
     fun onReceiveVoiceMessage(voiceNotifyMessageWithOperation: VoiceNotifyMessageWithOperation) {
         try {
             voiceService.sendMessage(voiceNotifyMessageWithOperation)
@@ -147,16 +90,6 @@ class NotifyMessageConsumer @Autowired constructor(
         }
     }
 
-    @RabbitListener(
-        containerFactory = "rabbitListenerContainerFactory",
-        bindings = [
-            QueueBinding(
-                key = [ROUTE_WECHAT],
-                value = Queue(value = QUEUE_NOTIFY_WECHAT, durable = "true"),
-                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
-            )
-        ]
-    )
     fun onReceiveWechatMessage(wechatNotifyMessageWithOperation: WechatNotifyMessageWithOperation) {
         try {
             wechatService.sendMessage(wechatNotifyMessageWithOperation)
@@ -165,16 +98,6 @@ class NotifyMessageConsumer @Autowired constructor(
         }
     }
 
-    @RabbitListener(
-        containerFactory = "rabbitListenerContainerFactory",
-        bindings = [
-            QueueBinding(
-                key = [ROUTE_WEWORK],
-                value = Queue(value = QUEUE_NOTIFY_WEWORK, durable = "true"),
-                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
-            )
-        ]
-    )
     fun onReceiveWeworkMessage(weworkNotifyMessageWithOperation: WeworkNotifyMessageWithOperation) {
         try {
             val weworkNotifyTextMessage = WeworkNotifyTextMessage(

@@ -27,18 +27,18 @@
 
 package com.tencent.devops.process.plugin.trigger.pojo.event
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.event.enums.ActionType
 
 /**
  * 订阅流水线事件
  *
  * @version 1.0
  */
-@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_TIMER)
+@Event(StreamBinding.PIPELINE_TIMER)
 data class PipelineTimerBuildEvent(
     override val source: String,
     override val projectId: String,

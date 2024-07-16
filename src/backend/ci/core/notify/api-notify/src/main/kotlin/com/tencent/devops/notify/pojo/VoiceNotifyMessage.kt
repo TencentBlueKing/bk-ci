@@ -1,9 +1,12 @@
 package com.tencent.devops.notify.pojo
 
+import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.notify.pojo.VoiceNotifyPost
+import com.tencent.devops.notify.constant.NotifyMQ.NOTIFY_VOICE
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "语音信息")
+@Event(NOTIFY_VOICE)
 open class VoiceNotifyMessage : BaseMessage() {
     @get:Schema(title = "接收人(英文ID)，支持多个")
     var receivers = mutableSetOf<String>()

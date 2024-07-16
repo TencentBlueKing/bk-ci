@@ -27,33 +27,38 @@
 
 package com.tencent.devops.quality.config
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
+import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.quality.listener.PipelineBuildQualityListener
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
 class QualityMQConfig {
+    @EventConsumer
+    fun pipelineCancelQualityListener(
+        @Autowired listener: PipelineBuildQualityListener
+    ) = ScsConsumerBuilder.build<PipelineBuildCancelBroadCastEvent> { listener.listenPipelineCancelQualityListener(it) }
 
-    @Bean
-    fun qualityDailyQueue() = Queue(MQ.QUEUE_QUALITY_DAILY_EVENT)
+    @EventConsumer
+    fun pipelineRetryQualityListener(
+        @Autowired listener: PipelineBuildQualityListener
+    ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { listener.listenPipelineRetryBroadCastEvent(it) }
 
-    @Bean
-    fun qualityDailyExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_QUALITY_DAILY_FANOUT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
+    @EventConsumer
+    fun pipelineReviewListener(
+        @Autowired listener: PipelineBuildQualityListener
+    ) = ScsConsumerBuilder.build<PipelineBuildReviewBroadCastEvent> { listener.listenPipelineTimeoutBroadCastEvent(it) }
 
-    @Bean
-    fun qualityQueueBind(
-        @Autowired qualityDailyQueue: Queue,
-        @Autowired qualityDailyExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(qualityDailyQueue).to(qualityDailyExchange).with(MQ.ROUTE_QUALITY_DAILY_FANOUT)
+    @EventConsumer
+    fun pipelineQualityReviewListener(
+        @Autowired listener: PipelineBuildQualityListener
+    ) = ScsConsumerBuilder.build<PipelineBuildQualityReviewBroadCastEvent> {
+        listener.listenPipelineQualityReviewBroadCastEvent(it)
     }
 }

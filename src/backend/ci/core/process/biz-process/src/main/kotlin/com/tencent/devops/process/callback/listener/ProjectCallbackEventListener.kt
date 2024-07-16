@@ -1,7 +1,7 @@
 package com.tencent.devops.process.callback.listener
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectVO
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service
 class ProjectCallbackEventListener @Autowired constructor(
     val callbackControl: CallBackControl,
     val client: Client
-) : Listener<ProjectBroadCastEvent> {
+) : EventListener<ProjectBroadCastEvent> {
     /**
      * 默认实现了Listener的消息处理方法做转换处理
      * @param event ProjectBroadCastEvent抽象类的处理，如有扩展请到子类操作

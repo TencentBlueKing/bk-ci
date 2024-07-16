@@ -27,73 +27,17 @@
 
 package com.tencent.devops.monitoring.configuration
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
-import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEvent
+import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.monitoring.consumer.AtomMonitorReportListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.lang.Integer.max
 
 @Configuration
 class ListenerConfiguration {
-
-    @Bean
-    fun atomMonitorDataReportQueue() = Queue(QUEUE_ATOM_MONITOR_DATA_REPORT)
-
-    /**
-     * 插件监控数据上报广播交换机
-     */
-    @Bean
-    fun atomMonitorDataReportFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun atomMonitorDataReportQueueBind(
-        @Autowired atomMonitorDataReportQueue: Queue,
-        @Autowired atomMonitorDataReportFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(atomMonitorDataReportQueue)
-            .to(atomMonitorDataReportFanoutExchange)
-    }
-
-    @Bean
-    fun atomMonitorDataReportListenerContainer(
-        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME) @Autowired connectionFactory: ConnectionFactory,
-        @Autowired atomMonitorDataReportQueue: Queue,
-        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME) @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: AtomMonitorReportListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(atomMonitorDataReportQueue.name)
-        container.setConcurrentConsumers(1)
-        container.setMaxConcurrentConsumers(max(10, 1))
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setStartConsumerMinInterval(5000)
-        container.setConsecutiveActiveTrigger(10)
-        container.setMismatchedQueuesFatal(true)
-        container.setMessageListener(adapter)
-        return container
-    }
-
-    companion object {
-        private const val QUEUE_ATOM_MONITOR_DATA_REPORT = "q.monitoring.atom.report"
-    }
+    @EventConsumer
+    fun atomMonitorReportConsumer(
+        @Autowired listener: AtomMonitorReportListener
+    ) = ScsConsumerBuilder.build<AtomMonitorReportBroadCastEvent> { listener.execute(it) }
 }

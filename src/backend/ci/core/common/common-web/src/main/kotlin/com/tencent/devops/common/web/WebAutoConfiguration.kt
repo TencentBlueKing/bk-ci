@@ -115,8 +115,7 @@ class WebAutoConfiguration {
     fun bkServiceInstanceApplicationRunner(
         compositeDiscoveryClient: CompositeDiscoveryClient,
         bkTag: BkTag,
-        redisOperation: RedisOperation,
-        rabbitAdmin: RabbitAdmin
+        redisOperation: RedisOperation
     ) = BkServiceInstanceApplicationRunner(
         compositeDiscoveryClient = compositeDiscoveryClient,
         bkTag = bkTag,

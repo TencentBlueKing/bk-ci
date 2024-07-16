@@ -29,9 +29,9 @@ package com.tencent.devops.process.plugin.trigger.timer.listener
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerChangeEvent
 import com.tencent.devops.process.plugin.trigger.timer.SchedulerManager
 import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineQuartzJob
@@ -48,7 +48,7 @@ import org.springframework.stereotype.Component
 class PipelineTimerChangerListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val schedulerManager: SchedulerManager
-) : BaseListener<PipelineTimerChangeEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineTimerChangeEvent>(pipelineEventDispatcher) {
 
     private val jobBeanClass = PipelineQuartzJob::class.java
 

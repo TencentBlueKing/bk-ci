@@ -33,15 +33,13 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
@@ -55,8 +53,8 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -75,7 +73,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
     private val client: Client,
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<NormalContainer> {
     override fun getParamElement(task: PipelineBuildTask): NormalContainer {
@@ -199,7 +197,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         )
 
         pipelineEventDispatcher.dispatch(
-            PipelineBuildLessStartupDispatchEvent(
+            PipelineBuildLessStartupEvent(
                 source = "dockerStartupTaskAtom",
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
@@ -211,7 +209,6 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 os = VMBaseOS.LINUX.name,
                 startTime = System.currentTimeMillis(),
                 channelCode = pipelineInfo.channelCode.name,
-                dispatchType = DockerDispatchType(DockerVersion.CUSTOMIZE.value),
                 zone = getBuildZone(container),
                 atoms = atoms,
                 executeCount = task.executeCount,
@@ -238,7 +235,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             } else { // 强制终止的设置为失败
                 logger.warn("[${task.buildId}]|[FORCE_STOP_BUILD_LESS_IN_START_TASK]")
                 pipelineEventDispatcher.dispatch(
-                    PipelineBuildLessShutdownDispatchEvent(
+                    PipelineBuildLessShutdownEvent(
                         source = "force_stop_startBuildLess",
                         projectId = task.projectId,
                         pipelineId = task.pipelineId,

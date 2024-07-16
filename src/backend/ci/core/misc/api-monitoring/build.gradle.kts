@@ -29,6 +29,7 @@ dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-notify"))
+    api(project(":core:common:common-event"))
 }
 
 plugins {

@@ -27,19 +27,13 @@
 
 package com.tencent.devops.stream.trigger.mq.streamMrConflict
 
-import com.tencent.devops.stream.constant.MQ
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.stream.trigger.StreamTriggerRequestService
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.core.ExchangeTypes
-import org.springframework.amqp.rabbit.annotation.Exchange
-import org.springframework.amqp.rabbit.annotation.Queue
-import org.springframework.amqp.rabbit.annotation.QueueBinding
-import org.springframework.amqp.rabbit.annotation.RabbitListener
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -48,27 +42,11 @@ class StreamMrConflictCheckListener @Autowired
 constructor(
     private val mergeConflictCheck: MergeConflictCheck,
     private val streamTriggerRequestService: StreamTriggerRequestService,
-    private val rabbitTemplate: RabbitTemplate,
+    private val eventDispatcher: SampleEventDispatcher,
     private val exHandler: StreamTriggerExceptionHandler,
     private val actionFactory: EventActionFactory
 ) {
 
-    @RabbitListener(
-        bindings = [
-            (
-                QueueBinding(
-                    key = [MQ.ROUTE_STREAM_MR_CONFLICT_CHECK_EVENT],
-                    value = Queue(value = MQ.QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT, durable = "true"),
-                    exchange = Exchange(
-                        value = MQ.EXCHANGE_STREAM_MR_CONFLICT_CHECK_EVENT,
-                        durable = "true",
-                        delayed = "true",
-                        type = ExchangeTypes.DIRECT
-                    )
-                )
-                )
-        ]
-    )
     fun listenGitCIRequestTriggerEvent(checkEvent: StreamMrConflictCheckEvent) {
         try {
             val action = actionFactory.loadByData(
@@ -96,7 +74,7 @@ constructor(
                         "event [${action.data.eventCommon}|${checkEvent.retryTime}]"
                 )
                 checkEvent.retryTime--
-                StreamMrConflictCheckDispatcher.dispatch(rabbitTemplate, checkEvent)
+                eventDispatcher.dispatch(checkEvent)
             } else {
                 if (isTrigger) {
                     exHandler.handle(action) {

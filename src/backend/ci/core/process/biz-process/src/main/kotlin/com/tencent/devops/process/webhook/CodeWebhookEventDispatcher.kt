@@ -27,12 +27,11 @@
 
 package com.tencent.devops.process.webhook
 
-import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.ICodeWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 
 /**
  * @ Date       ：Created in 10:32 2019-08-08
@@ -40,65 +39,38 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 object CodeWebhookEventDispatcher {
 
-    fun dispatchEvent(rabbitTemplate: RabbitTemplate, event: ICodeWebhookEvent): Boolean {
+    fun dispatchEvent(streamBridge: StreamBridge, event: ICodeWebhookEvent): Boolean {
         logger.debug("Webhook comming [${event.commitEventType}|${event.requestContent}]")
         var result = false
         try {
             logger.info("${event.traceId}|Dispatch the ${event.commitEventType} webhook event by MQ")
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
-                // 事件中的变量指定
-                if (event.delayMills > 0) {
-                    message.messageProperties.setHeader("x-delay", event.delayMills)
-                } else if (eventType.delayMills > 0) { // 事件类型固化默认值
-                    message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                }
-                message
-            }
+            event.sendTo(streamBridge)
             result = true
-        } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event) by MQ", e)
+        } catch (ignore: Throwable) {
+            logger.error("Fail to dispatch the event($event) by MQ", ignore)
         }
         return result
     }
 
-    fun dispatchGithubEvent(rabbitTemplate: RabbitTemplate, event: GithubWebhookEvent): Boolean {
+    fun dispatchGithubEvent(streamBridge: StreamBridge, event: GithubWebhookEvent): Boolean {
         logger.debug("Webhook comming [GITHUB|${event.githubWebhook.event}]")
         var result = false
         try {
             logger.info("Dispatch the GITHUB webhook event by MQ")
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
-                // 事件中的变量指定
-                if (event.delayMills > 0) {
-                    message.messageProperties.setHeader("x-delay", event.delayMills)
-                } else if (eventType.delayMills > 0) { // 事件类型固化默认值
-                    message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                }
-                message
-            }
+            event.sendTo(streamBridge)
             result = true
-        } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event) by MQ", e)
+        } catch (ignore: Throwable) {
+            logger.error("Fail to dispatch the event($event) by MQ", ignore)
         }
         return result
     }
 
-    fun dispatchReplayEvent(rabbitTemplate: RabbitTemplate, event: ReplayWebhookEvent): Boolean {
+    fun dispatchReplayEvent(streamBridge: StreamBridge, event: ReplayWebhookEvent): Boolean {
         logger.debug("Webhook comming [replay|$event]")
         var result = false
         try {
             logger.info("Dispatch the replay webhook event by MQ")
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
-                // 事件中的变量指定
-                if (event.delayMills > 0) {
-                    message.messageProperties.setHeader("x-delay", event.delayMills)
-                } else if (eventType.delayMills > 0) { // 事件类型固化默认值
-                    message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                }
-                message
-            }
+            event.sendTo(streamBridge)
             result = true
         } catch (e: Throwable) {
             logger.error("Fail to dispatch the event($event) by MQ", e)

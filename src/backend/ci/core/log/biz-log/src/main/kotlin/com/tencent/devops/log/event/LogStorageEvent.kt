@@ -28,10 +28,10 @@
 package com.tencent.devops.log.event
 
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
-import com.tencent.devops.common.stream.annotation.StreamEvent
+import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.stream.constants.StreamBinding
 
-@StreamEvent(StreamBinding.BINDING_LOG_STORAGE_EVENT_OUT)
+@Event(StreamBinding.LOG_STORAGE_EVENT_DESTINATION)
 data class LogStorageEvent(
     override val buildId: String,
     val logs: List<LogMessageWithLineNo>,

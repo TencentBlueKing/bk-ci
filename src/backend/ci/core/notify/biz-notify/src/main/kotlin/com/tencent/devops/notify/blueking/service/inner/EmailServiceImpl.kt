@@ -38,8 +38,6 @@ import com.tencent.devops.common.notify.pojo.EmailNotifyPost
 import com.tencent.devops.common.notify.utils.Configuration
 import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.model.notify.tables.records.TNotifyEmailRecord
-import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.ROUTE_EMAIL
 import com.tencent.devops.notify.blueking.utils.NotifyService
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.EMAIL_URL
 import com.tencent.devops.notify.dao.EmailNotifyDao
@@ -49,22 +47,22 @@ import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.service.EmailService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import java.util.stream.Collectors
 
 @Suppress("ALL")
 class EmailServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,
     private val emailNotifyDao: EmailNotifyDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val configuration: Configuration
 ) : EmailService {
 
     private val logger = LoggerFactory.getLogger(EmailServiceImpl::class.java)
 
     override fun sendMqMsg(message: EmailNotifyMessage) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_EMAIL, message)
+        message.sendTo(streamBridge)
     }
 
     override fun sendMessage(emailNotifyMessageWithOperation: EmailNotifyMessageWithOperation) {
@@ -74,18 +72,20 @@ class EmailServiceImpl @Autowired constructor(
             return
         }
 
-        val retryCount = emailNotifyMessageWithOperation.retryCount
+        val retryCount = emailNotifyMessageWithOperation.retryTime
         val id = emailNotifyMessageWithOperation.id ?: UUIDUtil.generate()
         val tofConfs = configuration.getConfigurations(emailNotifyMessageWithOperation.tofSysId)
         val result = notifyService.post(
             EMAIL_URL, emailNotifyPost, tofConfs!!)
         if (result.Ret == 0) {
             // 成功
-            emailNotifyDao.insertOrUpdateEmailNotifyRecord(true, emailNotifyMessageWithOperation.source, id,
+            emailNotifyDao.insertOrUpdateEmailNotifyRecord(
+                true, emailNotifyMessageWithOperation.source, id,
                 retryCount, null, emailNotifyPost.to, emailNotifyPost.cc, emailNotifyPost.bcc, emailNotifyPost.from,
                 emailNotifyPost.title, emailNotifyPost.content, emailNotifyPost.emailType, emailNotifyPost.bodyFormat,
                 emailNotifyPost.priority.toInt(), emailNotifyPost.contentMd5, emailNotifyPost.frequencyLimit,
-                tofConfs["sys-id"], emailNotifyPost.fromSysId)
+                tofConfs["sys-id"], emailNotifyPost.fromSysId
+            )
         } else {
             // 写入失败记录
             emailNotifyDao.insertOrUpdateEmailNotifyRecord(
@@ -124,7 +124,7 @@ class EmailServiceImpl @Autowired constructor(
         val emailNotifyMessageWithOperation = EmailNotifyMessageWithOperation()
         emailNotifyMessageWithOperation.apply {
             this.id = id
-            this.retryCount = retryCount
+            this.retryTime = retryCount
             this.source = source
             title = post.title
             body = post.content
@@ -140,18 +140,16 @@ class EmailServiceImpl @Autowired constructor(
             tofSysId = post.tofSysId
             fromSysId = post.fromSysId
         }
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_EMAIL, emailNotifyMessageWithOperation) { message ->
-            var delayTime = 0
-            when (retryCount) {
-                1 -> delayTime = 30000
-                2 -> delayTime = 120000
-                3 -> delayTime = 300000
-            }
-            if (delayTime > 0) {
-                message.messageProperties.setHeader("x-delay", delayTime)
-            }
-            message
+        var delayTime = 0
+        when (retryCount) {
+            1 -> delayTime = 30000
+            2 -> delayTime = 120000
+            3 -> delayTime = 300000
         }
+        if (delayTime > 0) {
+            emailNotifyMessageWithOperation.delayMills = delayTime
+        }
+        emailNotifyMessageWithOperation.sendTo(streamBridge)
     }
 
     private fun generateEmailNotifyPost(emailNotifyMessage: EmailNotifyMessage): EmailNotifyPost? {
@@ -259,14 +257,15 @@ class EmailServiceImpl @Autowired constructor(
             title = record.title
             priority = EnumNotifyPriority.parse(record.priority.toString())
             source = EnumNotifySource.parseName(record.source)
-            retryCount = record.retryCount
+            retryTime = record.retryCount
             lastError = record.lastError
             addAllReceivers(receivers)
             addAllCcs(cc)
             addAllBccs(bcc)
         }
 
-        return NotificationResponse(id = record.id, success = record.success,
+        return NotificationResponse(
+            id = record.id, success = record.success,
             createdTime = if (record.createdTime == null) {
                 null
             } else {
@@ -277,6 +276,7 @@ class EmailServiceImpl @Autowired constructor(
             } else {
                 DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime)
             },
-            contentMD5 = record.contentMd5, notificationMessage = message)
+            contentMD5 = record.contentMd5, notificationMessage = message
+        )
     }
 }

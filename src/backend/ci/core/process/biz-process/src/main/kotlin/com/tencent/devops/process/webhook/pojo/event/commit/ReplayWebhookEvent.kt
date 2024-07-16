@@ -30,11 +30,12 @@ package com.tencent.devops.process.webhook.pojo.event.commit
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.stream.constants.StreamBinding
 import org.slf4j.MDC
 
-@Event(exchange = MQ.EXCHANGE_REPLAY_BUILD_REQUEST_EVENT, routeKey = MQ.ROUTE_REPLAY_BUILD_REQUEST_EVENT)
+@Event(StreamBinding.REPLAY_BUILD_REQUEST_EVENT)
 data class ReplayWebhookEvent(
     val userId: String,
     val projectId: String,
@@ -44,7 +45,10 @@ data class ReplayWebhookEvent(
     val replayRequestId: String,
     val scmType: ScmType,
     val pipelineId: String? = null,
-    var retryTime: Int = 3,
-    var delayMills: Int = 0,
+    override var retryTime: Int = 3,
+    override var delayMills: Int = 0,
     var traceId: String? = MDC.get(TraceTag.BIZID)
+) : IEvent(
+    retryTime = retryTime,
+    delayMills = delayMills
 )

@@ -28,10 +28,10 @@
 package com.tencent.devops.common.event.pojo.pipeline
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT)
+@Event(destination = StreamBinding.PIPELINE_BUILD_CANCEL_FANOUT)
 data class PipelineBuildCancelBroadCastEvent(
     override val source: String,
     override val projectId: String,

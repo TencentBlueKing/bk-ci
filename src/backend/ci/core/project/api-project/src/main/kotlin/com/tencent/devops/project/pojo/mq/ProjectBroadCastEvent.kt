@@ -27,9 +27,11 @@
 
 package com.tencent.devops.project.pojo.mq
 
+import com.tencent.devops.common.event.pojo.IEvent
+
 open class ProjectBroadCastEvent(
     open val userId: String,
     open val projectId: String,
     open var retryCount: Int,
-    open var delayMills: Int
-)
+    override var delayMills: Int
+) : IEvent(delayMills, retryCount)

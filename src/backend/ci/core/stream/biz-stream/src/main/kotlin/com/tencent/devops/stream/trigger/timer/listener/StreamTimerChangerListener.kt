@@ -31,7 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.stream.trigger.timer.SchedulerManager
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamChangeEvent
 import com.tencent.devops.stream.trigger.timer.quartz.StreamQuartzJob
@@ -48,7 +48,7 @@ import org.springframework.stereotype.Component
 class StreamTimerChangerListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val schedulerManager: SchedulerManager
-) : BaseListener<StreamChangeEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<StreamChangeEvent>(pipelineEventDispatcher) {
 
     private val jobBeanClass = StreamQuartzJob::class.java
 

@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -93,7 +93,7 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelineBuildCommitService: PipelineBuildCommitService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val measureEventDispatcher: MeasureEventDispatcher,
+    private val measureEventDispatcher: SampleEventDispatcher,
     private val pipelineBuildPermissionService: PipelineBuildPermissionService,
     private val pipelineYamlService: PipelineYamlService
 ) {

@@ -27,17 +27,17 @@
 
 package com.tencent.devops.process.plugin.trigger.pojo.event
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.stream.constants.StreamBinding
 
 /**
  * 广播定时规则变化的事件
  *
  * @version 1.0
  */
-@Event(MQ.EXCHANGE_PIPELINE_TIMER_CHANGE_FANOUT, MQ.ROUTE_PIPELINE_TIMER)
+@Event(StreamBinding.PIPELINE_TIMER_CHANGE_FANOUT)
 data class PipelineTimerChangeEvent(
     override val source: String,
     override val projectId: String,

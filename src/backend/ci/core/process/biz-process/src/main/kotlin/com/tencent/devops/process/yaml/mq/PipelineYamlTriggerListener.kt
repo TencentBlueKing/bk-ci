@@ -28,8 +28,7 @@
 
 package com.tencent.devops.process.yaml.mq
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.process.yaml.PipelineYamlBuildService
 import com.tencent.devops.process.yaml.PipelineYamlRepositoryService
 import com.tencent.devops.process.yaml.PipelineYamlSyncService
@@ -37,21 +36,19 @@ import com.tencent.devops.process.yaml.actions.EventActionFactory
 import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionHandler
 import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionUtil
 import com.tencent.devops.process.yaml.pojo.CheckType
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class PipelineYamlTriggerListener @Autowired constructor(
-    pipelineEventDispatcher: PipelineEventDispatcher,
     private val actionFactory: EventActionFactory,
     private val pipelineYamlRepositoryService: PipelineYamlRepositoryService,
     private val pipelineYamlSyncService: PipelineYamlSyncService,
     private val pipelineYamlBuildService: PipelineYamlBuildService,
     private val exceptionHandler: YamlTriggerExceptionHandler
-) : BaseListener<BasePipelineYamlEvent>(
-    pipelineEventDispatcher = pipelineEventDispatcher
-) {
-    override fun run(event: BasePipelineYamlEvent) {
+) : EventListener<BasePipelineYamlEvent> {
+    override fun execute(event: BasePipelineYamlEvent) {
         when (event) {
             is PipelineYamlEnableEvent -> {
                 enablePac(projectId = event.projectId, event = event)
@@ -147,5 +144,9 @@ class PipelineYamlTriggerListener @Autowired constructor(
                 else -> Unit
             }
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineYamlTriggerListener::class.java)
     }
 }

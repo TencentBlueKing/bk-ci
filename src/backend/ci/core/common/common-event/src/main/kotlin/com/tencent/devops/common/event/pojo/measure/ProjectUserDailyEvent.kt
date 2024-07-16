@@ -29,11 +29,11 @@
 package com.tencent.devops.common.event.pojo.measure
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 
-@Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT)
+@Event(StreamBinding.METRICS_PROJECT_USER_DAILY)
 data class ProjectUserDailyEvent(
     @get:Schema(title = "项目ID")
     override val projectId: String,
