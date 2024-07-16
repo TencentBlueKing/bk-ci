@@ -116,6 +116,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
+    @Suppress("ComplexCondition")
     override fun notifyWorkspaceInfo(
         appCode: String?,
         apigwType: String?,
