@@ -35,7 +35,7 @@
           <span @click="handleLoadMore"> {{t("加载更多")}} </span>
         </div>
       </template>
-      <bk-table-column type="selection" :min-width="30" width="30" align="center" v-if="isShowOperation" />
+      <bk-table-column type="selection" :min-width="50" width="50" align="center" v-if="isShowOperation" />
       <bk-table-column :label="groupName" prop="groupName">
         <template #default="{row}">
           {{ row.groupName }}

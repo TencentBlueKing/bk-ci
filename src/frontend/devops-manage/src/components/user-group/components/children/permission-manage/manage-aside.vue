@@ -1,12 +1,12 @@
 <template>
-  <div>
-    <div class="group">
+  <bk-loading class="aside" :loading="manageAsideStore.isLoading" >
+    <div class="aside-header">
       <span>组织/用户</span>
       <span class="refresh" @click="refresh">
         刷新
       </span>
     </div>
-    <bk-loading class="aside" :loading="manageAsideStore.isLoading" >
+    <div class="group-wrapper">
       <div
         :class="{'group-active': activeTab == item.id }"
         class="group-item"
@@ -14,16 +14,22 @@
         :key="item.id"
         @click="handleClick(item)"
       >
-        <span v-if="item.type === 'department'">
-          <img :src="activeTab === item.id ? organizationActiveIcon : organizationIcon" class="group-icon">
-        </span>
-        <span v-else>
-          <img :src="activeTab === item.id ? userActiveIcon : userIcon" class="group-icon">
-        </span>
-        <p>{{ item.name }}</p>
+        <i 
+          :class="{
+            'group-icon': true,
+            'manage-icon manage-icon-organization': item.type === 'department',
+            'manage-icon manage-icon-user-shape': item.type === 'user',
+            'active': activeTab === item.id
+          }"
+        />
+        <p v-if="item.type === 'user'">
+          {{ item.id }} ({{ item.name }})
+        </p>
+        <p v-else>{{ item.name }}</p>
         <bk-popover
           :arrow="false"
           placement="bottom"
+          trigger="click"
           theme="light dot-menu"
         >
           <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
@@ -47,21 +53,22 @@
           </template>
         </bk-popover>
       </div>
-  
-      <bk-pagination
-        class="pagination"
-        v-model="current"
-        align="center"
-        :count="pageCount"
-        small
-        :show-limit="false"
-        :show-total-count="false"
-        @change="pageChange"
-      />
-    </bk-loading>
-  </div>
+    </div>
+
+    <bk-pagination
+      class="pagination"
+      v-model="current"
+      align="center"
+      :count="memberPagination.count"
+      :limit="20"
+      small
+      :show-limit="false"
+      :show-total-count="false"
+      @change="pageChange"
+    />
+  </bk-loading>
   <bk-dialog
-    :is-show="isShowhandOverDialog"
+    :is-show="isShowHandOverDialog"
     :width="640"
     :is-loading="handOverDialogLoding"
     @closed="handOverClose"
@@ -176,15 +183,17 @@
 
 <script setup name="ManageAside">
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 import { ref, defineProps, defineEmits, computed, watch, defineExpose } from 'vue';
 import useManageAside from "@/store/manageAside";
+import { storeToRefs } from 'pinia';
 
-const manageAsideStore = useManageAside();
 const { t } = useI18n();
+const route = useRoute();
+const manageAsideStore = useManageAside();
 const current = ref(1);
-const pageCount = ref();
 const activeTab = ref();
-const isShowhandOverDialog = ref(false);
+const isShowHandOverDialog = ref(false);
 const formRef = ref(null);
 const handOverDialogLoding = ref(false);
 const isHandOverfail = ref(false);
@@ -197,10 +206,11 @@ const handOverForm = ref({
   name: ''
 });
 
-const organizationIcon = computed(() => require('../../../svg/organization.svg?inline'));
-const organizationActiveIcon = computed(() => require('../../../svg/organization-active.svg?inline'));
-const userIcon = computed(() => require('../../../svg/user.svg?inline'));
-const userActiveIcon = computed(() => require('../../../svg/user-active.svg?inline'));
+const {
+  memberPagination,
+} = storeToRefs(manageAsideStore);
+
+const projectId = computed(() => route.params?.projectCode);
 const removeUser = ref(null);
 const authorizationStatus = computed(() => {
   if (verifying.value) {
@@ -225,16 +235,12 @@ const props = defineProps({
   overTable: {
     type: Array,
     default: () => [],
-  },
-  projectId: {
-    type: String,
   }
 });
 const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm', 'refresh']);
 
 watch(() => props.memberList, (newData) => {
   activeTab.value = newData[0]?.id;
-  pageCount.value = newData?.length;
   emit('handleClick', newData[0]);
 });
 
@@ -262,7 +268,7 @@ function handleRemoval(item) {
   if(item.type === "DEPARTMENT") {
     isShowRemoveDialog.value = true;
   } else {
-    isShowhandOverDialog.value = true;
+    isShowHandOverDialog.value = true;
   }
   removeUser.value = item;
 }
@@ -270,7 +276,7 @@ function handleRemoval(item) {
  *  人员移出项目弹窗关闭
  */
  function handOverClose() {
-  isShowhandOverDialog.value = false;
+  isShowHandOverDialog.value = false;
   isHandOverfail.value = false;
 }
 /**
@@ -357,19 +363,9 @@ function handleRemoveConfirm() {
 .aside {
   height: calc(100% - 60px);
   overflow-y: scroll;
-  &::-webkit-scrollbar-thumb {
-    background-color: #c4c6cc !important;
-    border-radius: 5px !important;
-    &:hover {
-      background-color: #979ba5 !important;
-    }
-  }
-  &::-webkit-scrollbar {
-    width: 4px !important;
-    height: 4px !important;
-  }
+  overflow: hidden;
 }
-.group {
+.aside-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -384,12 +380,26 @@ function handleRemoveConfirm() {
   line-height: 22px;
 
   .refresh{
-    font-family: MicrosoftYaHei;
     font-size: 12px;
+    font-weight: 400;
     color: #3A84FF;
-    letter-spacing: 0;
-    line-height: 20px;
     cursor: pointer;
+  }
+}
+.group-wrapper {
+  overflow: hidden;
+  overflow-y: scroll;
+  height: 100%;
+  &::-webkit-scrollbar-thumb {
+    background-color: #c4c6cc !important;
+    border-radius: 5px !important;
+    &:hover {
+      background-color: #979ba5 !important;
+    }
+  }
+  &::-webkit-scrollbar {
+    width: 4px !important;
+    height: 4px !important;
   }
 }
 .group-item {
@@ -413,9 +423,11 @@ function handleRemoveConfirm() {
 
   .group-icon {
     width: 15px;
-    line-height: 20px;
     margin-right: 8px;
-    filter: invert(70%) sepia(8%) saturate(136%) hue-rotate(187deg) brightness(91%) contrast(86%);
+    color: #9ea0a4;
+    &.active {
+      color: #0b76ff;
+    }
   }
 
   .more-icon {

@@ -24,7 +24,7 @@ export default defineStore('manageAside', () => {
   const personList = ref([]);
   const overTable = ref([]);
   const userName = ref('');
-  const memberPagination = ref({ limit: 10, current: 1 });
+  const memberPagination = ref({ limit: 20, current: 1, count: 0 });
 
   /**
    * 人员组织侧边栏点击事件
@@ -108,6 +108,7 @@ export default defineStore('manageAside', () => {
       const res = await http.getProjectMembers(projectId, params);
       isLoading.value = false;
       memberList.value = res.records
+      memberPagination.value.count = res.count;
     } catch (error) {
       isLoading.value = false;
     }

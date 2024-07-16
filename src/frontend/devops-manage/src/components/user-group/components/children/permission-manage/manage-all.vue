@@ -7,7 +7,7 @@
         unique-select
         class="multi-search"
         value-behavior="need-key"
-        :placeholder="t('用户/组织架构')"
+        :placeholder="filterTips"
       />
     </div>
     <div class="manage-article">
@@ -282,31 +282,26 @@ const rules = {
   ],
 };
 const searchValue = ref([]);
-const searchData = ref([
-  {
-    name: '用户',
-    id: 1,
-  },
-  {
-    name: '组织架构',
-    id: 2,
-    onlyRecommendChildren: true,
-    children: [
-      {
-        name: '王者荣耀',
-        id: '2-1',
-      },
-      {
-        name: '刺激战场',
-        id: '2-2',
-      },
-      {
-        name: '绝地求生',
-        id: '2-3',
-      },
-    ],
-  },
-]);
+
+const filterTips = computed(() => {
+  return searchData.value.map(item => item.name).join(' / ');
+});
+const searchData = computed(() => {
+  const data = [
+    {
+      name: t('用户'),
+      id: 'handoverFrom',
+      default: true,
+    },
+    {
+      name: t('组织架构'),
+      id: 'resourceName',
+    },
+  ]
+  return data.filter(data => {
+    return !searchValue.value.find(val => val.id === data.id)
+  })
+});
 const isPermission = ref(true);
 const manageAsideRef = ref(null);
 const groupTableStore = userGroupTable();
@@ -452,7 +447,10 @@ function handleSelectAll(resourceType, asideItem){
  */
 function batchOperator(flag){
   if (!selectedLength.value) {
-    Message(t('请先选择用户组'));
+    Message({
+      theme: 'error',
+      message: t('请先选择用户组')
+    });
     return;
   }
   sliderTitle.value = t(batchTitle[flag]);
@@ -577,7 +575,6 @@ function asideRemoveConfirm(value) {
     .manage-aside {
       position: relative;
       width: 230px;
-      padding: 8px 0 0;
       background: #FFFFFF;
       box-shadow: 0 2px 4px 0 #1919290d;
     }
