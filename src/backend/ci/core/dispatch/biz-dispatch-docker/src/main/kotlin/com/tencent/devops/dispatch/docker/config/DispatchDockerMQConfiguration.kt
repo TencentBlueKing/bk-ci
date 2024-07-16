@@ -28,7 +28,6 @@
 package com.tencent.devops.dispatch.docker.config
 
 import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.dispatch.docker.listener.DockerVMListener
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownDemoteEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -41,7 +40,6 @@ import java.util.function.Consumer
 
 @Configuration
 class DispatchDockerMQConfiguration @Autowired constructor() {
-    // TODO #7443 补充服务MQ配置
     @EventConsumer(groupName = GROUP_NAME)
     fun startDockerListener(
         @Autowired dockerVMListener: DockerVMListener

@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.kubernetes.config
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.dispatch.kubernetes.listeners.KubernetesListener
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownDemoteEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -44,12 +43,11 @@ import org.springframework.core.Ordered
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class DispatchKubernetesMQConfiguration @Autowired constructor() {
-    // TODO #7443 补充服务MQ配置
     /**
      * 启动构建队列
      */
     @EventConsumer(groupName = GROUP_NAME)
-    fun startDockerListener(
+    fun startKubernetesListener(
         @Autowired kubernetesListener: KubernetesListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { kubernetesListener.handleStartup(it) }
 
@@ -57,7 +55,7 @@ class DispatchKubernetesMQConfiguration @Autowired constructor() {
      * 启动构建降级队列
      */
     @EventConsumer(groupName = GROUP_NAME)
-    fun shutdownDockerListener(
+    fun shutdownKubernetesListener(
         @Autowired kubernetesListener: KubernetesListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { kubernetesListener.handleShutdownMessage(it) }
 
@@ -65,7 +63,7 @@ class DispatchKubernetesMQConfiguration @Autowired constructor() {
      * 启动构建结束队列
      */
     @EventConsumer(groupName = GROUP_NAME)
-    fun startDemoteDockerListener(
+    fun startDemoteKubernetesListener(
         @Autowired kubernetesListener: KubernetesListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
         with(it) {
@@ -100,7 +98,7 @@ class DispatchKubernetesMQConfiguration @Autowired constructor() {
     }
 
     @EventConsumer(groupName = GROUP_NAME)
-    fun shutdownDemoteDockerListener(
+    fun shutdownDemoteKubernetesListener(
         @Autowired kubernetesListener: KubernetesListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
         with(it) {
