@@ -269,7 +269,8 @@
                 return getVersionConfig()
             },
             versions () {
-                return this.pipelineNameList[0].versionParams
+                const params = this.pipelineNameList.find(item => item.pipelineName === this.currentPipelineParams.pipelineName)
+                return params.versionParams.filter(p => allVersionKeyList.includes(p.id))
             },
             versionValues () {
                 return getParamsValuesMap(this.versions)
@@ -548,8 +549,12 @@
                             param: pipeline.params
                         })
                     })
-
-                    if (params[0].buildNo && !params[0].buildNo.buildNo) {
+                    const isRequired = params.some(item => item.buildNo && !item.buildNo.buildNo)
+                    if (isRequired) {
+                        this.$showTips({
+                            message: this.$t('template.buildNumErrTips'),
+                            theme: 'error'
+                        })
                         return
                     }
 
