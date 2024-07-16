@@ -28,10 +28,7 @@
 package com.tencent.devops.process.init
 
 import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineCreateListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineDeleteListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineRestoreListener
@@ -40,15 +37,9 @@ import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
-import com.tencent.devops.process.engine.service.AgentPipelineRefService
-import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.engine.service.RepoPipelineRefService
-import com.tencent.devops.process.service.label.PipelineGroupService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Lazy
 
 /**
  * 流水线构建核心配置
@@ -56,84 +47,12 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 @Suppress("LongParameterList")
 class PipelineBaseConfiguration {
-    @Bean
-    fun createListener(
-        @Autowired pipelineWebhookService: PipelineWebhookService,
-        @Autowired pipelineAtomStatisticsService: PipelineAtomStatisticsService,
-        @Autowired callBackControl: CallBackControl,
-        @Autowired agentPipelineRefService: AgentPipelineRefService,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
-        @Autowired repoPipelineRefService: RepoPipelineRefService
-    ) = MQPipelineCreateListener(
-        pipelineWebhookService = pipelineWebhookService,
-        pipelineAtomStatisticsService = pipelineAtomStatisticsService,
-        callBackControl = callBackControl,
-        agentPipelineRefService = agentPipelineRefService,
-        pipelineEventDispatcher = pipelineEventDispatcher,
-        repoPipelineRefService = repoPipelineRefService
-    )
-
-    @Bean
-    fun deleteListener(
-        @Autowired pipelineRuntimeService: PipelineRuntimeService,
-        @Autowired pipelineWebhookService: PipelineWebhookService,
-        @Autowired pipelineGroupService: PipelineGroupService,
-        @Autowired pipelineAtomStatisticsService: PipelineAtomStatisticsService,
-        @Autowired callBackControl: CallBackControl,
-        @Autowired agentPipelineRefService: AgentPipelineRefService,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
-        @Autowired repoPipelineRefService: RepoPipelineRefService
-    ) = MQPipelineDeleteListener(
-        pipelineRuntimeService = pipelineRuntimeService,
-        pipelineWebhookService = pipelineWebhookService,
-        pipelineGroupService = pipelineGroupService,
-        pipelineAtomStatisticsService = pipelineAtomStatisticsService,
-        callBackControl = callBackControl,
-        agentPipelineRefService = agentPipelineRefService,
-        pipelineEventDispatcher = pipelineEventDispatcher,
-        repoPipelineRefService = repoPipelineRefService
-    )
-
-    @Bean
-    fun updateListener(
-        @Autowired pipelineRuntimeService: PipelineRuntimeService,
-        @Autowired pipelineWebhookService: PipelineWebhookService,
-        @Autowired pipelineAtomStatisticsService: PipelineAtomStatisticsService,
-        @Autowired callBackControl: CallBackControl,
-        @Autowired agentPipelineRefService: AgentPipelineRefService,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
-        @Autowired repoPipelineRefService: RepoPipelineRefService
-    ) = MQPipelineUpdateListener(
-        pipelineRuntimeService = pipelineRuntimeService,
-        pipelineWebhookService = pipelineWebhookService,
-        pipelineAtomStatisticsService = pipelineAtomStatisticsService,
-        callBackControl = callBackControl,
-        agentPipelineRefService = agentPipelineRefService,
-        pipelineEventDispatcher = pipelineEventDispatcher,
-        repoPipelineRefService = repoPipelineRefService
-    )
-
-    @Bean
-    fun restoreListener(
-        @Autowired pipelineAtomStatisticsService: PipelineAtomStatisticsService,
-        @Autowired callBackControl: CallBackControl,
-        @Autowired agentPipelineRefService: AgentPipelineRefService,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
-        @Autowired repoPipelineRefService: RepoPipelineRefService
-    ) = MQPipelineRestoreListener(
-        pipelineAtomStatisticsService = pipelineAtomStatisticsService,
-        callBackControl = callBackControl,
-        agentPipelineRefService = agentPipelineRefService,
-        pipelineEventDispatcher = pipelineEventDispatcher,
-        repoPipelineRefService = repoPipelineRefService
-    )
-
     /**
      * 流水线创建队列--- 并发小
      */
     @EventConsumer
     fun pipelineCreateListener(
-        @Autowired createListener: MQPipelineCreateListener
+        @Lazy @Autowired createListener: MQPipelineCreateListener
     ) = ScsConsumerBuilder.build<PipelineCreateEvent> { createListener.run(it) }
 
     /**
@@ -141,7 +60,7 @@ class PipelineBaseConfiguration {
      */
     @EventConsumer
     fun pipelineDeleteListener(
-        @Autowired deleteListener: MQPipelineDeleteListener
+        @Lazy @Autowired deleteListener: MQPipelineDeleteListener
     ) = ScsConsumerBuilder.build<PipelineDeleteEvent> { deleteListener.run(it) }
 
     /**
@@ -149,7 +68,7 @@ class PipelineBaseConfiguration {
      */
     @EventConsumer
     fun pipelineUpdateListener(
-        @Autowired updateListener: MQPipelineUpdateListener
+        @Lazy @Autowired updateListener: MQPipelineUpdateListener
     ) = ScsConsumerBuilder.build<PipelineUpdateEvent> { updateListener.run(it) }
 
     /**
@@ -157,6 +76,6 @@ class PipelineBaseConfiguration {
      */
     @EventConsumer
     fun pipelineRestoreListener(
-        @Autowired restoreListener: MQPipelineRestoreListener
+        @Lazy @Autowired restoreListener: MQPipelineRestoreListener
     ) = ScsConsumerBuilder.build<PipelineRestoreEvent> { restoreListener.run(it) }
 }
