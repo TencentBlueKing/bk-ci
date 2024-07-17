@@ -43,7 +43,7 @@ class QualityMQConfig {
     @EventConsumer
     fun pipelineCancelQualityConsumer(
         @Autowired listener: PipelineBuildQualityListener
-    ) = ScsConsumerBuilder.build<PipelineBuildCancelBroadCastEvent> { listener.listenPipelineCancelQualityConsumer(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildCancelBroadCastEvent> { listener.listenPipelineCancelQualityListener(it) }
 
     @EventConsumer
     fun pipelineRetryQualityConsumer(
