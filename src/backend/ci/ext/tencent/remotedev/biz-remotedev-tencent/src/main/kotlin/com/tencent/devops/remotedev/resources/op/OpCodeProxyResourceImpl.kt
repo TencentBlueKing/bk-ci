@@ -1,6 +1,8 @@
 package com.tencent.devops.remotedev.resources.op
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpCodeProxyResource
 import com.tencent.devops.remotedev.pojo.gitproxy.CallbackLinktgitData
@@ -11,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpCodeProxyResourceImpl @Autowired constructor(
     private val gitProxyTGitService: GitProxyTGitService
 ) : OpCodeProxyResource {
+
+    @AuditEntry(actionId = ActionId.TGIT_LINK_CREATE)
     override fun tgitlink(data: CallbackLinktgitData): Result<Map<Long, Boolean>> {
         return Result(
             gitProxyTGitService.linkTGit(

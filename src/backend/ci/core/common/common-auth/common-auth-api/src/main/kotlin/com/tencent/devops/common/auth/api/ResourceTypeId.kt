@@ -9,7 +9,6 @@ object ResourceTypeId {
     const val CERT = "cert"
     const val CGS = "cgs"
     const val IMAGE = "image"
-    const val CODE_PROXY = "code_proxy"
     const val ENVIRONMENT = "environment"
     const val ENV_NODE = "env_node"
     const val RULE = "rule"
@@ -19,4 +18,5 @@ object ResourceTypeId {
     const val EXPERIENCE_GROUP = "experience_group"
     // 自定义
     const val SECURITY = "security"
+    const val TGIT_LINK = "tgit_link"
 }
