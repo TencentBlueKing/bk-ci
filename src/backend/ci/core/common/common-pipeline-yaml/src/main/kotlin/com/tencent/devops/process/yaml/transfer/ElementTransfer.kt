@@ -152,10 +152,12 @@ class ElementTransfer @Autowired(required = false) constructor(
                             else -> return@m ""
                         }
                     }
-                val (repoHashId, repoName) = if (element.repositoryType == TriggerRepositoryType.SELF) {
-                    Pair(null, null)
-                } else {
-                    Pair(element.repoHashId, element.repoName)
+                // ui->code,repositoryType为null时,repoType才需要在code模式下展示
+                val (repoType, repoHashId, repoName) = when (element.repositoryType) {
+                    TriggerRepositoryType.ID -> Triple(null, element.repoHashId, null)
+                    TriggerRepositoryType.NAME -> Triple(null, null, element.repoName)
+                    TriggerRepositoryType.SELF -> Triple(null, null, null)
+                    else -> Triple(TriggerRepositoryType.NONE.name, null, null)
                 }
                 schedules.add(
                     SchedulesRule(
@@ -166,11 +168,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                         } else {
                             element.advanceExpression
                         },
-                        repoType = if (element.repositoryType == null) {
-                            TriggerRepositoryType.NONE.name
-                        } else {
-                            element.repositoryType!!.name
-                        },
+                        repoType = repoType,
                         repoId = repoHashId,
                         repoName = repoName,
                         branches = element.branches,
