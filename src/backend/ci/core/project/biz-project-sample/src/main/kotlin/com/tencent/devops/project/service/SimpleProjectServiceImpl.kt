@@ -218,6 +218,13 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun getProductByProductId(productId: Int): OperationalProductVO? {
+        return OperationalProductVO(
+            productId = -1,
+            productName = "其他"
+        )
+    }
+
     override fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO> {
         return listOf(
             OperationalProductVO(
