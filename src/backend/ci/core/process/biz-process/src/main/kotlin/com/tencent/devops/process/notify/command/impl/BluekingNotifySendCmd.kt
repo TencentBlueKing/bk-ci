@@ -63,9 +63,7 @@ class BluekingNotifySendCmd @Autowired constructor(
                         sendNotifyByTemplate(
                             templateCode = getNotifyTemplateCode(shutdownType, successSubscription.detailFlag),
                             receivers = receivers,
-                            notifyType = successSubscription.types.filter {
-                                it != PipelineSubscriptionType.WEWORK_GROUP
-                            }.map { it.name }.toMutableSet(),
+                            notifyType = setOf(PipelineSubscriptionType.WEWORK_GROUP.name),
                             titleParams = commandContext.notifyValue,
                             bodyParams = commandContext.notifyValue,
                             markdownContent = successSubscription.wechatGroupMarkdownFlag
@@ -97,7 +95,9 @@ class BluekingNotifySendCmd @Autowired constructor(
                     sendNotifyByTemplate(
                         templateCode = getNotifyTemplateCode(shutdownType, failSubscription.detailFlag),
                         receivers = receivers,
-                        notifyType = failSubscription.types.map { it.name }.toMutableSet(),
+                        notifyType = failSubscription.types.filter {
+                            it != PipelineSubscriptionType.WEWORK_GROUP
+                        }.map { it.name }.toMutableSet(),
                         titleParams = commandContext.notifyValue,
                         bodyParams = commandContext.notifyValue,
                         markdownContent = failSubscription.wechatGroupMarkdownFlag
@@ -107,9 +107,7 @@ class BluekingNotifySendCmd @Autowired constructor(
                         sendNotifyByTemplate(
                             templateCode = getNotifyTemplateCode(shutdownType, failSubscription.detailFlag),
                             receivers = receivers,
-                            notifyType = failSubscription.types.filter {
-                                it != PipelineSubscriptionType.WEWORK_GROUP
-                            }.map { it.name }.toMutableSet(),
+                            notifyType = setOf(PipelineSubscriptionType.WEWORK_GROUP.name),
                             titleParams = commandContext.notifyValue,
                             bodyParams = commandContext.notifyValue,
                             markdownContent = failSubscription.wechatGroupMarkdownFlag
