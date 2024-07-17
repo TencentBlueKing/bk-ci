@@ -15,12 +15,13 @@ data class CmdbNodeDTO(
     var hostId: Long? = null,
     var createdUser: String? = null
 ) {
-    fun operatorOrOsNameChanged(cmdbServerDTO: CmdbServerDTO?): Boolean {
+    fun operatorOrServerIdOrOsNameChanged(cmdbServerDTO: CmdbServerDTO?): Boolean {
         if (cmdbServerDTO == null) {
             return false
         }
         return operator != cmdbServerDTO.operator
             || bakOperator != cmdbServerDTO.getBakOperatorStr()
+            || serverId != cmdbServerDTO.serverId
             || osName != cmdbServerDTO.osName
     }
 

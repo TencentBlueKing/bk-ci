@@ -109,7 +109,7 @@ class UpdateCmdbNodeService @Autowired constructor(
         }.mapNotNull {
             val oldCmdbNode = it
             val newCmdbServer = ipToCmdbServerMap[oldCmdbNode.nodeIp]
-            if (oldCmdbNode.operatorOrOsNameChanged(newCmdbServer)) {
+            if (oldCmdbNode.operatorOrServerIdOrOsNameChanged(newCmdbServer)) {
                 NodeUpdateAttrDTO(
                     nodeIp = oldCmdbNode.nodeIp,
                     serverId = newCmdbServer?.serverId,
@@ -144,9 +144,9 @@ class UpdateCmdbNodeService @Autowired constructor(
         val affectedRowNum = cmdbNodeDao.updateNodeStatusNotInCmdbByNodeIp(statusInCmdbIpList)
         if (affectedRowNum > 0) {
             logger.info(
-                "updateNodeStatusNotInCmdb|affectedRowNum={}|notInCmdbIpList={}|",
+                "updateNodeStatusNotInCmdb|affectedRowNum={}|statusInCmdbIpList={}|",
                 affectedRowNum,
-                notInCmdbIpList
+                statusInCmdbIpList
             )
         }
     }
