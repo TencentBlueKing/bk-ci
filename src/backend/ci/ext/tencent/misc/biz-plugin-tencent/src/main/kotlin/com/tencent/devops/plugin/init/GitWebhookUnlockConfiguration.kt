@@ -30,21 +30,12 @@ package com.tencent.devops.plugin.init
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
-import com.tencent.devops.plugin.listener.git.GitWebhookUnlockListener
-import com.tencent.devops.plugin.service.git.GitWebhookUnlockService
+import com.tencent.devops.process.listener.GitWebhookUnlockListener
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
 class GitWebhookUnlockConfiguration {
-    @Bean
-    fun gitUnlockListener(
-        @Autowired gitWebhookUnlockService: GitWebhookUnlockService
-    ) = GitWebhookUnlockListener(
-        gitWebhookUnlockService = gitWebhookUnlockService
-    )
-
     @EventConsumer
     fun gitWebhookUnlockConsumer(
         @Autowired listener: GitWebhookUnlockListener
