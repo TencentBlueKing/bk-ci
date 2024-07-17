@@ -43,12 +43,12 @@ import org.springframework.context.annotation.Lazy
 @Configuration
 class BuildEngineExtendConfiguration {
     @EventConsumer
-    fun subPipelineBuildFinishListener(
-        @Lazy @Autowired buildListener: SubPipelineBuildFinishListener
+    fun subPipelineBuildFinish(
+        @Autowired buildListener: SubPipelineBuildFinishListener
     ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> { buildListener.run(it) }
 
     @EventConsumer
-    fun subPipelineQueueFinishListener(
-        @Lazy @Autowired buildListener: SubPipelineBuildQueueListener
+    fun subPipelineQueueFinish(
+        @Autowired buildListener: SubPipelineBuildQueueListener
     ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { buildListener.run(it) }
 }

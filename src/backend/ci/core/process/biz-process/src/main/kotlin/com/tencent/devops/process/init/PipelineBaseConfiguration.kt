@@ -51,31 +51,31 @@ class PipelineBaseConfiguration {
      * 流水线创建队列--- 并发小
      */
     @EventConsumer
-    fun pipelineCreateListener(
-        @Lazy @Autowired createListener: MQPipelineCreateListener
+    fun pipelineCreate(
+        @Autowired createListener: MQPipelineCreateListener
     ) = ScsConsumerBuilder.build<PipelineCreateEvent> { createListener.run(it) }
 
     /**
      * 流水线删除队列--- 并发小
      */
     @EventConsumer
-    fun pipelineDeleteListener(
-        @Lazy @Autowired deleteListener: MQPipelineDeleteListener
+    fun pipelineDelete(
+        @Autowired deleteListener: MQPipelineDeleteListener
     ) = ScsConsumerBuilder.build<PipelineDeleteEvent> { deleteListener.run(it) }
 
     /**
      * 流水线更新队列--- 并发小
      */
     @EventConsumer
-    fun pipelineUpdateListener(
-        @Lazy @Autowired updateListener: MQPipelineUpdateListener
+    fun pipelineUpdate(
+        @Autowired updateListener: MQPipelineUpdateListener
     ) = ScsConsumerBuilder.build<PipelineUpdateEvent> { updateListener.run(it) }
 
     /**
      * 流水线恢复队列--- 并发一般
      */
     @EventConsumer
-    fun pipelineRestoreListener(
-        @Lazy @Autowired restoreListener: MQPipelineRestoreListener
+    fun pipelineRestore(
+        @Autowired restoreListener: MQPipelineRestoreListener
     ) = ScsConsumerBuilder.build<PipelineRestoreEvent> { restoreListener.run(it) }
 }
