@@ -29,7 +29,6 @@ package com.tencent.devops.openapi.es.config
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.openapi.es.IESService
 import com.tencent.devops.openapi.es.mq.ESEvent
 import com.tencent.devops.openapi.es.mq.MQDispatcher
@@ -55,7 +54,7 @@ class MQConfiguration @Autowired constructor() {
     ) = MQDispatcher(streamBridge)
 
     @EventConsumer
-    fun openapiLogEventIn(
+    fun openapiLogEventConsumer(
         @Autowired listenerService: MQListenerService
     ) = ScsConsumerBuilder.build<ESEvent> { listenerService.handleEvent(it) }
 

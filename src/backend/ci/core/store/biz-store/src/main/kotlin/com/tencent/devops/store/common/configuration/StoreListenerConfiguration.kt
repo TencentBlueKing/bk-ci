@@ -41,7 +41,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class StoreListenerConfiguration {
     @EventConsumer
-    fun buildFinishListener(
+    fun buildFinishConsumer(
         @Autowired storeBuildService: StoreBuildService
     ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> {
         storeBuildService.handleStoreBuildStatus(

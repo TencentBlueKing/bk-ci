@@ -82,7 +82,7 @@ class BuildEngineCoreBuildConfiguration {
     )
 
     @EventConsumer
-    fun buildStartListener(
+    fun buildStartConsumer(
         @Autowired buildListener: PipelineBuildStartListener
     ) = ScsConsumerBuilder.build<PipelineBuildStartEvent> { buildListener.run(it) }
 
@@ -99,7 +99,7 @@ class BuildEngineCoreBuildConfiguration {
     )
 
     @EventConsumer
-    fun buildFinishListener(
+    fun buildFinishConsumer(
         @Autowired buildListener: PipelineBuildFinishListener
     ) = ScsConsumerBuilder.build<PipelineBuildFinishEvent> { buildListener.run(it) }
 
@@ -116,7 +116,7 @@ class BuildEngineCoreBuildConfiguration {
     )
 
     @EventConsumer
-    fun buildCancelListener(
+    fun buildCancelConsumer(
         @Autowired buildListener: PipelineBuildCancelListener
     ) = ScsConsumerBuilder.build<PipelineBuildCancelEvent> { buildListener.run(it) }
 
@@ -133,7 +133,7 @@ class BuildEngineCoreBuildConfiguration {
     )
 
     @EventConsumer
-    fun stageBuildListener(
+    fun stageBuildConsumer(
         @Autowired buildListener: PipelineStageBuildListener
     ) = ScsConsumerBuilder.build<PipelineBuildStageEvent> { buildListener.run(it) }
 
@@ -150,7 +150,7 @@ class BuildEngineCoreBuildConfiguration {
     )
 
     @EventConsumer
-    fun containerBuildListener(
+    fun containerBuildConsumer(
         @Autowired buildListener: PipelineContainerBuildListener
     ) = ScsConsumerBuilder.build<PipelineBuildContainerEvent> { buildListener.run(it) }
 
@@ -167,7 +167,7 @@ class BuildEngineCoreBuildConfiguration {
     )
 
     @EventConsumer
-    fun taskBuildListener(
+    fun taskBuildConsumer(
         @Autowired buildListener: PipelineAtomTaskBuildListener
     ) = ScsConsumerBuilder.build<PipelineBuildAtomTaskEvent> { buildListener.run(it) }
 
@@ -198,7 +198,7 @@ class BuildEngineCoreBuildConfiguration {
     )
 
     @EventConsumer
-    fun taskPauseListener(
+    fun taskPauseConsumer(
         @Autowired buildListener: PipelineTaskPauseListener
     ) = ScsConsumerBuilder.build<PipelineTaskPauseEvent> { buildListener.run(it) }
 }

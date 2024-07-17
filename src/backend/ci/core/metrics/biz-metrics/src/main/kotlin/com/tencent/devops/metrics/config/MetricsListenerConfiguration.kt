@@ -34,7 +34,6 @@ import com.tencent.devops.common.event.pojo.measure.LabelChangeMetricsBroadCastE
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.metrics.listener.BuildEndMetricsDataReportListener
 import com.tencent.devops.metrics.listener.DispatchJobMetricsListener
 import com.tencent.devops.metrics.listener.LabelChangeMetricsDataSyncListener
@@ -49,43 +48,43 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class MetricsListenerConfiguration {
     @Bean
-    fun buildEndMetricsDataReportListener(
+    fun buildEndMetricsDataReportConsumer(
         @Autowired metricsDataReportService: MetricsDataReportService
     ) = BuildEndMetricsDataReportListener(
         metricsDataReportService = metricsDataReportService
     )
 
     @EventConsumer
-    fun buildEndDataReportListener(
+    fun buildEndDataReportConsumer(
         @Autowired listener: BuildEndMetricsDataReportListener
     ) = ScsConsumerBuilder.build<BuildEndMetricsBroadCastEvent> { listener.execute(it) }
 
     @Bean
-    fun labelChangeMetricsDataSyncListener(
+    fun labelChangeMetricsDataSyncConsumber(
         @Autowired syncPipelineRelateLabelDataService: SyncPipelineRelateLabelDataService
     ) = LabelChangeMetricsDataSyncListener(
         syncPipelineRelateLabelDataService = syncPipelineRelateLabelDataService
     )
 
     @EventConsumer
-    fun labelChangeDataSyncListener(
+    fun labelChangeDataSyncConsumer(
         @Autowired listener: LabelChangeMetricsDataSyncListener
     ) = ScsConsumerBuilder.build<LabelChangeMetricsBroadCastEvent> { listener.execute(it) }
 
     @EventConsumer
-    fun metricsQualityDailyReportListener(
+    fun metricsQualityDailyReportConsumer(
         @Autowired thirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
     ) = ScsConsumerBuilder.build<QualityReportEvent> {
         thirdPlatformDataReportFacadeService.metricsQualityDataReport(it)
     }
 
     @EventConsumer
-    fun metricsDispatchJobReportListener(
+    fun metricsDispatchJobReportConsumer(
         @Autowired dispatchJobMetricsListener: DispatchJobMetricsListener
     ) = ScsConsumerBuilder.build<DispatchJobMetricsEvent> { dispatchJobMetricsListener.execute(it) }
 
     @EventConsumer
-    fun metricsProjectUserDailyListener(
+    fun metricsProjectUserDailyConsumer(
         @Autowired projectUserDailyMetricsListener: ProjectUserDailyMetricsListener
     ) = ScsConsumerBuilder.build<ProjectUserDailyEvent> { projectUserDailyMetricsListener.execute(it) }
 }

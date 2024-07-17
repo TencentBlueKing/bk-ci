@@ -38,12 +38,12 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class BuildLessMQConfiguration @Autowired constructor() {
     @EventConsumer
-    fun startListener(
+    fun buildLessStartConsumer(
         @Autowired buildLessListener: BuildLessListener
     ) = ScsConsumerBuilder.build<PipelineBuildLessStartupEvent> { buildLessListener.listenAgentStartUpEvent(it) }
 
     @EventConsumer
-    fun shutdownListener(
+    fun buildLessShutdownListener(
         @Autowired buildLessListener: BuildLessListener
     ) = ScsConsumerBuilder.build<PipelineBuildLessShutdownEvent> { buildLessListener.listenAgentShutdownEvent(it) }
 }

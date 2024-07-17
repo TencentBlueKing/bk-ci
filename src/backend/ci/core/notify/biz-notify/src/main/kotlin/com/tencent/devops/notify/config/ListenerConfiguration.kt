@@ -42,32 +42,32 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class ListenerConfiguration {
     @EventConsumer
-    fun rtxNotifyListener(
+    fun rtxNotifyConsumer(
         @Autowired listener: NotifyMessageConsumer
     ) = ScsConsumerBuilder.build<RtxNotifyMessageWithOperation> { listener.onReceiveRtxMessage(it) }
 
     @EventConsumer
-    fun emailNotifyListener(
+    fun emailNotifyConsumer(
         @Autowired listener: NotifyMessageConsumer
     ) = ScsConsumerBuilder.build<EmailNotifyMessageWithOperation> { listener.onReceiveEmailMessage(it) }
 
     @EventConsumer
-    fun smsNotifyListener(
+    fun smsNotifyConsumer(
         @Autowired listener: NotifyMessageConsumer
     ) = ScsConsumerBuilder.build<SmsNotifyMessageWithOperation> { listener.onReceiveSmsMessage(it) }
 
     @EventConsumer
-    fun wechatNotifyListener(
+    fun wechatNotifyConsumer(
         @Autowired listener: NotifyMessageConsumer
     ) = ScsConsumerBuilder.build<WechatNotifyMessageWithOperation> { listener.onReceiveWechatMessage(it) }
 
     @EventConsumer
-    fun weworkNotifyListener(
+    fun weworkNotifyConsumer(
         @Autowired listener: NotifyMessageConsumer
     ) = ScsConsumerBuilder.build<WeworkNotifyMessageWithOperation> { listener.onReceiveWeworkMessage(it) }
 
     @EventConsumer
-    fun voiceNotifyListener(
+    fun voiceNotifyConsumer(
         @Autowired listener: NotifyMessageConsumer
     ) = ScsConsumerBuilder.build<VoiceNotifyMessageWithOperation> { listener.onReceiveVoiceMessage(it) }
 }

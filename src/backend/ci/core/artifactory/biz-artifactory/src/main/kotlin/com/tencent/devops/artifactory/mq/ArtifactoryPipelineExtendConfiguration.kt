@@ -32,8 +32,6 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCas
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
-import java.util.function.Consumer
-import kotlin.reflect.jvm.kotlinFunction
 
 /**
  * 流水线构建扩展配置
@@ -45,7 +43,7 @@ class ArtifactoryPipelineExtendConfiguration {
      * 构建广播交换机
      */
     @EventConsumer
-    fun buildFinishListener(
+    fun buildFinishConsumer(
         @Autowired listener: PipelineBuildArtifactoryListener
     ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> { listener.onBuildFinished(it) }
 }

@@ -57,7 +57,7 @@ class PipelineExtendsNotifyConfiguration {
      * webhook构建触发广播监听
      */
     @EventConsumer
-    fun pipelineBuildNotifyListener(
+    fun pipelineBuildNotifyConsumer(
         @Autowired pipelineBuildNotifyListener: PipelineBuildNotifyListener
     ) = ScsConsumerBuilder.build<PipelineBuildNotifyEvent> { pipelineBuildNotifyListener.run(it) }
 
@@ -65,7 +65,7 @@ class PipelineExtendsNotifyConfiguration {
      * 审核提醒广播监听
      */
     @EventConsumer
-    fun pipelineBuildNotifyReminderListener(
+    fun pipelineBuildNotifyReminderConsumer(
         @Autowired pipelineAtomTaskReminderListener: PipelineAtomTaskReminderListener
     ) = ScsConsumerBuilder.build<PipelineBuildReviewReminderEvent> { pipelineAtomTaskReminderListener.execute(it) }
 }

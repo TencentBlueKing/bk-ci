@@ -41,22 +41,22 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class QualityMQConfig {
     @EventConsumer
-    fun pipelineCancelQualityListener(
+    fun pipelineCancelQualityConsumer(
         @Autowired listener: PipelineBuildQualityListener
-    ) = ScsConsumerBuilder.build<PipelineBuildCancelBroadCastEvent> { listener.listenPipelineCancelQualityListener(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildCancelBroadCastEvent> { listener.listenPipelineCancelQualityConsumer(it) }
 
     @EventConsumer
-    fun pipelineRetryQualityListener(
+    fun pipelineRetryQualityConsumer(
         @Autowired listener: PipelineBuildQualityListener
     ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { listener.listenPipelineRetryBroadCastEvent(it) }
 
     @EventConsumer
-    fun pipelineReviewListener(
+    fun pipelineReviewConsumer(
         @Autowired listener: PipelineBuildQualityListener
     ) = ScsConsumerBuilder.build<PipelineBuildReviewBroadCastEvent> { listener.listenPipelineTimeoutBroadCastEvent(it) }
 
     @EventConsumer
-    fun pipelineQualityReviewListener(
+    fun pipelineQualityReviewConsumer(
         @Autowired listener: PipelineBuildQualityListener
     ) = ScsConsumerBuilder.build<PipelineBuildQualityReviewBroadCastEvent> {
         listener.listenPipelineQualityReviewBroadCastEvent(it)
