@@ -39,17 +39,17 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class DispatchCodeCCMQConfiguration @Autowired constructor() {
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun startCodeCCListener(
         @Autowired codeCCDispatchListener: CodeCCDispatchListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { codeCCDispatchListener.handleStartup(it) }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun shutdownCodeCCListener(
         @Autowired codeCCDispatchListener: CodeCCDispatchListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { codeCCDispatchListener.handleShutdownMessage(it) }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun startDemoteCodeCCListener(
         @Autowired codeCCDispatchListener: CodeCCDispatchListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
@@ -84,7 +84,7 @@ class DispatchCodeCCMQConfiguration @Autowired constructor() {
         }
     }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun shutdownDemoteCodeCCListener(
         @Autowired codeCCDispatchListener: CodeCCDispatchListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
@@ -107,9 +107,5 @@ class DispatchCodeCCMQConfiguration @Autowired constructor() {
                 )
             )
         }
-    }
-
-    companion object {
-        private const val GROUP_NAME = "dispatch-codecc-service"
     }
 }

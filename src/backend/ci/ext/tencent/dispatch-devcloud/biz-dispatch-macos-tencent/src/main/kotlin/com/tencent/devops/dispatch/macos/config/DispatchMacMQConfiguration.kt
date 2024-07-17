@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.macos.config
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.dispatch.macos.listener.MacBuildListener
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownDemoteEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -40,17 +39,17 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class DispatchMacMQConfiguration @Autowired constructor() {
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun startMacListener(
         @Autowired macBuildListener: MacBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { macBuildListener.handleStartup(it) }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun shutdownMacListener(
         @Autowired macBuildListener: MacBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { macBuildListener.handleShutdownMessage(it) }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun startDemoteMacListener(
         @Autowired macBuildListener: MacBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
@@ -85,7 +84,7 @@ class DispatchMacMQConfiguration @Autowired constructor() {
         }
     }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun shutdownDemoteMacListener(
         @Autowired macBuildListener: MacBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
@@ -108,9 +107,5 @@ class DispatchMacMQConfiguration @Autowired constructor() {
                 )
             )
         }
-    }
-
-    companion object {
-        private const val GROUP_NAME = "dispatch-mac-service"
     }
 }

@@ -40,17 +40,17 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class DispatchPcgMQConfiguration @Autowired constructor() {
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun startPcgListener(
         @Autowired pcgBuildListener: PCGBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { pcgBuildListener.handleStartup(it) }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun shutdownPcgListener(
         @Autowired pcgBuildListener: PCGBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { pcgBuildListener.handleShutdownMessage(it) }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun startDemotePcgListener(
         @Autowired pcgBuildListener: PCGBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
@@ -85,7 +85,7 @@ class DispatchPcgMQConfiguration @Autowired constructor() {
         }
     }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun shutdownDemotePcgListener(
         @Autowired pcgBuildListener: PCGBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
@@ -108,9 +108,5 @@ class DispatchPcgMQConfiguration @Autowired constructor() {
                 )
             )
         }
-    }
-
-    companion object {
-        private const val GROUP_NAME = "dispatch-pcg-service"
     }
 }

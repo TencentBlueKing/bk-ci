@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.windows.config
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.dispatch.windows.listener.WindowsBuildListener
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownDemoteEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -40,17 +39,17 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class DispatchWindowsMQConfiguration @Autowired constructor() {
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun startWindowsListener(
         @Autowired windowsBuildListener: WindowsBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { windowsBuildListener.handleStartup(it) }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun shutdownWindowsListener(
         @Autowired windowsBuildListener: WindowsBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { windowsBuildListener.handleShutdownMessage(it) }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun startDemoteWindowsListener(
         @Autowired windowsBuildListener: WindowsBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
@@ -85,7 +84,7 @@ class DispatchWindowsMQConfiguration @Autowired constructor() {
         }
     }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun shutdownDemoteWindowsListener(
         @Autowired windowsBuildListener: WindowsBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
@@ -108,9 +107,5 @@ class DispatchWindowsMQConfiguration @Autowired constructor() {
                 )
             )
         }
-    }
-
-    companion object {
-        private const val GROUP_NAME = "dispatch-windows-service"
     }
 }

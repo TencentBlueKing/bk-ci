@@ -40,17 +40,17 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class DispatchDevCloudMQConfiguration @Autowired constructor() {
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun startDevCloudListener(
         @Autowired devCloudBuildListener: DevCloudBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { devCloudBuildListener.handleStartup(it) }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun shutdownDevCloudListener(
         @Autowired devCloudBuildListener: DevCloudBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { devCloudBuildListener.handleShutdownMessage(it) }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun startDemoteDevCloudListener(
         @Autowired devCloudBuildListener: DevCloudBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
@@ -85,7 +85,7 @@ class DispatchDevCloudMQConfiguration @Autowired constructor() {
         }
     }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun shutdownDemoteDevCloudListener(
         @Autowired devCloudBuildListener: DevCloudBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
@@ -108,9 +108,5 @@ class DispatchDevCloudMQConfiguration @Autowired constructor() {
                 )
             )
         }
-    }
-
-    companion object {
-        private const val GROUP_NAME = "dispatch-devcloud-service"
     }
 }
