@@ -95,7 +95,9 @@ class BluekingNotifySendCmd @Autowired constructor(
                     sendNotifyByTemplate(
                         templateCode = getNotifyTemplateCode(shutdownType, failSubscription.detailFlag),
                         receivers = receivers,
-                        notifyType = failSubscription.types.map { it.name }.toMutableSet(),
+                        notifyType = failSubscription.types.filter {
+                            it != PipelineSubscriptionType.WEWORK_GROUP
+                        }.map { it.name }.toMutableSet(),
                         titleParams = commandContext.notifyValue,
                         bodyParams = commandContext.notifyValue,
                         markdownContent = failSubscription.wechatGroupMarkdownFlag
