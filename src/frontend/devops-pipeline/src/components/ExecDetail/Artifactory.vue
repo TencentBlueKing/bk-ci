@@ -128,7 +128,7 @@
                             = res.records.map((item) => ({
                                 ...item,
                                 icon: item.folder ? 'folder' : extForFile(item.name),
-                                size: item.folder ? this.sizeFormatter(this.getFolderSize(item)) : this.sizeFormatter(item.size)
+                                size: item.size
                             })) || []
                         this.hasPermission = permission
                         if (this.artifactories.length > 0) {
