@@ -56,7 +56,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
             val source = it.source
             if (source is Map<*, *>) {
                 if (source.containsKey("spring.application.name")) {
-                    groupName = source["spring.application.name"].toString() + "-service"
+                    groupName = source["spring.application.name"].toString()
                 }
             }
             if (groupName.isBlank()) {
@@ -132,7 +132,6 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         consumer: EventConsumer,
         event: Event
     ) {
-        // TODO Kafka 场景缺少特定配置
         val bindingPrefix = "spring.cloud.stream.bindings.$bindingName-in-0"
         val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName-in-0"
         val pulsarPropPrefix = "spring.cloud.stream.pulsar.bindings.$bindingName-in-0"
@@ -147,7 +146,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
             setProperty("$rabbitPropPrefix.consumer.durableSubscription", "true")
             setProperty("$pulsarPropPrefix.consumer.subscriptionMode", SubscriptionMode.NonDurable.name)
         } else {
-            setProperty("$bindingPrefix.group", consumer.groupName.ifBlank { groupName })
+            setProperty("$bindingPrefix.group", consumer.groupName.ifBlank { "$groupName-$bindingName" })
         }
 
         setProperty("$rabbitPropPrefix.consumer.delayedExchange", "true")
