@@ -403,7 +403,7 @@ class SubPipelineRefService @Autowired constructor(
                         editUrl,
                         subPipelineRef.pipelineName,
                         editUrlBase,
-                        parentPipelineRef.pipelineName,
+                        parentPipelineRef.pipelineName.ifBlank { subPipelineRef.subPipelineName },
                     )
                 }
 
