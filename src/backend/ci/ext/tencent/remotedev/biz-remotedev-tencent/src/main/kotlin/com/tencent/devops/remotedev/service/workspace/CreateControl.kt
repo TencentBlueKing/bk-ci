@@ -255,10 +255,7 @@ class CreateControl @Autowired constructor(
         val generateWorkspaceName = workspaceCreate.assignNames.ifEmpty {
             buildList {
                 repeat(workspaceCreate.count) {
-                    when (ownerType) {
-                        WorkspaceOwnerType.PROJECT -> add(generateWorkspaceName(projectId))
-                        WorkspaceOwnerType.PERSONAL -> add(generateWorkspaceName(creator))
-                    }
+                    add(generateWorkspaceName())
                 }
             }
         }
@@ -517,7 +514,6 @@ class CreateControl @Autowired constructor(
                     status = ws.workspaceSystemType.afterCreateStatus(ws.ownerType),
                     hostName = event.environmentHost
                 )
-                remoteDevBillingDao.newBilling(transactionContext, event.workspaceName, event.userId)
                 workspaceHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
                     workspaceName = event.workspaceName,
@@ -656,10 +652,7 @@ class CreateControl @Autowired constructor(
             else -> checkNotNull(ownerType)
         }
         val gameId = workspaceCommon.getGameIdAndAppId(projectId, checkOwnerType)
-        val workspaceName = when (checkOwnerType) {
-            WorkspaceOwnerType.PROJECT -> oldWorkspaceName ?: generateWorkspaceName(projectId)
-            WorkspaceOwnerType.PERSONAL -> oldWorkspaceName ?: generateWorkspaceName(userId)
-        }
+        val workspaceName = oldWorkspaceName ?: generateWorkspaceName()
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
         val windowsConfig = windowsResourceConfigService.getTypeConfig(vm.machineType)
@@ -832,7 +825,7 @@ class CreateControl @Autowired constructor(
             .getOrElse { null }?.data
 
         val workspaceNames = workspaceCreate.assignNames.ifEmpty {
-            buildList { repeat(workspaceCreate.count) { add(generateWorkspaceName(userId)) } }
+            buildList { repeat(workspaceCreate.count) { add(generateWorkspaceName()) } }
         }
 
         whiteListService.windowsGpuCheck(userId, workspaceNames.size)
@@ -902,13 +895,7 @@ class CreateControl @Autowired constructor(
 //                it.internal == quotaType.getInternal()
         }
 
-    private fun generateWorkspaceName(userId: String): String {
-        val subUserId = if (userId.length > Constansts.subUserIdLimitLen) {
-            userId.substring(0 until Constansts.subUserIdLimitLen)
-        } else {
-            userId
-        }
-        return subUserId.replace(Regex("[@_]"), "-") +
-            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+    private fun generateWorkspaceName(): String {
+        return "ins-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 }

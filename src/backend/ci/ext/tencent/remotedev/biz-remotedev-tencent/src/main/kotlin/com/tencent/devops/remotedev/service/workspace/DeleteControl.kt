@@ -613,11 +613,6 @@ class DeleteControl @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceCommon.updateLastHistory(transactionContext, workspaceName, operator)
-            remoteDevBillingDao.endBilling(
-                dslContext = transactionContext,
-                workspaceName = workspaceName,
-                computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL
-            )
         }
 
         // 删除时给 cmdb 去掉字段方便监控检索

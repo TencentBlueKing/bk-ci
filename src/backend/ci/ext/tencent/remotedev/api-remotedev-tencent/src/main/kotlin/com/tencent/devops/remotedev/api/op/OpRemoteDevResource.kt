@@ -53,18 +53,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpRemoteDevResource {
-    @Operation(summary = "计费刷新")
-    @POST
-    @Path("/init_billing")
-    fun initBilling(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "freeTime (单位分钟)", required = true)
-        @QueryParam("freeTime")
-        freeTime: Int
-    ): Result<Boolean>
-
     @Operation(summary = "更新用户级别设置")
     @POST
     @Path("/user_setting")
