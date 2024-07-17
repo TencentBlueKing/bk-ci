@@ -29,9 +29,7 @@ package com.tencent.devops.project.config
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.project.listener.ProjectEventListener
-import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
@@ -46,17 +44,17 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class ProjectMQConfiguration {
     @EventConsumer
-    fun projectCreateEventListener(
+    fun projectCreateEventConsumer(
         @Autowired listener: ProjectEventListener
     ) = ScsConsumerBuilder.build<ProjectCreateBroadCastEvent> { listener.execute(it) }
 
     @EventConsumer
-    fun projectUpdateEventListener(
+    fun projectUpdateEventConsumer(
         @Autowired listener: ProjectEventListener
     ) = ScsConsumerBuilder.build<ProjectUpdateBroadCastEvent> { listener.execute(it) }
 
     @EventConsumer
-    fun projectUpdateLogoEventListener(
+    fun projectUpdateLogoEventConsumer(
         @Autowired listener: ProjectEventListener
     ) = ScsConsumerBuilder.build<ProjectUpdateLogoBroadCastEvent> { listener.execute(it) }
 }

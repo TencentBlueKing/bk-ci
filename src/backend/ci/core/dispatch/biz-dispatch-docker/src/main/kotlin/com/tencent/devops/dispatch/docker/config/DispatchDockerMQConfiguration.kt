@@ -41,7 +41,7 @@ import java.util.function.Consumer
 @Configuration
 class DispatchDockerMQConfiguration @Autowired constructor() {
     @EventConsumer
-    fun startDockerListener(
+    fun startDockerConsumer(
         @Autowired dockerVMListener: DockerVMListener
     ): Consumer<Message<PipelineAgentStartupEvent>> {
         return Consumer { event: Message<PipelineAgentStartupEvent> ->
@@ -50,7 +50,7 @@ class DispatchDockerMQConfiguration @Autowired constructor() {
     }
 
     @EventConsumer
-    fun shutdownDockerListener(
+    fun shutdownDockerConsumer(
         @Autowired dockerVMListener: DockerVMListener
     ): Consumer<Message<PipelineAgentShutdownEvent>> {
         return Consumer { event: Message<PipelineAgentShutdownEvent> ->
@@ -59,7 +59,7 @@ class DispatchDockerMQConfiguration @Autowired constructor() {
     }
 
     @EventConsumer
-    fun startDemoteDockerListener(
+    fun startDemoteDockerConsumer(
         @Autowired dockerVMListener: DockerVMListener
     ): Consumer<Message<PipelineAgentStartupDemoteEvent>> {
         return Consumer { event: Message<PipelineAgentStartupDemoteEvent> ->
@@ -96,7 +96,7 @@ class DispatchDockerMQConfiguration @Autowired constructor() {
     }
 
     @EventConsumer
-    fun shutdownDemoteDockerListener(
+    fun shutdownDemoteDockerConsumer(
         @Autowired dockerVMListener: DockerVMListener
     ): Consumer<Message<PipelineAgentShutdownDemoteEvent>> {
         return Consumer { event: Message<PipelineAgentShutdownDemoteEvent> ->

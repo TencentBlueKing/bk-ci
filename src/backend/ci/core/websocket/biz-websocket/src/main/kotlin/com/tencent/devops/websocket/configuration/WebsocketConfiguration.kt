@@ -52,12 +52,12 @@ class WebsocketConfiguration {
     fun websocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)
 
     @EventConsumer(true)
-    fun pipelineWebSocketListener(
+    fun pipelineWebSocketConsumer(
         @Autowired webSocketListener: WebSocketListener
     ) = ScsConsumerBuilder.build<SendMessage> { webSocketListener.handleWebsocketEvent(it) }
 
     @EventConsumer(true)
-    fun cacheClearWebSocketListener(
+    fun cacheClearWebSocketConsumer(
         @Autowired cacheSessionListener: CacheSessionListener
     ) = ScsConsumerBuilder.build<ClearSessionEvent> { cacheSessionListener.handleClearSessionEvent(it) }
 }

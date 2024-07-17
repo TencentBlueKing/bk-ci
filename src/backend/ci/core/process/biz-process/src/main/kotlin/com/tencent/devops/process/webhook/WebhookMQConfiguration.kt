@@ -65,37 +65,37 @@ class WebhookMQConfiguration @Autowired constructor() {
 
     // 各类Commit事件监听
     @EventConsumer
-    fun githubWebhookListener(
+    fun githubWebhookConsumer(
         @Autowired webhookEventListener: WebhookEventListener
     ) = ScsConsumerBuilder.build<GithubWebhookEvent> { webhookEventListener.handleGithubCommitEvent(it) }
 
     @EventConsumer
-    fun gitlabWebhookListener(
+    fun gitlabWebhookConsumer(
         @Autowired webhookEventListener: WebhookEventListener
     ) = ScsConsumerBuilder.build<GitlabWebhookEvent> { webhookEventListener.handleCommitEvent(it) }
 
     @EventConsumer
-    fun gitWebhookListener(
+    fun gitWebhookConsumer(
         @Autowired webhookEventListener: WebhookEventListener
     ) = ScsConsumerBuilder.build<GitWebhookEvent> { webhookEventListener.handleCommitEvent(it) }
 
     @EventConsumer
-    fun p4WebhookListener(
+    fun p4WebhookConsumer(
         @Autowired webhookEventListener: WebhookEventListener
     ) = ScsConsumerBuilder.build<P4WebhookEvent> { webhookEventListener.handleCommitEvent(it) }
 
     @EventConsumer
-    fun svnWebhookListener(
+    fun svnWebhookConsumer(
         @Autowired webhookEventListener: WebhookEventListener
     ) = ScsConsumerBuilder.build<SvnWebhookEvent> { webhookEventListener.handleCommitEvent(it) }
 
     @EventConsumer
-    fun tgitWebhookListener(
+    fun tgitWebhookConsumer(
         @Autowired webhookEventListener: WebhookEventListener
     ) = ScsConsumerBuilder.build<TGitWebhookEvent> { webhookEventListener.handleCommitEvent(it) }
 
     @EventConsumer
-    fun replayEventListener(
+    fun replayEventConsumer(
         @Autowired webhookEventListener: WebhookEventListener
     ) = ScsConsumerBuilder.build<ReplayWebhookEvent> { webhookEventListener.handleReplayEvent(it) }
 }

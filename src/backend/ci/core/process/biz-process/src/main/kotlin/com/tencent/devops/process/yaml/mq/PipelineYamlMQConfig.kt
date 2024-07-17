@@ -31,21 +31,20 @@ import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Lazy
 
 @Configuration
 class PipelineYamlMQConfig @Autowired constructor(
-    @Lazy private val pipelineYamlTriggerListener: PipelineYamlTriggerListener
+    private val pipelineYamlTriggerListener: PipelineYamlTriggerListener
 ) {
     @EventConsumer
-    fun pipelineYamlEnableListener(
+    fun pipelineYamlEnableConsumer(
     ) = ScsConsumerBuilder.build<PipelineYamlEnableEvent> { pipelineYamlTriggerListener.execute(it) }
 
     @EventConsumer
-    fun pipelineYamlDisableListener(
+    fun pipelineYamlDisableConsumer(
     ) = ScsConsumerBuilder.build<PipelineYamlDisableEvent> { pipelineYamlTriggerListener.execute(it) }
 
     @EventConsumer
-    fun pipelineYamlTriggerListener(
+    fun pipelineYamlTriggerConsumer(
     ) = ScsConsumerBuilder.build<PipelineYamlTriggerEvent> { pipelineYamlTriggerListener.execute(it) }
 }

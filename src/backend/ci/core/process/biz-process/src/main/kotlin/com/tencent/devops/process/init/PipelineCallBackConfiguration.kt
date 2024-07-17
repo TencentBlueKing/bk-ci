@@ -66,7 +66,7 @@ class PipelineCallBackConfiguration {
      * 构建构建回调广播交换机
      */
     @EventConsumer
-    fun pipelineBuildCallBackListener(
+    fun pipelineBuildCallBackConsumer(
         @Autowired buildListener: PipelineBuildCallBackListener
     ) = ScsConsumerBuilder.build<PipelineBuildStatusBroadCastEvent> { buildListener.run(it) }
 
@@ -74,7 +74,7 @@ class PipelineCallBackConfiguration {
      * 构建构建回调广播交换机
      */
     @EventConsumer
-    fun pipelineStreamEnabledListener(
+    fun pipelineStreamEnabledConsumer(
         @Autowired streamEnabledListener: MQPipelineStreamEnabledListener
     ) = ScsConsumerBuilder.build<PipelineStreamEnabledEvent> { streamEnabledListener.run(it) }
 

@@ -39,7 +39,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Lazy
 
 /**
  * 流水线构建核心配置
@@ -51,7 +50,7 @@ class PipelineBaseConfiguration {
      * 流水线创建队列--- 并发小
      */
     @EventConsumer
-    fun pipelineCreate(
+    fun pipelineCreateConsumer(
         @Autowired createListener: MQPipelineCreateListener
     ) = ScsConsumerBuilder.build<PipelineCreateEvent> { createListener.run(it) }
 
@@ -59,7 +58,7 @@ class PipelineBaseConfiguration {
      * 流水线删除队列--- 并发小
      */
     @EventConsumer
-    fun pipelineDelete(
+    fun pipelineDeleteConsumer(
         @Autowired deleteListener: MQPipelineDeleteListener
     ) = ScsConsumerBuilder.build<PipelineDeleteEvent> { deleteListener.run(it) }
 
@@ -67,7 +66,7 @@ class PipelineBaseConfiguration {
      * 流水线更新队列--- 并发小
      */
     @EventConsumer
-    fun pipelineUpdate(
+    fun pipelineUpdateConsumer(
         @Autowired updateListener: MQPipelineUpdateListener
     ) = ScsConsumerBuilder.build<PipelineUpdateEvent> { updateListener.run(it) }
 
@@ -75,7 +74,7 @@ class PipelineBaseConfiguration {
      * 流水线恢复队列--- 并发一般
      */
     @EventConsumer
-    fun pipelineRestore(
+    fun pipelineRestoreConsumer(
         @Autowired restoreListener: MQPipelineRestoreListener
     ) = ScsConsumerBuilder.build<PipelineRestoreEvent> { restoreListener.run(it) }
 }

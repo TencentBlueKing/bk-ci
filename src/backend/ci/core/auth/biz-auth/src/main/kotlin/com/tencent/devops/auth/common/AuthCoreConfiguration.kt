@@ -54,7 +54,7 @@ class AuthCoreConfiguration {
     )
 
     @EventConsumer(true)
-    fun refreshBroadCastListener(
+    fun refreshBroadCastConsumer(
         @Autowired refreshListener: AuthRefreshEventListener
     ) = ScsConsumerBuilder.build<RefreshBroadCastEvent> { refreshListener.execute(it) }
 

@@ -64,7 +64,7 @@ class PipelineWebSocketConfiguration {
      * webhook构建触发广播监听
      */
     @EventConsumer
-    fun pipelineWebSocketPushEventListener(
+    fun pipelineWebSocketPushEventConsumer(
         @Autowired pipelineWebSocketListener: PipelineWebSocketListener
     ) = ScsConsumerBuilder.build<PipelineBuildWebSocketPushEvent> { pipelineWebSocketListener.run(it) }
 

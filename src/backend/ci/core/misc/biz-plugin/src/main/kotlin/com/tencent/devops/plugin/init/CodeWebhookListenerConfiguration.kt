@@ -31,7 +31,6 @@ import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.plugin.service.git.CodeWebhookService
@@ -45,14 +44,14 @@ import org.springframework.context.annotation.Configuration
 @Suppress("TooManyFunctions")
 class CodeWebhookListenerConfiguration {
     @EventConsumer
-    fun codeWebhookFinishListener(
+    fun codeWebhookFinishConsumer(
         @Autowired codeWebhookService: CodeWebhookService
     ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> {
         codeWebhookService.onBuildFinished(it)
     }
 
     @EventConsumer
-    fun codeWebhookQueueListener(
+    fun codeWebhookQueueConsumer(
         @Autowired codeWebhookService: CodeWebhookService
     ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { codeWebhookService.onBuildQueue(it) }
 
@@ -60,7 +59,7 @@ class CodeWebhookListenerConfiguration {
      * gitcommit队列--- 并发小
      */
     @EventConsumer
-    fun gitCommitCheckListener(
+    fun gitCommitCheckConsumer(
         @Autowired codeWebhookService: CodeWebhookService
     ) = ScsConsumerBuilder.build<GitCommitCheckEvent> { codeWebhookService.consumeGitCommitCheckEvent(it) }
 
@@ -68,7 +67,7 @@ class CodeWebhookListenerConfiguration {
      * github pr队列--- 并发小
      */
     @EventConsumer
-    fun githubPrQueueListener(
+    fun githubPrQueueConsumer(
         @Autowired codeWebhookService: CodeWebhookService
     ) = ScsConsumerBuilder.build<GithubPrEvent> { codeWebhookService.consumeGitHubPrEvent(it) }
 }

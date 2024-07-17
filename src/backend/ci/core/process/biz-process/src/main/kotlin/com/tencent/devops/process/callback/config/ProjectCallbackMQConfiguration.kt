@@ -18,17 +18,17 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class ProjectCallbackMQConfiguration {
     @EventConsumer
-    fun projectCreateListener(
+    fun projectCreateConsumer(
         @Autowired listener: ProjectCallbackEventListener
     ) = ScsConsumerBuilder.build<ProjectCreateBroadCastEvent> { listener.execute(it) }
 
     @EventConsumer
-    fun projectUpdateListener(
+    fun projectUpdateConsumer(
         @Autowired listener: ProjectCallbackEventListener
     ) = ScsConsumerBuilder.build<ProjectUpdateBroadCastEvent> { listener.execute(it) }
 
     @EventConsumer
-    fun projectEnableListener(
+    fun projectEnableConsumer(
         @Autowired listener: ProjectCallbackEventListener
     ) = ScsConsumerBuilder.build<ProjectEnableStatusBroadCastEvent> { listener.execute(it) }
 }

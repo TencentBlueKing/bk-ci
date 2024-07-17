@@ -38,12 +38,12 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class DispatchMQConfiguration @Autowired constructor() {
     @EventConsumer
-    fun thirdAgentDispatchStartListener(
+    fun thirdAgentDispatchStartConsumer(
         @Autowired thirdPartyAgentListener: ThirdPartyBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { thirdPartyAgentListener.handleStartup(it) }
 
     @EventConsumer
-    fun thirdAgentDispatchShutdownListenerContainer(
+    fun thirdAgentDispatchShutdownConsumer(
         @Autowired thirdPartyAgentListener: ThirdPartyBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { thirdPartyAgentListener.handleShutdownMessage(it) }
 }

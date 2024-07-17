@@ -29,7 +29,6 @@ package com.tencent.devops.log.configuration
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
@@ -58,17 +57,17 @@ class LogMQConfiguration @Autowired constructor() {
     ) = BuildLogPrintService(streamBridge, logPrintBean, storageProperties, logServiceConfig)
 
     @EventConsumer
-    fun logOriginEventIn(
+    fun logOriginEventConsumer(
         @Autowired listenerService: BuildLogListenerService
     ) = ScsConsumerBuilder.build<LogOriginEvent> { listenerService.handleEvent(it) }
 
     @EventConsumer
-    fun logStorageEventIn(
+    fun logStorageEventConsumer(
         @Autowired listenerService: BuildLogListenerService
     ) = ScsConsumerBuilder.build<LogStorageEvent> { listenerService.handleEvent(it) }
 
     @EventConsumer
-    fun logStatusEventIn(
+    fun logStatusEventConsumer(
         @Autowired listenerService: BuildLogListenerService
     ) = ScsConsumerBuilder.build<LogStatusEvent> { listenerService.handleEvent(it) }
 }

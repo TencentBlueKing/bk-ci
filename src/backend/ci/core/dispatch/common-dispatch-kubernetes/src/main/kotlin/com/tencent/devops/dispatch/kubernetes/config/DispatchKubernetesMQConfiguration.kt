@@ -47,7 +47,7 @@ class DispatchKubernetesMQConfiguration @Autowired constructor() {
      * 启动构建队列
      */
     @EventConsumer
-    fun startKubernetesListener(
+    fun startKubernetesConsumer(
         @Autowired kubernetesListener: KubernetesListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { kubernetesListener.handleStartup(it) }
 
@@ -55,7 +55,7 @@ class DispatchKubernetesMQConfiguration @Autowired constructor() {
      * 启动构建降级队列
      */
     @EventConsumer
-    fun shutdownKubernetesListener(
+    fun shutdownKubernetesConsumer(
         @Autowired kubernetesListener: KubernetesListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { kubernetesListener.handleShutdownMessage(it) }
 
@@ -63,7 +63,7 @@ class DispatchKubernetesMQConfiguration @Autowired constructor() {
      * 启动构建结束队列
      */
     @EventConsumer
-    fun startDemoteKubernetesListener(
+    fun startDemoteKubernetesConsumer(
         @Autowired kubernetesListener: KubernetesListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
         with(it) {
@@ -98,7 +98,7 @@ class DispatchKubernetesMQConfiguration @Autowired constructor() {
     }
 
     @EventConsumer
-    fun shutdownDemoteKubernetesListener(
+    fun shutdownDemoteKubernetesConsumer(
         @Autowired kubernetesListener: KubernetesListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
         with(it) {

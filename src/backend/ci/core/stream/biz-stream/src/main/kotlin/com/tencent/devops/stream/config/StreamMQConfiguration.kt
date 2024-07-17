@@ -103,7 +103,7 @@ class StreamMQConfiguration {
     )
 
     @EventConsumer
-    fun buildFinishListener(
+    fun buildFinishConsumer(
         @Autowired finishListenerService: StreamBuildFinishListenerService
     ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> { finishListenerService.doFinish(it) }
 
@@ -131,7 +131,7 @@ class StreamMQConfiguration {
     )
 
     @EventConsumer
-    fun buildQualityCheckListener(
+    fun buildQualityCheckConsumer(
         @Autowired checkListener: StreamBuildQualityCheckListener
     ) =
         ScsConsumerBuilder.build<PipelineBuildQualityCheckBroadCastEvent> { checkListener.buildQualityCheckListener(it) }
@@ -148,7 +148,7 @@ class StreamMQConfiguration {
     )
 
     @EventConsumer
-    fun triggerListener(
+    fun triggerConsumer(
         @Autowired streamTriggerListener: StreamTriggerListener
     ) = ScsConsumerBuilder.build<StreamTriggerEvent> { streamTriggerListener.listenStreamTriggerEvent(it) }
 
@@ -168,7 +168,7 @@ class StreamMQConfiguration {
     )
 
     @EventConsumer
-    fun conflictCheckListener(
+    fun conflictCheckConsumer(
         @Autowired checkListener: StreamMrConflictCheckListener
     ) = ScsConsumerBuilder.build<StreamMrConflictCheckEvent> { checkListener.listenGitCIRequestTriggerEvent(it) }
 
@@ -180,7 +180,7 @@ class StreamMQConfiguration {
     )
 
     @EventConsumer
-    fun requestListener(
+    fun requestConsumer(
         @Autowired requestListener: StreamRequestListener
     ) = ScsConsumerBuilder.build<StreamRequestEvent> { requestListener.listenStreamRequestEvent(it) }
 
@@ -206,7 +206,7 @@ class StreamMQConfiguration {
     )
 
     @EventConsumer
-    fun timerBuildListener(
+    fun timerBuildConsumer(
         @Autowired buildListener: StreamTimerBuildListener
     ) = ScsConsumerBuilder.build<StreamTimerBuildEvent> { buildListener.run(it) }
 
@@ -221,7 +221,7 @@ class StreamMQConfiguration {
 
     // 每个实例都需要刷新自己维护的定时任务
     @EventConsumer(true)
-    fun timerChangerListener(
+    fun timerChangerConsumer(
         @Autowired buildListener: StreamTimerChangerListener
     ) = ScsConsumerBuilder.build<StreamChangeEvent> { buildListener.run(it) }
 
@@ -249,7 +249,7 @@ class StreamMQConfiguration {
     )
 
     @EventConsumer
-    fun buildReviewListener(
+    fun buildReviewConsumer(
         @Autowired listener: StreamBuildReviewListener
     ) = ScsConsumerBuilder.build<PipelineBuildReviewBroadCastEvent> { listener.buildReviewListener(it) }
 }

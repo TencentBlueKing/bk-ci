@@ -31,7 +31,6 @@ import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineArchiveEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.misc.listener.PipelineArchiveListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
@@ -44,7 +43,7 @@ class MiscMQConfiguration {
     fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
 
     @EventConsumer
-    fun pipelineMQArchiveListener(
+    fun pipelineMQArchiveConsumer(
         @Autowired buildListener: PipelineArchiveListener
     ) = ScsConsumerBuilder.build<PipelineArchiveEvent> { buildListener.execute(it) }
 }

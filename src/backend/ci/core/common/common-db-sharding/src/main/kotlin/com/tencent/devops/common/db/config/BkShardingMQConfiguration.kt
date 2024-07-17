@@ -41,7 +41,7 @@ import org.springframework.core.Ordered
 class BkShardingMQConfiguration {
 
     @EventConsumer(true)
-    fun shardingRoutingRuleListener(
+    fun shardingRoutingRuleConsumer(
         @Autowired shardingRoutingRuleManageService: ShardingRoutingRuleManageService
     ) = ScsConsumerBuilder.build<ShardingRoutingRuleBroadCastEvent> {
         shardingRoutingRuleManageService.handleShardingRoutingRuleLocalCache(

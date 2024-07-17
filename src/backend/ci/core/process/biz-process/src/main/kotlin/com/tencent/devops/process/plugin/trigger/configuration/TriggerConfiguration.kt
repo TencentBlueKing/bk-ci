@@ -84,7 +84,7 @@ class TriggerConfiguration {
      * 定时构建队列--- 并发一般
      */
     @EventConsumer
-    fun timerTriggerListener(
+    fun timerTriggerConsumer(
         @Autowired buildListener: PipelineTimerBuildListener
     ) = ScsConsumerBuilder.build<PipelineTimerBuildEvent> { buildListener.run(it) }
 
@@ -92,7 +92,7 @@ class TriggerConfiguration {
      * 构建定时构建定时变化的广播交换机
      */
     @EventConsumer(true)
-    fun timerChangeListener(
+    fun timerChangeConsumer(
         @Autowired buildListener: PipelineTimerChangerListener
     ) = ScsConsumerBuilder.build<PipelineTimerChangeEvent> { buildListener.run(it) }
 }

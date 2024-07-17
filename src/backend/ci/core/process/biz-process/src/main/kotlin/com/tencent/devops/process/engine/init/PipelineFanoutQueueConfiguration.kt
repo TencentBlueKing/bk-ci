@@ -61,7 +61,7 @@ class PipelineFanoutQueueConfiguration {
      * webhook构建触发广播监听
      */
     @EventConsumer
-    fun webHookQueueBuildStartListener(
+    fun webHookQueueBuildStartConsumer(
         @Autowired buildListener: PipelineWebHookQueueListener
     ) = ScsConsumerBuilder.build<PipelineBuildStartBroadCastEvent> { buildListener.onBuildStart(it) }
 
@@ -69,7 +69,7 @@ class PipelineFanoutQueueConfiguration {
      * webhook和notify构建结束广播监听
      */
     @EventConsumer
-    fun webHookQueueBuildFinishListener(
+    fun webHookQueueBuildFinishConsumer(
         @Autowired webhookListener: PipelineWebHookQueueListener,
         @Autowired notifyListener: PipelineNotifyQueueListener
     ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> {

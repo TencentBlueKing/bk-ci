@@ -29,7 +29,6 @@ package com.tencent.devops.metrics.config
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.metrics.pojo.message.CodeCheckReportEvent
 import com.tencent.devops.metrics.pojo.message.TurboReportEvent
 import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportFacadeService
@@ -39,14 +38,14 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class MetricsThirdPartyListenerConfiguration {
     @EventConsumer
-    fun metricsCodeCheckDailyReportListener(
+    fun metricsCodeCheckDailyReportConsumer(
         @Autowired metricsThirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
     ) = ScsConsumerBuilder.build<CodeCheckReportEvent> {
         metricsThirdPlatformDataReportFacadeService.metricsCodeCheckDataReport(it)
     }
 
     @EventConsumer
-    fun metricsTurboDailyReportListener(
+    fun metricsTurboDailyReportConsumer(
         @Autowired metricsThirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
     ) = ScsConsumerBuilder.build<TurboReportEvent> {
         metricsThirdPlatformDataReportFacadeService.metricsTurboDataReport(it)
