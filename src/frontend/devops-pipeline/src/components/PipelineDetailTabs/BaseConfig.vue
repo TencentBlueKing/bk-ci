@@ -139,7 +139,7 @@
                             {
                                 key: 'waitQueueTimeMinute',
                                 label: 'settings.lagestTime',
-                                value: this.basicInfo?.waitQueueTimeMinute ?? '--'
+                                value: Number.isInteger(this.basicInfo?.waitQueueTimeMinute) ? `${this.basicInfo?.waitQueueTimeMinute}${this.$t('settings.minutes')}` : '--'
                             }
 
                         ]

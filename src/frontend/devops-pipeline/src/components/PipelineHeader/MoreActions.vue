@@ -264,7 +264,7 @@
             },
             afterDisablePipeline (enable) {
                 this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                    runLockType: enable ? 'MULTIPLE' : 'LOCK'
+                    locked: !enable
                 })
             },
 

@@ -149,7 +149,8 @@ abstract class Element(
     open var progressRate: Double? = null,
     override var template: String? = null,
     override var ref: String? = null,
-    override var variables: Map<String, String>? = null
+    override var variables: Map<String, String>? = null,
+    var asyncStatus: String? = null
 ) : IModelTemplate {
 
     open fun getAtomCode() = getClassType()
