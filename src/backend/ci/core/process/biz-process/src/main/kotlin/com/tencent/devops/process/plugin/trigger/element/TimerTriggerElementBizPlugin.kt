@@ -72,7 +72,8 @@ class TimerTriggerElementBizPlugin constructor(
         element: TimerTriggerElement,
         contextMap: Map<String, String>,
         appearedCnt: Int,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        pipelineId: String
     ) = ElementCheckResult(true)
 
     override fun afterCreate(

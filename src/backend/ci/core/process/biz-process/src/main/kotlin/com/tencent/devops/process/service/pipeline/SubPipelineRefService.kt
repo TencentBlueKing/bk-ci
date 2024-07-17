@@ -29,7 +29,6 @@ package com.tencent.devops.process.service.pipeline
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
@@ -43,8 +42,6 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.model.process.tables.TPipelineSubRef
-import com.tencent.devops.model.process.tables.records.TPipelineSubRefRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.SubPipelineRefDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -290,24 +287,6 @@ class SubPipelineRefService @Autowired constructor(
         else -> null
     }
 
-    fun getContextMap(triggerStage: Stage): Map<String /* 流水线变量名 */, String> {
-        val triggerContainer = (triggerStage.containers.getOrNull(0) ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
-        )) as TriggerContainer
-        // 检查触发容器
-        val paramsMap = PipelineUtils.checkPipelineParams(triggerContainer.params)
-        return PipelineVarUtil.fillVariableMap(paramsMap.mapValues { it.value.defaultValue.toString() })
-    }
-
-//    fun getContextMap(projectId: String,pipelineId: String): Map<String /* 流水线变量名 */, String> {
-//        val triggerContainer = (triggerStage.containers.getOrNull(0) ?: throw ErrorCodeException(
-//            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
-//        )) as TriggerContainer
-//        // 检查触发容器
-//        val paramsMap = PipelineUtils.checkPipelineParams(triggerContainer.params)
-//        return PipelineVarUtil.fillVariableMap(paramsMap.mapValues { it.value.defaultValue.toString() })
-//    }
-
     private fun resolveSubPipelineCall(
         projectId: String,
         element: SubPipelineCallElement,
@@ -406,24 +385,101 @@ class SubPipelineRefService @Autowired constructor(
     }
 
     fun checkCircularDependency(
-        projectId: String,
-        pipelineId: String,
-        existsPipeline: MutableMap<String, TPipelineSubRefRecord>
+        subPipelineRef: SubPipelineRef,
+        rootNode: Boolean = false,
+        existsPipeline: HashMap<String, SubPipelineRef>
     ): ElementCheckResult {
-        // :TODO 递归校验
-//        val subPipelineList = subPipelineRefDao.list(dslContext, projectId, pipelineId)
-//        subPipelineList.forEach {
-//            val pipelineItem = "${it.projectId}_${it.pipelineId}"
-//            if (existsPipeline.contains(pipelineItem)){
-//                throw OperationException(
-//                    I18nUtil.getCodeLanMessage(
-//                        messageCode = ProcessMessageCode.ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL,
-//                        params = arrayOf(projectId, pipelineId)
-//                    )
-//                )
-//            }
-//            checkCircularDependency(it.projectId,it.pipelineId,existsPipeline)
-//        }
-        return ElementCheckResult(result = true)
+        with(subPipelineRef){
+            val pipelineRefKey = "${subProjectId}_$subPipelineId"
+            if (existsPipeline.contains(pipelineRefKey)) {
+                logger.warn("subPipeline does not allow loop calls|projectId:$subProjectId|pipelineId:$subPipelineId")
+                val parentPipelineRef = existsPipeline[pipelineRefKey]!!
+                val (msgCode, params) = if (rootNode) {
+                    ProcessMessageCode.BK_CURRENT_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to emptyArray<String>()
+                } else {
+                    val editUrlBase = getPipelineEditUrl(parentPipelineRef.projectId, parentPipelineRef.pipelineId)
+                    val editUrl = getPipelineEditUrl(projectId, pipelineId)
+                    ProcessMessageCode.BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to arrayOf(
+                        editUrl,
+                        subPipelineRef.pipelineName,
+                        editUrlBase,
+                        parentPipelineRef.pipelineName,
+                    )
+                }
+
+                return ElementCheckResult(
+                    result = false,
+                    errorTitle = I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_TITLE
+                    ),
+                    errorMessage = I18nUtil.getCodeLanMessage(
+                        messageCode = msgCode,
+                        params = params
+                    )
+                )
+            }
+            val subRefList = subPipelineRefDao.list(
+                dslContext = dslContext,
+                projectId = subProjectId,
+                pipelineId = subPipelineId
+            ).map {
+                SubPipelineRef(
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    channel = it.channel,
+                    taskId = it.taskId,
+                    taskName = it.taskName,
+                    stageName = it.stageName,
+                    containerName = it.containerName,
+                    subPipelineId = it.subPipelineId,
+                    subProjectId = it.subProjectId,
+                    subPipelineName = it.subPipelineName
+                )
+            }
+            if (subRefList.isEmpty()) return ElementCheckResult(true)
+            subRefList.forEach {
+                val exist = HashMap(existsPipeline)
+                exist["${it.projectId}_${it.pipelineId}"] = it
+                logger.info(
+                    "callPipelineStartup|" +
+                            "supProjectId:${it.subProjectId},subPipelineId:${it.subPipelineId}," +
+                            "subElementId:${it.taskId},parentProjectId:${it.projectId}," +
+                            "parentPipelineId:${it.pipelineId}"
+                )
+                val checkResult = checkCircularDependency(
+                    subPipelineRef = it,
+                    existsPipeline = exist
+                )
+                // 检查不成功，直接返回
+                if (!checkResult.result) {
+                    return checkResult
+                }
+                existsPipeline.putAll(exist)
+            }
+            return ElementCheckResult(true)
+        }
     }
+
+
+    fun getContextMap(triggerStage: Stage): Map<String /* 流水线变量名 */, String> {
+        val triggerContainer = (triggerStage.containers.getOrNull(0) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
+        )) as TriggerContainer
+        // 检查触发容器
+        val paramsMap = PipelineUtils.checkPipelineParams(triggerContainer.params)
+        return PipelineVarUtil.fillVariableMap(paramsMap.mapValues { it.value.defaultValue.toString() })
+    }
+
+    fun deleteElement(projectId: String, pipelineId: String, taskId: String) {
+        subPipelineRefDao.delete(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            taskId = taskId
+        )
+    }
+
+    // 流水线编辑界面
+    fun getPipelineEditUrl(projectId: String, pipelineId: String) = "/console/pipeline/$projectId/$pipelineId/edit"
 }

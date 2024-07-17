@@ -555,4 +555,10 @@ object ProcessMessageCode {
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotSubPipelineExecutePermissionErrorTitle"
     // 没有子流水线执行权限错误消息
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE = "bkNotSubPipelineExecutePermissionErrorMessage"
+    // 子流水线循环依赖错误标题
+    const val BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_TITLE = "bkSubPipelineCircularDependencyErrorTitle"
+    // 子流水线循环依赖错误消息
+    const val BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE = "bkSubPipelineCircularDependencyErrorMessage"
+    // [xxx]流水线循环调用[xxx]流水线
+    const val BK_CURRENT_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE = "bkSubPipelineCircularDependencyErrorMessage"
 }
