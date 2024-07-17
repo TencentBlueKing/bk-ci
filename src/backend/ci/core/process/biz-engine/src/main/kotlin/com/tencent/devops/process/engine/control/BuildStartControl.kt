@@ -515,8 +515,6 @@ class BuildStartControl @Autowired constructor(
                         projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId,
                         buildId = buildInfo.buildId,
-                        stageId = stage.id!!,
-                        containerId = container.id!!,
                         taskId = taskId,
                         buildStatus = BuildStatus.SUCCEED,
                         executeCount = executeCount,

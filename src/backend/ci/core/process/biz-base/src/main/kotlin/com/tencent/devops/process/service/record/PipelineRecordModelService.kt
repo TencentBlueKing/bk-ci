@@ -442,7 +442,7 @@ class PipelineRecordModelService @Autowired constructor(
             // 如果跳过的是矩阵类task，则需要生成完整的model对象以便合并
             taskVarMap["@type"] = MatrixStatusElement.classType
             taskVarMap[MatrixStatusElement::originClassType.name] =
-                taskBaseMap[MatrixStatusElement::classType.name].toString()
+                taskBaseMap[MatrixStatusElement.classType].toString()
             taskVarMap[MatrixStatusElement::originAtomCode.name] = taskBaseMap[KEY_ATOM_CODE].toString()
             taskVarMap[MatrixStatusElement::originTaskAtom.name] = taskBaseMap[KEY_TASK_ATOM].toString()
             taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)

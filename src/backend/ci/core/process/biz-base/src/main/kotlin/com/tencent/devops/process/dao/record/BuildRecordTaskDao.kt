@@ -169,7 +169,8 @@ class BuildRecordTaskDao {
         buildId: String,
         executeCount: Int,
         containerId: String? = null,
-        buildStatusSet: Set<BuildStatus>? = null
+        buildStatusSet: Set<BuildStatus>? = null,
+        queryPostTaskFlag: Boolean? = null
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val conditions = mutableListOf<Condition>()
@@ -179,8 +180,12 @@ class BuildRecordTaskDao {
             conditions.add(EXECUTE_COUNT.eq(executeCount))
             containerId?.let { conditions.add(CONTAINER_ID.eq(containerId)) }
             buildStatusSet?.let { conditions.add(STATUS.`in`(it.map { status -> status.name })) }
-            return dslContext.selectFrom(this)
-                .where(conditions).orderBy(TASK_SEQ.asc()).fetch(mapper)
+            if (queryPostTaskFlag == true) {
+                conditions.add(POST_INFO.isNotNull)
+            } else if (queryPostTaskFlag == false) {
+                conditions.add(POST_INFO.isNull)
+            }
+            return dslContext.selectFrom(this).where(conditions).orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
     }
 

@@ -81,8 +81,7 @@ open class BaseBuildRecordService(
     private val stageTagService: StageTagService,
     private val recordModelService: PipelineRecordModelService,
     private val pipelineResourceDao: PipelineResourceDao,
-    private val pipelineResourceVersionDao: PipelineResourceVersionDao,
-    private val pipelineElementService: PipelineElementService
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao
 ) {
 
     protected fun update(
