@@ -25,21 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.atom.service.impl
+USE devops_ci_environment;
+SET NAMES utf8mb4;
 
-import com.tencent.devops.store.atom.service.AtomBusHandleService
+DROP PROCEDURE IF EXISTS ci_environment_schema_update;
 
-class CommonAtomBusHandleHandleServiceImpl : AtomBusHandleService {
+DELIMITER <CI_UBF>
 
-    override fun handleOsName(osName: String): String {
-        return osName.lowercase()
-    }
+CREATE PROCEDURE ci_environment_schema_update()
+BEGIN
 
-    override fun handleOsArch(osName: String, osArch: String): String {
-        return osArch
-    }
+    DECLARE db VARCHAR(100);
+    SET AUTOCOMMIT = 0;
+    SELECT DATABASE() INTO db;
 
-    override fun handleTarget(reqTarget: String?, target: String): String {
-        return if (reqTarget.isNullOrBlank()) target else reqTarget
-    }
-}
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND INDEX_NAME = 'SERVER_ID') THEN
+        ALTER TABLE `T_NODE`
+            ADD INDEX `SERVER_ID` (`SERVER_ID`);
+    END IF;
+
+    COMMIT;
+END <CI_UBF>
+DELIMITER ;
+COMMIT;
+CALL ci_environment_schema_update();
