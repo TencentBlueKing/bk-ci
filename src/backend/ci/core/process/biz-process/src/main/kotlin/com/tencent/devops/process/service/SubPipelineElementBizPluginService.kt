@@ -179,14 +179,15 @@ class SubPipelineElementBizPluginService @Autowired constructor(
     }
 
     fun checkCircularDependency(subPipelineRef: SubPipelineRef): ElementCheckResult {
-        val checkResult = with(subPipelineRef) {
-            subPipelineRefService.checkCircularDependency(
+        with(subPipelineRef) {
+            val startTime = System.currentTimeMillis()
+            val checkResult = subPipelineRefService.checkCircularDependency(
                 subPipelineRef = this,
                 rootNode = true,
                 existsPipeline = HashMap(mapOf("${projectId}_$pipelineId" to this))
             )
+            logger.info("finish check circular dependency|${System.currentTimeMillis() - startTime} ms")
+            return checkResult
         }
-        logger.info("check circular dependency result|$checkResult")
-        return ElementCheckResult(true)
     }
 }
