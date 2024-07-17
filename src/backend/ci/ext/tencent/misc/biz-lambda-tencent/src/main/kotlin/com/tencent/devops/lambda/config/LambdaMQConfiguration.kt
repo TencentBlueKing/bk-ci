@@ -32,7 +32,6 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCas
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.lambda.service.process.LambdaDataService
 import com.tencent.devops.lambda.service.process.LambdaPipelineModelService
 import com.tencent.devops.lambda.service.project.LambdaProjectService
@@ -44,32 +43,32 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class LambdaMQConfiguration {
     @EventConsumer
-    fun pipelineBuildFinishListener(
+    fun pipelineBuildFinishConsumer(
         @Autowired lambdaDataService: LambdaDataService
     ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> { lambdaDataService.onBuildFinish(it) }
 
     @EventConsumer
-    fun pipelineBuildElementFinishListener(
+    fun pipelineBuildElementFinishConsumer(
         @Autowired lambdaDataService: LambdaDataService
     ) = ScsConsumerBuilder.build<PipelineBuildTaskFinishBroadCastEvent> { lambdaDataService.onBuildTaskFinish(it) }
 
     @EventConsumer
-    fun projectCreateListener(
+    fun projectCreateConsumer(
         @Autowired lambdaProjectService: LambdaProjectService
     ) = ScsConsumerBuilder.build<ProjectCreateBroadCastEvent> { lambdaProjectService.onReceiveProjectCreate(it) }
 
     @EventConsumer
-    fun projectUpdateListener(
+    fun projectUpdateConsumer(
         @Autowired lambdaProjectService: LambdaProjectService
     ) = ScsConsumerBuilder.build<ProjectUpdateBroadCastEvent> { lambdaProjectService.onReceiveProjectUpdate(it) }
 
     @EventConsumer
-    fun pipelineModelAnalysisListener(
+    fun pipelineModelAnalysisConsumer(
         @Autowired lambdaPipelineModelService: LambdaPipelineModelService
     ) = ScsConsumerBuilder.build<PipelineModelAnalysisEvent> { lambdaPipelineModelService.onModelExchange(it) }
 
     @EventConsumer
-    fun pipelineBuildCommitsFinishListener(
+    fun pipelineBuildCommitsFinishConsumer(
         @Autowired lambdaDataService: LambdaDataService
     ) = ScsConsumerBuilder.build<PipelineBuildCommitFinishEvent> { lambdaDataService.onBuildCommitFinish(it) }
 }

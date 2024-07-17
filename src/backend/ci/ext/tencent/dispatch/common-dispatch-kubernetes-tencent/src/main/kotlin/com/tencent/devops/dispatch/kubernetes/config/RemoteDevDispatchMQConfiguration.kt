@@ -51,12 +51,12 @@ class RemoteDevDispatchMQConfiguration @Autowired constructor() {
     private val agentStartQueueMaxConcurrency: Int = 100
 
     @EventConsumer
-    fun workspaceCreateListener(
+    fun workspaceCreateConsumer(
         @Autowired workspaceListener: WorkspaceListener
     ) = ScsConsumerBuilder.build<WorkspaceCreateEvent> { workspaceListener.handleWorkspaceCreate(it) }
 
     @EventConsumer
-    fun workspaceOperateListener(
+    fun workspaceOperateConsumer(
         @Autowired workspaceListener: WorkspaceListener
     ) = ScsConsumerBuilder.build<WorkspaceOperateEvent> { workspaceListener.handleWorkspaceOperate(it) }
 }

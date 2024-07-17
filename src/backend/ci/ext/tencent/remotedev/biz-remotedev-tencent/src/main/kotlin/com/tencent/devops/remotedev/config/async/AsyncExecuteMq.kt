@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class AsyncExecuteMq {
     @EventConsumer
-    fun asyncExecute(
+    fun asyncExecuteConsumer(
         @Autowired asyncExecuteListener: AsyncExecuteListener
     ) = ScsConsumerBuilder.build<AsyncExecuteEvent> { asyncExecuteListener.listenAsyncExecuteEvent(it) }
 }

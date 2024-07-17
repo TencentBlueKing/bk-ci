@@ -40,17 +40,17 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class DispatchCodeCCMQConfiguration @Autowired constructor() {
     @EventConsumer
-    fun startCodeCCListener(
+    fun startCodeCCConsumer(
         @Autowired codeCCDispatchListener: CodeCCDispatchListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { codeCCDispatchListener.handleStartup(it) }
 
     @EventConsumer
-    fun shutdownCodeCCListener(
+    fun shutdownCodeCCConsumer(
         @Autowired codeCCDispatchListener: CodeCCDispatchListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { codeCCDispatchListener.handleShutdownMessage(it) }
 
     @EventConsumer
-    fun startDemoteCodeCCListener(
+    fun startDemoteCodeCCConsumer(
         @Autowired codeCCDispatchListener: CodeCCDispatchListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
         with(it) {
@@ -85,7 +85,7 @@ class DispatchCodeCCMQConfiguration @Autowired constructor() {
     }
 
     @EventConsumer
-    fun shutdownDemoteCodeCCListener(
+    fun shutdownDemoteCodeCCConsumer(
         @Autowired codeCCDispatchListener: CodeCCDispatchListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
         with(it) {

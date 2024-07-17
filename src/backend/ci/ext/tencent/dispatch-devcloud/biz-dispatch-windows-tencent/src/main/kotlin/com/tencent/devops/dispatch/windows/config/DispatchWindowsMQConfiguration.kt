@@ -40,17 +40,17 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class DispatchWindowsMQConfiguration @Autowired constructor() {
     @EventConsumer
-    fun startWindowsListener(
+    fun startWindowsConsumer(
         @Autowired windowsBuildListener: WindowsBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { windowsBuildListener.handleStartup(it) }
 
     @EventConsumer
-    fun shutdownWindowsListener(
+    fun shutdownWindowsConsumer(
         @Autowired windowsBuildListener: WindowsBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { windowsBuildListener.handleShutdownMessage(it) }
 
     @EventConsumer
-    fun startDemoteWindowsListener(
+    fun startDemoteWindowsConsumer(
         @Autowired windowsBuildListener: WindowsBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
         with(it) {
@@ -85,7 +85,7 @@ class DispatchWindowsMQConfiguration @Autowired constructor() {
     }
 
     @EventConsumer
-    fun shutdownDemoteWindowsListener(
+    fun shutdownDemoteWindowsConsumer(
         @Autowired windowsBuildListener: WindowsBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
         with(it) {

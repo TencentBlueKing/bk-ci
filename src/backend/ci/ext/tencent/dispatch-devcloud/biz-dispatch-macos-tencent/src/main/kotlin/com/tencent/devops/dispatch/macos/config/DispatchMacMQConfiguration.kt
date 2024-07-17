@@ -40,17 +40,17 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class DispatchMacMQConfiguration @Autowired constructor() {
     @EventConsumer
-    fun startMacListener(
+    fun startMacConsumer(
         @Autowired macBuildListener: MacBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { macBuildListener.handleStartup(it) }
 
     @EventConsumer
-    fun shutdownMacListener(
+    fun shutdownMacConsumer(
         @Autowired macBuildListener: MacBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { macBuildListener.handleShutdownMessage(it) }
 
     @EventConsumer
-    fun startDemoteMacListener(
+    fun startDemoteMacConsumer(
         @Autowired macBuildListener: MacBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
         with(it) {
@@ -85,7 +85,7 @@ class DispatchMacMQConfiguration @Autowired constructor() {
     }
 
     @EventConsumer
-    fun shutdownDemoteMacListener(
+    fun shutdownDemoteMacConsumer(
         @Autowired macBuildListener: MacBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
         with(it) {

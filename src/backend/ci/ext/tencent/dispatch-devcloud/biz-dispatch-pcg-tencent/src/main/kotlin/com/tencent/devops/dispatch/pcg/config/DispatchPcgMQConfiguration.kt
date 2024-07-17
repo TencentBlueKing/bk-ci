@@ -41,17 +41,17 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class DispatchPcgMQConfiguration @Autowired constructor() {
     @EventConsumer
-    fun startPcgListener(
+    fun startPcgConsumer(
         @Autowired pcgBuildListener: PCGBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { pcgBuildListener.handleStartup(it) }
 
     @EventConsumer
-    fun shutdownPcgListener(
+    fun shutdownPcgConsumer(
         @Autowired pcgBuildListener: PCGBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { pcgBuildListener.handleShutdownMessage(it) }
 
     @EventConsumer
-    fun startDemotePcgListener(
+    fun startDemotePcgConsumer(
         @Autowired pcgBuildListener: PCGBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
         with(it) {
@@ -86,7 +86,7 @@ class DispatchPcgMQConfiguration @Autowired constructor() {
     }
 
     @EventConsumer
-    fun shutdownDemotePcgListener(
+    fun shutdownDemotePcgConsumer(
         @Autowired pcgBuildListener: PCGBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
         with(it) {

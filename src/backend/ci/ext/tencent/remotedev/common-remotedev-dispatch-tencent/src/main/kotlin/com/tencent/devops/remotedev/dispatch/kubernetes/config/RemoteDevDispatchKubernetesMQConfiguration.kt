@@ -42,12 +42,12 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class RemoteDevDispatchKubernetesMQConfiguration @Autowired constructor() {
     @EventConsumer
-    fun workspaceCreateListener(
+    fun workspaceCreateConsumer(
         @Autowired workspaceListener: WorkspaceListener
     ) = ScsConsumerBuilder.build<WorkspaceCreateEvent> { workspaceListener.handleWorkspaceCreate(it) }
 
     @EventConsumer
-    fun workspaceOperateListener(
+    fun workspaceOperateConsumer(
         @Autowired workspaceListener: WorkspaceListener
     ) = ScsConsumerBuilder.build<WorkspaceOperateEvent> { workspaceListener.handleWorkspaceOperate(it) }
 }

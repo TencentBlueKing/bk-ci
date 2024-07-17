@@ -29,7 +29,6 @@ package com.tencent.devops.plugin.init
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
 import com.tencent.devops.plugin.listener.git.GitWebhookUnlockListener
 import com.tencent.devops.plugin.service.git.GitWebhookUnlockService
@@ -47,7 +46,7 @@ class GitWebhookUnlockConfiguration {
     )
 
     @EventConsumer
-    fun gitWebhookUnlockListener(
+    fun gitWebhookUnlockConsumer(
         @Autowired listener: GitWebhookUnlockListener
     ) = ScsConsumerBuilder.build<GitWebhookUnlockEvent> { listener.execute(it) }
 }

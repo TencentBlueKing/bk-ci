@@ -41,17 +41,17 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class DispatchDevCloudMQConfiguration @Autowired constructor() {
     @EventConsumer
-    fun startDevCloudListener(
+    fun startDevCloudConsumer(
         @Autowired devCloudBuildListener: DevCloudBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { devCloudBuildListener.handleStartup(it) }
 
     @EventConsumer
-    fun shutdownDevCloudListener(
+    fun shutdownDevCloudConsumer(
         @Autowired devCloudBuildListener: DevCloudBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { devCloudBuildListener.handleShutdownMessage(it) }
 
     @EventConsumer
-    fun startDemoteDevCloudListener(
+    fun startDemoteDevCloudConsumer(
         @Autowired devCloudBuildListener: DevCloudBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
         with(it) {
@@ -86,7 +86,7 @@ class DispatchDevCloudMQConfiguration @Autowired constructor() {
     }
 
     @EventConsumer
-    fun shutdownDemoteDevCloudListener(
+    fun shutdownDemoteDevCloudConsumer(
         @Autowired devCloudBuildListener: DevCloudBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
         with(it) {

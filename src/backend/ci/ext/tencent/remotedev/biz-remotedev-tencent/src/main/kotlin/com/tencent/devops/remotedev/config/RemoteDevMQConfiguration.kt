@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class RemoteDevMQConfiguration {
     @EventConsumer
-    fun remoteDevUpdateListenerContainer(
+    fun remoteDevUpdateConsumer(
         @Autowired remoteDevUpdateListener: RemoteDevUpdateListener
     ) = ScsConsumerBuilder.build<RemoteDevUpdateEvent> { remoteDevUpdateListener.execute(it) }
 }

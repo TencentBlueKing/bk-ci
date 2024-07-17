@@ -30,7 +30,6 @@ package com.tencent.devops.process.config
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.measure.MeasureServiceImpl
 import com.tencent.devops.process.listener.MeasurePipelineBuildFinishListener
@@ -42,8 +41,6 @@ import org.springframework.context.annotation.Configuration
 @Suppress("ALL")
 @Configuration
 class TencentMeasureConfig {
-    // TODO #7443 补充服务MQ配置
-
     @Value("\${build.atomMonitorData.report.switch:false}")
     private val atomMonitorSwitch: String = "false"
 
@@ -64,7 +61,7 @@ class TencentMeasureConfig {
      * 构建结束广播交换机
      */
     @EventConsumer
-    fun pipelineBuildMeasureListener(
+    fun pipelineBuildMeasureConsumer(
         @Autowired listener: MeasurePipelineBuildFinishListener
     ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> { listener.execute(it) }
 }

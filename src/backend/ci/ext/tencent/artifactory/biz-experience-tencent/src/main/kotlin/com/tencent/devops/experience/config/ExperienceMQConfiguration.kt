@@ -36,9 +36,8 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class ExperienceMQConfiguration {
-    // TODO #7443 增加ext实例配置
     @EventConsumer
-    fun rtxNotifyListener(
+    fun rtxNotifyConsumer(
         @Autowired experienceNotifyService: ExperienceNotifyService
     ) = ScsConsumerBuilder.build<AppNotifyMessageWithOperation> {
         experienceNotifyService.onReceiveAppNotifyMessage(it)
