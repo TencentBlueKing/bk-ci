@@ -264,8 +264,6 @@ class StartCloudInterfaceService @Autowired constructor(
                 } ?: emptyList()
             }
 
-        logger.info("get all vm resource|resourceList|{}", resList)
-
         if (resList.isNotEmpty()) {
             windowsGpuResourceDao.deleteVmResource(dslContext)
             windowsGpuResourceDao.insertVmResource(dslContext, resList)
