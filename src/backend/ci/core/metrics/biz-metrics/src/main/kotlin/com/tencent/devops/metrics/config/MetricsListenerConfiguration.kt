@@ -47,13 +47,6 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class MetricsListenerConfiguration {
-    @Bean
-    fun buildEndMetricsDataReportConsumer(
-        @Autowired metricsDataReportService: MetricsDataReportService
-    ) = BuildEndMetricsDataReportListener(
-        metricsDataReportService = metricsDataReportService
-    )
-
     @EventConsumer
     fun buildEndDataReportConsumer(
         @Autowired listener: BuildEndMetricsDataReportListener
