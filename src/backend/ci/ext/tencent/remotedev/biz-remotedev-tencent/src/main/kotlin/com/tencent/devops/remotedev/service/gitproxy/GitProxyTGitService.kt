@@ -447,12 +447,12 @@ class GitProxyTGitService @Autowired constructor(
      */
     fun addOrRemoveAclIp(
         projectId: String,
-        ip: String,
+        ips: Set<String>,
         remove: Boolean
     ) {
         AsyncExecute.dispatch(
             rabbitTemplate, AsyncTGitAclIp(
-                projectId = projectId, ip = ip, remove = remove
+                projectId = projectId, ips = ips, remove = remove
             )
         )
     }
@@ -460,9 +460,10 @@ class GitProxyTGitService @Autowired constructor(
     // 因为IP的唯一性，所以它还是可以单独进行增减分配
     fun doAddOrRemoveAclIp(
         projectId: String,
-        ip: String,
+        ips: Set<String>,
         remove: Boolean
     ) {
+        logger.info("doAddOrRemoveAclIp $projectId|$ips|remove=$remove")
         fetchProjectTGit(projectId) { repo, token ->
             val lock = updateTGitLock(repo.tgitId)
             try {
@@ -476,16 +477,16 @@ class GitProxyTGitService @Autowired constructor(
                     return@fetchProjectTGit
                 }
 
-                val ips = config.allowIps?.split(";")?.filter { it.isNotBlank() }?.toMutableSet() ?: mutableSetOf()
+                val configIps = config.allowIps?.split(";")?.filter { it.isNotBlank() }?.toMutableSet() ?: mutableSetOf()
                 if (remove) {
-                    ips.remove(ip)
+                    configIps.removeAll(ips)
                 } else {
-                    ips.add(ip)
+                    configIps.addAll(ips)
                 }
                 doUpdateIps(
                     token = token,
                     tGitProjectId = repo.tgitId.toString(),
-                    ips = ips
+                    ips = configIps
                 )
             } finally {
                 lock.unlock()
@@ -504,6 +505,7 @@ class GitProxyTGitService @Autowired constructor(
     fun doRefreshProjectTGitSpecUser(
         projectId: String
     ) {
+        logger.info("doRefreshProjectTGitSpecUser $projectId")
         // 获取所有关联项目下正在跑的所有机器的用户
         val usersMap = mutableMapOf<String, Set<String>>()
         fetchProjectTGit(projectId) { repo, token ->
@@ -838,7 +840,7 @@ class GitProxyTGitService @Autowired constructor(
                         notifyType = mutableSetOf(NotifyType.EMAIL.name),
                         bodyParams = mapOf(
                             "userId" to userId,
-                            "urls" to idAndUrls.keys.joinToString(separator = "\n"),
+                            "urls" to idAndUrls.values.joinToString(separator = "\n"),
                             "projectId" to projectId,
                             "projectName" to project.projectName
                         ),
