@@ -6,14 +6,16 @@
         <bk-collapse-panel v-model="activeFlag">
           <template #header>
             <p class="group-title">
-              <i class="permission-icon permission-icon-down-shape"></i>
+              <i :class="{
+                'manage-icon manage-icon-down-shape': activeFlag,
+                'manage-icon manage-icon-right-shape': !activeFlag,
+              }" style="color: #989ca7; margin-right: 10px;" />
               {{ projectTable.resourceTypeName }} ({{ projectTable.resourceType }})
               <span class="group-num">{{projectTable.count}}</span>
             </p>
           </template>
           <template #content>
             <TabTable
-              v-if="projectTable.count && projectTable.tableData.length"
               :is-show-operation="isShowOperation"
               :data="projectTable.tableData"
               :resource-type="projectTable.resourceType"
@@ -44,14 +46,17 @@
         <bk-collapse-panel v-model="item.activeFlag" :item-click="collapseClick" :name="item.resourceType">
           <template #header>
             <p class="group-title">
-              <i class="permission-icon permission-icon-down-shape"></i>
+              <i :class="{
+                'manage-icon manage-icon-down-shape': item.activeFlag,
+                'manage-icon manage-icon-right-shape': !item.activeFlag,
+              }" style="color: #989ca7; margin-right: 10px;" />
+              <img v-if="item.resourceType" :src="getServiceIcon(item.resourceType)" class="service-icon" alt="">
               {{item.resourceTypeName}} ({{ item.resourceType }})
               <span class="group-num">{{item.count}}</span>
             </p>
           </template>
           <template #content>
             <TabTable
-              v-if="item.count"
               :is-show-operation="isShowOperation"
               :data="item.tableData"
               :resource-type="item.resourceType"
@@ -83,7 +88,7 @@
 <script setup name="GroupTab">
 import { useI18n } from 'vue-i18n';
 import { ref, defineProps, defineEmits, computed, watch } from 'vue';
-import userGroupTable from "@/store/userGroupTable";
+import userGroupTable from '@/store/userGroupTable';
 import TabTable from './tab-table.vue';
 
 const { t } = useI18n();
@@ -92,6 +97,35 @@ const groupTableStore = userGroupTable();
 const projectTable = computed(() => props.sourceList.find(item => item.resourceType == 'project'));
 const sourceTable= computed(() => props.sourceList.filter(item => item.resourceType != 'project'));
 
+const pipelineIcon = computed(() => require('../../../svg/color-logo-pipeline.svg'));
+const codelibIcon = computed(() => require('../../../svg/color-logo-codelib.svg'));
+const codeccIcon = computed(() => require('../../../svg/color-logo-codecc.svg'));
+const environmentIcon = computed(() => require('../../../svg/color-logo-environment.svg'));
+const experienceIcon = computed(() => require('../../../svg/color-logo-experience.svg'));
+const qualityIcon = computed(() => require('../../../svg/color-logo-quality.svg'));
+const ticketIcon = computed(() => require('../../../svg/color-logo-ticket.svg'));
+const turboIcon = computed(() => require('../../../svg/color-logo-turbo.svg'));
+
+const getServiceIcon = (type) => {
+  const iconMap = {
+    'pipeline': pipelineIcon.value,
+    'pipeline_group': pipelineIcon.value,
+    'repertory': codelibIcon.value,
+    'credential': ticketIcon.value,
+    'cert': ticketIcon.value,
+    'environment': environmentIcon.value,
+    'env_node': pipelineIcon.value,
+    'codecc_task': codeccIcon.value,
+    'codecc_rule_set': codeccIcon.value,
+    'codecc_ignore_type': codeccIcon.value,
+    'experience_task': experienceIcon.value,
+    'experience_group': experienceIcon.value,
+    'rule': qualityIcon.value,
+    'quality_group': qualityIcon.value,
+    'pipeline_template': pipelineIcon.value,
+  }
+  return iconMap[type]
+}
 
 const {
   handleRenewal,
@@ -177,16 +211,22 @@ function collapseClick(resourceType) {
     }
   
     .group-title {
+      display: flex;
+      align-items: center;
       width: 100%;
       height: 26px;
       line-height: 26px;
       padding-left: 10px;
       background: #EAEBF0;
       border-radius: 2px;
-      font-family: MicrosoftYaHei;
       font-size: 12px;
       color: #313238;
       cursor: pointer;
+      .service-icon {
+        width: 14px;
+        height: 14px;
+        margin-right: 5px;
+      }
     }
   
     .group-num {

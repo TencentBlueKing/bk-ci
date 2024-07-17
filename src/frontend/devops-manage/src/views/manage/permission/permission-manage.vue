@@ -99,6 +99,7 @@
               :disabled="dialogLoading"
               @change="(val) => handleClearName(val)"
               @blur="handleCheckReset()"
+              @enter="handleCheckReset()"
             />
           </bk-form-item>
         </bk-form>
@@ -178,6 +179,7 @@ const dialogLoading = ref(false);
 const isResetFailure = ref(false);
 const isResetSuccess = ref(false);
 const isChecking = ref(false);
+const canLoading = ref(true);
 const projectId = computed(() => route.params?.projectCode);
 const resourceType = ref('repertory');
 const isSelectAll = ref(false);  // 选择全量数据
@@ -258,10 +260,7 @@ const columns = ref([
       return h(
         'span',
         {
-          style: resourceType.value === 'env_node' ? {} : {
-            cursor: 'pointer',
-            color: '#3a84ff',
-          },
+          class: resourceType.value === 'env_node' ? '' : 'resource-name-cell',
           onClick () {
             if (resourceType.value === 'env_node') return
             if (resourceType.value === 'repertory') {
@@ -323,7 +322,7 @@ const searchData = computed(() => {
 watch(() => searchValue.value, (val, oldVal) => {
   pagination.value.current = 1;
   isSelectAll.value = false;
-  refTable.value.clearSelection();
+  refTable.value?.clearSelection();
   selectList.value = [];
   getTableList();
 });
@@ -419,7 +418,7 @@ function handleSelectAllData() {
  * 清除选择
  */
 function handleClear() {
-  refTable.value.clearSelection();
+  refTable.value?.clearSelection();
   isSelectAll.value = false;
   selectList.value = [];
 }
@@ -428,6 +427,7 @@ function handleClear() {
  */
 function dialogClose() {
   showResetDialog.value = false;
+  canLoading.value = true;
   isResetFailure.value = false;
   isResetSuccess.value = false;
   isSelectAll.value = false;
@@ -437,6 +437,7 @@ function dialogClose() {
 }
 
 function handleClearName (val) {
+  canLoading.value = true;
   if (!val) {
     isResetFailure.value = false;
     isResetSuccess.value = false;
@@ -448,15 +449,17 @@ function handleClearName (val) {
 
 async function handleCheckReset () {
   if (!resetFormData.value.name) return
-  try {
+  if (canLoading.value) {
     isChecking.value = true;
     disabledResetBtn.value = true;
-
+  }
+  try {
     const res = await http.resetAuthorization(projectId.value, {
       ...resetParams.value,
       preCheck: true
     }, resourceType.value)
-    
+
+    if (!resetFormData.value.name) return // 点击input输入框清空按钮，会触发失焦事件
     failedCount.value = res['FAILED']?.length || 0
     if (failedCount) {
       resetTableData.value = res['FAILED'].splice(0,6)
@@ -464,7 +467,7 @@ async function handleCheckReset () {
     isResetFailure.value = !!failedCount.value;
     isResetSuccess.value = !failedCount.value;
     isChecking.value = false;
-
+    canLoading.value = false;
     disabledResetBtn.value = failedCount.value === selectList.value.length;
   } catch (e) {
     console.error(e)
@@ -474,14 +477,14 @@ async function handleCheckReset () {
  * 弹窗提交
  */
 function confirmReset() {
-  dialogLoading.value = true;
+  if (canLoading.value) dialogLoading.value = true;
   formRef.value?.validate().then(async () => {
     try {
       await http.resetAuthorization(projectId.value, resetParams.value, resourceType.value)
       
       dialogLoading.value = false;
       showResetDialog.value = false;
-
+      canLoading.value = true;
       Message({
         theme: 'success',
         message: t('授权已成功重置', [searchName.value]),
@@ -492,7 +495,7 @@ function confirmReset() {
       disabledResetBtn.value = true;
       isResetSuccess.value = false;
       isResetFailure.value = false;
-      refTable.value.clearSelection();
+      refTable.value?.clearSelection();
       selectList.value = [];
       isSelectAll.value = false;
     } catch (e) {
@@ -518,7 +521,7 @@ function handlePickSuccess () {
 }
 
 function handlePageChange (page) {
-  refTable.value.clearSelection();
+  refTable.value?.clearSelection();
   isSelectAll.value = false;
   selectList.value = [];
   pagination.value.current = page;
@@ -526,7 +529,7 @@ function handlePageChange (page) {
 }
 
 function handlePageLimitChange (limit) {
-  refTable.value.clearSelection();
+  refTable.value?.clearSelection();
   isSelectAll.value = false;
   selectList.value = [];
   pagination.value.current = 1;
@@ -536,14 +539,13 @@ function handlePageLimitChange (limit) {
 
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 .permission-wrapper {
+  display: flex;
   width: 100%;
   height: 100%;
-  display: flex;
-
   .aside {
-    width: 240px;
+    width: 290px;
     height: 100%;
     padding-top: 8px;
     background: #FAFBFD;
@@ -569,7 +571,7 @@ function handlePageLimitChange (limit) {
 
   .content {
     padding: 24px;
-    width: calc(100% - 240px);
+    flex: 1;
     .content-btn {
       display: flex;
       justify-content: space-between;
@@ -588,6 +590,7 @@ function handlePageLimitChange (limit) {
     .content-table{
       border: 1px solid #DCDEE5;
       height: calc(100vh - 158px);
+      width: 100%;
 
       .prepend{
         width: 100%;
@@ -660,4 +663,13 @@ function handlePageLimitChange (limit) {
     margin-bottom: 15px !important;
   }
 }
+</style>
+
+<style lang="scss">
+  .resource-name-cell {
+    cursor: pointer;
+    &:hover {
+      color: #3a84ff;
+    }
+  }
 </style>

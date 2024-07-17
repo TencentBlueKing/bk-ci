@@ -82,6 +82,7 @@ watch(route, initActiveTab, { immediate: true });
   font-size: 14px;
   flex: 1;
   text-align: center;
+  padding-right: 100px;
 }
 .manage-tab {
   display: inline-block;

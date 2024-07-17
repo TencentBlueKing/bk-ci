@@ -58,9 +58,3 @@ export default {
   },
 };
 </script>
-
-<style lang="postcss" scoped>
-  .permission-main {
-    padding: 24px;
-  }
-</style>

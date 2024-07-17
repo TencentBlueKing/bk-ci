@@ -1,6 +1,5 @@
 <template>
   <article class="group-aside" v-bkloading="{ isLoading: !groupList.length }">
-    <span class="group-title">{{ $t('权限角色') }}</span>
     <scroll-load-list
       class="group-list"
       ref="loadList"
@@ -365,6 +364,7 @@ export default {
   height: 100%;
   background-color: #fff;
   border-right: 1px solid #dde0e6;
+  padding-top: 10px;
 }
 .group-list {
   max-height: calc(100% - 130px);
