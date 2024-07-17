@@ -46,7 +46,7 @@ class DispatchKubernetesMQConfiguration @Autowired constructor() {
     /**
      * 启动构建队列
      */
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun startKubernetesListener(
         @Autowired kubernetesListener: KubernetesListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { kubernetesListener.handleStartup(it) }
@@ -54,7 +54,7 @@ class DispatchKubernetesMQConfiguration @Autowired constructor() {
     /**
      * 启动构建降级队列
      */
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun shutdownKubernetesListener(
         @Autowired kubernetesListener: KubernetesListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { kubernetesListener.handleShutdownMessage(it) }
@@ -62,7 +62,7 @@ class DispatchKubernetesMQConfiguration @Autowired constructor() {
     /**
      * 启动构建结束队列
      */
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun startDemoteKubernetesListener(
         @Autowired kubernetesListener: KubernetesListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
@@ -97,7 +97,7 @@ class DispatchKubernetesMQConfiguration @Autowired constructor() {
         }
     }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun shutdownDemoteKubernetesListener(
         @Autowired kubernetesListener: KubernetesListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
@@ -120,9 +120,5 @@ class DispatchKubernetesMQConfiguration @Autowired constructor() {
                 )
             )
         }
-    }
-
-    companion object {
-        private const val GROUP_NAME = "dispatch-kubernetes-service"
     }
 }

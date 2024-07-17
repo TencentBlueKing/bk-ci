@@ -40,7 +40,7 @@ import java.util.function.Consumer
 
 @Configuration
 class DispatchDockerMQConfiguration @Autowired constructor() {
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun startDockerListener(
         @Autowired dockerVMListener: DockerVMListener
     ): Consumer<Message<PipelineAgentStartupEvent>> {
@@ -49,7 +49,7 @@ class DispatchDockerMQConfiguration @Autowired constructor() {
         }
     }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun shutdownDockerListener(
         @Autowired dockerVMListener: DockerVMListener
     ): Consumer<Message<PipelineAgentShutdownEvent>> {
@@ -58,7 +58,7 @@ class DispatchDockerMQConfiguration @Autowired constructor() {
         }
     }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun startDemoteDockerListener(
         @Autowired dockerVMListener: DockerVMListener
     ): Consumer<Message<PipelineAgentStartupDemoteEvent>> {
@@ -95,7 +95,7 @@ class DispatchDockerMQConfiguration @Autowired constructor() {
         }
     }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun shutdownDemoteDockerListener(
         @Autowired dockerVMListener: DockerVMListener
     ): Consumer<Message<PipelineAgentShutdownDemoteEvent>> {
@@ -120,9 +120,5 @@ class DispatchDockerMQConfiguration @Autowired constructor() {
                 )
             }
         }
-    }
-
-    companion object {
-        private const val GROUP_NAME = "dispatch-docker-service"
     }
 }

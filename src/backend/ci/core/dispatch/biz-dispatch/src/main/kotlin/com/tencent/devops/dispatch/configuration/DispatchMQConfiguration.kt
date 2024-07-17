@@ -37,17 +37,13 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class DispatchMQConfiguration @Autowired constructor() {
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun thirdAgentDispatchStartListener(
         @Autowired thirdPartyAgentListener: ThirdPartyBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> { thirdPartyAgentListener.handleStartup(it) }
 
-    @EventConsumer(groupName = GROUP_NAME)
+    @EventConsumer
     fun thirdAgentDispatchShutdownListenerContainer(
         @Autowired thirdPartyAgentListener: ThirdPartyBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { thirdPartyAgentListener.handleShutdownMessage(it) }
-
-    companion object {
-        private const val GROUP_NAME = "dispatch-service"
-    }
 }
