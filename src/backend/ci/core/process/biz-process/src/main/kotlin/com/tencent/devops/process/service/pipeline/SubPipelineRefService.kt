@@ -43,6 +43,9 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CURRENT_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_OTHER_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE
 import com.tencent.devops.process.dao.SubPipelineRefDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -386,7 +389,7 @@ class SubPipelineRefService @Autowired constructor(
 
     fun checkCircularDependency(
         subPipelineRef: SubPipelineRef,
-        rootNode: Boolean = false,
+        rootPipelineKey: String,
         existsPipeline: HashMap<String, SubPipelineRef>
     ): ElementCheckResult {
         with(subPipelineRef){
@@ -394,17 +397,31 @@ class SubPipelineRefService @Autowired constructor(
             if (existsPipeline.contains(pipelineRefKey)) {
                 logger.warn("subPipeline does not allow loop calls|projectId:$subProjectId|pipelineId:$subPipelineId")
                 val parentPipelineRef = existsPipeline[pipelineRefKey]!!
-                val (msgCode, params) = if (rootNode) {
-                    ProcessMessageCode.BK_CURRENT_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to emptyArray<String>()
-                } else {
-                    val editUrlBase = getPipelineEditUrl(parentPipelineRef.projectId, parentPipelineRef.pipelineId)
-                    val editUrl = getPipelineEditUrl(projectId, pipelineId)
-                    ProcessMessageCode.BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to arrayOf(
-                        editUrl,
-                        subPipelineRef.pipelineName,
-                        editUrlBase,
-                        parentPipelineRef.pipelineName.ifBlank { subPipelineRef.subPipelineName },
-                    )
+                val (msgCode, params) = when {
+                    // [当前流水线] -> [当前流水线]
+                     "${projectId}_$pipelineId" == rootPipelineKey-> {
+                        BK_CURRENT_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to emptyArray<String>()
+                    }
+                    // [其他流水线] -> [当前流水线]
+                    pipelineRefKey == rootPipelineKey -> {
+                        val editUrl = getPipelineEditUrl(projectId, pipelineId)
+                        BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to arrayOf(
+                            editUrl,
+                            subPipelineRef.pipelineName
+                        )
+                    }
+                    // [其他流水线_1] -> [其他流水线_2]
+                    // [其他流水线_2] -> ... ->[其他流水线_1]
+                    else -> {
+                        val editUrlBase = getPipelineEditUrl(parentPipelineRef.projectId, parentPipelineRef.pipelineId)
+                        val editUrl = getPipelineEditUrl(projectId, pipelineId)
+                        BK_OTHER_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to arrayOf(
+                            editUrl,
+                            subPipelineRef.pipelineName,
+                            editUrlBase,
+                            parentPipelineRef.pipelineName.ifBlank { subPipelineRef.subPipelineName }
+                        )
+                    }
                 }
 
                 return ElementCheckResult(
@@ -449,6 +466,7 @@ class SubPipelineRefService @Autowired constructor(
                 )
                 val checkResult = checkCircularDependency(
                     subPipelineRef = it,
+                    rootPipelineKey = rootPipelineKey,
                     existsPipeline = exist
                 )
                 // 检查不成功，直接返回
