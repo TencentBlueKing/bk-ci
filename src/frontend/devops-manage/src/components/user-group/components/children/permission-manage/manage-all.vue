@@ -55,12 +55,9 @@
   </bk-loading>
   <bk-dialog
     :width="640"
-    theme="danger"
-    :confirm-text="t('提交')"
     class="renewal-dialog"
     :is-show="isShowRenewal"
     @closed="handleRenewalClosed"
-    @confirm="handleRenewalConfirm"
   >
     <template #header>
       {{t("续期")}}
@@ -86,15 +83,16 @@
         </template>
       </p>
     </template>
+    <template #footer>
+      <bk-button theme="primary" :loading="operatorLoading" @click="handleRenewalConfirm"> {{t('续期')}} </bk-button>
+      <bk-button class="btn-margin" @click="handleRenewalClosed"> {{t('取消')}} </bk-button>
+    </template>
   </bk-dialog>
   <bk-dialog
     :width="640"
-    theme="danger"
-    :confirm-text="t('移交')"
     class="handover-dialog"
     :is-show="isShowHandover"
     @closed="handleHandoverClosed"
-    @confirm="handleHandoverConfirm"
   >
     <template #header>
       {{t("移交")}}
@@ -125,18 +123,18 @@
         </bk-form>
       </p>
     </template>
+    <template #footer>
+      <bk-button theme="primary" :loading="operatorLoading" @click="handleHandoverConfirm"> {{t('移交')}} </bk-button>
+      <bk-button class="btn-margin" @click="handleHandoverClosed"> {{t('取消')}} </bk-button>
+    </template>
   </bk-dialog>
   <bk-dialog
     :width="450"
-    confirmButtonTheme="danger"
-    :cancel-text="t('关闭')"
-    :confirm-text="t('确认移出')"
     header-align="center"
     footer-align="center"
     class="remove-dialog"
     :is-show="isShowRemove"
     @closed="() => isShowRemove = false"
-    @confirm="handleRemoveConfirm"
   >
     <template #header>
       <span class="dialog-header"> {{t("确认从用户组中移出用户吗")}}？ </span>
@@ -148,6 +146,10 @@
       <p class="remove-text">
         <span>{{t("所在用户组")}}：</span> {{ selectedRow?.groupName }}
       </p>
+    </template>
+    <template #footer>
+      <bk-button theme="danger" :loading="operatorLoading" @click="handleRemoveConfirm"> {{t('确认移出')}} </bk-button>
+      <bk-button class="btn-margin" @click="() => isShowRemove = false"> {{t('关闭')}} </bk-button>
     </template>
   </bk-dialog>
 
@@ -306,6 +308,7 @@ const isPermission = ref(true);
 const manageAsideRef = ref(null);
 const groupTableStore = userGroupTable();
 const manageAsideStore = useManageAside();
+const operatorLoading = ref(false);
 
 const {
   sourceList,
@@ -376,17 +379,14 @@ function refresh(){
  * 续期弹窗提交事件
  */
 async function handleRenewalConfirm() {
-  handleUpDateRow(expiredAt.value);
+  operatorLoading.value = true;
   const param = formatSelectParams(selectedRow.value.groupId);
+  await http.batchRenewal(projectId.value, param);
+  handleUpDateRow(expiredAt.value);
+  operatorLoading.value = false;
   showMessage('success', t('用户组权限已续期。'));
   cancleClear('renewal');
   isShowRenewal.value = false;
-  expiredAt.value = 30;
-  try {
-    await http.batchRenewal(projectId.value, param);
-  } catch (error) {
-    console.log(error);
-  }
 };
 /**
  * 续期弹窗关闭
@@ -401,15 +401,14 @@ function handleRenewalClosed() {
 async function handleHandoverConfirm() {
   const isValidate = await formRef.value.validate();
   if(!isValidate) return;
+  operatorLoading.value = true;
+  const param = formatSelectParams(selectedRow.value.groupId);
+  // await http.batchHandover(projectId.value, param);
   handleRemoveRow();
+  operatorLoading.value = false;
   showMessage('success', t('用户组权限已移交给X。',[handOverForm.value.name]));
   cancleClear('handover');
   isShowHandover.value = false;
-  try {
-    await http.batchHandover(projectId.value, param);
-  } catch (error) {
-    console.log(error);
-  }
 };
 /**
  * 移交弹窗关闭
@@ -423,14 +422,13 @@ async function handleHandoverConfirm() {
  * 移出弹窗提交事件
  */
 async function handleRemoveConfirm() {
-  showMessage('success', t('X 已移出X用户组。', [asideItem.value.name, selectedRow.value.groupName]));
+  operatorLoading.value = true;
+  const param = formatSelectParams(selectedRow.value.groupId);
+  await http.batchRemove(projectId.value, param);
   handleRemoveRow();
+  operatorLoading.value = false;
+  showMessage('success', t('X 已移出X用户组。', [asideItem.value.name, selectedRow.value.groupName]));
   isShowRemove.value = false;
-  try {
-    await http.batchRemove(projectId.value, param);
-  } catch (error) {
-    console.log(error);
-  }
 }
 /**
  * 授权期限选择
@@ -487,7 +485,7 @@ function formatSelectParams(rowGroupId){
     excludedUniqueManagerGroup: true,
     targetMember: asideItem.value,
     ...(expiredAt.value && {renewalDuration: expiredAt.value}),
-    ...(handOverForm.value.id && {handoverTo: handOverForm.value}),
+    ...(handOverForm.value.name && {handoverTo: handOverForm.value}),
   }
   return params;
 }
@@ -503,6 +501,7 @@ function cancleClear(batchFlag) {
     formRef.value?.clearValidate()
   } else if (batchFlag === 'renewal') {
     renewalRef.value.initTime();
+    expiredAt.value = 30;
   }
 }
 /**
@@ -628,6 +627,10 @@ function asideRemoveConfirm(value) {
   font-size: 12px;
   color: #313238;
   line-height: 20px;
+}
+
+.btn-margin{
+  margin-left: 10px
 }
 
 .renewal-dialog {

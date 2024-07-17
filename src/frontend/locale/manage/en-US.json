@@ -227,5 +227,6 @@
     "X 已移出X用户组。": "{0} has been removed from the {1} user group.",
     "用户组权限已续期": "User group permissions have been renewed",
     "用户组权限已移交": "User group permissions have been transferred",
-    "用户组已移出": "User group has been removed"
+    "用户组已移出": "User group has been removed",
+    "永久": "Permanent"
 }
