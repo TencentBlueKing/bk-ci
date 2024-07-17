@@ -559,8 +559,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         originalProjectName = projectInfo.projectName,
                         modifiedProjectName = projectUpdateInfo.projectName,
                         finalNeedApproval = finalNeedApproval,
-                        beforeSubjectScopesStr = projectInfo.subjectScopes,
-                        afterSubjectScopesStr = subjectScopesStr
+                        beforeSubjectScopes = JsonUtil.to(projectInfo.subjectScopes, object : TypeReference<List<SubjectScopeInfo>>() {}),
+                        afterSubjectScopes = subjectScopes,
                     )) {
                     modifyProjectAuthResource(resourceUpdateInfo)
                 }
@@ -693,11 +693,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         originalProjectName: String,
         modifiedProjectName: String,
         finalNeedApproval: Boolean,
-        beforeSubjectScopesStr: String,
-        afterSubjectScopesStr: String
+        beforeSubjectScopes: List<SubjectScopeInfo>,
+        afterSubjectScopes: List<SubjectScopeInfo>
     ): Boolean {
+        val isSubjectScopesChange = isSubjectScopesChange(
+            beforeSubjectScopes = beforeSubjectScopes,
+            afterSubjectScopes = afterSubjectScopes
+        )
         return originalProjectName != modifiedProjectName || finalNeedApproval ||
-            beforeSubjectScopesStr != afterSubjectScopesStr
+            isSubjectScopesChange
     }
 
     private fun getUpdateApprovalStatus(
