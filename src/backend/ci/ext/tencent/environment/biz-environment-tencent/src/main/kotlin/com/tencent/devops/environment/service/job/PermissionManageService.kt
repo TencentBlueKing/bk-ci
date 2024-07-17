@@ -29,15 +29,12 @@ package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
-import com.tencent.devops.environment.constant.T_NODE_CREATED_USER
-import com.tencent.devops.environment.constant.T_NODE_NODE_IP
-import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.dao.job.JobDao
+import com.tencent.devops.environment.pojo.dto.CmdbNodeDTO
 import com.tencent.devops.environment.pojo.job.jobreq.Host
 import com.tencent.devops.environment.service.cmdb.TencentCmdbService
 import org.jooq.DSLContext
-import org.jooq.Record6
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -54,90 +51,105 @@ class PermissionManageService @Autowired constructor(
     }
 
     fun isJobInsBelongToProj(projectId: String, jobInstanceId: Long): Boolean {
-        val jobProjRecordExist = jobDao.isJobInsExist(dslContext, projectId, jobInstanceId)
-        logger.info("[isJobInsBelongToProj] $projectId: $jobProjRecordExist")
-        return jobProjRecordExist
+        val result = jobDao.isJobInsExist(dslContext, projectId, jobInstanceId)
+        logger.debug("isJobInsBelongToProj|projectId=$projectId|jobInstanceId=$jobInstanceId|result=$result")
+        return result
     }
 
     fun recordJobInsToProj(projectId: String, jobInstanceId: Long, createUser: String) {
-        val jobProjInsertResult = jobDao.addJobProjRecord(dslContext, projectId, jobInstanceId, createUser)
-        logger.info("[recordJobInsToProj] $jobProjInsertResult row(s) of data have been inserted into the table.")
+        val insertedRowNum = jobDao.addJobProjRecord(dslContext, projectId, jobInstanceId, createUser)
+        if (insertedRowNum != 1) {
+            logger.warn("recordJobInsToProj failed|insertedRowNum={}", insertedRowNum)
+        }
     }
 
     fun isUserHasAllPermission(userId: String, projectId: String, allHostList: List<Host>) {
-        val nodeRecords = getNodesFromHostList(dslContext, projectId, allHostList).toSet() // 所有host对应的T_NODE表中的记录
-        logger.info(
-            "Wait to detect permission node ip(s): " +
-                nodeRecords.mapNotNull { it[T_NODE_NODE_IP] as? String }.joinToString()
-        )
-        // 判断：用户or节点导入人 是机器的主备负责人（用户：函数中形参userId；节点导入人：T_NODE表中的createdUser）
-        isOperatorOrBakOperator(userId, nodeRecords)
+        // 所有host对应的T_NODE表中的记录
+        val cmdbNodes = getNodesFromHostList(projectId, allHostList).toSet()
+        logger.info("checkPermissionNodeIps=" + cmdbNodes.joinToString { it.nodeIp })
+        checkUserOrNodeCreatedUserPermission(userId, cmdbNodes)
     }
 
     private fun getNodesFromHostList(
-        dslContext: DSLContext,
         projectId: String,
         hostList: List<Host>
-    ): List<Record6<Long, String, Long, Long, String, Long>> {
-        val recordByHostIdList = mutableListOf<Host>()
-        val getRecordByIpAndBkCloudId = mutableListOf<Host>()
+    ): List<CmdbNodeDTO> {
+        val hostIdHostList = mutableListOf<Host>()
+        val cloudIpHostList = mutableListOf<Host>()
         hostList.map {
-            if (null != it.bkHostId) recordByHostIdList.add(it)
-            else getRecordByIpAndBkCloudId.add(it)
+            if (null != it.bkHostId) hostIdHostList.add(it)
+            else cloudIpHostList.add(it)
         }
-        return cmdbNodeDao.getNodesFromHostListByBkHostId(dslContext, projectId, recordByHostIdList) +
-            cmdbNodeDao.getNodesFromHostListByIpAndBkCloudId(dslContext, projectId, getRecordByIpAndBkCloudId)
+        val hostIdList = hostIdHostList.mapNotNull { it.bkHostId }
+        val cmdbNodesByHostIds = cmdbNodeDao.listCmdbNodesByHostIds(projectId, hostIdList)
+
+        val ipList = cloudIpHostList.mapNotNull { it.ip }
+        val cmdbNodesByIps = cmdbNodeDao.listCmdbNodesByIps(projectId, ipList)
+        val cmdbNodesByCloudIps = mutableListOf<CmdbNodeDTO>()
+        // 根据云区域ID过滤
+        val ipToHostMap = hostList.associateBy { it.ip }
+        cmdbNodesByIps.forEach {
+            val ip = it.nodeIp
+            val cmdbNodeCloudAreaId = it.cloudAreaId
+            val inputCloudAreaId = ipToHostMap[ip]?.bkCloudId
+            if (inputCloudAreaId == cmdbNodeCloudAreaId
+                || (inputCloudAreaId == null && cmdbNodeCloudAreaId == 0L)
+                || (inputCloudAreaId == 0L && cmdbNodeCloudAreaId == null)
+            ) {
+                cmdbNodesByCloudIps.add(it)
+            }
+        }
+        return cmdbNodesByHostIds + cmdbNodesByCloudIps
     }
 
     /*
-     *  判断：用户or节点导入人 是机器的主备负责人（用户：函数中形参userId；节点导入人：T_NODE表中的createdUser）
-     *  ext中实现：从cmdb中 用serverId查询机器的主备负责人（提示用户时，还是用ip标识机器）
+     *  校验当前用户/节点导入人是否为机器的主备负责人
+     *  先从CMDB中用nodeIp查询机器的主备负责人，再与当前用户/节点导入人进行对比判定
      */
-    fun isOperatorOrBakOperator(userId: String, nodeRecords: Set<Record6<Long, String, Long, Long, String, Long>>) {
-        val nodeServerIdSet = nodeRecords.mapNotNull { it[T_NODE_SERVER_ID] as? Long }.toSet() // 所有host对应的serverId
-        // 所有host的：serverId - 记录 映射
-        val nodeServerIdToNodeMap = nodeRecords.associateBy {
-            it[T_NODE_SERVER_ID] as? Long
-        }
+    fun checkUserOrNodeCreatedUserPermission(
+        userId: String,
+        cmdbNodes: Set<CmdbNodeDTO>
+    ) {
+        val nodeIpSet = cmdbNodes.map { it.nodeIp }.toSet() // 所有host对应的serverId
+        val nodeIpToNodeMap = cmdbNodes.associateBy { it.nodeIp }
 
-        val cmdbServerIdToCmdbDataMap = tencentCmdbService.queryServerByServerId(nodeServerIdSet)
-        // 没有serverId的节点记录，也认为该节点不在CMDB中
-        val ipNotInCmdb = nodeRecords.filterNot { nodeServerIdSet.contains(it[T_NODE_SERVER_ID] as? Long) }.map {
-            it[T_NODE_NODE_IP] as String
-        }.toMutableList()
-        val noPermissionServerIdList = nodeServerIdSet.filter {
-            if (null != cmdbServerIdToCmdbDataMap[it]) {
-                val createdUser = nodeServerIdToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String
-                val operator = cmdbServerIdToCmdbDataMap[it]?.operator
-                val isOperator = userId == operator || createdUser == operator
-                val bakOperatorSet = cmdbServerIdToCmdbDataMap[it]?.bakOperatorList?.toSet() ?: emptySet()
-                val isBakOperator = bakOperatorSet.contains(userId) || bakOperatorSet.contains(createdUser)
-                !isOperator && !isBakOperator
-            } else { // 机器不在CMDB中
-                ipNotInCmdb.add(nodeServerIdToNodeMap[it]?.get(T_NODE_NODE_IP) as String)
-                false
+        val ipToCmdbServerMap = tencentCmdbService.queryServerByIp(nodeIpSet)
+        val notInCmdbIpList = mutableListOf<String>()
+        val noPermissionIpList = mutableListOf<String>()
+        nodeIpSet.forEach { nodeIp ->
+            val cmdbNodeDTO = nodeIpToNodeMap[nodeIp]
+            val cmdbServerDTO = ipToCmdbServerMap[nodeIp]
+            if (null == cmdbServerDTO) {
+                notInCmdbIpList.add(nodeIp)
+                return@forEach
+            }
+            val createdUser = cmdbNodeDTO?.createdUser!!
+            if (!cmdbServerDTO.hasOperatorOrBak(userId) && !cmdbServerDTO.hasOperatorOrBak(createdUser)) {
+                noPermissionIpList.add(nodeIp)
             }
         }
-        if (noPermissionServerIdList.isNotEmpty() || ipNotInCmdb.isNotEmpty()) {
-            val noPermissionIpToNodeMap = noPermissionServerIdList.map {
-                nodeServerIdToNodeMap[it]
-            }.associateBy { it?.get(T_NODE_NODE_IP) as String }
-            val noPermissionIpList = noPermissionIpToNodeMap.keys
+
+        if (noPermissionIpList.isNotEmpty() || notInCmdbIpList.isNotEmpty()) {
+            val noPermissionIpToNodeMap = noPermissionIpList.map {
+                nodeIpToNodeMap[it]
+            }.associateBy { it?.nodeIp }
             logger.warn(
-                "[isOperatorOrBakOperator] noPermissionIpList: ${noPermissionIpList.joinToString()}, " +
-                    "notInCmdbIpList: ${ipNotInCmdb.joinToString()}"
+                "noPermissionIpList={}|notInCmdbIpList={}",
+                noPermissionIpList.joinToString(),
+                notInCmdbIpList.joinToString()
             )
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL,
                 params = arrayOf(
-                    ipNotInCmdb.joinToString(","),
+                    notInCmdbIpList.joinToString(","),
                     noPermissionIpList.joinToString(","),
                     userId,
-                    noPermissionIpList.joinToString(", ") {
-                        it + " - " + noPermissionIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String
+                    noPermissionIpList.joinToString(", ") { ip ->
+                        ip + "(" + noPermissionIpToNodeMap[ip]?.createdUser + ")"
                     }
                 )
             )
         }
     }
+
 }
