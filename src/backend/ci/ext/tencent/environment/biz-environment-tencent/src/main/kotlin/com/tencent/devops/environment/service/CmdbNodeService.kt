@@ -37,19 +37,12 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.environment.service.cmdb.EsbCmdbClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_CLOUD_ID
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_HOST_ID
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_HOST_INNERIP
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_OS_TYPE
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_SVR_ID
-import com.tencent.devops.environment.constant.Constants.NEW_COLUMN_BAK_MAINTAINER
-import com.tencent.devops.environment.constant.Constants.NEW_COLUMN_HOST_NAME
-import com.tencent.devops.environment.constant.Constants.NEW_COLUMN_INNER_SERVER_IPV4
-import com.tencent.devops.environment.constant.Constants.NEW_COLUMN_MAINTAINER
-import com.tencent.devops.environment.constant.Constants.NEW_COLUMN_OS_NAME
-import com.tencent.devops.environment.constant.Constants.NEW_COLUMN_SERVER_ID
 import com.tencent.devops.environment.constant.Constants.OS_TYPE_CC_CODE_AIX
 import com.tencent.devops.environment.constant.Constants.OS_TYPE_CC_CODE_FREEBSD
 import com.tencent.devops.environment.constant.Constants.OS_TYPE_CC_CODE_LINUX
@@ -79,9 +72,10 @@ import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCResp
 import com.tencent.devops.environment.pojo.job.ccres.QueryCCListHostWithoutBizData
+import com.tencent.devops.environment.service.cc.TencentQueryFromCCService
+import com.tencent.devops.environment.service.cmdb.EsbCmdbClient
 import com.tencent.devops.environment.service.cmdb.TencentCmdbService
 import com.tencent.devops.environment.service.job.QueryAgentStatusService
-import com.tencent.devops.environment.service.job.TencentQueryFromCCService
 import com.tencent.devops.environment.utils.ComputeTimeUtils
 import com.tencent.devops.environment.utils.ImportServerNodeUtils
 import com.tencent.devops.environment.utils.NodeStringIdUtils
@@ -235,10 +229,7 @@ class CmdbNodeService @Autowired constructor(
         logger.info("[reImportCmdbNodesByIp]")
         // 验证User是节点的主备负责人
         val nodeIpList = reImportCmdbNodeInfoList.mapNotNull { it.nodeIp }
-        val cmdbIpToNodeMap = checkUserOperatorByIp(
-            userId, nodeIpList,
-            NEW_COLUMN_MAINTAINER, NEW_COLUMN_BAK_MAINTAINER, NEW_COLUMN_INNER_SERVER_IPV4, NEW_COLUMN_SERVER_ID
-        )
+        val cmdbIpToNodeMap = checkUserOperatorByIp(userId, nodeIpList)
 
         // 将该节点添加到CC中
         val queryCCInfoList = addNodeToCCByIpMap(cmdbIpToNodeMap)
@@ -418,12 +409,7 @@ class CmdbNodeService @Autowired constructor(
     fun addCmdbNodesByIp(userId: String, projectId: String, nodeIpList: List<String>): AddCmdbNodesRes {
         val startTime = LocalDateTime.now()
         // 验证 CMDB 节点IP和责任人
-        val cmdbIpToNodeMap = checkUserOperatorByIp(
-            userId,
-            nodeIpList,
-            NEW_COLUMN_MAINTAINER, NEW_COLUMN_BAK_MAINTAINER, NEW_COLUMN_INNER_SERVER_IPV4,
-            NEW_COLUMN_SERVER_ID, NEW_COLUMN_HOST_NAME, NEW_COLUMN_OS_NAME
-        )
+        val cmdbIpToNodeMap = checkUserOperatorByIp(userId, nodeIpList)
         // 只添加不存在的节点
         val existIpList = cmdbNodeDao.listServerAndDevCloudNodes(dslContext, projectId) // 已存在 节点db记录
             .map { it.nodeIp }.toSet() // 已存在 节点ip
@@ -658,11 +644,11 @@ class CmdbNodeService @Autowired constructor(
      */
     private fun checkUserOperatorByIp(
         userId: String,
-        nodeIpList: List<String>,
-        vararg cmdbColumn: String
+        nodeIpList: List<String>
     ): Map<String, CmdbServerDTO> {
         val ipToCmdbServerMap = tencentCmdbService.queryServerByIp(nodeIpList.toSet())
-        val invalidIps = nodeIpList.filter { // 权限校验
+        // 权限校验
+        val invalidIps = nodeIpList.filter {
             if (!ipToCmdbServerMap.containsKey(it)) {
                 true
             } else {
