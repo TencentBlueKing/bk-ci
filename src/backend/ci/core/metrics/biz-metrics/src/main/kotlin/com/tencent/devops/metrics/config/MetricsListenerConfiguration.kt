@@ -38,11 +38,8 @@ import com.tencent.devops.metrics.listener.BuildEndMetricsDataReportListener
 import com.tencent.devops.metrics.listener.DispatchJobMetricsListener
 import com.tencent.devops.metrics.listener.LabelChangeMetricsDataSyncListener
 import com.tencent.devops.metrics.listener.ProjectUserDailyMetricsListener
-import com.tencent.devops.metrics.service.MetricsDataReportService
 import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportFacadeService
-import com.tencent.devops.metrics.service.SyncPipelineRelateLabelDataService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
@@ -51,13 +48,6 @@ class MetricsListenerConfiguration {
     fun buildEndDataReportConsumer(
         @Autowired listener: BuildEndMetricsDataReportListener
     ) = ScsConsumerBuilder.build<BuildEndMetricsBroadCastEvent> { listener.execute(it) }
-
-    @Bean
-    fun labelChangeMetricsDataSyncConsumber(
-        @Autowired syncPipelineRelateLabelDataService: SyncPipelineRelateLabelDataService
-    ) = LabelChangeMetricsDataSyncListener(
-        syncPipelineRelateLabelDataService = syncPipelineRelateLabelDataService
-    )
 
     @EventConsumer
     fun labelChangeDataSyncConsumer(

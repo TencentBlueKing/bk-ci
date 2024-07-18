@@ -50,18 +50,6 @@ import java.time.Duration
 @Configuration
 @EnableConfigurationProperties(CallbackCircuitBreakerProperties::class)
 class PipelineCallBackConfiguration {
-    @Bean
-    fun buildCallBackListener(
-        @Autowired callBackControl: CallBackControl,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
-    ) = PipelineBuildCallBackListener(callBackControl, pipelineEventDispatcher)
-
-    @Bean
-    fun streamEnabledListener(
-        @Autowired callBackControl: CallBackControl,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
-    ) = MQPipelineStreamEnabledListener(callBackControl, pipelineEventDispatcher)
-
     /**
      * 构建构建回调广播交换机
      */
