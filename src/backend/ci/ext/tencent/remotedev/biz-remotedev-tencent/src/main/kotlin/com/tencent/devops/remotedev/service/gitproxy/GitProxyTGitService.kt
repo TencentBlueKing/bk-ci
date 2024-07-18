@@ -124,8 +124,21 @@ class GitProxyTGitService @Autowired constructor(
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
             .scopeId = projectId
 
-        // 关联项目，不符合要求的自动踢出去
-        bkitsmService.createTicket(projectId, userId, result.filter { it.value.second })
+        // ITSM单据以及其触发的流水线变量有长度限制，这里分组提单
+        val resultArray = result.filter { it.value.second }.map { Pair(it.key, it.value) }
+        resultArray.chunked(20).forEachIndexed { index, chunk ->
+            // 关联项目，不符合要求的自动踢出去
+            bkitsmService.createTicket(
+                projectId = projectId,
+                userId = userId,
+                tData = chunk.associate { it.first to it.second },
+                index = if (resultArray.size > 20) {
+                    index + 1
+                } else {
+                    null
+                }
+            )
+        }
 
         // 入库
         projectTGitLinkDao.batchAdd(
@@ -140,7 +153,9 @@ class GitProxyTGitService @Autowired constructor(
                         TGitRepoStatus.ABNORMAL
                     },
                     oauthUser = userId,
-                    gitType = if (it.value.first.removeHttpPrefix().startsWith(tGitConfig.tSvnUrl.removeHttpPrefix())) {
+                    gitType = if (it.value.first.removeHttpPrefix()
+                            .startsWith(tGitConfig.tSvnUrl.removeHttpPrefix())
+                    ) {
                         TGitProjectType.SVN.name
                     } else {
                         TGitProjectType.GIT.name

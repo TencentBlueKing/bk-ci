@@ -44,7 +44,6 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.cron.HolidayHelper
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -95,7 +94,6 @@ class DeleteControl @Autowired constructor(
     private val permissionService: PermissionService,
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val redisCache: RedisCacheService,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val workspaceCommon: WorkspaceCommon,
