@@ -149,6 +149,7 @@ function _M:get_staff_info_new(credentialKey)
                 ["x-rio-signature"] = signature,
                 ["x-rio-timestamp"] = tostring(timestamp),
                 ["x-rio-nonce"] = nonce,
+                ["Content-Type"] = "application/x-www-form-urlencoded"
             }
         })
 
