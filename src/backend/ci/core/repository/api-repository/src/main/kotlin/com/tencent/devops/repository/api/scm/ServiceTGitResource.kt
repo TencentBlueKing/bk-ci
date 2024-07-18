@@ -36,6 +36,7 @@ import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -186,4 +187,34 @@ interface ServiceTGitResource {
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH
     ): Result<GitUserInfo>
+
+    @Operation(summary = "获取两次提交的差异文件列表")
+    @GET
+    @Path("/getChangeFileList")
+    fun getChangeFileList(
+        @Parameter(description = "token")
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @Parameter(description = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @Parameter(description = "旧commit")
+        @QueryParam("from")
+        from: String,
+        @Parameter(description = "新commit")
+        @QueryParam("to")
+        to: String,
+        @Parameter(description = "true：两个点比较差异，false：三个点比较差异。默认是 false")
+        @QueryParam("straight")
+        straight: Boolean? = false,
+        @Parameter(description = "页码")
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页大小")
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<List<ChangeFileInfo>>
 }

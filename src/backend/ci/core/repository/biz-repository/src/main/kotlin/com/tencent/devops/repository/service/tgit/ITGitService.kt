@@ -37,6 +37,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
 import javax.servlet.http.HttpServletResponse
 
@@ -95,4 +96,15 @@ interface ITGitService {
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<GitCodeProjectInfo>
+
+    fun getChangeFileList(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        from: String,
+        to: String,
+        straight: Boolean? = false,
+        page: Int,
+        pageSize: Int
+    ): List<ChangeFileInfo>
 }
