@@ -89,5 +89,4 @@ class ScheduledTasks @Autowired constructor(
             updateGseAgentInfoService::updateGseAgentStatusAndVersion
         )
     }
-
 }

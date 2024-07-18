@@ -30,7 +30,6 @@ package com.tencent.devops.environment.dao.job
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
 import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
-import com.tencent.devops.environment.constant.T_NODE_CREATED_USER
 import com.tencent.devops.environment.constant.T_NODE_HOST_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
@@ -56,7 +55,6 @@ import org.jooq.Record2
 import org.jooq.Record3
 import org.jooq.Record4
 import org.jooq.Record5
-import org.jooq.Record6
 import org.jooq.Record7
 import org.jooq.Result
 import org.springframework.beans.factory.annotation.Autowired
@@ -488,7 +486,6 @@ class CmdbNodeDao @Autowired constructor(
                 .fetch()
         }
     }
-
 
     /**
      * 从传入的IP列表中筛选出状态为不在CMDB中（NOT_IN_CMDB）的IP

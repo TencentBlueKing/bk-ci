@@ -92,9 +92,9 @@ class PermissionManageService @Autowired constructor(
             val ip = it.nodeIp
             val cmdbNodeCloudAreaId = it.cloudAreaId
             val inputCloudAreaId = ipToHostMap[ip]?.bkCloudId
-            if (inputCloudAreaId == cmdbNodeCloudAreaId
-                || (inputCloudAreaId == null && cmdbNodeCloudAreaId == 0L)
-                || (inputCloudAreaId == 0L && cmdbNodeCloudAreaId == null)
+            if (inputCloudAreaId == cmdbNodeCloudAreaId ||
+                (inputCloudAreaId == null && cmdbNodeCloudAreaId == 0L) ||
+                (inputCloudAreaId == 0L && cmdbNodeCloudAreaId == null)
             ) {
                 cmdbNodesByCloudIps.add(it)
             }
@@ -151,5 +151,4 @@ class PermissionManageService @Autowired constructor(
             )
         }
     }
-
 }

@@ -251,5 +251,4 @@ class UpdateCmdbNodeService @Autowired constructor(
         else
             NodeStatus.NOT_INSTALLED.name
     }
-
 }

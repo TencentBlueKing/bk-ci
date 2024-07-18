@@ -19,10 +19,10 @@ data class CmdbNodeDTO(
         if (cmdbServerDTO == null) {
             return false
         }
-        return operator != cmdbServerDTO.operator
-            || bakOperator != cmdbServerDTO.getBakOperatorStr()
-            || serverId != cmdbServerDTO.serverId
-            || osName != cmdbServerDTO.osName
+        return operator != cmdbServerDTO.operator ||
+            bakOperator != cmdbServerDTO.getBakOperatorStr() ||
+            serverId != cmdbServerDTO.serverId ||
+            osName != cmdbServerDTO.osName
     }
 
     private fun hasBakOperator(userId: String): Boolean {

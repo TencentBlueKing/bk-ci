@@ -157,5 +157,4 @@ class UpdateGseAgentInfoService @Autowired constructor(
         else
             NodeStatus.NOT_INSTALLED.name
     }
-
 }
