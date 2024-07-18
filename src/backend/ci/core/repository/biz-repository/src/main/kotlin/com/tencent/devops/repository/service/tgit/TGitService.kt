@@ -468,27 +468,25 @@ class TGitService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): List<ChangeFileInfo> {
-        val url = StringBuilder(
-            (
-            "${gitConfig.tGitApiUrl}/projects/${urlEncode(gitProjectId)}/" +
-                    "repository/compare/changed_files/list").addParams(
-                mapOf(
-                    "from" to from,
-                    "to" to to,
-                    "straight" to straight,
-                    "page" to page,
-                    "pageSize" to pageSize
-                )
+        val apiUrl = StringBuilder("${gitConfig.tGitApiUrl}/projects/${urlEncode(gitProjectId)}/" +
+                    "repository/compare/changed_files/list")
+        setToken(tokenType, apiUrl, token)
+        val requestUrl = apiUrl.toString().addParams(
+            mapOf(
+                "from" to from,
+                "to" to to,
+                "straight" to straight,
+                "page" to page,
+                "pageSize" to pageSize
             )
         )
-        setToken(tokenType, url, token)
         val res = mutableListOf<ChangeFileInfo>()
         val request = Request.Builder()
-            .url(url.toString())
+            .url(requestUrl)
             .get()
             .build()
         var result = res.toList()
-        logger.info("getChangeFileList: $url")
+        logger.info("getChangeFileList: $requestUrl")
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
                 throw RemoteServiceException(
