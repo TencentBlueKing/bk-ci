@@ -298,6 +298,7 @@ class PipelineContainerService @Autowired constructor(
     ): PipelineBuildContainer {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
         var taskSeq = 0
+        var needStartVM = false // 是否需要启动构建
         val parentElements = container.elements
 
         parentElements.forEach nextElement@{ atomElement ->
@@ -359,11 +360,15 @@ class PipelineContainerService @Autowired constructor(
                     )
                 }
             }
+            // 确认是否要启动构建机/无编译环境
+            if (!needStartVM && startVMTaskSeq > 0) {
+                needStartVM = true
+            }
         }
         container.startVMTaskSeq = startVMTaskSeq
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
         // 判断是否为无编译环境的写法保持和 prepareBuildContainerTasks() 一致
-        if (startVMTaskSeq > 0) {
+        if (needStartVM) {
             supplyVMTask(
                 projectId = projectId,
                 pipelineId = pipelineId,
