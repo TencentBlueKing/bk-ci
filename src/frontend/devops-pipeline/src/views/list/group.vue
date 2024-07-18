@@ -34,7 +34,7 @@
                                             ref="labelInput"
                                             style="width: 94%; margin-right: 10px;"
                                             :placeholder="$t('group.groupInputTips')"
-                                            v-model="labelValue"
+                                            v-model.trim="labelValue"
                                             v-validate="'required|max:20'"
                                             name="groupName"
                                             @blur="labelInputBlur(groupIndex, group.name)"
@@ -60,7 +60,7 @@
                                 <input
                                     ref="tagInput"
                                     class="tag-input"
-                                    v-model="tagValue"
+                                    v-model.trim="tagValue"
                                     v-focus="isFocus(groupIndex, tagIndex)"
                                     maxlength="20"
                                     @blur="tagInputBlur($event, groupIndex, tagIndex)"
@@ -129,7 +129,7 @@
                             <div class="bk-form-content">
                                 <bk-input
                                     :placeholder="$t('group.groupInputTips')"
-                                    v-model="groupSetting.value"
+                                    v-model.trim="groupSetting.value"
                                     name="groupName"
                                     v-validate="'required|max:20'"
                                     maxlength="20"
@@ -272,7 +272,7 @@
             },
             async handleSave (groupIndex) {
                 this.btnIsdisable = false
-
+                debugger
                 const params = {
                     projectId: this.projectId,
                     name: this.labelValue

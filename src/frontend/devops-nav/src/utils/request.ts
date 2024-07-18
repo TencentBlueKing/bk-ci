@@ -1,5 +1,5 @@
 import { showLoginPopup } from '@/utils/util'
-import axios, { AxiosError, AxiosResponse } from 'axios'
+import axios, { AxiosError, AxiosResponse, CreateAxiosDefaults } from 'axios'
 import cookie from 'js-cookie'
 import Vue from 'vue'
 
@@ -15,7 +15,7 @@ const request = axios.create({
     withCredentials: true,
     xsrfCookieName: 'paas_perm_csrftoken', // 注入csrfToken
     xsrfHeaderName: 'X-CSRFToken' // 注入csrfToken
-})
+} as CreateAxiosDefaults)
 
 function errorHandler (error: AxiosError) {
     if (typeof error.response.data === 'undefined') {

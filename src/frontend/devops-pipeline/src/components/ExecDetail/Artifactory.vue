@@ -37,9 +37,6 @@
                 prop="size"
                 show-overflow-tooltip
             >
-                <template slot-scope="props">
-                    {{ !props.row.folder ? sizeFormatter(props.row.size) : sizeFormatter(getFolderSize(props.row)) }}
-                </template>
             </bk-table-column>
             <bk-table-column
                 :label="$t('details.repoType')"
