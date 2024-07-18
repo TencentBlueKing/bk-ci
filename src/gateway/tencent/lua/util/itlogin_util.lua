@@ -172,6 +172,10 @@ function _M:get_staff_info_new(credentialKey)
     local responseBody = res.body
     --- 转换JSON的返回数据为TABLE
     local result = json.decode(responseBody)
+    if result.ReturnFlag ~= 0 then
+        ngx.log(ngx.STDERR, "failed to get info, responseBody: ", responseBody)
+        ngx.exit(500)
+    end
     if result.Domain:sub(- #"-odc") == "-odc" then
         result.IsOuter = true
     end
