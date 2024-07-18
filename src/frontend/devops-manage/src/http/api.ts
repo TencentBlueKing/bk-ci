@@ -294,5 +294,15 @@ export default {
     }
     const serviceUrl = serviceUrlMap[resourceType]
     return http.post(`${serviceUrl}`, params)
-  }
+  },
+
+  /**
+   * 用户态-iam用户组_同步
+   */
+  syncGroupAndMember (projectId: string) {
+    return http.put(`${IAM_PERFIX}/group/sync/${projectId}/syncGroupAndMember`);
+  },
+  syncGroupMember (projectId: string, groupId: any) {
+    return http.put(`${IAM_PERFIX}/group/sync/${projectId}/${groupId}/syncGroupMember`);
+  },
 };

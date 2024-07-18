@@ -1,5 +1,5 @@
 <template>
-  <bk-loading :loading="groupTableStore.isLoading" class="group-tab">
+  <bk-loading :loading="groupTableStore.isLoading" :zIndex="100" class="group-tab">
     <div class="manage-content-project" v-if="projectTable">
       <p class="project-group">{{t("项目级用户组")}}</p>
       <div class="project-group-table">
