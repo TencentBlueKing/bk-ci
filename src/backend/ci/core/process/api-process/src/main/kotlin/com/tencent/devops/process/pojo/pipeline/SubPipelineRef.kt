@@ -54,5 +54,7 @@ data class SubPipelineRef(
     @get:Schema(title = "子流水线名称", required = true)
     val subPipelineName: String,
     @get:Schema(title = "校验权限用户", required = true)
-    val userId: String = ""
+    val userId: String = "",
+    @get:Schema(title = "插件启用状态", required = true)
+    val elementEnable: Boolean = true
 )

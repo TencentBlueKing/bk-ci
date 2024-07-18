@@ -102,6 +102,7 @@ class SubPipelineElementBizPluginService @Autowired constructor(
     ): ElementCheckResult {
         // 模板保存时不需要校验子流水线权限
         if (isTemplate || projectId.isNullOrBlank()) return ElementCheckResult(true)
+
         val (subProjectId, subPipelineId, subPipelineName) = subPipelineRefService.getSubPipelineInfo(
             element = element,
             projectId = projectId,
@@ -119,7 +120,8 @@ class SubPipelineElementBizPluginService @Autowired constructor(
             stageName = stage.name ?: "",
             taskName = element.name ?: "",
             channel = ChannelCode.BS.name,
-            userId = userId
+            userId = userId,
+            elementEnable = enableElement(stage, container, element)
         )
         logger.info("start check sub pipeline element|$subPipelineRef")
         return subPipelineRef.check(
@@ -180,6 +182,7 @@ class SubPipelineElementBizPluginService @Autowired constructor(
 
     fun checkCircularDependency(subPipelineRef: SubPipelineRef): ElementCheckResult {
         with(subPipelineRef) {
+            if (!elementEnable) return ElementCheckResult(true)
             val startTime = System.currentTimeMillis()
             val rootPipelineKey = "${projectId}_$pipelineId"
             val checkResult = subPipelineRefService.checkCircularDependency(
@@ -191,4 +194,7 @@ class SubPipelineElementBizPluginService @Autowired constructor(
             return checkResult
         }
     }
+
+    private fun enableElement(stage: Stage, container: Container, element: Element) =
+        stage.isStageEnable() && container.isContainerEnable() && element.isElementEnable()
 }
