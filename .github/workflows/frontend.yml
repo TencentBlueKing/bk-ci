@@ -25,22 +25,19 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9.5.0
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
-      - uses: actions/cache@v3
-        id: yarn-cache
-        with:
-          path: src/frontend/**/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('src/frontend/**/package.json') }}
-      - name: prefer offline
-        if: steps.yarn-cache.outputs.cache-hit != 'true'
-        run: yarn --prefer-offline && yarn install
-        working-directory: src/frontend
+          cache: "pnpm"
+          cache-dependency-path: src/frontend/pnpm-lock.yaml
       - run: |
+          pnpm install
           export NODE_OPTIONS=--openssl-legacy-provider
-          yarn public
+          pnpm public
         working-directory: src/frontend
       - uses: actions/upload-artifact@v3
         if: ${{ inputs.upload == 'true'  }}

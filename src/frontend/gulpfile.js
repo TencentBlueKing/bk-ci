@@ -98,7 +98,7 @@ function getScopeStr (scope) {
             default:
                 scopeArray = scope
         }
-        return `--filter=${scopeArray.map(item => `devops-${item}`).join(',')}`
+        return `${scopeArray.map(item => `--filter devops-${item}`).join(' ')}`
     } catch (e) {
         console.error(e)
         return ''
@@ -127,7 +127,7 @@ task('build', async () => {
         return acc
     }, '')
     console.log(envQueryStr)
-    await execAsync(`pnpm run ${scopeStr} public:${env}`)
+    await execAsync(`pnpm ${scopeStr} run public:${env}`)
 })
 
 task('generate-assets-json', () => {
