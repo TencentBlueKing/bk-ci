@@ -362,20 +362,23 @@ class PipelineContainerService @Autowired constructor(
         }
         container.startVMTaskSeq = startVMTaskSeq
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
-        supplyVMTask(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            userId = context.userId,
-            stage = stage,
-            container = container,
-            containerSeq = context.containerSeq,
-            startVMTaskSeq = startVMTaskSeq,
-            lastTimeBuildTasks = listOf(),
-            updateExistsTask = mutableListOf(),
-            buildTaskList = buildTaskList,
-            executeCount = context.executeCount
-        )
+        // 判断是否为无编译环境的写法保持和 prepareBuildContainerTasks() 一致
+        if (startVMTaskSeq > 0) {
+            supplyVMTask(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = context.userId,
+                stage = stage,
+                container = container,
+                containerSeq = context.containerSeq,
+                startVMTaskSeq = startVMTaskSeq,
+                lastTimeBuildTasks = listOf(),
+                updateExistsTask = mutableListOf(),
+                buildTaskList = buildTaskList,
+                executeCount = context.executeCount
+            )
+        }
 
         return PipelineBuildContainer(
             projectId = projectId,
