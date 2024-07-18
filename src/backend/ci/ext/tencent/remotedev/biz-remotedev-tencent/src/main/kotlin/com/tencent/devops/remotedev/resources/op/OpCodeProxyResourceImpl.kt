@@ -6,6 +6,8 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpCodeProxyResource
 import com.tencent.devops.remotedev.pojo.gitproxy.CallbackLinktgitData
+import com.tencent.devops.remotedev.pojo.gitproxy.UpdateTgitAclIpData
+import com.tencent.devops.remotedev.pojo.gitproxy.UpdateTgitAclUserData
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -24,6 +26,26 @@ class OpCodeProxyResourceImpl @Autowired constructor(
                 repoIds = data.repoIds.split("\n").filter { it.isNotBlank() }
                     .associate { it.split(";").first().trim().toLong() to it.split(";").last() }
             )
+        )
+    }
+
+    override fun updateTgitAclIp(
+        data: UpdateTgitAclIpData
+    ) {
+        gitProxyTGitService.addOrRemoveAclIp(
+            projectId = data.projectId,
+            ips = data.ips,
+            remove = data.remove,
+            tgitId = data.tgitId
+        )
+    }
+
+    override fun updateTgitAclUser(
+        data: UpdateTgitAclUserData
+    ) {
+        gitProxyTGitService.refreshProjectTGitSpecUser(
+            projectId = data.projectId,
+            tgitId = data.tgitId
         )
     }
 }

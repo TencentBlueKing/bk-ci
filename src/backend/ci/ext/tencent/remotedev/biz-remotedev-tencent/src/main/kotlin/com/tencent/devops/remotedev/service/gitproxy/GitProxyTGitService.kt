@@ -252,7 +252,7 @@ class GitProxyTGitService @Autowired constructor(
         val users = fetchProjectSpecAclUsers(setOf(projectId))
 
         // 获取关联的工蜂仓库
-        val repoMap = projectTGitLinkDao.fetch(dslContext, projectId).associate {
+        val repoMap = projectTGitLinkDao.fetch(dslContext, projectId, null).associate {
             it.tgitId to Pair(it.oauthUser, it.status)
         }
 
@@ -302,7 +302,7 @@ class GitProxyTGitService @Autowired constructor(
     fun tgitLinkList(
         projectId: String
     ): List<TGitRepoData> {
-        val repos = projectTGitLinkDao.fetch(dslContext, projectId)
+        val repos = projectTGitLinkDao.fetch(dslContext, projectId, null)
         if (repos.isEmpty()) {
             return emptyList()
         }
@@ -499,13 +499,19 @@ class GitProxyTGitService @Autowired constructor(
     fun addOrRemoveAclIp(
         projectId: String,
         ips: Set<String>,
-        remove: Boolean
+        remove: Boolean,
+        tgitId: Long?
     ) {
-        logger.info("${OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG}|addOrRemoveAclIp|$projectId|$ips||remove=$remove")
+        logger.info(
+            "${OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG}|addOrRemoveAclIp|$projectId|$ips|remove=$remove|$tgitId"
+        )
         AsyncExecute.dispatch(
             rabbitTemplate = rabbitTemplate,
             data = AsyncTGitAclIp(
-                projectId = projectId, ips = ips, remove = remove
+                projectId = projectId,
+                ips = ips,
+                remove = remove,
+                tgitId = tgitId
             ),
             errorLogTag = OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG
         )
@@ -515,9 +521,10 @@ class GitProxyTGitService @Autowired constructor(
     fun doAddOrRemoveAclIp(
         projectId: String,
         ips: Set<String>,
-        remove: Boolean
+        remove: Boolean,
+        tgitId: Long?
     ) {
-        fetchProjectTGit(projectId) { repo, token ->
+        fetchProjectTGit(projectId, true, tgitId) { repo, token ->
             val lock = updateTGitLock(repo.tgitId)
             try {
                 lock.lock()
@@ -553,23 +560,25 @@ class GitProxyTGitService @Autowired constructor(
 
     // 被分配的用户是工作空间下的一个子集，所以无法根据单个工作空间的人员变更得知整个项目的人员变更
     fun refreshProjectTGitSpecUser(
-        projectId: String
+        projectId: String,
+        tgitId: Long?
     ) {
-        logger.info("${OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG}|refreshProjectTGitSpecUser|$projectId")
+        logger.info("${OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG}|refreshProjectTGitSpecUser|$projectId|$tgitId")
         AsyncExecute.dispatch(
             rabbitTemplate = rabbitTemplate,
-            data = AsyncTGitAclUser(projectId),
+            data = AsyncTGitAclUser(projectId, tgitId),
             errorLogTag = OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG
         )
     }
 
     // 如果一个项目只绑定了一个tGit那么直接使用这个项目的所有的人，否则需要计算所有项目的所有的人
     fun doRefreshProjectTGitSpecUser(
-        projectId: String
+        projectId: String,
+        tgitId: Long?
     ) {
         // 获取所有关联项目下正在跑的所有机器的用户
         val usersMap = mutableMapOf<String, Set<String>>()
-        fetchProjectTGit(projectId) { repo, token ->
+        fetchProjectTGit(projectId, true, tgitId) { repo, token ->
             val tGitProjects = projectTGitLinkDao.fetchByTGitId(dslContext, repo.tgitId, null)
                 .map { it.projectId }.sorted().toSet()
             val mapKey = tGitProjects.joinToString(";")
@@ -838,11 +847,12 @@ class GitProxyTGitService @Autowired constructor(
 
     private fun fetchProjectTGit(
         projectId: String,
-        needToken: Boolean = true,
+        needToken: Boolean,
+        tgitId: Long?,
         run: (repo: TProjectTgitIdLinkRecord, token: String) -> Unit
     ) {
         val tokenMap = mutableMapOf<String, String>()
-        projectTGitLinkDao.fetch(dslContext, projectId)
+        projectTGitLinkDao.fetch(dslContext, projectId, tgitId)
             .filter { it.status == TGitRepoStatus.AVAILABLE.name }
             .forEach { repo ->
                 val token = if (needToken) {
