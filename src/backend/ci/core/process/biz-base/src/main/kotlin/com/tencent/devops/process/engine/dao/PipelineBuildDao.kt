@@ -91,7 +91,8 @@ class PipelineBuildDao {
                     WEBHOOK_INFO,
                     BUILD_MSG,
                     BUILD_NUM_ALIAS,
-                    CONCURRENCY_GROUP
+                    CONCURRENCY_GROUP,
+                    EXECUTE_COUNT
                 ).values(
                     startBuildContext.buildId,
                     startBuildContext.buildNum,
@@ -113,7 +114,8 @@ class PipelineBuildDao {
                     startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
                     startBuildContext.buildMsg,
                     startBuildContext.buildNumAlias,
-                    startBuildContext.concurrencyGroup
+                    startBuildContext.concurrencyGroup,
+                    startBuildContext.executeCount
                 ).execute()
             }
         } catch (t: Throwable) {
