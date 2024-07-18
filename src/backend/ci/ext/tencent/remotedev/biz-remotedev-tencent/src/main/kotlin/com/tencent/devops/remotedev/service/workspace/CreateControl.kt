@@ -675,13 +675,11 @@ class CreateControl @Autowired constructor(
         if (oldWs != null) {
             // 直接硬删除记录。新的工作空间会复用原先的name
             val bakName = "$workspaceName.bak.${LocalDateTime.now()}"
-            if (oldWs.status.checkUpgrading()) {
-                // 备份windows config
-                workspaceWindowsDao.bakWindowsConfig(dslContext, oldWs.workspaceName, bakName)
-                // 备份分享信息
-                workspaceSharedDao.bakWorkspaceShareInfo(dslContext, oldWs.workspaceName, bakName)
-                ws.bakWorkspaceName = bakName
-            }
+            // 备份windows config
+            workspaceWindowsDao.bakWindowsConfig(dslContext, oldWs.workspaceName, bakName)
+            // 备份分享信息
+            workspaceSharedDao.bakWorkspaceShareInfo(dslContext, oldWs.workspaceName, bakName)
+            ws.bakWorkspaceName = bakName
             workspaceDao.bakWorkspace(dslContext, oldWs.workspaceName, bakName)
             SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
                 .deleteWorkspace(userId, workspaceName, bakName)
