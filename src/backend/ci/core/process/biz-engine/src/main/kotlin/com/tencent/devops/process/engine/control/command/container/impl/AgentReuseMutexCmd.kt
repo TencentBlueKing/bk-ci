@@ -199,7 +199,8 @@ class AgentReuseMutexCmd @Autowired constructor(
             buildId = container.buildId,
             varName = AgentReuseMutex.genAgentContextKey(mutex.reUseJobId ?: mutex.jobId),
             varValue = mutex.runtimeAgentOrEnvId!!,
-            readOnly = true
+            readOnly = true,
+            rewriteReadOnly = true
         )
 
         val res = tryAgentLockOrQueue(container, mutex)

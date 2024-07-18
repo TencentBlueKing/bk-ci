@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -306,6 +307,7 @@ class PipelineRecordModelService @Autowired constructor(
         // 判断当前job执行的task任务后是否还有跳过的task任务，有则继续补充跳过的task对象
         if (supplementSkipTaskFlag) {
             doSupplementSkipTaskBus(
+                containerType = buildRecordContainer.containerType,
                 containerRecordTasks = containerRecordTasks,
                 taskBaseMaps = taskBaseMaps,
                 matrixTaskFlag = matrixTaskFlag,
@@ -339,7 +341,9 @@ class PipelineRecordModelService @Autowired constructor(
         val classType = containerRecordTask.classType
         val atomCode = containerRecordTask.atomCode
         val qualityTaskFlag = atomCode in listOf(QualityGateInElement.classType, QualityGateOutElement.classType)
-        val taskBaseMapIndex = containerRecordTask.taskSeq - 2
+        val containerType = containerBaseMap["@type"]?.toString()
+        val taskSeq = containerRecordTask.taskSeq
+        val taskBaseMapIndex = getTaskBaseMapIndex(containerType, taskSeq)
         if (qualityTaskFlag) {
             // 补充质量红线相关信息以便详情页模型数据组装合并
             taskVarMap["@type"] = classType
@@ -359,7 +363,18 @@ class PipelineRecordModelService @Autowired constructor(
         return taskVarMap
     }
 
+    private fun getTaskBaseMapIndex(containerType: String?, taskSeq: Int): Int {
+        val taskBaseMapIndex = if (containerType == NormalContainer.classType) {
+            taskSeq - 1
+        } else {
+            taskSeq - 2
+        }
+        return taskBaseMapIndex
+    }
+
+    @Suppress("LongParameterList")
     private fun doSupplementSkipTaskBus(
+        containerType: String,
         containerRecordTasks: List<BuildRecordTask>,
         taskBaseMaps: List<Map<String, Any>>,
         matrixTaskFlag: Boolean,
@@ -371,7 +386,7 @@ class PipelineRecordModelService @Autowired constructor(
         }.sortedBy { it.taskSeq }
         if (containerResourceRecordTasks.isNotEmpty()) {
             val lastResourceRecordTaskSeq = containerResourceRecordTasks[containerResourceRecordTasks.size - 1].taskSeq
-            val lastResourceRecordTaskIndex = lastResourceRecordTaskSeq - 2
+            val lastResourceRecordTaskIndex = getTaskBaseMapIndex(containerType, lastResourceRecordTaskSeq)
             val taskBaseMapNum = taskBaseMaps.size
             if (taskBaseMapNum - lastResourceRecordTaskIndex > 1) {
                 // 如果job里含有质量红线任务，则后续跳过的任务都需要生成完整的变量模型以便和model合并
@@ -443,7 +458,7 @@ class PipelineRecordModelService @Autowired constructor(
             // 如果跳过的是矩阵类task，则需要生成完整的model对象以便合并
             taskVarMap["@type"] = MatrixStatusElement.classType
             taskVarMap[MatrixStatusElement::originClassType.name] =
-                taskBaseMap[MatrixStatusElement::classType.name].toString()
+                taskBaseMap[MatrixStatusElement.classType].toString()
             taskVarMap[MatrixStatusElement::originAtomCode.name] = taskBaseMap[KEY_ATOM_CODE].toString()
             taskVarMap[MatrixStatusElement::originTaskAtom.name] = taskBaseMap[KEY_TASK_ATOM].toString()
             taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
