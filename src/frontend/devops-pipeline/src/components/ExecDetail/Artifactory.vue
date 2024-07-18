@@ -37,9 +37,6 @@
                 prop="size"
                 show-overflow-tooltip
             >
-                <template slot-scope="props">
-                    {{ !props.row.folder ? sizeFormatter(props.row.size) : sizeFormatter(getFolderSize(props.row)) }}
-                </template>
             </bk-table-column>
             <bk-table-column
                 :label="$t('details.repoType')"
@@ -128,7 +125,7 @@
                             = res.records.map((item) => ({
                                 ...item,
                                 icon: item.folder ? 'folder' : extForFile(item.name),
-                                size: item.size
+                                size: item.folder ? this.sizeFormatter(this.getFolderSize(item)) : this.sizeFormatter(item.size)
                             })) || []
                         this.hasPermission = permission
                         if (this.artifactories.length > 0) {
