@@ -5,7 +5,7 @@
         :current-tab="currentTab"
         :is-hook="((currentElement.additionalOptions || {}).elementPostInfo || false)"
     >
-        <span class="head-tab" slot="tab" v-if="showTab">
+        <span class="head-tab" slot="tab">
             <template v-for="tab in tabList">
                 <span v-if="tab.show"
                     :key="tab.name"
@@ -27,28 +27,30 @@
                 ref="log"
                 v-if="currentTab === 'log'"
             />
-            <component :is="value.component"
+            <component
+                v-if="currentTab === key"
+                :is="value.component"
                 v-bind="value.bindData"
                 v-for="(value, key) in componentList"
                 :key="key"
                 :ref="key"
                 @toggle="(show) => toggleTab(key, show)"
                 @complete="completeLoading(key)"
-                v-show="currentTab === key"
+                
             ></component>
         </template>
     </detail-container>
 </template>
 
 <script>
-    import { mapState } from 'vuex'
-    import detailContainer from './detailContainer'
     import AtomContent from '@/components/AtomPropertyPanel/AtomContent.vue'
     import ReferenceVariable from '@/components/AtomPropertyPanel/ReferenceVariable'
-    import pluginLog from './log/pluginLog'
     import ErrorSummary from '@/components/ExecDetail/ErrorSummary'
-    import Report from './Report'
+    import { mapState } from 'vuex'
     import Artifactory from './Artifactory'
+    import Report from './Report'
+    import detailContainer from './detailContainer'
+    import pluginLog from './log/pluginLog'
 
     export default {
         components: {
@@ -147,10 +149,6 @@
                 // } catch (error) {
                 //     return null
                 // }
-            },
-
-            showTab () {
-                return this.tabList[1].completeLoading && this.tabList[2].completeLoading
             }
         },
 
