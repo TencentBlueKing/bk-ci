@@ -215,6 +215,9 @@ interface ServiceTGitResource {
         page: Int,
         @Parameter(description = "每页大小")
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int,
+        @Parameter(description = "代码库url")
+        @QueryParam("url")
+        url: String
     ): Result<List<ChangeFileInfo>>
 }
