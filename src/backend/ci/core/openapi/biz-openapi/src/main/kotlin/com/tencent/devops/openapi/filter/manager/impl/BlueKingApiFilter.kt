@@ -39,7 +39,6 @@ class BlueKingApiFilter constructor(
 
     /*返回true时执行check逻辑*/
     override fun canExecute(requestContext: FilterContext): Boolean {
-        if (requestContext.flowState != ApiFilterFlowState.CONTINUE) return false
         if (!apiGatewayUtil.isAuth() || apiFilterEnabled != true) return false
         requestContext.needCheckPermissions = true
         return !requestContext.requestContext.getHeaderString(jwtHeader).isNullOrBlank()

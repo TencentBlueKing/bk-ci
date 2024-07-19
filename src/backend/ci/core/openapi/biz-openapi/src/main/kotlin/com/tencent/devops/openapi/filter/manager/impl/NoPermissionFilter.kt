@@ -26,15 +26,14 @@ class NoPermissionFilter constructor(
 
     /*返回true时执行check逻辑*/
     override fun canExecute(requestContext: FilterContext): Boolean {
-        return requestContext.flowState == ApiFilterFlowState.CONTINUE &&
-            apiBlueKingEnabled == true &&
+        return apiBlueKingEnabled == true &&
             !apiGatewayUtil.isAuth()
     }
 
     override fun verify(requestContext: FilterContext): ApiFilterFlowState {
         // 将query中的app_code和app_secret设置成头部
         setupHeader(requestContext.requestContext)
-        return ApiFilterFlowState.BREAK
+        return ApiFilterFlowState.AUTHORIZED
     }
 
     private fun setupHeader(requestContext: ContainerRequestContext) {

@@ -41,11 +41,13 @@ interface ApiFilterManagerChain {
             if (next.canExecute(requestContext)) {
                 requestContext.setFlowState(next.verify(requestContext))
             }
+            if (requestContext.flowState == ApiFilterFlowState.BREAK) return
             doFilterCheck(requestContext, chain)
             return
         }
-        // 只有通过BREAK退出才有效，剩余情况为没有匹配到合适的
-        if (requestContext.needCheckPermissions && requestContext.flowState != ApiFilterFlowState.BREAK) {
+
+        // 如果需要检查权限，那必须返回AUTHORIZED才表示已授权成功
+        if (requestContext.needCheckPermissions && requestContext.flowState != ApiFilterFlowState.AUTHORIZED) {
             requestContext.requestContext.abortWith(
                 Response.status(Response.Status.BAD_REQUEST)
                     .entity("You do not have permission to access")
@@ -55,8 +57,8 @@ interface ApiFilterManagerChain {
     }
 
     fun FilterContext.setFlowState(state: ApiFilterFlowState) {
-        /*BREAK 为最终态，不允许状态流转变更*/
-        if (flowState != ApiFilterFlowState.BREAK) {
+        /*只有CONTINUE状态能够流转*/
+        if (flowState == ApiFilterFlowState.CONTINUE) {
             flowState = state
         }
     }

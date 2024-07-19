@@ -29,5 +29,6 @@ package com.tencent.devops.openapi.filter.manager
 
 enum class ApiFilterFlowState {
     CONTINUE, // 正常会继续下一指令
+    AUTHORIZED, // 已授权
     BREAK; // 提前结束指令，会中断Command链路
 }
