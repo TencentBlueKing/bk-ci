@@ -40,6 +40,7 @@ import com.tencent.devops.scm.api.ServiceTGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.services.TGitService
 import javax.servlet.http.HttpServletResponse
@@ -171,6 +172,32 @@ class ServiceTGitResourceImpl @Autowired constructor(
             sort = sort,
             owned = owned,
             minAccessLevel = minAccessLevel
+        )
+    }
+
+    override fun getChangeFileList(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        from: String,
+        to: String,
+        straight: Boolean?,
+        page: Int,
+        pageSize: Int,
+        url: String
+    ): Result<List<ChangeFileInfo>> {
+        return Result(
+            gitService.getChangeFileList(
+                tokenType = tokenType,
+                gitProjectId = gitProjectId,
+                token = token,
+                from = from,
+                to = to,
+                straight = straight,
+                page = page,
+                pageSize = pageSize,
+                url = url
+            )
         )
     }
 }
