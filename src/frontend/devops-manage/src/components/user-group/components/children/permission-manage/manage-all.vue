@@ -447,6 +447,7 @@ function handleSelectAll(resourceType, asideItem){
  * @param flag 按钮标识
  */
 function batchOperator(flag){
+  getSourceList();
   if (!selectedLength.value) {
     Message({
       theme: 'error',
@@ -457,7 +458,6 @@ function batchOperator(flag){
   sliderTitle.value = t(batchTitle[flag]);
   batchFlag.value = flag;
   isShowSlider.value = true;
-  getSourceList();
 }
 
 function batchCancel() {

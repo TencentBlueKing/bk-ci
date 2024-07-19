@@ -140,9 +140,13 @@ const fixedBottom = {
 /**
  * 当前页全选事件
  */
-function handleSelectAll() {
-  emit('getSelectList', refTable.value.getSelection(), resourceType.value);
-  isCurrentAll.value = false;
+function handleSelectAll({checked}) {
+  if(checked){
+    emit('getSelectList', refTable.value.getSelection(), resourceType.value);
+    isCurrentAll.value = false;
+  } else {
+    handleClear()
+  }
 }
 /**
  * 多选事件

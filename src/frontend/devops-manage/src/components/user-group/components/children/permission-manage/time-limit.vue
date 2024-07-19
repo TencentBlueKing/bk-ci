@@ -57,6 +57,7 @@ onMounted(()=>{
 
 function initTime(){
   currentActive.value = 30;
+  customTime.value = 1;
 }
 // /**
 //  * 传入的值与当前时间戳秒数相加

@@ -1,7 +1,7 @@
 import http from '@/http/api';
 import { defineStore } from 'pinia';
 import { useRoute } from 'vue-router';
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 interface GroupTableType {
@@ -81,8 +81,12 @@ export default defineStore('userGroupTable', () => {
   const selectedRow = ref<GroupTableType | null>(null);
   const rowIndex = ref<number>();
   const selectedTableGroupType = ref('');
-  const selectedLength = computed(() => Object.keys(selectedData).length);
+  const selectedLength = ref(0);
   let currentRequestId = 0;
+
+  watch(selectedData, ()=>{
+    getSourceList()
+  })
 
   /**
    * 初始化数据
@@ -93,9 +97,14 @@ export default defineStore('userGroupTable', () => {
     selectedTableGroupType.value = '';
     sourceList.value = [];
     selectSourceList.value = [];
+    selectedLength.value = 0;
     Object.keys(selectedData).forEach(key => {
       delete selectedData[key];
     });
+    paginations.value = {
+      'project': [0, 10],
+      'pipeline': [0, 10]
+    };
   }
   /**
    * 获取项目成员有权限的用户组数量
@@ -232,6 +241,8 @@ export default defineStore('userGroupTable', () => {
    * 获取表格选择的数据
    */
   function getSelectList(selections: GroupTableType[], resourceType: string) {
+    let item = sourceList.value.find((item: SourceType) => item.resourceType == resourceType);
+    item && (item.isAll = false);
     selectedData[resourceType] = selections
     if (!selectedData[resourceType].length) {
       delete selectedData[resourceType]
@@ -251,9 +262,11 @@ export default defineStore('userGroupTable', () => {
    * 获取选中的用户组数据
    */
   function getSourceList() {
+    selectedLength.value = 0;
     selectSourceList.value = Object.entries(selectedData)
       .map(([key, tableData]: [string, GroupTableType[]]) => {
         const sourceItem = sourceList.value.find((item: SourceType) => item.resourceType == key) as SourceType;
+        selectedLength.value += sourceItem.isAll ? sourceItem.count! : tableData.length 
         return {
           pagination: {
             limit: 10,

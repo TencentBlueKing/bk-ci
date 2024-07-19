@@ -22,15 +22,13 @@
             'active': activeTab === item.id
           }"
         />
-        <p class="item" v-if="item.type === 'user'" v-bk-tooltips="{ content: `${item.id}(${item.name})`, placement: 'top' }">
-          <bk-overflow-title>
-          {{ item.id }} ({{ item.name }})
+        <p class="item" v-if="item.type === 'user'">
+          <bk-overflow-title type="tips">
+            {{ item.id }} ({{ item.name }})
           </bk-overflow-title>
         </p>
-        <p class="item" v-else  v-bk-tooltips="{ content: item.name, placement: 'top' }">
-          <bk-overflow-title>
-            {{truncateMiddleText(item.name)}}
-          </bk-overflow-title>
+        <p class="item" v-else  v-bk-tooltips="{ content: item.name, placement: 'top', disabled: !truncateMiddleText(item.name).includes(' ... ') }">
+          {{truncateMiddleText(item.name)}}
         </p>
         <bk-popover
           :arrow="false"
