@@ -11,6 +11,7 @@
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
     export default {
         name: 'app',
 
@@ -21,6 +22,14 @@
             title () {
                 return this.$t(`codelib.${this.$route.meta.title}`)
             }
+        },
+        created () {
+            this.fetchCodeTypeList()
+        },
+        methods: {
+            ...mapActions('codelib', [
+                'fetchCodeTypeList'
+            ])
         }
     }
 </script>

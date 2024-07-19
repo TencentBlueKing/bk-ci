@@ -67,11 +67,12 @@
             :desc="$t('codelib.codelibDesc')"
         >
             <bk-button
-                v-for="typeLabel in codelibTypes"
-                :key="typeLabel"
-                @click="createCodelib(typeLabel)"
+                v-for="item in codelibTypes"
+                :key="item.scmType"
+                :disabled="item.status !== 'OK'"
+                @click="createCodelib(item.scmType)"
             >
-                {{ $t('codelib.linkCodelibLabel', [typeLabel]) }}
+                {{ $t('codelib.linkCodelibLabel', [item.name]) }}
             </bk-button>
         </empty-tips>
         <empty-tips
@@ -100,26 +101,25 @@
 </template>
 
 <script>
-    import layout from '../components/layout'
-    import LinkCodeLib from '../components/LinkCodeLib'
-    import CodeLibTable from '../components/CodeLibTable'
+    import { mapActions, mapState } from 'vuex'
     import CodeLibDetail from '../components/CodeLibDetail'
     import CodeLibDialog from '../components/CodeLibDialog'
-    import { mapState, mapActions } from 'vuex'
-    import { getOffset } from '../utils/'
-    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
+    import CodeLibTable from '../components/CodeLibTable'
+    import LinkCodeLib from '../components/LinkCodeLib'
+    import layout from '../components/layout'
     import {
-        codelibTypes,
+        CODE_REPOSITORY_CACHE,
+        CODE_REPOSITORY_SEARCH_VAL,
         getCodelibConfig,
         isGit,
         isGitLab,
         isGithub,
-        isTGit,
         isP4,
-        CODE_REPOSITORY_CACHE,
-        CODE_REPOSITORY_SEARCH_VAL,
-        isSvn
+        isSvn,
+        isTGit
     } from '../config/'
+    import { getOffset } from '../utils/'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
     
     export default {
         name: 'codelib-list',
@@ -151,12 +151,9 @@
         },
 
         computed: {
-            ...mapState('codelib', ['codelibs', 'showCodelibDialog', 'gitOAuth']),
+            ...mapState('codelib', ['codelibTypes', 'codelibs', 'showCodelibDialog', 'gitOAuth']),
             projectId () {
                 return this.$route.params.projectId
-            },
-            codelibTypes () {
-                return codelibTypes
             },
             hasCodelibs () {
                 const { codelibs } = this
@@ -317,6 +314,15 @@
             },
 
             async createCodelib (typeLabel, isEdit) {
+                const codelibType = this.codelibTypes.find(type => type.scmType === typeLabel)
+                if (codelibType?.status === 'DEPLOYING') {
+                    this.showUndeployDialog({
+                        title: this.$t('codelib.codelibUndeployTitle', [typeLabel]),
+                        desc: this.$t(`codelib.${typeLabel.toLowerCase()}UndeployDesc`),
+                        link: `${DOCS_URL_PREFIX}${codelibType.docUrl}`
+                    })
+                    return
+                }
                 const { credentialTypes, typeName } = getCodelibConfig(typeLabel)
                 const CodelibDialog = {
                     showCodelibDialog: true,
