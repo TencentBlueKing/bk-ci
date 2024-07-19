@@ -124,7 +124,7 @@
         '; path=/'
     }
 
-    window.setProjectIdCookie = function (projectId) {
+    function setProjectIdCookie (projectId) {
       try {
         var domainMatch = location.hostname.match(/([^.]+\.)?([^\.]+\..+)/)
         var topDomain =
