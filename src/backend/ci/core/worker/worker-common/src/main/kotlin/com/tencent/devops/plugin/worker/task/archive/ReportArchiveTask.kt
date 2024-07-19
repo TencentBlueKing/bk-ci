@@ -50,10 +50,10 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.FOLDER_NOT_E
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTOM_OUTPUT_SUCCESS
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.utils.TaskUtil
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -61,7 +61,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.regex.Pattern
-import org.slf4j.LoggerFactory
 
 @TaskClassType(classTypes = [ReportArchiveElement.classType])
 class ReportArchiveTask : ITask() {
@@ -81,7 +80,7 @@ class ReportArchiveTask : ITask() {
         val reportType = taskParams["reportType"] ?: ReportTypeEnum.INTERNAL.name
         val indexFileParam: String
         var indexFileContent: String
-        val token = RepoServiceFactory.getInstance().getRepoToken(
+        val token = api.getRepoToken(
             userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
             projectId = buildVariables.projectId,
             repoName = "report",

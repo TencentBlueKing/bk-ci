@@ -81,6 +81,7 @@ import com.tencent.devops.worker.common.PIPELINE_SCRIPT_ATOM_CODE
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.api.atom.StoreSdkApi
@@ -93,7 +94,6 @@ import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
@@ -104,10 +104,10 @@ import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
 import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
-import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务
@@ -118,6 +118,8 @@ open class MarketAtomTask : ITask() {
     private val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
 
     private val storeApi = ApiFactory.create(StoreSdkApi::class)
+
+    private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
 
     private val outputFile = "output.json"
 
@@ -798,7 +800,7 @@ open class MarketAtomTask : ITask() {
         var oneArtifact = ""
         val artifactoryType = (output[ARTIFACTORY_TYPE] as? String) ?: ArtifactoryType.PIPELINE.name
         val customFlag = artifactoryType == ArtifactoryType.CUSTOM_DIR.name
-        val token = RepoServiceFactory.getInstance().getRepoToken(
+        val token = archiveApi.getRepoToken(
             userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
             projectId = buildVariables.projectId,
             repoName = if (customFlag) "custom" else "pipeline",

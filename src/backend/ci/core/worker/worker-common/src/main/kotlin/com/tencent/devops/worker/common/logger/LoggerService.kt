@@ -46,9 +46,9 @@ import com.tencent.devops.worker.common.LOG_TASK_LINE_LIMIT
 import com.tencent.devops.worker.common.LOG_UPLOAD_BUFFER_SIZE
 import com.tencent.devops.worker.common.LOG_WARN_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.log.LogSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
-import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.FileUtils
@@ -69,6 +69,7 @@ import java.util.concurrent.locks.ReentrantLock
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
+    private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
     private val logger = LoggerFactory.getLogger(LoggerService::class.java)
     private var future: Future<Boolean>? = null
     private val running = AtomicBoolean(true)
@@ -336,7 +337,7 @@ object LoggerService {
         logger.info("Start to archive log files with LogMode[${AgentEnv.getLogMode()}]")
         try {
             val expireSeconds = buildVariables!!.timeoutMills / 1000
-            val token = RepoServiceFactory.getInstance().getRepoToken(
+            val token = archiveApi.getRepoToken(
                 userId = buildVariables!!.variables[PIPELINE_START_USER_ID] ?: "",
                 projectId = buildVariables!!.projectId,
                 repoName = "log",
