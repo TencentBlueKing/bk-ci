@@ -10,6 +10,7 @@ import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -48,6 +49,19 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             userId = userId,
             isOffshore = isOffshore,
             ticket = ticket
+        )
+    }
+
+    override fun desktopTokenCheck(
+        appCode: String?,
+        apigwType: String?,
+        token: String,
+        dToken: String
+    ): Result<UserOnePassword> {
+        logger.info("Get  projects info by group ,userId:$dToken")
+        return client.get(ServiceRemoteDevResource::class).desktopTokenCheck(
+            token = token,
+            dToken = dToken
         )
     }
 
