@@ -233,27 +233,30 @@ class SubPipelineRefService @Autowired constructor(
                 return@c
             }
             container.elements.forEach { element ->
-                getSubPipelineInfo(
-                    element = element,
-                    projectId = projectId,
-                    contextMap = contextMap
-                )?.let {
-                    subPipelineRefList.add(
-                        SubPipelineRef(
-                            pipelineId = pipelineId,
-                            projectId = projectId,
-                            pipelineName = pipelineName,
-                            taskId = element.id ?: "",
-                            taskName = element.name,
-                            stageName = stage.name ?: "",
-                            containerName = container.name,
-                            subProjectId = it.first,
-                            subPipelineId = it.second,
-                            channel = channel,
-                            subPipelineName = it.third
+                if (element.isElementEnable()) {
+                    getSubPipelineInfo(
+                        element = element,
+                        projectId = projectId,
+                        contextMap = contextMap
+                    )?.let {
+                        subPipelineRefList.add(
+                            SubPipelineRef(
+                                pipelineId = pipelineId,
+                                projectId = projectId,
+                                pipelineName = pipelineName,
+                                taskId = element.id ?: "",
+                                taskName = element.name,
+                                stageName = stage.name ?: "",
+                                containerName = container.name,
+                                subProjectId = it.first,
+                                subPipelineId = it.second,
+                                channel = channel,
+                                subPipelineName = it.third
+                            )
                         )
-                    )
+                    }
                 }
+
             }
         }
     }
@@ -490,6 +493,7 @@ class SubPipelineRefService @Autowired constructor(
     }
 
     fun deleteElement(projectId: String, pipelineId: String, taskId: String) {
+        logger.info("delete sub pipeline ref|projectId[$projectId]|pipelineId[$pipelineId]|taskId[$taskId]")
         subPipelineRefDao.delete(
             dslContext = dslContext,
             projectId = projectId,
