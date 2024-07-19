@@ -175,7 +175,8 @@ class TencentTGitServiceImpl @Autowired constructor(val client: Client) : ITGitS
         to: String,
         straight: Boolean?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        url: String
     ): List<ChangeFileInfo> {
         return client.getScm(ServiceTGitResource::class).getChangeFileList(
             token = token,
@@ -185,7 +186,8 @@ class TencentTGitServiceImpl @Autowired constructor(val client: Client) : ITGitS
             to = to,
             straight = straight,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            url = url
         ).data!!
     }
 }

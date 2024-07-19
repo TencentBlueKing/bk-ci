@@ -183,7 +183,8 @@ class ServiceTGitResourceImpl @Autowired constructor(
         to: String,
         straight: Boolean?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        url: String
     ): Result<List<ChangeFileInfo>> {
         return Result(
             gitService.getChangeFileList(
@@ -194,7 +195,8 @@ class ServiceTGitResourceImpl @Autowired constructor(
                 to = to,
                 straight = straight,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                url = url
             )
         )
     }
