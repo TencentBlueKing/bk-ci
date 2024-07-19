@@ -117,7 +117,6 @@ class BlueKingApiFilter constructor(
         return ApiFilterFlowState.BREAK
     }
 
-
     private fun parseJwt(bkApiJwt: String): Map<String, Any> {
         var reader: PEMParser? = null
         try {
