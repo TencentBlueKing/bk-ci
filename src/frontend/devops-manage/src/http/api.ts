@@ -255,6 +255,12 @@ export default {
     return http.DELETE(`${IAM_PERFIX}/member/${projectId}/batch/remove`, params);
   },
   /**
+   * 单条续期
+   */
+  async renewal(projectId: string, params?: any) {
+    return http.put(`${IAM_PERFIX}/member/${projectId}/renewal`, params);
+  },
+  /**
    * 批量交接用户组成员
    */
   async batchHandover(projectId: string, params?: any) {
@@ -266,16 +272,6 @@ export default {
   async deptUsers(deptId: string) {
     return http.get(`${USER_PERFIX}/dept/${deptId}/users`);
   },
-  /**
-   * 一键移除项目用户
-   */
-  async removeMemberFromProject(projectId: string, params: any) {
-    const query = new URLSearchParams({
-      ...params,
-    }).toString();
-    return http.delete(`${IAM_PERFIX}/member/${projectId}/removeMemberFromProject?${query}`);
-  },
-
   /**
    * 获取（代码库、流水线、部署节点）授权列表
    */
@@ -304,5 +300,11 @@ export default {
   },
   syncGroupMember (projectId: string, groupId: any) {
     return http.put(`${IAM_PERFIX}/group/sync/${projectId}/${groupId}/syncGroupMember`);
+  },
+  /**
+     * 用户移出项目
+     */
+  removeMemberFromProject (projectId: string, params: any) {
+    return http.put(`${IAM_PERFIX}/member/${projectId}/removeMemberFromProject`, params);
   },
 };

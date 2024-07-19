@@ -228,5 +228,9 @@
     "用户组权限已续期": "User group permissions have been renewed",
     "用户组权限已移交": "User group permissions have been transferred",
     "用户组已移出": "User group has been removed",
-    "永久": "Permanent"
+    "永久": "Permanent",
+    "唯一管理员，不可移出。请添加新的管理员后再移出。": "Only administrator, cannot be removed. Please add a new administrator before removing.",
+    "唯一所有者，不可移出。请添加新的所有者后再移出。": "Only owner, cannot be removed. Please add a new owner before removing.",
+    "通过用户组加入，不可直接移出。如需调整，请编辑用户组。": "Added through user group, cannot be directly removed. If adjustments are needed, please edit the user group.",
+    "组织/用户": "Organization/User"
 }

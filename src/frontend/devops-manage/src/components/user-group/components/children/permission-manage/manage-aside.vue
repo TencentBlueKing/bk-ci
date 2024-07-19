@@ -1,9 +1,9 @@
 <template>
   <bk-loading class="aside" :loading="manageAsideStore.isLoading" >
     <div class="aside-header">
-      <span>组织/用户</span>
+      {{t("组织/用户")}}
       <span class="refresh" @click="refresh">
-        刷新
+        {{t("刷新")}}
       </span>
     </div>
     <div class="group-wrapper">
@@ -35,14 +35,14 @@
           <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
           <template #content>
             <div class="menu-content">
-              <bk-button
+              <!-- <bk-button
                 v-if="item.type === 'department'"
                 class="btn"
                 text
                 @click="handleShowPerson(item)"
               >
                 {{t("人员列表")}}
-              </bk-button>
+              </bk-button> -->
               <bk-button
                 class="btn"
                 text
@@ -70,7 +70,6 @@
   <bk-dialog
     :is-show="isShowHandOverDialog"
     :width="640"
-    :is-loading="handOverDialogLoding"
     @closed="handOverClose"
   >
     <template #header>
@@ -80,10 +79,14 @@
     <template #default>
       <div class="dialog">
         <p class="text-tag">
-          {{t("将用户移出项目前，需要指定移交人，平台将自动完成所有权限/授权的移交")}}。
+          <i class="manage-icon manage-icon-info-line"></i>
+          <span>
+            {{t("将用户移出项目前，需要指定移交人，平台将自动完成所有权限/授权的移交")}}。
+          </span>
         </p>
         <bk-form
           ref="formRef"
+          :rules="rules"
           :model="handOverForm"
         >
           <bk-form-item
@@ -99,39 +102,47 @@
               @clear="handOverInputClear"
               @blur="handOverInputBlur"
             />
-            <p v-if="verifying" class="verifying">
-              {{ authorizationStatus }}
-            </p>
           </bk-form-item>
         </bk-form>
 
-        <div v-if="!isAuthorizedSuccess && isHandOverfail" class="hand-over-fail">
+        <p class="verifying">
+          <span v-if="isChecking">
+            <Spinner class="check-checking-icon" />
+            {{ t("正在校验授权") }}
+          </span>
+          <span v-if="isAuthorizedSuccess">
+            <Success class="check-success-icon" />
+            {{t("授权校验通过")}}
+          </span>
+        </p>
+
+        <div v-if="isHandOverfail" class="hand-over-fail">
           <p class="err-text">
             <p style="display: flex; line-height: 14px;">
-              <img src="@/css/svg/close.svg" class="close-icon">
+              <i class="manage-icon manage-icon-close"></i>
               <i18n-t keypath="检测到以下授权将无法移交给X，请先前往「授权管理」单独处理" tag="div" >
                 <span> {{ removeUser.name }} </span>
               </i18n-t>
             </p>
-            <p>
-              <!-- 一个图标占位 -->
-              <span class="blue-text" @click="refreshHandOverfail">{{t("刷新")}}</span>
+            <p class="blue-text" @click="refreshHandOverfail">
+              <i class="manage-icon manage-icon-refresh"></i>
+              <span>{{t("刷新")}}</span>
             </p>
           </p>
           <!-- 这里需要循环拿数据overTable替换成后端返回的东西 -->
           <div class="hand-over-table-group">
             <p class="hand-over-table-item">{{t("代码库授权")}}</p>
-            <p class="blue-text">
-              <!-- 一个图标占位 -->
-              <span @click="goAauthorization">{{t("前往处理")}}</span>
+            <p class="blue-text" @click="goAauthorization">
+              <i class="manage-icon manage-icon-jump"></i>
+              <span>{{t("前往处理")}}</span>
             </p>
           </div>
         </div>
       </div>
     </template>
     <template #footer>
-      <bk-button theme="primary" @click="handOverConfirm" :disabled="!isAuthorizedSuccess"> {{t("移交并移出")}} </bk-button>
-      <bk-button @click="handOverClose"> {{t("关闭")}} </bk-button>
+      <bk-button theme="primary" @click="handConfirm('user')" :loading="loading" :disabled="!isAuthorizedSuccess"> {{t("移交并移出")}} </bk-button>
+      <bk-button class="btn-margin" @click="handOverClose"> {{t("关闭")}} </bk-button>
     </template>
   </bk-dialog>
   <bk-dialog
@@ -140,7 +151,6 @@
     :dialog-type="'confirm'"
     :confirm-text="t('关闭')"
     :is-show="isShowPersonDialog"
-    :is-loading="personDialogLoading"
     @closed="() => isShowPersonDialog = false"
     @confirm="() => isShowPersonDialog = false"
   >
@@ -152,6 +162,7 @@
         <bk-table
           max-height="320"
           :data="personList"
+          :loading="tableLoading"
           show-overflow-tooltip
           class="person-table"
         >
@@ -161,22 +172,23 @@
   </bk-dialog>
   <bk-dialog
     :width="450"
-    confirmButtonTheme="danger"
-    :cancel-text="t('关闭')"
-    :confirm-text="t('确认移出')"
     header-align="center"
     footer-align="center"
     :is-show="isShowRemoveDialog"
-    @closed="() => isShowRemoveDialog = false"
-    @confirm="handleRemoveConfirm"
+    @closed="handOverClose"
   >
     <template #header>
-      <h2 class="dialog-header-text"> {{t("确认将组织移出本项目吗")}}？ </h2>
+      <img src="@/css/svg/warninfo.svg" class="manage-icon-tishi">
+      <p class="dialog-header-text"> {{t("确认将组织移出本项目吗")}}？ </p>
     </template>
     <template #default>
         <p class="remove-text">
           <span>{{t("待移出组织")}}：</span> {{ removeUser.name }}
         </p>
+    </template>
+    <template #footer>
+      <bk-button theme="danger" @click="handConfirm('department')" :loading="loading"> {{t("确认移出")}} </bk-button>
+      <bk-button class="btn-margin" @click="handOverClose"> {{t("关闭")}} </bk-button>
     </template>
   </bk-dialog>
 </template>
@@ -187,6 +199,7 @@ import { useRoute } from 'vue-router';
 import { ref, defineProps, defineEmits, computed, watch, defineExpose } from 'vue';
 import useManageAside from "@/store/manageAside";
 import { storeToRefs } from 'pinia';
+import { Success, Spinner } from 'bkui-vue/lib/icon';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -195,33 +208,26 @@ const current = ref(1);
 const activeTab = ref();
 const isShowHandOverDialog = ref(false);
 const formRef = ref(null);
-const handOverDialogLoding = ref(false);
+const loading = ref(false);
 const isHandOverfail = ref(false);
 const isShowPersonDialog = ref(false);
-const personDialogLoading = ref(false);
 const isShowRemoveDialog = ref(false);
 const isAuthorizedSuccess = ref(false);
-const verifying = ref(false);
 const handOverForm = ref({
   name: ''
 });
-
+const rules = {
+  name: [
+    { required: true, message: t('请输入移交人'), trigger: 'blur' },
+  ],
+};
 const {
   memberPagination,
 } = storeToRefs(manageAsideStore);
 
 const projectId = computed(() => route.params?.projectCode);
 const removeUser = ref(null);
-const authorizationStatus = computed(() => {
-  if (verifying.value) {
-    if (isAuthorizedSuccess.value) {
-      return t("授权校验通过");
-    } else if (!isHandOverfail.value){
-      return t("正在校验授权");
-    }
-  }
-  return '';
-});
+const isChecking = ref(false);
 
 const props = defineProps({
   memberList: {
@@ -235,7 +241,8 @@ const props = defineProps({
   overTable: {
     type: Array,
     default: () => [],
-  }
+  },
+  tableLoading: Boolean,
 });
 const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm', 'refresh']);
 
@@ -244,7 +251,7 @@ watch(() => props.memberList, (newData) => {
   emit('handleClick', newData[0]);
 });
 
-watch(()=> handOverForm.value.name,(newName,oldName) => {
+watch(()=> handOverForm.value.name,() => {
   handOverInputClear();
 })
 
@@ -260,12 +267,8 @@ function handleClick(item) {
 function pageChange(current) {
   emit('pageChange', current, projectId.value);
 }
-/**
- * 移出项目
- * @param item 
- */
 function handleRemoval(item) {
-  if(item.type === "DEPARTMENT") {
+  if(item.type === "department") {
     isShowRemoveDialog.value = true;
   } else {
     isShowHandOverDialog.value = true;
@@ -273,89 +276,73 @@ function handleRemoval(item) {
   removeUser.value = item;
 }
 /**
- *  人员移出项目弹窗关闭
+ *  移出项目弹窗关闭
  */
- function handOverClose() {
+function handOverClose() {
+   if(formRef.value) {
+     handOverForm.value.name = '';
+     formRef.value.clearValidate()
+   }
   isShowHandOverDialog.value = false;
+  isShowRemoveDialog.value = false
   isHandOverfail.value = false;
 }
 /**
- *  人员移出项目弹窗提交
+ *  移出项目弹窗提交
  */
-function handOverConfirm() {
-  handOverDialogLoding.value = true;
-  formRef.value?.validate().then( isValid => {
-    if (isValid) {
-      emit('removeConfirm',removeUser.value)
-      handOverDialogLoding.value = false;
-    }
-  }).catch(()=>{
-    
-  }).finally(()=>{
-    handOverDialogLoding.value = false;
-    isHandOverfail.value = false;
-  })
+function handConfirm(flag){
+  loading.value = true;
+  if(flag === 'user'){
+    const isValidate = formRef.value?.validate();
+    if(!isValidate) return;
+    emit('removeConfirm',handOverForm.value);
+  } else {
+    emit('removeConfirm');
+  }
+  loading.value = false;
+  isShowHandOverDialog.value = false;
+  isShowRemoveDialog.value = false;
+  isHandOverfail.value = false;
 }
+
 function handOverfail(flag) {
   isHandOverfail.value = flag;
 }
-/**
- * 移交人输入清空事件
- */
 function handOverInputClear(){
-  verifying.value = false;
   isAuthorizedSuccess.value = false;
   isHandOverfail.value = false;
 }
-/**
- * 移交人输入失焦事件
- */
 function handOverInputBlur(){
-  console.log('失焦时输入框内容',handOverForm.value.name);
   if(!handOverForm.value.name) return;
-  verifying.value = true;
+  isChecking.value = true;
+  isAuthorizedSuccess.value = false;
   setTimeout(()=>{
     if(Math.random()> 0.5){
+      isChecking.value = false;
       isAuthorizedSuccess.value = true;
     } else {
       isHandOverfail.value = true;
+      isChecking.value = false;
+      isAuthorizedSuccess.value = false;
     }
   },2000)
 }
-/**
- * 组织刷新
- */
 function refresh(){
   emit('refresh');
 }
 /**
- * 移出刷新
+ * 移出失败刷新数据
  */
 function refreshHandOverfail() {
 
 }
-/**
- * 前往授权管理
- */
 function goAauthorization() {
   window.open(`${location.origin}/console/manage/xxzza/permission`, '_blank')
 }
-/**
- * 人员列表
- */
 function handleShowPerson(item) {
   isShowPersonDialog.value = true;
   removeUser.value = item;
-  personDialogLoading.value = true;
   emit('getPersonList',item)
-  personDialogLoading.value = false;
-}
-/**
- * 组织移除项目弹窗确定
- */
-function handleRemoveConfirm() {
-  emit('removeConfirm',removeUser.value)
-  isShowRemoveDialog.value = false;
 }
 </script>
 
@@ -477,28 +464,45 @@ function handleRemoveConfirm() {
 }
 
 .dialog {
+  .bk-form-item{
+    margin-bottom: 6px !important;
+  }
   .text-tag {
     width: 100%;
     height: 32px;
-    line-height: 32px;
+    line-height: 30px;
     padding-left: 10px;
     margin-bottom: 16px;
     background: #F0F8FF;
     border: 1px solid #C5DAFF;
     border-radius: 2px;
-    font-family: MicrosoftYaHei;
-    font-size: 12px;
-    color: #63656E;
+
+    .manage-icon-info-line{
+      font-size: 14px;
+      color: #3A84FF;
+      margin-right: 10px;
+    }
+
+    span {
+      vertical-align: middle;
+      font-family: MicrosoftYaHei;
+      font-size: 12px;
+      color: #63656E;
+    }
   }
 
   .verifying{
     font-size: 12px;
     color: #63656E;
+
+    span {
+      vertical-align: middle;
+    }
   }
 
   .hand-over-fail {
     border-top: 1px solid #DCDEE5;
-    margin-bottom: 25px;
+    margin: 25px 0;
 
     .err-text {
       display: flex;
@@ -507,14 +511,15 @@ function handleRemoveConfirm() {
       color: #63656e;
       font-size: 12px;
 
-      .close-icon {
-        width: 14px;
-        height: 14px;
-        vertical-align: middle;
+      .manage-icon-close {
+        font-size: 14px;
+        color: #EA3636;
+        margin-right: 5px;
       }
 
       span {
         font-weight: 700;
+        vertical-align: middle;
       }
     }
 
@@ -538,9 +543,17 @@ function handleRemoveConfirm() {
     }
 
     .blue-text {
-      font-size: 12px;
-      color: #3A84FF;
       cursor: pointer;
+      color: #3A84FF;
+      font-size: 12px;
+
+      .manage-icon {
+        margin-right: 6px;
+      }
+      
+      span{
+        vertical-align: middle;
+      }
     }
   }
 }
@@ -553,7 +566,15 @@ function handleRemoveConfirm() {
   font-family: MicrosoftYaHei;
   font-size: 20px;
   color: #313238;
-  font-weight: 600;
+  letter-spacing: 0;
+  text-align: center;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.manage-icon-tishi {
+  width: 42px;
+  height: 42px;
 }
 
 .remove-text {
@@ -561,6 +582,8 @@ function handleRemoveConfirm() {
   font-size: 12px;
   color: #313238;
   line-height: 20px;
+  text-align: center;
+
   span {
     color: #63656E;
   }
@@ -572,5 +595,19 @@ function handleRemoveConfirm() {
   padding-top: 16px;
   width: 100%;
   border-top: 1px solid #DCDEE5;
+}
+
+.btn-margin{
+  margin-left: 10px
+}
+
+.check-success-icon {
+  color: #2DCB56;
+  margin-right: 5px;
+}
+
+.check-checking-icon {
+  color: #3A84FF;
+  margin-right: 5px;
 }
 </style>

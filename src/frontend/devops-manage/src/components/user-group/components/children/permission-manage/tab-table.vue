@@ -1,5 +1,5 @@
 <template>
-  <bk-loading :loading="loading">
+  <bk-loading :loading="loading" :zIndex="100">
     <bk-table
       class="table"
       ref="refTable"
@@ -11,6 +11,7 @@
       :pagination="pagination"
       :border="['row', 'outer']"
       remote-pagination
+      empty-cell-text="--"
       @select-all="handleSelectAll"
       @selection-change="handleSelectionChange"
       @page-limit-change="pageLimitChange"
@@ -71,13 +72,7 @@
             >{{t("移交")}}</bk-button>
             <span
               v-bk-tooltips="{
-                content: row.removeMemberButtonControl==='UNIQUE_MANAGER'?
-                  '唯一管理员，不可移出。请添加新的管理员后再移出。':
-                  row.removeMemberButtonControl==='TEMPLATE'?
-                  '通过用户组加入，不可直接移出。如需调整，请编辑用户组。':
-                  row.removeMemberButtonControl==='UNIQUE_OWNER'?
-                  '唯一拥有者，不可移出。请添加新的拥有者后再移出。': ''
-                  ,
+                content: TOOLTIPS_CONTENT[row.removeMemberButtonControl] || '',
                 disabled: row.removeMemberButtonControl === 'OTHER'
               }"
             >
@@ -99,41 +94,23 @@
 import { useI18n } from 'vue-i18n';
 import { ref, defineProps, defineEmits, computed } from 'vue';
 import { timeFormatter } from '@/common/util.ts'
-
-const { t } = useI18n();
-const fixedBottom = {
-  position: 'relative',
-  height: 42,
-};
-const refTable = ref(null);
-const isCurrentAll = ref(false);
-const resourceType = computed(() => props.resourceType);
-const groupTotal = computed(() => props.groupTotal);
-const remainingCount = computed(()=> props.groupTotal - props.data.length)
+import { TOOLTIPS_CONTENT } from '@/utils/constants'
 
 const props = defineProps({
   isShowOperation: {
     type: Boolean,
     default: true,
-    required: true,
   },
-  pagination: Object,
-  // remainingCount: Number,
   data: {
     type: Array,
+    default: () => [],
   },
-  resourceType: {
-    type: String,
-  },
-  groupTotal: {
-    type: Number,
-  },
-  selectedData: {
-    type: Object,
-  },
-  hasNext: {
-    type: Boolean,
-  },
+  pagination: Object,
+  scrollLoading: Boolean,
+  resourceType: String,
+  groupTotal: Number,
+  selectedData: Object,
+  hasNext: Boolean,
   loading: Boolean,
   groupName: String,
 });
@@ -148,17 +125,29 @@ const emit = defineEmits([
   'pageLimitChange',
   'pageValueChange',
 ])
+const { t } = useI18n();
+const refTable = ref(null);
+const isCurrentAll = ref(false);
+const resourceType = computed(() => props.resourceType);
+const groupTotal = computed(() => props.groupTotal);
+const remainingCount = computed(()=> props.groupTotal - props.data.length);
+const scrollLoading = computed(()=>props.scrollLoading);
+const fixedBottom = {
+  position: 'relative',
+  height: 42,
+  loading: scrollLoading.value
+};
 /**
  * 当前页全选事件
  */
-function handleSelectAll({ checked, data }) {
+function handleSelectAll() {
   emit('getSelectList', refTable.value.getSelection(), resourceType.value);
   isCurrentAll.value = false;
 }
 /**
  * 多选事件
  */
-function handleSelectionChange({checked}) {
+function handleSelectionChange() {
   emit('getSelectList', refTable.value.getSelection(), resourceType.value);
   isCurrentAll.value = props.data.length === refTable.value.getSelection()
 };

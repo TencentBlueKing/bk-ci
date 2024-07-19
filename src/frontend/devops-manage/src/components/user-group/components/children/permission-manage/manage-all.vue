@@ -1,5 +1,5 @@
 <template>
-  <bk-loading class="manage" :loading="isLoading">
+  <bk-loading class="manage" :loading="isLoading"  :zIndex="100">
     <div class="manage-search">
       <bk-search-select
         v-model="searchValue"
@@ -17,6 +17,7 @@
           :project-id="projectId"
           :member-list="memberList"
           :person-list="personList"
+          :table-loading="tableLoading"
           :over-table="overTable"
           @refresh="refresh"
           @handle-click="asideClick"
@@ -60,7 +61,7 @@
     @closed="handleRenewalClosed"
   >
     <template #header>
-      {{t("续期")}}
+      <h2 class="htext">{{t("续期")}}</h2>
       <span class="dialog-header"> {{asideItem.name}} </span>
     </template>
     <template #default>
@@ -95,7 +96,7 @@
     @closed="handleHandoverClosed"
   >
     <template #header>
-      {{t("移交")}}
+      <h2 class="htext">{{t("移交")}}</h2>
       <span class="dialog-header"> {{asideItem.name}} </span>
     </template>
     <template #default>
@@ -112,6 +113,7 @@
           <bk-form-item
             required
             property="name"
+            label-position="right"
             :label="t('移交给')"
           >
             <bk-input
@@ -137,7 +139,8 @@
     @closed="() => isShowRemove = false"
   >
     <template #header>
-      <span class="dialog-header"> {{t("确认从用户组中移出用户吗")}}？ </span>
+      <img src="@/css/svg/warninfo.svg" class="manage-icon-tishi">
+      <h2 class="dialog-header"> {{t("确认从用户组中移出用户吗")}}？ </h2>
     </template>
     <template #default>
       <p class="remove-text">
@@ -271,7 +274,6 @@ const formRef = ref('');
 const renewalRef = ref(null);
 const projectId = computed(() => route.params?.projectCode);
 const expiredAt = ref(30);
-const isLoading = ref(false);
 const isShowSlider = ref(false);
 const sliderTitle = ref();
 const batchFlag = ref();
@@ -342,7 +344,9 @@ const {
   asideItem,
   memberList,
   personList,
+  tableLoading,
   overTable,
+  isLoading,
 } = storeToRefs(manageAsideStore);
 const {
   handleAsideClick,
@@ -369,20 +373,15 @@ watch(searchValue, (nv) => {
 function asideClick(item){
   handleAsideClick(item, projectId.value);
 }
-function refresh(){
-  isLoading.value = true;
-  setTimeout(()=>{
-    isLoading.value = false;
-  },1000)
+async function refresh(){
+  await getProjectMembers(projectId.value);
 }
 /**
  * 续期弹窗提交事件
  */
 async function handleRenewalConfirm() {
   operatorLoading.value = true;
-  const param = formatSelectParams(selectedRow.value.groupId);
-  await http.batchRenewal(projectId.value, param);
-  handleUpDateRow(expiredAt.value);
+  await handleUpDateRow(expiredAt.value);
   operatorLoading.value = false;
   showMessage('success', t('用户组权限已续期。'));
   cancleClear('renewal');
@@ -403,7 +402,7 @@ async function handleHandoverConfirm() {
   if(!isValidate) return;
   operatorLoading.value = true;
   const param = formatSelectParams(selectedRow.value.groupId);
-  // await http.batchHandover(projectId.value, param);
+  await http.batchHandover(projectId.value, param);
   handleRemoveRow();
   operatorLoading.value = false;
   showMessage('success', t('用户组权限已移交给X。',[handOverForm.value.name]));
@@ -485,7 +484,12 @@ function formatSelectParams(rowGroupId){
     excludedUniqueManagerGroup: true,
     targetMember: asideItem.value,
     ...(expiredAt.value && {renewalDuration: expiredAt.value}),
-    ...(handOverForm.value.name && {handoverTo: handOverForm.value}),
+    // ...(handOverForm.value.name && {handoverTo: handOverForm.value}),
+    ...(handOverForm.value.name && {handoverTo: {
+      id: 'greysonfang',
+      name: '方灿',
+      type: 'user'
+    }}),
   }
   return params;
 }
@@ -542,7 +546,7 @@ function showMessage(theme, message) {
   });
 }
 function asideRemoveConfirm(value) {
-  handleAsideRemoveConfirm(value, manageAsideRef.value);
+  handleAsideRemoveConfirm(value, projectId.value, manageAsideRef.value);
 }
 </script>
 
@@ -633,10 +637,19 @@ function asideRemoveConfirm(value) {
   margin-left: 10px
 }
 
+.htext{
+  display: inline;
+}
+
 .renewal-dialog {
 
   .dialog-header {
     .dialog-header-common();
+  }
+
+  ::v-deep .bk-dialog-content{
+    margin-top: 40px !important;
+    margin-bottom: 78px !important;
   }
 
   .required {
@@ -681,6 +694,10 @@ function asideRemoveConfirm(value) {
     .dialog-header-common();
   }
 
+  ::v-deep .bk-dialog-content{
+    margin-bottom: 56px !important;
+  }
+
   .handover-text {
     margin: 12px 0;
     .dialog-text-common();
@@ -696,6 +713,7 @@ function asideRemoveConfirm(value) {
       font-size: 12px;
       color: #63656E;
     }
+
   }
 }
 
@@ -716,6 +734,11 @@ function asideRemoveConfirm(value) {
     span {
       color: #63656E;
     }
+  }
+
+  .manage-icon-tishi {
+    width: 42px;
+    height: 42px;
   }
 }
 
