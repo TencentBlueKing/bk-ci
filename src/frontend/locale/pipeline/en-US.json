@@ -363,6 +363,7 @@
     "wechatNotice": "Wechat",
     "smsNotice": "SMS",
     "emailNotice": "Email",
+    "weworkGroup": "WeCom Groups Notification",
     "open": "Expand",
     "fold": "Collapse",
     "attach": "Attach",
