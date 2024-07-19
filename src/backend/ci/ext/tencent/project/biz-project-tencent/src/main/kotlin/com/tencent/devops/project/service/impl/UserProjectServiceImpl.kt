@@ -152,7 +152,8 @@ class UserProjectServiceImpl @Autowired constructor(
                             webSocket = it.webSocket,
                             newWindow = newWindow,
                             newWindowUrl = newWindowUrl,
-                            clusterType = it.clusterType
+                            clusterType = it.clusterType,
+                            docUrl = it.docUrl ?: ""
                         )
                     )
                 }
