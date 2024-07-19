@@ -22,10 +22,16 @@
             'active': activeTab === item.id
           }"
         />
-        <p v-if="item.type === 'user'">
+        <p class="item" v-if="item.type === 'user'" v-bk-tooltips="{ content: `${item.id}(${item.name})`, placement: 'top' }">
+          <bk-overflow-title>
           {{ item.id }} ({{ item.name }})
+          </bk-overflow-title>
         </p>
-        <p v-else>{{ item.name }}</p>
+        <p class="item" v-else  v-bk-tooltips="{ content: item.name, placement: 'top' }">
+          <bk-overflow-title>
+            {{truncateMiddleText(item.name)}}
+          </bk-overflow-title>
+        </p>
         <bk-popover
           :arrow="false"
           placement="bottom"
@@ -260,6 +266,18 @@ defineExpose({
   handOverClose,
 });
 
+function truncateMiddleText(text) {
+  if (text.length <= 15) {
+    return text;
+  }
+
+  const separator = ' ... ';
+  const charsToShow = 15 - separator.length;
+  const frontChars = Math.ceil(charsToShow / 2);
+  const backChars = Math.floor(charsToShow / 2);
+
+  return text.substr(0, frontChars) + separator + text.substr(text.length - backChars);
+}
 function handleClick(item) {
   activeTab.value = item.id;
   emit('handleClick', item);
@@ -389,6 +407,7 @@ function handleShowPerson(item) {
     height: 4px !important;
   }
 }
+
 .group-item {
   display: flex;
   width: 100%;
@@ -401,6 +420,8 @@ function handleShowPerson(item) {
 
   p{
     flex: 1;
+    width: 150px;
+    height: 20px;
     font-family: MicrosoftYaHei;
     font-size: 12px;
     color: #63656E;
@@ -431,6 +452,7 @@ function handleShowPerson(item) {
 
   &:hover .more-icon{
     display: block;
+    padding: 1px;
   }
 
   

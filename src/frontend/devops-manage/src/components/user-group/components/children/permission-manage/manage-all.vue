@@ -31,6 +31,10 @@
           <bk-button :disabled="!isPermission" @click="batchOperator('renewal')">{{t("批量续期")}}</bk-button>
           <bk-button :disabled="!isPermission" @click="batchOperator('handover')" v-if="asideItem?.type==='user'">{{t("批量移交")}}</bk-button>
           <bk-button :disabled="!isPermission" @click="batchOperator('remove')">{{t("批量移出")}}</bk-button>
+
+          <i18n-t keypath="已选择X个用户组" tag="div" class="main-desc" v-if="selectedLength">
+            <span class="desc-primary">&nbsp;{{ selectedLength }}&nbsp;</span>
+          </i18n-t>
         </div>
         <div v-if="isPermission" class="group-tab">
           <GroupTab
@@ -168,10 +172,10 @@
       <div class="slider-main">
         <p class="main-desc">
           <i18n-t keypath="已选择X个用户组" tag="div">
-            <span class="desc-primary"> {{ selectedLength }} </span>
+            <span class="desc-primary">&nbsp;{{ selectedLength }}&nbsp;</span>
           </i18n-t>
           <i18n-t v-if="unableMoveLength" keypath="；其中X个用户组无法移出，本次操作将忽略" tag="div">
-            <span class="desc-warn"> {{ unableMoveLength }} </span>
+            <span class="desc-warn">&nbsp;{{ unableMoveLength }}&nbsp;</span>
             <span class="desc-warn">{{t("无法移出")}}</span>
           </i18n-t>
         </p>
@@ -600,10 +604,24 @@ function asideRemoveConfirm(value) {
       }
 
       .manage-content-btn {
+        display: flex;
         margin-bottom: 10px;
 
         .bk-button {
           margin-right: 8px
+        }
+
+        .main-desc {
+          display: flex;
+          margin-left: 24px;
+          color: #63656e;
+          font-size: 12px;
+          line-height: 32px;
+
+          .desc-primary {
+            font-weight: 700;
+            color: #3A84FF;
+          }
         }
       }
 
@@ -785,10 +803,12 @@ function asideRemoveConfirm(value) {
 
       .desc-primary {
         color: #3A84FF;
+        font-weight: 700;
       }
 
       .desc-warn {
         color: #FF9C01;
+        font-weight: 700;
       }
     }
   }
