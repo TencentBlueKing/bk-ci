@@ -105,6 +105,7 @@ interface ITGitService {
         to: String,
         straight: Boolean? = false,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        url: String
     ): List<ChangeFileInfo>
 }

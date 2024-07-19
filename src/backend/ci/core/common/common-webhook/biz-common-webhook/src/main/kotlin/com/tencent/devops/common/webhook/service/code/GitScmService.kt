@@ -222,7 +222,8 @@ class GitScmService @Autowired constructor(
                         to = to,
                         straight = false,
                         page = i,
-                        pageSize = 100
+                        pageSize = 100,
+                        url = repo.url
                     ).data
                 } else {
                     client.get(ServiceGitResource::class).getChangeFileList(

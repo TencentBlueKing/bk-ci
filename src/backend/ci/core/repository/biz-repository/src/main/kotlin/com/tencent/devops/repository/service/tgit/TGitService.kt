@@ -52,6 +52,7 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import java.net.URLEncoder
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.core.Response
@@ -466,9 +467,11 @@ class TGitService @Autowired constructor(
         to: String,
         straight: Boolean?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        url: String
     ): List<ChangeFileInfo> {
-        val apiUrl = StringBuilder("${gitConfig.tGitApiUrl}/projects/${urlEncode(gitProjectId)}/" +
+        val host = GitUtils.getGitApiUrl(apiUrl = gitConfig.tGitApiUrl, repoUrl = url)
+        val apiUrl = StringBuilder("$host/projects/${urlEncode(gitProjectId)}/" +
                     "repository/compare/changed_files/list")
         setToken(tokenType, apiUrl, token)
         val requestUrl = apiUrl.toString().addParams(
