@@ -70,6 +70,15 @@
       oHead.appendChild(oStyle)
     }
 
+    function loadJsAssets(isVendors) {
+      for (var i = 0; i < window.jsAssets.length; i++) {
+        var js = window.jsAssets[i]
+        if (isVendors === true ? js.indexOf('vendors') > -1 : js.indexOf('vendors') === -1) {
+          importScript(js, document.body)
+        }
+      }
+    }
+
     function getCookie(cname) {
       try {
         var name = cname + '='
@@ -224,12 +233,7 @@
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js"></script>
   <script>
-    for (var i = 0; i < window.jsAssets.length; i++) {
-      var js = window.jsAssets[i]
-      if (js.indexOf('vendors') > -1) {
-        importScript(js, document.body)
-      }
-    }
+    loadJsAssets(true)
   </script>
   <script>
     var pathPid = getCookie(X_DEVOPS_PROJECT_ID)
@@ -517,15 +521,6 @@
         '</p>' +
         '</div>'
       )
-    }
-
-    function loadJsAssets() {
-      for (var i = 0; i < window.jsAssets.length; i++) {
-        var js = window.jsAssets[i]
-        if (js.indexOf('vendors') === -1) {
-          importScript(js, document.body)
-        }
-      }
     }
 
     // 接入mta统计
