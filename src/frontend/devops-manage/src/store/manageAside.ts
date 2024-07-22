@@ -48,10 +48,10 @@ export default defineStore('manageAside', () => {
   /**
    * 人员列表数据获取
    */
-  async function handleShowPerson(asideItem: ManageAsideType) {
+  async function handleShowPerson(asideItem: ManageAsideType, projectId: string) {
     tableLoading.value = true;
-    const res = await http.deptUsers(asideItem.id);
-    personList.value = res.map(item => ({ person: item }));
+    const res = await http.deptUsers(projectId);
+    personList.value = res.map(item => ({ person: item.name }));
     tableLoading.value = false;
   }
   /**
@@ -112,14 +112,22 @@ export default defineStore('manageAside', () => {
   /**
    * 获取项目下全体成员
    */
-  async function getProjectMembers(projectId: string) {
+  async function getProjectMembers(projectId: string, searchValue?) {
     try {
       isLoading.value = true;
       const params = {
         page: memberPagination.value.current,
         pageSize: memberPagination.value.limit,
-        ...(userName.value && { userName: userName.value }),
       };
+      searchValue?.forEach(item => {
+        if (item.id === 'user') {
+          params.userName = item.values[0].name;
+          params.memberType = item.id;
+        } else if (item.id === 'department') {
+          params.deptName = item.values[0].name;
+          params.memberType = item.id;
+        }
+      })
       const res = await http.getProjectMembers(projectId, params);
       isLoading.value = false;
       memberList.value = res.records

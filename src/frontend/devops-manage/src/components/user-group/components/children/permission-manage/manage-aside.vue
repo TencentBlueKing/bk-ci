@@ -358,7 +358,7 @@ function goAauthorization() {
 function handleShowPerson(item) {
   isShowPersonDialog.value = true;
   removeUser.value = item;
-  emit('getPersonList',item)
+  emit('getPersonList',item, projectId.value)
 }
 </script>
 

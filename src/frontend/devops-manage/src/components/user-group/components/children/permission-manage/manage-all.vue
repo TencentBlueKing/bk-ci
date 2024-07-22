@@ -298,12 +298,12 @@ const searchData = computed(() => {
   const data = [
     {
       name: t('用户'),
-      id: 'handoverFrom',
+      id: 'user',
       default: true,
     },
     {
       name: t('组织架构'),
-      id: 'resourceName',
+      id: 'department',
     },
   ]
   return data.filter(data => {
@@ -364,20 +364,15 @@ onMounted(() => {
   getProjectMembers(projectId.value);
 });
 
-watch(searchValue, (nv) => {
-  manageAsideStore.userName = '';
-  nv.forEach((val) => {
-    if (val.id === 1) {
-      manageAsideStore.userName = val?.values[0]?.name;
-    };
-  });
-  getProjectMembers(projectId.value);
+watch(searchValue, (newSearchValue) => {
+  getProjectMembers(projectId.value, newSearchValue);
 });
 
 function asideClick(item){
   handleAsideClick(item, projectId.value);
 }
 async function refresh(){
+  searchValue.value = [];
   await getProjectMembers(projectId.value);
 }
 /**

@@ -147,7 +147,7 @@ export default defineStore('userGroupTable', () => {
   async function fetchUserGroupList(asideItem: AsideItem) {
     const requestId = ++currentRequestId;
     initData();
-    getCollapseList(asideItem.id);
+    asideItem && getCollapseList(asideItem.id);
     memberItem.value = asideItem;
     try {
       isLoading.value = true;
