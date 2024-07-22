@@ -89,7 +89,16 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         branch: String?,
         validOsNameFlag: Boolean?,
         validOsArchFlag: Boolean?
-    ) = Unit
+    ) {
+        val record = marketAtomDao.getAtomRecordById(dslContext, atomId)
+        record?.let {
+            checkUpdateAtomLatestTestFlag(
+                userId = userId,
+                atomCode = record.atomCode,
+                atomId = atomId
+            )
+        }
+    }
 
     override fun validateUpdateMarketAtomReq(
         userId: String,
