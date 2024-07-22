@@ -1,5 +1,5 @@
 <template>
-  <bk-loading :loading="groupTableStore.isLoading" class="group-tab">
+  <bk-loading :loading="groupTableStore.isLoading" :zIndex="100" class="group-tab">
     <div class="manage-content-project" v-if="projectTable">
       <p class="project-group">{{t("项目级用户组")}}</p>
       <div class="project-group-table">
@@ -26,6 +26,7 @@
               :selected-data="selectedData"
               :has-next="projectTable.hasNext"
               :group-name="t('用户组')"
+              :scroll-loading="projectTable.scrollLoading"
               @handle-renewal="handleRenewal"
               @handle-hand-over="handleHandOver"
               @handle-remove="handleRemove"
@@ -68,6 +69,7 @@
               :has-next="item.hasNext"
               :loading="item.tableLoading"
               :group-name="item.resourceTypeName"
+              :scroll-loading="item.scrollLoading"
               @handle-renewal="handleRenewal"
               @handle-hand-over="handleHandOver"
               @handle-remove="handleRemove"
@@ -146,6 +148,7 @@ const props = defineProps({
   },
   selectedData: {
     type: Object,
+    default: () => ({})
   },
   sourceList: {
     type: Array,
@@ -153,6 +156,7 @@ const props = defineProps({
   },
   asideItem: {
     type: Object,
+    default: () => ({})
   },
 });
 const emit = defineEmits(['collapseClick']);

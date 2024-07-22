@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 import { ref, reactive, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-export interface GroupTableType {
+interface GroupTableType {
   resourceCode: string,
   resourceName: string,
   resourceType: string,
@@ -33,6 +33,7 @@ interface SourceType {
   hasNext?: boolean,
   activeFlag?: boolean;
   tableLoading?: boolean;
+  scrollLoading?: boolean;
   tableData: GroupTableType[];
 }
 interface SelectedDataType {
@@ -49,6 +50,12 @@ interface AsideItem {
   type: string
 }
 
+interface ManageAsideType {
+  id: string,
+  name: string,
+  type: string
+};
+
 export default defineStore('userGroupTable', () => {
   const { t } = useI18n();
   const route = useRoute();
@@ -62,7 +69,7 @@ export default defineStore('userGroupTable', () => {
 
   const sourceList = ref<SourceType[]>([]);
   const collapseList = ref<CollapseListType[]>([]);
-  const memberId = ref();
+  const memberItem = ref<ManageAsideType>();
 
   const isShowRenewal = ref(false);
   const isShowHandover = ref(false);
@@ -74,18 +81,13 @@ export default defineStore('userGroupTable', () => {
   const selectedRow = ref<GroupTableType | null>(null);
   const rowIndex = ref<number>();
   const selectedTableGroupType = ref('');
-  const selectedLength = computed(() => Object.keys(selectedData).length);
+  const selectedLength = ref(0);
+  let currentRequestId = 0;
 
-  watch(sourceList, () => {
-    sourceList.value.forEach(item => {
-      if(item.count && (item.count > item.tableData.length)) {
-        item.hasNext = true;
-        item.remainingCount = item.count - item.tableData.length
-      } else {
-        item.hasNext = false;
-      }
-    })
+  watch(selectedData, ()=>{
+    getSourceList()
   })
+
   /**
    * 初始化数据
    */
@@ -95,9 +97,14 @@ export default defineStore('userGroupTable', () => {
     selectedTableGroupType.value = '';
     sourceList.value = [];
     selectSourceList.value = [];
+    selectedLength.value = 0;
     Object.keys(selectedData).forEach(key => {
       delete selectedData[key];
     });
+    paginations.value = {
+      'project': [0, 10],
+      'pipeline': [0, 10]
+    };
   }
   /**
    * 获取项目成员有权限的用户组数量
@@ -125,7 +132,7 @@ export default defineStore('userGroupTable', () => {
       const params = {
         projectId: projectId.value,
         resourceType,
-        memberId: memberId.value,
+        memberId: memberItem.value!.id,
         start: paginations.value[resourceType][0],
         limit: paginations.value[resourceType][1],
       }
@@ -138,9 +145,10 @@ export default defineStore('userGroupTable', () => {
    * 获取项目成员页面数据
    */
   async function fetchUserGroupList(asideItem: AsideItem) {
+    const requestId = ++currentRequestId;
     initData();
-    getCollapseList(asideItem.id);
-    memberId.value = asideItem.id;
+    asideItem && getCollapseList(asideItem.id);
+    memberItem.value = asideItem;
     try {
       isLoading.value = true;
       const resourceTypes = ['project', 'pipeline'];
@@ -149,16 +157,18 @@ export default defineStore('userGroupTable', () => {
       );
       const [projectResult, pipelineGroupResult] = results;
 
-      sourceList.value.forEach(item => {
-        if(item.resourceType === "project") {
-          item.tableData = projectResult.records;
-        }
-        if(item.resourceType === "pipeline") {
-          item.tableData = pipelineGroupResult.records;
-          item.count && (item.activeFlag = true);
-        }
-      })
-      isLoading.value = false;
+      if(currentRequestId === requestId) {
+        sourceList.value.forEach(item => {
+          if(item.resourceType === "project") {
+            item.tableData = projectResult.records;
+          }
+          if(item.resourceType === "pipeline") {
+            item.tableData = pipelineGroupResult.records;
+            item.count && (item.activeFlag = true);
+          }
+        })
+        isLoading.value = false;
+      }
     } catch (error: any) {
       console.error(error);
     }
@@ -196,16 +206,20 @@ export default defineStore('userGroupTable', () => {
    * 更新表格行数据
    * @param expiredAt 续期时间
    */
-  function handleUpDateRow(expiredAt: number) {
+  async function handleUpDateRow(expiredAt: number) {
     const activeTable = sourceList.value.find(group => group.resourceType === selectedTableGroupType.value);
-    const activeTableRow = activeTable?.tableData.find(item => item.groupId === selectedRow.value?.groupId);
-    if (activeTableRow) {
-      const currentDisplay = activeTableRow.expiredAtDisplay;
-      if (currentDisplay !== t('已过期')) {
-        const days = Number(currentDisplay.split('天')[0]);
-        activeTableRow.expiredAtDisplay = `${days + expiredAt}天`;
-      } else {
-        activeTableRow.expiredAtDisplay = `${expiredAt}天`;
+    if (activeTable) {
+      try {
+        const params = {
+          groupId: selectedRow.value!.groupId,
+          targetMember: memberItem.value,
+          renewalDuration: expiredAt
+        };
+        const res = await http.renewal(projectId.value, params)
+        activeTable.tableData = activeTable.tableData.map(item => item.groupId === selectedRow.value!.groupId ? res : item)
+      } catch (error) {
+        console.log(error);
+        
       }
     }
   }
@@ -227,6 +241,8 @@ export default defineStore('userGroupTable', () => {
    * 获取表格选择的数据
    */
   function getSelectList(selections: GroupTableType[], resourceType: string) {
+    let item = sourceList.value.find((item: SourceType) => item.resourceType == resourceType);
+    item && (item.isAll = false);
     selectedData[resourceType] = selections
     if (!selectedData[resourceType].length) {
       delete selectedData[resourceType]
@@ -246,9 +262,11 @@ export default defineStore('userGroupTable', () => {
    * 获取选中的用户组数据
    */
   function getSourceList() {
+    selectedLength.value = 0;
     selectSourceList.value = Object.entries(selectedData)
       .map(([key, tableData]: [string, GroupTableType[]]) => {
         const sourceItem = sourceList.value.find((item: SourceType) => item.resourceType == key) as SourceType;
+        selectedLength.value += sourceItem.isAll ? sourceItem.count! : tableData.length 
         return {
           pagination: {
             limit: 10,
@@ -274,10 +292,10 @@ export default defineStore('userGroupTable', () => {
 
     let item = sourceList.value.find((item: SourceType) => item.resourceType == resourceType);
     if(item){
-      item.tableLoading = true;
+      item.scrollLoading = true;
       const res = await getGroupList(resourceType);
-      item.tableLoading = false;
-      item.tableData = [...item.tableData, ...res.records];
+      item.scrollLoading = false;
+      item.tableData.push(...res.records);
       if(pagination[2]){
         pagination.pop();
       }

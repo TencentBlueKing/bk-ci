@@ -144,6 +144,8 @@
 import ScrollLoadList from '../../widget-components/scroll-load-list';
 import ajax from '../../../ajax/index';
 import { Message } from 'bkui-vue';
+import http from '@/http/api';
+
 export default {
   components: {
     ScrollLoadList,
@@ -301,6 +303,7 @@ export default {
           case 'add_user_confirm':
             this.groupList[this.curGroupIndex].departmentCount += data.data.departments.length
             this.groupList[this.curGroupIndex].userCount += data.data.users.length
+            this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
           case 'remove_user_confirm':
             const departments = data.data.members.filter(i => i.type === 'department')
@@ -311,6 +314,19 @@ export default {
           case 'change_group_detail_tab':
             this.$emit('change-group-detail-tab', data.data.tab)
         }
+      }
+    },
+    async syncGroupIAM(groupId){
+      try {
+        await Promise.all([
+          http.syncGroupAndMember(this.projectCode),
+          http.syncGroupMember(this.projectCode, groupId)
+        ]);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: err.message
+        });
       }
     },
     handleShowRename (group) {

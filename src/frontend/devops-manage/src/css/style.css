@@ -98,3 +98,15 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .manage-icon-right-shape:before {
 	content: "\e138";
 }
+.manage-icon-arrows-right:before {
+	content: "\e139";
+}
+.manage-icon-jump:before {
+	content: "\e13a";
+}
+.manage-icon-info-line:before {
+	content: "\e13b";
+}
+.manage-icon-tishi:before {
+	content: "\e13c";
+}
