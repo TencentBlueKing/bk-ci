@@ -684,7 +684,7 @@ class CreateControl @Autowired constructor(
                 dslContext = dslContext,
                 workspaceName = oldWs.workspaceName,
                 bakName = bakName,
-                status = if (oldWs.status.checkUpgrading()) WorkspaceStatus.UNUSED else WorkspaceStatus.DELETED,
+                status = if (oldWs.status.checkUpgrading()) WorkspaceStatus.UNUSED else WorkspaceStatus.DELETED
             )
             SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
                 .deleteWorkspace(userId, workspaceName, bakName)
