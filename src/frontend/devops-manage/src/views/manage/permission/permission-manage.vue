@@ -461,7 +461,7 @@ async function handleCheckReset () {
 
     if (!resetFormData.value.name) return // 点击input输入框清空按钮，会触发失焦事件
     failedCount.value = res['FAILED']?.length || 0
-    if (failedCount) {
+    if (failedCount.value) {
       resetTableData.value = res['FAILED'].splice(0,6)
     }
     isResetFailure.value = !!failedCount.value;
