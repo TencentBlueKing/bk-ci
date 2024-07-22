@@ -213,5 +213,6 @@
     "websocketNotice": "Websocket Notice",
     "websocketInterupt": "Websocket connection interrupted, cannot automatically obtain the current pipeline running status. Reconnect?",
     "reconnect": "Reconnect",
-    "启用中": "Enabled"
+    "启用中": "Enabled",
+    "蓝盾": "BK-CI"
 }

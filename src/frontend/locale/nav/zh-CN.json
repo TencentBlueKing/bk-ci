@@ -213,5 +213,6 @@
     "websocketNotice": "websocket连接",
     "websocketInterupt": "检测到 websocket 连接中断，不能自动获取当前流水线运行状态。 是否重连？",
     "reconnect": "重新连接",
-    "启用中": "启用中"
+    "启用中": "启用中",
+    "蓝盾": "BK-CI"
 }
