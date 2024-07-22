@@ -680,7 +680,12 @@ class CreateControl @Autowired constructor(
             // 备份分享信息
             workspaceSharedDao.bakWorkspaceShareInfo(dslContext, oldWs.workspaceName, bakName)
             ws.bakWorkspaceName = bakName
-            workspaceDao.bakWorkspace(dslContext, oldWs.workspaceName, bakName)
+            workspaceDao.bakWorkspace(
+                dslContext = dslContext,
+                workspaceName = oldWs.workspaceName,
+                bakName = bakName,
+                status = if (oldWs.status.checkUpgrading()) WorkspaceStatus.UNUSED else WorkspaceStatus.DELETED
+            )
             SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
                 .deleteWorkspace(userId, workspaceName, bakName)
         }

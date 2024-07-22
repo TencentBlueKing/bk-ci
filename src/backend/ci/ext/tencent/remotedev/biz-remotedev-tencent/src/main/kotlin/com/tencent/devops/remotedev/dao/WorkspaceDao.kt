@@ -620,12 +620,13 @@ class WorkspaceDao {
     fun bakWorkspace(
         dslContext: DSLContext,
         workspaceName: String,
-        bakName: String
+        bakName: String,
+        status: WorkspaceStatus
     ): Int {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.update(this)
                 .set(NAME, bakName)
-                .set(STATUS, WorkspaceStatus.UNUSED.ordinal)
+                .set(STATUS, status.ordinal)
                 .where(NAME.eq(workspaceName))
                 .execute()
         }
