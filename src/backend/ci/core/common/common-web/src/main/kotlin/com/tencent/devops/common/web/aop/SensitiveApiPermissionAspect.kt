@@ -146,7 +146,7 @@ class SensitiveApiPermissionAspect constructor(
         osName: String? = null,
         osArch: String? = null
     ): Boolean {
-        val cacheKey = "$storeType:$storeCode:$apiName"
+        val cacheKey = "$storeType:$storeCode:$apiName:$version:$installedPkgShaContent:$osName:$osArch"
         return apiPermissionCache.getIfPresent(cacheKey) ?: run {
             val apiPermission = client.get(ServiceSensitiveApiPermissionResource::class).verifyApi(
                 installedPkgShaContent = installedPkgShaContent,
