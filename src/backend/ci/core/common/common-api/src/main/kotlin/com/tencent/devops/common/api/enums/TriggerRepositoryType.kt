@@ -30,7 +30,9 @@ package com.tencent.devops.common.api.enums
 enum class TriggerRepositoryType {
     ID,
     NAME,
-    SELF;
+    SELF,
+    // 触发器不需要绑定代码库,如定时触发默认时,不需要绑定
+    NONE;
 
     companion object {
         fun toRepositoryType(type: TriggerRepositoryType?): RepositoryType? {

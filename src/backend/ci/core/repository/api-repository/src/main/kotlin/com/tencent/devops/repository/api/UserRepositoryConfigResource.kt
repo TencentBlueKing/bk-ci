@@ -25,18 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.setting
+package com.tencent.devops.repository.api
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.RepositoryConfig
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Schema(title = "流水线-订阅-消息类型")
-enum class PipelineSubscriptionType {
-    EMAIL,
-    RTX,
-    WECHAT,
-    SMS,
-    WEWORK,
-    VOICE,
-    // 企业微信群通知
-    WEWORK_GROUP
+@Tag(name = "USER_REPOSITORY_MANAGER", description = "用户-代码库配置")
+@Path("/user/repositories/config")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserRepositoryConfigResource {
+
+    @Operation(summary = "获取代码库配置列表")
+    @GET
+    @Path("/")
+    fun list(): Result<List<RepositoryConfig>>
 }
