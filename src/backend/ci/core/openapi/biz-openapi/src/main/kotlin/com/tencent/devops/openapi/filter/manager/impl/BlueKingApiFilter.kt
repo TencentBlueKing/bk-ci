@@ -44,6 +44,7 @@ class BlueKingApiFilter constructor(
         return !requestContext.requestContext.getHeaderString(jwtHeader).isNullOrBlank()
     }
 
+    @Suppress("ComplexMethod", "NestedBlockDepth")
     override fun verify(requestContext: FilterContext): ApiFilterFlowState {
         val bkApiJwt = requestContext.requestContext.getHeaderString(jwtHeader)
         if (bkApiJwt.isNullOrBlank()) {
