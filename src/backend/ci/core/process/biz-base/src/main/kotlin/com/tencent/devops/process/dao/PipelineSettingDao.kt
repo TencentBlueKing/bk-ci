@@ -387,6 +387,7 @@ class PipelineSettingDao {
                 // 如果新数组有值，则老数据被替换为新数据的首个元素
                 val successSubscriptionList = t.successSubscription?.let {
                     val list = JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                        .map { s -> s.fixWeworkGroupType() }
                     if (list.isNotEmpty()) {
                         oldSuccessSubscription = list.first()
                         list
@@ -394,6 +395,7 @@ class PipelineSettingDao {
                 } ?: oldSuccessSubscription?.let { listOf(it) }
                 val failSubscriptionList = t.failureSubscription?.let {
                     val list = JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                        .map { s -> s.fixWeworkGroupType() }
                     if (list.isNotEmpty()) {
                         oldFailSubscription = list.first()
                         list
