@@ -51,13 +51,14 @@ data class Subscription(
 
     // 转换企业微信组通知
     fun fixWeworkGroupType(): Subscription {
-        return if (wechatGroupFlag && !types.contains(PipelineSubscriptionType.WEWORK_GROUP)) {
+        val fixTypes = if (wechatGroupFlag && !types.contains(PipelineSubscriptionType.WEWORK_GROUP)) {
             val fixTypes = mutableSetOf<PipelineSubscriptionType>()
             fixTypes.addAll(types)
             fixTypes.add(PipelineSubscriptionType.WEWORK_GROUP)
-            this.copy(types = fixTypes)
+            fixTypes
         } else {
-            this
+            types
         }
+        return this.copy(types = fixTypes, wechatGroupFlag = false)
     }
 }
