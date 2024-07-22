@@ -69,6 +69,15 @@
       oHead.appendChild(oStyle)
     }
 
+    function loadJsAssets(isVendors) {
+      for (var i = 0; i < window.jsAssets.length; i++) {
+        var js = window.jsAssets[i]
+        if (isVendors ? js.indexOf('vendors') > -1 : js.indexOf('vendors') === -1) {
+          importScript(js, document.body)
+        }
+      }
+    }
+
     function isValidPid(projectList, pid) {
       for (var i = 0; i < projectList.length; i++) {
         var proj = projectList[i]
@@ -77,13 +86,6 @@
         }
       }
       return false
-    }
-
-    for (var i = 0; i < window.jsAssets.length; i++) {
-      var js = window.jsAssets[i]
-      if (js.indexOf('vendors') > -1) {
-        importScript(js, document.body)
-      }
     }
 
     function getCookie(cname) {
@@ -125,7 +127,7 @@
         '; path=/'
     }
 
-    window.setProjectIdCookie = function (projectId) {
+    function setProjectIdCookie (projectId) {
       try {
         var domainMatch = location.hostname.match(/([^.]+\.)?([^\.]+\..+)/)
         var topDomain =
@@ -215,7 +217,9 @@
   <!-- devops:assets -->
   <!-- end devops:assets -->
 
- 
+  <script>
+    loadJsAssets(true)
+  </script>
   <script>
     window.getLoginUrl = function () {
       const loginUrl = LOGIN_SERVICE_URL.startsWith('//') ? `${location.protocol}${LOGIN_SERVICE_URL}` : LOGIN_SERVICE_URL
@@ -530,15 +534,6 @@
         '</p>' +
         '</div>'
       )
-    }
-
-    function loadJsAssets() {
-      for (var i = 0; i < window.jsAssets.length; i++) {
-        var js = window.jsAssets[i]
-        if (js.indexOf('vendors') === -1) {
-          importScript(js, document.body)
-        }
-      }
     }
 
     function handleVisibilityChange() {
