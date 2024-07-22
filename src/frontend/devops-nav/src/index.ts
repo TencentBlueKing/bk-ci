@@ -20,6 +20,7 @@ import { BkciDocs } from '../../common-lib/docs'
 import createLocale from '../../locale'
 
 import '@/assets/scss/index.scss'
+import Undeploy from '@/components/Undeploy/index.vue'
 import bsWebSocket from '@/utils/bsWebSocket.js'
 import { BkPermission, PermissionDirective, handleNoPermission } from 'bk-permission'
 import 'bk-permission/dist/main.css'
@@ -59,6 +60,7 @@ Vue.component('EmptyTips', EmptyTips)
 Vue.component('ShowTooltip', ShowTooltip)
 Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
+Vue.component('undeploy', Undeploy)
 
 const { i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
 
@@ -104,6 +106,26 @@ judgementLsVersion()
 
 Vue.mixin({
     methods: {
+        showUndeployDialog ({
+            title,
+            desc,
+            link
+        }) {
+            this.$bkInfo({
+                subHeader: this.$createElement('undeploy', {
+                    props: {
+                        isInPopup: true,
+                        serviceName: title,
+                        serviceDesc: desc
+                    }
+                }, ''),
+                okText: this.$t('learnMore'),
+                cancelText: this.$t('close'),
+                confirmFn: () => {
+                    window.open(link, '_blank')
+                }
+            })
+        },
         async applyPermission (actionId, resourceId, instanceId = []) {
             try {
                 const redirectUrl = await this.$store.dispatch('getPermRedirectUrl', [{

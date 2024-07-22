@@ -360,6 +360,7 @@
     "wechatNotice": "微信通知",
     "smsNotice": "短信通知",
     "emailNotice": "邮件通知",
+    "weworkGroup": "企业微信群通知",
     "open": "展开",
     "fold": "收起",
     "attach": "附加",

@@ -9,7 +9,7 @@
     import { Component, Watch } from 'vue-property-decorator'
     import { Action, State } from 'vuex-class'
     
-    @Component
+    @Component()
     export default class App extends Vue {
         @State fetchError
         @State moduleLoading

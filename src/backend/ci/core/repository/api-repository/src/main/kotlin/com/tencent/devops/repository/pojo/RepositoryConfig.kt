@@ -25,18 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.setting
+package com.tencent.devops.repository.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.repository.pojo.enums.RepositoryConfigStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "流水线-订阅-消息类型")
-enum class PipelineSubscriptionType {
-    EMAIL,
-    RTX,
-    WECHAT,
-    SMS,
-    WEWORK,
-    VOICE,
-    // 企业微信群通知
-    WEWORK_GROUP
-}
+@Schema(title = "代码库配置")
+data class RepositoryConfig(
+    @get:Schema(title = "代码库类型", required = false)
+    val scmType: ScmType,
+    @get:Schema(title = "代码库名称", required = false)
+    val name: String,
+    @get:Schema(title = "代码库状态", required = false)
+    val status: RepositoryConfigStatusEnum,
+    @get:Schema(title = "文档连接", required = false)
+    val docUrl: String? = ""
+)
