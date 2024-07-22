@@ -457,7 +457,7 @@ async function handleCheckReset () {
     const res = await http.resetAuthorization(projectId.value, {
       ...resetParams.value,
       preCheck: true
-    }, resourceType.value)
+    })
 
     if (!resetFormData.value.name) return // 点击input输入框清空按钮，会触发失焦事件
     failedCount.value = res['FAILED']?.length || 0
@@ -480,7 +480,7 @@ function confirmReset() {
   if (canLoading.value) dialogLoading.value = true;
   formRef.value?.validate().then(async () => {
     try {
-      await http.resetAuthorization(projectId.value, resetParams.value, resourceType.value)
+      await http.resetAuthorization(projectId.value, resetParams.value)
       
       dialogLoading.value = false;
       showResetDialog.value = false;
