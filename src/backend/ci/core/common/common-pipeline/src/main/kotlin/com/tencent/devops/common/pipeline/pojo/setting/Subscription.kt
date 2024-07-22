@@ -47,4 +47,17 @@ data class Subscription(
     val detailFlag: Boolean = false,
     @get:Schema(title = "自定义通知内容", required = false)
     val content: String = ""
-)
+) {
+
+    // 转换企业微信组通知
+    fun fixWeworkGroupType(): Subscription {
+        return if (wechatGroupFlag && !types.contains(PipelineSubscriptionType.WEWORK_GROUP)) {
+            val fixTypes = mutableSetOf<PipelineSubscriptionType>()
+            fixTypes.addAll(types)
+            fixTypes.add(PipelineSubscriptionType.WEWORK_GROUP)
+            this.copy(types = fixTypes)
+        } else {
+            this
+        }
+    }
+}
