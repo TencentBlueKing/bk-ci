@@ -49,7 +49,7 @@ interface ApiFilterManagerChain {
         // 如果需要检查权限，那必须返回AUTHORIZED才表示已授权成功
         if (requestContext.needCheckPermissions && requestContext.flowState != ApiFilterFlowState.AUTHORIZED) {
             requestContext.requestContext.abortWith(
-                Response.status(Response.Status.BAD_REQUEST)
+                Response.status(Response.Status.FORBIDDEN)
                     .entity("You do not have permission to access")
                     .build()
             )

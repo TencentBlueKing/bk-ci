@@ -113,7 +113,7 @@ class BlueKingApiFilter constructor(
                 }
             }
         }
-        return ApiFilterFlowState.BREAK
+        return ApiFilterFlowState.AUTHORIZED
     }
 
     private fun parseJwt(bkApiJwt: String): Map<String, Any> {
