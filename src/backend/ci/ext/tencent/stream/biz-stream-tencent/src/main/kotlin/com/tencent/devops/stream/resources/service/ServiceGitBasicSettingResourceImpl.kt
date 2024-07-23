@@ -41,6 +41,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.constant.ProjectMessageCode.ERROR_PROJECT_NOT_RELATED_PRODUCT
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -60,9 +61,9 @@ import com.tencent.devops.stream.service.StreamGitTokenService
 import com.tencent.devops.stream.service.StreamScmService
 import com.tencent.devops.stream.service.TXStreamBasicSettingService
 import com.tencent.devops.stream.util.GitCommonUtils
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @RestResource
 class ServiceGitBasicSettingResourceImpl @Autowired constructor(
@@ -83,6 +84,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     override fun enableGitCI(
         userId: String,
         enabled: Boolean,
+        productName: String?,
         projectInfo: GitCIProjectInfo
     ): Result<Boolean> {
         val projectId = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId, gitConfig.getScmType())
@@ -95,6 +97,15 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
             permission = AuthPermission.EDIT
         )
         val setting = txStreamBasicSettingService.getStreamConf(gitProjectId)
+
+        if (productName != null) {
+            txStreamBasicSettingService.updateProjectProductId(
+                userId = userId,
+                projectId = projectId,
+                productId = null,
+                productName = productName
+            )
+        }
 
         if (enabled) {
             val enabledCheck = client.get(ServiceProjectResource::class).get(projectId).data?.productId != null
@@ -132,6 +143,41 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
             )
         )
         return Result(result)
+    }
+
+    override fun updateProjectOrganization(
+        userId: String,
+        gitProjectId: Long,
+        organization: ProjectOrganizationInfo
+    ): Result<Boolean> {
+        val projectId = GitCommonUtils.getCiProjectId(gitProjectId, gitConfig.getScmType())
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.EDIT
+        )
+        txStreamBasicSettingService.updateOrganizationByEnglishName(
+            userId = userId,
+            projectId = projectId,
+            organization = organization
+        )
+        return Result(true)
+    }
+
+    override fun updateProjectProductName(userId: String, gitProjectId: Long, productName: String): Result<Boolean> {
+        val projectId = GitCommonUtils.getCiProjectId(gitProjectId, gitConfig.getScmType())
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.EDIT
+        )
+        txStreamBasicSettingService.updateProjectProductId(
+            userId = userId,
+            projectId = projectId,
+            productId = null,
+            productName = productName
+        )
+        return Result(true)
     }
 
     override fun getGitCIConf(userId: String, projectId: String): Result<GitCIBasicSetting?> {
