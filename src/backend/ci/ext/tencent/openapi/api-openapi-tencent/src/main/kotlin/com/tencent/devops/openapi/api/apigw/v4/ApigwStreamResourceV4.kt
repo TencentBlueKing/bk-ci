@@ -444,17 +444,13 @@ interface ApigwStreamResourceV4 {
 
     @Operation(summary = "更新项目组织架构", tags = ["v4_stream_app_product", "v4_stream_user_product"])
     @POST
-    @Path("/gitProjects/{gitProjectId}/productName")
+    @Path("product_name")
     fun updateProjectProductName(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID英文名标识", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
-        @Parameter(description = "产品名称", required = true)
-        @QueryParam("productName")
-        productName: String
+        @Parameter(description = "data", required = true)
+        data: Map<String, Any>
     ): Result<Boolean>
 
     @Operation(

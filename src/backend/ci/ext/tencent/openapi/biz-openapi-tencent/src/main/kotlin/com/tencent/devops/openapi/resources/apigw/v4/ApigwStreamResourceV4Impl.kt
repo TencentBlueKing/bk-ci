@@ -1,5 +1,6 @@
 package com.tencent.devops.openapi.resources.apigw.v4
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
@@ -265,11 +266,14 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         )
     }
 
-    override fun updateProjectProductName(userId: String, gitProjectId: Long, productName: String): Result<Boolean> {
+    override fun updateProjectProductName(
+        userId: String,
+        data: Map<String, Any>
+    ): Result<Boolean> {
         return client.get(ServiceGitBasicSettingResource::class).updateProjectProductName(
             userId = userId,
-            gitProjectId = gitProjectId,
-            productName = productName
+            gitProjectId = data.getOrElse("gitProjectId") { throw ParamBlankException("gitProjectId is null") } as Long,
+            productName = data.getOrElse("productName") { throw ParamBlankException("productName is null") } as String
         )
     }
 
