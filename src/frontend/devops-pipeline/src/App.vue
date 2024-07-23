@@ -14,7 +14,6 @@
     export default {
         name: 'App',
         data () {
-            console.log(222)
             return {
                 stayCurrentPage: ['atomDebug', '']
             }
