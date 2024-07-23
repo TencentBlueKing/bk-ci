@@ -92,7 +92,7 @@ task('build', series([cb => {
     
     const cmd = scopeStr ? `pnpx nx run-many -t public:master ${scopeStr}`: `pnpx nx affected -t public:master --base=${process.env.NX_BASE} --head=${process.env.NX_HEAD}`
     console.log('gulp cmd: ', cmd);
-    const spawnCmd = require('child_process').spawn(cmd, {
+    const spawnCmd = require('node:child_process').spawn(cmd, {
         stdio: 'inherit',
         env: {
             ...process.env,
