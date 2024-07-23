@@ -36,6 +36,8 @@ jobs:
           cache-dependency-path: src/frontend/pnpm-lock.yaml
       - name: Derive appropriate SHAs for base and head for `nx affected` commands
         uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: master
       - run: |
           echo "BASE: ${{ env.NX_BASE }}"
           echo "HEAD: ${{ env.NX_HEAD }}"
