@@ -10,6 +10,7 @@
         <div class="setting-content-wrapper">
             <setting-base
                 :is-enabled-permission="isEnabledPermission"
+                :is-loading="isLoading"
                 @setState="setState"
                 @cancel="exit"
             ></setting-base>
@@ -20,6 +21,7 @@
 <script>
     import SettingBase from '@/components/pipelineSetting/settingBase/index.vue'
     import { navConfirm } from '@/utils/util'
+    import { mapState } from 'vuex'
 
     export default {
         components: {
@@ -31,15 +33,20 @@
         data () {
             return {
                 isEditing: false,
-                isLoading: true,
                 confirmMsg: this.$t('editPage.confirmMsg'),
                 confirmTitle: this.$t('editPage.confirmTitle'),
                 cancelText: this.$t('cancel')
             }
         },
         computed: {
+            ...mapState('pipelines', [
+                'templateSetting'
+            ]),
             projectId () {
                 return this.$route.params.projectId
+            },
+            isLoading () {
+                return !this.templateSetting
             }
         },
         mounted () {
@@ -55,8 +62,8 @@
             this.leaveConfirm(to, from, next)
         },
         methods: {
-            setState ({ isLoading, isEditing }) {
-                this.isLoading = isLoading
+            setState (isEditing) {
+                console.log('setState', isEditing)
                 this.isEditing = isEditing
             },
             leaveConfirm (to, from, next) {

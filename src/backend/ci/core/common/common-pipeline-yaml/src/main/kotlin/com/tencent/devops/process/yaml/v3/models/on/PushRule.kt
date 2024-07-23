@@ -40,7 +40,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class PushRule(
     val name: String? = null,
     val enable: Boolean? = true,
-    val branches: List<String>? = listOf("*"),
+    val branches: List<String>?,
 
     @get:Schema(title = "branches-ignore")
     @JsonProperty("branches-ignore")
@@ -62,5 +62,19 @@ data class PushRule(
 
     @get:Schema(title = "path-filter-type")
     @JsonProperty("path-filter-type")
-    val pathFilterType: String? = null
+    val pathFilterType: String? = null,
+
+    @get:Schema(title = "custom-filter")
+    @JsonProperty("custom-filter")
+    val custom: CustomFilter? = null
+)
+
+data class CustomFilter(
+    @get:Schema(title = "custom-filter-url")
+    @JsonProperty("url")
+    val url: String? = null,
+
+    @get:Schema(title = "custom-filter-credentials")
+    @JsonProperty("credentials")
+    val credentials: String? = null
 )

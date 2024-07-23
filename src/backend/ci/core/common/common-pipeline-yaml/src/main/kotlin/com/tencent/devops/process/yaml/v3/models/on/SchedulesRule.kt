@@ -44,6 +44,9 @@ data class SchedulesRule(
     val cron: Any? = null,
     val interval: Interval? = null,
 
+    @get:Schema(title = "repo-type")
+    @JsonProperty("repo-type")
+    val repoType: String? = null,
     @get:Schema(title = "repo-id")
     @JsonProperty("repo-id")
     val repoId: String? = null,

@@ -31,7 +31,7 @@ class WeworkGroupNotifier @Autowired constructor(
         commonNotifyMessageTemplateRecord: TCommonNotifyMessageTemplateRecord
     ) {
         logger.info("send WEWORK_GROUP msg: $commonNotifyMessageTemplateRecord.id")
-        val groups = request.bodyParams?.get(NotifyUtils.WEWORK_GROUP_KEY)?.split(",")
+        val groups = request.bodyParams?.get(NotifyUtils.WEWORK_GROUP_KEY)?.split("[,;]".toRegex())
         if (groups.isNullOrEmpty()) {
             logger.info("wework group is empty, so return.")
             return

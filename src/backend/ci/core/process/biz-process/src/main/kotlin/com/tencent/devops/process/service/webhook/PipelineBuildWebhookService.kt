@@ -38,7 +38,6 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
@@ -79,6 +78,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDate
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -309,6 +309,15 @@ class PipelineBuildWebhookService @Autowired constructor(
                     }
                 } catch (ignore: Exception) {
                     logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
+                    builder.eventSource(eventSource = repo.repoHashId!!)
+                    failedMatchElements.add(
+                        PipelineTriggerFailedMatchElement(
+                            elementId = element.id,
+                            elementName = element.name,
+                            elementAtomCode = element.getAtomCode(),
+                            reasonMsg = ignore.message ?: ""
+                        )
+                    )
                 }
                 return true
             } else {
@@ -491,11 +500,18 @@ class PipelineBuildWebhookService @Autowired constructor(
         val repoName = webhookCommit.repoName
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: throw IllegalArgumentException("Pipeline($pipelineId) not found")
-        // 代码库触发支持仅有分支版本的情况
-        if (pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-        )
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                params = arrayOf(pipelineId)
+            )
+        if (pipelineInfo.locked == true) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
+        // 代码库触发支持仅有分支版本的情况，如果仅有草稿不需要在这里拦截
+//        if (pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING) throw ErrorCodeException(
+//            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+//        )
         val version = webhookCommit.version ?: pipelineInfo.version
         checkPermission(pipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
@@ -578,7 +594,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             return buildId
         } catch (ignore: Exception) {
             logger.warn("[$pipelineId]| webhook trigger fail to start repo($repoName): ${ignore.message}", ignore)
-            return null
+            throw ignore
         } finally {
             logger.info("$pipelineId|WEBHOOK_TRIGGER|repo=$repoName|time=${System.currentTimeMillis() - startEpoch}")
         }

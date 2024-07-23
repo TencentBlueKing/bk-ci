@@ -25,50 +25,9 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <link rel="icon" href="<%= PUBLIC_PATH_PREFIX %>/console/static/favicon.ico" type="image/x-icon" />
   <link rel="shortcut icon" href="<%= PUBLIC_PATH_PREFIX %>/console/static/favicon.ico" type="image/x-icon" />
-  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue.min.js?v=2.7.16" />
+  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js" />
   <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js" />
   <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js" />
-
-  <!-- devops:preload -->
-  <% for (key in htmlWebpackPlugin.files.js) { %>
-    <link href="<%= htmlWebpackPlugin.files.js[key] %>" as="script" rel="preload" />
-    <% } %>
-      <!-- end devops:preload -->
-
-      <!-- devops:css -->
-      <% for (key in htmlWebpackPlugin.files.css) { %>
-        <link href="<%= htmlWebpackPlugin.files.css[key] %>" rel="stylesheet" />
-        <% } %>
-
-
-          <!-- end devops:css -->
-          <title></title>
-</head>
-
-<body>
-  <!-- gulp inject: svg sprite js -->
-  <!-- inject:js -->
-  <!-- endinject -->
-  <div id="devops-root">
-    <div class="bk-loading" style="position: absolute">
-      <div class="bk-loading-wrapper">
-        <div class="bk-loading1">
-          <div class="point point1"></div>
-          <div class="point point2"></div>
-          <div class="point point3"></div>
-          <div class="point point4"></div>
-        </div>
-        <div class="bk-loading-title"></div>
-      </div>
-    </div>
-  </div>
-  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue.min.js?v=2.7.16"></script>
-  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
-  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js"></script>
-
-  <!-- devops:assets -->
-  <!-- end devops:assets -->
-
   <script>
     var API_URL_PREFIX = '/ms' // api接口前缀
     var PUBLIC_URL_PREFIX = '<%= PUBLIC_PATH_PREFIX %>' // 静态资源前缀
@@ -109,6 +68,15 @@
       oHead.appendChild(oStyle)
     }
 
+    function loadJsAssets(isVendors) {
+      for (var i = 0; i < window.jsAssets.length; i++) {
+        var js = window.jsAssets[i]
+        if (isVendors ? js.indexOf('vendors') > -1 : js.indexOf('vendors') === -1) {
+          importScript(js, document.body)
+        }
+      }
+    }
+
     function isValidPid(projectList, pid) {
       for (var i = 0; i < projectList.length; i++) {
         var proj = projectList[i]
@@ -117,13 +85,6 @@
         }
       }
       return false
-    }
-
-    for (var i = 0; i < window.jsAssets.length; i++) {
-      var js = window.jsAssets[i]
-      if (js.indexOf('vendors') > -1) {
-        importScript(js, document.body)
-      }
     }
 
     function getCookie(cname) {
@@ -165,7 +126,7 @@
         '; path=/'
     }
 
-    window.setProjectIdCookie = function (projectId) {
+    function setProjectIdCookie (projectId) {
       try {
         var domainMatch = location.hostname.match(/([^.]+\.)?([^\.]+\..+)/)
         var topDomain =
@@ -213,6 +174,50 @@
 
     var pathPid = matchPathProjectId() || getCookie(X_DEVOPS_PROJECT_ID)
     window.setProjectIdCookie(pathPid)
+  </script>
+
+  <!-- devops:preload -->
+  <% for (key in htmlWebpackPlugin.files.js) { %>
+    <link href="<%= htmlWebpackPlugin.files.js[key] %>" as="script" rel="preload" />
+    <% } %>
+      <!-- end devops:preload -->
+
+      <!-- devops:css -->
+      <% for (key in htmlWebpackPlugin.files.css) { %>
+        <link href="<%= htmlWebpackPlugin.files.css[key] %>" rel="stylesheet" />
+        <% } %>
+
+
+          <!-- end devops:css -->
+          <title></title>
+</head>
+
+<body>
+  <!-- gulp inject: svg sprite js -->
+  <!-- inject:js -->
+  <!-- endinject -->
+  <div id="devops-root">
+    <div class="bk-loading" style="position: absolute">
+      <div class="bk-loading-wrapper">
+        <div class="bk-loading1">
+          <div class="point point1"></div>
+          <div class="point point2"></div>
+          <div class="point point3"></div>
+          <div class="point point4"></div>
+        </div>
+        <div class="bk-loading-title"></div>
+      </div>
+    </div>
+  </div>
+  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js"></script>
+  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
+  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js"></script>
+
+  <!-- devops:assets -->
+  <!-- end devops:assets -->
+
+  <script>
+    loadJsAssets(true)
   </script>
   <script>
     window.getLoginUrl = function () {
@@ -528,15 +533,6 @@
         '</p>' +
         '</div>'
       )
-    }
-
-    function loadJsAssets() {
-      for (var i = 0; i < window.jsAssets.length; i++) {
-        var js = window.jsAssets[i]
-        if (js.indexOf('vendors') === -1) {
-          importScript(js, document.body)
-        }
-      }
     }
 
     function handleVisibilityChange() {

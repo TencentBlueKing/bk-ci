@@ -96,10 +96,8 @@
                                 "
                                 :class="{
                                     'devops-icon': true,
-                                    'spin-icon': true,
-                                    'running-icon': true,
-                                    'icon-hourglass': props.row.status === 'QUEUE',
-                                    'icon-circle-2-1': props.row.status === 'RUNNING' || !props.row.endTime
+                                    'icon-hourglass hourglass-queue': props.row.status === 'QUEUE',
+                                    'icon-circle-2-1 spin-icon': props.row.status === 'RUNNING' || !props.row.endTime
                                 }"
                             >
                             </i>
@@ -722,7 +720,7 @@
                     const res = await this.requestPipelinesHistory({
                         projectId,
                         pipelineId,
-                        version
+                        ...(this.isDebug ? { version } : {})
                     })
                     this.setHistoryPageStatus({
                         count: res.count
