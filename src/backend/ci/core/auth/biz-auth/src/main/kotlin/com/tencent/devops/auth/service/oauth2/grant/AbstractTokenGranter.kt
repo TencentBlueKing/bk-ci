@@ -16,7 +16,7 @@ abstract class AbstractTokenGranter<T : Oauth2AccessTokenRequest>(
     override fun grant(
         clientDetails: ClientDetailsInfo,
         accessTokenRequest: T
-    ): Oauth2AccessTokenVo? {
+    ): Oauth2AccessTokenVo {
         val accessTokenDTO = getAccessToken(
             accessTokenRequest = accessTokenRequest,
             clientDetails = clientDetails

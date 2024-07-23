@@ -82,7 +82,7 @@ class Oauth2EndpointService(
         clientId: String,
         clientSecret: String,
         accessTokenRequest: Oauth2AccessTokenRequest
-    ): Oauth2AccessTokenVo? {
+    ): Oauth2AccessTokenVo {
         val grantType = accessTokenRequest.grantType
         logger.info("get access token:$clientId|$grantType|$accessTokenRequest")
         val clientDetails = clientService.getClientDetails(

@@ -43,5 +43,5 @@ interface ApigwOauth2EndpointResourceV4 {
         clientSecret: String,
         @Parameter(description = "oauth2获取token请求报文体", required = true)
         accessTokenRequest: Oauth2AccessTokenRequest
-    ): Result<Any?>
+    ): Result<Any>
 }

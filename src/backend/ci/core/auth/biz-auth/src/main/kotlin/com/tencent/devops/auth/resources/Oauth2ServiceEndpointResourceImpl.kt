@@ -50,7 +50,7 @@ class Oauth2ServiceEndpointResourceImpl(
         clientId: String,
         clientSecret: String,
         accessTokenRequest: Oauth2AccessTokenRequest
-    ): Result<Oauth2AccessTokenVo?> {
+    ): Result<Oauth2AccessTokenVo> {
         return Result(
             endpointService.getAccessToken(
                 clientId = clientId,

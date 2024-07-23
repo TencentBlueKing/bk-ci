@@ -9,7 +9,7 @@ interface TokenGranter<T : Oauth2AccessTokenRequest> {
     fun grant(
         clientDetails: ClientDetailsInfo,
         accessTokenRequest: T
-    ): Oauth2AccessTokenVo?
+    ): Oauth2AccessTokenVo
 
     /**
      * 支持类型

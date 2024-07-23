@@ -22,7 +22,7 @@ class ApigwOauth2EndpointResourceV4Impl @Autowired constructor(
         clientId: String,
         clientSecret: String,
         accessTokenRequest: Oauth2AccessTokenRequest
-    ): Result<Any?> {
+    ): Result<Any> {
         logger.info("OPENAPI_OAUTH2_ACCESS_TOKEN_V4|$appCode|$clientId")
         return try {
             client.get(Oauth2ServiceEndpointResource::class).getAccessToken(

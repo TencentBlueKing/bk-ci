@@ -24,7 +24,7 @@ data class ClientDetailsDTO(
     @get:Schema(title = "refresh_token有效时间")
     val refreshTokenValidity: Long,
     @get:Schema(title = "创建人")
-    val createUser: String? = null,
+    val createUser: String = "system",
     @get:Schema(title = "更新人")
-    val updateUser: String? = null
+    val updateUser: String = "system"
 )

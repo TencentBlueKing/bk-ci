@@ -72,7 +72,7 @@ interface Oauth2ServiceEndpointResource {
         clientSecret: String,
         @Parameter(description = "oauth2获取token请求报文体", required = true)
         accessTokenRequest: Oauth2AccessTokenRequest
-    ): Result<Oauth2AccessTokenVo?>
+    ): Result<Oauth2AccessTokenVo>
 
     @GET
     @Path("/verifyAccessToken")
