@@ -6,6 +6,12 @@
         "^public:master"
       ],
       "cache": true
+    },
+    "dev": {
+      "dependsOn": [
+        "^public:master"
+      ],
+      "cache": true
     }
   }
 }
