@@ -90,7 +90,7 @@ task('build', series([cb => {
         lsVersion
     }
     
-    const cmd = scopeStr ? `nx run-many -t public:master ${scopeStr}`: `nx affected -t public:master --base=${process.env.NX_BASE} --head=${process.env.NX_HEAD}`
+    const cmd = scopeStr ? `exec nx run-many -t public:master ${scopeStr}`: `exec nx affected -t public:master --base=${process.env.NX_BASE} --head=${process.env.NX_HEAD}`
     console.log('gulp cmd: ', cmd, cmd.split(' '));
     const { spawn } = require('node:child_process')
     const spawnCmd = spawn('pnpm', [cmd.split(' ')], {
