@@ -36,19 +36,17 @@ jobs:
           node-version: 20
           cache: "pnpm"
           cache-dependency-path: src/frontend/pnpm-lock.yaml
-      - name: Derive appropriate SHAs for base and head for `nx affected` commands
-        id: setSHAs
-        uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v4
         with:
-          main-branch-name: ${{ github.ref_name }}
+          main-branch-name: master
           working-directory: "src/frontend"
       - run: |
-          echo "BASE: ${{ steps.setSHAs.outputs.base }}"
-          echo "HEAD: ${{ steps.setSHAs.outputs.head }}"
+          echo "BASE: ${{ env.NX_BASE }}"
+          echo "HEAD: ${{ env.NX_HEAD }}"
       - run: |
           pnpm install
           export NODE_OPTIONS=--openssl-legacy-provider
-          pnpm exec nx affected -t public:master --base=${{ github.ref_name }} --head=${{ steps.setSHAs.outputs.head }}
+          pnpm exec nx affected -t public:master --base=master --head=${{ steps.setSHAs.outputs.head }}
         working-directory: src/frontend
       - uses: actions/upload-artifact@v3
         if: ${{ inputs.upload == 'true'  }}
