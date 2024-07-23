@@ -421,7 +421,7 @@ const actions = {
             .then(res => res.data)
     },
     resetPipelineAuthorization (_, { projectId, params }) {
-        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/authorization/${projectId}/resetPipelineAuthorization`, params)
+        return ajax.post(`${AUTH_URL_PREFIX}/user/auth/authorization/${projectId}/resetResourceAuthorization`, params)
             .then(res => res.data)
     }
 }
