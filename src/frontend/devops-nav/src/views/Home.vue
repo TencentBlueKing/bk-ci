@@ -136,7 +136,8 @@
             </aside>
         </div>
         <section class="devops-home-footer">
-            <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved {{ BK_CI_VERSION.trim() }}</p>
+            <p class="item" v-html="platformInfo.footerInfoHTML" />
+            <p class="bkci-copyright">{{ platformInfo.footerCopyrightContent }}</p>
         </section>
         <consult-tools />
     </div>
@@ -146,7 +147,7 @@
     import { isAbsoluteUrl, urlJoin } from '@/utils/util'
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { Action, State } from 'vuex-class'
+    import { Action, Getter, State } from 'vuex-class'
     import { Accordion, AccordionItem } from '../components/Accordion/index'
     import ConsultTools from '../components/ConsultTools/index.vue'
     import Logo from '../components/Logo/index.vue'
@@ -166,6 +167,8 @@
         @State news
         @State related
         @Action fetchLinks
+        @Action getPlatformPreData
+        @Getter platformInfo
         isAllServiceListShow: boolean = false
         isAbsoluteUrl = isAbsoluteUrl
         BK_CI_VERSION: string = window.BK_CI_VERSION
@@ -224,6 +227,7 @@
             this.fetchLinks({
                 type: 'related'
             })
+            this.getPlatformPreData()
         }
     }
 </script>
