@@ -718,6 +718,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     !timer.repoName.isNullOrBlank() ->
                         TriggerRepositoryType.NAME
 
+                    timer.repoType == TriggerRepositoryType.NONE.name ->
+                        null
+                    // code -> ui,默认监听PAC代码库
                     else -> TriggerRepositoryType.SELF
                 }
                 elementQueue.add(

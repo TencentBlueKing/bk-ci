@@ -25,18 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.setting
+package com.tencent.devops.repository.pojo.enums
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "流水线-订阅-消息类型")
-enum class PipelineSubscriptionType {
-    EMAIL,
-    RTX,
-    WECHAT,
-    SMS,
-    WEWORK,
-    VOICE,
-    // 企业微信群通知
-    WEWORK_GROUP
+@Schema(title = "代码库配置状态")
+enum class RepositoryConfigStatusEnum {
+    OK,
+
+    // 禁用,前端不展示
+    DISABLED,
+
+    // 部署中,配置还没有准备好,如github app还没有申请
+    DEPLOYING
 }

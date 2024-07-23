@@ -3,8 +3,6 @@ package com.tencent.devops.process.config
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.wechatwork.WechatWorkRobotService
-import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.process.service.notify.TxNotifySendGroupMsgCmdImpl
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -22,14 +20,10 @@ class TxPipelineNotifyConfiguration {
     fun notifySendCmd(
         client: Client,
         authProjectApi: AuthProjectApi,
-        pipelineAuthServiceCode: PipelineAuthServiceCode,
-        wechatWorkService: WechatWorkService,
-        wechatWorkRobotService: WechatWorkRobotService
+        pipelineAuthServiceCode: PipelineAuthServiceCode
     ) = TxNotifySendGroupMsgCmdImpl(
         client = client,
         authProjectApi = authProjectApi,
-        pipelineAuthServiceCode = pipelineAuthServiceCode,
-        wechatWorkService = wechatWorkService,
-        wechatWorkRobotService = wechatWorkRobotService
+        pipelineAuthServiceCode = pipelineAuthServiceCode
     )
 }

@@ -2,6 +2,7 @@ package com.tencent.devops.openapi.api.apigw
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -10,6 +11,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -65,6 +67,24 @@ interface ApigwRemoteDevResource {
         @QueryParam("ticket")
         ticket: String
     ): Result<Boolean>
+
+    @Operation(summary = "校验token", tags = ["v4_app_ticket_check"])
+    @GET
+    @Path("/desktop_token_check")
+    fun desktopTokenCheck(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @Parameter(description = "认证token", required = true)
+        token: String,
+        @QueryParam("dToken")
+        @Parameter(description = "dToken", required = false)
+        dToken: String
+    ): Result<UserOnePassword>
 
     @Operation(summary = "提供给wesec获取云桌面信息", tags = ["v4_app_project_workspace"])
     @GET

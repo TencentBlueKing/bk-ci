@@ -184,7 +184,7 @@ class WorkspaceBcsClient @Autowired constructor(
                 logger.info("$userId ${action.action} workspace response: ${response.rid()}|$responseContent")
                 if (!response.isSuccessful) {
                     throw WorkspaceDispatchException(
-                        "操作环境接口返回失败: ${response.code}"
+                        "操作环境接口返回失败: ${response.code}-$responseContent"
                     )
                 }
 

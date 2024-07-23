@@ -414,7 +414,8 @@ class NotifyControl @Autowired constructor(
                     errorMsg = errorMsg,
                     systemType = systemType,
                     workspaceMountType = workspaceMountType,
-                    ownerType = ownerType
+                    ownerType = ownerType,
+                    projectId = projectId
                 ),
                 projectId = projectId,
                 userIds = getWebSocketUsers(userId, workspaceName),

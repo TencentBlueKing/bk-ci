@@ -16,6 +16,8 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
@@ -26,6 +28,7 @@ import com.tencent.devops.remotedev.pojo.DesktopTokenSign
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.OperateCvmDataType
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -121,6 +124,12 @@ class ServiceRemoteDevResourceImpl(
             logger.error("validateUserTicket error", e)
         }
         return Result(true)
+    }
+
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
+    override fun desktopTokenCheck(token: String, dToken: String): Result<UserOnePassword> {
+        logger.info("Checking desktop token $dToken")
+        return Result(permissionService.checkAndGetUser1Password(dToken))
     }
 
     override fun getProjectWorkspace(
