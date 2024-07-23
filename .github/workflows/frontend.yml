@@ -38,14 +38,11 @@ jobs:
         id: setSHAs
         uses: nrwl/nx-set-shas@v4
         with:
-          main-branch-name: master
+          main-branch-name: "master"
           working-directory: "src/frontend"
       - run: |
           echo "BASE: ${{ steps.setSHAs.outputs.base }}"
           echo "HEAD: ${{ steps.setSHAs.outputs.head }}"
-      - run: |
-          echo "BASE: ${{ env.NX_BASE }}"
-          echo "HEAD: ${{ env.NX_HEAD }}"
       - run: |
           pnpm install
           export NODE_OPTIONS=--openssl-legacy-provider
