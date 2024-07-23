@@ -94,6 +94,7 @@ task('build', series([cb => {
     console.log('gulp cmd: ', cmd);
     require('child_process').exec(cmd, {
         maxBuffer: 5000 * 1024,
+        stdio: 'inherit',
         env: {
             ...process.env,
             dist,

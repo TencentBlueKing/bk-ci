@@ -41,7 +41,7 @@
             }
         },
         created () {
-            console.log('debug')
+            
             window.globalVue.$on('change::$currentProjectId', data => { // 蓝盾选择项目时切换
                 if (this.$route.params.projectId !== data.currentProjectId) {
                     if (this.stayCurrentPage.find(item => item === this.$route.name)) {
