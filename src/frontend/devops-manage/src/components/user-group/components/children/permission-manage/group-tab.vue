@@ -27,6 +27,7 @@
               :has-next="projectTable.hasNext"
               :group-name="t('用户组')"
               :scroll-loading="projectTable.scrollLoading"
+              :batch-flag="batchFlag"
               @handle-renewal="handleRenewal"
               @handle-hand-over="handleHandOver"
               @handle-remove="handleRemove"
@@ -70,6 +71,7 @@
               :loading="item.tableLoading"
               :group-name="item.resourceTypeName"
               :scroll-loading="item.scrollLoading"
+              :batch-flag="batchFlag"
               @handle-renewal="handleRenewal"
               @handle-hand-over="handleHandOver"
               @handle-remove="handleRemove"
@@ -158,6 +160,7 @@ const props = defineProps({
     type: Object,
     default: () => ({})
   },
+  batchFlag: String,
 });
 const emit = defineEmits(['collapseClick']);
 

@@ -1,6 +1,6 @@
 import http from '@/http/api';
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Message } from 'bkui-vue';
 import userGroupTable from "@/store/userGroupTable";
 
@@ -16,6 +16,14 @@ interface Pagination {
   count: number;
 }
 
+interface MemberListParamsType {
+  page: number;
+  pageSize: number;
+  userName?: string;
+  deptName?: string;
+  memberType?: string;
+}
+
 export default defineStore('manageAside', () => {
   const groupTableStore = userGroupTable();
 
@@ -27,6 +35,7 @@ export default defineStore('manageAside', () => {
   const overTable = ref([]);
   const userName = ref('');
   const memberPagination = ref<Pagination>({ limit: 20, current: 1, count: 0 });
+  const activeTab = ref();
 
   /**
    * 人员组织侧边栏点击事件
@@ -34,6 +43,7 @@ export default defineStore('manageAside', () => {
   function handleAsideClick(item: ManageAsideType) {
     // 调用接口，获取侧边表格数据和折叠面板数
     asideItem.value = item;
+    activeTab.value = item.id;
     groupTableStore.fetchUserGroupList(item);
   }
   /**
@@ -57,57 +67,26 @@ export default defineStore('manageAside', () => {
   /**
    * 组织移出项目
    */
-  // const flag = ref(true);
-  async function handleAsideRemoveConfirm(handOverMember: ManageAsideType, projectId: string, manageAsideRef) {
+  async function handleAsideRemoveConfirm(removeUser, handOverMember, projectId: string) {
     const params = {
-      targetMember: asideItem.value,
+      targetMember: removeUser,
       // ...(handOverMember && {handoverTo: handOverMember})
       ...(handOverMember && {handoverTo: {
-        id: 'greysonfang',
-        name: '方灿',
+        id: 'v_yjjiaoyu',
+        name: '余姣姣',
         type: 'user'
       }})
     }
-    const res = await http.removeMemberFromProject(projectId, params);
-    // 这里根据返回判断移出成功和失败的情况而不用flag
-    // if (value.type == 'DEPARTMENT') {
-    //   Message({
-    //     theme: 'success',
-    //     message: `${value.name} 已成功移出本项目。`,
-    //   });
-    // } else {
-    //   // 这里根据返回判断移出成功和失败的情况
-    //   if (flag.value) {
-    //     manageAsideRef.handOverfail(true);
-    //     overTable.value = [
-    //       {
-    //         id: 1,
-    //         code: 'bkdevops-plugins-test/fayenodejstesa',
-    //         reason: '指定用户未操作过 OAuth',
-    //         percent: '',
-    //       },
-    //       {
-    //         id: 2,
-    //         code: 'bkdevops-plugins-test/fayenodejstesa',
-    //         reason: '指定用户没有此代码库权限',
-    //         percent: '',
-    //       },
-    //     ];
-    //     flag.value = false;
-    //   } else {
-    //     console.log(overTable.value, '移交失败表格数据');
-    //     Message({
-    //       theme: 'success',
-    //       message: `${value.name} 已成功移出本项目。`,
-    //     });
-    //     manageAsideRef.handOverClose();
-    //   }
-    // }
-    Message({
-      theme: 'success',
-      message: `${asideItem.value!.name} 已成功移出本项目。`,
-    });
-    getProjectMembers(projectId);
+    try {
+      await http.removeMemberFromProject(projectId, params);
+      Message({
+        theme: 'success',
+        message: `${removeUser!.name} 已成功移出本项目。`,
+      });
+      getProjectMembers(projectId);
+    } catch (error) {
+      console.log(error);
+    }
   }
   /**
    * 获取项目下全体成员
@@ -115,7 +94,7 @@ export default defineStore('manageAside', () => {
   async function getProjectMembers(projectId: string, searchValue?) {
     try {
       isLoading.value = true;
-      const params = {
+      const params: MemberListParamsType = {
         page: memberPagination.value.current,
         pageSize: memberPagination.value.limit,
       };
@@ -128,9 +107,12 @@ export default defineStore('manageAside', () => {
           params.memberType = item.id;
         }
       })
+      
       const res = await http.getProjectMembers(projectId, params);
       isLoading.value = false;
-      memberList.value = res.records
+      memberList.value = res.records;
+      activeTab.value = res.records[0]?.id;
+      handleAsideClick(res.records[0]);
       memberPagination.value.count = res.count;
     } catch (error) {
       isLoading.value = false;
@@ -146,6 +128,7 @@ export default defineStore('manageAside', () => {
     overTable,
     userName,
     memberPagination,
+    activeTab,
     handleAsideClick,
     handleAsidePageChange,
     handleShowPerson,
