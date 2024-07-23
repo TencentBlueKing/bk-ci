@@ -67,7 +67,6 @@
     "webpack": "~5.76.1"
   },
   "dependencies": {
-    "@blueking/login-modal": "1.0.4",
     "@icon-cool/bk-icon-devops": "^0.1.13",
     "axios": "0.28.0",
     "bk-magic-vue": "2.5.9-beta.9",
@@ -84,6 +83,8 @@
     "vue-router": "3.6.5",
     "vuex": "3.6.2",
     "vuex-class": "^0.3.0",
-    "vuex-typescript-interface": "^1.0.3"
+    "vuex-typescript-interface": "^1.0.3",
+    "@blueking/login-modal": "1.0.4",
+    "@blueking/platform-config": "^1.0.4"
   }
 }

@@ -4,12 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-catalogs:
-  vue3:
-    vue-i18n:
-      specifier: ~9.1.10
-      version: 9.1.10
-
 overrides:
   glob-parent: 5.1.2
 
@@ -957,6 +951,9 @@ importers:
     dependencies:
       '@blueking/login-modal':
         specifier: 1.0.4
+        version: 1.0.4
+      '@blueking/platform-config':
+        specifier: ^1.0.4
         version: 1.0.4
       '@icon-cool/bk-icon-devops':
         specifier: ^0.1.13
@@ -2880,6 +2877,9 @@ packages:
 
   '@blueking/login-modal@1.0.4':
     resolution: {integrity: sha512-HMSIZl4QeRAPEVcD/FV2vysnZxJiDSVeLppVw65wvQnvNwos2JwqjoCSoS46Joe/JY/H0r89RgA2WIkneOekNg==}
+
+  '@blueking/platform-config@1.0.4':
+    resolution: {integrity: sha512-qYdNtOGHAd0h6o1QF6DR0BG+Xx7bkljJEt3iC0hD1hDAxhDOOTwjsb/VRKNDTcNm8WJWDLkV/afK1CauRP6d0A==}
 
   '@blueking/search-select@0.0.1-beta.2':
     resolution: {integrity: sha512-o9D5Rs15ZBE+AWp5dsB2NqI0vu6X4fVYBWfTeTIsvrCGqkfLY90e+H9VZjyNBwGPIIrYofHHb+bx2dDxyai/6g==}
@@ -15479,7 +15479,7 @@ packages:
     engines: {node: '>=10'}
 
   yaeti@0.0.6:
-    resolution: {integrity: sha1-8m9ITXJoTPQr7ft2lwqhYI+/lXc=}
+    resolution: {integrity: sha512-MvQa//+KcZCUkBTIC9blM+CU9J2GzuTytsOUwf2lidtvkx/6gnEp1QvJv34t9vdjhFmha/mUiNDbN0D0mJWdug==}
     engines: {node: '>=0.10.32'}
 
   yallist@2.1.2:
@@ -15566,6 +15566,12 @@ packages:
 
   zwitch@1.0.5:
     resolution: {integrity: sha512-V50KMwwzqJV0NpZIZFwfOD5/lyny3WlSzRiXgA0G7VUnRlqttta1L6UQIHzd6EuBY/cHGfwTIck7w1yH6Q5zUw==}
+
+catalogs:
+  vue3:
+    vue-i18n:
+      specifier: ~9.1.10
+      version: 9.1.10
 
 snapshots:
 
@@ -16713,6 +16719,10 @@ snapshots:
       - webpack-command
 
   '@blueking/login-modal@1.0.4': {}
+
+  '@blueking/platform-config@1.0.4':
+    dependencies:
+      xss: 1.0.15
 
   '@blueking/search-select@0.0.1-beta.2':
     dependencies:

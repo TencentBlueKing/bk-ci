@@ -15,17 +15,23 @@ const argv = yargs.alias({
     dist: 'd',
     env: 'e',
     lsVersion: 'l',
+    base: 'b',
+    head: 'h',
     scope: 's'
 }).default({
     dist: 'frontend',
     env: 'master',
-    lsVersion: 'dev'
+    lsVersion: 'dev',
+    base: 'master',
+    head: 'HEAD',
 }).describe({
     dist: 'build output dist directory',
     env: 'environment [dev, test, master, external]',
-    lsVersion: 'localStorage version'
+    lsVersion: 'localStorage version',
+    head: 'head file path',
+    base: 'base file path'
 }).argv
-const { dist, env, lsVersion, scope } = argv
+const { dist, env, lsVersion, scope, head = 'HEAD', base = 'master' } = argv
 const svgSpriteConfig = {
     mode: {
         symbol: true
@@ -90,7 +96,7 @@ task('build', series([cb => {
         lsVersion
     }
     
-    const cmd = scopeStr ? `exec nx run-many -t public:master ${scopeStr}`: `exec nx affected -t public:master --base=${process.env.NX_BASE} --head=${process.env.NX_HEAD}`
+    const cmd = scopeStr ? `exec nx run-many -t public:master ${scopeStr}`: `exec nx affected -t public:master --base=${base} --head=${head}`
     console.log('gulp cmd: ', cmd, cmd.split(' '));
     const { spawn } = require('node:child_process')
     const spawnCmd = spawn('pnpm', cmd.split(' '), {

@@ -2217,8 +2217,8 @@
             "description" : {
               "type" : "string"
             },
-            "send-markdown" : {
-              "type" : "boolean"
+            "content-format" : {
+              "enum" : [ "markdown", "text" ]
             },
             "notify-type" : {
               "type" : "array",
