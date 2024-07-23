@@ -46,7 +46,7 @@ jobs:
       - run: |
           pnpm install
           export NODE_OPTIONS=--openssl-legacy-provider
-          pnpm public -- --base ${{ env.NX_BASE }} --head ${{ env.NX_HEAD }}
+          pnpm public --base ${{ env.NX_BASE }} --head ${{ env.NX_HEAD }}
         working-directory: src/frontend
       - uses: actions/upload-artifact@v3
         if: ${{ inputs.upload == 'true'  }}
