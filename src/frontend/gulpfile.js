@@ -101,14 +101,6 @@ task('build', series([cb => {
             lsVersion
         }
     })
-    // spawnCmd.stdout.on('data', (data) => {
-    //     console.log(`stdout: ${data}`);
-    // });
-      
-    // spawnCmd.stderr.on('data', (data) => {
-    //     console.error(`stderr: ${data}`);
-    //     process.exit(1)
-    // });
       
     spawnCmd.on('close', (code) => {
         console.log(`child process exited with code ${code}`);
