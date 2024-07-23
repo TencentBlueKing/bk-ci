@@ -272,8 +272,10 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
     ): Result<Boolean> {
         return client.get(ServiceGitBasicSettingResource::class).updateProjectProductName(
             userId = userId,
-            gitProjectId = data.getOrElse("gitProjectId") { throw ParamBlankException("gitProjectId is null") } as Long,
-            productName = data.getOrElse("productName") { throw ParamBlankException("productName is null") } as String
+            gitProjectId = data.getOrElse("gitProjectId") { throw ParamBlankException("gitProjectId is null") }
+                .toString().toLong(),
+            productName = data.getOrElse("productName") { throw ParamBlankException("productName is null") }
+                .toString()
         )
     }
 
