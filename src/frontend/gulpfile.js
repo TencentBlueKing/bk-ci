@@ -61,7 +61,7 @@ function generatorSvgJs (type) {
 
 function getScopeStr (scope) {
     try {
-        if (!scope) return '-r'
+        if (!scope) return ''
         let scopeArray
         switch (true) {
             case typeof scope === 'string':
@@ -70,7 +70,7 @@ function getScopeStr (scope) {
             default:
                 scopeArray = scope
         }
-        return `${scopeArray.map(item => `--filter devops-${item}`).join(' ')}`
+        return `-p ${scopeArray.map(item => `devops-${item}`).join(' ')}`
     } catch (e) {
         console.error(e)
         return ''
@@ -89,12 +89,10 @@ task('build', series([cb => {
         // version: type,
         lsVersion
     }
-    const envQueryStr = Object.keys(envConfMap).reduce((acc, key) => {
-        acc += ` --env ${key}=${envConfMap[key]}`
-        return acc
-    }, '')
-    console.log(`${envQueryStr} \n pnpm ${scopeStr} run public:${env}`)
-    require('child_process').exec(`pnpm ${scopeStr} run public:${env}`, {
+    
+    const cmd = scopeStr ? `pnpx nx run-many -t public:master ${scopeStr}`: `pnpx nx affected -t public:master --base=${process.env.NX_BASE} --head=${process.env.NX_HEAD}`
+    console.log('gulp cmd: ', cmd);
+    require('child_process').exec(cmd, {
         maxBuffer: 5000 * 1024,
         env: {
             ...process.env,
