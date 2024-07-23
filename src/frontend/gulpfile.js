@@ -92,22 +92,28 @@ task('build', series([cb => {
     
     const cmd = scopeStr ? `pnpx nx run-many -t public:master ${scopeStr}`: `pnpx nx affected -t public:master --base=${process.env.NX_BASE} --head=${process.env.NX_HEAD}`
     console.log('gulp cmd: ', cmd);
-    require('child_process').exec(cmd, {
-        maxBuffer: 5000 * 1024,
+    const spawnCmd = require('child_process').spawn(cmd, {
         stdio: 'inherit',
         env: {
             ...process.env,
             dist,
             lsVersion
         }
-    }, (err, res) => {
-        if (err) {
-            console.log(err)
+    })
+    spawnCmd.stdout.on('data', (data) => {
+        console.log(`stdout: ${data}`);
+      });
+      
+      spawnCmd.stderr.on('data', (data) => {
+        console.error(`stderr: ${data}`);
             process.exit(1)
-        }
+      });
+      
+      spawnCmd.on('close', (code) => {
+        console.log(`child process exited with code ${code}`);
         spinner.succeed('Finished building bk-ci frontend project')
         cb()
-    })
+      }); 
 }], () => {
     try {
         const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(`${dist}/assets_bundle.json`, 'utf8')}`
