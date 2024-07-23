@@ -40,7 +40,7 @@ jobs:
         id: setSHAs
         uses: nrwl/nx-set-shas@v4
         with:
-          main-branch-name: master
+          main-branch-name: ${{ github.ref_name }}
           working-directory: "src/frontend"
       - run: |
           echo "BASE: ${{ steps.setSHAs.outputs.base }}"
