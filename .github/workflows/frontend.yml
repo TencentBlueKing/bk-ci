@@ -46,7 +46,7 @@ jobs:
       - run: |
           pnpm install
           export NODE_OPTIONS=--openssl-legacy-provider
-          pnpm exec nx affected -t public:master --base=master --head=${{ steps.setSHAs.outputs.head }}
+          pnpm exec nx affected -t public:master --base=${{ env.NX_BASE }} --head=${{ env.NX_HEAD }}
         working-directory: src/frontend
       - uses: actions/upload-artifact@v3
         if: ${{ inputs.upload == 'true'  }}
