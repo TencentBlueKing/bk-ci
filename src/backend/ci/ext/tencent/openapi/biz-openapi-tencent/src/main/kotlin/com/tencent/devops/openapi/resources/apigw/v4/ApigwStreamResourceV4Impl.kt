@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwStreamResourceV4
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
@@ -241,12 +242,34 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         enabled: Boolean,
+        productName: String?,
         projectInfo: GitCIProjectInfo
     ): Result<Boolean> {
         return client.get(ServiceGitBasicSettingResource::class).enableGitCI(
             userId = userId,
             enabled = enabled,
+            productName = productName,
             projectInfo = projectInfo
+        )
+    }
+
+    override fun updateProjectOrganization(
+        userId: String,
+        gitProjectId: Long,
+        organization: ProjectOrganizationInfo
+    ): Result<Boolean> {
+        return client.get(ServiceGitBasicSettingResource::class).updateProjectOrganization(
+            userId = userId,
+            gitProjectId = gitProjectId,
+            organization = organization
+        )
+    }
+
+    override fun updateProjectProductName(userId: String, gitProjectId: Long, productName: String): Result<Boolean> {
+        return client.get(ServiceGitBasicSettingResource::class).updateProjectProductName(
+            userId = userId,
+            gitProjectId = gitProjectId,
+            productName = productName
         )
     }
 

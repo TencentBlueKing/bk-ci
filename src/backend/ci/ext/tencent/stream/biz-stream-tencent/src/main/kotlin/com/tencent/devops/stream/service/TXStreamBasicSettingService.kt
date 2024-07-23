@@ -27,14 +27,18 @@
 
 package com.tencent.devops.stream.service
 
+import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.ProjectDeptInfo
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -43,6 +47,7 @@ import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,6 +80,47 @@ class TXStreamBasicSettingService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TXStreamBasicSettingService::class.java)
+    }
+
+    fun updateProjectProductId(
+        userId: String,
+        projectId: String,
+        productId: Int?,
+        productName: String?
+    ) {
+        kotlin.runCatching {
+            client.get(ServiceProjectResource::class).updateProjectProductId(projectId, productName)
+        }.onFailure {
+            if (it is RemoteServiceException && it.httpStatus == HTTP_404) {
+                initStreamConf(
+                    userId = userId,
+                    projectId = projectId,
+                    gitProjectId = GitCommonUtils.getGitProjectId(projectId),
+                    enabled = false
+                )
+                client.get(ServiceProjectResource::class).updateProjectProductId(projectId, productName)
+            }
+        }
+    }
+
+    fun updateOrganizationByEnglishName(
+        userId: String,
+        projectId: String,
+        organization: ProjectOrganizationInfo
+    ) {
+        kotlin.runCatching {
+            client.get(ServiceProjectResource::class).updateOrganizationByEnglishName(projectId, organization)
+        }.onFailure {
+            if (it is RemoteServiceException && it.httpStatus == HTTP_404) {
+                initStreamConf(
+                    userId = userId,
+                    projectId = projectId,
+                    gitProjectId = GitCommonUtils.getGitProjectId(projectId),
+                    enabled = false
+                )
+                client.get(ServiceProjectResource::class).updateOrganizationByEnglishName(projectId, organization)
+            }
+        }
     }
 
     override fun updateProjectSetting(
