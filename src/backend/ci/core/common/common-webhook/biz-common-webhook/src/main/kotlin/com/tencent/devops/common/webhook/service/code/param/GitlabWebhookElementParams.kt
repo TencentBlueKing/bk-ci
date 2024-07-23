@@ -68,6 +68,40 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
         if (element.branchName == null) {
             return null
         }
+        when {
+            // action上线后【流水线配置层面】兼容存量merge_request_accept和push事件
+            element.eventType == CodeEventType.MERGE_REQUEST_ACCEPT -> {
+                params.includeMrAction = CodeGitWebHookTriggerElement.MERGE_ACTION_MERGE
+            }
+
+            element.eventType == CodeEventType.MERGE_REQUEST &&
+                    !WebhookUtils.isActionGitTriggerVersion(element.version) &&
+                    element.includeMrAction == null -> {
+                params.includeMrAction = joinToString(
+                    listOf(
+                        CodeGitWebHookTriggerElement.MERGE_ACTION_OPEN,
+                        CodeGitWebHookTriggerElement.MERGE_ACTION_REOPEN,
+                        CodeGitWebHookTriggerElement.MERGE_ACTION_PUSH_UPDATE
+                    )
+                )
+            }
+
+            element.eventType == CodeEventType.PUSH &&
+                    !WebhookUtils.isActionGitTriggerVersion(element.version) &&
+                    element.includePushAction == null -> {
+                params.includePushAction = joinToString(
+                    listOf(
+                        CodeGitWebHookTriggerElement.PUSH_ACTION_CREATE_BRANCH,
+                        CodeGitWebHookTriggerElement.PUSH_ACTION_PUSH_FILE
+                    )
+                )
+            }
+
+            else -> {
+                params.includeMrAction = joinToString(element.includeMrAction)
+                params.includePushAction = joinToString(element.includePushAction)
+            }
+        }
         params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
         params.codeType = CodeType.GITLAB
         params.eventType = element.eventType
@@ -118,5 +152,13 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
             }
         }
         return params
+    }
+
+    private fun joinToString(list: List<String>?): String {
+        return if (list.isNullOrEmpty()) {
+            ""
+        } else {
+            list.joinToString(",")
+        }
     }
 }

@@ -49,6 +49,8 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind.UPDATE
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
@@ -242,7 +244,11 @@ class TGitMrTriggerHandler(
             val actionFilter = ContainsFilter(
                 pipelineId = pipelineId,
                 filterName = "mrAction",
-                triggerOn = TGitMrEventAction.getActionValue(event) ?: "",
+                triggerOn = if (repository is CodeGitlabRepository && getAction(event) == UPDATE.value) {
+                    TGitMrEventAction.PUSH_UPDATE.value
+                } else {
+                    TGitMrEventAction.getActionValue(event)
+                } ?: "",
                 included = convert(includeMrAction).ifEmpty {
                     listOf("empty-action")
                 },
