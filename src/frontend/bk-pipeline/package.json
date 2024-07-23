@@ -54,8 +54,8 @@
     "sass-loader": "^12.1.0",
     "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.3.6",
-    "vue-loader": "catalog:vue2",
-    "webpack": "catalog:webpack5"
+    "vue-loader": "~15.10.0",
+    "webpack": "~5.76.1"
   },
   "dependencies": {
     "uuid": "~8.1.0",
@@ -66,8 +66,8 @@
     "url": "git+https://github.com/Tencent/bk-ci.git"
   },
   "peerDependencies": {
-    "bk-magic-vue": "catalog:bkMagicVue",
-    "vue": "catalog:vue2"
+    "bk-magic-vue": "2.5.9-beta.9",
+    "vue": "~2.7.16"
   },
   "keywords": [
     "pipeline",

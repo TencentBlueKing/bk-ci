@@ -12,3 +12,8 @@ devops-gitci/src/conf
 .vscode
 *.pem
 dist/
+.pnpm-global/
+
+
+.nx/cache
+.nx/workspace-data

@@ -4,7 +4,7 @@
   "description": "",
   "dependencies": {
     "lodash-es": "^4.17.21",
-    "vue": "catalog:vue2",
+    "vue": "~2.7.16",
     "vuex-class": "^0.3.0"
   },
   "private": true,
@@ -47,9 +47,9 @@
     "sass-loader": "^12.1.0",
     "style-loader": "^0.23.0",
     "terser-webpack-plugin": "^5.3.6",
-    "vue-loader": "catalog:vue2",
+    "vue-loader": "~15.10.0",
     "vue-style-loader": "^3.0.3",
-    "webpack": "catalog:webpack5"
+    "webpack": "~5.76.1"
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
