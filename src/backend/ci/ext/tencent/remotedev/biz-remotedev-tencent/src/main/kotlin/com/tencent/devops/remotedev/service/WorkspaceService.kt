@@ -594,7 +594,10 @@ class WorkspaceService @Autowired constructor(
         val data = result.map { res ->
             val name = res.workspaceName
 
-            val owner = owners[res.workspaceName]
+            val owner = when (res.ownerType) {
+                WorkspaceOwnerType.PROJECT -> owners[res.workspaceName]
+                WorkspaceOwnerType.PERSONAL -> res.createUserId
+            }
             val depInfo = if (!owner.isNullOrBlank() && (hasDepartmentsInfo == true)) {
                 // 判断是不是太湖用户
                 if (owner.contains("@tai")) {
@@ -628,7 +631,7 @@ class WorkspaceService @Autowired constructor(
                 regionId = res.regionId.toString(),
                 innerIp = res.hostIp,
                 createTime = DateTimeUtil.toDateTime(res.createTime),
-                owner = owners[name] ?: res.createUserId,
+                owner = owner ?: res.createUserId,
                 realOwner = owner ?: "",
                 status = res.status,
                 displayName = res.displayName,
