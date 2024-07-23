@@ -168,10 +168,10 @@ export default defineStore('userGroupTable', () => {
 
       if(currentRequestId === requestId) {
         sourceList.value.forEach(item => {
-          if(item.resourceType === "project") {
+          if(item.resourceType === "project" && projectResult) {
             item.tableData = projectResult.records;
           }
-          if(item.resourceType === "pipeline") {
+          if(item.resourceType === "pipeline" && pipelineGroupResult) {
             item.tableData = pipelineGroupResult.records;
             item.count && (item.activeFlag = true);
           }
@@ -179,6 +179,7 @@ export default defineStore('userGroupTable', () => {
         isLoading.value = false;
       }
     } catch (error: any) {
+      isLoading.value = false;
       console.error(error);
     }
   }

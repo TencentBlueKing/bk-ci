@@ -74,7 +74,7 @@
     </bk-exception>
   </bk-loading>
   <bk-dialog
-    :width="640"
+    :width="660"
     class="renewal-dialog"
     :is-show="isShowRenewal"
     @closed="handleRenewalClosed"
@@ -95,11 +95,11 @@
         <span>{{t("到期时间")}}：</span> 
         <template v-if="selectedRow?.expiredAtDisplay === t('已过期')">
           <span class="text-gray">{{t("已过期")}}</span>
-          <span class="text-blue"> &nbsp; -> &nbsp; {{ expiredAt }}天</span>
+          <span class="text-blue"> &nbsp; -> &nbsp; {{ expiredAt }} {{ t("天") }} </span>
         </template>
         <template v-else>
           <span class="text-gray">{{ selectedRow?.expiredAtDisplay }}</span class="text-blue">
-          <span> &nbsp; -> &nbsp; {{ Number(selectedRow?.expiredAtDisplay.split('天')[0]) + expiredAt }}天</span>
+          <span> &nbsp; -> &nbsp; {{ Number(selectedRow?.expiredAtDisplay.replace(/\D/g, '')) + expiredAt }} {{ t("天") }} </span>
         </template>
       </p>
     </template>
@@ -211,16 +211,16 @@
           <div v-if="sliderTitle === t('批量续期')">
             <div class="main-line">
               <p class="main-label">{{t("续期对象")}}</p>
-              <span class="main-text">{{("用户")}}： {{userName}}</span>
+              <span class="main-text">{{t("用户")}}： {{userName}}</span>
             </div>
             <div class="main-line">
-              <p class="main-label">{{("续期时长")}}</p>
+              <p class="main-label">{{t("续期时长")}}</p>
               <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
             </div>
           </div>
           <div v-if="sliderTitle === t('批量移交')">
             <div class="main-line" style="margin-top: 26px;">
-              <p class="main-label">{{("移交给")}}</p>
+              <p class="main-label">{{t("移交给")}}</p>
               <bk-form
                 ref="formRef"
                 :rules="rules"
@@ -573,10 +573,14 @@ async function batchConfirm(batchFlag) {
     }
 
     if (res) {
-      fetchUserGroupList(asideItem.value);
       showMessage('success', t(batchMassageText[batchFlag]));
       batchBtnLoading.value = false;
       cancleClear(batchFlag);
+      if(batchFlag === 'renewal'){
+        fetchUserGroupList(asideItem.value);
+      } else {
+        getProjectMembers(projectId.value);
+      }
     }
   } catch (error) {
     batchBtnLoading.value = false;
@@ -761,7 +765,7 @@ function asideRemoveConfirm(removeUser, handOverForm) {
 
     span {
       display: inline-block;
-      width: 100px;
+      min-width: 100px;
       text-align: right;
       color: #63656E;
     }

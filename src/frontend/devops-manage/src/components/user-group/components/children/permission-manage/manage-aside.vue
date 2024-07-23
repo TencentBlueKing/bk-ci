@@ -211,7 +211,6 @@ const { t } = useI18n();
 const route = useRoute();
 const manageAsideStore = useManageAside();
 const current = ref(1);
-// const activeTab = ref();
 const isShowHandOverDialog = ref(false);
 const formRef = ref(null);
 const loading = ref(false);
@@ -249,10 +248,6 @@ const props = defineProps({
   activeTab: String,
 });
 const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm', 'refresh']);
-
-// watch(() => props.memberList, (newData) => {
-//   emit('handleClick', newData[0]);
-// });
 
 watch(()=> handOverForm.value.name,() => {
   handOverInputClear();
@@ -497,7 +492,6 @@ function handleShowPerson(item) {
   }
   .text-tag {
     width: 100%;
-    height: 32px;
     line-height: 30px;
     padding-left: 10px;
     margin-bottom: 16px;

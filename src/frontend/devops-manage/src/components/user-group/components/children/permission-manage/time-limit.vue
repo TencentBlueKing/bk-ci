@@ -59,14 +59,6 @@ function initTime(){
   currentActive.value = 30;
   customTime.value = 1;
 }
-// /**
-//  * 传入的值与当前时间戳秒数相加
-//  * @param value 传入的值
-//  */
-// function formatTimes(value) {
-//   const nowSecond = Math.floor(Date.now() / 1000);
-//   return Number(value) + nowSecond;
-// }
 /**
  * 授权期限选择
  */
@@ -113,7 +105,7 @@ const handleChangeCustomTime = (value) => {
   }
 
   .custom-time-select {
-    width: 110px;
+    width: 100px;
     height: 26px;
     position: relative;
     left: -1px;

@@ -29,7 +29,7 @@
           <span @click="handleClear">{{t("清除选择")}}</span>
         </div>
       </template>
-      <template #fixedBottom v-if="remainingCount && !pagination">
+      <template #fixedBottom v-if="remainingCount && !pagination && data.length">
         <div class="prepend">
           {{ t("剩余X条数据",[remainingCount]) }}
           <span @click="handleLoadMore"> {{t("加载更多")}} </span>
@@ -150,9 +150,9 @@ const fixedBottom = {
   loading: scrollLoading.value
 };
 const TOOLTIPS_CONTENT = {
-  UNIQUE_MANAGER: t('唯一管理员，不可移出。请添加新的管理员后再移出。'),
-  UNIQUE_OWNER: t('唯一拥有者，不可移出。请添加新的拥有者后再移出。'),
-  TEMPLATE: t('通过用户组加入，不可直接移出。如需调整，请编辑用户组。')
+  UNIQUE_MANAGER: t('唯一管理员，不可移出。请添加新的管理员后再移出'),
+  UNIQUE_OWNER: t('唯一拥有者，不可移出。请添加新的拥有者后再移出'),
+  TEMPLATE: t('通过用户组加入，不可直接移出。如需调整，请编辑用户组')
 }
 const unableMessage = ref('');
 function shouldShowOverlay(row){
@@ -173,11 +173,11 @@ function shouldShowOverlay(row){
       return row.removeMemberButtonControl === 'TEMPLATE';
     case 'remove':
       if (row.removeMemberButtonControl === 'UNIQUE_MANAGER') {
-        unableMessage.value = t("唯一管理员，无法移出");
+        unableMessage.value = t("唯一管理员，不可移出。请添加新的管理员后再移出");
       } else if (row.removeMemberButtonControl === 'UNIQUE_OWNER') {
-        unableMessage.value = t("唯一拥有者，无法移出");
+        unableMessage.value = t("唯一拥有者，不可移出。请添加新的拥有者后再移出");
       } else if (row.removeMemberButtonControl === 'TEMPLATE') {
-        unableMessage.value = t("通过用户组加入，无法移出");
+        unableMessage.value = t("通过用户组加入，不可直接移出。如需调整，请编辑用户组") + `[${row.groupName}]`;
       }
       return row.removeMemberButtonControl !== 'OTHER';
     default:
