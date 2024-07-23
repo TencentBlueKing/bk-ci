@@ -51,9 +51,6 @@
                 }
             })
 
-            // window.globalVue.$on('change::$userInfo', data => { // 获取人员信息
-            //     console.log('syncUserInfo', data)
-            // })
             window.globalVue.$on('order::backHome', data => { // 蓝盾选择项目时切换
                 this.goHome()
             })
