@@ -13,7 +13,7 @@ class ClientCredentialsTokenGranter(
     private val oauth2ScopeService: Oauth2ScopeService,
     accessTokenService: Oauth2AccessTokenService
 ) : AbstractTokenGranter<Oauth2AccessTokenRequest>(
-    accessTokenService =  accessTokenService
+    accessTokenService = accessTokenService
 ) {
 
     override fun getAccessToken(

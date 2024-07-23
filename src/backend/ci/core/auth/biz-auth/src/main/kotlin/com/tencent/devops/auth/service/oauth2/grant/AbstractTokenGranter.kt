@@ -8,7 +8,6 @@ import com.tencent.devops.auth.service.oauth2.Oauth2AccessTokenService
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.utils.AuthUtils
-import org.springframework.beans.factory.annotation.Autowired
 
 abstract class AbstractTokenGranter<T : Oauth2AccessTokenRequest>(
     val accessTokenService: Oauth2AccessTokenService

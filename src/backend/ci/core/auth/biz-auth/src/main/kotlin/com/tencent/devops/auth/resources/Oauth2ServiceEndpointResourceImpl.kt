@@ -14,7 +14,7 @@ import com.tencent.devops.common.web.RestResource
 @RestResource
 class Oauth2ServiceEndpointResourceImpl(
     private val endpointService: Oauth2EndpointService,
-    private val clientService: Oauth2ClientService,
+    private val clientService: Oauth2ClientService
 ) : Oauth2ServiceEndpointResource {
     override fun getAuthorizationInformation(
         userId: String,

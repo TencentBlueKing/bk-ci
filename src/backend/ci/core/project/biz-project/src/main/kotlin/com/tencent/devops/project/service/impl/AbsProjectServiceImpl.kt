@@ -560,7 +560,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         modifiedProjectName = projectUpdateInfo.projectName,
                         finalNeedApproval = finalNeedApproval,
                         beforeSubjectScopes = JsonUtil.to(projectInfo.subjectScopes, object : TypeReference<List<SubjectScopeInfo>>() {}),
-                        afterSubjectScopes = subjectScopes,
+                        afterSubjectScopes = subjectScopes
                     )) {
                     modifyProjectAuthResource(resourceUpdateInfo)
                 }

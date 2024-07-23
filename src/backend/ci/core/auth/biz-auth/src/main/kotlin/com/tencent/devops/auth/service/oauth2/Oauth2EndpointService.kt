@@ -7,7 +7,6 @@ import com.tencent.devops.auth.pojo.enum.Oauth2GrantType
 import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.auth.pojo.vo.Oauth2AuthorizationInfoVo
 import com.tencent.devops.auth.service.oauth2.grant.Oauth2TokenGranterFactory
-import com.tencent.devops.auth.service.oauth2.grant.TokenGranter
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.utils.AuthUtils

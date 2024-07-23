@@ -2,7 +2,6 @@ package com.tencent.devops.auth.service.oauth2
 
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_REFRESH_TOKEN_EXPIRED
 import com.tencent.devops.auth.pojo.ClientDetailsInfo
-import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
 import com.tencent.devops.auth.pojo.Oauth2RefreshTokenRequest
 import com.tencent.devops.auth.pojo.enum.Oauth2GrantType
 import com.tencent.devops.auth.service.oauth2.grant.RefreshTokenGranter
