@@ -31,13 +31,18 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: "pnpm"
           cache-dependency-path: src/frontend/pnpm-lock.yaml
+      - name: Derive appropriate SHAs for base and head for `nx affected` commands
+        uses: nrwl/nx-set-shas@v4
+      - run: |
+          echo "BASE: ${{ env.NX_BASE }}"
+          echo "HEAD: ${{ env.NX_HEAD }}"
       - run: |
           pnpm install
           export NODE_OPTIONS=--openssl-legacy-provider
-          pnpx nx affected:public:master
+          pnpm exec nx affected -t public:master
         working-directory: src/frontend
       - uses: actions/upload-artifact@v3
         if: ${{ inputs.upload == 'true'  }}
