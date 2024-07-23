@@ -166,7 +166,6 @@
         @State news
         @State related
         @Action fetchLinks
-        @Action getPlatformPreData
         @Getter platformInfo
         isAllServiceListShow: boolean = false
         isAbsoluteUrl = isAbsoluteUrl
@@ -226,7 +225,6 @@
             this.fetchLinks({
                 type: 'related'
             })
-            this.getPlatformPreData()
         }
     }
 </script>
