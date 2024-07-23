@@ -90,30 +90,31 @@ task('build', series([cb => {
         lsVersion
     }
     
-    const cmd = scopeStr ? `pnpx nx run-many -t public:master ${scopeStr}`: `pnpx nx affected -t public:master --base=${process.env.NX_BASE} --head=${process.env.NX_HEAD}`
-    console.log('gulp cmd: ', cmd);
+    const cmd = scopeStr ? `nx run-many -t public:master ${scopeStr}`: `nx affected -t public:master --base=${process.env.NX_BASE} --head=${process.env.NX_HEAD}`
+    console.log('gulp cmd: ', cmd, cmd.split(' '));
     const { spawn } = require('node:child_process')
-    const spawnCmd = spawn(cmd, {
+    const spawnCmd = spawn('pnpm', [cmd.split(' ')], {
+        stdio: 'inherit',
         env: {
             ...process.env,
             dist,
             lsVersion
         }
     })
-    spawnCmd.stdout.on('data', (data) => {
-        console.log(`stdout: ${data}`);
-      });
+    // spawnCmd.stdout.on('data', (data) => {
+    //     console.log(`stdout: ${data}`);
+    // });
       
-      spawnCmd.stderr.on('data', (data) => {
-        console.error(`stderr: ${data}`);
-            process.exit(1)
-      });
+    // spawnCmd.stderr.on('data', (data) => {
+    //     console.error(`stderr: ${data}`);
+    //     process.exit(1)
+    // });
       
-      spawnCmd.on('close', (code) => {
+    spawnCmd.on('close', (code) => {
         console.log(`child process exited with code ${code}`);
         spinner.succeed('Finished building bk-ci frontend project')
         cb()
-      }); 
+    }); 
 }], () => {
     try {
         const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(`${dist}/assets_bundle.json`, 'utf8')}`
