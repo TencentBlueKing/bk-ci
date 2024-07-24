@@ -29,6 +29,7 @@ package com.tencent.devops.auth.provider.stream.service
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.github.ServiceGithubPermissionResource
 import com.tencent.devops.stream.api.service.ServiceStreamBasicSettingResource
@@ -63,6 +64,10 @@ class GithubStreamPermissionServiceImpl @Autowired constructor(
             .maximumSize(MAX_SIZE)
             .expireAfterAccess(5, TimeUnit.MINUTES)
             .build<String, Boolean?>()
+
+    override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
+        return emptyList()
+    }
 
     override fun isPublicProject(projectCode: String, userId: String?): Boolean {
         if (publicProjectCache.getIfPresent(projectCode) != null) {
