@@ -52,6 +52,12 @@ class StreamGitPermissionServiceImpl @Autowired constructor(
             .expireAfterAccess(5, TimeUnit.HOURS)
             .build<String, Boolean>()
 
+    private val projectUsersCache =
+        CacheBuilder.newBuilder()
+            .maximumSize(MAX_SIZE)
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .build<String, List<String>>()
+
     private val projectMemberCache =
         CacheBuilder.newBuilder()
             .maximumSize(MAX_SIZE)
@@ -59,6 +65,10 @@ class StreamGitPermissionServiceImpl @Autowired constructor(
             .build<String, Boolean?>()
 
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
+        val projectMembers = projectUsersCache.getIfPresent("$projectCode@@${group?.name}")
+        if (projectMembers != null) {
+            return projectMembers
+        }
         val level = when (group) {
             BkAuthGroup.MANAGER, BkAuthGroup.CI_MANAGER, BkAuthGroup.CIADMIN -> 40
             BkAuthGroup.DEVELOPER -> 30
@@ -91,6 +101,7 @@ class StreamGitPermissionServiceImpl @Autowired constructor(
             }
             page += 1
         }
+        projectUsersCache.put("$projectCode@@${group.name}", users)
         return users
     }
 
