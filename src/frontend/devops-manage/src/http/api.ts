@@ -296,9 +296,15 @@ export default {
     return http.put(`${IAM_PERFIX}/group/sync/${projectId}/${groupId}/syncGroupMember`);
   },
   /**
-     * 用户移出项目
-     */
+   * 用户移出项目
+   */
   removeMemberFromProject (projectId: string, params: any) {
     return http.put(`${IAM_PERFIX}/member/${projectId}/removeMemberFromProject`, params);
+  },
+  /**
+   * 重置资源授权管理
+   */
+  resetAllResourceAuthorization (projectId: string, params: any) {
+    return http.post(`${USER_PERFIX}/auth/authorization/${projectId}/resetAllResourceAuthorization`, params);
   },
 };

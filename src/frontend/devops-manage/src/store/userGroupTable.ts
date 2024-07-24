@@ -82,6 +82,7 @@ export default defineStore('userGroupTable', () => {
   const rowIndex = ref<number>();
   const selectedTableGroupType = ref('');
   const selectedLength = ref(0);
+  const isPermission = ref(true);
   let currentRequestId = 0;
 
   watch(selectedData, ()=>{
@@ -113,6 +114,11 @@ export default defineStore('userGroupTable', () => {
     try {
       const res = await http.getMemberGroups(projectId.value, memberId);
       collapseList.value = res;
+      if(res.length){
+        isPermission.value = true;
+      } else {
+        isPermission.value = false;
+      }
       sourceList.value = collapseList.value.map((item) => ({
         ...item,
         tableLoading: false,
@@ -128,6 +134,9 @@ export default defineStore('userGroupTable', () => {
    * @param resourceType 资源类型
    */
   async function getGroupList(resourceType: string) {
+    if (!collapseList.value.some(item => item.resourceType === resourceType)) {
+      return {};
+    }
     try {
       const params = {
         projectId: projectId.value,
@@ -147,7 +156,7 @@ export default defineStore('userGroupTable', () => {
   async function fetchUserGroupList(asideItem: AsideItem) {
     const requestId = ++currentRequestId;
     initData();
-    asideItem && getCollapseList(asideItem.id);
+    asideItem && await getCollapseList(asideItem.id);
     memberItem.value = asideItem;
     try {
       isLoading.value = true;
@@ -159,10 +168,10 @@ export default defineStore('userGroupTable', () => {
 
       if(currentRequestId === requestId) {
         sourceList.value.forEach(item => {
-          if(item.resourceType === "project") {
+          if(item.resourceType === "project" && projectResult) {
             item.tableData = projectResult.records;
           }
-          if(item.resourceType === "pipeline") {
+          if(item.resourceType === "pipeline" && pipelineGroupResult) {
             item.tableData = pipelineGroupResult.records;
             item.count && (item.activeFlag = true);
           }
@@ -170,6 +179,7 @@ export default defineStore('userGroupTable', () => {
         isLoading.value = false;
       }
     } catch (error: any) {
+      isLoading.value = false;
       console.error(error);
     }
   }
@@ -247,16 +257,6 @@ export default defineStore('userGroupTable', () => {
     if (!selectedData[resourceType].length) {
       delete selectedData[resourceType]
     }
-    unableMoveLength.value = countNonOtherObjects(selectedData);
-  }
-  /**
-   * 找出无法移出用户数据
-   */
-  function countNonOtherObjects(data: SelectedDataType) {
-    return Object.values(data)
-      .flat()
-      .filter((item: GroupTableType) => item.removeMemberButtonControl !== 'OTHER')
-      .length;
   }
   /**
    * 获取选中的用户组数据
@@ -274,7 +274,7 @@ export default defineStore('userGroupTable', () => {
             count: sourceItem.isAll ? sourceItem.count! : tableData.length 
           },
           ...sourceItem,
-          tableData,
+          tableData: tableData.slice(0,11),
           ...(!sourceItem.isAll && { groupIds: tableData.map(item => item.groupId) })
         };
       });
@@ -384,6 +384,7 @@ export default defineStore('userGroupTable', () => {
     selectedLength,
     selectSourceList,
     selectedRow,
+    isPermission,
     fetchUserGroupList,
     handleRenewal,
     handleHandOver,

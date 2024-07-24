@@ -8,9 +8,10 @@
         class="multi-search"
         value-behavior="need-key"
         :placeholder="filterTips"
+        @search="handleSearch(searchValue)"
       />
     </div>
-    <div class="manage-article">
+    <div class="manage-article" v-if="memberList.length">
       <div class="manage-aside">
         <manage-aside
           ref="manageAsideRef"
@@ -19,6 +20,7 @@
           :person-list="personList"
           :table-loading="tableLoading"
           :over-table="overTable"
+          :active-tab="activeTab"
           @refresh="refresh"
           @handle-click="asideClick"
           @page-change="handleAsidePageChange"
@@ -57,16 +59,29 @@
         </div>
       </div>
     </div>
+    <bk-exception
+      v-else
+      :description="t('没有数据')"
+      scene="part"
+      type="empty"
+    >
+      <i18n-t
+        tag="div"
+        keypath="可以尝试 调整关键词 或 清空筛选条件"
+      >
+        <button class="text-blue" @click='refresh'>{{t('清空筛选条件')}}</button>
+      </i18n-t>
+    </bk-exception>
   </bk-loading>
   <bk-dialog
-    :width="640"
+    :width="660"
     class="renewal-dialog"
     :is-show="isShowRenewal"
     @closed="handleRenewalClosed"
   >
     <template #header>
       <h2 class="htext">{{t("续期")}}</h2>
-      <span class="dialog-header"> {{asideItem.name}} </span>
+      <span class="dialog-header"> {{userName}} </span>
     </template>
     <template #default>
       <p class="renewal-text">
@@ -80,11 +95,11 @@
         <span>{{t("到期时间")}}：</span> 
         <template v-if="selectedRow?.expiredAtDisplay === t('已过期')">
           <span class="text-gray">{{t("已过期")}}</span>
-          <span class="text-blue"> &nbsp; -> &nbsp; {{ expiredAt }}天</span>
+          <span class="text-blue"> &nbsp; -> &nbsp; {{ expiredAt }} {{ t("天") }} </span>
         </template>
         <template v-else>
           <span class="text-gray">{{ selectedRow?.expiredAtDisplay }}</span class="text-blue">
-          <span> &nbsp; -> &nbsp; {{ Number(selectedRow?.expiredAtDisplay.split('天')[0]) + expiredAt }}天</span>
+          <span> &nbsp; -> &nbsp; {{ Number(selectedRow?.expiredAtDisplay.replace(/\D/g, '')) + expiredAt }} {{ t("天") }} </span>
         </template>
       </p>
     </template>
@@ -101,7 +116,7 @@
   >
     <template #header>
       <h2 class="htext">{{t("移交")}}</h2>
-      <span class="dialog-header"> {{asideItem.name}} </span>
+      <span class="dialog-header"> {{userName}} </span>
     </template>
     <template #default>
       <p class="handover-text">
@@ -148,7 +163,7 @@
     </template>
     <template #default>
       <p class="remove-text">
-        <span>{{t("待移出用户")}}：</span> {{asideItem.name}}
+        <span>{{t("待移出用户")}}：</span> {{userName}}
       </p>
       <p class="remove-text">
         <span>{{t("所在用户组")}}：</span> {{ selectedRow?.groupName }}
@@ -176,14 +191,16 @@
           </i18n-t>
           <i18n-t v-if="unableMoveLength" keypath="；其中X个用户组无法移出，本次操作将忽略" tag="div">
             <span class="desc-warn">&nbsp;{{ unableMoveLength }}&nbsp;</span>
-            <span class="desc-warn">{{t("无法移出")}}</span>
+            <span class="desc-warn">&nbsp;{{ unableText[batchFlag] }}</span>
           </i18n-t>
+          
         </p>
         <div>
           <GroupTab
             :source-list="selectSourceList"
             :is-show-operation="false"
             :aside-item="asideItem"
+            :batch-flag="batchFlag"
             @page-limit-change="pageLimitChange"
             @page-value-change="pageValueChange"
           />
@@ -194,16 +211,16 @@
           <div v-if="sliderTitle === t('批量续期')">
             <div class="main-line">
               <p class="main-label">{{t("续期对象")}}</p>
-              <span class="main-text">{{("用户")}}： {{ asideItem.name }}</span>
+              <span class="main-text">{{t("用户")}}： {{userName}}</span>
             </div>
             <div class="main-line">
-              <p class="main-label">{{("续期时长")}}</p>
+              <p class="main-label">{{t("续期时长")}}</p>
               <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
             </div>
           </div>
           <div v-if="sliderTitle === t('批量移交')">
             <div class="main-line" style="margin-top: 26px;">
-              <p class="main-label">{{("移交给")}}</p>
+              <p class="main-label">{{t("移交给")}}</p>
               <bk-form
                 ref="formRef"
                 :rules="rules"
@@ -227,7 +244,7 @@
               <p class="main-label-remove">
                 <i18n-t keypath="确认从以上X个用户组中移出X吗？" tag="div">
                   <span class="remove-num">{{ selectedLength }}</span>
-                  <span class="remove-person">{{ asideItem.name }}</span>
+                  <span class="desc-warn">&nbsp;{{ t(unableText[batchFlag]) }}</span>
                 </i18n-t>
               </p>
             </div>
@@ -310,11 +327,21 @@ const searchData = computed(() => {
     return !searchValue.value.find(val => val.id === data.id)
   })
 });
-const isPermission = ref(true);
 const manageAsideRef = ref(null);
 const groupTableStore = userGroupTable();
 const manageAsideStore = useManageAside();
 const operatorLoading = ref(false);
+const unableText = {
+  renewal: '无法续期',
+  handover: '无法移交',
+  remove: '无法移出',
+}
+const userName = computed(() => {
+  if (asideItem.value.type === 'user') {
+    return `${asideItem.value.id}(${asideItem.value.name})`;
+  }
+  return asideItem.value.name;
+})
 
 const {
   sourceList,
@@ -326,6 +353,7 @@ const {
   unableMoveLength,
   selectSourceList,
   selectedRow,
+  isPermission,
 } = storeToRefs(groupTableStore);
 const {
   fetchUserGroupList,
@@ -351,6 +379,7 @@ const {
   tableLoading,
   overTable,
   isLoading,
+  activeTab,
 } = storeToRefs(manageAsideStore);
 const {
   handleAsideClick,
@@ -367,13 +396,14 @@ onMounted(() => {
 watch(searchValue, (newSearchValue) => {
   getProjectMembers(projectId.value, newSearchValue);
 });
-
+function handleSearch(value){
+  getProjectMembers(projectId.value, value);
+}
 function asideClick(item){
   handleAsideClick(item, projectId.value);
 }
 async function refresh(){
   searchValue.value = [];
-  await getProjectMembers(projectId.value);
 }
 /**
  * 续期弹窗提交事件
@@ -438,6 +468,19 @@ function handleSelectAll(resourceType, asideItem){
   handleSelectAllData(resourceType, asideItem)
 }
 /**
+ * 找出无法移出用户数据
+ */
+function countNonOtherObjects(data, flag) {
+  const items = Object.values(data).flat();
+  const filterConditions = {
+    renewal: item => item.expiredAtDisplay == t('永久') || item.removeMemberButtonControl === 'TEMPLATE',
+    handover: item => item.removeMemberButtonControl == 'TEMPLATE',
+    remove: item => item.removeMemberButtonControl !== 'OTHER',
+  };
+  const filterCondition = filterConditions[flag] || (() => false);
+  return items.filter(filterCondition).length;
+}
+/**
  * 批量操作
  * @param flag 按钮标识
  */
@@ -450,6 +493,7 @@ function batchOperator(flag){
     });
     return;
   }
+  unableMoveLength.value = countNonOtherObjects(selectedData.value, flag);
   sliderTitle.value = t(batchTitle[flag]);
   batchFlag.value = flag;
   isShowSlider.value = true;
@@ -529,10 +573,14 @@ async function batchConfirm(batchFlag) {
     }
 
     if (res) {
-      fetchUserGroupList(asideItem.value);
       showMessage('success', t(batchMassageText[batchFlag]));
       batchBtnLoading.value = false;
       cancleClear(batchFlag);
+      if(batchFlag === 'renewal'){
+        fetchUserGroupList(asideItem.value);
+      } else {
+        getProjectMembers(projectId.value);
+      }
     }
   } catch (error) {
     batchBtnLoading.value = false;
@@ -544,8 +592,8 @@ function showMessage(theme, message) {
     message: message,
   });
 }
-function asideRemoveConfirm(value) {
-  handleAsideRemoveConfirm(value, projectId.value, manageAsideRef.value);
+function asideRemoveConfirm(removeUser, handOverForm) {
+  handleAsideRemoveConfirm(removeUser, handOverForm, projectId.value);
 }
 </script>
 
@@ -717,7 +765,7 @@ function asideRemoveConfirm(value) {
 
     span {
       display: inline-block;
-      width: 100px;
+      min-width: 100px;
       text-align: right;
       color: #63656E;
     }
@@ -874,5 +922,13 @@ function asideRemoveConfirm(value) {
       }
     }
   }
+}
+
+.text-blue{
+  color: #699DF4;
+}
+
+.bk-exception{
+  margin-top: 240px;
 }
 </style>

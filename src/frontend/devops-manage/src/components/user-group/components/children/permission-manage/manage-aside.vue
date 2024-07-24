@@ -3,6 +3,7 @@
     <div class="aside-header">
       {{t("组织/用户")}}
       <span class="refresh" @click="refresh">
+        <i class="manage-icon manage-icon-refresh"></i>
         {{t("刷新")}}
       </span>
     </div>
@@ -104,7 +105,8 @@
               :placeholder="t('请输入')"
               clearable
               @clear="handOverInputClear"
-              @blur="handOverInputBlur"
+              @blur="handOverInput"
+              @enter="handOverInput"
             />
           </bk-form-item>
         </bk-form>
@@ -133,9 +135,8 @@
               <span>{{t("刷新")}}</span>
             </p>
           </p>
-          <!-- 这里需要循环拿数据overTable替换成后端返回的东西 -->
-          <div class="hand-over-table-group">
-            <p class="hand-over-table-item">{{t("代码库授权")}}</p>
+          <div class="hand-over-table-group" v-for="item in overTable" :key="item.id">
+            <p class="hand-over-table-item">{{item.name}}({{ item.resourceType }})</p>
             <p class="blue-text" @click="goAauthorization">
               <i class="manage-icon manage-icon-jump"></i>
               <span>{{t("前往处理")}}</span>
@@ -204,12 +205,12 @@ import { ref, defineProps, defineEmits, computed, watch, defineExpose } from 'vu
 import useManageAside from "@/store/manageAside";
 import { storeToRefs } from 'pinia';
 import { Success, Spinner } from 'bkui-vue/lib/icon';
+import http from '@/http/api';
 
 const { t } = useI18n();
 const route = useRoute();
 const manageAsideStore = useManageAside();
 const current = ref(1);
-const activeTab = ref();
 const isShowHandOverDialog = ref(false);
 const formRef = ref(null);
 const loading = ref(false);
@@ -232,6 +233,7 @@ const {
 const projectId = computed(() => route.params?.projectCode);
 const removeUser = ref(null);
 const isChecking = ref(false);
+const overTable = ref([]);
 
 const props = defineProps({
   memberList: {
@@ -242,18 +244,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
-  overTable: {
-    type: Array,
-    default: () => [],
-  },
   tableLoading: Boolean,
+  activeTab: String,
 });
 const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm', 'refresh']);
-
-watch(() => props.memberList, (newData) => {
-  activeTab.value = newData[0]?.id;
-  emit('handleClick', newData[0]);
-});
 
 watch(()=> handOverForm.value.name,() => {
   handOverInputClear();
@@ -277,7 +271,7 @@ function truncateMiddleText(text) {
   return text.substr(0, frontChars) + separator + text.substr(text.length - backChars);
 }
 function handleClick(item) {
-  activeTab.value = item.id;
+  // activeTab.value = item.id;
   emit('handleClick', item);
 }
 function pageChange(current) {
@@ -295,10 +289,10 @@ function handleRemoval(item) {
  *  移出项目弹窗关闭
  */
 function handOverClose() {
-   if(formRef.value) {
-     handOverForm.value.name = '';
-     formRef.value.clearValidate()
-   }
+  if(formRef.value) {
+    handOverForm.value.name = '';
+    formRef.value.clearValidate()
+  }
   isShowHandOverDialog.value = false;
   isShowRemoveDialog.value = false
   isHandOverfail.value = false;
@@ -311,14 +305,12 @@ function handConfirm(flag){
   if(flag === 'user'){
     const isValidate = formRef.value?.validate();
     if(!isValidate) return;
-    emit('removeConfirm',handOverForm.value);
+    emit('removeConfirm', removeUser.value, handOverForm.value);
   } else {
     emit('removeConfirm');
   }
   loading.value = false;
-  isShowHandOverDialog.value = false;
-  isShowRemoveDialog.value = false;
-  isHandOverfail.value = false;
+  handOverClose();
 }
 
 function handOverfail(flag) {
@@ -328,20 +320,31 @@ function handOverInputClear(){
   isAuthorizedSuccess.value = false;
   isHandOverfail.value = false;
 }
-function handOverInputBlur(){
+async function handOverInput(){
   if(!handOverForm.value.name) return;
   isChecking.value = true;
   isAuthorizedSuccess.value = false;
-  setTimeout(()=>{
-    if(Math.random()> 0.5){
-      isChecking.value = false;
-      isAuthorizedSuccess.value = true;
-    } else {
+  const params = {
+    projectCode: projectId.value,
+    handoverFrom: removeUser.value.name,
+    handoverTo: handOverForm.value.name,
+    preCheck: true
+  }
+
+  try {
+    const reset = await http.resetAllResourceAuthorization(projectId.value, params)
+    if (reset.length) {
+      overTable.value = reset;
       isHandOverfail.value = true;
       isChecking.value = false;
       isAuthorizedSuccess.value = false;
+    } else {
+      isChecking.value = false;
+      isAuthorizedSuccess.value = true;
     }
-  },2000)
+  } catch (error) {
+    console.log(error);
+  }
 }
 function refresh(){
   emit('refresh');
@@ -350,7 +353,7 @@ function refresh(){
  * 移出失败刷新数据
  */
 function refreshHandOverfail() {
-
+  handOverInput();
 }
 function goAauthorization() {
   window.open(`${location.origin}/console/manage/xxzza/permission`, '_blank')
@@ -489,7 +492,6 @@ function handleShowPerson(item) {
   }
   .text-tag {
     width: 100%;
-    height: 32px;
     line-height: 30px;
     padding-left: 10px;
     margin-bottom: 16px;
