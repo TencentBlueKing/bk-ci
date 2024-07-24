@@ -49,7 +49,6 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind.UPDATE
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK

@@ -68,54 +68,6 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
         if (element.branchName == null) {
             return null
         }
-        when {
-            // action上线后【流水线配置层面】兼容存量merge_request_accept和push事件
-            element.eventType == CodeEventType.MERGE_REQUEST_ACCEPT -> {
-                params.includeMrAction = CodeGitWebHookTriggerElement.MERGE_ACTION_MERGE
-            }
-
-            element.eventType == CodeEventType.MERGE_REQUEST &&
-                    !WebhookUtils.isActionGitTriggerVersion(element.version) &&
-                    element.includeMrAction == null -> {
-                params.includeMrAction = joinToString(
-                    listOf(
-                        CodeGitWebHookTriggerElement.MERGE_ACTION_OPEN,
-                        CodeGitWebHookTriggerElement.MERGE_ACTION_REOPEN,
-                        CodeGitWebHookTriggerElement.MERGE_ACTION_PUSH_UPDATE
-                    )
-                )
-            }
-
-            element.eventType == CodeEventType.PUSH &&
-                    !WebhookUtils.isActionGitTriggerVersion(element.version) &&
-                    element.includePushAction == null -> {
-                params.includePushAction = joinToString(
-                    listOf(
-                        CodeGitWebHookTriggerElement.PUSH_ACTION_CREATE_BRANCH,
-                        CodeGitWebHookTriggerElement.PUSH_ACTION_PUSH_FILE
-                    )
-                )
-            }
-
-            else -> {
-                params.includeMrAction = joinToString(element.includeMrAction)
-                params.includePushAction = joinToString(element.includePushAction)
-            }
-        }
-        params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
-        params.codeType = CodeType.GITLAB
-        params.eventType = element.eventType
-        params.block = element.block ?: false
-        params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
-        params.pathFilterType = element.pathFilterType
-        params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
-        params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
-        params.tagName = EnvUtils.parseEnv(element.tagName ?: "", variables)
-        params.excludeTagName = EnvUtils.parseEnv(element.excludeTagName ?: "", variables)
-        params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
-        params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
-        params.includeCommitMsg = EnvUtils.parseEnv(element.includeCommitMsg ?: "", variables)
-        params.excludeCommitMsg = EnvUtils.parseEnv(element.excludeCommitMsg ?: "", variables)
         params.version = element.version
         when {
             // action上线后【流水线配置层面】兼容存量merge_request_accept和push事件
@@ -151,14 +103,20 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
                 params.includePushAction = WebhookUtils.joinToString(element.includePushAction)
             }
         }
+        params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
+        params.codeType = CodeType.GITLAB
+        params.eventType = element.eventType
+        params.block = element.block ?: false
+        params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
+        params.pathFilterType = element.pathFilterType
+        params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
+        params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
+        params.tagName = EnvUtils.parseEnv(element.tagName ?: "", variables)
+        params.excludeTagName = EnvUtils.parseEnv(element.excludeTagName ?: "", variables)
+        params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
+        params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
+        params.includeCommitMsg = EnvUtils.parseEnv(element.includeCommitMsg ?: "", variables)
+        params.excludeCommitMsg = EnvUtils.parseEnv(element.excludeCommitMsg ?: "", variables)
         return params
-    }
-
-    private fun joinToString(list: List<String>?): String {
-        return if (list.isNullOrEmpty()) {
-            ""
-        } else {
-            list.joinToString(",")
-        }
     }
 }
