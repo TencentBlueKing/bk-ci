@@ -24,6 +24,7 @@ const store = {
     actions,
     mutations,
     state: {
+        codelibTypes: [],
         codelibs: null,
         tickets: null,
         showCodelibDialog: false,

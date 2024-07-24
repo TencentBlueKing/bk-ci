@@ -17,7 +17,6 @@
                                     }
                                 }"
                                 :create-codelib="createCodelib"
-                                :is-blue-king="isBlueKing"
                             >
                             </link-code-lib>
                             <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
@@ -68,11 +67,12 @@
             :desc="$t('codelib.codelibDesc')"
         >
             <bk-button
-                v-for="typeLabel in codelibTypes"
-                :key="typeLabel"
-                @click="createCodelib(typeLabel)"
+                v-for="item in codelibTypes"
+                :key="item.scmType"
+                :disabled="item.status !== 'OK'"
+                @click="createCodelib(item.scmType)"
             >
-                {{ $t('codelib.linkCodelibLabel', [typeLabel]) }}
+                {{ $t('codelib.linkCodelibLabel', [item.name]) }}
             </bk-button>
         </empty-tips>
         <empty-tips
@@ -110,7 +110,6 @@
     import {
         CODE_REPOSITORY_CACHE,
         CODE_REPOSITORY_SEARCH_VAL,
-        codelibTypes,
         getCodelibConfig,
         isGit,
         isGitLab,
@@ -121,7 +120,7 @@
     } from '../config/'
     import { getOffset } from '../utils/'
     import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
-
+    
     export default {
         name: 'codelib-list',
 
@@ -153,29 +152,9 @@
         },
 
         computed: {
-            ...mapState('codelib', ['codelibs', 'showCodelibDialog', 'gitOAuth']),
+            ...mapState('codelib', ['codelibTypes', 'codelibs', 'showCodelibDialog', 'gitOAuth']),
             projectId () {
                 return this.$route.params.projectId
-            },
-            isExtendTx () {
-                return VERSION_TYPE === 'tencent'
-            },
-            codelibTypes () {
-                let typeList = codelibTypes
-                if (!this.isExtendTx) {
-                    typeList = typeList.filter(type => !['Git', 'TGit'].includes(type))
-                }
-                return typeList
-            },
-            isBlueKing () {
-                const projectId = this.$route.params.projectId
-                const filterArr = this.projectList.find(item => {
-                    return (
-                        item.centerName === '蓝鲸产品中心'
-                        && item.projectCode === projectId
-                    )
-                })
-                return filterArr
             },
             hasCodelibs () {
                 const { codelibs } = this
@@ -336,6 +315,15 @@
             },
 
             async createCodelib (typeLabel, isEdit) {
+                const codelibType = this.codelibTypes.find(type => type.scmType === typeLabel)
+                if (codelibType?.status === 'DEPLOYING') {
+                    this.showUndeployDialog({
+                        title: this.$t('codelib.codelibUndeployTitle', [typeLabel]),
+                        desc: this.$t(`codelib.${typeLabel.toLowerCase()}UndeployDesc`),
+                        link: `${DOCS_URL_PREFIX}${codelibType.docUrl}`
+                    })
+                    return
+                }
                 const { credentialTypes, typeName } = getCodelibConfig(typeLabel)
                 const CodelibDialog = {
                     showCodelibDialog: true,

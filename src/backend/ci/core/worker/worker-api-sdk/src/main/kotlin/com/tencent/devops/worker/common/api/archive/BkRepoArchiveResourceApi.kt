@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.api.archive
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -37,6 +38,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
@@ -307,5 +309,29 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
         val responseContent = request(request, "upload file[$fileName] failed")
         return objectMapper.readValue(responseContent)
+    }
+
+    override fun getRepoToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        type: TokenType,
+        expireSeconds: Long
+    ): String? {
+        return if (bkrepoResourceApi.tokenAccess()) {
+            HttpRetryUtils.retry(retryTime = 3, retryPeriodMills = 1000) {
+                bkrepoResourceApi.createBkRepoTemporaryToken(
+                    userId = userId,
+                    projectId = projectId,
+                    repoName = repoName,
+                    path = path,
+                    type = type,
+                    expireSeconds = expireSeconds
+                )
+            }
+        } else {
+            null
+        }
     }
 }

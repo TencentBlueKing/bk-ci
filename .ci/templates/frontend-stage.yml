@@ -64,8 +64,8 @@ stages:
                 echo "package.json has not changed, use cache"
               fi
               export NODE_OPTIONS=--openssl-legacy-provider
-
-              $(pwd)/.pnpm-global/pnpm public -e "${{ parameters.env }}" -t tencent -l v2 
+              export NX_BASE=develop
+              $(pwd)/.pnpm-global/pnpm public
 
               cd ./frontend/ || exit 1
 

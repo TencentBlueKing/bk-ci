@@ -11,7 +11,7 @@
                         class="bk-icon icon-info-circle">
                     </i>
                 </section>
-                
+
                 <span class="item-num">{{itemNum}}</span>
             </slot>
         </header>
@@ -77,7 +77,7 @@
 
 <script>
     import vueDraggable from 'vuedraggable'
-    import { bkVarWrapper } from '@/utils/util'
+    import { bkVarWrapper, copyToClipboard } from '@/utils/util'
     export default {
         components: {
             vueDraggable
@@ -133,7 +133,7 @@
         methods: {
             bkVarWrapper,
             handleCopy (con) {
-                window.navigator.clipboard.writeText(con)
+                copyToClipboard(con)
                 this.$bkMessage({
                     theme: 'success',
                     message: this.$t('copySuc'),
@@ -205,7 +205,7 @@
             .header-content {
                 display: flex;
                 align-items: center;
-                
+
                 .item-title {
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -225,7 +225,7 @@
                 font-size: 12px;
             }
         }
-        
+
         .var-content {
             width: 100%;
             .variable-empty {

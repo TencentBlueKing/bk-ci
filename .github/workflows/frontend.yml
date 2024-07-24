@@ -25,15 +25,23 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v2
         with:
           version: 9.5.0
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: "pnpm"
           cache-dependency-path: src/frontend/pnpm-lock.yaml
+      - uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: master
+      - run: |
+          echo "BASE: ${{ env.NX_BASE }}"
+          echo "HEAD: ${{ env.NX_HEAD }}"
       - run: |
           pnpm install
           export NODE_OPTIONS=--openssl-legacy-provider

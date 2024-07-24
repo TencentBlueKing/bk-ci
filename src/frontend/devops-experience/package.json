@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "description": "",
   "dependencies": {
-    "vue": "catalog:vue2"
+    "vue": "~2.7.16"
   },
   "devDependencies": {
     "@babel/core": "^7.15.8",
@@ -41,8 +41,8 @@
     "style-loader": "^0.23.0",
     "vue-property-decorator": "^6.0.0",
     "vue-style-loader": "^3.0.3",
-    "vue-loader": "catalog:vue2",
-    "webpack": "catalog:webpack5"
+    "vue-loader": "~15.10.0",
+    "webpack": "~5.76.1"
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",

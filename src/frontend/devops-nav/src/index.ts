@@ -1,7 +1,5 @@
 /// <reference path='./typings/index.d.ts' />
 
-import Vue from 'vue'
-
 import AsideNav from '@/components/AsideNav/index.vue'
 import ContentHeader from '@/components/ContentHeader/index.vue'
 import DevopsFormItem from '@/components/DevopsFormItem/index.vue'
@@ -15,11 +13,13 @@ import store from '@/store'
 import eventBus from '@/utils/eventBus'
 import iframeUtil from '@/utils/iframeUtil'
 import App from '@/views/App.vue'
+import Vue from 'vue'
 import { BkciDocs } from '../../common-lib/docs'
 
 import createLocale from '../../locale'
 
 import '@/assets/scss/index.scss'
+import Undeploy from '@/components/Undeploy/index.vue'
 import bsWebSocket from '@/utils/bsWebSocket.js'
 import { BkPermission, PermissionDirective, handleNoPermission } from 'bk-permission'
 import 'bk-permission/dist/main.css'
@@ -59,6 +59,7 @@ Vue.component('EmptyTips', EmptyTips)
 Vue.component('ShowTooltip', ShowTooltip)
 Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
+Vue.component('undeploy', Undeploy)
 
 const { i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
 
@@ -108,6 +109,26 @@ Vue.mixin({
         tencentPermission (url) {
             const permUrl = this.isExtendTx ? url : PERM_URL_PREFIX
             window.open(permUrl, '_blank')
+        },
+        showUndeployDialog ({
+            title,
+            desc,
+            link
+        }) {
+            this.$bkInfo({
+                subHeader: this.$createElement('undeploy', {
+                    props: {
+                        isInPopup: true,
+                        serviceName: title,
+                        serviceDesc: desc
+                    }
+                }, ''),
+                okText: this.$t('learnMore'),
+                cancelText: this.$t('close'),
+                confirmFn: () => {
+                    window.open(link, '_blank')
+                }
+            })
         },
         async applyPermission (actionId, resourceId, instanceId = []) {
             try {

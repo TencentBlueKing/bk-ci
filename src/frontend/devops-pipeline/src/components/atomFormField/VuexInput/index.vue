@@ -36,13 +36,13 @@
             }
         },
         render (h) {
-            const { inputType, value, name, handleInput, readOnly, handleBlur, title, placeholder, maxLength } = this
+            const { inputType, value, name, handleInput, readOnly, disabled, handleBlur, title, placeholder, maxLength } = this
 
             return (
                 <input
                     placeholder={placeholder}
                     title={title}
-                    disabled={readOnly}
+                    disabled={readOnly || disabled}
                     type={inputType}
                     class='bk-form-input pointer-events-auto'
                     maxlength={maxLength}

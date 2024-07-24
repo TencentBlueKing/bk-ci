@@ -22,14 +22,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "0.28.0",
     "bk-permission": "workspace:bk-permission",
     "bkui-vue": "0.0.2-beta.121",
     "dayjs": "^1.11.2",
     "pinia": "^2.0.23",
-    "vue": "catalog:vue3",
-    "vue-i18n": "catalog:vue3",
-    "vue-router": "^4.1.6",
-    "axios": "0.28.0"
+    "vue": "~3.4.31",
+    "vue-i18n": "~9.1.10",
+    "vue-router": "^4.1.6"
   },
   "devDependencies": {
     "@babel/runtime": "^7.15.4",
@@ -39,6 +39,7 @@
     "babel-preset-peer-bk": "0.0.2",
     "enhanced-resolve": "^5.10.0",
     "eslint-import-resolver-node": "^0.3.9",
+    "eslint-plugin-vue": "^9.27.0",
     "peer-cli-service-webpack": "0.0.2",
     "postcss": "~8.4.16",
     "postcss-import": "^15.0.0",

@@ -63,27 +63,28 @@
     "terser-webpack-plugin": "^5.3.6",
     "ts-loader": "^4.1.0",
     "typescript": "3.4.5",
-    "vue-loader": "catalog:vue2",
-    "webpack": "catalog:webpack5"
+    "vue-loader": "~15.10.0",
+    "webpack": "~5.76.1"
   },
   "dependencies": {
-    "@blueking/login-modal": "1.0.4",
     "@icon-cool/bk-icon-devops": "^0.1.13",
     "axios": "0.28.0",
-    "@tencent/bk-magic-vue": "catalog:bkMagicVue",
+    "@tencent/bk-magic-vue": "2.5.9-beta.6",
     "bk-permission": "workspace:bk-permission",
     "bluebird": "^3.5.1",
     "js-cookie": "^3.0.1",
     "sockjs-client": "1.3.0",
     "stompjs": "2.3.3",
     "vee-validate": "^2.0.3",
-    "vue": "catalog:vue2",
+    "vue": "~2.7.16",
     "vue-class-component": "^6.2.0",
-    "vue-i18n": "catalog:vue2",
+    "vue-i18n": "~8.18.1",
     "vue-property-decorator": "^6.0.0",
     "vue-router": "3.6.5",
     "vuex": "3.6.2",
     "vuex-class": "^0.3.0",
-    "vuex-typescript-interface": "^1.0.3"
+    "vuex-typescript-interface": "^1.0.3",
+    "@blueking/login-modal": "1.0.4",
+    "@blueking/platform-config": "^1.0.4"
   }
 }

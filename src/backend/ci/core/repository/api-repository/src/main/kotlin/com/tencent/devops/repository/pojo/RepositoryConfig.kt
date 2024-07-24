@@ -25,22 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent.service
+package com.tencent.devops.repository.pojo
 
-import com.tencent.bkrepo.repository.pojo.token.TokenType
-import com.tencent.devops.worker.common.service.RepoService
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.repository.pojo.enums.RepositoryConfigStatusEnum
+import io.swagger.v3.oas.annotations.media.Schema
 
-class SampleRepoServiceImpl : RepoService {
-
-    override fun getRepoToken(
-        userId: String,
-        projectId: String,
-        repoName: String,
-        path: String,
-        type: TokenType,
-        expireSeconds: Long?
-    ): String? {
-        // 开源版暂不支持用token去上传或下载
-        return null
-    }
-}
+@Schema(title = "代码库配置")
+data class RepositoryConfig(
+    @get:Schema(title = "代码库类型", required = false)
+    val scmType: ScmType,
+    @get:Schema(title = "代码库名称", required = false)
+    val name: String,
+    @get:Schema(title = "代码库状态", required = false)
+    val status: RepositoryConfigStatusEnum,
+    @get:Schema(title = "文档连接", required = false)
+    val docUrl: String? = ""
+)

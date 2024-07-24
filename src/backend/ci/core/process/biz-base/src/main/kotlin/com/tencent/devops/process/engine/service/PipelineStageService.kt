@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBroadCastEvent
@@ -39,7 +40,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
-import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
@@ -65,12 +65,12 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
+import java.util.Date
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Date
 
 /**
  * 流水线Stage相关的服务
@@ -215,7 +215,8 @@ class PipelineStageService @Autowired constructor(
         with(buildStage) {
             // 兜底保护，若已经被审核过则直接忽略
             if (checkIn?.status == BuildStatus.REVIEW_ABORT.name ||
-                checkIn?.status == BuildStatus.REVIEW_PROCESSED.name) {
+                checkIn?.status == BuildStatus.REVIEW_PROCESSED.name
+            ) {
                 return@with
             }
             checkIn?.status = BuildStatus.REVIEWING.name
@@ -246,9 +247,9 @@ class PipelineStageService @Autowired constructor(
                         dslContext = context, projectId = projectId, buildId = buildId, stageStatus = allStageStatus
                     )
                     // 被暂停的流水线不占构建队列，在执行数-1
-                    if (!debug) pipelineBuildSummaryDao.updateRunningCount(
+                    pipelineBuildSummaryDao.updateRunningCount(
                         dslContext = context, projectId = projectId, pipelineId = pipelineId,
-                        buildId = buildId, runningIncrement = -1
+                        buildId = buildId, runningIncrement = -1, debug = debug
                     )
                 }
             }
@@ -315,9 +316,9 @@ class PipelineStageService @Autowired constructor(
                         pipelineBuildDao.updateBuildStageStatus(
                             dslContext = context, projectId = projectId, buildId = buildId, stageStatus = allStageStatus
                         )
-                        if (!debug) pipelineBuildSummaryDao.updateRunningCount(
+                        pipelineBuildSummaryDao.updateRunningCount(
                             dslContext = context, projectId = projectId, pipelineId = pipelineId,
-                            buildId = buildId, runningIncrement = 1
+                            buildId = buildId, runningIncrement = 1, debug = debug
                         )
                     }
                 }
@@ -428,9 +429,9 @@ class PipelineStageService @Autowired constructor(
                         oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
                     )
                     // #4255 stage审核超时恢复运行状态需要将运行状态+1，即使直接结束也会在finish阶段减回来
-                    if (!debug) pipelineBuildSummaryDao.updateRunningCount(
+                    pipelineBuildSummaryDao.updateRunningCount(
                         dslContext = context, projectId = projectId, pipelineId = pipelineId,
-                        buildId = buildId, runningIncrement = 1
+                        buildId = buildId, runningIncrement = 1, debug = debug
                     )
                 }
             }

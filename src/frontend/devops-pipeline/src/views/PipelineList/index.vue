@@ -99,10 +99,8 @@
             pipelineListRoute () {
                 return {
                     name: 'PipelineManageList',
-                    params: {
-                        viewId: this.viewId,
-                        ...this.$route.params
-                    }
+                    params: this.$route.params,
+                    query: this.$route.query
                 }
             },
             dropdownMenus () {
