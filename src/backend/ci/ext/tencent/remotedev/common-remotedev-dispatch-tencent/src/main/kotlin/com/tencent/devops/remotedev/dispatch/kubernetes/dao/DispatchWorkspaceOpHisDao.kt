@@ -58,6 +58,7 @@ class DispatchWorkspaceOpHisDao {
                 ACTION,
                 ACTION_MSG,
                 CREATED_TIME,
+                UPDATE_TIME,
                 STATUS,
                 UID
             )
@@ -67,6 +68,7 @@ class DispatchWorkspaceOpHisDao {
                     operator,
                     action.name,
                     actionMsg.take(255),
+                    LocalDateTime.now(),
                     LocalDateTime.now(),
                     EnvironmentActionStatus.PENDING.name,
                     uid
@@ -83,7 +85,7 @@ class DispatchWorkspaceOpHisDao {
         actionMsg: String? = null
     ): Int {
         with(TDispatchWorkspaceOpHis.T_DISPATCH_WORKSPACE_OP_HIS) {
-            return dslContext.update(this).set(STATUS, status.name)
+            return dslContext.update(this).set(STATUS, status.name).set(UPDATE_TIME, LocalDateTime.now())
                 .let {
                     if (actionMsg != null) it.set(ACTION_MSG, actionMsg.take(255)) else it
                 }
@@ -116,8 +118,20 @@ class DispatchWorkspaceOpHisDao {
         with(TDispatchWorkspaceOpHis.T_DISPATCH_WORKSPACE_OP_HIS) {
             return dslContext.update(this)
                 .set(STATUS, status.name)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .and(STATUS.eq(fStatus.name)).execute()
+        }
+    }
+
+    fun fetchLastTaskByWorkspaceName(
+        dslContext: DSLContext,
+        workspaceName: String,
+        action: EnvironmentAction
+    ): TDispatchWorkspaceOpHisRecord? {
+        with(TDispatchWorkspaceOpHis.T_DISPATCH_WORKSPACE_OP_HIS) {
+            return dslContext.selectFrom(this).where(WORKSPACE_NAME.eq(workspaceName)).and(ACTION.eq(action.name))
+                .orderBy(CREATED_TIME.desc()).fetchAny()
         }
     }
 

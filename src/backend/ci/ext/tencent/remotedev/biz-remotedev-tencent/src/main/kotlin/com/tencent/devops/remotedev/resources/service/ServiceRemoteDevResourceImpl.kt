@@ -652,15 +652,15 @@ class ServiceRemoteDevResourceImpl(
         // 校验签名
         // <md5(mac_addr+token)>,<appid>,<原始文件名>,<文件版本>,<修改日期>,<产品名称>,<产品版本>,<exe文件的sha1>,<当前10位时间戳>,<public key>
         val unsigned = "${sign.fingerprint}," +
-            "${sign.appId}," +
-            "${sign.fileName}," +
-            "${sign.fileVersion}," +
-            "${sign.fileUpdateTime}," +
-            "${sign.productName}," +
-            "${sign.productVersion}," +
-            "${sign.sha1}," +
-            "${sign.timestamp}," +
-            sign.publicKey
+                "${sign.appId}," +
+                "${sign.fileName}," +
+                "${sign.fileVersion}," +
+                "${sign.fileUpdateTime}," +
+                "${sign.productName}," +
+                "${sign.productVersion}," +
+                "${sign.sha1}," +
+                "${sign.timestamp}," +
+                sign.publicKey
         val realSigned = ShaUtils.hmacSha1(bkConfig.desktopSdkToken.toByteArray(), unsigned.toByteArray()).uppercase()
         if (realSigned != sign.sign) {
             throwTokenFail(desktopIP, "wrong sign", "$realSigned != ${sign.sign}")
@@ -681,6 +681,9 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun opCvm(data: OperateCvmData): Result<Boolean> {
+        if (!tGitService.checkProjectExist(data.projectId)) {
+            return Result(false)
+        }
         tGitService.addOrRemoveAclIp(
             projectId = data.projectId,
             ips = data.ipList,

@@ -50,10 +50,11 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.cron.HolidayHelper
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
+import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
@@ -101,7 +102,6 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
 import com.tencent.devops.remotedev.service.tai.TaiService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
-import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.time.Duration
 import java.time.LocalDateTime
@@ -125,6 +125,8 @@ class WorkspaceService @Autowired constructor(
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val remoteDevGitTransfer: RemoteDevGitTransfer,
+    private val workspaceResourceTypeDao: WindowsResourceTypeDao,
+    private val workspaceResourceZoneDao: WindowsResourceZoneDao,
     private val permissionService: PermissionService,
     private val client: Client,
     private val remoteDevSettingDao: RemoteDevSettingDao,
@@ -137,10 +139,7 @@ class WorkspaceService @Autowired constructor(
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val expertSupportDao: ExpertSupportDao,
     private val apiGwService: ApiGwService,
-    private val notifyControl: NotifyControl,
     private val startWorkspaceService: StartWorkspaceService,
-    private val bkBaseService: BKBaseService,
-    private val holidayHelper: HolidayHelper,
     private val taiClient: TaiClient,
     private val taiService: TaiService
 ) {
@@ -833,7 +832,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -867,46 +866,65 @@ class WorkspaceService @Autowired constructor(
             .scopeId = workspace.projectId
 
         val now = LocalDateTime.now()
-
         val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceName)
-
         val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: DISCOUNT_TIME
-
         val usageTime = workspace.usageTime + if (workspace.status.checkRunning()) {
             // 如果正在运行，需要加上目前距离该次启动的时间
             Duration.between(lastHistory?.startTime ?: now, now).seconds
         } else {
             0
         }
-
         val sleepingTime = workspace.sleepingTime + if (workspace.status.checkSleeping()) {
             // 如果正在休眠，需要加上目前距离上次结束的时间
             Duration.between(lastHistory?.endTime ?: now, now).seconds
         } else {
             0
         }
-
         val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
             Duration.between(it, now).seconds
         }
-
         val endBilling = remoteDevSettingDao.fetchSingleUserBilling(dslContext, userId)
-        return with(workspace) {
-            WorkspaceDetail(
-                workspaceId = workspaceId,
-                workspaceName = workspaceName,
-                displayName = displayName,
-                status = workspace.status,
-                lastUpdateTime = updateTime.timestamp(),
-                chargeableTime = endBilling.second +
-                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
-                usageTime = usageTime,
-                sleepingTime = sleepingTime,
-                systemType = workspaceSystemType,
-                workspaceMountType = workspaceMountType,
-                ownerType = ownerType
-            )
+
+        val winInfo = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)
+        val workspaceConf = if (winInfo != null) {
+            workspaceResourceTypeDao.fetchAny(dslContext, winInfo.winConfigId)
+        } else {
+            null
         }
+        val zone = if (winInfo != null) {
+            workspaceResourceZoneDao.fetchAll(dslContext)
+                .firstOrNull { it.zoneShortName == winInfo.zoneId.removeSuffixNumb() }?.zone
+        } else {
+            null
+        }
+
+        val sharedList = workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
+
+        return WorkspaceDetail(
+            workspaceId = workspace.workspaceId,
+            workspaceName = workspaceName,
+            displayName = workspace.displayName,
+            status = workspace.status,
+            lastUpdateTime = workspace.updateTime.timestamp(),
+            chargeableTime = endBilling.second +
+                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+            usageTime = usageTime,
+            sleepingTime = sleepingTime,
+            systemType = workspace.workspaceSystemType,
+            workspaceMountType = workspace.workspaceMountType,
+            ownerType = workspace.ownerType,
+            ip = winInfo?.hostIp,
+            macAddress = winInfo?.macAddress,
+            machineType = workspaceConf?.size,
+            region = zone,
+            owner = sharedList.filter { it.type == WorkspaceShared.AssignType.OWNER }.map { it.sharedUser }.toSet(),
+            sharedUsers = sharedList.filter { it.type != WorkspaceShared.AssignType.OWNER }.map { it.sharedUser }
+                .toSet(),
+            creator = workspace.createUserId,
+            createTime = workspace.createTime.timestamp(),
+            imageId = winInfo?.imageId,
+            remark = workspace.remark
+        )
     }
 
     @ActionAuditRecord(
@@ -1156,5 +1174,15 @@ class WorkspaceService @Autowired constructor(
         private const val defaultPageSize = 20
         private const val DEFAULT_WAIT_TIME = 60
         private const val DISCOUNT_TIME = 10000
+
+        private fun String.removeSuffixNumb(): String {
+            for (i in this.lastIndex downTo 0) {
+                if (this[i].isDigit()) {
+                    continue
+                }
+                return this.substring(0..i)
+            }
+            return ""
+        }
     }
 }

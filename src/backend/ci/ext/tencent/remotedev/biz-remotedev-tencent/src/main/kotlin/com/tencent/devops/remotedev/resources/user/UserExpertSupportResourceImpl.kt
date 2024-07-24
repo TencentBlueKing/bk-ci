@@ -6,6 +6,7 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserExpertSupportResource
 import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
+import com.tencent.devops.remotedev.pojo.expert.ExpandDiskTaskDetail
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
@@ -33,5 +34,9 @@ class UserExpertSupportResourceImpl @Autowired constructor(
                 message = data.message
             )
         )
+    }
+
+    override fun expandDiskDetail(userId: String, workspaceName: String): Result<ExpandDiskTaskDetail?> {
+        return Result(expertSupportService.expandDiskDetail(workspaceName))
     }
 }
