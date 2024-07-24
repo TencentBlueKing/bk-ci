@@ -251,6 +251,7 @@ class SignInfoService(
         }
     }
 
+    @Suppress("NestedBlockDepth")
     fun checkInfoPlist(resignId: String, ipaUnzipDir: File) {
         try {
             // 遍历Frameworks下的framework和PlugIns下的xctest
@@ -276,7 +277,8 @@ class SignInfoService(
                     if (!rootDict.containsKey("CFBundleVersion"))
                         warnInfo.append("[WARN]").append("CFBundleVersion is empty,").append(infoPlist)
                     if (!bundleIdPattern.matcher(parameters.toString()).matches())
-                        warnInfo.append("[WARN]").append("bundleIdentifier not conform to specification,").append(infoPlist)
+                        warnInfo.append("[WARN]").append("bundleIdentifier not conform to specification,")
+                            .append(infoPlist)
                 }
             }
 
