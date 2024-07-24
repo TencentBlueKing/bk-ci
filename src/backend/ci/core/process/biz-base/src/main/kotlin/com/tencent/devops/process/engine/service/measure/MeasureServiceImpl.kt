@@ -54,7 +54,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.Optional
 import java.util.concurrent.TimeUnit
+import kotlin.jvm.optionals.getOrNull
 
 @Suppress("ALL", "UNUSED")
 @Service
@@ -62,20 +64,28 @@ class MeasureServiceImpl : MeasureService {
 
     @Autowired
     lateinit var projectCacheService: ProjectCacheService
+
     @Autowired
     lateinit var pipelineTaskService: PipelineTaskService
+
     @Autowired
     lateinit var buildVariableService: BuildVariableService
+
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var templateService: TemplateService
+
     @Autowired
     lateinit var pipelineInfoService: PipelineInfoService
+
     @Autowired
     lateinit var redisOperation: RedisOperation
+
     @Autowired
     lateinit var pipelineEventDispatcher: PipelineEventDispatcher
+
     @Autowired
     lateinit var measureEventDispatcher: MeasureEventDispatcher
 
@@ -207,14 +217,14 @@ class MeasureServiceImpl : MeasureService {
     }
 
     private fun getSpecReportAtoms(): List<String> = try {
-        cache.get("specReportAtoms")?.split(",") ?: emptyList()
+        cache.get("specReportAtoms").getOrNull()?.split(",") ?: emptyList()
     } catch (ignored: Exception) {
         emptyList()
     }
 
     private fun checkAtomMonitorSwitch(): Boolean {
         return try {
-            cache.get("atomMonitorSwitch")?.toBoolean() ?: true
+            cache.get("atomMonitorSwitch").getOrNull()?.toBoolean() ?: true
         } catch (ignored: Exception) {
             atomMonitorSwitch.toBoolean()
         }
@@ -222,8 +232,8 @@ class MeasureServiceImpl : MeasureService {
 
     private val cache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE)
         .expireAfterWrite(CACHE_TIME, TimeUnit.MINUTES)
-        .build(object : CacheLoader<String, String>() {
-            override fun load(key: String) = redisOperation.get(key)
+        .build(object : CacheLoader<String, Optional<String>>() {
+            override fun load(key: String) = Optional.ofNullable(redisOperation.get(key))
         })
 
     companion object {

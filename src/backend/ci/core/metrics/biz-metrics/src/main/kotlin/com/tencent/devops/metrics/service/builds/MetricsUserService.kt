@@ -40,7 +40,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.Meter
-import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.LinkedList

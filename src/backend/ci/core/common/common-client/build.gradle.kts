@@ -27,12 +27,12 @@
 dependencies {
     api(project(":core:common:common-service"))
     api(project(":core:common:common-api"))
-    api("io.github.openfeign:feign-jakarta")
+    api("io.github.openfeign:feign-jaxrs3")
     api("io.github.openfeign:feign-okhttp")
     api("io.github.openfeign:feign-jackson")
     api("io.github.openfeign.form:feign-form")
     api("io.github.openfeign.form:feign-form-spring")
-    api("io.github.openfeign:feign-spring4")
+    api("io.github.openfeign:feign-spring")
     if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
         print("use common-kubernetes")
         api(project(":core:common:common-kubernetes"))

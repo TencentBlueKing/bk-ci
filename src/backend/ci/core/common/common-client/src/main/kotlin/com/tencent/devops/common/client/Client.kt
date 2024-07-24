@@ -46,7 +46,7 @@ import feign.RetryableException
 import feign.Retryer
 import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
-import feign.jaxrs.JakartaContract
+import feign.jaxrs.JAXRSContract
 import feign.okhttp.OkHttpClient
 import feign.spring.SpringContract
 import org.slf4j.LoggerFactory
@@ -326,7 +326,7 @@ class Client @Autowired constructor(
     }
 }
 
-class ClientContract : JakartaContract() {
+class ClientContract : JAXRSContract() {
     override fun parseAndValidateMetadata(targetType: Class<*>?, method: Method?): MethodMetadata {
         val parseAndValidateMetadata = super.parseAndValidateMetadata(targetType, method)
         parseAndValidateMetadata.template().decodeSlash(false)

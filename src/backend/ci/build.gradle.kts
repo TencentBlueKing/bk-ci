@@ -1,10 +1,8 @@
 plugins {
-    id("com.tencent.devops.boot") version "0.0.10-SNAPSHOT"
+    id("com.tencent.devops.boot") version "0.1.0-SNAPSHOT"
     detektCheck
     `task-license-report` // 检查License合规
 }
-
-apply(plugin = "org.owasp.dependencycheck")
 
 allprojects {
     apply(plugin = "com.tencent.devops.boot")
@@ -17,7 +15,6 @@ allprojects {
     // 加载boot的插件
     if (name.startsWith("boot-")) {
         pluginManager.apply("task-sharding-db-table-check") // 分区表检查插件
-        pluginManager.apply("org.owasp.dependencycheck") // 检查依赖包漏洞版本
         pluginManager.apply("task-i18n-load") // i18n插件
         if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
             pluginManager.apply("task-docker-build") // Docker镜像构建
