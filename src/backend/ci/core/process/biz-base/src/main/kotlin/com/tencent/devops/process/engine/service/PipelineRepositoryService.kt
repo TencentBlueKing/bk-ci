@@ -667,6 +667,7 @@ class PipelineRepositoryService constructor(
                     pipelineName = model.name,
                     desc = model.desc ?: ""
                 ) ?: run {
+                    // 空白流水线设置初始化
                     val maxPipelineResNum = if (
                         channelCode.name in versionConfigure.specChannels.split(",")
                     ) {
