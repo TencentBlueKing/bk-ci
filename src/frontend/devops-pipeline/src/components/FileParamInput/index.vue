@@ -87,7 +87,6 @@
                 this.handleChange(this.name, val)
             },
             uploadPathFromFileName (value) {
-                if (this.fileDefaultVal.fileName) return
                 this.fileDefaultVal.fileName = value
                 const val = `${this.fileDefaultVal.directory}/${this.fileDefaultVal.fileName}`
                 this.handleChange(this.name, val)
