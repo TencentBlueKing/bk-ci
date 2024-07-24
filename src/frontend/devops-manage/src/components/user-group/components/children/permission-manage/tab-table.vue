@@ -4,13 +4,14 @@
       class="table"
       ref="refTable"
       :max-height="!isShowOperation && '464'"
-      :fixed-bottom="fixedBottom"
       :data="data"
       show-overflow-tooltip
       :pagination="pagination"
       :border="['row', 'outer']"
       remote-pagination
       empty-cell-text="--"
+      :fixed-bottom="fixedBottom"
+      :scroll-loading="scrollLoading"
       @select-all="handleSelectAll"
       @selection-change="handleSelectionChange"
       @page-limit-change="pageLimitChange"
@@ -27,12 +28,6 @@
           <span @click="handleSelectAllData">{{ t('选择全量数据X条', [groupTotal]) }}</span>
           &nbsp; | &nbsp;
           <span @click="handleClear">{{t("清除选择")}}</span>
-        </div>
-      </template>
-      <template #fixedBottom v-if="remainingCount && !pagination && data.length">
-        <div class="prepend">
-          {{ t("剩余X条数据",[remainingCount]) }}
-          <span @click="handleLoadMore"> {{t("加载更多")}} </span>
         </div>
       </template>
       <bk-table-column type="selection" :min-width="50" width="50" align="center" v-if="isShowOperation" />
@@ -98,6 +93,12 @@
           </div>
         </template>
       </bk-table-column>
+      <template #fixedBottom v-if="remainingCount && !pagination && data.length">
+        <div class="prepend">
+          {{ t("剩余X条数据",[remainingCount]) }}
+          <span @click="handleLoadMore"> {{t("加载更多")}} </span>
+        </div>
+      </template>
     </bk-table>
   </bk-loading>
 </template>
@@ -143,7 +144,7 @@ const isCurrentAll = ref(false);
 const resourceType = computed(() => props.resourceType);
 const groupTotal = computed(() => props.groupTotal);
 const remainingCount = computed(()=> props.groupTotal - props.data.length);
-const scrollLoading = computed(()=>props.scrollLoading);
+const scrollLoading = computed(() => props.scrollLoading);
 const fixedBottom = {
   position: 'relative',
   height: 42,
@@ -199,8 +200,10 @@ function handleSelectAll({checked}) {
  * 多选事件
  */
 function handleSelectionChange() {
-  emit('getSelectList', refTable.value.getSelection(), resourceType.value);
-  isCurrentAll.value = props.data.length === refTable.value.getSelection()
+  const selectionList = refTable.value.getSelection();
+  console.log("🚀 ~ handleSelectionChange ~ selectionList:", selectionList)
+  emit('getSelectList', selectionList, resourceType.value);
+  isCurrentAll.value = props.data.length === selectionList
 };
 /**
  * 全量数据选择
@@ -265,8 +268,8 @@ function pageValueChange(value) {
 }
 .prepend {
   width: 100%;
-  height: 32px;
-  line-height: 32px;
+  height: 42px;
+  line-height: 42px;
   background: #F0F1F5;
   text-align: center;
   box-shadow: 0 -1px 0 0 #DCDEE5;

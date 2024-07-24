@@ -244,7 +244,7 @@
               <p class="main-label-remove">
                 <i18n-t keypath="确认从以上X个用户组中移出X吗？" tag="div">
                   <span class="remove-num">{{ selectedLength }}</span>
-                  <span class="remove-person">{{userName}}</span>
+                  <span class="desc-warn">&nbsp;{{ t(unableText[batchFlag]) }}</span>
                 </i18n-t>
               </p>
             </div>
@@ -332,9 +332,9 @@ const groupTableStore = userGroupTable();
 const manageAsideStore = useManageAside();
 const operatorLoading = ref(false);
 const unableText = {
-  renewal: t('无法续期'),
-  handover: t('无法移交'),
-  remove: t('无法移出'),
+  renewal: '无法续期',
+  handover: '无法移交',
+  remove: '无法移出',
 }
 const userName = computed(() => {
   if (asideItem.value.type === 'user') {
