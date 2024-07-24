@@ -103,7 +103,8 @@ class PipelineBuildDao {
                         BUILD_NUM_ALIAS,
                         CONCURRENCY_GROUP,
                         VERSION_NAME,
-                        YAML_VERSION
+                        YAML_VERSION,
+                        EXECUTE_COUNT
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -127,7 +128,8 @@ class PipelineBuildDao {
                         startBuildContext.buildNumAlias,
                         startBuildContext.concurrencyGroup,
                         startBuildContext.versionName,
-                        startBuildContext.yamlVersion
+                        startBuildContext.yamlVersion,
+                        startBuildContext.executeCount
                     ).execute()
                 }
             } else {
@@ -156,7 +158,8 @@ class PipelineBuildDao {
                         BUILD_NUM_ALIAS,
                         CONCURRENCY_GROUP,
                         YAML_VERSION,
-                        RESOURCE_MODEL
+                        RESOURCE_MODEL,
+                        EXECUTE_COUNT
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -180,7 +183,8 @@ class PipelineBuildDao {
                         startBuildContext.buildNumAlias,
                         startBuildContext.concurrencyGroup,
                         startBuildContext.yamlVersion,
-                        startBuildContext.debugModelStr
+                        startBuildContext.debugModelStr,
+                        startBuildContext.executeCount
                     ).execute()
                 }
             }

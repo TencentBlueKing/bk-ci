@@ -754,7 +754,7 @@ class DockerHostBuildService(
             val date = sdf.parse(utcTimeLocal)
             val startTimestamp = date.time
             val nowTimestamp = System.currentTimeMillis()
-            return (nowTimestamp - startTimestamp) > (8 * 3600 * 1000)
+            return (nowTimestamp - startTimestamp) > (16 * 3600 * 1000)
         }
 
         return false

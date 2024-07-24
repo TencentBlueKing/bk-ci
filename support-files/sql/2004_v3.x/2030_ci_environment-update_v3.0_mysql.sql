@@ -25,22 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent.service
+USE devops_ci_environment;
+SET NAMES utf8mb4;
 
-import com.tencent.bkrepo.repository.pojo.token.TokenType
-import com.tencent.devops.worker.common.service.RepoService
+DROP PROCEDURE IF EXISTS ci_environment_schema_update;
 
-class SampleRepoServiceImpl : RepoService {
+DELIMITER <CI_UBF>
 
-    override fun getRepoToken(
-        userId: String,
-        projectId: String,
-        repoName: String,
-        path: String,
-        type: TokenType,
-        expireSeconds: Long?
-    ): String? {
-        // 开源版暂不支持用token去上传或下载
-        return null
-    }
-}
+CREATE PROCEDURE ci_environment_schema_update()
+BEGIN
+
+    DECLARE db VARCHAR(100);
+    SET AUTOCOMMIT = 0;
+    SELECT DATABASE() INTO db;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND INDEX_NAME = 'SERVER_ID') THEN
+        ALTER TABLE `T_NODE`
+            ADD INDEX `SERVER_ID` (`SERVER_ID`);
+    END IF;
+
+    COMMIT;
+END <CI_UBF>
+DELIMITER ;
+COMMIT;
+CALL ci_environment_schema_update();

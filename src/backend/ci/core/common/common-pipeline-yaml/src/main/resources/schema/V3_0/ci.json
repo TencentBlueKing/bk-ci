@@ -294,6 +294,9 @@
                         }
                       }
                     },
+                    "repo-type" : {
+                      "enum" : [ "ID", "NAME", "SELF", "NONE" ]
+                    },
                     "repo-id" : {
                       "type" : "string"
                     },
@@ -346,6 +349,9 @@
                         "type" : "array"
                       }
                     }
+                  },
+                  "repo-type" : {
+                    "enum" : [ "ID", "NAME", "SELF", "NONE" ]
                   },
                   "repo-id" : {
                     "type" : "string"
@@ -976,6 +982,9 @@
                       }
                     }
                   },
+                  "repo-type" : {
+                    "enum" : [ "ID", "NAME", "SELF", "NONE" ]
+                  },
                   "repo-id" : {
                     "type" : "string"
                   },
@@ -1028,6 +1037,9 @@
                       "type" : "array"
                     }
                   }
+                },
+                "repo-type" : {
+                  "enum" : [ "ID", "NAME", "SELF", "NONE" ]
                 },
                 "repo-id" : {
                   "type" : "string"
@@ -2205,8 +2217,8 @@
             "description" : {
               "type" : "string"
             },
-            "send-markdown" : {
-              "type" : "boolean"
+            "content-format" : {
+              "enum" : [ "markdown", "text" ]
             },
             "notify-type" : {
               "type" : "array",

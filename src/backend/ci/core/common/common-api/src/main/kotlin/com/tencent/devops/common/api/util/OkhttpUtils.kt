@@ -155,6 +155,10 @@ object OkhttpUtils {
         return doHttp(okHttpClient, request)
     }
 
+    fun doShortGet(url: String, headers: Map<String, String> = mapOf()): Response {
+        return doGet(shortOkHttpClient, url, headers)
+    }
+
     fun doLongGet(url: String, headers: Map<String, String> = mapOf()): Response {
         return doGet(longHttpClient, url, headers)
     }
@@ -165,6 +169,13 @@ object OkhttpUtils {
 
     fun doShortHttp(request: Request): Response {
         return doHttp(shortOkHttpClient, request)
+    }
+
+    fun doShortPost(url: String, jsonParam: String, headers: Map<String, String> = mapOf()): Response {
+        val builder = getBuilder(url, headers)
+        val body = jsonParam.toRequestBody(jsonMediaType)
+        val request = builder.post(body).build()
+        return doShortHttp(request)
     }
 
     private fun doCustomClientHttp(customOkHttpClient: OkHttpClient, request: Request): Response {

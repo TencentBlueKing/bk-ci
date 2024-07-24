@@ -580,6 +580,7 @@ object TransferMapper {
    * 2.保留锚点信息
    * */
     fun mergeYaml(old: String, new: String): String {
+        if (old.isBlank()) return new
 
         val oldE = getYamlFactory().parse(old.reader()).toList()
         val newL = getYamlFactory().parse(new.reader()).toList()
