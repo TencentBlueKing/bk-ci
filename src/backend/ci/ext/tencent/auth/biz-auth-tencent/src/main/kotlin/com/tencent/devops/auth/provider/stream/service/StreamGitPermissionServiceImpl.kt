@@ -78,22 +78,14 @@ class StreamGitPermissionServiceImpl @Autowired constructor(
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
         var page = 1
         val users = mutableListOf<String>()
-        val token = ScmRetryUtils.callScm(0, logger) {
-            client.getScm(ServiceGitCiResource::class)
-                .getTokenFromCache(
-                    gitProjectId = gitProjectId
-                ).data!!
-        }
         while (true) {
             val res = ScmRetryUtils.callScm(0, logger) {
-                client.getScm(ServiceGitCiResource::class)
-                    .getMembers(
-                        token = token,
-                        gitProjectId = gitProjectId,
-                        page = page,
-                        pageSize = 100,
-                        search = null
-                    ).data!!
+                client.getScm(ServiceGitCiResource::class).getProjectMembersAll(
+                    gitProjectId = gitProjectId,
+                    page = page,
+                    pageSize = 100,
+                    search = null
+                ).data!!
             }
             users.addAll(res.filter { it.accessLevel >= level }.map { it.username })
             if (res.size != 100) {
