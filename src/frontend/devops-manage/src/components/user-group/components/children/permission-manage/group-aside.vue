@@ -310,6 +310,7 @@ export default {
             const users = data.data.members.filter(i => i.type === 'user')
             this.groupList[this.curGroupIndex].departmentCount -= departments.length
             this.groupList[this.curGroupIndex].userCount -= users.length
+            this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
           case 'change_group_detail_tab':
             this.$emit('change-group-detail-tab', data.data.tab)

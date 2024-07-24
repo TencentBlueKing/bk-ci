@@ -328,6 +328,11 @@ watch(() => searchValue.value, (val, oldVal) => {
 });
 
 onMounted(() => {
+  const currentResourceType = route.query.resourceType;
+  if(currentResourceType){
+    activeIndex.value = permissionList.value.findIndex(item => item.resourceType === currentResourceType);
+    resourceType.value = currentResourceType;
+  }
   init();
 });
 

@@ -79,7 +79,7 @@
   >
     <template #header>
       {{ t("移出项目") }}
-      <span class="dialog-header"> {{t("移出用户")}}： {{ removeUser.name }} </span>
+      <span class="dialog-header"> {{t("移出用户")}}： {{ removeUser.id }}({{ removeUser.name }}) </span>
     </template>
     <template #default>
       <div class="dialog">
@@ -127,7 +127,7 @@
             <p style="display: flex; line-height: 14px;">
               <i class="manage-icon manage-icon-close"></i>
               <i18n-t keypath="检测到以下授权将无法移交给X，请先前往「授权管理」单独处理" tag="div" >
-                <span> {{ removeUser.name }} </span>
+                <span> {{ handOverForm.name }} </span>
               </i18n-t>
             </p>
             <p class="blue-text" @click="refreshHandOverfail">
@@ -137,7 +137,7 @@
           </p>
           <div class="hand-over-table-group" v-for="item in overTable" :key="item.id">
             <p class="hand-over-table-item">{{item.name}}({{ item.resourceType }})</p>
-            <p class="blue-text" @click="goAauthorization">
+            <p class="blue-text" @click="goAauthorization(item.resourceType)">
               <i class="manage-icon manage-icon-jump"></i>
               <span>{{t("前往处理")}}</span>
             </p>
@@ -321,12 +321,16 @@ function handOverInputClear(){
   isHandOverfail.value = false;
 }
 async function handOverInput(){
-  if(!handOverForm.value.name) return;
+  const isValidate = formRef.value?.validate();
+  if(!handOverForm.value.name || !isValidate) {
+    handOverInputClear();
+    return;
+  };
   isChecking.value = true;
   isAuthorizedSuccess.value = false;
   const params = {
     projectCode: projectId.value,
-    handoverFrom: removeUser.value.name,
+    handoverFrom: removeUser.value.id,
     handoverTo: handOverForm.value.name,
     preCheck: true
   }
@@ -343,6 +347,7 @@ async function handOverInput(){
       isAuthorizedSuccess.value = true;
     }
   } catch (error) {
+    handOverInputClear();
     console.log(error);
   }
 }
@@ -355,13 +360,23 @@ function refresh(){
 function refreshHandOverfail() {
   handOverInput();
 }
-function goAauthorization() {
-  window.open(`${location.origin}/console/manage/xxzza/permission`, '_blank')
+function goAauthorization(resourceType) {
+  window.open(`${location.origin}/console/manage/${projectId.value}/permission?resourceType=${resourceType}`, '_blank')
 }
 function handleShowPerson(item) {
   isShowPersonDialog.value = true;
   removeUser.value = item;
   emit('getPersonList',item, projectId.value)
+}
+/**
+  * 校验粘贴数据中合法的值
+  * usernames [Array] - 格式化后的用户名数组，可通过paste-formatter配置自定义格式化方法
+  */
+function pasteValidator (usernames){
+  return usernames.filter(username => username.startWith('a'))
+}
+function onRemoveselected(value){
+  console.log(value,'全部清空');
 }
 </script>
 

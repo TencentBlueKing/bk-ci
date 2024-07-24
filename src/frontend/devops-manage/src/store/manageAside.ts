@@ -107,12 +107,14 @@ export default defineStore('manageAside', () => {
           params.memberType = item.id;
         }
       })
-      
       const res = await http.getProjectMembers(projectId, params);
       isLoading.value = false;
       memberList.value = res.records;
-      activeTab.value = res.records[0]?.id;
-      handleAsideClick(res.records[0]);
+      if (!asideItem.value) {
+        handleAsideClick(res.records[0])
+      } else{
+        handleAsideClick(asideItem.value)
+      }
       memberPagination.value.count = res.count;
     } catch (error) {
       isLoading.value = false;

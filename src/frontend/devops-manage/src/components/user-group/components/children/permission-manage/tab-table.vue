@@ -10,7 +10,6 @@
       :border="['row', 'outer']"
       remote-pagination
       empty-cell-text="--"
-      :fixed-bottom="fixedBottom"
       :scroll-loading="scrollLoading"
       @select-all="handleSelectAll"
       @selection-change="handleSelectionChange"
@@ -93,8 +92,8 @@
           </div>
         </template>
       </bk-table-column>
-      <template #fixedBottom v-if="remainingCount && !pagination && data.length">
-        <div class="prepend">
+      <template #appendLastRow v-if="remainingCount && !pagination && data.length">
+        <div class="prepend appendLastRow">
           {{ t("剩余X条数据",[remainingCount]) }}
           <span @click="handleLoadMore"> {{t("加载更多")}} </span>
         </div>
@@ -144,12 +143,6 @@ const isCurrentAll = ref(false);
 const resourceType = computed(() => props.resourceType);
 const groupTotal = computed(() => props.groupTotal);
 const remainingCount = computed(()=> props.groupTotal - props.data.length);
-const scrollLoading = computed(() => props.scrollLoading);
-const fixedBottom = {
-  position: 'relative',
-  height: 42,
-  loading: scrollLoading.value
-};
 const TOOLTIPS_CONTENT = {
   UNIQUE_MANAGER: t('唯一管理员，不可移出。请添加新的管理员后再移出'),
   UNIQUE_OWNER: t('唯一拥有者，不可移出。请添加新的拥有者后再移出'),
@@ -201,7 +194,6 @@ function handleSelectAll({checked}) {
  */
 function handleSelectionChange() {
   const selectionList = refTable.value.getSelection();
-  console.log("🚀 ~ handleSelectionChange ~ selectionList:", selectionList)
   emit('getSelectList', selectionList, resourceType.value);
   isCurrentAll.value = props.data.length === selectionList
 };
@@ -282,6 +274,9 @@ function pageValueChange(value) {
     line-height: 20px;
     cursor: pointer;
   }
+}
+.appendLastRow{
+  background-color: #fff;
 }
 .overlay{
   position: absolute;

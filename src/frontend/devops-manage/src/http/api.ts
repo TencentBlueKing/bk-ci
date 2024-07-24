@@ -313,4 +313,10 @@ export default {
   resetAllResourceAuthorization (projectId: string, params: any) {
     return http.post(`${USER_PERFIX}/auth/authorization/${projectId}/resetAllResourceAuthorization`, params);
   },
+  /**
+   * 重置资源授权管理
+   */
+  batchOperateCheck (projectId: string, batchOperateType: string , params: any) {
+    return http.post(`${IAM_PERFIX}/member/${projectId}/batch/${batchOperateType}/check`, params);
+  },
 };

@@ -74,8 +74,6 @@ export default defineStore('userGroupTable', () => {
   const isShowRenewal = ref(false);
   const isShowHandover = ref(false);
   const isShowRemove = ref(false);
-
-  const unableMoveLength = ref();
   const selectedData = reactive<SelectedDataType>({});
   const selectSourceList = ref<SourceType[]>([]);
   const selectedRow = ref<GroupTableType | null>(null);
@@ -229,7 +227,6 @@ export default defineStore('userGroupTable', () => {
         activeTable.tableData = activeTable.tableData.map(item => item.groupId === selectedRow.value!.groupId ? res : item)
       } catch (error) {
         console.log(error);
-        
       }
     }
   }
@@ -380,7 +377,6 @@ export default defineStore('userGroupTable', () => {
     isShowHandover,
     isShowRemove,
     selectedData,
-    unableMoveLength,
     selectedLength,
     selectSourceList,
     selectedRow,

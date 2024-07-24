@@ -30,9 +30,9 @@
       </div>
       <div class="manage-content">
         <div class="manage-content-btn">
-          <bk-button :disabled="!isPermission" @click="batchOperator('renewal')">{{t("批量续期")}}</bk-button>
-          <bk-button :disabled="!isPermission" @click="batchOperator('handover')" v-if="asideItem?.type==='user'">{{t("批量移交")}}</bk-button>
-          <bk-button :disabled="!isPermission" @click="batchOperator('remove')">{{t("批量移出")}}</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchOperator('renewal')" :loading="renewalLoading">{{t("批量续期")}}</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchOperator('handover')" v-if="asideItem?.type==='user'" :loading="handoverLoading">{{t("批量移交")}}</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchOperator('remove')" :loading="removerLoading">{{t("批量移出")}}</bk-button>
 
           <i18n-t keypath="已选择X个用户组" tag="div" class="main-desc" v-if="selectedLength">
             <span class="desc-primary">&nbsp;{{ selectedLength }}&nbsp;</span>
@@ -187,13 +187,12 @@
       <div class="slider-main">
         <p class="main-desc">
           <i18n-t keypath="已选择X个用户组" tag="div">
-            <span class="desc-primary">&nbsp;{{ selectedLength }}&nbsp;</span>
+            <span class="desc-primary">&nbsp;{{ totalCount }}&nbsp;</span>
           </i18n-t>
-          <i18n-t v-if="unableMoveLength" keypath="；其中X个用户组无法移出，本次操作将忽略" tag="div">
-            <span class="desc-warn">&nbsp;{{ unableMoveLength }}&nbsp;</span>
+          <i18n-t v-if="inoperableCount" keypath="；其中X个用户组无法移出，本次操作将忽略" tag="div">
+            <span class="desc-warn">&nbsp;{{ inoperableCount }}&nbsp;</span>
             <span class="desc-warn">&nbsp;{{ unableText[batchFlag] }}</span>
           </i18n-t>
-          
         </p>
         <div>
           <GroupTab
@@ -272,22 +271,8 @@ import NoPermission from '../no-enable-permission/no-permission.vue';
 import userGroupTable from "@/store/userGroupTable";
 import useManageAside from "@/store/manageAside";
 import { storeToRefs } from 'pinia';
+import { unableText, batchOperateTypes, btnTexts, batchTitle, batchMassageText } from "@/utils/constants"
 
-const btnTexts = {
-  renewal: "确定续期",
-  handover: "确定移交",
-  remove: "确定移出"
-}
-const batchTitle = {
-  renewal: "批量续期",
-  handover: "批量移交",
-  remove: "批量移出"
-}
-const batchMassageText = {
-  renewal: '用户组权限已续期',
-  handover: '用户组权限已移交',
-  remove: '用户组已移出',
-}
 const batchBtnLoading = ref(false);
 const { t } = useI18n();
 const route = useRoute();
@@ -307,7 +292,16 @@ const rules = {
   ],
 };
 const searchValue = ref([]);
-
+const inoperableCount = ref();
+const totalCount = ref();
+const renewalLoading = ref(false);
+const handoverLoading = ref(false);
+const removerLoading = ref(false);
+const loadingMap = {
+  renewal: renewalLoading,
+  handover: handoverLoading,
+  remove: removerLoading
+};
 const filterTips = computed(() => {
   return searchData.value.map(item => item.name).join(' / ');
 });
@@ -331,11 +325,6 @@ const manageAsideRef = ref(null);
 const groupTableStore = userGroupTable();
 const manageAsideStore = useManageAside();
 const operatorLoading = ref(false);
-const unableText = {
-  renewal: '无法续期',
-  handover: '无法移交',
-  remove: '无法移出',
-}
 const userName = computed(() => {
   if (asideItem.value.type === 'user') {
     return `${asideItem.value.id}(${asideItem.value.name})`;
@@ -350,13 +339,11 @@ const {
   isShowRemove,
   selectedData,
   selectedLength,
-  unableMoveLength,
   selectSourceList,
   selectedRow,
   isPermission,
 } = storeToRefs(groupTableStore);
 const {
-  fetchUserGroupList,
   handleRenewal,
   handleHandOver,
   handleRemove,
@@ -403,6 +390,7 @@ function asideClick(item){
   handleAsideClick(item, projectId.value);
 }
 async function refresh(){
+  asideItem.value = null;
   searchValue.value = [];
 }
 /**
@@ -468,23 +456,10 @@ function handleSelectAll(resourceType, asideItem){
   handleSelectAllData(resourceType, asideItem)
 }
 /**
- * 找出无法移出用户数据
- */
-function countNonOtherObjects(data, flag) {
-  const items = Object.values(data).flat();
-  const filterConditions = {
-    renewal: item => item.expiredAtDisplay == t('永久') || item.removeMemberButtonControl === 'TEMPLATE',
-    handover: item => item.removeMemberButtonControl == 'TEMPLATE',
-    remove: item => item.removeMemberButtonControl !== 'OTHER',
-  };
-  const filterCondition = filterConditions[flag] || (() => false);
-  return items.filter(filterCondition).length;
-}
-/**
  * 批量操作
  * @param flag 按钮标识
  */
-function batchOperator(flag){
+async function batchOperator(flag){
   getSourceList();
   if (!selectedLength.value) {
     Message({
@@ -493,10 +468,23 @@ function batchOperator(flag){
     });
     return;
   }
-  unableMoveLength.value = countNonOtherObjects(selectedData.value, flag);
-  sliderTitle.value = t(batchTitle[flag]);
-  batchFlag.value = flag;
-  isShowSlider.value = true;
+
+  try {
+    loadingMap[flag].value = true;
+    const params = formatSelectParams();
+    delete params.renewalDuration
+
+    const res = await http.batchOperateCheck(projectId.value, batchOperateTypes[flag], params);
+    totalCount.value = res.totalCount;
+    inoperableCount.value = res.inoperableCount;
+    loadingMap[flag].value = false;
+
+    sliderTitle.value = t(batchTitle[flag]);
+    batchFlag.value = flag;
+    isShowSlider.value = true;
+  } catch (error) {
+    loadingMap[flag].value = false;
+  }
 }
 
 function batchCancel() {
@@ -523,8 +511,6 @@ function formatSelectParams(rowGroupId){
   const params = {
     groupIds: groupIds,
     resourceTypes: resourceTypes || [],
-    allSelection: resourceTypes.length ? true : false,
-    excludedUniqueManagerGroup: true,
     targetMember: asideItem.value,
     ...(expiredAt.value && {renewalDuration: expiredAt.value}),
     // ...(handOverForm.value.name && {handoverTo: handOverForm.value}),
@@ -576,11 +562,7 @@ async function batchConfirm(batchFlag) {
       showMessage('success', t(batchMassageText[batchFlag]));
       batchBtnLoading.value = false;
       cancleClear(batchFlag);
-      if(batchFlag === 'renewal'){
-        fetchUserGroupList(asideItem.value);
-      } else {
-        getProjectMembers(projectId.value);
-      }
+      getProjectMembers(projectId.value);
     }
   } catch (error) {
     batchBtnLoading.value = false;

@@ -23,12 +23,14 @@
   "license": "ISC",
   "dependencies": {
     "bk-permission": "^0.0.28",
-    "bkui-vue": "2.0.1-beta.38",
+    "bkui-vue": "2.0.1-beta.41",
     "dayjs": "^1.11.2",
     "pinia": "^2.0.23",
     "vue": "^3.2.41",
     "vue-i18n": "^9.1.10",
-    "vue-router": "^4.1.6"
+    "vue-router": "^4.1.6",
+    "lodash.throttle": "^4.1.1",
+    "@icon-cool/bk-icon-bk-biz-components": "0.0.4"
   },
   "devDependencies": {
     "@blueking/babel-preset-bk": "^2.1.0-beta7",
