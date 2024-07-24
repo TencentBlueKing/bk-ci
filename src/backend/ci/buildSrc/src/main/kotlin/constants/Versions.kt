@@ -32,7 +32,7 @@ object Versions {
     const val Ktlint = "0.31.0"
     const val Elasticsearch = "7.17.3"
     const val Lucene = "8.11.1"
-    const val ShardingSphere = "5.2.1"
+    const val ShardingSphere = "5.5.0"
     const val Oshi = "6.6.1"
     const val Leaf = "1.0.2-RELEASE"
     const val p4 = "2024.1.2612262"

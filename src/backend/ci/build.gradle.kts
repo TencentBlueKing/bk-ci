@@ -66,7 +66,8 @@ allprojects {
             dependency("com.tencent.bk.sdk:crypto-java-sdk:${Versions.BkCrypto}")
             dependency("mysql:mysql-connector-java:${Versions.MysqlDriver}")
             dependency("org.jolokia:jolokia-core:${Versions.jakarta}")
-            dependency("org.apache.shardingsphere:shardingsphere-jdbc-core:${Versions.ShardingSphere}")
+            dependency("org.apache.shardingsphere:shardingsphere-jdbc:${Versions.ShardingSphere}")
+            dependency("org.apache.shardingsphere:shardingsphere-infra-algorithm-core:${Versions.ShardingSphere}")
             dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}") {
                 entry("jersey-container-servlet-core")
                 entry("jersey-container-servlet")
@@ -141,7 +142,8 @@ allprojects {
         it.exclude("io.swagger", "swagger-annotations")
         it.exclude("io.swagger", "swagger-models")
         it.exclude("commons-logging", "commons-logging")
-        it.exclude("com.vaadin.external.google","android-json")
+        it.exclude("com.vaadin.external.google", "android-json")
+        it.exclude("org.apache.shardingsphere", "shardingsphere-test-util")
     }
     dependencies {
         // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656
