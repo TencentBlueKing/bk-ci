@@ -100,8 +100,7 @@ class SubPipelineElementBizPluginService @Autowired constructor(
         isTemplate: Boolean,
         pipelineId: String
     ): ElementCheckResult {
-        // 模板保存时不需要校验子流水线权限
-        if (isTemplate || projectId.isNullOrBlank()) return ElementCheckResult(true)
+        if (projectId.isNullOrBlank()) return ElementCheckResult(true)
 
         val (subProjectId, subPipelineId, subPipelineName) = subPipelineRefService.getSubPipelineInfo(
             element = element,
@@ -121,7 +120,8 @@ class SubPipelineElementBizPluginService @Autowired constructor(
             taskName = element.name ?: "",
             channel = ChannelCode.BS.name,
             userId = userId,
-            elementEnable = enableElement(stage, container, element)
+            elementEnable = enableElement(stage, container, element),
+            isTemplate = isTemplate
         )
         logger.info("start check sub pipeline element|$subPipelineRef")
         return subPipelineRef.check(
@@ -146,6 +146,8 @@ class SubPipelineElementBizPluginService @Autowired constructor(
 
     fun checkPermission(subPipelineRef: SubPipelineRef): ElementCheckResult {
         with(subPipelineRef) {
+            // 模板保存时不需要校验子流水线权限
+            if (isTemplate) return ElementCheckResult(true)
             logger.info(
                 "check the sub-pipeline permissions when deploying pipeline|" +
                         "project:$projectId|elementId:$taskId|userId:$userId|" +
