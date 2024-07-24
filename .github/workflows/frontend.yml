@@ -37,6 +37,8 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: src/frontend/pnpm-lock.yaml
       - uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: master
       - run: |
           echo "BASE: ${{ env.NX_BASE }}"
           echo "HEAD: ${{ env.NX_HEAD }}"
