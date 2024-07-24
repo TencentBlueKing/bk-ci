@@ -267,7 +267,7 @@ class StoreProjectRelDao {
                 conditions.add(TYPE.`in`(storeProjectTypes))
             }
             // 测试中的应用对应的调试项目下无需判断测试版本的应用已安装
-            if (instanceId.isNullOrBlank() && storeProjectTypes?.contains(StoreProjectTypeEnum.TEST.type.toByte()) != true) {
+            if (!instanceId.isNullOrBlank() && storeProjectTypes?.contains(StoreProjectTypeEnum.TEST.type.toByte()) != true) {
                 conditions.add(INSTANCE_ID.eq(instanceId))
             }
             val baseQuery = dslContext.select(STORE_CODE, VERSION)
