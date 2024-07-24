@@ -37,16 +37,13 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: src/frontend/pnpm-lock.yaml
       - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: ${{ github.ref_name }}
-          working-directory: "src/frontend"
       - run: |
           echo "BASE: ${{ env.NX_BASE }}"
           echo "HEAD: ${{ env.NX_HEAD }}"
       - run: |
           pnpm install
           export NODE_OPTIONS=--openssl-legacy-provider
-          pnpm public --base ${{ env.NX_BASE }} --head ${{ env.NX_HEAD }}
+          pnpm public
         working-directory: src/frontend
       - uses: actions/upload-artifact@v3
         if: ${{ inputs.upload == 'true'  }}

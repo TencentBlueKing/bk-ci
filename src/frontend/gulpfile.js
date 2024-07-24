@@ -15,15 +15,11 @@ const argv = yargs.alias({
     dist: 'd',
     env: 'e',
     lsVersion: 'l',
-    base: 'b',
-    head: 'h',
     scope: 's'
 }).default({
     dist: 'frontend',
     env: 'master',
     lsVersion: 'dev',
-    base: 'master',
-    head: 'HEAD',
 }).describe({
     dist: 'build output dist directory',
     env: 'environment [dev, test, master, external]',
@@ -96,7 +92,7 @@ task('build', series([cb => {
         lsVersion
     }
     
-    const cmd = scopeStr ? `exec nx run-many -t public:master ${scopeStr}`: `exec nx affected -t public:master --base=${base} --head=${head}`
+    const cmd = scopeStr ? `exec nx run-many -t public:master ${scopeStr}`: `exec nx affected -t public:master `
     console.log('gulp cmd: ', cmd, cmd.split(' '));
     const { spawn } = require('node:child_process')
     const spawnCmd = spawn('pnpm', cmd.split(' '), {
