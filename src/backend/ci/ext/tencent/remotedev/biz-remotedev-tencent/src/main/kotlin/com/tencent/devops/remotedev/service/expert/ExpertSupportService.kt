@@ -505,7 +505,8 @@ class ExpertSupportService @Autowired constructor(
         val rStatus = if (status != null) {
             when (status) {
                 EnvironmentActionStatus.PENDING -> "RUNNING"
-                else -> "DONE"
+                EnvironmentActionStatus.SUCCEEDED -> "SUCCEEDED"
+                else -> "FAILED"
             }
         } else {
             "UNKNOW"
@@ -515,7 +516,7 @@ class ExpertSupportService @Autowired constructor(
             operator = record.operator,
             operateDate = record.createdTime,
             status = rStatus,
-            completeDate = if (rStatus == "DONE") {
+            completeDate = if (rStatus == "FAILED" || rStatus == "SUCCEEDED") {
                 updateTime
             } else {
                 null

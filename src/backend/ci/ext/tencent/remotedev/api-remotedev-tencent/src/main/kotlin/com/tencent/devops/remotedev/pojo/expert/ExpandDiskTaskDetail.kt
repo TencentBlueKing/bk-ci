@@ -11,7 +11,7 @@ data class ExpandDiskTaskDetail(
     val operator: String,
     @get:Schema(title = "操作时间")
     val operateDate: LocalDateTime,
-    @get:Schema(title = "状态: RUNNING|DONE|UNKNOW")
+    @get:Schema(title = "状态: RUNNING|SUCCEEDED|FAILED|UNKNOW")
     val status: String,
     @get:Schema(title = "操作完成时间")
     val completeDate: LocalDateTime?
