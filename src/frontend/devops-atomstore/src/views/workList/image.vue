@@ -47,7 +47,7 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('store.状态')" show-overflow-tooltip>
                     <template slot-scope="props">
-                        <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                        <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary image-status"
                             v-if="['AUDITING', 'COMMITTING', 'CHECKING', 'CHECK_FAIL', 'UNDERCARRIAGING', 'TESTING'].includes(props.row.imageStatus)">
                             <div class="rotate rotate1"></div>
                             <div class="rotate rotate2"></div>
@@ -533,5 +533,12 @@
     }
     .lh30 {
         line-height: 30px;
+    }
+    .image-status{
+        &.bk-spin-loading {
+            display: inline-block !important;
+            width: 14px;
+            height: 14px;
+        }
     }
 </style>
