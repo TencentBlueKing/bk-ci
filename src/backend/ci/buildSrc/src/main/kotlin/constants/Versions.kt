@@ -1,6 +1,5 @@
 object Versions {
     const val HashIds = "1.0.3"
-    const val Jaxrs = "2.1.1"
     const val CommonExec = "1.4.0"
     const val CommonIo = "2.7"
     const val CommonText = "1.10.0"
@@ -49,7 +48,7 @@ object Versions {
     const val BkCrypto = "1.1.3"
     const val audit = "1.0.8"
     const val MysqlDriver = "8.0.33"
-    const val jakarta = "1.7.2"
+    const val jolokia = "1.7.2"
     const val HttpClient = "4.5.14"
     // worker
     const val Winp = "1.28"

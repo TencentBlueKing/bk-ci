@@ -26,7 +26,6 @@ allprojects {
         setApplyMavenExclusions(false)
         dependencies {
             dependency("org.json:json:${Versions.orgJson}")
-            dependency("javax.ws.rs:javax.ws.rs-api:${Versions.Jaxrs}")
             dependency("org.bouncycastle:bcpkix-jdk15on:${Versions.BouncyCastle}")
             dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
@@ -66,7 +65,7 @@ allprojects {
             dependency("commons-io:commons-io:${Versions.CommonIo}")
             dependency("com.tencent.bk.sdk:crypto-java-sdk:${Versions.BkCrypto}")
             dependency("mysql:mysql-connector-java:${Versions.MysqlDriver}")
-            dependency("org.jolokia:jolokia-core:${Versions.jakarta}")
+            dependency("org.jolokia:jolokia-core:${Versions.jolokia}")
             dependency("org.apache.shardingsphere:shardingsphere-jdbc:${Versions.ShardingSphere}")
             dependency("org.apache.shardingsphere:shardingsphere-infra-algorithm-core:${Versions.ShardingSphere}")
             dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}") {
@@ -134,7 +133,6 @@ allprojects {
         it.exclude("org.slf4j", "log4j-over-slf4j")
         it.exclude("org.slf4j", "slf4j-log4j12")
         it.exclude("org.slf4j", "slf4j-nop")
-        it.exclude("jakarta.ws.rs", "jsr311-api")
         it.exclude("dom4j", "dom4j")
         it.exclude("com.flipkart.zjsonpatch", "zjsonpatch")
         it.exclude("com.zaxxer", "HikariCP-java7")

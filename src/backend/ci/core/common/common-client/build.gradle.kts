@@ -28,6 +28,8 @@ dependencies {
     api(project(":core:common:common-service"))
     api(project(":core:common:common-api"))
     api("io.github.openfeign:feign-jaxrs3")
+    api(group = "io.github.openfeign", name = "feign-jaxrs2", classifier = "jakarta")
+    api(group = "io.github.openfeign", name = "feign-jaxrs", classifier = "jakarta")
     api("io.github.openfeign:feign-okhttp")
     api("io.github.openfeign:feign-jackson")
     api("io.github.openfeign.form:feign-form")
@@ -37,5 +39,4 @@ dependencies {
         print("use common-kubernetes")
         api(project(":core:common:common-kubernetes"))
     }
-    api("javax.ws.rs:javax.ws.rs-api")// 兼容 feign-jaxrs3
 }
