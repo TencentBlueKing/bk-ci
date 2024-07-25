@@ -93,5 +93,13 @@
     "webpack": "~5.76.1",
     "nx": "19.5.1"
   },
-  "nx": {}
+  "nx": {
+    "targets": {
+      "public:master": {
+        "outputs": [
+          "{workspaceRoot}/frontend/pipeline"
+        ]
+      }
+    }
+  }
 }

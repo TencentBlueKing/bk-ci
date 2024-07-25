@@ -46,5 +46,14 @@
     "url": ""
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "nx": {
+    "targets": {
+      "public:master": {
+        "outputs": [
+          "{workspaceRoot}/frontend/ticket"
+        ]
+      }
+    }
+  }
 }

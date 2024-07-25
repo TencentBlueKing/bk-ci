@@ -54,5 +54,14 @@
   "dependencies": {
     "@blueking/bkcharts": "^2.0.10",
     "vue": "~2.7.16"
+  },
+  "nx": {
+    "targets": {
+      "public:master": {
+        "outputs": [
+          "{workspaceRoot}/frontend/turbo"
+        ]
+      }
+    }
   }
 }

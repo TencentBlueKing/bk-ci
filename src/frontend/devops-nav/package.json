@@ -86,5 +86,14 @@
     "vuex-typescript-interface": "^1.0.3",
     "@blueking/login-modal": "1.0.4",
     "@blueking/platform-config": "^1.0.4"
+  },
+  "nx": {
+    "targets": {
+      "public:master": {
+        "outputs": [
+          "{workspaceRoot}/frontend/console"
+        ]
+      }
+    }
   }
 }

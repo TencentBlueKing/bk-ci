@@ -61,5 +61,14 @@
   "repository": {
     "type": "git",
     "url": ""
+  },
+  "nx": {
+    "targets": {
+      "public:master": {
+        "outputs": [
+          "{workspaceRoot}/frontend/codelib"
+        ]
+      }
+    }
   }
 }

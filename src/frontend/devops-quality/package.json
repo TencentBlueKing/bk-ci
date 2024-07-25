@@ -63,5 +63,14 @@
     "type": "git",
     "url": ""
   },
-  "gitHead": "afc92dde9341d36ec28514ede9e7cca0af3edb1b"
+  "gitHead": "afc92dde9341d36ec28514ede9e7cca0af3edb1b",
+  "nx": {
+    "targets": {
+      "public:master": {
+        "outputs": [
+          "{workspaceRoot}/frontend/quality"
+        ]
+      }
+    }
+  }
 }

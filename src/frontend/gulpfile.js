@@ -83,7 +83,7 @@ task('devops', series([taskGenerator('devops'), renameSvg('devops'), generatorSv
 task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline'), generatorSvgJs('pipeline')]))
 task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
 
-task('build', series([cb => {
+task('build', series(cb => {
     const spinner = new Ora('building bk-ci frontend project').start()
     const scopeStr = getScopeStr(scope)
     const envConfMap = {
@@ -92,7 +92,7 @@ task('build', series([cb => {
         lsVersion
     }
     
-    const cmd = scopeStr ? `run-many -t public:master ${scopeStr}`: `exec nx affected -t public:master`
+    const cmd = scopeStr ? `run-many -t public:master ${scopeStr}`: `affected -t public:master --base=develop`
     console.log('gulp cmd: ', cmd, cmd.split(' '));
     const { spawn } = require('node:child_process')
     const spawnCmd = spawn('pnpm', [
@@ -111,43 +111,51 @@ task('build', series([cb => {
       
     spawnCmd.on('close', (code) => {
         console.log(`child process exited with code ${code}`);
+        if (code) {
+            spinner.fail('Failed building bk-ci frontend project')
+            process.exit(1)
+            return;
+        }
         spinner.succeed('Finished building bk-ci frontend project')
         cb()
     }); 
-}], () => {
+}, (cb) => {
     try {
         const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(`${dist}/assets_bundle.json`, 'utf8')}`
         fs.writeFileSync(`${dist}/assetsBundles.js`, fileContent)
-        return src(`${dist}/assetsBundles.js`)
+        return src(`${dist}/assetsBundles.js`, {
+            allowEmpty: true
+        })
             .pipe(hash())
             .pipe(dest(`${dist}/`))
     } catch (error) {
+        console.log('build assetsBundles.js failed')
         console.error(error)
     }
+    cb()
 }, (cb) => {
+
     ['console', 'pipeline'].map(prefix => {
         const dir = path.join(dist, prefix)
         const spriteNameGlob = `${prefix === 'console' ? 'devops' : 'pipeline'}_sprite-*.js`
         const fileName = `frontend#${prefix}#index.html`
         return src(path.join(dir, fileName), {
             allowEmpty: true
-        })
-            .pipe(inject(src([
-                ...(prefix === 'console' ? [`${dist}/assetsBundles-*.js`] : []),
-                `${dist}/svg-sprites/${spriteNameGlob}`
-            ], {
-                read: false
-            }), {
-                ignorePath: dist,
-                addRootSlash: false,
-                addPrefix: '__BK_CI_PUBLIC_PATH__'
-            }))
-            .pipe(htmlmin({
-                collapseWhitespace: true,
-                removeComments: true,
-                minifyJS: true
-            }))
-            .pipe(dest(dir))
+        }).pipe(inject(src([
+            ...(prefix === 'console' ? [`${dist}/assetsBundles-*.js`] : []),
+            `${dist}/svg-sprites/${spriteNameGlob}`
+        ], {
+            read: false
+        }), {
+            ignorePath: dist,
+            addRootSlash: false,
+            addPrefix: '__BK_CI_PUBLIC_PATH__'
+        })).pipe(htmlmin({
+            collapseWhitespace: true,
+            removeComments: true,
+            minifyJS: true
+        }))
+        .pipe(dest(dir))
     })
     cb()
 }))

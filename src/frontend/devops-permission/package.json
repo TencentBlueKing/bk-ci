@@ -55,5 +55,14 @@
   "engines": {
     "node": ">= 14.16.1",
     "npm": ">= 6.4.1 <7"
+  },
+  "nx": {
+    "targets": {
+      "public:master": {
+        "outputs": [
+          "{workspaceRoot}/frontend/permission"
+        ]
+      }
+    }
   }
 }
