@@ -106,6 +106,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
@@ -160,7 +161,8 @@ class PipelineRepositoryService constructor(
     private val client: Client,
     private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation,
-    private val pipelineYamlInfoDao: PipelineYamlInfoDao
+    private val pipelineYamlInfoDao: PipelineYamlInfoDao,
+    private val pipelineGroupService: PipelineGroupService
 ) {
 
     companion object {
@@ -715,6 +717,13 @@ class PipelineRepositoryService constructor(
                             }
                             if (useLabelSettings != true) {
                                 setting.labels = listOf()
+                            } else {
+                                val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
+                                val labels = ArrayList<String>()
+                                groups.forEach {
+                                    labels.addAll(it.labels)
+                                }
+                                setting.labels = labels
                             }
                             setting.pipelineAsCodeSettings = PipelineAsCodeSettings()
                             newSetting = setting
