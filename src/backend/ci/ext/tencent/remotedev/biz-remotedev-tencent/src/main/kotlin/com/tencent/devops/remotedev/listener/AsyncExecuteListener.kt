@@ -74,14 +74,16 @@ class AsyncExecuteListener @Autowired constructor(
                 gitProxyTGitService.doAddOrRemoveAclIp(
                     projectId = data.projectId,
                     ips = data.ips,
-                    remove = data.remove
+                    remove = data.remove,
+                    tgitId = data.tgitId
                 )
             }
 
             AsyncExecuteEventType.ASYNC_TGIT_ACL_USER -> {
                 val data = objectMapper.readValue<AsyncTGitAclUser>(event.eventStr)
                 gitProxyTGitService.doRefreshProjectTGitSpecUser(
-                    projectId = data.projectId
+                    projectId = data.projectId,
+                    tgitId = data.tgitId
                 )
             }
 

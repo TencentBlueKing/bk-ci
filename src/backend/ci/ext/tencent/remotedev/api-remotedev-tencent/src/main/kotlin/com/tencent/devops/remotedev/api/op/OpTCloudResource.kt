@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.tcloud.ProjectCfsData
+import com.tencent.devops.remotedev.pojo.tcloud.UpdateCfsData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -66,4 +67,14 @@ interface OpTCloudResource {
         @QueryParam("cfsId")
         cfsId: String
     )
+
+    @Operation(summary = "新增CFS规则")
+    @POST
+    @Path("/updateProjectCfs")
+    fun updateProjectCfs(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: UpdateCfsData
+    ): Result<Boolean>
 }

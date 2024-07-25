@@ -42,6 +42,7 @@ class OffshoreTGitApiClient @Autowired constructor(
         minAccessLevel: GitAccessLevelEnum?,
         type: TGitProjectType
     ): List<TGitProjectInfo> {
+        logger.info("get /api/v3/projects|$page|$pageSize|$search|$minAccessLevel|$type")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects".addQuery(
             "access_token" to accessToken,
             "page" to page,
@@ -77,6 +78,7 @@ class OffshoreTGitApiClient @Autowired constructor(
         projectId: String,
         userId: String
     ): List<TGitProjectMember>? {
+        logger.info("get /api/v3/projects/$projectId/members/all|$userId")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/members/all".addQuery(
             "access_token" to accessToken,
             "query" to userId
@@ -112,6 +114,7 @@ class OffshoreTGitApiClient @Autowired constructor(
         accessToken: String,
         projectId: String
     ): TGitSvnAuth? {
+        logger.info("get api/v3/svn/projects/$projectId/authority")
         val url = "${tGitConfig.tGitUrl}/api/v3/svn/projects/$projectId/authority".addQuery(
             "access_token" to accessToken,
             "dir_path" to "/"
@@ -140,6 +143,7 @@ class OffshoreTGitApiClient @Autowired constructor(
         page: Int,
         pageSize: Int
     ): List<TGitNamespace> {
+        logger.info("get /api/v3/namespaces|$page|$pageSize")
         val url = "${tGitConfig.tGitUrl}/api/v3/namespaces".addQuery(
             "access_token" to accessToken,
             "page" to page,
@@ -180,11 +184,14 @@ class OffshoreTGitApiClient @Autowired constructor(
         svnProject: Boolean
     ): TGitProjectInfo {
         val uri = if (svnProject) {
-            "api/v3/svn/projects"
+            "/api/v3/svn/projects"
         } else {
-            "api/v3/projects"
+            "/api/v3/projects"
         }
-        val url = "${tGitConfig.tGitUrl}/$uri".addQuery(
+
+        logger.info("create offshore $uri|$name|$namespaceId")
+
+        val url = "${tGitConfig.tGitUrl}$uri".addQuery(
             "policy" to "offshore",
             "access_token" to accessToken
         )
@@ -227,6 +234,7 @@ class OffshoreTGitApiClient @Autowired constructor(
         accessToken: String,
         projectId: String
     ): TGitAclConfig? {
+        logger.info("$LOG_UPDATE_TGIT_ACL_TAG|offshore/acl/config|$projectId")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config".addQuery(
             "policy" to "offshore",
             "access_token" to accessToken
@@ -239,13 +247,13 @@ class OffshoreTGitApiClient @Autowired constructor(
             doRetryHttp(request).use { response ->
                 val data = response.body!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("getProjectAcl fail|{}|{}", response.code, data)
+                    logger.error("$LOG_UPDATE_TGIT_ACL_TAG fail|{}|{}", response.code, data)
                     return null
                 }
                 return JsonUtil.to(data, object : TypeReference<TGitAclConfig>() {})
             }
         } catch (e: Exception) {
-            logger.error("getProjectAcl error", e)
+            logger.error("$LOG_UPDATE_TGIT_ACL_TAG error", e)
             return null
         }
     }
@@ -255,6 +263,7 @@ class OffshoreTGitApiClient @Autowired constructor(
         projectId: String,
         ips: Set<String>
     ): Boolean {
+        logger.info("$LOG_UPDATE_TGIT_ACL_TAG|offshore|/acl/config/allow_ips|$projectId|$ips")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/allow_ips".addQuery(
             "policy" to "offshore",
             "access_token" to accessToken
@@ -270,13 +279,13 @@ class OffshoreTGitApiClient @Autowired constructor(
             doRetryHttp(request).use { response ->
                 val data = response.body!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("addProjectAclIp fail|{}|{}", response.code, data)
+                    logger.error("$LOG_UPDATE_TGIT_ACL_TAG fail|{}|{}", response.code, data)
                     return false
                 }
                 return true
             }
         } catch (e: Exception) {
-            logger.error("addProjectAclIp error", e)
+            logger.error("$LOG_UPDATE_TGIT_ACL_TAG error", e)
             return false
         }
     }
@@ -286,6 +295,7 @@ class OffshoreTGitApiClient @Autowired constructor(
         projectId: String,
         users: Set<String>
     ): Boolean {
+        logger.info("$LOG_UPDATE_TGIT_ACL_TAG|offshore|/acl/config/allow_users|$projectId|$users")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/allow_users".addQuery(
             "policy" to "offshore",
             "access_token" to accessToken
@@ -301,13 +311,13 @@ class OffshoreTGitApiClient @Autowired constructor(
             doRetryHttp(request).use { response ->
                 val data = response.body!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("addProjectAclUser fail|{}|{}", response.code, data)
+                    logger.error("$LOG_UPDATE_TGIT_ACL_TAG fail|{}|{}", response.code, data)
                     return false
                 }
                 return true
             }
         } catch (e: Exception) {
-            logger.error("addProjectAclUser error", e)
+            logger.error("$LOG_UPDATE_TGIT_ACL_TAG error", e)
             return false
         }
     }
@@ -317,6 +327,7 @@ class OffshoreTGitApiClient @Autowired constructor(
         projectId: String,
         ips: Set<String>
     ): Boolean {
+        logger.info("$LOG_UPDATE_TGIT_ACL_TAG|offshore|/acl/config/spec_allow_ips|$projectId|$ips")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/spec_allow_ips".addQuery(
             "policy" to "offshore",
             "access_token" to accessToken
@@ -332,13 +343,13 @@ class OffshoreTGitApiClient @Autowired constructor(
             doRetryHttp(request).use { response ->
                 val data = response.body!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("updateProjectAclSpecIps fail|{}|{}", response.code, data)
+                    logger.error("$LOG_UPDATE_TGIT_ACL_TAG fail|{}|{}", response.code, data)
                     return false
                 }
                 return true
             }
         } catch (e: Exception) {
-            logger.error("updateProjectAclSpecIps error", e)
+            logger.error("$LOG_UPDATE_TGIT_ACL_TAG error", e)
             return false
         }
     }
@@ -348,6 +359,7 @@ class OffshoreTGitApiClient @Autowired constructor(
         projectId: String,
         users: Set<String>
     ): Boolean {
+        logger.info("$LOG_UPDATE_TGIT_ACL_TAG|offshore|/acl/config/spec_hit_users|$projectId|$users")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/spec_hit_users".addQuery(
             "policy" to "offshore",
             "access_token" to accessToken
@@ -363,13 +375,13 @@ class OffshoreTGitApiClient @Autowired constructor(
             doRetryHttp(request).use { response ->
                 val data = response.body!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("updateProjectAclSpecUser fail|{}|{}", response.code, data)
+                    logger.error("$LOG_UPDATE_TGIT_ACL_TAG fail|{}|{}", response.code, data)
                     return false
                 }
                 return true
             }
         } catch (e: Exception) {
-            logger.error("updateProjectAclSpecUser error", e)
+            logger.error("$LOG_UPDATE_TGIT_ACL_TAG error", e)
             return false
         }
     }
@@ -426,6 +438,9 @@ class OffshoreTGitApiClient @Autowired constructor(
     }
 
     companion object {
+        // 日志标志常量，方便配置告警或者搜索日志
+        const val LOG_UPDATE_TGIT_ACL_TAG = "update_tgit_project_acl"
+
         private val logger = LoggerFactory.getLogger(OffshoreTGitApiClient::class.java)
 
         private fun sslSocketFactory(): SSLSocketFactory {

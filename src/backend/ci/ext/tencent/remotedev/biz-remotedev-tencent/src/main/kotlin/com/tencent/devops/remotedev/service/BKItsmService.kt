@@ -24,7 +24,8 @@ class BKItsmService @Autowired constructor(
     fun createTicket(
         projectId: String,
         userId: String,
-        tData: Map<Long, Pair<String, Boolean>>
+        tData: Map<Long, Pair<String, Boolean>>,
+        index: Int?
     ): String {
         val url = "${bkConfig.itsmHost}/v2/itsm/create_ticket"
         val body = BKItsmCreateTicketReq(
@@ -35,7 +36,7 @@ class BKItsmService @Autowired constructor(
             fields = listOf(
                 mapOf(
                     "key" to "title",
-                    "value" to "$projectId|$userId"
+                    "value" to "云研发项目关联工蜂仓库|$projectId|$userId|${index ?: ""}"
                 ),
                 mapOf(
                     "key" to "bkci_project_id",
