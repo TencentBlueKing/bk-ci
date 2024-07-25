@@ -122,7 +122,7 @@ object JsonUtil {
     private fun objectMapper(): ObjectMapper {
         return ObjectMapper().apply {
             registerModule(javaTimeModule())
-            registerModule(KotlinModule())
+            registerModule(KotlinModule.Builder().build())
             enable(SerializationFeature.INDENT_OUTPUT)
             enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
             enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
@@ -137,7 +137,7 @@ object JsonUtil {
 
     private val skipEmptyObjectMapper = ObjectMapper().apply {
         registerModule(javaTimeModule())
-        registerModule(KotlinModule())
+        registerModule(KotlinModule.Builder().build())
         enable(SerializationFeature.INDENT_OUTPUT)
         enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
         enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())

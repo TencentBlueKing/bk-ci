@@ -29,7 +29,7 @@ package com.tencent.devops.process.jmx.api
 
 import com.google.common.util.concurrent.AtomicDouble
 import io.micrometer.core.instrument.Gauge
-import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import org.springframework.jmx.export.annotation.ManagedAttribute
 import org.springframework.jmx.export.annotation.ManagedResource
 import java.util.concurrent.atomic.AtomicInteger

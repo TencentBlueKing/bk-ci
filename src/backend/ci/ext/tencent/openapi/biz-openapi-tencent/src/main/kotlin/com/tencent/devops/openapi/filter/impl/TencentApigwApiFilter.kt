@@ -288,7 +288,7 @@ class TencentApigwApiFilter(
             val bais = ByteArrayInputStream(key)
             reader = PEMReader(InputStreamReader(bais)) { "".toCharArray() }
             val keyPair = reader.readObject() as JCERSAPublicKey
-            val jwtParser = Jwts.parser().setSigningKey(keyPair)
+            val jwtParser = Jwts.parser().setSigningKey(keyPair).build()
             val parse = jwtParser.parse(bkApiJwt)
             logger.info("Get the parse body(${parse.body}) and header(${parse.header})")
             return JsonUtil.toMap(parse.body)

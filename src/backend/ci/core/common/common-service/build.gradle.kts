@@ -40,4 +40,5 @@ dependencies {
     api("org.springframework.cloud:spring-cloud-starter-bootstrap")
     api("org.jooq:jooq")
     api("io.micrometer:micrometer-registry-prometheus")
+    runtimeOnly("org.springframework.boot:spring-boot-properties-migrator")
 }

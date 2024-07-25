@@ -99,7 +99,8 @@ class JwtManager(
         }
         try {
             val claims = Jwts.parser()
-                .setSigningKey(publicKey)
+                .verifyWith(publicKey)
+                .build()
                 .parseClaimsJws(token)
                 .body
             logger.info("Verify jwt sub:${claims["sub"]}")

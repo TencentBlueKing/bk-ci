@@ -556,9 +556,9 @@ class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateIn
                         TokenKind.LogicalOperator
                     )
                 }
-            }
 
-            else -> {}
+                else -> {}
+            }
         }
         if (!legal) {
             return Token(TokenKind.Unexpected, rawValue, index)

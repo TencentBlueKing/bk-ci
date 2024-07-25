@@ -1,10 +1,8 @@
 plugins {
-    id("com.tencent.devops.boot") version "0.0.10-SNAPSHOT"
+    id("com.tencent.devops.boot") version "0.1.0-SNAPSHOT"
     detektCheck
     `task-license-report` // 检查License合规
 }
-
-apply(plugin = "org.owasp.dependencycheck")
 
 allprojects {
     apply(plugin = "com.tencent.devops.boot")
@@ -17,7 +15,6 @@ allprojects {
     // 加载boot的插件
     if (name.startsWith("boot-")) {
         pluginManager.apply("task-sharding-db-table-check") // 分区表检查插件
-        pluginManager.apply("org.owasp.dependencycheck") // 检查依赖包漏洞版本
         pluginManager.apply("task-i18n-load") // i18n插件
         if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
             pluginManager.apply("task-docker-build") // Docker镜像构建
@@ -67,7 +64,9 @@ allprojects {
             dependency("commons-io:commons-io:${Versions.CommonIo}")
             dependency("com.tencent.bk.sdk:crypto-java-sdk:${Versions.BkCrypto}")
             dependency("mysql:mysql-connector-java:${Versions.MysqlDriver}")
-            dependency("org.jolokia:jolokia-core:${Versions.jakarta}")
+            dependency("org.jolokia:jolokia-core:${Versions.jolokia}")
+            dependency("org.apache.shardingsphere:shardingsphere-jdbc:${Versions.ShardingSphere}")
+            dependency("org.apache.shardingsphere:shardingsphere-infra-algorithm-core:${Versions.ShardingSphere}")
             dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}") {
                 entry("jersey-container-servlet-core")
                 entry("jersey-container-servlet")
@@ -109,6 +108,7 @@ allprojects {
             dependency("io.mockk:mockk:${Versions.mockk}")
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
+                entry("resilience4j-core")
             }
             dependencySet("org.eclipse.jgit:${Versions.jgit}") {
                 entry("org.eclipse.jgit")
@@ -136,7 +136,6 @@ allprojects {
         it.exclude("org.slf4j", "log4j-over-slf4j")
         it.exclude("org.slf4j", "slf4j-log4j12")
         it.exclude("org.slf4j", "slf4j-nop")
-        it.exclude("jakarta.ws.rs", "jsr311-api")
         it.exclude("dom4j", "dom4j")
         it.exclude("com.flipkart.zjsonpatch", "zjsonpatch")
         it.exclude("com.zaxxer", "HikariCP-java7")
@@ -144,6 +143,9 @@ allprojects {
         it.exclude("org.bouncycastle", "bcutil-jdk15on")
         it.exclude("io.swagger", "swagger-annotations")
         it.exclude("io.swagger", "swagger-models")
+        it.exclude("commons-logging", "commons-logging")
+        it.exclude("com.vaadin.external.google", "android-json")
+        it.exclude("org.apache.shardingsphere", "shardingsphere-test-util")
         it.exclude("org.bouncycastle", "bcpkix-jdk15on")
     }
     dependencies {

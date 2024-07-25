@@ -334,6 +334,11 @@
       "desc": ""
     },
     {
+      "moduleLicense": "CDDL 1.1",
+      "category": "CDDL",
+      "desc": ""
+    },
+    {
       "moduleLicense": "Eclipse Distribution License (New BSD License)",
       "category": "BSD"
     },
@@ -368,6 +373,11 @@
       "desc": "本项目仅Maven依赖, 不涉及修改源码,EPL协议允许被链接或调用EPL程序，不构成传染"
     },
     {
+      "moduleLicense": "Eclipse Public License, Version 2.0",
+      "category": "EPL",
+      "desc": "本项目仅Maven依赖, 不涉及修改源码,EPL协议允许被链接或调用EPL程序，不构成传染"
+    },
+    {
       "moduleLicense": "MIT",
       "category": "MIT"
     },
@@ -387,6 +397,12 @@
       "moduleLicense": "MIT-0"
     },
     {
+      "moduleLicense": "SPDX-License-Identifier: MIT"
+    },
+    {
+      "moduleLicense": "Plexus"
+    },
+    {
       "moduleLicense": "Creative Commons Legal Code",
       "desc": "本项目仅Maven依赖, 不涉及修改源码, 不构成传染"
     },
@@ -396,6 +412,9 @@
     },
     {
       "moduleLicense": "WTFPL"
+    },
+    {
+      "moduleLicense": null
     }
   ]
 }
