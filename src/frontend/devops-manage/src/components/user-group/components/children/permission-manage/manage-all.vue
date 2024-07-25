@@ -8,6 +8,7 @@
         class="multi-search"
         value-behavior="need-key"
         :placeholder="filterTips"
+        :get-menu-list="getMenuList"
         @search="handleSearch(searchValue)"
       />
     </div>
@@ -310,7 +311,6 @@ const searchData = computed(() => {
     {
       name: t('用户'),
       id: 'user',
-      default: true,
     },
     {
       name: t('组织架构'),
@@ -576,6 +576,27 @@ function showMessage(theme, message) {
 }
 function asideRemoveConfirm(removeUser, handOverForm) {
   handleAsideRemoveConfirm(removeUser, handOverForm, projectId.value);
+}
+
+async function getMenuList (item, keyword) {
+  const query = {
+    memberType: item.id,
+    page: 1,
+    pageSize: 2000
+  }
+  if (item.id === 'user' && keyword) {
+    query.userName = keyword
+  } else if (item.id === 'department' && keyword) {
+    query.departName = keyword
+  }
+  const res = await http.getProjectMembers(projectId.value, query)
+  return res.records.map(i => {
+    return {
+      ...i,
+      displayName: i.name,
+      name: i.type === 'user' ?  `${i.id} (${i.name})` : i.id,
+    }
+  })
 }
 </script>
 

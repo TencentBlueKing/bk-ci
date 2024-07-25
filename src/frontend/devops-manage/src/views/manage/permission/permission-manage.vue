@@ -34,6 +34,7 @@
               class="content-btn-search"
               :placeholder="filterTips"
               :key="searchName"
+              :get-menu-list="getMenuList"
               value-behavior="need-key"
             />
           </div>
@@ -462,11 +463,11 @@ async function handleCheckReset () {
     const res = await http.resetAuthorization(projectId.value, {
       ...resetParams.value,
       preCheck: true
-    }, resourceType.value)
+    })
 
     if (!resetFormData.value.name) return // 点击input输入框清空按钮，会触发失焦事件
     failedCount.value = res['FAILED']?.length || 0
-    if (failedCount) {
+    if (failedCount.value) {
       resetTableData.value = res['FAILED'].splice(0,6)
     }
     isResetFailure.value = !!failedCount.value;
@@ -485,7 +486,7 @@ function confirmReset() {
   if (canLoading.value) dialogLoading.value = true;
   formRef.value?.validate().then(async () => {
     try {
-      await http.resetAuthorization(projectId.value, resetParams.value, resourceType.value)
+      await http.resetAuthorization(projectId.value, resetParams.value)
       
       dialogLoading.value = false;
       showResetDialog.value = false;
@@ -540,6 +541,28 @@ function handlePageLimitChange (limit) {
   pagination.value.current = 1;
   pagination.value.limit = limit;
   getTableList();
+}
+
+async function getMenuList (item, keyword) {
+  if (item.id !== 'handoverFrom') return []
+  const query = {
+    memberType: 'user',
+    page: 1,
+    pageSize: 2000
+  }
+  if (item.id === 'user' && keyword) {
+    query.userName = keyword
+  } else if (item.id === 'department' && keyword) {
+    query.departName = keyword
+  }
+  const res = await http.getProjectMembers(projectId.value, query)
+  return res.records.map(i => {
+    return {
+      ...i,
+      displayName: i.name,
+      name: i.type === 'user' ?  `${i.id} (${i.name})` : i.id,
+    }
+  })
 }
 
 </script>

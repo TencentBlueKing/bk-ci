@@ -54,6 +54,7 @@ const goToManage = () => {
   z-index: 100;
 }
 .manage-breadcrumb {
+  padding-left: 20px;
   .bk-breadcrumb-item {
     max-width: 80%;
     overflow: hidden;
