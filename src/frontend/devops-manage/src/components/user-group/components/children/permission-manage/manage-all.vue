@@ -136,11 +136,13 @@
             label-position="right"
             :label="t('移交给')"
           >
-            <bk-input
-              v-model="handOverForm.name"
-              :placeholder="t('请输入')"
-              clearable
-            />
+            <project-user-selector
+              class="selector-input"
+              @change="handleChangeOverFormName"
+              @removeAll="handleCleaOverFormName"
+              :key="isShowSlider"
+            >
+            </project-user-selector>
           </bk-form-item>
         </bk-form>
       </p>
@@ -175,7 +177,6 @@
       <bk-button class="btn-margin" @click="() => isShowRemove = false"> {{t('关闭')}} </bk-button>
     </template>
   </bk-dialog>
-
   <bk-sideslider
     v-model:isShow="isShowSlider"
     :title="sliderTitle"
@@ -208,7 +209,7 @@
       </div>
       <div class="slider-footer">
         <div class="footer-main">
-          <div v-if="sliderTitle === t('批量续期')">
+          <div v-if="batchFlag === 'renewal'">
             <div class="main-line">
               <p class="main-label">{{t("续期对象")}}</p>
               <span class="main-text">{{t("用户")}}： {{userName}}</span>
@@ -218,7 +219,7 @@
               <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
             </div>
           </div>
-          <div v-if="sliderTitle === t('批量移交')">
+          <div v-if="batchFlag === 'handover'">
             <div class="main-line" style="margin-top: 26px;">
               <p class="main-label">{{t("移交给")}}</p>
               <bk-form
@@ -230,16 +231,18 @@
                   required
                   property="name"
                 >
-                  <bk-input
-                    v-model="handOverForm.name"
-                    :placeholder="t('请输入')"
-                    clearable
-                  />
+                  <project-user-selector
+                    class="selector-input"
+                    @change="handleChangeOverFormName"
+                    @removeAll="handleCleaOverFormName"
+                    :key="isShowSlider"
+                  >
+                  </project-user-selector>
                 </bk-form-item>
               </bk-form>
             </div>
           </div>
-          <div v-if="sliderTitle === t('批量移出')">
+          <div v-if="batchFlag === 'remove'">
             <div class="main-line" style="margin-top: 40px;">
               <p class="main-label-remove">
                 <i18n-t keypath="确认从以上X个用户组中移出X吗？" tag="div">
@@ -268,6 +271,7 @@ import ManageAside from './manage-aside.vue';
 import GroupTab from './group-tab.vue';
 import TimeLimit from './time-limit.vue';
 import http from '@/http/api';
+import ProjectUserSelector from '@/components/project-user-selector'
 import NoPermission from '../no-enable-permission/no-permission.vue';
 import userGroupTable from "@/store/userGroupTable";
 import useManageAside from "@/store/manageAside";
@@ -298,6 +302,7 @@ const totalCount = ref();
 const renewalLoading = ref(false);
 const handoverLoading = ref(false);
 const removerLoading = ref(false);
+const handoverToMap = ref({});
 const loadingMap = {
   renewal: renewalLoading,
   handover: handoverLoading,
@@ -514,11 +519,7 @@ function formatSelectParams(rowGroupId){
     targetMember: asideItem.value,
     ...(expiredAt.value && {renewalDuration: expiredAt.value}),
     // ...(handOverForm.value.name && {handoverTo: handOverForm.value}),
-    ...(handOverForm.value.name && {handoverTo: {
-      id: 'greysonfang',
-      name: '方灿',
-      type: 'user'
-    }}),
+    ...(handOverForm.value.name && {handoverTo: handoverToMap.value}),
   }
   return params;
 }
@@ -582,7 +583,7 @@ async function getMenuList (item, keyword) {
   const query = {
     memberType: item.id,
     page: 1,
-    pageSize: 2000
+    pageSize: 200
   }
   if (item.id === 'user' && keyword) {
     query.userName = keyword
@@ -597,6 +598,13 @@ async function getMenuList (item, keyword) {
       name: i.type === 'user' ?  `${i.id} (${i.name})` : i.id,
     }
   })
+}
+
+function handleChangeOverFormName ({ list, userList}) {
+  const val = list.join(',')
+  console.log(val, 'val')
+  handOverForm.value.name = val
+  handoverToMap.value = userList.find(i => i.name === val)
 }
 </script>
 
@@ -888,7 +896,7 @@ async function getMenuList (item, keyword) {
           color: #63656E;
         }
 
-        .bk-input {
+        .selector-input {
           width: 480px;
         }
 
