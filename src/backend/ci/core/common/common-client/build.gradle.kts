@@ -37,4 +37,5 @@ dependencies {
         print("use common-kubernetes")
         api(project(":core:common:common-kubernetes"))
     }
+    api("javax.ws.rs:javax.ws.rs-api")// 兼容 feign-jaxrs3
 }

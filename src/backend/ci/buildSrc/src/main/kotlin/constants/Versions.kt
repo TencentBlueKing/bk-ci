@@ -1,5 +1,6 @@
 object Versions {
     const val HashIds = "1.0.3"
+    const val Jaxrs = "2.1.1"
     const val CommonExec = "1.4.0"
     const val CommonIo = "2.7"
     const val CommonText = "1.10.0"
