@@ -72,7 +72,6 @@ export default {
       this.tabName = payload;
     },
     handleChooseGroup(payload) {
-      // this.path = `user-group-detail/${payload.groupId}?role_id=${payload.managerId}&tab=${this.tabName}`;
       if (!payload.projectMemberGroup) {
         this.isAllMember = false;
         this.path = `user-group-detail/${payload.groupId}?role_id=${payload.managerId}&tab=${this.tabName}`;
@@ -82,6 +81,7 @@ export default {
     },
     handleCreateGroup() {
       this.activeIndex = '';
+      this.isAllMember = false;
       this.path = 'create-user-group';
     },
     handleCloseManage() {

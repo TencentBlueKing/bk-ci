@@ -12,8 +12,8 @@ export const unableText = {
 }
 export const batchOperateTypes = {
   renewal: 'RENEWAL',
-  handover: 'REMOVE',
-  remove: 'HANDOVER',
+  handover: 'HANDOVER',
+  remove: 'REMOVE',
 }
 export const btnTexts = {
   renewal: "确定续期",
