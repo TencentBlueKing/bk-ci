@@ -129,5 +129,14 @@
   "engines": {
     "node": ">= 6.9.0",
     "npm": ">= 6.0.0"
+  },
+  "nx": {
+    "targets": {
+      "public:master": {
+        "outputs": [
+          "{workspaceRoot}/frontend/stream"
+        ]
+      }
+    }
   }
 }

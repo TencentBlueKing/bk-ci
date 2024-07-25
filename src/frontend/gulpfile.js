@@ -155,10 +155,15 @@ async function execAsync () {
     
     return new Promise((resolve, reject) => {
         const scopeStr = getScopeStr(scope)
-        const cmd = scopeStr ? `exec nx run-many -t public:master ${scopeStr}`: `exec nx affected -t public:master `
+        const cmd = scopeStr ? `run-many -t public:master ${scopeStr}`: `affected -t public:master `
         console.log('gulp cmd: ', cmd, cmd.split(' '));
         const { spawn } = require('node:child_process')
-        const spawnCmd = spawn('pnpm', cmd.split(' '), {
+        const spawnCmd = spawn('pnpm', [
+            'exec',
+            'nx',
+            '--parallel=16',
+            ...cmd.split(' ')
+        ], {
             stdio: 'inherit',
             env: {
                 ...process.env,

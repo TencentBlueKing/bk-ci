@@ -94,5 +94,13 @@
     "vue-style-loader": "^3.0.3",
     "webpack": "~5.76.1"
   },
-  "nx": {}
+  "nx": {
+    "targets": {
+      "public:master": {
+        "outputs": [
+          "{workspaceRoot}/frontend/pipeline"
+        ]
+      }
+    }
+  }
 }
