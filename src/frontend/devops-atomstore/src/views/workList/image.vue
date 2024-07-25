@@ -47,21 +47,7 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('store.状态')" show-overflow-tooltip>
                     <template slot-scope="props">
-                        <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary image-status"
-                            v-if="['AUDITING', 'COMMITTING', 'CHECKING', 'CHECK_FAIL', 'UNDERCARRIAGING', 'TESTING'].includes(props.row.imageStatus)">
-                            <div class="rotate rotate1"></div>
-                            <div class="rotate rotate2"></div>
-                            <div class="rotate rotate3"></div>
-                            <div class="rotate rotate4"></div>
-                            <div class="rotate rotate5"></div>
-                            <div class="rotate rotate6"></div>
-                            <div class="rotate rotate7"></div>
-                            <div class="rotate rotate8"></div>
-                        </div>
-                        <span class="atom-status-icon success" v-if="props.row.imageStatus === 'RELEASED'"></span>
-                        <span class="atom-status-icon fail" v-if="props.row.imageStatus === 'GROUNDING_SUSPENSION'"></span>
-                        <span class="atom-status-icon obtained" v-if="props.row.imageStatus === 'AUDIT_REJECT' || props.row.imageStatus === 'UNDERCARRIAGED'"></span>
-                        <span class="atom-status-icon devops-icon icon-initialize" v-if="props.row.imageStatus === 'INIT'"></span>
+                        <status :status="calcStatus(props.row.imageStatus)"></status>
                         <span>{{ $t(imageStatusList[props.row.imageStatus]) }}</span>
                     </template>
                 </bk-table-column>
@@ -219,8 +205,12 @@
 <script>
     import { debounce } from '@/utils/index'
     import { imageStatusList } from '@/store/constants'
+    import status from './status'
 
     export default {
+        components: {
+            status
+        },
         data () {
             return {
                 imageStatusList,
@@ -294,6 +284,34 @@
         },
 
         methods: {
+            calcStatus (status) {
+                let icon = ''
+                switch (status) {
+                    case 'AUDITING':
+                    case 'COMMITTING':
+                    case 'CHECKING':
+                    case 'CHECK_FAIL':
+                    case 'UNDERCARRIAGING':
+                    case 'TESTING':
+                        icon = 'doing'
+                        break
+                    case 'RELEASED':
+                        icon = 'success'
+                        break
+                    case 'GROUNDING_SUSPENSION':
+                        icon = 'fail'
+                        break
+                    case 'AUDIT_REJECT':
+                    case 'UNDERCARRIAGED':
+                        icon = 'info'
+                        break
+                    case 'INIT':
+                        icon = 'init'
+                        break
+                }
+                return icon
+            },
+
             search () {
                 this.pagination.current = 1
                 this.requestList()
@@ -533,12 +551,5 @@
     }
     .lh30 {
         line-height: 30px;
-    }
-    .image-status{
-        &.bk-spin-loading {
-            display: inline-block !important;
-            width: 14px;
-            height: 14px;
-        }
     }
 </style>
