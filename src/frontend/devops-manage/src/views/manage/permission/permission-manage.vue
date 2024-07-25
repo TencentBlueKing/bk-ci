@@ -34,6 +34,7 @@
               class="content-btn-search"
               :placeholder="filterTips"
               :key="searchName"
+              :get-menu-list="getMenuList"
               value-behavior="need-key"
             />
           </div>
@@ -535,6 +536,28 @@ function handlePageLimitChange (limit) {
   pagination.value.current = 1;
   pagination.value.limit = limit;
   getTableList();
+}
+
+async function getMenuList (item, keyword) {
+  if (item.id !== 'handoverFrom') return []
+  const query = {
+    memberType: 'user',
+    page: 1,
+    pageSize: 2000
+  }
+  if (item.id === 'user' && keyword) {
+    query.userName = keyword
+  } else if (item.id === 'department' && keyword) {
+    query.departName = keyword
+  }
+  const res = await http.getProjectMembers(projectId.value, query)
+  return res.records.map(i => {
+    return {
+      ...i,
+      displayName: i.name,
+      name: i.type === 'user' ?  `${i.id} (${i.name})` : i.id,
+    }
+  })
 }
 
 </script>

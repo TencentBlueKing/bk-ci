@@ -100,10 +100,10 @@ export default defineStore('manageAside', () => {
       };
       searchValue?.forEach(item => {
         if (item.id === 'user') {
-          params.userName = item.values[0].name;
+          params.userName = item.values[0].id;
           params.memberType = item.id;
         } else if (item.id === 'department') {
-          params.deptName = item.values[0].name;
+          params.deptName = item.values[0].id;
           params.memberType = item.id;
         }
       })

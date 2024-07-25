@@ -24,14 +24,20 @@
           >
           <!-- v-show="group.groupId !== renameGroupId" -->
           <span class="group-name" :title="group.name">{{ group.name }}</span>
-          <span class="user-num">
-            <img src="../../../svg/user.svg?inline" class="group-icon">
-            {{ group.userCount }}
-          </span>
-          <span class="group-num">
-            <img src="../../../svg/organization.svg?inline" class="group-icon">
-            {{ group.departmentCount }}
-          </span>
+          <div class="num-box">
+            <i :class="{
+              'group-icon manage-icon manage-icon-user-shape': true,
+              'active': activeTab === group.groupId
+            }" />
+            <div class="group-num">{{ group.userCount }}</div>
+          </div>
+          <div class="num-box">
+            <i :class="{
+              'group-icon manage-icon manage-icon-organization': true,
+              'active': activeTab === group.groupId
+            }" />
+            <div class="group-num">{{ group.departmentCount }}</div>
+          </div>
           <bk-popover
             v-if="resourceType === 'project'"
             class="group-more-option"
@@ -39,6 +45,7 @@
             theme="light dot-menu"
             :popoverDelay="[100, 0]"
             :arrow="false"
+            trigger="click"
             :offset="15"
             :distance="0">
             <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
@@ -431,8 +438,15 @@ export default {
     color: #fff;
   }
   .group-icon {
-    filter: invert(100%) sepia(0%) saturate(1%) hue-rotate(151deg) brightness(104%) contrast(101%);
+    color: #A3C5FD;
   }
+}
+.num-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-right: 10px;
 }
 .user-num,
 .group-num {
@@ -445,19 +459,19 @@ export default {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  margin-right: 20px;
 }
 .user-num,
 .group-num {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
-  width: 40px;
-  height: 16px;
+  width: 24px;
+  height: 12px;
   background: #F0F1F5;
   border-radius: 2px;
   font-size: 12px;
   line-height: 16px;
-  margin-right: 3px;
   text-align: center;
   color: #C4C6CC;
 }
@@ -471,9 +485,9 @@ export default {
   color: #3A84FF !important;
 }
 .group-icon {
-  height: 12px;
-  width: 12px;
-  filter: invert(89%) sepia(8%) saturate(136%) hue-rotate(187deg) brightness(91%) contrast(86%);
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: #C4C6CC;
 }
 .line-split {
   width: 80%;

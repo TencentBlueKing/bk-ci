@@ -386,6 +386,8 @@ function handleShowPerson(item) {
   line-height: 22px;
 
   .refresh{
+    display: flex;
+    align-items: center;
     font-size: 12px;
     font-weight: 400;
     color: #3A84FF;
