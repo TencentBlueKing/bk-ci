@@ -27,8 +27,13 @@
 dependencies {
     api(project(":core:common:common-service"))
     api(project(":core:common:common-api"))
-    api("io.github.openfeign:feign-jaxrs3")
-    api(group = "io.github.openfeign", name = "feign-jaxrs2", classifier = "jakarta")
+    api("io.github.openfeign:feign-jaxrs3") {
+        exclude("io.github.openfeign", "feign-jaxrs")
+        exclude("io.github.openfeign", "feign-jaxrs2")
+    }
+    api(group = "io.github.openfeign", name = "feign-jaxrs2", classifier = "jakarta") {
+        exclude("io.github.openfeign", "feign-jaxrs")
+    }
     api(group = "io.github.openfeign", name = "feign-jaxrs", classifier = "jakarta")
     api("io.github.openfeign:feign-okhttp")
     api("io.github.openfeign:feign-jackson")
