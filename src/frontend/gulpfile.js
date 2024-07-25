@@ -92,7 +92,7 @@ task('build', series(cb => {
         lsVersion
     }
     
-    const cmd = scopeStr ? `run-many -t public:master ${scopeStr}`: `affected -t public:master --base=develop`
+    const cmd = scopeStr ? `run-many -t public:master ${scopeStr}`: `affected -t public:master`
     console.log('gulp cmd: ', cmd, cmd.split(' '));
     const { spawn } = require('node:child_process')
     const spawnCmd = spawn('pnpm', [
