@@ -92,7 +92,7 @@
       dialogType="show"
       header-align="center"
       theme="danger"
-      extCls="delete-group-dialog"
+      class="delete-group-dialog"
       :quick-close="false"
       :is-show="deleteObj.isShow"
       :is-loading="deleteObj.isLoading"
@@ -275,6 +275,9 @@ export default {
       })
       this.activeTab = group.groupId;
       this.curGroupIndex = this.groupList.findIndex(item => item.groupId === group.groupId);
+      console.log("🚀 ~ handleChooseGroup ~ this.activeTab :", this.activeTab )
+      console.log("🚀 ~ handleChooseGroup ~ this.curGroupIndex:", this.curGroupIndex)
+      
       this.$emit('choose-group', group);
     },
     handleCreateGroup() {
@@ -555,9 +558,6 @@ export default {
   .delete-tips {
     background-color: #f5f6fa;
     padding: 20px;
-  }
-  .bk-dialog-header {
-    padding: 15px 0;
   }
   .bk-dialog-title {
     height: 26px !important;

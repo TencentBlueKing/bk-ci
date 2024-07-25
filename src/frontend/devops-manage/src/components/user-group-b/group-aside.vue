@@ -84,7 +84,7 @@
       header-align="center"
       theme="danger"
       :quick-close="false"
-      extCls="delete-group-dialog"
+      class="delete-group-dialog"
       :is-show="deleteObj.isShow"
       :is-loading="deleteObj.isLoading"
     >
@@ -499,9 +499,6 @@ export default {
     }
     .delete-title {
       white-space: normal !important;
-    }
-    .bk-dialog-header {
-      padding: 15px 0;
     }
     .bk-dialog-title {
       height: 26px !important;

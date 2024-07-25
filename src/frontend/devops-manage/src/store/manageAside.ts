@@ -1,6 +1,6 @@
 import http from '@/http/api';
 import { defineStore } from 'pinia';
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import { Message } from 'bkui-vue';
 import userGroupTable from "@/store/userGroupTable";
 
@@ -79,6 +79,7 @@ export default defineStore('manageAside', () => {
     }
     try {
       await http.removeMemberFromProject(projectId, params);
+      asideItem.value = undefined;
       Message({
         theme: 'success',
         message: `${removeUser!.name} 已成功移出本项目。`,

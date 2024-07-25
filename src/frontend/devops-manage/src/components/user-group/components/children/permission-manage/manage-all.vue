@@ -395,7 +395,7 @@ function asideClick(item){
   handleAsideClick(item, projectId.value);
 }
 async function refresh(){
-  asideItem.value = null;
+  asideItem.value = undefined;
   searchValue.value = [];
 }
 /**
@@ -624,7 +624,6 @@ function handleChangeOverFormName ({ list, userList}) {
 
     .multi-search {
       width: 50%;
-      // flex: 1;
     }
   }
 

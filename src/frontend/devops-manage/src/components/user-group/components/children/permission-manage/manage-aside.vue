@@ -271,7 +271,6 @@ function truncateMiddleText(text) {
   return text.substr(0, frontChars) + separator + text.substr(text.length - backChars);
 }
 function handleClick(item) {
-  // activeTab.value = item.id;
   emit('handleClick', item);
 }
 function pageChange(current) {
@@ -307,7 +306,7 @@ function handConfirm(flag){
     if(!isValidate) return;
     emit('removeConfirm', removeUser.value, handOverForm.value);
   } else {
-    emit('removeConfirm');
+    emit('removeConfirm', removeUser.value);
   }
   loading.value = false;
   handOverClose();
@@ -363,20 +362,13 @@ function refreshHandOverfail() {
 function goAauthorization(resourceType) {
   window.open(`${location.origin}/console/manage/${projectId.value}/permission?resourceType=${resourceType}`, '_blank')
 }
+/**
+ * 获取人员列表数据
+ */
 function handleShowPerson(item) {
   isShowPersonDialog.value = true;
   removeUser.value = item;
   emit('getPersonList',item, projectId.value)
-}
-/**
-  * 校验粘贴数据中合法的值
-  * usernames [Array] - 格式化后的用户名数组，可通过paste-formatter配置自定义格式化方法
-  */
-function pasteValidator (usernames){
-  return usernames.filter(username => username.startWith('a'))
-}
-function onRemoveselected(value){
-  console.log(value,'全部清空');
 }
 </script>
 

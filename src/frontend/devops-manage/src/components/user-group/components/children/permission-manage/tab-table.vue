@@ -4,7 +4,7 @@
       class="table"
       ref="refTable"
       :max-height="!isShowOperation && '464'"
-      :data="data"
+      :data="tableList"
       show-overflow-tooltip
       :pagination="pagination"
       :border="['row', 'outer']"
@@ -35,7 +35,7 @@
         <template #default="{row}">
           {{ row.groupName }}
           <div class="overlay" v-if="shouldShowOverlay(row)">
-            {{ unableMessage }}
+            {{ row.unableMessage }}
           </div>
         </template>
       </bk-table-column>
@@ -104,7 +104,7 @@
 
 <script setup name="TabTable">
 import { useI18n } from 'vue-i18n';
-import { ref, defineProps, defineEmits, computed } from 'vue';
+import { ref, defineProps, defineEmits, computed, onMounted } from 'vue';
 import { timeFormatter } from '@/common/util.ts'
 
 const props = defineProps({
@@ -148,7 +148,11 @@ const TOOLTIPS_CONTENT = {
   UNIQUE_OWNER: t('唯一拥有者，不可移出。请添加新的拥有者后再移出'),
   TEMPLATE: t('通过用户组加入，不可直接移出。如需调整，请编辑用户组')
 }
-const unableMessage = ref('');
+const tableList = computed(() => props.data.map(item => ({
+    ...item,
+    unableMessage: getUnableMessage(item),
+  }))
+);
 function shouldShowOverlay(row){
   if (props.isShowOperation) {
     return false;
@@ -156,26 +160,34 @@ function shouldShowOverlay(row){
 
   switch (props.batchFlag) {
     case 'renewal':
-      if(row.expiredAtDisplay === t('永久')){
-        unableMessage.value = t("无需续期");
-      } else if (row.removeMemberButtonControl === 'TEMPLATE') {
-        unableMessage.value = t("通过用户组获得权限，请到流水线里续期整个用户组");
-      }
       return row.expiredAtDisplay === t('永久') || row.removeMemberButtonControl === 'TEMPLATE';
     case 'handover':
-      unableMessage.value = t("通过用户组获得权限，请到用户组里移出用户");
       return row.removeMemberButtonControl === 'TEMPLATE';
     case 'remove':
-      if (row.removeMemberButtonControl === 'UNIQUE_MANAGER') {
-        unableMessage.value = t("唯一管理员，不可移出。请添加新的管理员后再移出");
-      } else if (row.removeMemberButtonControl === 'UNIQUE_OWNER') {
-        unableMessage.value = t("唯一拥有者，不可移出。请添加新的拥有者后再移出");
-      } else if (row.removeMemberButtonControl === 'TEMPLATE') {
-        unableMessage.value = t("通过用户组加入，不可直接移出。如需调整，请编辑用户组") + `[${row.groupName}]`;
-      }
       return row.removeMemberButtonControl !== 'OTHER';
     default:
       return false;
+  }
+}
+
+function getUnableMessage(row){
+  switch (props.batchFlag) {
+    case 'renewal':
+      if(row.expiredAtDisplay === t('永久')){
+        return t("无需续期");
+      } else if (row.removeMemberButtonControl === 'TEMPLATE') {
+        return t("通过用户组获得权限，请到流水线里续期整个用户组");
+      }
+    case 'handover':
+      return t("通过用户组获得权限，请到用户组里移出用户");
+    case 'remove':
+      let message = TOOLTIPS_CONTENT[row.removeMemberButtonControl];
+      if (row.removeMemberButtonControl === 'TEMPLATE') {
+        message += ` [${row.groupName}]`;
+      }
+      return message;
+    default:
+      return '';
   }
 }
 /**
@@ -281,11 +293,10 @@ function pageValueChange(value) {
 .overlay{
   position: absolute;
   left: 0;
-  backdrop-filter: blur(0.5px);
   transform: translateY(-42px);
   width: 100%;
   height: 42px;
-  background: rgba(255,229,180, .6);
+  background: rgba(255, 232, 195, .7);
   font-family: MicrosoftYaHei;
   font-size: 12px;
   color: #63656E;
