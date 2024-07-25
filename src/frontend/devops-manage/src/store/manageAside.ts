@@ -79,6 +79,7 @@ export default defineStore('manageAside', () => {
     }
     try {
       await http.removeMemberFromProject(projectId, params);
+      asideItem.value = undefined;
       Message({
         theme: 'success',
         message: `${removeUser!.name} 已成功移出本项目。`,

@@ -293,11 +293,10 @@ function pageValueChange(value) {
 .overlay{
   position: absolute;
   left: 0;
-  backdrop-filter: blur(0.5px);
   transform: translateY(-42px);
   width: 100%;
   height: 42px;
-  background: rgba(255,229,180, .6);
+  background: rgba(255, 232, 195, .7);
   font-family: MicrosoftYaHei;
   font-size: 12px;
   color: #63656E;

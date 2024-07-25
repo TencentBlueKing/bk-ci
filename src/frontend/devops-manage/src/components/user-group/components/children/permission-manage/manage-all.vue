@@ -390,7 +390,7 @@ function asideClick(item){
   handleAsideClick(item, projectId.value);
 }
 async function refresh(){
-  asideItem.value = null;
+  asideItem.value = undefined;
   searchValue.value = [];
 }
 /**
@@ -616,7 +616,6 @@ async function getMenuList (item, keyword) {
 
     .multi-search {
       width: 50%;
-      // flex: 1;
     }
   }
 

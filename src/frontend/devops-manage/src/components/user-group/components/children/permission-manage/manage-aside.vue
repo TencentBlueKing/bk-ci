@@ -271,7 +271,6 @@ function truncateMiddleText(text) {
   return text.substr(0, frontChars) + separator + text.substr(text.length - backChars);
 }
 function handleClick(item) {
-  // activeTab.value = item.id;
   emit('handleClick', item);
 }
 function pageChange(current) {
@@ -307,7 +306,7 @@ function handConfirm(flag){
     if(!isValidate) return;
     emit('removeConfirm', removeUser.value, handOverForm.value);
   } else {
-    emit('removeConfirm');
+    emit('removeConfirm', removeUser.value);
   }
   loading.value = false;
   handOverClose();
