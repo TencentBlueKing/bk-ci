@@ -49,5 +49,6 @@ enum class EnvStatusEnum {
     abnormalAfterReady,
     abnormalAfterRunning,
     restarting,
-    rebuilding
+    rebuilding,
+    upgrading
 }

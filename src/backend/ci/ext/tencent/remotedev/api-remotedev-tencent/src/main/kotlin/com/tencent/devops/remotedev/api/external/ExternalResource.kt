@@ -29,29 +29,21 @@ package com.tencent.devops.remotedev.api.external
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
-import jakarta.ws.rs.core.Response
 
 @Tag(name = "EXTERNAL_REMOTE_DEV", description = "External-remoteDev")
 @Path("/external/remotedev/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalResource {
-    @Operation(summary = "获取默认的devfile文件内容")
-    @GET
-    @Path("/devfile")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    fun getDevfile(): Response
-
     @Operation(summary = "软件安装回调")
     @POST
     @Path("/software_install_callback")

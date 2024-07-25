@@ -39,6 +39,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
+@Deprecated("LINUX 待删除")
 class RemoteDevCvmDao {
     fun batchAddCvm(
         dslContext: DSLContext,

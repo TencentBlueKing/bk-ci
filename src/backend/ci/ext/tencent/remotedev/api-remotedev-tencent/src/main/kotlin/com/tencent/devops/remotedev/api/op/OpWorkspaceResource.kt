@@ -131,25 +131,4 @@ interface OpWorkspaceResource {
         @QueryParam("uid")
         uid: String
     ): Result<Boolean>
-
-    @Operation(summary = "删过期工作空间，用与定时外手动清理")
-    @GET
-    @Path("/deleteInactivityWorkspace")
-    fun deleteInactivityWorkspace(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<Boolean>
-
-    @Operation(summary = "手动执行云桌面清理job")
-    @GET
-    @Path("/autoCleanJob4Windows")
-    fun autoCleanJob4Windows(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "为true时，只执行自动作业中的销毁作业", required = false)
-        @QueryParam("type")
-        type: String?
-    ): Result<Boolean>
 }

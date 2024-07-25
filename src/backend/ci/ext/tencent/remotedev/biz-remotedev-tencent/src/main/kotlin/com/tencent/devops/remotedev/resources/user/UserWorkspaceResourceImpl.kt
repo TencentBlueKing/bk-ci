@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
-import com.tencent.devops.remotedev.pojo.BkTicketInfo
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
@@ -46,11 +45,13 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
-import com.tencent.devops.remotedev.service.BkTicketService
+import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceService
-import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
@@ -65,10 +66,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserWorkspaceResourceImpl @Autowired constructor(
     private val gitTransfer: RemoteDevGitTransfer,
     private val workspaceService: WorkspaceService,
-    private val redisHeartBeat: RedisHeartBeat,
     private val permissionService: PermissionService,
     private val repositoryService: RepositoryService,
-    private val bkTicketService: BkTicketService,
     private val createControl: CreateControl,
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
@@ -238,11 +237,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun workspaceHeartbeat(userId: String, workspaceName: String): Result<Boolean> {
-        redisHeartBeat.refreshHeartbeat(workspaceName)
-        return Result(true)
-    }
-
     override fun checkUserPermission(userId: String, workspaceName: String): Result<Boolean> {
         return Result(permissionService.checkUserPermission(userId, workspaceName))
     }
@@ -251,13 +245,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(permissionService.checkUserCreate(userId))
     }
 
-    override fun updateBkTicket(userId: String, bkTicketInfo: BkTicketInfo): Result<Boolean> {
-        bkTicketService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName, bkTicketInfo.mountType)
-        return Result(true)
-    }
-
+    @Deprecated("LINUX 待删除")
     override fun updateAllBkTicket(userId: String, bkTicket: String): Result<Boolean> {
-        bkTicketService.updateAllBkTicket(userId, bkTicket)
         return Result(true)
     }
 
@@ -271,5 +260,13 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         macAddress: String
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>> {
         return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress))
+    }
+
+    override fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Result<Moa2faRespData> {
+        return Result(workspaceService.createMoa2faRequest(userId = userId, moa2faReqData = moa2faReqData))
+    }
+
+    override fun verifyMoa2faResult(userId: String, moa2faVerifyReqData: Moa2faVerifyReqData): Result<Moa2faVerifyRespData> {
+        return Result(workspaceService.verifyMoa2faResult(userId = userId, moa2faVerifyReqData = moa2faVerifyReqData))
     }
 }

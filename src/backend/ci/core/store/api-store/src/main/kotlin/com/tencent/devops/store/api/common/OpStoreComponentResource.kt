@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.store.api.common
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
@@ -79,6 +80,10 @@ interface OpStoreComponentResource {
     @Operation(summary = "获取组件列表")
     @GET
     @Path("/types/{storeType}/component/list")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "releaseInfo"]
+    )
     @Suppress("LongParameterList")
     fun listComponents(
         @Parameter(description = "userId", required = true)
@@ -122,6 +127,10 @@ interface OpStoreComponentResource {
     @Operation(summary = "根据组件标识获取组件版本列表")
     @GET
     @Path("/types/{storeType}/codes/{storeCode}/component/version/list")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "releaseInfo"]
+    )
     fun getComponentVersionsByCode(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -147,6 +156,9 @@ interface OpStoreComponentResource {
     @Operation(summary = "根据组件ID获取组件详情")
     @GET
     @Path("/types/{storeType}/ids/{storeId}/component/detail")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["{data.storeType}", "{data.storeCode}", "{data.version}", "releaseInfo"]
+    )
     fun getComponentDetailInfoById(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

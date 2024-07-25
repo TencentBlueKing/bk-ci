@@ -38,7 +38,6 @@ import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
-import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -55,7 +54,6 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val desktopWorkspaceService: DesktopWorkspaceService,
-    private val gitProxyService: GitProxyService,
     private val xlsxExportService: WorkspaceXlsxExportService,
     private val client: Client,
     private val notifyControl: NotifyControl,
@@ -299,10 +297,6 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
 
     override fun updateCCHost(userId: String, data: OpUpdateCCHostData): Result<Boolean> {
         return Result(desktopWorkspaceService.updateCCHost(data))
-    }
-
-    override fun refreshCodeProxy(userId: String, projectId: String) {
-        gitProxyService.refreshCodeProxy(projectId)
     }
 
     override fun exportProjectWorkspaceList(userId: String, data: ProjectWorkspaceFetchData): Response {

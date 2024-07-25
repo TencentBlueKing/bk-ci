@@ -62,10 +62,10 @@
 </template>
 
 <script>
+    import { debounce, isObject } from '@/utils/util'
     import mixins from '../mixins'
     import scrollMixins from '../SelectInput/scrollMixins'
     import selectorMixins from '../selectorMixins'
-    import { debounce, isObject } from '@/utils/util'
 
     export default {
         name: 'devops-select',
@@ -240,6 +240,7 @@
             },
 
             handleBlur () {
+                if (!this.optionListVisible) return
                 this.optionListVisible = false
                 this.resetSelectPointer()
                 this.isFocused = false
@@ -356,7 +357,8 @@
             showValValidTips (val) {
                 this.$bkMessage({
                     theme: 'error',
-                    message: `${this.$t('editPage.invalidValue', [this.label])}: ${val}`
+                    message: `${this.$t('editPage.invalidValue', [this.label])}: ${val}`,
+                    limit: 1
                 })
             },
             async getOptionList () {

@@ -1,11 +1,14 @@
 package com.tencent.devops.remotedev.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.DesktopTokenSign
+import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -56,7 +59,19 @@ interface ServiceRemoteDevResource {
         ticket: String
     ): Result<Boolean>
 
-    @Operation(summary = "提供给wesec获取项目下云桌面信息")
+    @Operation(summary = "校验token")
+    @GET
+    @Path("/desktop_token_check")
+    fun desktopTokenCheck(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @Parameter(description = "认证token", required = true)
+        token: String,
+        @QueryParam("dToken")
+        @Parameter(description = "dToken", required = false)
+        dToken: String
+    ): Result<UserOnePassword>
+
+    @Operation(summary = "提供给wesec获取项目下批量云桌面信息")
     @GET
     @Path("/project/workspace")
     fun getProjectWorkspace(
@@ -314,7 +329,7 @@ interface ServiceRemoteDevResource {
         available: Boolean?
     ): Result<QuotaInApiRes>
 
-    @Operation(summary = "DevcloudCvm列表")
+    @Operation(summary = "获取DevcloudCvm列表")
     @GET
     @Path("/devcloud/cvmList")
     fun fetchCvmList(
@@ -358,7 +373,7 @@ interface ServiceRemoteDevResource {
         projectId: String?
     ): Result<Map<String, Any>>
 
-    @Operation(summary = "修改工作空间")
+    @Operation(summary = "修改工作空间别名")
     @POST
     @Path("/modify/display_name")
     @Deprecated("不要新增功能，希望废弃该接口")
@@ -490,5 +505,12 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "镜像ID", required = true)
         @QueryParam("imageId")
         imageId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "增删cvm回调")
+    @POST
+    @Path("/op_cvm_callback")
+    fun opCvm(
+        data: OperateCvmData
     ): Result<Boolean>
 }

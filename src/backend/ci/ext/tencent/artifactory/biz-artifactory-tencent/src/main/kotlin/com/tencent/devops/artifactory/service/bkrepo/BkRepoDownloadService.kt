@@ -188,7 +188,10 @@ open class BkRepoDownloadService @Autowired constructor(
             creatorId,
             projectId,
             RepoUtils.getRepoByType(artifactoryType),
-            argPath
+            URLEncoder.encode(
+                argPath,
+                "utf-8"
+            ).replace("+", "%20")
         )
         val bundleIdentifier = fileProperties[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: ""
         val appTitle = fileProperties[ARCHIVE_PROPS_APP_NAME] ?: fileProperties[ARCHIVE_PROPS_APP_APP_TITLE] ?: ""

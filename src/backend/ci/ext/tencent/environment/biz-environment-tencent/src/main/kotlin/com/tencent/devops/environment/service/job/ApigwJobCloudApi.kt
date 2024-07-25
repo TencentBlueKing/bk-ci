@@ -75,7 +75,8 @@ class ApigwJobCloudApi {
             "getAccountList" to "/api/v3/get_account_list",
             "getStepInstanceDetail" to "/api/v3/get_step_instance_detail",
             "getStepInstanceStatus" to "/api/v3/get_step_instance_status",
-            "queryAgentStatusFromJob" to "/api/v3/query_agent_info"
+            "queryAgentStatusFromJob" to "/api/v3/query_agent_info",
+            "operateStepInstance" to "/api/v3/operate_step_instance"
         )
         private val suffix = mapOf(
             "queryJobInstanceStatus" to "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&return_ip_result=%s",
@@ -106,7 +107,11 @@ class ApigwJobCloudApi {
         }
     }
 
-    fun <T : JobCloudPermission, U : Any> executePostRequest(jobCloud: T, classOfU: Class<U>): JobCloudResult<U> {
+    fun <T : JobCloudPermission, U : Any> executePostRequest(
+        shortPostTag: Boolean = false,
+        jobCloud: T,
+        classOfU: Class<U>
+    ): JobCloudResult<U> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq()
         jobCloud.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloud.bkScopeId = jobCloudAuthenticationReq.bkScopeId
@@ -116,10 +121,12 @@ class ApigwJobCloudApi {
             "[${getJobOperationName()}]POST url: ${jobCloudAuthenticationReq.url}, " +
                 "body: ${logWithLengthLimit(requestContent)}"
         )
-        return getResultFromRes(
-            OkhttpUtils.doPost(url = jobCloudAuthenticationReq.url, jsonParam = requestContent, headers = headers),
-            classOfU
-        )
+        val resp = if (!shortPostTag) {
+            OkhttpUtils.doPost(url = jobCloudAuthenticationReq.url, jsonParam = requestContent, headers = headers)
+        } else {
+            OkhttpUtils.doShortPost(url = jobCloudAuthenticationReq.url, jsonParam = requestContent, headers = headers)
+        }
+        return getResultFromRes(resp, classOfU)
     }
 
     fun <T, U> executeGetRequest(classOfT: Class<T>, vararg args: U): JobCloudResult<T> {

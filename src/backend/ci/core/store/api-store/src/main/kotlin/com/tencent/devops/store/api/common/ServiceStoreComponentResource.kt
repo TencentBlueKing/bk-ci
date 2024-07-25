@@ -63,8 +63,7 @@ interface ServiceStoreComponentResource {
     @Path("/types/{storeType}/component/main/page/list")
     @GET
     @BkInterfaceI18n(
-        keyPrefixNames = [
-            "{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+        keyPrefixNames = ["{data[*].records[*].type}", "{data[*].records[*].code}", "{data[*].records[*].version}",
             "releaseInfo"
         ]
     )
@@ -98,7 +97,7 @@ interface ServiceStoreComponentResource {
     @GET
     @BkInterfaceI18n(
         keyPrefixNames = [
-            "{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "{data.records[*].type}", "{data.records[*].code}", "{data.records[*].version}",
             "releaseInfo"
         ]
     )
@@ -173,7 +172,7 @@ interface ServiceStoreComponentResource {
     @Path("/types/{storeType}/ids/{storeId}/component/detail")
     @BkInterfaceI18n(
         keyPrefixNames = [
-            "{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "{data.storeType}", "{data.storeCode}", "{data.version}",
             "releaseInfo"
         ]
     )

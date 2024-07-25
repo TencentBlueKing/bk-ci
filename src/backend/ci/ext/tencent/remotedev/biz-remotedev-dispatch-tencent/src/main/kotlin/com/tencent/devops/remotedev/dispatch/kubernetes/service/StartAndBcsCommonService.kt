@@ -1,6 +1,5 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.service
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
@@ -9,6 +8,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentActionSt
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceBcsClient
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.interfaces.ServiceRemoteDevInterface
+import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskData
@@ -23,54 +23,117 @@ import org.springframework.stereotype.Service
  */
 @Service
 class StartAndBcsCommonService @Autowired constructor(
-    private val client: Client,
     private val dslContext: DSLContext,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val workspaceOpHisDao: DispatchWorkspaceOpHisDao,
     private val bcsClient: WorkspaceBcsClient,
     private val workspaceRedisUtils: WorkspaceRedisUtils
 ) {
+    @Suppress("ComplexMethod")
     fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
-        val task = workspaceOpHisDao.getTask(dslContext, taskStatus.uid)
-        workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
-        if (task?.action == EnvironmentAction.EXPAND_DISK) {
-            kotlin.runCatching {
-                SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceExpandDiskCallback(
-                    taskId = taskStatus.uid,
-                    workspaceName = task.workspaceName,
-                    operator = task.operator
-                )
-            }.onFailure {
-                logger.warn("workspaceTaskCallback|workspaceExpandDiskCallback fail ${it.message}", it)
-            }
-            workspaceOpHisDao.update(
-                dslContext = dslContext,
-                uid = task.uid,
-                status = if (taskStatus.status == TaskStatusEnum.successed) {
-                    EnvironmentActionStatus.SUCCEEDED
-                } else {
-                    EnvironmentActionStatus.FAILED
-                },
-                actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
-            )
-            return true
+        logger.info("StartAndBcsCommonService|workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
+        val task = workspaceOpHisDao.getTask(dslContext, taskStatus.uid) ?: kotlin.run {
+            logger.warn("workspaceTaskCallback|fail with wrong task|$taskStatus")
+            return false
         }
-        if (task?.status?.needFix() == true && task.action == EnvironmentAction.CREATE) {
-            val oldWs = dispatchWorkspaceDao.getWorkspaceInfo(task.workspaceName, dslContext) ?: kotlin.run {
-                logger.warn("workspaceTaskCallback|try to fix fail with wrong workspace|$task")
-                return false
-            }
-            kotlin.runCatching {
-                SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).createWinWorkspaceByVm(
-                    userId = oldWs.userId,
-                    oldWorkspaceName = oldWs.workspaceName,
-                    projectId = null,
-                    ownerType = null,
-                    uid = taskStatus.uid
+        workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
+        when {
+            task.action == EnvironmentAction.EXPAND_DISK -> {
+                kotlin.runCatching {
+                    SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceExpandDiskCallback(
+                        taskId = taskStatus.uid,
+                        workspaceName = task.workspaceName,
+                        operator = task.operator
+                    )
+                }.onFailure {
+                    logger.warn("workspaceTaskCallback|workspaceExpandDiskCallback fail ${it.message}", it)
+                }
+                workspaceOpHisDao.update(
+                    dslContext = dslContext,
+                    uid = task.uid,
+                    status = if (taskStatus.status == TaskStatusEnum.successed) {
+                        EnvironmentActionStatus.SUCCEEDED
+                    } else {
+                        EnvironmentActionStatus.FAILED
+                    },
+                    actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
                 )
-            }.onFailure {
-                logger.warn("workspaceTaskCallback|createWinWorkspaceByVm fail ${it.message}", it)
+                return true
+            }
+
+            task.action == EnvironmentAction.UPGRADE_VM && task.status == EnvironmentActionStatus.PENDING -> {
+                val result = kotlin.runCatching {
+                    SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java)
+                        .createWinWorkspaceByVm(
+                            userId = task.operator,
+                            oldWorkspaceName = task.workspaceName,
+                            projectId = null,
+                            ownerType = null,
+                            uid = taskStatus.uid
+                        ).data!!
+                }.onFailure {
+                    logger.warn("workspaceTaskCallback|upgradeVm error ${it.message}", it)
+                }.getOrElse { false }
+                if (result) {
+                    workspaceOpHisDao.update(
+                        dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
+                    )
+                } else {
+                    workspaceOpHisDao.update(
+                        dslContext, task.uid, EnvironmentActionStatus.FAILED
+                    )
+                    logger.error("workspaceTaskCallback $task error $taskStatus")
+                }
+                return true
+            }
+
+            task.action == EnvironmentAction.CREATE && task.status.needFix() -> {
+                val oldWs = dispatchWorkspaceDao.getWorkspaceInfo(task.workspaceName, dslContext) ?: kotlin.run {
+                    logger.warn("workspaceTaskCallback|try to fix fail with wrong workspace|$task")
+                    return false
+                }
+                kotlin.runCatching {
+                    SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).createWinWorkspaceByVm(
+                        userId = oldWs.userId,
+                        oldWorkspaceName = oldWs.workspaceName,
+                        projectId = null,
+                        ownerType = null,
+                        uid = taskStatus.uid
+                    )
+                }.onFailure {
+                    logger.warn("workspaceTaskCallback|createWinWorkspaceByVm fail ${it.message}", it)
+                }
+            }
+
+            task.action == EnvironmentAction.MAKE_IMAGE -> {
+                kotlin.runCatching {
+                    SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).makeImageCallback(
+                        taskId = taskStatus.uid,
+                        workspaceName = task.workspaceName,
+                        operator = task.operator,
+                        imageId = task.actionMsg
+                    )
+                }.onFailure {
+                    logger.warn("workspaceTaskCallback|makeImageCallback fail ${it.message}", it)
+                }
+                workspaceOpHisDao.update(
+                    dslContext = dslContext,
+                    uid = task.uid,
+                    status = if (taskStatus.status == TaskStatusEnum.successed) {
+                        EnvironmentActionStatus.SUCCEEDED
+                    } else {
+                        EnvironmentActionStatus.FAILED
+                    },
+                    actionMsg = null
+                )
+                if (taskStatus.status == TaskStatusEnum.successed) {
+                    dispatchWorkspaceDao.updateWorkspaceStatus(
+                        workspaceName = task.workspaceName,
+                        status = EnvStatusEnum.stopped,
+                        dslContext = dslContext
+                    )
+                }
+                return true
             }
         }
         return true

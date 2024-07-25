@@ -105,17 +105,6 @@ interface OpProjectWorkspaceResource {
         data: OpUpdateCCHostData
     ): Result<Boolean>
 
-    @Operation(summary = "刷新 codeproxy 数据")
-    @POST
-    @Path("/refreshCodeProxy")
-    fun refreshCodeProxy(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @QueryParam("projectId")
-        projectId: String
-    )
-
     @Operation(summary = "导出实例页面查询结果")
     @POST
     @Path("/list/export")

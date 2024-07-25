@@ -342,7 +342,7 @@
             },
             'releaseParams.scmType': {
                 handler: function (val) {
-                    if (val) {
+                    if (val && this.pacEnabled) {
                         this.$nextTick(() => {
                             this.refreshOatuStatus()
                         })

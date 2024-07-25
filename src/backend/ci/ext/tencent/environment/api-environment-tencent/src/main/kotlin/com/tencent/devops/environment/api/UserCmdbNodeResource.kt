@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.CmdbNode
 import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
+import com.tencent.devops.environment.pojo.job.ImportCmdbNodeInfo
 import com.tencent.devops.environment.pojo.job.ReImportCmdbNodeInfo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -87,6 +88,20 @@ interface UserCmdbNodeResource {
         projectId: String,
         @Parameter(description = "CMDB节点 IP", required = true)
         nodeIps: List<String>
+    ): Result<AddCmdbNodesRes>
+
+    @Operation(summary = "导入CMDB节点")
+    @POST
+    @Path("/{projectId}/addCmdbNode")
+    fun addCmdbNode(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "要导入的CMDB节点信息", required = true)
+        importCmdbNodeInfoList: List<ImportCmdbNodeInfo>
     ): Result<AddCmdbNodesRes>
 
     @Operation(summary = "重新导入CMDB节点")

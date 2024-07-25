@@ -33,7 +33,7 @@ spec:
               REPO_CREATE_GENERIC_PATH="{{ .Values.config.bkRepoApiUrl }}/repository/api/repo/create"
               REPO_INIT_GENERIC_METADATA_PATH="{{ .Values.config.bkRepoApiUrl }}/generic/"
               create_repo_project_name_init_plugintransfer_project_generic (){
-                  for i in bk-store
+                  for i in bk-store bkcdn
                   do
                       ret=0
                       echo "CI project is $i -------------------------------------------------->"

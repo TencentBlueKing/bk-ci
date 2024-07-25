@@ -27,6 +27,9 @@
 
 package com.tencent.devops.environment.service.job
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_LIST_NODE_NOT_IN_CC_OR_CMDB
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_LIST_NODE_NOT_IN_CC_OR_CMDB
 import com.tencent.devops.environment.constant.T_ENV_ENV_ID
 import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
 import com.tencent.devops.environment.constant.T_NODE_HOST_ID
@@ -86,6 +89,15 @@ class ParseHashListService @Autowired constructor(
             val nodeRecord = cmdbNodeDao.getNodesByNodeIdList(
                 dslContext, projectId, nodeIdList
             )
+            val notInCCNodeList = nodeRecord.filter {
+                null == it[T_NODE_HOST_ID] as? Long || null == it[T_NODE_CLOUD_AREA_ID] as? Long
+            }.map { it[T_NODE_NODE_IP] as String }
+            if (notInCCNodeList.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_ENV_LIST_NODE_NOT_IN_CC_OR_CMDB,
+                    params = arrayOf(notInCCNodeList.joinToString(", "))
+                )
+            }
             val nodeHostList = nodeRecord.map {
                 Host(
                     bkHostId = it[T_NODE_HOST_ID] as? Long,
@@ -106,6 +118,15 @@ class ParseHashListService @Autowired constructor(
             val nodeRecord = cmdbNodeDao.getNodesByNodeHashIdList(
                 dslContext, projectId, nodeHashIdList
             )
+            val notInCCNodeList = nodeRecord.filter {
+                null == it[T_NODE_HOST_ID] as? Long || null == it[T_NODE_CLOUD_AREA_ID] as? Long
+            }.map { it[T_NODE_NODE_IP] as String }
+            if (notInCCNodeList.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_NODE_LIST_NODE_NOT_IN_CC_OR_CMDB,
+                    params = arrayOf(notInCCNodeList.joinToString(", "))
+                )
+            }
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] nodeRecord: $nodeRecord")
             val hostList = nodeRecord.map {
                 val hostId = it[T_NODE_HOST_ID] as? Long

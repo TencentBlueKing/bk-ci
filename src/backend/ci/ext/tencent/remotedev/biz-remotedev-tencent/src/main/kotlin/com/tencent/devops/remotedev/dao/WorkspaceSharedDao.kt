@@ -1,12 +1,17 @@
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import java.time.LocalDateTime
+import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.RecordMapper
+import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
@@ -156,12 +161,45 @@ class WorkspaceSharedDao {
     fun fetchWorkspaceOwner(
         dslContext: DSLContext,
         workspaceNames: Set<String>
-    ): Set<String> {
+    ): Map<String, String> {
         with(TWorkspaceShared.T_WORKSPACE_SHARED) {
             return dslContext.selectFrom(this)
                 .where(WORKSPACE_NAME.`in`(workspaceNames))
                 .and(ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
-                .fetch().map { it.sharedUser }.toSet()
+                .fetch().associateBy({ it.workspaceName }, { it.sharedUser })
+        }
+    }
+
+    /**
+     * 模糊匹配workspaceName 拿分享信息
+     */
+    fun fetchSharedWorkspace(
+        dslContext: DSLContext,
+        workspaceName: String? = null
+    ): Result<out Record>? {
+        val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
+        val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
+        val conditions = mutableListOf<Condition>()
+        conditions.add(t1.STATUS.ne(WorkspaceStatus.DELETED.ordinal))
+        conditions.add(t2.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name))
+        if (!workspaceName.isNullOrBlank()) {
+            conditions.add(t2.WORKSPACE_NAME.like("%$workspaceName%"))
+        }
+        return dslContext.select(t2.ID, t2.WORKSPACE_NAME, t2.OPERATOR, t2.SHARED_USER, t2.ASSIGN_TYPE, t2.RESOURCE_ID)
+            .from(t1).innerJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
+            .where(conditions)
+            .fetch()
+    }
+
+    fun bakWorkspaceShareInfo(
+        dslContext: DSLContext,
+        workspaceName: String,
+        bakName: String
+    ): Int {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.update(this)
+                .set(WORKSPACE_NAME, bakName)
+                .where(WORKSPACE_NAME.equal(workspaceName)).execute()
         }
     }
 

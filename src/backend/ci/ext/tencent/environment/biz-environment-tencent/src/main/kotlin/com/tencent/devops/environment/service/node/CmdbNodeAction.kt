@@ -31,7 +31,7 @@ import com.tencent.devops.environment.constant.T_NODE_HOST_ID
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.job.jobreq.Host
-import com.tencent.devops.environment.service.job.QueryFromCCService
+import com.tencent.devops.environment.service.cc.TencentQueryFromCCService
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Service
 class CmdbNodeAction @Autowired constructor(
     private val dslContext: DSLContext,
     private val cmdbNodeDao: CmdbNodeDao,
-    private val queryFromCCService: QueryFromCCService
+    private val tencentQueryFromCCService: TencentQueryFromCCService
 ) : NodeAction {
     @Value("\${environment.cc.bkBizScopeId:}")
     private val bkBizScopeId = ""
@@ -60,9 +60,9 @@ class CmdbNodeAction @Autowired constructor(
         // 判断节点在CC中的业务，为蓝盾对应的公共业务：find_host_biz_relations接口查询出所属业务，看返回值中的data数组中对象的bk_biz_id是否等于蓝盾测试机业务。
         val hostIdList = nodeRecords.filterNot {
             it.nodeType == NodeType.THIRDPARTY.name || it.nodeType == NodeType.DEVCLOUD.name
-        }.mapNotNull { it.hostId }
+        }.mapNotNull { it.hostId }.map { it.toInt() }
         if (hostIdList.isNotEmpty()) {
-            val hostIdQueryCCRes = queryFromCCService.queryCCFindHostBizRelations(hostIdList)
+            val hostIdQueryCCRes = tencentQueryFromCCService.queryCCFindHostBizRelations(hostIdList)
             val hostIdQueryCCList = hostIdQueryCCRes.data // 所有cc中返回的节点记录
 
             // 条件1. 这个业务的bizid等于蓝盾测试机
@@ -84,7 +84,7 @@ class CmdbNodeAction @Autowired constructor(
 
             // 满足以上2个条件，将其从CC蓝盾业务下移出：调用cc的delete接口，将机器从CC中移除。
             if (deleteHostIdMap.isNotEmpty()) {
-                queryFromCCService.deleteHostFromCiBiz(deleteHostIdMap.keys.filterNotNull().toSet())
+                tencentQueryFromCCService.deleteHostFromCiBiz(deleteHostIdMap.keys.filterNotNull().toSet())
             }
         }
     }

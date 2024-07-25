@@ -28,10 +28,8 @@
 package com.tencent.devops.environment.dao.job
 
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.environment.constant.T_NODE_AGENT_STATUS
 import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
 import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
-import com.tencent.devops.environment.constant.T_NODE_CREATED_USER
 import com.tencent.devops.environment.constant.T_NODE_HOST_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
@@ -39,7 +37,10 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.constant.T_NODE_NODE_TYPE
 import com.tencent.devops.environment.constant.T_NODE_OS_TYPE
 import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
+import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
 import com.tencent.devops.environment.model.CreateNodeModel
+import com.tencent.devops.environment.pojo.dto.CmdbNodeDTO
+import com.tencent.devops.environment.pojo.dto.NodeUpdateAttrDTO
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.job.AgentVersionInfo
@@ -48,18 +49,24 @@ import com.tencent.devops.environment.pojo.job.jobreq.Host
 import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record2
 import org.jooq.Record3
 import org.jooq.Record4
 import org.jooq.Record5
-import org.jooq.Record6
+import org.jooq.Record7
 import org.jooq.Result
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class CmdbNodeDao {
+class CmdbNodeDao @Autowired constructor(
+    private val defaultDSLContext: DSLContext
+) {
+
+    private val table = TNode.T_NODE
     // -------------------------------batch update node record(s)-------------------------------
 
     fun batchUpdateNodeSeverIdByIp(
@@ -139,6 +146,9 @@ class CmdbNodeDao {
                         .set(NODE_STATUS, it.nodeStatus)
                         .set(AGENT_STATUS, it.agentStatus)
                         .set(AGENT_VERSION, it.agentVersion)
+                        .set(HOST_ID, it.hostId)
+                        .set(CLOUD_AREA_ID, it.cloudAreaId)
+                        .set(OS_TYPE, it.osType)
                         .set(LAST_MODIFY_TIME, LocalDateTime.now())
                         .where(NODE_ID.eq(it.nodeId))
                 }
@@ -147,19 +157,56 @@ class CmdbNodeDao {
         }
     }
 
-    fun batchUpdateNodeInCCByIp(dslContext: DSLContext, ipToNodeStatus: Map<String, String>) {
+    fun batchUpdateCCInfoByServerId(dslContext: DSLContext, updateAgentInfo: List<UpdateTNodeInfo>) {
+        with(TNode.T_NODE) {
+            val batchUpdate = dslContext.batch(
+                updateAgentInfo.map {
+                    dslContext.update(this)
+                        .set(NODE_STATUS, it.nodeStatus)
+                        .set(AGENT_STATUS, it.agentStatus)
+                        .set(AGENT_VERSION, it.agentVersion)
+                        .set(HOST_ID, it.hostId)
+                        .set(CLOUD_AREA_ID, it.cloudAreaId)
+                        .set(OS_TYPE, it.osType)
+                        .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                        .where(SERVER_ID.eq(it.serverId))
+                }
+            )
+            batchUpdate.execute()
+        }
+    }
+
+    fun batchUpdateNodeInCCByServerId(dslContext: DSLContext, serverIdToNodeStatus: Map<Long, String>) {
         val agentVersionDefault: String? = null
         with(TNode.T_NODE) {
             val batchUpdate = dslContext.batch(
-                ipToNodeStatus.map { (ip, nodeStatus) ->
+                serverIdToNodeStatus.map { (serverId, nodeStatus) ->
                     val updateInfo = dslContext.update(this)
                         .set(NODE_STATUS, nodeStatus)
                         .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
                     if (NodeStatus.NOT_INSTALLED.name == nodeStatus) {
                         updateInfo.set(AGENT_VERSION, agentVersionDefault)
                     }
-                    updateInfo.where(NODE_IP.eq(ip))
+                    updateInfo.where(SERVER_ID.eq(serverId))
                         .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                }
+            )
+            batchUpdate.execute()
+        }
+    }
+
+    fun batchUpdateNodeMaintainerAndOsNameByNodeIp(nodeAttrList: List<NodeUpdateAttrDTO>) {
+        with(TNode.T_NODE) {
+            val batchUpdate = defaultDSLContext.batch(
+                nodeAttrList.map {
+                    defaultDSLContext.update(this)
+                        .set(SERVER_ID, it.serverId)
+                        .set(OPERATOR, it.operator)
+                        .set(BAK_OPERATOR, it.bakOperator)
+                        .set(OS_NAME, it.osName)
+                        .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
+                        .where(NODE_IP.eq(it.nodeIp))
+                        .and(buildCmdbNodeTypeCondition())
                 }
             )
             batchUpdate.execute()
@@ -188,37 +235,37 @@ class CmdbNodeDao {
 
     /**
      * 将在CMDB中但被误更新为NOT_IN_CMDB的节点对应状态改为NOT_IN_CC
-     * @param ipList 在CMDB中但被误更新为NOT_IN_CMDB的节点ip
+     * @param nodeIps 在CMDB中但节点状态被误更新为NOT_IN_CMDB的节点IP集合
      */
-    fun updateStatusIncorrectNodeByIpList(
-        dslContext: DSLContext,
-        ipList: Set<String>
-    ) {
+    fun updateNotInCmdbToNotInCCByNodeIp(nodeIps: Collection<String>): Int {
+        if (nodeIps.isEmpty()) {
+            return 0
+        }
         with(TNode.T_NODE) {
-            dslContext.update(this)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(NODE_IP.`in`(nodeIps))
+            conditions.add(NODE_STATUS.eq(NodeStatus.NOT_IN_CMDB.name))
+            conditions.add(buildCmdbNodeTypeCondition())
+            return defaultDSLContext.update(this)
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CC.name)
                 .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
-                .where(NODE_IP.`in`(ipList))
-                .and(NODE_STATUS.eq(NodeStatus.NOT_IN_CMDB.name))
-                .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .where(conditions)
                 .execute()
         }
     }
 
-    fun updateNodeNotInCCByIp(dslContext: DSLContext, notInCCIpList: List<String>) {
+    fun updateNodeNotInCCByServerId(dslContext: DSLContext, notInCCServerIdList: List<Long>) {
         val hostIdDefault: Long? = null
         val cloudAreaIdDefault: Long? = null
-        val osTypeDefault: String? = null
         val agentVersionDefault: String? = null
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CC.name)
                 .set(HOST_ID, hostIdDefault)
                 .set(CLOUD_AREA_ID, cloudAreaIdDefault)
-                .set(OS_TYPE, osTypeDefault)
                 .set(AGENT_VERSION, agentVersionDefault)
                 .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
-                .where(NODE_IP.`in`(notInCCIpList))
+                .where(SERVER_ID.`in`(notInCCServerIdList))
                 .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CC.name))
                 .execute()
@@ -244,19 +291,13 @@ class CmdbNodeDao {
         }
     }
 
-    fun updateNodeNotInCmdb(dslContext: DSLContext, ipList: List<String>) {
-        val hostIdDefault: Long? = null
-        val cloudAreaIdDefault: Long? = null
-        val serverIdDefault: Long? = null
+    fun updateNodeStatusNotInCmdbByNodeIp(nodeIps: Collection<String>): Int {
         with(TNode.T_NODE) {
-            dslContext.update(this)
+            return defaultDSLContext.update(this)
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CMDB.name)
-                .set(HOST_ID, hostIdDefault)
-                .set(CLOUD_AREA_ID, cloudAreaIdDefault)
-                .set(SERVER_ID, serverIdDefault)
                 .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
-                .where(NODE_IP.`in`(ipList))
-                .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .where(NODE_IP.`in`(nodeIps))
+                .and(buildCmdbNodeTypeCondition())
                 .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .execute()
         }
@@ -293,12 +334,14 @@ class CmdbNodeDao {
         }
     }
 
-    fun countDeployNodesInCmdb(dslContext: DSLContext): Int {
+    fun countNodeInCmdb(): Int {
         with(TNode.T_NODE) {
-            return dslContext.selectCount()
+            val conditions = mutableListOf<Condition>()
+            conditions.add(buildCmdbNodeTypeCondition())
+            conditions.add(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
+            return defaultDSLContext.selectCount()
                 .from(TNode.T_NODE)
-                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
-                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
+                .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -425,49 +468,105 @@ class CmdbNodeDao {
 
     // -------------------------------get node record(s)-------------------------------
 
-    fun getCmdbNodesByIpAndProjectId(
+    fun getCmdbNodesByServerIdAndProjectId(
         dslContext: DSLContext,
         projectId: String,
-        nodeIpList: List<String>
-    ): Result<Record3<Long, String, String>> {
+        nodeServerIdList: List<Long>
+    ): Result<Record4<Long, String, String, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_ID.`as`(T_NODE_NODE_ID),
                 NODE_IP.`as`(T_NODE_NODE_IP),
-                NODE_STATUS.`as`(T_NODE_NODE_STATUS)
+                NODE_STATUS.`as`(T_NODE_NODE_STATUS),
+                SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
-                .and(NODE_IP.`in`(nodeIpList))
+                .and(SERVER_ID.`in`(nodeServerIdList))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()
         }
     }
 
-    fun getDeployNodesLimit(
-        dslContext: DSLContext,
+    /**
+     * 从传入的IP列表中筛选出状态为不在CMDB中（NOT_IN_CMDB）的IP
+     */
+    fun listNotInCmdbIps(nodeIps: Collection<String>): List<String> {
+        with(TNode.T_NODE) {
+            val conditons = buildBasicNodeIpConditions(nodeIps)
+            conditons.add(NODE_STATUS.eq(NodeStatus.NOT_IN_CMDB.name))
+            val records = defaultDSLContext.select(
+                NODE_IP
+            ).from(this)
+                .where(conditons)
+                .orderBy(NODE_ID.desc())
+                .fetch()
+            return records.map { record -> record.get(NODE_IP) }
+        }
+    }
+
+    /**
+     * 从传入的IP列表中筛选出状态为在CMDB中（非NOT_IN_CMDB）的IP
+     */
+    fun listInCmdbIps(nodeIps: Collection<String>): List<String> {
+        with(TNode.T_NODE) {
+            val conditons = buildBasicNodeIpConditions(nodeIps)
+            conditons.add(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
+            val records = defaultDSLContext.select(
+                NODE_IP
+            ).from(this)
+                .where(conditons)
+                .orderBy(NODE_ID.desc())
+                .fetch()
+            return records.map { record -> record.get(NODE_IP) }
+        }
+    }
+
+    private fun buildBasicNodeIpConditions(nodeIps: Collection<String>): MutableList<Condition> {
+        val conditons = mutableListOf<Condition>()
+        conditons.add(buildCmdbNodeTypeCondition())
+        conditons.add(table.NODE_IP.`in`(nodeIps))
+        return conditons
+    }
+
+    fun listCmdbNodes(
         page: Int,
         pageSize: Int
-    ): Result<Record5<Long, String, String, Long, Long>> {
+    ): List<CmdbNodeDTO> {
         with(TNode.T_NODE) {
-            return dslContext.select(
-                NODE_ID.`as`(T_NODE_NODE_ID),
-                NODE_TYPE.`as`(T_NODE_NODE_TYPE),
-                NODE_IP.`as`(T_NODE_NODE_IP),
-                HOST_ID.`as`(T_NODE_HOST_ID),
-                CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID)
+            val records = defaultDSLContext.select(
+                NODE_ID,
+                NODE_IP,
+                SERVER_ID,
+                OPERATOR,
+                BAK_OPERATOR,
+                OS_NAME
             ).from(this)
-                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .where(buildCmdbNodeTypeCondition())
                 .orderBy(NODE_ID.desc())
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
+            return records.map { record ->
+                CmdbNodeDTO(
+                    nodeId = record.get(table.NODE_ID),
+                    nodeIp = record.get(table.NODE_IP),
+                    serverId = record.get(table.SERVER_ID),
+                    operator = record.get(table.OPERATOR),
+                    bakOperator = record.get(table.BAK_OPERATOR),
+                    osName = record.get(table.OS_NAME)
+                )
+            }
         }
+    }
+
+    private fun buildCmdbNodeTypeCondition(): Condition {
+        return table.NODE_TYPE.`in`(NodeType.CMDB.name)
     }
 
     fun getDeployNodesInCmdbLimit(
         dslContext: DSLContext,
         page: Int,
         pageSize: Int
-    ): Result<Record6<Long, String, String, Long, Long, String>> {
+    ): Result<Record7<Long, String, String, Long, Long, String, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_ID.`as`(T_NODE_NODE_ID),
@@ -475,7 +574,8 @@ class CmdbNodeDao {
                 NODE_IP.`as`(T_NODE_NODE_IP),
                 HOST_ID.`as`(T_NODE_HOST_ID),
                 CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID),
-                OS_TYPE.`as`(T_NODE_OS_TYPE)
+                OS_TYPE.`as`(T_NODE_OS_TYPE),
+                SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
@@ -488,13 +588,14 @@ class CmdbNodeDao {
     fun getCmdbNodesByNodeIdList(
         dslContext: DSLContext,
         nodeIdList: List<Long>
-    ): Result<Record4<Long, String, Boolean, String>> {
+    ): Result<Record5<Long, String, String, String, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_ID.`as`(T_NODE_NODE_ID),
                 NODE_IP.`as`(T_NODE_NODE_IP),
-                AGENT_STATUS.`as`(T_NODE_AGENT_STATUS),
-                AGENT_VERSION.`as`(T_NODE_AGENT_VERSION)
+                NODE_STATUS.`as`(T_NODE_NODE_STATUS),
+                AGENT_VERSION.`as`(T_NODE_AGENT_VERSION),
+                SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_ID.`in`(nodeIdList))
@@ -514,19 +615,26 @@ class CmdbNodeDao {
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(SERVER_ID.isNull)
+                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .orderBy(NODE_ID.desc())
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
         }
     }
 
-    fun getCmdbNodesHostIdNullLimit(dslContext: DSLContext, page: Int, pageSize: Int): Result<Record2<String, Long>> {
+    fun getCmdbNodesHostIdNullLimit(
+        dslContext: DSLContext,
+        page: Int,
+        pageSize: Int
+    ): Result<Record3<String, Long, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_IP.`as`(T_NODE_NODE_IP),
-                NODE_ID.`as`(T_NODE_NODE_ID)
+                NODE_ID.`as`(T_NODE_NODE_ID),
+                SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .and(SERVER_ID.isNotNull)
                 .and(HOST_ID.isNull)
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
@@ -537,7 +645,7 @@ class CmdbNodeDao {
         dslContext: DSLContext,
         page: Int,
         pageSize: Int
-    ): Result<Record6<String, Long, String, String, String, Long>> {
+    ): Result<Record7<String, Long, String, String, String, Long, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_IP.`as`(T_NODE_NODE_IP),
@@ -545,7 +653,8 @@ class CmdbNodeDao {
                 NODE_STATUS.`as`(T_NODE_NODE_STATUS),
                 AGENT_VERSION.`as`(T_NODE_AGENT_VERSION),
                 PROJECT_ID.`as`(T_NODE_PROJECT_ID),
-                NODE_ID.`as`(T_NODE_NODE_ID)
+                NODE_ID.`as`(T_NODE_NODE_ID),
+                SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(NODE_TYPE.eq(NodeType.CMDB.name))
                 .limit(pageSize).offset((page - 1) * pageSize)
@@ -553,24 +662,35 @@ class CmdbNodeDao {
         }
     }
 
-    fun getNodesFromHostListByBkHostId(
-        dslContext: DSLContext,
+    fun listCmdbNodesByHostIds(
         projectId: String,
-        hostList: List<Host>
-    ): List<Record5<Long, String, Long, Long, String>> {
-        val hostIdList = hostList.map { it.bkHostId }
+        hostIds: Collection<Long>
+    ): List<CmdbNodeDTO> {
         return with(TNode.T_NODE) {
-            val nodeRecord = dslContext.select(
-                NODE_ID.`as`(T_NODE_NODE_ID),
-                NODE_IP.`as`(T_NODE_NODE_IP),
-                HOST_ID.`as`(T_NODE_HOST_ID),
-                CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID),
-                CREATED_USER.`as`(T_NODE_CREATED_USER)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(buildCmdbNodeTypeCondition())
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(HOST_ID.`in`(hostIds))
+            val records = defaultDSLContext.select(
+                NODE_ID,
+                NODE_IP,
+                SERVER_ID,
+                CLOUD_AREA_ID,
+                HOST_ID,
+                CREATED_USER
             ).from(this)
-                .where(HOST_ID.`in`(hostIdList))
-                .and(PROJECT_ID.eq(projectId))
+                .where(conditions)
                 .fetch()
-            nodeRecord.mapNotNull { it }
+            records.mapNotNull { record ->
+                CmdbNodeDTO(
+                    nodeId = record.get(table.NODE_ID),
+                    nodeIp = record.get(table.NODE_IP),
+                    serverId = record.get(table.SERVER_ID),
+                    cloudAreaId = record.get(table.CLOUD_AREA_ID),
+                    hostId = record.get(table.HOST_ID),
+                    createdUser = record.get(table.CREATED_USER)
+                )
+            }
         }
     }
 
@@ -586,28 +706,31 @@ class CmdbNodeDao {
         }
     }
 
-    fun getNodesFromHostListByIpAndBkCloudId(
-        dslContext: DSLContext,
+    fun listCmdbNodesByIps(
         projectId: String,
-        hostList: List<Host>
-    ): List<Record5<Long, String, Long, Long, String>> {
-        val ipList = hostList.map { it.ip }
-        val ipToRecordMap = hostList.associateBy { it.ip }
+        ips: Collection<String>
+    ): List<CmdbNodeDTO> {
         return with(TNode.T_NODE) {
-            val nodeRecord = dslContext.select(
-                NODE_ID.`as`(T_NODE_NODE_ID),
-                NODE_IP.`as`(T_NODE_NODE_IP),
-                HOST_ID.`as`(T_NODE_HOST_ID),
-                CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID),
-                CREATED_USER.`as`(T_NODE_CREATED_USER)
+            val nodeRecord = defaultDSLContext.select(
+                NODE_ID,
+                NODE_IP,
+                SERVER_ID,
+                CLOUD_AREA_ID,
+                HOST_ID,
+                CREATED_USER
             ).from(this)
-                .where(NODE_IP.`in`(ipList))
+                .where(NODE_IP.`in`(ips))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()
-            nodeRecord.mapNotNull {
-                if (ipToRecordMap[it[T_NODE_NODE_IP] as? String]?.bkCloudId == it[T_NODE_CLOUD_AREA_ID] as? Long) {
-                    it
-                } else null
+            nodeRecord.mapNotNull { record ->
+                CmdbNodeDTO(
+                    nodeId = record.get(table.NODE_ID),
+                    nodeIp = record.get(table.NODE_IP),
+                    serverId = record.get(table.SERVER_ID),
+                    cloudAreaId = record.get(table.CLOUD_AREA_ID),
+                    hostId = record.get(table.HOST_ID),
+                    createdUser = record.get(table.CREATED_USER)
+                )
             }
         }
     }
@@ -641,6 +764,23 @@ class CmdbNodeDao {
                 CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID)
             ).from(this)
                 .where(NODE_ID.`in`(nodeIdList))
+                .and(PROJECT_ID.eq(projectId))
+                .fetch()
+        }
+    }
+
+    fun getNodeByProjectIdAndServerIdList(
+        dslContext: DSLContext,
+        projectId: String,
+        serverIdList: List<Long>
+    ): Result<Record3<Long, Long, String>> {
+        with(TNode.T_NODE) {
+            return dslContext.select(
+                NODE_ID.`as`(T_NODE_NODE_ID),
+                SERVER_ID.`as`(T_NODE_SERVER_ID),
+                NODE_IP.`as`(T_NODE_NODE_IP)
+            ).from(this)
+                .where(SERVER_ID.`in`(serverIdList))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()
         }

@@ -31,10 +31,12 @@ enum class WorkspaceSystemType {
     LINUX,
     WINDOWS_GPU;
 
+    @Deprecated("LINUX 待删除")
     fun needHeartbeat() = this == LINUX
 
     fun checkWindows() = this == WINDOWS_GPU
 
+    @Deprecated("LINUX 待删除")
     fun needUpdateBkTicket() = this == LINUX
 
     fun needSafeInitialization() = this == WINDOWS_GPU

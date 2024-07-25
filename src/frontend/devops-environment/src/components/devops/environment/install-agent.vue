@@ -8,9 +8,9 @@
     >
         <div class="sideslider-title" slot="header">
             {{ $t('environment.installGseAgent') }}
-            <span class="node-title">{{ $t('environment.nodeTitle') }}: {{ innerIp }}</span>
+            <span class="node-title">{{ $t('environment.nodeTitle') }}: {{ ip }}</span>
         </div>
-        <div slot="content" v-if="isEditing">
+        <div slot="content" v-show="isEditing" v-bkloading="{ isLoading, title: $t('environment.正在生成手动安装命令') }">
             <bk-alert type="info" :title="$t('environment.installAgentTips')" closable></bk-alert>
             <bk-form
                 ref="form"
@@ -20,108 +20,172 @@
                 :rules="rules"
             >
                 <bk-form-item
-                    :label="$t('environment.nodeInfo.os')"
+                    :label="$t('environment.nodeInfo.installMethod')"
                     :required="true"
-                    property="os"
+                    property="isManual"
                 >
-                    <bk-radio-group
-                        v-model="formData.osType"
-                        @change="handleChangeData"
+                    <div class="bk-button-group" style="display: block;">
+                        <bk-button
+                            :class="{
+                                'is-selected': formData.isManual === false,
+                                'methods-btn': true
+                            }"
+                            :disabled="isLoading"
+                            @click="formData.isManual = false"
+                        >
+                            {{ $t('environment.nodeInfo.remoteInstall') }}
+                        </bk-button>
+                        <bk-button
+                            :class="{
+                                'is-selected': formData.isManual === true,
+                                'methods-btn': true
+                            }"
+                            :disabled="isLoading"
+                            @click="formData.isManual = true"
+                        >
+                            {{ $t('environment.nodeInfo.manualInstall') }}
+                        </bk-button>
+                    </div>
+                </bk-form-item>
+                <template v-if="!formData.isManual">
+                    <bk-form-item
+                        :label="$t('environment.nodeInfo.os')"
+                        :required="true"
+                        property="os"
                     >
-                        <bk-radio value="LINUX" class="mr20">Linux</bk-radio>
-                        <bk-radio value="WINDOWS" class="mr20">Windows</bk-radio>
-                        <bk-radio value="AIX" class="mr20">Aix</bk-radio>
-                        <bk-radio value="SOLARIS">Solaris</bk-radio>
-                    </bk-radio-group>
-                </bk-form-item>
-                <bk-form-item
-                    :label="$t('environment.loginAccount')"
-                    :required="true"
-                    property="account"
-                    error-display-type="normal"
-                >
-                    <bk-input
-                        v-model="formData.account"
-                        :placeholder="$t('environment.accountPlaceholder')"
-                        @change="handleChangeData"
-                    />
-                </bk-form-item>
-                <bk-form-item
-                    :label="$t('environment.oauthMethod')"
-                    :required="true"
-                    property="authType"
-                >
-                    <bk-radio-group
-                        v-model="formData.authType"
-                        @change="handleChangeData"
+                        <bk-radio-group
+                            v-model="formData.osType"
+                            @change="handleChangeData"
+                        >
+                            <bk-radio value="LINUX" class="mr20">Linux</bk-radio>
+                            <bk-radio value="WINDOWS" class="mr20">Windows</bk-radio>
+                            <bk-radio value="AIX" class="mr20">Aix</bk-radio>
+                            <bk-radio value="SOLARIS">Solaris</bk-radio>
+                        </bk-radio-group>
+                    </bk-form-item>
+                    <bk-form-item
+                        :label="$t('environment.loginAccount')"
+                        :required="true"
+                        property="account"
+                        error-display-type="normal"
                     >
-                        <bk-radio value="PASSWORD" class="mr20">{{ $t('environment.password') }}</bk-radio>
-                        <bk-radio value="KEY" class="mr20">{{ $t('environment.key') }}</bk-radio>
-                    </bk-radio-group>
-                </bk-form-item>
-                <bk-form-item
-                    v-if="formData.authType === 'PASSWORD'"
-                    :label="$t('environment.loginPassword')"
-                    :required="true"
-                    property="password"
-                    error-display-type="normal"
-                >
-                    <bk-input
-                        v-model="formData.password"
-                        type="password"
-                        :placeholder="$t('environment.passwordPlaceholder')"
-                        @change="handleChangeData"
-                    />
-                    <div v-if="formData.authType === 'PASSWORD'" class="password-tips">{{ $t('environment.passwordTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}</div>
-                </bk-form-item>
-                <bk-form-item
-                    v-else
-                    :label="$t('environment.keyFile')"
-                    :required="true"
-                    property="keyFile"
-                >
-                    <bk-upload
-                        ext-cls="upload-file-btn"
-                        theme="button"
-                        :tip="$t('environment.uploadTips')"
-                        :custom-request="handleUpload"
-                        url="/"
-                        :limit="1"
-                        :multiple="false"
+                        <bk-input
+                            v-model="formData.account"
+                            :placeholder="$t('environment.accountPlaceholder')"
+                            @change="handleChangeData"
+                        />
+                    </bk-form-item>
+                    <bk-form-item
+                        :label="$t('environment.oauthMethod')"
+                        :required="true"
+                        property="authType"
                     >
-                    </bk-upload>
-                    <div v-if="formData.authType === 'PASSWORD'" class="keyFile-tips">{{ $t('environment.keyFileTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}</div>
-                </bk-form-item>
-                <bk-form-item
-                    :label="$t('environment.端口')"
-                    :required="true"
-                    property="port"
-                >
-                    <bk-input
-                        v-model="formData.port"
-                        :placeholder="$t('environment.请填写端口')"
-                        @change="handleChangeData"
-                    />
-                </bk-form-item>
-                <bk-form-item
-                    :label="$t('environment.installationChannel')"
-                    :required="true"
-                    property="installChannelId"
-                >
-                    <bk-select
-                        v-model="formData.installChannelId"
-                        @change="handleChangeData"
+                        <bk-radio-group
+                            v-model="formData.authType"
+                            @change="handleChangeData"
+                        >
+                            <bk-radio value="PASSWORD" class="mr20">{{ $t('environment.password') }}</bk-radio>
+                            <bk-radio value="KEY" class="mr20">{{ $t('environment.key') }}</bk-radio>
+                        </bk-radio-group>
+                    </bk-form-item>
+                    <bk-form-item
+                        v-if="formData.authType === 'PASSWORD'"
+                        :label="$t('environment.loginPassword')"
+                        :required="true"
+                        property="password"
+                        error-display-type="normal"
                     >
-                        <bk-option v-for="option in channelList"
-                            :key="option.id"
-                            :id="option.id"
-                            :name="option.name">
-                        </bk-option>
-                    </bk-select>
-                </bk-form-item>
+                        <bk-input
+                            v-model="formData.password"
+                            type="password"
+                            :placeholder="$t('environment.passwordPlaceholder')"
+                            @change="handleChangeData"
+                        />
+                        <div v-if="formData.authType === 'PASSWORD'" class="password-tips">{{ $t('environment.passwordTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}</div>
+                    </bk-form-item>
+                    <bk-form-item
+                        v-else
+                        :label="$t('environment.keyFile')"
+                        :required="true"
+                        property="keyFile"
+                    >
+                        <bk-upload
+                            ext-cls="upload-file-btn"
+                            theme="button"
+                            :tip="$t('environment.uploadTips')"
+                            :custom-request="handleUpload"
+                            url="/"
+                            :limit="1"
+                            :multiple="false"
+                        >
+                        </bk-upload>
+                        <div v-if="formData.authType === 'PASSWORD'" class="keyFile-tips">{{ $t('environment.keyFileTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}</div>
+                    </bk-form-item>
+                    <bk-form-item
+                        :label="$t('environment.端口')"
+                        :required="true"
+                        property="port"
+                    >
+                        <bk-input
+                            v-model="formData.port"
+                            :placeholder="$t('environment.请填写端口')"
+                            @change="handleChangeData"
+                        />
+                    </bk-form-item>
+                    <bk-form-item
+                        :label="$t('environment.installationChannel')"
+                        :required="true"
+                        property="installChannelId"
+                    >
+                        <bk-select
+                            v-model="formData.installChannelId"
+                            @change="handleChangeData"
+                        >
+                            <bk-option v-for="option in channelList"
+                                :key="option.id"
+                                :id="option.id"
+                                :name="option.name">
+                            </bk-option>
+                        </bk-select>
+                    </bk-form-item>
+                </template>
+                <template v-else>
+                    <bk-form-item
+                        :label="$t('environment.nodeInfo.os')"
+                        :required="true"
+                        property="os"
+                    >
+                        <bk-radio-group
+                            v-model="formData.osType"
+                            @change="handleChangeData"
+                        >
+                            <bk-radio value="LINUX" class="mr20" :disabled="isLoading">Linux</bk-radio>
+                            <bk-radio value="WINDOWS" class="mr20" :disabled="isLoading">Windows</bk-radio>
+                            <bk-radio value="AIX" class="mr20" :disabled="isLoading">Aix</bk-radio>
+                            <bk-radio value="SOLARIS" :disabled="isLoading">Solaris</bk-radio>
+                        </bk-radio-group>
+                    </bk-form-item>
+                    <bk-form-item
+                        :label="$t('environment.installationChannel')"
+                        :required="true"
+                        property="installChannelId"
+                    >
+                        <bk-select
+                            v-model="formData.installChannelId"
+                            :disabled="isLoading"
+                            @change="handleChangeData"
+                        >
+                            <bk-option v-for="option in channelList"
+                                :key="option.id"
+                                :id="option.id"
+                                :name="option.name">
+                            </bk-option>
+                        </bk-select>
+                    </bk-form-item>
+                </template>
             </bk-form>
         </div>
-        <div class="sideslider-content" slot="content" v-else>
+        <div class="sideslider-content" slot="content" v-show="!isEditing && !isManualCommand">
             <div class="install-status">
                 <template v-if="['PENDING', 'RUNNING'].includes(installStatus)">
                     <Icon class="icon" name="loading" />
@@ -144,8 +208,17 @@
                 </template>
             </div>
             <div ref="editor" class="log-wrapper">
-                <div ref="executeScriptLog" v-once id="executeScriptLog" style="height: 100%;" />
+                <div ref="executeScriptLog1" v-once id="executeScriptLog1" style="height: 100%;" />
             </div>
+        </div>
+        <div class="command-sideslider-content" slot="content" v-show="!isEditing && isManualCommand">
+            <manual-install-detail
+                :install-status="installStatus"
+                :step-status="stepStatus"
+                :command-step="commandStep"
+                @retry="handleRetryInstallAgent()"
+            >
+            </manual-install-detail>
         </div>
         <div slot="footer">
             <template v-if="isEditing">
@@ -173,7 +246,8 @@
                 </bk-button>
             </template>
         </div>
-        <section v-once id="executeScriptLog" style="height: 100%;" />
+        <section v-once id="executeScriptLog1" />
+        <section v-once id="executeScriptLog2" />
     </bk-sideslider>
 </template>
 
@@ -182,19 +256,27 @@
     import 'ace-builds/src-noconflict/mode-text'
     import 'ace-builds/src-noconflict/theme-monokai'
     import 'ace-builds/src-noconflict/ext-searchbox'
+    import ManualInstallDetail from './manual-install-detail.vue'
+
     export default {
+        components: {
+            ManualInstallDetail
+        },
         props: {
-            innerIp: {
+            ip: {
                 type: String,
                 default: ''
             },
-            hostId: {
+            bkHostId: {
                 type: Number
             },
             osType: {
                 type: String
             },
             taskId: {
+                type: Number
+            },
+            cloudAreaId: {
                 type: Number
             }
         },
@@ -208,7 +290,8 @@
                     installChannelId: 'auto',
                     innerIp: '',
                     bkHostId: null,
-                    port: '36000'
+                    port: '36000',
+                    isManual: false
                 }
             }
             return {
@@ -224,7 +307,15 @@
                 jobId: 0,
                 installStatus: 'PENDING',
                 taskLog: '',
-                keyFileFormData: new FormData()
+                keyFileFormData: new FormData(),
+                commandStatus: '',
+                commandStep: {},
+                isManualCommand: false,
+                editorId: '',
+                stepStatus: '',
+                timeoutIdTask1: null,
+                timeoutIdTask2: null,
+                timeoutIdTask3: null
             }
         },
         computed: {
@@ -254,8 +345,8 @@
             isShow (val) {
                 if (val) {
                     this.fetchChannelList()
-                    this.formData.innerIp = this.innerIp
-                    this.formData.bkHostId = this.hostId
+                    this.formData.innerIp = this.ip
+                    this.formData.bkHostId = this.bkHostId
                     if (['LINUX', 'AIX', 'SOLARIS', 'WINDOWS'].includes(this.osType)) {
                         this.formData.osType = this.osType
                     }
@@ -264,6 +355,7 @@
                         this.$emit('install')
                     }
                     this.handleCancel()
+                    this.clearTimeoutTasks()
                 }
             },
             'formData.osType' (val) {
@@ -277,12 +369,12 @@
             },
             async taskId (val) {
                 if (val) {
-                    this.$nextTick(() => {
-                        this.initEditor()
-                    })
                     this.isEditing = false
                     this.jobId = val
                     await this.fetchInstallAgentStatus()
+                    if (this.isManualCommand) {
+                        await this.fetchInstallCommand()
+                    }
                     await this.fetchInstallAgentTaskLog()
                 }
             }
@@ -292,8 +384,8 @@
             this.labelWidth = this.isZH ? 100 : 130
         },
         methods: {
-            initEditor () {
-                const editor = ace.edit('executeScriptLog')
+            initEditor (id) {
+                const editor = ace.edit(id)
                 editor.setTheme('ace/theme/monokai')
                 editor.setOptions({
                     wrapBehavioursEnabled: true,
@@ -325,11 +417,28 @@
                 })
             },
 
+            clearTimeoutTasks () {
+                clearTimeout(this.timeoutIdTask1)
+                clearTimeout(this.timeoutIdTask2)
+                clearTimeout(this.timeoutIdTask3)
+                this.timeoutIdTask1 = null
+                this.timeoutIdTask2 = null
+                this.timeoutIdTask3 = null
+            },
+
             handleConFirm () {
                 this.$refs.form.validate().then(async () => {
                     try {
                         this.isLoading = true
                         const params = { ...this.formData }
+                        if (params.isManual) {
+                            params.apId = 8
+                            params.bkAddressing = 'static'
+                            params.loginIp = params.innerIp
+                            params.peerExchangeSwitchForAgent = 0
+                            params.enableCompression = false
+                            params.bkCloudId = this.cloudAreaId
+                        }
                         if (params.installChannelId === 'auto') {
                             params.isAutoChooseInstallChannelId = true
                             delete params.installChannelId
@@ -350,30 +459,69 @@
                             }
                         })
                         this.jobId = res.jobId
-                        this.isEditing = false
-                        this.$nextTick(() => {
-                            this.initEditor()
-                        })
-                        this.isLoading = false
-                        setTimeout(async () => {
+                       
+                        if (params.isManual) {
+                            this.$nextTick(() => {
+                                this.initEditor('executeScriptLog2')
+                            })
                             await this.fetchInstallAgentStatus()
+                            await this.fetchInstallCommand()
                             await this.fetchInstallAgentTaskLog()
-                        }, 1000)
+                        } else {
+                            this.isEditing = false
+                            this.isLoading = false
+                            this.$nextTick(() => {
+                                this.initEditor('executeScriptLog1')
+                            })
+                            this.timeoutIdTask1 = setTimeout(async () => {
+                                await this.fetchInstallAgentStatus()
+                                await this.fetchInstallAgentTaskLog()
+                            }, 5000)
+                        }
                         this.$emit('install')
                     } catch (e) {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: e.message || e
-                        })
+                        console.error(e)
                         this.isLoading = false
                     }
                 })
+            },
+
+            async fetchInstallCommand () {
+                if (!this.jobId) return
+                this.isLoading = true
+                try {
+                    const res = await this.$store.dispatch('environment/fetchInstallCommand', {
+                        projectId: this.projectId,
+                        jobId: this.jobId,
+                        hostId: this.bkHostId
+                    })
+                    this.commandStatus = res.status
+                    this.commandStep = res || {}
+                    if (res.code === 3800015 || ['PENDING'].includes(this.commandStatus)) {
+                        this.timeoutIdTask2 = setTimeout(async () => {
+                            this.fetchInstallCommand()
+                        }, 5000)
+                    } else {
+                        this.isEditing = false
+                        this.isManualCommand = true
+                        this.isLoading = false
+                    }
+                } catch (e) {
+                    if (e.status === 3800015) {
+                        this.timeoutIdTask2 = setTimeout(async () => {
+                            this.fetchInstallCommand()
+                        }, 5000)
+                    }
+                    this.isLoading = false
+                }
             },
 
             handleCancel () {
                 this.isShow = false
                 this.isLoading = false
                 this.isEditing = true
+                this.isManualCommand = false
+                this.commandStatus = ''
                 this.installStatus = 'PENDING'
                 this.jobId = 0
                 this.keyFile = null
@@ -410,10 +558,14 @@
                     }
                 })
                 this.installStatus = res.status
-                this.instanceId = res.list.find(i => i.innerIp === this.innerIp).instanceId
-
+                this.isManualCommand = res?.list[0]?.isManual
+                this.instanceId = res.list.find(i => i.innerIp === this.ip)?.instanceId
+                this.$nextTick(() => {
+                    this.initEditor(this.editorId)
+                })
+                this.editorId = this.isManualCommand ? 'executeScriptLog2' : 'executeScriptLog1'
                 if (['PENDING', 'RUNNING'].includes(this.installStatus)) {
-                    setTimeout(async () => {
+                    this.timeoutIdTask3 = setTimeout(async () => {
                         await this.fetchInstallAgentStatus()
                         await this.fetchInstallAgentTaskLog()
                     }, 5000)
@@ -423,13 +575,14 @@
             },
 
             async fetchInstallAgentTaskLog () {
-                if (!this.jobId) return
+                if (!this.jobId || !this.instanceId) return
                 const res = await this.$store.dispatch('environment/getAgentTaskLog', {
                     projectId: this.projectId,
                     jobId: this.jobId,
                     instanceId: this.instanceId
                 })
                 const logList = []
+                this.stepStatus = res.queryAgentTaskLogResult.find(i => ['Install', '安装'].includes(i.step)).status
                 res.queryAgentTaskLogResult.forEach(i => {
                     if (i.log) logList.push(i.log)
                 })
@@ -439,10 +592,17 @@
             },
 
             async handleRetryInstallAgent () {
-                this.installStatus = 'PENDING'
-                this.taskLog = ''
-                this.editor.getSession().setValue('')
-                this.handleConFirm()
+                if (!this.isManualCommand) {
+                    this.installStatus = 'PENDING'
+                    this.taskLog = ''
+                    this.editor.getSession().setValue('')
+                    this.handleConFirm()
+                } else {
+                    this.taskLog = ''
+                    this.editor.getSession().setValue('')
+                    this.isEditing = true
+                    this.isManualCommand = false
+                }
             },
 
             handleUpload (option) {
@@ -490,7 +650,8 @@
         display: flex;
         align-items: center;
     }
-    .sideslider-content {
+    .sideslider-content,
+    .command-sideslider-content {
         height: 100%;
     }
     .node-title {
@@ -502,37 +663,14 @@
         font-size: 12px;
         color: #c7c9d0;
     }
-    .install-status {
-        display: flex;
-        align-items: center;
-        height: 80px;
-        padding: 0 20px;
-        background-color: #eef8ff;
-        border: 1px solid #c5deff;
-        .icon {
-            margin-right: 20px;
-        }
+    .methods-btn {
+        width: 200px;
     }
     
 }
 </style>
 
 <style lang="scss">
-.import-status-icon {
-    width: 38px;
-    height: 38px;
-    line-height: 38px;
-    font-size: 36px;
-    border-radius: 50%;
-    &.success {
-        background-color: #e5f6ea;
-        color: #3fc06d;
-    }
-    &.error {
-        background-color: #fdd;
-        color: #ea3636;
-    }
-}
 .log-wrapper {
     width: 100%;
     height: calc(100% - 90px);
@@ -582,12 +720,39 @@
         }
 
         .ace_scrollbar-h {
+            display: none !important;
             margin-bottom: -20px;
 
             &::-webkit-scrollbar {
                 height: 14px;
             }
         }
+    }
+}
+.install-status {
+    display: flex;
+    align-items: center;
+    height: 80px;
+    padding: 0 20px;
+    background-color: #eef8ff;
+    border: 1px solid #c5deff;
+    .icon {
+        margin-right: 20px;
+    }
+}
+.import-status-icon {
+    width: 38px;
+    height: 38px;
+    line-height: 38px;
+    font-size: 36px;
+    border-radius: 50%;
+    &.success {
+        background-color: #e5f6ea;
+        color: #3fc06d;
+    }
+    &.error {
+        background-color: #fdd;
+        color: #ea3636;
     }
 }
 .upload-file-btn {

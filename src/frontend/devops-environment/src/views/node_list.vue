@@ -142,7 +142,7 @@
                                 <!-- 责任人已变更 -->
                                 <template
                                     v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
-                                        || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))"
+                                        || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator?.split(';').indexOf(props.row.createdUser) === -1))"
                                 >
                                     <span class="prompt-operator">
                                         <i class="devops-icon icon-exclamation-circle"></i>
@@ -222,7 +222,7 @@
                                         >
                                             <bk-button
                                                 v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
-                                                    || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))"
+                                                    || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator?.split(';').indexOf(props.row.createdUser) === -1))"
                                                 class="mr5"
                                                 :disabled="!(userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator)"
                                                 text
@@ -421,10 +421,8 @@
         <!-- 重装/安装Agent -->
         <installAgent
             ref="installAgent"
+            v-bind="curNode"
             :task-id.sync="taskId"
-            :inner-ip="installAgentIp"
-            :host-id="installHostId"
-            :os-type="installOsType"
             @install="handleInstallEnd"
         />
     </div>
@@ -569,6 +567,7 @@
                 requestParams: {},
                 buildNodes: ['DEVCLOUD', 'THIRDPARTY'], // Build 构建用途的节点 - 第三方构建机类型
                 deploymentNodes: ['CC', 'CMDB', 'UNKNOWN', 'OTHER'], // deployment 部署用途的节点
+                curNode: {},
                 installAgentIp: '',
                 installHostId: 0,
                 installOsType: '',
@@ -771,7 +770,6 @@
                     })
                     this.nodeList.splice(0, this.nodeList.length)
                     this.pagination.count = res.count
-
                     res.records.forEach(item => {
                         item.isEnableEdit = item.nodeHashId === this.curEditNodeItem
                         this.nodeList.push(item)
@@ -1094,17 +1092,13 @@
                     this.constructToolConf.importText = this.$t('environment.confirm')
                     this.switchConstruct(node)
                 } else if (this.deploymentNodes.includes(node.nodeType)) {
-                    this.installAgentIp = node.ip
-                    this.installHostId = node.bkHostId
-                    this.installOsType = node.osType
+                    this.curNode = node
                     this.$refs.installAgent.isShow = true
                 }
             },
 
             handleShowLogDetail (node) {
-                this.installAgentIp = node.ip
-                this.installHostId = node.bkHostId
-                this.installOsType = node.osType
+                this.curNode = node
                 this.taskId = node.taskId
                 this.$refs.installAgent.isShow = true
             },

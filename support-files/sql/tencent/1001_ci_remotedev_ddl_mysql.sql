@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
     `BUSINESS_LINE_NAME` varchar(255) NOT NULL DEFAULT '' COMMENT '业务线名称',
     `REMARK` varchar(255) NULL DEFAULT '' COMMENT '备注',
     `LABELS` varchar(1024) NULL DEFAULT NULL COMMENT '标签',
+	`BAK_NAME` varchar(128) NULL DEFAULT NULL COMMENT '备份的workspace name',
     PRIMARY KEY (`ID`),
     UNIQUE INDEX `NAME`(`NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -61,6 +62,8 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
     `MAC_ADDRESS` varchar(64) NOT NULL DEFAULT '' COMMENT 'mac地址',
     `IMAGE_ID` varchar(32) default '' not null comment '镜像唯一标识',
     `ZONE_ID` varchar(32) default '' null comment '地域id',
+    `CUR_LAUNCH_ID` int(11) NULL COMMENT '根据项目区分的计费id',
+    `REGION_ID` int(11) NULL COMMENT '云区域ID',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`WORKSPACE_NAME`),
     KEY `ipKey`(`HOST_IP`),
@@ -304,6 +307,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_IMAGES` (
     `STATUS` int(11) default 0 not null comment '镜像状态,0-building,1-success,2-failure',
     `CREATOR` varchar(32) default '' not null comment '创建人',
     `CREATE_TIME` timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
+    `ERROR_MSG` varchar(1024) NULL COMMENT '制作镜像失败时的失败信息',
     PRIMARY KEY (`ID`) USING BTREE,
     UNIQUE KEY `uni_1` (`PROJECT_ID`,`IMAGE_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '控制台项目镜像模板信息';

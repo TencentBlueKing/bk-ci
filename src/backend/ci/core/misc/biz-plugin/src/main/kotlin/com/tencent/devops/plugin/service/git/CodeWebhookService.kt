@@ -280,8 +280,10 @@ class CodeWebhookService @Autowired constructor(
                 return
             }
 
-            if (variables[PIPELINE_START_CHANNEL] != ChannelCode.BS.name) {
-                logger.warn("Process instance($buildId) is not bs channel")
+            if (variables[PIPELINE_START_CHANNEL] != ChannelCode.BS.name &&
+                variables[PIPELINE_START_CHANNEL] != ChannelCode.GONGFENGSCAN.name
+            ) {
+                logger.warn("Process instance($buildId) is not bs or gongfengscan channel")
                 return
             }
 

@@ -60,6 +60,7 @@ import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.process.pojo.setting.JobCommonSetting
 import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.setting.StageCommonSetting
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.pojo.setting.TaskCommonSetting
@@ -87,7 +88,8 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val taskCommonSettingConfig: TaskCommonSettingConfig,
     private val auditService: AuditService,
     private val modelCheckPlugin: ModelCheckPlugin,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineTemplatePermissionService: PipelineTemplatePermissionService
 ) {
 
     private val logger = LoggerFactory.getLogger(PipelineSettingFacadeService::class.java)
@@ -178,11 +180,20 @@ class PipelineSettingFacadeService @Autowired constructor(
             )
 
             if (checkPermission) {
-                pipelinePermissionService.modifyResource(
-                    projectId = setting.projectId,
-                    pipelineId = setting.pipelineId,
-                    pipelineName = setting.pipelineName
-                )
+                if (isTemplate) {
+                    pipelineTemplatePermissionService.modifyResource(
+                        userId = userId,
+                        projectId = projectId,
+                        templateId = setting.pipelineId,
+                        templateName = setting.pipelineName
+                    )
+                } else {
+                    pipelinePermissionService.modifyResource(
+                        projectId = setting.projectId,
+                        pipelineId = setting.pipelineId,
+                        pipelineName = setting.pipelineName
+                    )
+                }
             }
         }
 

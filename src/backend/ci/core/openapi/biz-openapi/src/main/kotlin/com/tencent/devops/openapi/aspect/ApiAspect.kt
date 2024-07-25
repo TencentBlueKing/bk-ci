@@ -37,6 +37,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.openapi.IgnoreProjectId
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.PARAM_VERIFY_FAIL
 import com.tencent.devops.openapi.es.ESMessage
 import com.tencent.devops.openapi.es.IESService
@@ -183,7 +184,11 @@ class ApiAspect(
 
             if (appCode != null && apigwType == "apigw-app" && !appCodeService.validAppCode(appCode, projectId)) {
                 throw PermissionForbiddenException(
-                    message = "Permission denied: apigwType[$apigwType],appCode[$appCode],ProjectId[$projectId]"
+                    message = "Permission denied: apigwType[$apigwType]," +
+                        "appCode[$appCode],ProjectId[$projectId] " + I18nUtil.getCodeLanMessage(
+                        messageCode = OpenAPIMessageCode.APP_CODE_PERMISSION_DENIED_MESSAGE,
+                        language = I18nUtil.getLanguage(userId)
+                    )
                 )
             }
         }

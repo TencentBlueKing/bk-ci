@@ -8,7 +8,9 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -47,6 +49,19 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             userId = userId,
             isOffshore = isOffshore,
             ticket = ticket
+        )
+    }
+
+    override fun desktopTokenCheck(
+        appCode: String?,
+        apigwType: String?,
+        token: String,
+        dToken: String
+    ): Result<UserOnePassword> {
+        logger.info("Get  projects info by group ,userId:$dToken")
+        return client.get(ServiceRemoteDevResource::class).desktopTokenCheck(
+            token = token,
+            dToken = dToken
         )
     }
 
@@ -116,6 +131,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
+    @Suppress("ComplexCondition")
     override fun notifyWorkspaceInfo(
         appCode: String?,
         apigwType: String?,
@@ -123,7 +139,10 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         notifyData: WorkspaceNotifyData
     ): Result<Boolean> {
         logger.info("notify workspace|notifyData|$notifyData")
-        if (notifyData.projectId.isNullOrEmpty() && notifyData.ip.isNullOrEmpty() && notifyData.owner.isNullOrEmpty()) {
+        if ((notifyData.projectId.isNullOrEmpty() || notifyData.projectId?.all { it.isBlank() } == true) &&
+            (notifyData.ip.isNullOrEmpty() || notifyData.ip?.all { it.isBlank() } == true) &&
+            (notifyData.owner.isNullOrEmpty() || notifyData.owner?.all { it.isBlank() } == true)
+        ) {
             return Result(false)
         }
         return client.get(ServiceRemoteDevResource::class).notifyWorkspaceInfo(
@@ -361,5 +380,10 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             projectId = projectId,
             imageId = imageId
         )
+    }
+
+    override fun operateCvmCallback(appCode: String?, apigwType: String?, data: OperateCvmData): Result<Boolean> {
+        logger.info("operateCvmCallback $data")
+        return client.get(ServiceRemoteDevResource::class).opCvm(data)
     }
 }
