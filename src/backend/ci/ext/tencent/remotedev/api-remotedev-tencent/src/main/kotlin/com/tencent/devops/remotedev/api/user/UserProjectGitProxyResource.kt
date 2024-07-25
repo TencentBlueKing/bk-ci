@@ -6,6 +6,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
 import com.tencent.devops.remotedev.pojo.gitproxy.LinktgitData
+import com.tencent.devops.remotedev.pojo.gitproxy.ReBindingLinkData
+import com.tencent.devops.remotedev.pojo.gitproxy.ReBindingLinkResp
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import io.swagger.v3.oas.annotations.Operation
@@ -98,4 +100,15 @@ interface UserProjectGitProxyResource {
         @Parameter(description = "创建项目信息", required = true)
         data: CreateTGitProjectInfo
     ): Result<Boolean>
+
+    @Operation(summary = "重新绑定工蜂关联")
+    @POST
+    @Path("/tgit/reBinding")
+    fun reBindingTgitLink(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "绑定信息", required = true)
+        data: ReBindingLinkData
+    ):Result<List<ReBindingLinkResp>>
 }

@@ -7,6 +7,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectGitProxyResource
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
 import com.tencent.devops.remotedev.pojo.gitproxy.LinktgitData
+import com.tencent.devops.remotedev.pojo.gitproxy.ReBindingLinkData
+import com.tencent.devops.remotedev.pojo.gitproxy.ReBindingLinkResp
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
@@ -48,5 +50,9 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
     @AuditEntry(actionId = ActionId.TGIT_LINK_CREATE)
     override fun createProject(userId: String, data: CreateTGitProjectInfo): Result<Boolean> {
         return Result(gitProxyTGitService.createProjectAndLinkTGit(userId, data))
+    }
+
+    override fun reBindingTgitLink(userId: String, data: ReBindingLinkData): Result<List<ReBindingLinkResp>> {
+        return Result(gitProxyTGitService.reBinding(data))
     }
 }

@@ -28,6 +28,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclIp
 import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclUser
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
+import com.tencent.devops.remotedev.pojo.gitproxy.ReBindingLinkData
+import com.tencent.devops.remotedev.pojo.gitproxy.ReBindingLinkResp
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
@@ -734,6 +736,10 @@ class GitProxyTGitService @Autowired constructor(
         )
 
         return ok
+    }
+
+    fun reBinding(data: ReBindingLinkData): List<ReBindingLinkResp> {
+
     }
 
     private val publicIpsCache: LoadingCache<String, String> = Caffeine.newBuilder()
