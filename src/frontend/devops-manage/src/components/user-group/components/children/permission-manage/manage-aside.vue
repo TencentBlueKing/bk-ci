@@ -93,6 +93,7 @@
           ref="formRef"
           :rules="rules"
           :model="handOverForm"
+          form-type="vertical"
         >
           <bk-form-item
             required
@@ -100,14 +101,11 @@
             property="name"
             labelWidth=""
           >
-            <bk-input
-              v-model="handOverForm.name"
-              :placeholder="t('请输入')"
-              clearable
-              @clear="handOverInputClear"
-              @blur="handOverInput"
-              @enter="handOverInput"
-            />
+            <project-user-selector
+              @change="handleChangeOverFormName"
+              @removeAll="handOverInputClear"
+            >
+            </project-user-selector>
           </bk-form-item>
         </bk-form>
 
@@ -146,7 +144,7 @@
       </div>
     </template>
     <template #footer>
-      <bk-button theme="primary" @click="handConfirm('user')" :loading="loading" :disabled="!isAuthorizedSuccess"> {{t("移交并移出")}} </bk-button>
+      <bk-button theme="primary" @click="handConfirm('user')" :loading="manageAsideStore.btnLoading" :disabled="!isAuthorizedSuccess"> {{t("移交并移出")}} </bk-button>
       <bk-button class="btn-margin" @click="handOverClose"> {{t("关闭")}} </bk-button>
     </template>
   </bk-dialog>
@@ -192,20 +190,21 @@
         </p>
     </template>
     <template #footer>
-      <bk-button theme="danger" @click="handConfirm('department')" :loading="loading"> {{t("确认移出")}} </bk-button>
+      <bk-button theme="danger" @click="handConfirm('department')" :loading="manageAsideStore.btnLoading"> {{t("确认移出")}} </bk-button>
       <bk-button class="btn-margin" @click="handOverClose"> {{t("关闭")}} </bk-button>
     </template>
   </bk-dialog>
 </template>
 
 <script setup name="ManageAside">
-import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
-import { ref, defineProps, defineEmits, computed, watch, defineExpose } from 'vue';
-import useManageAside from "@/store/manageAside";
-import { storeToRefs } from 'pinia';
-import { Success, Spinner } from 'bkui-vue/lib/icon';
 import http from '@/http/api';
+import { useI18n } from 'vue-i18n';
+import { storeToRefs } from 'pinia';
+import { useRoute } from 'vue-router';
+import useManageAside from "@/store/manageAside";
+import { Success, Spinner } from 'bkui-vue/lib/icon';
+import ProjectUserSelector from '@/components/project-user-selector'
+import { ref, defineProps, defineEmits, computed, watch, defineExpose } from 'vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -213,17 +212,18 @@ const manageAsideStore = useManageAside();
 const current = ref(1);
 const isShowHandOverDialog = ref(false);
 const formRef = ref(null);
-const loading = ref(false);
 const isHandOverfail = ref(false);
 const isShowPersonDialog = ref(false);
 const isShowRemoveDialog = ref(false);
 const isAuthorizedSuccess = ref(false);
 const handOverForm = ref({
-  name: ''
+  id: '',
+  name: '',
+  type: '',
 });
 const rules = {
   name: [
-    { required: true, message: t('请输入移交人'), trigger: 'blur' },
+    { required: true, message: t('请输入移交人'), trigger: 'change' },
   ],
 };
 const {
@@ -234,6 +234,7 @@ const projectId = computed(() => route.params?.projectCode);
 const removeUser = ref(null);
 const isChecking = ref(false);
 const overTable = ref([]);
+const userListData = ref([]);
 
 const props = defineProps({
   memberList: {
@@ -248,10 +249,6 @@ const props = defineProps({
   activeTab: String,
 });
 const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm', 'refresh']);
-
-watch(()=> handOverForm.value.name,() => {
-  handOverInputClear();
-})
 
 defineExpose({
   handOverfail,
@@ -280,6 +277,8 @@ function handleRemoval(item) {
   if(item.type === "department") {
     isShowRemoveDialog.value = true;
   } else {
+    handOverForm.value && (handOverForm.value.name = '');
+    formRef.value?.clearValidate();
     isShowHandOverDialog.value = true;
   }
   removeUser.value = item;
@@ -288,27 +287,21 @@ function handleRemoval(item) {
  *  移出项目弹窗关闭
  */
 function handOverClose() {
-  if(formRef.value) {
-    handOverForm.value.name = '';
-    formRef.value.clearValidate()
-  }
   isShowHandOverDialog.value = false;
   isShowRemoveDialog.value = false
-  isHandOverfail.value = false;
+  handOverInputClear();
 }
 /**
  *  移出项目弹窗提交
  */
-function handConfirm(flag){
-  loading.value = true;
+async function handConfirm(flag){
   if(flag === 'user'){
-    const isValidate = formRef.value?.validate();
+    const isValidate = await formRef.value?.validate();
     if(!isValidate) return;
     emit('removeConfirm', removeUser.value, handOverForm.value);
   } else {
     emit('removeConfirm', removeUser.value);
   }
-  loading.value = false;
   handOverClose();
 }
 
@@ -316,21 +309,28 @@ function handOverfail(flag) {
   isHandOverfail.value = flag;
 }
 function handOverInputClear(){
+  isChecking.value = false;
   isAuthorizedSuccess.value = false;
   isHandOverfail.value = false;
 }
-async function handOverInput(){
-  const isValidate = formRef.value?.validate();
-  if(!handOverForm.value.name || !isValidate) {
+async function handleChangeOverFormName ({list, userList}){
+  const val = list.join(',')
+  userListData.value = userList;
+  handOverForm.value = userList.find(i => i.id === val);
+
+  if(!handOverForm.value){
     handOverInputClear();
     return;
-  };
+  }
+
   isChecking.value = true;
   isAuthorizedSuccess.value = false;
+  isHandOverfail.value = false;
+
   const params = {
     projectCode: projectId.value,
     handoverFrom: removeUser.value.id,
-    handoverTo: handOverForm.value.name,
+    handoverTo: handOverForm.value.id,
     preCheck: true
   }
 
@@ -347,7 +347,6 @@ async function handOverInput(){
     }
   } catch (error) {
     handOverInputClear();
-    console.log(error);
   }
 }
 function refresh(){
@@ -357,7 +356,11 @@ function refresh(){
  * 移出失败刷新数据
  */
 function refreshHandOverfail() {
-  handOverInput();
+  const param = {
+    list: [handOverForm.value.name],
+    userList: userListData.value,
+  }
+  handleChangeOverFormName(param);
 }
 function goAauthorization(resourceType) {
   window.open(`${location.origin}/console/manage/${projectId.value}/permission?resourceType=${resourceType}`, '_blank')
@@ -399,6 +402,10 @@ function handleShowPerson(item) {
     font-weight: 400;
     color: #3A84FF;
     cursor: pointer;
+
+    .manage-icon {
+      margin-right: 6px;
+    }
   }
 }
 .group-wrapper {

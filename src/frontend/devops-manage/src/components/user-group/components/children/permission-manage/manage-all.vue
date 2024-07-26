@@ -45,14 +45,14 @@
             :aside-item="asideItem"
             :source-list="sourceList"
             :selected-data="selectedData"
+            :handle-renewal="handleRenewal"
+            :handle-hand-over="handOverDialog"
+            :handle-remove="handleRemove"
+            :get-select-list="getSelectList"
+            :handle-select-all-data="handleSelectAll"
+            :handle-load-more="handleLoadMore"
+            :handle-cancleClear="handleClear"
             @collapse-click="collapseClick"
-            @handle-renewal="handleRenewal"
-            @handle-hand-over="handleHandOver"
-            @handle-remove="handleRemove"
-            @get-select-list="getSelectList"
-            @handle-select-all-data="handleSelectAll"
-            @handle-load-more="handleLoadMore"
-            @handle-cancleClear="handleClear"
           />
         </div>
         <div v-else class="no-permission">
@@ -201,8 +201,8 @@
             :is-show-operation="false"
             :aside-item="asideItem"
             :batch-flag="batchFlag"
-            @page-limit-change="pageLimitChange"
-            @page-value-change="pageValueChange"
+            :page-limit-change="pageLimitChange"
+            :page-value-change="pageValueChange"
           />
         </div>
       </div>
@@ -280,7 +280,7 @@ import { unableText, batchOperateTypes, btnTexts, batchTitle, batchMassageText }
 const batchBtnLoading = ref(false);
 const { t } = useI18n();
 const route = useRoute();
-const formRef = ref('');
+const formRef = ref(null);
 const renewalRef = ref(null);
 const projectId = computed(() => route.params?.projectCode);
 const expiredAt = ref(30);
@@ -288,7 +288,9 @@ const isShowSlider = ref(false);
 const sliderTitle = ref();
 const batchFlag = ref();
 const handOverForm = ref({
+  id: '',
   name: '',
+  type: '',
 });
 const rules = {
   name: [
@@ -301,7 +303,6 @@ const totalCount = ref();
 const renewalLoading = ref(false);
 const handoverLoading = ref(false);
 const removerLoading = ref(false);
-const handoverToMap = ref({});
 const loadingMap = {
   renewal: renewalLoading,
   handover: handoverLoading,
@@ -330,10 +331,13 @@ const groupTableStore = userGroupTable();
 const manageAsideStore = useManageAside();
 const operatorLoading = ref(false);
 const userName = computed(() => {
-  if (asideItem.value.type === 'user') {
-    return `${asideItem.value.id}(${asideItem.value.name})`;
+  if(asideItem.value){
+    if (asideItem.value.type === 'user') {
+      return `${asideItem.value.id}(${asideItem.value.name})`;
+    }
+    return asideItem.value.name;
   }
-  return asideItem.value.name;
+  return ''
 })
 
 const {
@@ -398,6 +402,13 @@ async function refresh(){
   searchValue.value = [];
 }
 /**
+ * 移交弹窗打开时
+ */
+function handOverDialog(row, resourceType, index){
+  formRef.value?.clearValidate();
+  handleHandOver(row, resourceType, index);
+}
+/**
  * 续期弹窗提交事件
  */
 async function handleRenewalConfirm() {
@@ -423,6 +434,7 @@ async function handleHandoverConfirm() {
   if(!isValidate) return;
   operatorLoading.value = true;
   const param = formatSelectParams(selectedRow.value.groupId);
+  delete handOverForm.value.displayName;
   await http.batchHandover(projectId.value, param);
   handleRemoveRow();
   operatorLoading.value = false;
@@ -435,7 +447,6 @@ async function handleHandoverConfirm() {
  */
  function handleHandoverClosed() {
   cancleClear('handover');
-  formRef.value?.clearValidate();
   isShowHandover.value = false;
 }
 /**
@@ -517,8 +528,7 @@ function formatSelectParams(rowGroupId){
     resourceTypes: resourceTypes || [],
     targetMember: asideItem.value,
     ...(expiredAt.value && {renewalDuration: expiredAt.value}),
-    // ...(handOverForm.value.name && {handoverTo: handOverForm.value}),
-    ...(handOverForm.value.name && {handoverTo: handoverToMap.value}),
+    ...(handOverForm.value.name && {handoverTo: handOverForm.value}),
   }
   return params;
 }
@@ -530,7 +540,7 @@ function cancleClear(batchFlag) {
   isShowSlider.value = false;
 
   if (batchFlag === 'handover') {
-    handOverForm.value.name = '';
+    handOverForm.value && (handOverForm.value.name = '');
     formRef.value?.clearValidate()
   } else if (batchFlag === 'renewal') {
     renewalRef.value.initTime();
@@ -598,11 +608,14 @@ async function getMenuList (item, keyword) {
     }
   })
 }
-
-function handleChangeOverFormName ({ list, userList}) {
+function handleChangeOverFormName ({list, userList}) {
   const val = list.join(',')
   handOverForm.value.name = val
   handoverToMap.value = userList.find(i => i.id === val)
+}
+
+function handleClearOverFormName () {
+  handOverForm.value.name = ''
 }
 </script>
 

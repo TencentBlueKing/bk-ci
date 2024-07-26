@@ -131,18 +131,6 @@ const getServiceIcon = (type) => {
   return iconMap[type]
 }
 
-const {
-  handleRenewal,
-  handleHandOver,
-  handleRemove,
-  getSelectList,
-  handleLoadMore,
-  handleSelectAllData,
-  handleClear,
-  pageLimitChange,
-  pageValueChange,
-} = groupTableStore;
-
 const props = defineProps({
   isShowOperation: {
     type: Boolean,
@@ -161,6 +149,42 @@ const props = defineProps({
     default: () => ({})
   },
   batchFlag: String,
+  handleRenewal: {
+    type: Function,
+    default: () => {},
+  },
+  handleHandOver: {
+    type: Function,
+    default: () => {},
+  },
+  handleRemove: {
+    type: Function,
+    default: () => {},
+  },
+  getSelectList: {
+    type: Function,
+    default: () => {},
+  },
+  handleLoadMore: {
+    type: Function,
+    default: () => {},
+  },
+  handleSelectAllData: {
+    type: Function,
+    default: () => {},
+  },
+  handleClear: {
+    type: Function,
+    default: () => {},
+  },
+  pageLimitChange: {
+    type: Function,
+    default: () => {},
+  },
+  pageValueChange: {
+    type: Function,
+    default: () => {},
+  },
 });
 const emit = defineEmits(['collapseClick']);
 
