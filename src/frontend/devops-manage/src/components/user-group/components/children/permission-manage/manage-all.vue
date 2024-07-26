@@ -45,6 +45,7 @@
             :aside-item="asideItem"
             :source-list="sourceList"
             :selected-data="selectedData"
+            :active-flag="activeFlag"
             :handle-renewal="handleRenewal"
             :handle-hand-over="handOverDialog"
             :handle-remove="handleRemove"
@@ -201,6 +202,7 @@
             :is-show-operation="false"
             :aside-item="asideItem"
             :batch-flag="batchFlag"
+            :active-flag="activeFlag"
             :page-limit-change="pageLimitChange"
             :page-value-change="pageValueChange"
           />
@@ -350,6 +352,7 @@ const {
   selectSourceList,
   selectedRow,
   isPermission,
+  activeFlag,
 } = storeToRefs(groupTableStore);
 const {
   handleRenewal,
@@ -476,6 +479,7 @@ function handleSelectAll(resourceType, asideItem){
  * @param flag 按钮标识
  */
 async function batchOperator(flag){
+  activeFlag.value=true;
   getSourceList();
   if (!selectedLength.value) {
     Message({

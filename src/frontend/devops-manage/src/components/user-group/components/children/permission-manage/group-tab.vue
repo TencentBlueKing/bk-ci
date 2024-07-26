@@ -3,7 +3,7 @@
     <div class="manage-content-project" v-if="projectTable">
       <p class="project-group">{{t("项目级用户组")}}</p>
       <div class="project-group-table">
-        <bk-collapse-panel v-model="activeFlag">
+        <bk-collapse-panel v-model="activeFlag" :item-click="() => groupTableStore.activeFlag = !groupTableStore.activeFlag">
           <template #header>
             <p class="group-title">
               <i :class="{
@@ -91,15 +91,15 @@
 
 <script setup name="GroupTab">
 import { useI18n } from 'vue-i18n';
-import { ref, defineProps, defineEmits, computed, watch } from 'vue';
+import { defineProps, defineEmits, computed } from 'vue';
 import userGroupTable from '@/store/userGroupTable';
 import TabTable from './tab-table.vue';
 
 const { t } = useI18n();
-const activeFlag =  ref(true);
 const groupTableStore = userGroupTable();
 const projectTable = computed(() => props.sourceList.find(item => item.resourceType == 'project'));
 const sourceTable= computed(() => props.sourceList.filter(item => item.resourceType != 'project'));
+const activeFlag= computed(() => props.activeFlag);
 
 const pipelineIcon = computed(() => require('../../../svg/color-logo-pipeline.svg'));
 const codelibIcon = computed(() => require('../../../svg/color-logo-codelib.svg'));
@@ -148,6 +148,7 @@ const props = defineProps({
     type: Object,
     default: () => ({})
   },
+  activeFlag: Boolean,
   batchFlag: String,
   handleRenewal: {
     type: Function,
