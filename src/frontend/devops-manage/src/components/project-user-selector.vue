@@ -4,7 +4,7 @@
     clearable
     :placeholder="t('输入授权人，选中回车进行校验')"
     :search-key="['id', 'name']"
-    save-key="name"
+    save-key="id"
     display-key="displayName"
     allow-create
     :list="userList"
@@ -15,7 +15,7 @@
 </template>
 
 <script setup name="ProjectUserSelector">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import http from '@/http/api';
@@ -61,4 +61,12 @@ function handleChange (list) {
 function removeAll (val) {
     emits('removeAll', val)
 }
+
+onMounted(() => {
+  fetchProjectMembers(projectId.value, {
+    memberType: 'user',
+    page: 1,
+    pageSize: 200
+  })
+})
 </script>

@@ -139,8 +139,7 @@
             <project-user-selector
               class="selector-input"
               @change="handleChangeOverFormName"
-              @removeAll="handleCleaOverFormName"
-              :key="isShowSlider"
+              @removeAll="handleClearOverFormName"
             >
             </project-user-selector>
           </bk-form-item>
@@ -234,7 +233,7 @@
                   <project-user-selector
                     class="selector-input"
                     @change="handleChangeOverFormName"
-                    @removeAll="handleCleaOverFormName"
+                    @removeAll="handleClearOverFormName"
                     :key="isShowSlider"
                   >
                   </project-user-selector>
@@ -602,9 +601,8 @@ async function getMenuList (item, keyword) {
 
 function handleChangeOverFormName ({ list, userList}) {
   const val = list.join(',')
-  console.log(val, 'val')
   handOverForm.value.name = val
-  handoverToMap.value = userList.find(i => i.name === val)
+  handoverToMap.value = userList.find(i => i.id === val)
 }
 </script>
 
