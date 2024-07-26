@@ -6,7 +6,6 @@
     :search-key="['id', 'name']"
     save-key="name"
     display-key="displayName"
-    allow-create
     :list="userList"
     @input="handleInputUserName"
     @change="handleChange"

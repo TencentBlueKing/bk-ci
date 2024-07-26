@@ -36,6 +36,7 @@ export default defineStore('manageAside', () => {
   const userName = ref('');
   const memberPagination = ref<Pagination>({ limit: 20, current: 1, count: 0 });
   const activeTab = ref();
+  const btnLoading = ref(false);
 
   /**
    * 人员组织侧边栏点击事件
@@ -70,23 +71,20 @@ export default defineStore('manageAside', () => {
   async function handleAsideRemoveConfirm(removeUser, handOverMember, projectId: string) {
     const params = {
       targetMember: removeUser,
-      // ...(handOverMember && {handoverTo: handOverMember})
-      ...(handOverMember && {handoverTo: {
-        id: 'v_yjjiaoyu',
-        name: '余姣姣',
-        type: 'user'
-      }})
+      ...(handOverMember && {handoverTo: handOverMember})
     }
     try {
+      btnLoading.value = true;
       await http.removeMemberFromProject(projectId, params);
       asideItem.value = undefined;
       Message({
         theme: 'success',
         message: `${removeUser!.name} 已成功移出本项目。`,
       });
+      btnLoading.value = false;
       getProjectMembers(projectId);
     } catch (error) {
-      console.log(error);
+
     }
   }
   /**
@@ -132,6 +130,7 @@ export default defineStore('manageAside', () => {
     userName,
     memberPagination,
     activeTab,
+    btnLoading,
     handleAsideClick,
     handleAsidePageChange,
     handleShowPerson,

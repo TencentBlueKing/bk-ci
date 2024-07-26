@@ -275,9 +275,6 @@ export default {
       })
       this.activeTab = group.groupId;
       this.curGroupIndex = this.groupList.findIndex(item => item.groupId === group.groupId);
-      console.log("🚀 ~ handleChooseGroup ~ this.activeTab :", this.activeTab )
-      console.log("🚀 ~ handleChooseGroup ~ this.curGroupIndex:", this.curGroupIndex)
-      
       this.$emit('choose-group', group);
     },
     handleCreateGroup() {
