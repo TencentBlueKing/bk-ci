@@ -93,15 +93,24 @@
             property="name"
             labelWidth=""
           >
-            <bk-input
-              v-model="resetFormData.name"
-              :placeholder="t('输入授权人，输入框失焦进行校验')"
+            <project-user-selector
+              @change="handleChangeName"
+              @removeAll="handleClearName"
+              :key="showResetDialog"
+            >
+            </project-user-selector>
+            <!-- <bk-tag-input
+              class="manage-user-selector"
               clearable
-              :disabled="dialogLoading"
-              @change="(val) => handleClearName(val)"
-              @blur="handleCheckReset()"
-              @enter="handleCheckReset()"
-            />
+              :placeholder="t('输入授权人，选中回车进行校验')"
+              :search-key="['id', 'name']"
+              save-key="name"
+              allow-create
+              :list="userList"
+              @input="handleInputUserName"
+              @change="handleChangeName"
+              @removeAll="handleClearName">
+            </bk-tag-input> -->
           </bk-form-item>
         </bk-form>
 
@@ -163,10 +172,10 @@ import { useRoute, useRouter } from 'vue-router';
 import { convertTime } from '@/utils/util'
 import { Message } from 'bkui-vue';
 import { Success, Spinner } from 'bkui-vue/lib/icon';
+import ProjectUserSelector from '@/components/project-user-selector'
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
-
 const tableData = ref([]);
 const resetTableData = ref([]);
 const activeIndex = ref(0);
@@ -442,15 +451,13 @@ function dialogClose() {
   formRef.value?.clearValidate();
 }
 
-function handleClearName (val) {
+function handleClearName () {
   canLoading.value = true;
-  if (!val) {
-    isResetFailure.value = false;
-    isResetSuccess.value = false;
-    disabledResetBtn.value = true;
-    resetTableData.value = [];
-    failedCount.value = 0;
-  }
+  isResetFailure.value = false;
+  isResetSuccess.value = false;
+  disabledResetBtn.value = true;
+  resetTableData.value = [];
+  failedCount.value = 0;
 }
 
 async function handleCheckReset () {
@@ -548,21 +555,28 @@ async function getMenuList (item, keyword) {
   const query = {
     memberType: 'user',
     page: 1,
-    pageSize: 2000
+    pageSize: 200
   }
-  if (item.id === 'user' && keyword) {
+  if (item.id === 'handoverFrom' && keyword) {
     query.userName = keyword
-  } else if (item.id === 'department' && keyword) {
-    query.departName = keyword
   }
   const res = await http.getProjectMembers(projectId.value, query)
   return res.records.map(i => {
     return {
       ...i,
       displayName: i.name,
-      name: i.type === 'user' ?  `${i.id} (${i.name})` : i.id,
+      name: i.type === 'user' ?  `${i.id}(${i.name})` : i.id,
     }
   })
+}
+
+function handleChangeName ({ list }) {
+  if (!list.length) {
+    handleClearName()
+  }
+  const val = list.join(',')
+  resetFormData.value.name = val
+  handleCheckReset()
 }
 
 </script>
@@ -698,6 +712,13 @@ async function getMenuList (item, keyword) {
     cursor: pointer;
     &:hover {
       color: #3a84ff;
+    }
+  }
+  .manage-user-selector {
+    display: inline-flex;
+    width: 100%;
+    .bk-tag-input-trigger {
+      width: 100%;
     }
   }
 </style>
