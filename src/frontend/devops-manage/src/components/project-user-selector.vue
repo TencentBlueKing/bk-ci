@@ -62,7 +62,7 @@ function removeAll (val) {
 }
 
 onMounted(() => {
-  fetchProjectMembers(projectId.value, {
+  fetchProjectMembers({
     memberType: 'user',
     page: 1,
     pageSize: 200

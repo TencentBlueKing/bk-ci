@@ -245,6 +245,7 @@ export default defineStore('userGroupTable', () => {
       activeTableData.tableData = [...activeTableData.tableData];
       activeTableData.count = activeTableData.count! - 1;
     }
+    handleClear(selectedTableGroupType.value);
   }
   /**
    * 获取表格选择的数据

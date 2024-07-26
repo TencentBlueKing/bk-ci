@@ -52,7 +52,7 @@
             :get-select-list="getSelectList"
             :handle-select-all-data="handleSelectAll"
             :handle-load-more="handleLoadMore"
-            :handle-cancleClear="handleClear"
+            :handle-clear="handleClear"
             @collapse-click="collapseClick"
           />
         </div>
@@ -248,7 +248,7 @@
               <p class="main-label-remove">
                 <i18n-t keypath="确认从以上X个用户组中移出X吗？" tag="div">
                   <span class="remove-num">{{ selectedLength }}</span>
-                  <span class="desc-warn">&nbsp;{{ t(unableText[batchFlag]) }}</span>
+                  <span class="remove-person">{{ userName }}</span>
                 </i18n-t>
               </p>
             </div>
@@ -436,15 +436,22 @@ function handleRenewalClosed() {
 async function handleHandoverConfirm() {
   const isValidate = await formRef.value.validate();
   if(!isValidate) return;
-  operatorLoading.value = true;
+
   const param = formatSelectParams(selectedRow.value.groupId);
-  delete handOverForm.value.displayName;
-  await http.batchHandover(projectId.value, param);
-  handleRemoveRow();
-  operatorLoading.value = false;
-  showMessage('success', t('用户组权限已移交给X。',[handOverForm.value.name]));
-  cancleClear('handover');
-  isShowHandover.value = false;
+  delete param.renewalDuration;
+  try {
+    operatorLoading.value = true;
+    const res = await http.batchHandover(projectId.value, param);
+    if (res) {
+      operatorLoading.value = false;
+      showMessage('success', t('用户组权限已移交给X。',[`${handOverForm.value.id}(${handOverForm.value.name})`]));
+      isShowHandover.value = false;
+      handleRemoveRow();
+      cancleClear('handover');
+    }
+  } catch (error) {
+    
+  }
 };
 /**
  * 移交弹窗关闭
@@ -459,10 +466,11 @@ async function handleHandoverConfirm() {
 async function handleRemoveConfirm() {
   operatorLoading.value = true;
   const param = formatSelectParams(selectedRow.value.groupId);
+  delete param.renewalDuration;
   await http.batchRemove(projectId.value, param);
-  handleRemoveRow();
   operatorLoading.value = false;
-  showMessage('success', t('X 已移出X用户组。', [asideItem.value.name, selectedRow.value.groupName]));
+  showMessage('success', t('X 已移出X用户组。', [`${asideItem.value.id}(${asideItem.value.name})`, selectedRow.value.groupName]));
+  handleRemoveRow();
   isShowRemove.value = false;
 }
 /**
@@ -615,8 +623,7 @@ async function getMenuList (item, keyword) {
 }
 function handleChangeOverFormName ({list, userList}) {
   const val = list.join(',')
-  handOverForm.value.name = val
-  handoverToMap.value = userList.find(i => i.id === val)
+  handOverForm.value = userList.find(i => i.id === val)
 }
 
 function handleClearOverFormName () {
