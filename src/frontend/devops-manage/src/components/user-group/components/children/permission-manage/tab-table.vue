@@ -51,7 +51,7 @@
           {{ row.joinedType === "DIRECT" ? "直接加入" : "用户组加入" }}
         </template>
       </bk-table-column>
-      <bk-table-column :label="t('操作')" v-if="isShowOperation">
+      <bk-table-column :label="t('操作')" v-if="isShowOperation" :show-overflow-tooltip="false">
         <template #default="{row, index}">
           <div class="operation-btn">
             <bk-button

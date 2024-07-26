@@ -385,6 +385,7 @@ const {
 } = manageAsideStore;
 
 onMounted(() => {
+  asideItem.value = undefined;
   getProjectMembers(projectId.value);
 });
 
