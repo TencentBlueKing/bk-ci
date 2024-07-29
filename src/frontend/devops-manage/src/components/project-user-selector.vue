@@ -29,7 +29,7 @@ function debounce (callBack) {
     window.clearTimeout(debounce.timeId)
     debounce.timeId = window.setTimeout(() => {
         callBack()
-    }, 300)
+    }, 0)
 }
 
 async function fetchProjectMembers (query) {

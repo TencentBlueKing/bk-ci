@@ -68,7 +68,7 @@ export default defineStore('manageAside', () => {
   /**
    * 组织移出项目
    */
-  async function handleAsideRemoveConfirm(removeUser, handOverMember, projectId: string, manageAsideRef) {
+  async function handleAsideRemoveConfirm(removeUser: ManageAsideType, handOverMember: ManageAsideType, projectId: string, manageAsideRef: any) {
     const params = {
       targetMember: removeUser,
       ...(handOverMember && {handoverTo: handOverMember})
@@ -91,7 +91,7 @@ export default defineStore('manageAside', () => {
   /**
    * 获取项目下全体成员
    */
-  async function getProjectMembers(projectId: string, searchValue?) {
+  async function getProjectMembers(projectId: string, searchValue?: any) {
     try {
       isLoading.value = true;
       const params: MemberListParamsType = {
