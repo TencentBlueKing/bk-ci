@@ -697,7 +697,10 @@ class PipelineRepositoryService constructor(
 
                 if (model.instanceFromTemplate != true) {
                     if (null == pipelineSettingDao.getSetting(transactionContext, projectId, pipelineId)) {
-                        if (templateId != null && (useSubscriptionSettings == true || useConcurrencyGroup == true)) {
+                        if (templateId != null &&
+                            (useSubscriptionSettings == true ||
+                                    useConcurrencyGroup == true || useLabelSettings == true)
+                        ) {
                             // 沿用模板的配置
                             val setting = getSetting(projectId, templateId)
                                 ?: throw ErrorCodeException(errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)
