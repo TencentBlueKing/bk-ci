@@ -160,15 +160,6 @@
                             canRetry: false,
                             classType: 'trigger'
                         }],
-                        stageControlOption: {
-                            enable: true,
-                            runCondition: 'AFTER_LAST_FINISHED',
-                            customCondition: '',
-                            customVariables: [{ key: 'param1', value: '' }],
-                            manualTrigger: false,
-                            triggerUsers: [],
-                            timeout: 24
-                        },
                         id: 'stage-1'
                     }]
                 },
