@@ -471,7 +471,6 @@ object ControlUtils {
     fun checkContainerFailure(c: PipelineBuildContainer) =
         c.status.isFailure() && c.controlOption.jobControlOption.continueWhenFailed != true
 
-
     private fun channelCode(projectId: String, pipelineId: String, buildId: String): ChannelCode {
         return try {
             SpringContextUtil.getBean(BuildVariableService::class.java).getVariable(
