@@ -25,33 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service
+package com.tencent.devops.repository.pojo.enums
 
-import com.tencent.devops.common.api.util.PropertyUtil
-import java.util.concurrent.ConcurrentHashMap
+import io.swagger.v3.oas.annotations.media.Schema
 
-object RepoServiceFactory {
+@Schema(title = "代码库配置状态")
+enum class RepositoryConfigStatusEnum {
+    OK,
 
-    private val repoServiceMap = ConcurrentHashMap<String, RepoService>()
+    // 禁用,前端不展示
+    DISABLED,
 
-    private const val REPO_CLASS_NAME = "repo.class.name"
-
-    private const val AGENT_PROPERTIES_FILE_NAME = "/.agent.properties"
-
-    /**
-     * 根据配置文件的类名获取实现RepoService的对象
-     * @return 实现RepoService的对象
-     */
-    fun getInstance(): RepoService {
-        // 从配置文件读取类名
-        val className = PropertyUtil.getPropertyValue(REPO_CLASS_NAME, AGENT_PROPERTIES_FILE_NAME)
-        // 根据类名从缓存中获取实现RepoService的对象
-        var repoService = repoServiceMap[className]
-        if (repoService == null) {
-            // 通过反射生成对象并放入缓存中
-            repoService = Class.forName(className).newInstance() as RepoService
-            repoServiceMap[className] = repoService
-        }
-        return repoService
-    }
+    // 部署中,配置还没有准备好,如github app还没有申请
+    DEPLOYING
 }
