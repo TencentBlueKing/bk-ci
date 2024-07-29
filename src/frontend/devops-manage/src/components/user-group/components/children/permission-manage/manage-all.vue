@@ -404,6 +404,7 @@ const {
   tableLoading,
   isLoading,
   activeTab,
+  memberPagination,
 } = storeToRefs(manageAsideStore);
 const {
   handleAsideClick,
@@ -419,9 +420,11 @@ onMounted(() => {
 });
 
 watch(searchValue, (newSearchValue) => {
+  memberPagination.value.current = 1;
   getProjectMembers(projectId.value, newSearchValue);
 });
 function handleSearch(value){
+  memberPagination.value.current = 1;
   getProjectMembers(projectId.value, value);
 }
 function asideClick(item){
