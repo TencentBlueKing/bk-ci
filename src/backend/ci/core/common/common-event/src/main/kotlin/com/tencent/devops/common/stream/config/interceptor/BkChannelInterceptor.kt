@@ -15,7 +15,7 @@ class BkChannelInterceptor : ChannelInterceptor {
     override fun preSend(message: Message<*>, channel: MessageChannel): Message<*> {
         try {
             if (channel is DirectWithAttributesChannel) {
-                if (channel.beanName.contains("-in-")) {
+                if (channel.beanName != null && channel.beanName.contains("-in-")) {
                     message.headers[TraceTag.X_DEVOPS_RID]?.let {
                         MDC.put(TraceTag.BIZID, it.toString())
                     }
