@@ -64,6 +64,7 @@ class BuildIpaResourceImpl
         ): Result<String> {
             val resignId = "s-${UUIDUtil.generate()}"
             val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
+//            signInfoService.checkAppIdIsExist(ipaSignInfo)
             var taskExecuteCount = 1
             try {
                 val (ipaFile, taskExecuteCount2) =
