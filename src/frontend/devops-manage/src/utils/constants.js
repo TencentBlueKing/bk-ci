@@ -5,11 +5,6 @@ export const TIME_FILTERS = {
   180: '6个月',
   360: '12个月',
 };
-export const unableText = {
-  renewal: '无法续期',
-  handover: '无法移交',
-  remove: '无法移出',
-}
 export const batchOperateTypes = {
   renewal: 'RENEWAL',
   handover: 'HANDOVER',

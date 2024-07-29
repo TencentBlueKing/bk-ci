@@ -36,10 +36,10 @@
           {{ row.groupName }}
           <div class="overlay" v-if="shouldShowOverlay(row)">
             {{ row.unableMessage }}
+            <span v-if="row.removeMemberButtonControl === 'TEMPLATE'" @click="toResource(row)" class="text-blue">[{{ row.groupName }}]</span>
           </div>
         </template>
       </bk-table-column>
-      <bk-table-column :label="t('用户组描述')" prop="groupDesc" />
       <bk-table-column :label="t('有效期')" prop="expiredAtDisplay" />
       <bk-table-column :label="t('加入时间')" prop="joinedTime" >
         <template #default="{row}">
@@ -182,9 +182,6 @@ function getUnableMessage(row){
       return t("通过用户组获得权限，请到用户组里移出用户");
     case 'remove':
       let message = TOOLTIPS_CONTENT[row.removeMemberButtonControl];
-      if (row.removeMemberButtonControl === 'TEMPLATE') {
-        message += ` [${row.groupName}]`;
-      }
       return message;
     default:
       return '';
@@ -262,7 +259,9 @@ function pageLimitChange(limit) {
 function pageValueChange(value) {
   emit('pageValueChange',value, resourceType.value);
 }
+function toResource(row){
 
+}
 </script>
 
 <style lang="less" scoped>
@@ -301,5 +300,9 @@ function pageValueChange(value) {
   font-size: 12px;
   color: #63656E;
   text-align: center;
+}
+.text-blue{
+  cursor: pointer;
+  color: #699DF4;
 }
 </style>
