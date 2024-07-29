@@ -13,7 +13,9 @@
                 class="iwiki-link"
                 :href="commandStep.networkPolicyDocLink"
                 target="_blank"
-            ></a>
+            >
+                {{ $t('environment.无法连通网络？') }}
+            </a>
             <div class="form-item">
                 <label class="label">
                     {{ $t('environment.安装方式：') }}

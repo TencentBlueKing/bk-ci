@@ -226,10 +226,12 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                     old.displayName, old.remark, old.labels
                 )
             )
-        }
 
-        // 删除旧云桌面
-        deleteControl.deleteWorkspace4System(ws.createUserId, bakWorkspaceName)
+            // 删除旧云桌面
+            if (old.status.checkUnused()) {
+                deleteControl.deleteWorkspace4System(ws.createUserId, bakWorkspaceName)
+            }
+        }
     }
 
     companion object {

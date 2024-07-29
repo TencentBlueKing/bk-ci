@@ -245,13 +245,15 @@ class StartCloudInterfaceService @Autowired constructor(
         )
     }
 
-    // 获取vm空闲资源
+    // 获取vm空闲资源，包含Devcloud专区和其他
     fun getAllVmResource() {
-        val resList = mutableListOf<ResourceVmRespDataMachineResource>()
-        val cgs = workspaceBcsClient.startGetResourceVm(ResourceVmReq(null, null, false))
-        cgs?.forEach { resource ->
-            resource.machineResources?.forEach { mas ->
-                resList.add(
+        val resList = listOfNotNull(
+            workspaceBcsClient.startGetResourceVm(ResourceVmReq(null, null, false)),
+            workspaceBcsClient.startGetResourceVm(ResourceVmReq(null, null, true))
+        )
+            .flatten() // 将上述两个list合并成一个
+            .flatMap { resource ->
+                resource.machineResources?.map { mas ->
                     ResourceVmRespDataMachineResource(
                         zoneId = resource.zoneId,
                         machineType = mas.machineType,
@@ -259,10 +261,9 @@ class StartCloudInterfaceService @Autowired constructor(
                         used = mas.used ?: 0,
                         free = mas.free ?: 0
                     )
-                )
+                } ?: emptyList()
             }
-        }
-        logger.debug("get all vm resource|resourceList|{}", resList)
+
         if (resList.isNotEmpty()) {
             windowsGpuResourceDao.deleteVmResource(dslContext)
             windowsGpuResourceDao.insertVmResource(dslContext, resList)

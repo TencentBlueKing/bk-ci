@@ -281,6 +281,9 @@ interface ApigwStreamResourceV3 {
         @Parameter(description = "开启或关闭", required = true)
         @QueryParam("enabled")
         enabled: Boolean,
+        @Parameter(description = "运营产品ID", required = true)
+        @QueryParam("productName")
+        productName: String?,
         @Parameter(description = "工蜂项目信息(初始化时用)", required = false)
         projectInfo: GitCIProjectInfo
     ): Result<Boolean>

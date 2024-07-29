@@ -16,6 +16,7 @@
         <div
             slot="content"
             v-show="isEditing"
+            v-bkloading="{ isLoading, title: $t('environment.正在生成手动安装命令') }"
         >
             <bk-alert
                 type="info"
@@ -28,7 +29,6 @@
                 :label-width="labelWidth"
                 :model="formData"
                 :rules="rules"
-                v-bkloading="{ isLoading, title: $t('environment.无法连通网络？') }"
             >
                 <bk-form-item
                     :label="$t('environment.nodeInfo.installMethod')"
@@ -354,9 +354,9 @@
 
 <script>
     import ace from 'ace-builds/src-noconflict/ace'
+    import 'ace-builds/src-noconflict/ext-searchbox'
     import 'ace-builds/src-noconflict/mode-text'
     import 'ace-builds/src-noconflict/theme-monokai'
-    import 'ace-builds/src-noconflict/ext-searchbox'
     import ManualInstallDetail from './manual-install-detail.vue'
 
     export default {
@@ -598,7 +598,7 @@
                     })
                     this.commandStatus = res.status
                     this.commandStep = res || {}
-                    if (['PENDING'].includes(this.commandStatus)) {
+                    if (res.code === 3800015 || ['PENDING'].includes(this.commandStatus)) {
                         this.timeoutIdTask2 = setTimeout(async () => {
                             this.fetchInstallCommand()
                         }, 5000)
@@ -676,7 +676,7 @@
             },
 
             async fetchInstallAgentTaskLog () {
-                if (!this.jobId) return
+                if (!this.jobId || !this.instanceId) return
                 const res = await this.$store.dispatch('environment/getAgentTaskLog', {
                     projectId: this.projectId,
                     jobId: this.jobId,

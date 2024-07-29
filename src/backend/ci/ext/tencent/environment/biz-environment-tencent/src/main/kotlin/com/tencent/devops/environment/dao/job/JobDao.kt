@@ -31,11 +31,14 @@ import com.tencent.devops.model.environment.tables.TProjectJob
 import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.impl.DSL
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class JobDao {
+class JobDao @Autowired constructor(
+    private val defaultDSLContext: DSLContext
+) {
     fun isJobInsExist(
         dslContext: DSLContext,
         projectId: String,
@@ -73,10 +76,10 @@ class JobDao {
         }
     }
 
-    fun deleteExpiredJobTaskRecord(dslContext: DSLContext, days: Long): Int {
+    fun deleteExpiredJobTaskRecord(days: Long): Int {
         val maxDeleteRowNum = 10000
         with(TProjectJob.T_PROJECT_JOB) {
-            return dslContext.deleteFrom(this)
+            return defaultDSLContext.deleteFrom(this)
                 .where(CREATED_TIME.lessOrEqual(timestampSubDay(days)))
                 .limit(maxDeleteRowNum)
                 .execute()

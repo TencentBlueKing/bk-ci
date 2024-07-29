@@ -41,11 +41,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val workspaceWindowsDao: WorkspaceWindowsDao
 ) : OpRemoteDevResource {
-    override fun initBilling(userId: String, freeTime: Int): Result<Boolean> {
-        workspaceService.initBilling(freeTime)
-        return Result(true)
-    }
-
     override fun updateUserSetting(userId: String, data: List<OPUserSetting>): Result<Boolean> {
         data.forEach {
             remoteDevSettingService.updateSetting4Op(it)

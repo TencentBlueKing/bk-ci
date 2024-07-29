@@ -44,7 +44,6 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.cron.HolidayHelper
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -95,7 +94,6 @@ class DeleteControl @Autowired constructor(
     private val permissionService: PermissionService,
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val redisCache: RedisCacheService,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val workspaceCommon: WorkspaceCommon,
@@ -613,11 +611,6 @@ class DeleteControl @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceCommon.updateLastHistory(transactionContext, workspaceName, operator)
-            remoteDevBillingDao.endBilling(
-                dslContext = transactionContext,
-                workspaceName = workspaceName,
-                computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL
-            )
         }
 
         // 删除时给 cmdb 去掉字段方便监控检索
@@ -669,9 +662,9 @@ class DeleteControl @Autowired constructor(
         // 删除cfs的权限组规则
         tCloudCfsService.addOrRemoveCfsPermissionRule(workspace.projectId, ip, true)
 
-        // 关联tgit相关
-        gitProxyTGitService.addOrRemoveAclIp(workspace.projectId, ip, true)
-    }
+            // 关联tgit相关
+            gitProxyTGitService.addOrRemoveAclIp(workspace.projectId, setOf(ip), true, null)
+        }
 
     private fun checkWorkspaceStatusForDelete(workspace: WorkspaceRecord, userId: String): Boolean {
 

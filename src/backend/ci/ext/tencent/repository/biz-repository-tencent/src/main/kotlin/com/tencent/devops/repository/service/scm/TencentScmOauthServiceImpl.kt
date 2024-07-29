@@ -95,7 +95,9 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
             token = token,
             region = region,
             userName = userName,
-            search = search
+            search = search,
+            page = page,
+            pageSize = pageSize
         ).data!!
     }
 

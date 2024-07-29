@@ -45,6 +45,10 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -256,5 +260,13 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         macAddress: String
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>> {
         return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress))
+    }
+
+    override fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Result<Moa2faRespData> {
+        return Result(workspaceService.createMoa2faRequest(userId = userId, moa2faReqData = moa2faReqData))
+    }
+
+    override fun verifyMoa2faResult(userId: String, moa2faVerifyReqData: Moa2faVerifyReqData): Result<Moa2faVerifyRespData> {
+        return Result(workspaceService.verifyMoa2faResult(userId = userId, moa2faVerifyReqData = moa2faVerifyReqData))
     }
 }

@@ -161,13 +161,13 @@
 
 <script lang="ts">
     import { isAbsoluteUrl, urlJoin } from '@/utils/util'
-    import Vue from 'vue'
-    import { Component } from 'vue-property-decorator'
-    import { Action, Getter, State } from 'vuex-class'
-    import { Accordion, AccordionItem } from '../components/Accordion/index'
-    import ConsultTools from '../components/ConsultTools/index.vue'
-    import Logo from '../components/Logo/index.vue'
-    import NavBox from '../components/NavBox/index.vue'
+import Vue from 'vue'
+import { Component } from 'vue-property-decorator'
+import { Action, Getter, State } from 'vuex-class'
+import { Accordion, AccordionItem } from '../components/Accordion/index'
+import ConsultTools from '../components/ConsultTools/index.vue'
+import Logo from '../components/Logo/index.vue'
+import NavBox from '../components/NavBox/index.vue'
 
     @Component({
         components: {
