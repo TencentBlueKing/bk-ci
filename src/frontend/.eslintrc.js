@@ -122,7 +122,7 @@ module.exports = {
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/html-closing-bracket-newline.md
         // 单行写法不需要换行，多行需要，不限制
-        'vue/html-closing-bracket-newline': 'error',
+        'vue/html-closing-bracket-newline': 'off',
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/html-closing-bracket-spacing.md
         'vue/html-closing-bracket-spacing': ['error', {
@@ -168,22 +168,15 @@ module.exports = {
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/max-attributes-per-line.md
         // 每行属性的最大个数，不限制
-        'vue/max-attributes-per-line': ['error', {
-            singleline: {
-                max: 1
-            },
-            multiline: {
-                max: 1
-            }
-        }],
+        'vue/max-attributes-per-line': 'off',
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/multiline-html-element-content-newline.md
         // 在多行元素的内容前后需要换行符，不限制
-        'vue/multiline-html-element-content-newline': 'error',
+        'vue/multiline-html-element-content-newline': 'off',
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/mustache-interpolation-spacing.md
         // template 中 {{var}}，不限制
-        'vue/mustache-interpolation-spacing': 'error',
+        'vue/mustache-interpolation-spacing': 'off',
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/name-property-casing.md
         'vue/name-property-casing': 'off',
@@ -239,7 +232,7 @@ module.exports = {
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/no-template-key.md
         // 禁止在 <template> 中使用 key 属性，不限制
-        'vue/no-template-key': 'error',
+        'vue/no-template-key': 'off',
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/no-template-shadow.md
         'vue/no-template-shadow': 'error',
