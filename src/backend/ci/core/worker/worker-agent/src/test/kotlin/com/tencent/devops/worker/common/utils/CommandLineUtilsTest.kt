@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import sun.security.action.GetPropertyAction
 
-
 class CommandLineUtilsTest {
 
     @Test
@@ -69,7 +68,6 @@ class CommandLineUtilsTest {
         Assertions.assertEquals(func("::set-remark 备注信息"), "BK_CI_BUILD_REMARK=备注信息\n")
         Assertions.assertEquals(func("::set-remark   备注信息"), "BK_CI_BUILD_REMARK=  备注信息\n")
     }
-
 
     @Test
     fun appendOutputToFileTest() {
