@@ -32,7 +32,6 @@ export default defineStore('manageAside', () => {
   const memberList = ref<ManageAsideType[]>([]);
   const personList = ref([]);
   const tableLoading = ref(false);
-  const overTable = ref([]);
   const userName = ref('');
   const memberPagination = ref<Pagination>({ limit: 20, current: 1, count: 0 });
   const activeTab = ref();
@@ -127,7 +126,6 @@ export default defineStore('manageAside', () => {
     memberList,
     personList,
     tableLoading,
-    overTable,
     userName,
     memberPagination,
     activeTab,

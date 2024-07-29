@@ -16,11 +16,9 @@
       <div class="manage-aside">
         <manage-aside
           ref="manageAsideRef"
-          :project-id="projectId"
           :member-list="memberList"
           :person-list="personList"
           :table-loading="tableLoading"
-          :over-table="overTable"
           :active-tab="activeTab"
           @refresh="refresh"
           @handle-click="asideClick"
@@ -266,7 +264,7 @@
             <div class="main-line" style="margin-top: 40px;">
               <p class="main-label-remove">
                 <i18n-t keypath="确认从以上X个用户组中移出X吗？" tag="div">
-                  <span class="remove-num">{{ selectedLength }}</span>
+                  <span class="remove-num">{{ totalCount - inoperableCount }}</span>
                   <span class="remove-person">{{ userName }}</span>
                 </i18n-t>
               </p>
@@ -404,7 +402,6 @@ const {
   memberList,
   personList,
   tableLoading,
-  overTable,
   isLoading,
   activeTab,
 } = storeToRefs(manageAsideStore);
