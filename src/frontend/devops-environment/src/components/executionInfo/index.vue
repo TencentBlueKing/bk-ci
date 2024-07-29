@@ -1,22 +1,31 @@
 <template>
-    <div ref="infoBox" class="step-execution-info-box" :style="boxStyles">
+    <div
+        ref="infoBox"
+        class="step-execution-info-box"
+        :style="boxStyles"
+    >
         <div class="tab-container">
             <div :class="['tab-title', ipStatus]">
-                <span class="host-ip" v-if="ip">{{ bkCloudId }}:{{ ip }}</span>
+                <span
+                    class="host-ip"
+                    v-if="ip"
+                >{{ bkCloudId }}:{{ ip }}</span>
             </div>
             <div class="split-line" />
             <div
                 v-if="!isFile"
                 class="tab-item"
                 :class="{ active: activePanel === 'scriptLog' }"
-                @click="handleTogglePanel('scriptLog')">
+                @click="handleTogglePanel('scriptLog')"
+            >
                 {{ $t('environment.执行日志') }}
             </div>
             <template v-if="isFile">
                 <div
                     class="tab-item"
                     :class="{ active: activePanel === 'download' }"
-                    @click="handleTogglePanel('download')">
+                    @click="handleTogglePanel('download')"
+                >
                     {{ $t('environment.下载信息') }}
                 </div>
                 <!-- <div
@@ -38,35 +47,51 @@
                     v-if="activePanel === 'scriptLog'"
                     class="extend-item"
                     @mouseenter="handleShowSetFont"
-                    @mouseleave="handleHideSetFont">Aa</div>
+                    @mouseleave="handleHideSetFont"
+                >
+                    Aa
+                </div>
                 <div
                     v-if="!isFullscreen"
                     class="extend-item"
                     v-bk-tooltips="$t('environment.全屏')"
-                    @click="handleFullscreen">
-                    <icon name="full-screen" size="16" />
+                    @click="handleFullscreen"
+                >
+                    <icon
+                        name="full-screen"
+                        size="16"
+                    />
                 </div>
                 <div
                     v-if="isFullscreen"
                     class="extend-item"
                     v-bk-tooltips="$t('environment.还原')"
-                    @click="handleExitFullscreen">
-                    <icon name="un-full-screen" size="16" />
+                    @click="handleExitFullscreen"
+                >
+                    <icon
+                        name="un-full-screen"
+                        size="16"
+                    />
                 </div>
                 <div
                     v-if="activePanel === 'scriptLog'"
                     class="extend-item"
-                    style="padding-left: 16px; border-left: 1px solid #262626;">
+                    style="padding-left: 16px; border-left: 1px solid #262626;"
+                >
                     <bk-switcher
                         :value="isScriptLogLineFeed"
                         theme="primary"
                         size="small"
-                        @change="handleScriptLogLineFeedChange" />
+                        @change="handleScriptLogLineFeedChange"
+                    />
                     <span style="padding-left: 7px; font-size: 12px; color: #979ba5;">{{ $t('environment.自动换行') }}</span>
                 </div>
             </div>
         </div>
-        <div class="tab-content-wrapper" :style="contentStyles">
+        <div
+            class="tab-content-wrapper"
+            :style="contentStyles"
+        >
             <component
                 ref="view"
                 :key="activePanel"
@@ -79,31 +104,42 @@
                 :finished="finished"
                 :line-feed="isScriptLogLineFeed"
                 v-bind="$attrs"
-                v-on="$listeners" />
+                v-on="$listeners"
+            />
         </div>
         <div
             class="font-setting"
             :class="{ active: isFontSet }"
             @mouseenter="handleShowSetFont"
-            @mouseleave="handleHideSetFont">
+            @mouseleave="handleHideSetFont"
+        >
             <div class="font-setting-wrapper">
                 <div
                     class="font-item"
                     :class="{ active: fontSize === 12 }"
                     style="font-size: 12px;"
-                    @click="handleFontChange(12)">Aa</div>
+                    @click="handleFontChange(12)"
+                >
+                    Aa
+                </div>
                 <div class="line" />
                 <div
                     class="font-item"
                     :class="{ active: fontSize === 13 }"
                     style="font-size: 13px;"
-                    @click="handleFontChange(13)">Aa</div>
+                    @click="handleFontChange(13)"
+                >
+                    Aa
+                </div>
                 <div class="line" />
                 <div
                     class="font-item"
                     :class="{ active: fontSize === 14 }"
                     style="font-size: 14px;"
-                    @click="handleFontChange(14)">Aa</div>
+                    @click="handleFontChange(14)"
+                >
+                    Aa
+                </div>
             </div>
         </div>
     </div>

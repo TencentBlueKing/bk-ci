@@ -1,20 +1,31 @@
 <template>
     <div class="define-param">
-        <draggable v-model="globalParams" :options="paramsDragOptions">
+        <draggable
+            v-model="globalParams"
+            :options="paramsDragOptions"
+        >
             <accordion
                 v-for="(param, index) in globalParams"
                 :key="param.paramIdKey"
                 :show-content="true"
-                :is-error="errors.any(`param-${param.key}`)">
-                <header class="param-header" slot="header">
+                :is-error="errors.any(`param-${param.key}`)"
+            >
+                <header
+                    class="param-header"
+                    slot="header"
+                >
                     <span>
                         <bk-popover
                             style="vertical-align: middle"
                             v-if="errors.all(`param-${param.key}`).length"
-                            placement="top">
+                            placement="top"
+                        >
                             <i class="bk-icon icon-info-circle-shape" />
                             <div slot="content">
-                                <p v-for="error in errors.all(`param-${param.key}`)" :key="error">{{ error }}</p>
+                                <p
+                                    v-for="error in errors.all(`param-${param.key}`)"
+                                    :key="error"
+                                >{{ error }}</p>
                             </div>
                         </bk-popover>
                         {{ param.key }}
@@ -22,11 +33,16 @@
                     <i
                         v-if="!disabled"
                         @click.stop.prevent="editParam({ index: index, isAdd: false })"
-                        class="devops-icon icon-minus" />
+                        class="devops-icon icon-minus"
+                    />
                 </header>
                 <bk-form slot="content">
                     <div class="params-flex-col">
-                        <bk-form-item label-width="auto" :label="$t('editPage.paramsType')" class="flex-col-span-1">
+                        <bk-form-item
+                            label-width="auto"
+                            :label="$t('editPage.paramsType')"
+                            class="flex-col-span-1"
+                        >
                             <selector
                                 :popover-min-width="246"
                                 :data-vv-scope="`param-${param.key}`"
@@ -34,15 +50,21 @@
                                 name="type"
                                 :list="paramsList"
                                 :handle-change="(name, value) => handleParamTypeChange(name, value, index)"
-                                :value="param.valueType" />
+                                :value="param.valueType"
+                            />
                         </bk-form-item>
-                        <bk-form-item label-width="auto" class="flex-col-span-1" v-if="settingKey !== 'templateParams'">
+                        <bk-form-item
+                            label-width="auto"
+                            class="flex-col-span-1"
+                            v-if="settingKey !== 'templateParams'"
+                        >
                             <atom-checkbox
                                 :disabled="disabled"
                                 :text="$t('editPage.required')"
                                 :value="param.required"
                                 name="required"
-                                :handle-change="(name, value) => handleParamChange(name, value, index)" />
+                                :handle-change="(name, value) => handleParamChange(name, value, index)"
+                            />
                         </bk-form-item>
                     </div>
                     <div class="params-flex-col pt10">
@@ -51,7 +73,8 @@
                             class="flex-col-span-1"
                             :label="$t('name')"
                             :is-error="errors.has(`param-${param.key}.id`)"
-                            :error-msg="errors.first(`param-${param.key}.id`)">
+                            :error-msg="errors.first(`param-${param.key}.id`)"
+                        >
                             <vuex-input
                                 :ref="`paramId${index}Input`"
                                 :data-vv-scope="`param-${param.key}`"
@@ -60,7 +83,8 @@
                                 v-validate.initial="`required|unique:${globalParams.map(p => p.key).join(',')}`"
                                 name="key"
                                 :placeholder="$t('nameInputTips')"
-                                :value="param.key" />
+                                :value="param.key"
+                            />
                         </bk-form-item>
                         <bk-form-item
                             label-width="auto"
@@ -68,9 +92,15 @@
                             :label="$t(`editPage.${getParamsDefaultValueLabel(param.valueType)}`)"
                             :is-error="errors.has(`param-${param.key}.defaultValue`)"
                             :error-msg="errors.first(`param-${param.key}.defaultValue`)"
-                            :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.valueType)}`)">
+                            :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.valueType)}`)"
+                        >
                             <!-- 自定义变量展示 -->
-                            <define-param-show :param="param" :global-params="globalParams" :param-index="index" @handleParamChange="handleParamChange" />
+                            <define-param-show
+                                :param="param"
+                                :global-params="globalParams"
+                                :param-index="index"
+                                @handleParamChange="handleParamChange"
+                            />
                         </bk-form-item>
                     </div>
                     <bk-form-item
@@ -79,7 +109,8 @@
                         :label="$t('editPage.selectOptions')"
                         :desc="$t('editPage.optionsDesc')"
                         :is-error="errors.has(`param-${param.key}.options`)"
-                        :error-msg="errors.first(`param-${param.key}.options`)">
+                        :error-msg="errors.first(`param-${param.key}.options`)"
+                    >
                         <vuex-textarea
                             v-validate.initial="'excludeComma'"
                             :disabled="disabled"
@@ -87,29 +118,42 @@
                             name="options"
                             :data-vv-scope="`param-${param.key}`"
                             :placeholder="$t('editPage.optionTips')"
-                            :value="getOptions(param)" />
+                            :value="getOptions(param)"
+                        />
                     </bk-form-item>
-                    <bk-form-item label-width="auto" :label="$t('editPage.chineseName')">
+                    <bk-form-item
+                        label-width="auto"
+                        :label="$t('editPage.chineseName')"
+                    >
                         <vuex-input
                             :disabled="disabled"
                             :handle-change="(name, value) => handleParamChange(name, value, index)"
                             name="chineseName"
                             max-length="20"
                             :placeholder="$t('editPage.chineseNameTips')"
-                            :value="param.chineseName" />
+                            :value="param.chineseName"
+                        />
                     </bk-form-item>
-                    <bk-form-item label-width="auto" :label="$t('desc')">
+                    <bk-form-item
+                        label-width="auto"
+                        :label="$t('desc')"
+                    >
                         <vuex-input
                             :disabled="disabled"
                             :handle-change="(name, value) => handleParamChange(name, value, index)"
                             name="desc"
                             :placeholder="$t('editPage.descTips')"
-                            :value="param.desc" />
+                            :value="param.desc"
+                        />
                     </bk-form-item>
                 </bk-form>
             </accordion>
         </draggable>
-        <a class="text-link" v-if="!disabled" @click.stop.prevent="editParam({ index: value.length, isAdd: true })">
+        <a
+            class="text-link"
+            v-if="!disabled"
+            @click.stop.prevent="editParam({ index: value.length, isAdd: true })"
+        >
             <i class="devops-icon icon-plus-circle" />
             <span>{{ $t('editPage.addParams') }}</span>
         </a>

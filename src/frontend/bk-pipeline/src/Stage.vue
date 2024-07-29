@@ -1,6 +1,12 @@
 <template>
-    <div ref="stageRef" :class="pipelineStageCls">
-        <div @click.stop="stageEntryClick" class="pipeline-stage-entry">
+    <div
+        ref="stageRef"
+        :class="pipelineStageCls"
+    >
+        <div
+            @click.stop="stageEntryClick"
+            class="pipeline-stage-entry"
+        >
             <stage-check-icon
                 v-if="isMiddleStage"
                 class="check-in-icon"
@@ -12,7 +18,10 @@
                 :user-name="reactiveData.userName"
                 :stage-status="stageStatusCls"
             />
-            <span :title="stageTitle" :class="stageTitleCls">
+            <span
+                :title="stageTitle"
+                :class="stageTitleCls"
+            >
                 <Logo
                     v-if="!!stageStatusIcon"
                     v-bk-tooltips="isStageSkip ? t('skipStageDesc') : { disabled: true }"
@@ -28,7 +37,11 @@
                 size="14"
                 class="stage-entry-error-icon"
             />
-            <span @click.stop v-else-if="reactiveData.canSkipElement" class="check-total-stage">
+            <span
+                @click.stop
+                v-else-if="reactiveData.canSkipElement"
+                class="check-total-stage"
+            >
                 <bk-checkbox
                     class="atom-canskip-checkbox"
                     v-model="stage.runStage"
@@ -53,7 +66,10 @@
                 :user-name="reactiveData.userName"
                 :stage-status="stageStatusCls"
             />
-            <span v-else class="stage-entry-btns">
+            <span
+                v-else
+                class="stage-entry-btns"
+            >
                 <Logo
                     class="copy-stage"
                     v-if="showCopyStage"
@@ -70,7 +86,11 @@
             </span>
         </div>
         <span class="stage-connector">
-            <Logo size="14" name="right-shape" class="connector-angle" />
+            <Logo
+                size="14"
+                name="right-shape"
+                class="connector-angle"
+            />
         </span>
         <draggable
             v-model="computedContainer"

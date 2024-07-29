@@ -1,7 +1,16 @@
 <template>
-    <div class="devops-iframe-content" :class="{ showTopPrompt: showAnnounce }">
-        <div v-if="isAnyPopupShow" class="iframe-over-layout" />
-        <div v-bkloading="{ isLoading }" :style="{ height: '100%' }">
+    <div
+        class="devops-iframe-content"
+        :class="{ showTopPrompt: showAnnounce }"
+    >
+        <div
+            v-if="isAnyPopupShow"
+            class="iframe-over-layout"
+        />
+        <div
+            v-bkloading="{ isLoading }"
+            :style="{ height: '100%' }"
+        >
             <iframe
                 v-if="src"
                 id="iframe-box"

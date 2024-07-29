@@ -4,7 +4,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.certName') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     name="androidId"
                     v-validate="{ required: true, regex: /^[a-zA-Z0-9\.\_]{1,100}$/ }"
@@ -21,7 +22,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.jksFile') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     readonly
                     name="jksFileName"
@@ -30,9 +32,18 @@
                     :class="{ 'is-danger': errors.has('jksFileName') }"
                     :placeholder="$t('ticket.cert.emptyFile')"
                 />
-                <a href="javascript:void(0);" class="file-input" :title="$t('ticket.cert.selectFile')">
+                <a
+                    href="javascript:void(0);"
+                    class="file-input"
+                    :title="$t('ticket.cert.selectFile')"
+                >
                     <div class="file-input-wrap">
-                        <input type="file" class="file-input-btn" accept=".jks,.keystore" @change="handleFileUpload" />
+                        <input
+                            type="file"
+                            class="file-input-btn"
+                            accept=".jks,.keystore"
+                            @change="handleFileUpload"
+                        />
                         <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
@@ -45,7 +56,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.certPassword') }}：</label>
             <div class="bk-form-content">
-                <selector name="credentialId"
+                <selector
+                    name="credentialId"
                     v-model="formData.credentialId"
                     v-validate="{ required: true }"
                     :list="credentialList"
@@ -73,7 +85,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.certAlias') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     name="alias"
                     v-validate="{ required: true }"
@@ -90,7 +103,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.aliasPassword') }}：</label>
             <div class="bk-form-content">
-                <selector name="aliasCredentialId"
+                <selector
+                    name="aliasCredentialId"
                     v-validate="{ required: true }"
                     v-model="formData.aliasCredentialId"
                     :list="credentialList"
@@ -117,7 +131,11 @@
         <div class="bk-form-item cert-textarea-item">
             <label class="bk-label">{{ $t('ticket.cert.certRemark') }}：</label>
             <div class="bk-form-content">
-                <textarea class="bk-form-textarea" :placeholder="$t('ticket.cert.certRemarkPlaceHolder')" v-model="formData.remark"></textarea>
+                <textarea
+                    class="bk-form-textarea"
+                    :placeholder="$t('ticket.cert.certRemarkPlaceHolder')"
+                    v-model="formData.remark"
+                ></textarea>
             </div>
         </div>
     </section>

@@ -1,12 +1,21 @@
 <template>
     <section class="main-body">
         <section class="progress-approve">
-            <img src="../../../images/progressApprove.svg" class="approve-image">
+            <img
+                src="../../../images/progressApprove.svg"
+                class="approve-image"
+            >
             <span class="approve-tip"> {{ $t('store.正在初始化，请耐心等候') }} </span>
         </section>
 
         <footer class="main-footer">
-            <bk-button theme="primary" :disabled="currentStep.status !== 'success'" @click="nextStep"> {{ $t('store.下一步') }} </bk-button>
+            <bk-button
+                theme="primary"
+                :disabled="currentStep.status !== 'success'"
+                @click="nextStep"
+            >
+                {{ $t('store.下一步') }}
+            </bk-button>
         </footer>
     </section>
 </template>

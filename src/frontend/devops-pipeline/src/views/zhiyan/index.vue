@@ -1,5 +1,8 @@
 <template>
-    <div class="zy-bk-page" v-bkloading="{ isLoading: loading }">
+    <div
+        class="zy-bk-page"
+        v-bkloading="{ isLoading: loading }"
+    >
         <component
             ref="zhiyan"
             v-if="!loading"

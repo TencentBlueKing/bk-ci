@@ -1,9 +1,12 @@
 <template>
     <div class="devops-codelib">
         <header class="devops-codelib-header">
-            <logo size="32" :name="logo" />
+            <logo
+                size="32"
+                :name="logo"
+            />
             <span>
-                {{title}}
+                {{ title }}
             </span>
         </header>
         <main>

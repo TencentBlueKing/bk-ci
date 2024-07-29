@@ -1,48 +1,85 @@
 <template>
     <section class="detail-title">
-        <img class="detail-pic atom-logo" :src="detail.logoUrl || defaultUrl">
+        <img
+            class="detail-pic atom-logo"
+            :src="detail.logoUrl || defaultUrl"
+        >
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
-                {{detail.name}}
-                <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic }">
-                    <icon class="detail-img" name="gray-git-code" size="14" />
+                {{ detail.name }}
+                <h5
+                    :title="isPublicTitle"
+                    @click="goToCode"
+                    :class="{ 'not-public': !isPublic }"
+                >
+                    <icon
+                        class="detail-img"
+                        name="gray-git-code"
+                        size="14"
+                    />
                     <span class="approve-msg">{{ isPublic ? $t('store.源码') : $t('store.未开源') }}</span>
                 </h5>
             </h3>
             <h5 class="detail-info">
-                <span> {{ $t('store.发布者：') }} </span><span>{{detail.publisher || '-'}}</span>
+                <span> {{ $t('store.发布者：') }} </span><span>{{ detail.publisher || '-' }}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('store.版本：') }} </span><span>{{detail.version || '-'}}</span>
+                <span> {{ $t('store.版本：') }} </span><span>{{ detail.version || '-' }}</span>
             </h5>
-            <h5 class="detail-info detail-score" :title="$t('store.rateTips', [(detail.score || 0), (detail.totalNum || 0)])">
+            <h5
+                class="detail-info detail-score"
+                :title="$t('store.rateTips', [(detail.score || 0), (detail.totalNum || 0)])"
+            >
                 <span> {{ $t('store.评分：') }} </span>
                 <p class="score-group">
-                    <comment-rate :rate="5" :width="14" :height="14" :style="{ width: starWidth }" class="score-real"></comment-rate>
-                    <comment-rate :rate="0" :width="14" :height="14"></comment-rate>
+                    <comment-rate
+                        :rate="5"
+                        :width="14"
+                        :height="14"
+                        :style="{ width: starWidth }"
+                        class="score-real"
+                    ></comment-rate>
+                    <comment-rate
+                        :rate="0"
+                        :width="14"
+                        :height="14"
+                    ></comment-rate>
                 </p>
-                <span class="rate-num">{{detail.totalNum || 0}}</span>
+                <span class="rate-num">{{ detail.totalNum || 0 }}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('store.适用IDE：') }} </span><span>{{detail.categoryList|templateCategory}}</span>
+                <span> {{ $t('store.适用IDE：') }} </span><span>{{ detail.categoryList|templateCategory }}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('store.分类：') }} </span><span>{{detail.classifyName || '-'}}</span>
+                <span> {{ $t('store.分类：') }} </span><span>{{ detail.classifyName || '-' }}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('store.热度：') }} </span><span>{{detail.downloads || 0}}</span>
+                <span> {{ $t('store.热度：') }} </span><span>{{ detail.downloads || 0 }}</span>
             </h5>
             <h5 class="detail-info detail-label">
                 <span> {{ $t('store.功能标签：') }} </span>
-                <span v-for="(label, index) in detail.labelList" :key="index" class="info-label">{{label.labelName}}</span>
+                <span
+                    v-for="(label, index) in detail.labelList"
+                    :key="index"
+                    class="info-label"
+                >{{ label.labelName }}</span>
                 <span v-if="!detail.labelList || detail.labelList.length <= 0 ">-</span>
             </h5>
-            <h5 class="detail-info detail-maxwidth" :title="detail.summary">
-                <span> {{ $t('store.简介：') }} </span><span>{{detail.summary || '-'}}</span>
+            <h5
+                class="detail-info detail-maxwidth"
+                :title="detail.summary"
+            >
+                <span> {{ $t('store.简介：') }} </span><span>{{ detail.summary || '-' }}</span>
             </h5>
         </hgroup>
-        <button :class="[{ 'opicity-hidden': (detail.categoryList || []).every(x => x.categoryCode !== 'VsCode') }, 'detail-install']" @click="installPlugin"> {{ $t('store.安装') }} </button>
-        <bk-dialog v-model="showInstallTip"
+        <button
+            :class="[{ 'opicity-hidden': (detail.categoryList || []).every(x => x.categoryCode !== 'VsCode') }, 'detail-install']"
+            @click="installPlugin"
+        >
+            {{ $t('store.安装') }}
+        </button>
+        <bk-dialog
+            v-model="showInstallTip"
             theme="primary"
             :close-icon="false"
             header-position="center"
@@ -54,8 +91,14 @@
             @confirm="confirmInstall"
         >
             <h3 class="mb10"> {{ $t('store.VSCode 插件安装指引：') }} </h3>
-            1. {{ $t('store.首先安装') }} <span class="text-tip" v-bk-tooltips="{ placements: ['top'], content: $t('store.T-extensions 管理公司内部的所有VSCode插件') }">T-extensions</span> {{ $t('store.到 VSCode。若已安装，则跳过此步') }} <br>
-            <span class="ml10">1）<a class="down-link" href="http://bk.artifactory.oa.com/generic-public/ide-plugin/t-extension/0.0.4/t-extension-0.0.4.vsix"> {{ $t('store.点此下载') }} </a>  {{ $t('store.T-extensions 插件安装包') }} <br></span>
+            1. {{ $t('store.首先安装') }} <span
+                class="text-tip"
+                v-bk-tooltips="{ placements: ['top'], content: $t('store.T-extensions 管理公司内部的所有VSCode插件') }"
+            >T-extensions</span> {{ $t('store.到 VSCode。若已安装，则跳过此步') }} <br>
+            <span class="ml10">1）<a
+                class="down-link"
+                href="http://bk.artifactory.oa.com/generic-public/ide-plugin/t-extension/0.0.4/t-extension-0.0.4.vsix"
+            > {{ $t('store.点此下载') }} </a>  {{ $t('store.T-extensions 插件安装包') }} <br></span>
             <span class="ml10">2）{{ $t('store.在 VSCode 扩展 =》更多功能 =》从VSIX安装，安装上一步下载的VSIX包，入口如下图所示：') }}</span>
             <img :src="VSCODE_GUIDE_IMAGE_URL">
             <span class="mt10 inb">2. {{ $t('store.在 T-extensions 中安装目标插件，或在蓝盾研发商店中点击目标插件详情页面的安装按钮') }}</span>

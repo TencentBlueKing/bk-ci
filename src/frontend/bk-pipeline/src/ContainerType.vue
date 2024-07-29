@@ -1,9 +1,16 @@
 <template>
     <span class="container-type">
-        <span v-if="!containerType.showIcon" v-bk-tooltips="containerType.tooltip">
+        <span
+            v-if="!containerType.showIcon"
+            v-bk-tooltips="containerType.tooltip"
+        >
             {{ containerType.content }}
         </span>
-        <Logo v-else v-bk-tooltips="containerType.tooltip" v-bind="containerType.iconProps">{{
+        <Logo
+            v-else
+            v-bk-tooltips="containerType.tooltip"
+            v-bind="containerType.iconProps"
+        >{{
             containerType.content
         }}</Logo>
     </span>

@@ -1,12 +1,20 @@
 <template>
-    <div class="vs-report-wrapper"
+    <div
+        class="vs-report-wrapper"
         v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
-        }">
+        }"
+    >
         <content-header>
-            <div slot="left" class="title">
-                <i class="devops-icon icon-arrows-left" @click="toVsList"></i>
+            <div
+                slot="left"
+                class="title"
+            >
+                <i
+                    class="devops-icon icon-arrows-left"
+                    @click="toVsList"
+                ></i>
                 <span>查看报告</span>
                 <span v-if="reportDetail.id">
                     <span>{{ reportDetail.fileName }}</span>&nbsp;<span>（{{ reportDetail.version }}）</span>
@@ -15,10 +23,16 @@
             <p slot="right">本服务由金刚团队（企业微信：KingKong）提供后台支持</p>
         </content-header>
 
-        <section class="sub-view-port" v-if="showContent">
+        <section
+            class="sub-view-port"
+            v-if="showContent"
+        >
             <template>
                 <div class="report-main-container">
-                    <div class="report-box" v-if="reportDetail.id">
+                    <div
+                        class="report-box"
+                        v-if="reportDetail.id"
+                    >
                         <div class="report-header">
                             金刚漏洞扫描报告
                             <!-- <bk-button type="primary" class="download-btn">下载报告</bk-button> -->
@@ -32,11 +46,26 @@
                                     <div class="item-info-inner">
                                         <label class="info-label">威胁等级：</label>
                                         <div class="info-value">
-                                            <span class="level-icon" :class="{ 'highlight-icon': reportResult.conclusion.risk_level > 0 }"></span>
-                                            <span class="level-icon" :class="{ 'highlight-icon': reportResult.conclusion.risk_level >= 2 }"></span>
-                                            <span class="level-icon" :class="{ 'highlight-icon': reportResult.conclusion.risk_level >= 3 }"></span>
-                                            <span class="level-icon" :class="{ 'highlight-icon': reportResult.conclusion.risk_level >= 4 }"></span>
-                                            <span class="level-icon" :class="{ 'highlight-icon': reportResult.conclusion.risk_level >= 5 }"></span>
+                                            <span
+                                                class="level-icon"
+                                                :class="{ 'highlight-icon': reportResult.conclusion.risk_level > 0 }"
+                                            ></span>
+                                            <span
+                                                class="level-icon"
+                                                :class="{ 'highlight-icon': reportResult.conclusion.risk_level >= 2 }"
+                                            ></span>
+                                            <span
+                                                class="level-icon"
+                                                :class="{ 'highlight-icon': reportResult.conclusion.risk_level >= 3 }"
+                                            ></span>
+                                            <span
+                                                class="level-icon"
+                                                :class="{ 'highlight-icon': reportResult.conclusion.risk_level >= 4 }"
+                                            ></span>
+                                            <span
+                                                class="level-icon"
+                                                :class="{ 'highlight-icon': reportResult.conclusion.risk_level >= 5 }"
+                                            ></span>
                                         </div>
                                     </div>
                                     <div class="item-info-inner vulnerability-desc">
@@ -77,23 +106,45 @@
                                     <i class="devops-icon icon-exclamation-triangle"></i><span>漏洞详情</span>
                                 </div>
                                 <div class="card-content hole-content">
-                                    <div class="steps-item" v-for="(entry, index) in vulnerabilityDetail" :key="index">
+                                    <div
+                                        class="steps-item"
+                                        v-for="(entry, index) in vulnerabilityDetail"
+                                        :key="index"
+                                    >
                                         <div class="steps-item-header">
                                             <div class="header-info">
-                                                <i class="devops-icon icon-plus-square" v-if="!entry.isDisplayMsg"
-                                                    @click="toggleDisplay(entry, 'vulnerability')"></i>
-                                                <i class="devops-icon icon-minus-square" v-else
-                                                    @click="toggleDisplay(entry, 'vulnerability')"></i>
+                                                <i
+                                                    class="devops-icon icon-plus-square"
+                                                    v-if="!entry.isDisplayMsg"
+                                                    @click="toggleDisplay(entry, 'vulnerability')"
+                                                ></i>
+                                                <i
+                                                    class="devops-icon icon-minus-square"
+                                                    v-else
+                                                    @click="toggleDisplay(entry, 'vulnerability')"
+                                                ></i>
                                                 <label @click="toggleDisplay(entry, 'vulnerability')">{{ entry.name }}</label>
                                             </div>
                                             <div class="marking-tips">
-                                                <span class="marking-icon danger-icon" v-if="entry.result.indexOf('风险') === 1"></span>
-                                                <span class="marking-icon risky-icon" v-if="!entry.result.indexOf('发现')"></span>
-                                                <span class="marking-icon safe-icon" v-if="!entry.result.indexOf('安全')"></span>
+                                                <span
+                                                    class="marking-icon danger-icon"
+                                                    v-if="entry.result.indexOf('风险') === 1"
+                                                ></span>
+                                                <span
+                                                    class="marking-icon risky-icon"
+                                                    v-if="!entry.result.indexOf('发现')"
+                                                ></span>
+                                                <span
+                                                    class="marking-icon safe-icon"
+                                                    v-if="!entry.result.indexOf('安全')"
+                                                ></span>
                                                 <span class="marking-text">{{ entry.result }}</span>
                                             </div>
                                         </div>
-                                        <div class="steps-item-wrapper" v-if="entry.isDisplayMsg">
+                                        <div
+                                            class="steps-item-wrapper"
+                                            v-if="entry.isDisplayMsg"
+                                        >
                                             <div class="item-info-inner">
                                                 <label class="info-label">详细信息：</label>
                                                 <div class="info-value">{{ entry.item.detail }}</div>
@@ -115,23 +166,45 @@
                                     <i class="devops-icon icon-risk"></i><span>风险详情</span>
                                 </div>
                                 <div class="card-content hole-content">
-                                    <div class="steps-item" v-for="(entry, index) in riskDetails" :key="index">
+                                    <div
+                                        class="steps-item"
+                                        v-for="(entry, index) in riskDetails"
+                                        :key="index"
+                                    >
                                         <div class="steps-item-header">
                                             <div class="header-info">
-                                                <i class="devops-icon icon-plus-square" v-if="!entry.isDisplayMsg"
-                                                    @click="toggleDisplay(entry, 'detail')"></i>
-                                                <i class="devops-icon icon-minus-square" v-else
-                                                    @click="toggleDisplay(entry , 'detail')"></i>
+                                                <i
+                                                    class="devops-icon icon-plus-square"
+                                                    v-if="!entry.isDisplayMsg"
+                                                    @click="toggleDisplay(entry, 'detail')"
+                                                ></i>
+                                                <i
+                                                    class="devops-icon icon-minus-square"
+                                                    v-else
+                                                    @click="toggleDisplay(entry , 'detail')"
+                                                ></i>
                                                 <label @click="toggleDisplay(entry , 'detail')">{{ entry.name }}</label>
                                             </div>
                                             <div class="marking-tips">
-                                                <span class="marking-icon danger-icon" v-if="entry.result.indexOf('风险') === 1"></span>
-                                                <span class="marking-icon risky-icon" v-if="!entry.result.indexOf('发现')"></span>
-                                                <span class="marking-icon safe-icon" v-if="!entry.result.indexOf('安全')"></span>
+                                                <span
+                                                    class="marking-icon danger-icon"
+                                                    v-if="entry.result.indexOf('风险') === 1"
+                                                ></span>
+                                                <span
+                                                    class="marking-icon risky-icon"
+                                                    v-if="!entry.result.indexOf('发现')"
+                                                ></span>
+                                                <span
+                                                    class="marking-icon safe-icon"
+                                                    v-if="!entry.result.indexOf('安全')"
+                                                ></span>
                                                 <span class="marking-text">{{ entry.result }}</span>
                                             </div>
                                         </div>
-                                        <div class="steps-item-wrapper" v-if="entry.isDisplayMsg">
+                                        <div
+                                            class="steps-item-wrapper"
+                                            v-if="entry.isDisplayMsg"
+                                        >
                                             <div class="item-info-inner">
                                                 <label class="info-label">详细信息：</label>
                                                 <div class="info-value">{{ entry.item.detail }}</div>
@@ -153,23 +226,45 @@
                                     <i class="devops-icon icon-safety"></i><span>安全提示</span>
                                 </div>
                                 <div class="card-content hole-content">
-                                    <div class="steps-item" v-for="(entry, index) in riskWarn" :key="index">
+                                    <div
+                                        class="steps-item"
+                                        v-for="(entry, index) in riskWarn"
+                                        :key="index"
+                                    >
                                         <div class="steps-item-header">
                                             <div class="header-info">
-                                                <i class="devops-icon icon-plus-square" v-if="!entry.isDisplayMsg"
-                                                    @click="toggleDisplay(entry, 'tips')"></i>
-                                                <i class="devops-icon icon-minus-square" v-else
-                                                    @click="toggleDisplay(entry, 'tips')"></i>
+                                                <i
+                                                    class="devops-icon icon-plus-square"
+                                                    v-if="!entry.isDisplayMsg"
+                                                    @click="toggleDisplay(entry, 'tips')"
+                                                ></i>
+                                                <i
+                                                    class="devops-icon icon-minus-square"
+                                                    v-else
+                                                    @click="toggleDisplay(entry, 'tips')"
+                                                ></i>
                                                 <label @click="toggleDisplay(entry, 'tips')">{{ entry.name }}</label>
                                             </div>
                                             <div class="marking-tips">
-                                                <span class="marking-icon danger-icon" v-if="entry.result.indexOf('风险') === 1"></span>
-                                                <span class="marking-icon risky-icon" v-if="!entry.result.indexOf('发现')"></span>
-                                                <span class="marking-icon safe-icon" v-if="!entry.result.indexOf('安全')"></span>
+                                                <span
+                                                    class="marking-icon danger-icon"
+                                                    v-if="entry.result.indexOf('风险') === 1"
+                                                ></span>
+                                                <span
+                                                    class="marking-icon risky-icon"
+                                                    v-if="!entry.result.indexOf('发现')"
+                                                ></span>
+                                                <span
+                                                    class="marking-icon safe-icon"
+                                                    v-if="!entry.result.indexOf('安全')"
+                                                ></span>
                                                 <span class="marking-text">{{ entry.result }}</span>
                                             </div>
                                         </div>
-                                        <div class="steps-item-wrapper" v-if="entry.isDisplayMsg">
+                                        <div
+                                            class="steps-item-wrapper"
+                                            v-if="entry.isDisplayMsg"
+                                        >
                                             <div class="item-info-inner">
                                                 <label class="info-label">详细信息：</label>
                                                 <div class="info-value">{{ entry.item.detail }}</div>
@@ -188,7 +283,10 @@
                             </div>
                         </div>
                     </div>
-                    <div class="no-report-tips" v-else>
+                    <div
+                        class="no-report-tips"
+                        v-else
+                    >
                         <img src="../images/500.png">
                         <p>暂无扫描报告</p>
                     </div>

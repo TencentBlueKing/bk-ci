@@ -1,10 +1,16 @@
 <template>
     <section>
         <div class="setting-wrapper bk-form">
-            <div :class="['setting-header', { 'hasFold': isFold }]" @click="toggleFold">
-                <span class="setting-title">{{title}}</span>
+            <div
+                :class="['setting-header', { 'hasFold': isFold }]"
+                @click="toggleFold"
+            >
+                <span class="setting-title">{{ title }}</span>
                 <slot name="introduce"></slot>
-                <div class="setting-expand" v-if="isFold">
+                <div
+                    class="setting-expand"
+                    v-if="isFold"
+                >
                     <div v-if="isContentShow">
                         <span>{{ $t('settings.fold') }}</span>
                         <i class="devops-icon icon-angle-up"></i>
@@ -15,14 +21,32 @@
                     </div>
                 </div>
             </div>
-            <div class="setting-content" v-if="isContentShow">
+            <div
+                class="setting-content"
+                v-if="isContentShow"
+            >
                 <bk-form :style="{ 'width': computeWidth, 'max-width': computeMaxWidth }">
-                    <bk-form-item :label-width="90" :label="inputLabel">
-                        <staff-input :handle-change="handleChange" name="users" :value="pipelineSettingUser"></staff-input>
-                        <div class="setting-extra" v-if="extraUserList.length">
+                    <bk-form-item
+                        :label-width="90"
+                        :label="inputLabel"
+                    >
+                        <staff-input
+                            :handle-change="handleChange"
+                            name="users"
+                            :value="pipelineSettingUser"
+                        ></staff-input>
+                        <div
+                            class="setting-extra"
+                            v-if="extraUserList.length"
+                        >
                             <bk-popover placement="bottom-start">
-                                <p class="setting-extra-list">{{ $t('settings.attach') }}：{{extraUserList.join(',')}}</p>
-                                <div class="setting-tip-content" slot="content">{{extraUserList.join(',')}}</div>
+                                <p class="setting-extra-list">{{ $t('settings.attach') }}：{{ extraUserList.join(',') }}</p>
+                                <div
+                                    class="setting-tip-content"
+                                    slot="content"
+                                >
+                                    {{ extraUserList.join(',') }}
+                                </div>
                             </bk-popover>
                             <p class="setting-extra-tip">
                                 <slot name="setting-extra-tip"></slot>
@@ -31,14 +55,36 @@
                     </bk-form-item>
                 </bk-form>
                 <bk-form :style="{ 'width': computeWidth, 'max-width': computeMaxWidth }">
-                    <bk-form-item :label-width="90" :label="selectLabel">
-                        <bk-select :multiple="multiSelect" :value="selected" @change="selectedChange" searchable>
-                            <bk-option v-for="item in list" :key="item[settingKey]" :id="item[settingKey]" :name="item[selectKeyText]">
+                    <bk-form-item
+                        :label-width="90"
+                        :label="selectLabel"
+                    >
+                        <bk-select
+                            :multiple="multiSelect"
+                            :value="selected"
+                            @change="selectedChange"
+                            searchable
+                        >
+                            <bk-option
+                                v-for="item in list"
+                                :key="item[settingKey]"
+                                :id="item[settingKey]"
+                                :name="item[selectKeyText]"
+                            >
                             </bk-option>
                         </bk-select>
-                        <bk-popover v-if="extraGroupList.length" placement="bottom-start" class="setting-extra">
+                        <bk-popover
+                            v-if="extraGroupList.length"
+                            placement="bottom-start"
+                            class="setting-extra"
+                        >
                             <p class="setting-extra-list">{{ $t('settings.attach') }}：{{ extraGroupStr() }}</p>
-                            <div class="setting-tip-content" slot="content">{{ extraGroupStr() }}</div>
+                            <div
+                                class="setting-tip-content"
+                                slot="content"
+                            >
+                                {{ extraGroupStr() }}
+                            </div>
                         </bk-popover>
                     </bk-form-item>
                 </bk-form>

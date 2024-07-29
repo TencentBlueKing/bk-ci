@@ -6,9 +6,13 @@
         width="450"
         header-position="center"
         :show-footer="false"
-        :z-index="2000">
+        :z-index="2000"
+    >
         <header slot="header">
-            <i class="bk-icon import-status-icon" :class="iconClass"></i>
+            <i
+                class="bk-icon import-status-icon"
+                :class="iconClass"
+            ></i>
         </header>
         <div class="tips-header">
             {{ status === 'success' ? $t('environment.successfullyImported') : $t('environment.failedImport') }}
@@ -19,12 +23,20 @@
                     <div>{{ $t('environment.nextCan') }}</div>
                     <div>
                         1.{{ $t('environment.use') }}
-                        <a class="handle-btn" :href="`${hostName}/console/store/atomStore/detail/atom/JobScriptExecutionA`" target="__blank">{{ $t('environment.jobScriptExecution') }}</a>
+                        <a
+                            class="handle-btn"
+                            :href="`${hostName}/console/store/atomStore/detail/atom/JobScriptExecutionA`"
+                            target="__blank"
+                        >{{ $t('environment.jobScriptExecution') }}</a>
                         {{ $t('environment.executionJobScript') }}
                     </div>
                     <div>
                         2.{{ $t('environment.use') }}
-                        <a class="handle-btn" :href="`${hostName}/console/store/atomStore/detail/atom/JobPushFile`" target="__blank">{{ $t('environment.jobPushFile') }}</a>
+                        <a
+                            class="handle-btn"
+                            :href="`${hostName}/console/store/atomStore/detail/atom/JobPushFile`"
+                            target="__blank"
+                        >{{ $t('environment.jobPushFile') }}</a>
                         {{ $t('environment.executionJobPushFile') }}
                     </div>
                 </template>
@@ -33,9 +45,17 @@
                     <span v-if="agentNotInstallNodesCount">{{ $t('environment.GSEAgentNotInstall', [agentNotInstallNodesCount]) }}</span>
                     <span v-if="agentAbnormalNodesCount">{{ $t('environment.GSEAgentAbnormal', [agentAbnormalNodesCount]) }}</span>
                     <span>{{ $t('environment.importSuccessTips1') }}</span>
-                    <a class="handle-btn" :href="`${hostName}/console/store/atomStore/detail/atom/JobScriptExecutionA`" target="__blank">{{ $t('environment.jobScriptExecution') }}</a>
+                    <a
+                        class="handle-btn"
+                        :href="`${hostName}/console/store/atomStore/detail/atom/JobScriptExecutionA`"
+                        target="__blank"
+                    >{{ $t('environment.jobScriptExecution') }}</a>
                     <span>{{ $t('environment.and') }}</span>
-                    <a class="handle-btn" :href="`${hostName}/console/store/atomStore/detail/atom/JobPushFile`" target="__blank">{{ $t('environment.jobPushFile') }}</a>
+                    <a
+                        class="handle-btn"
+                        :href="`${hostName}/console/store/atomStore/detail/atom/JobPushFile`"
+                        target="__blank"
+                    >{{ $t('environment.jobPushFile') }}</a>
                     <span>{{ $t('environment.importSuccessTips2') }}</span>
                 </template>
             </template>

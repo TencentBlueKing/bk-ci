@@ -1,16 +1,36 @@
 <template>
     <section>
         <section
-            v-if="!connectError" style="height: 100%" v-bkloading="{
+            v-if="!connectError"
+            style="height: 100%"
+            v-bkloading="{
                 isLoading,
                 title: loadingTitle
-            }">
+            }"
+        >
             <div class="console-header">
-                <bk-button class="debug-btn" theme="danger" @click="stopDebug">{{ $t('editPage.docker.exitDebug') }}</bk-button>
-                <p class="debug-tips" v-show="isRunning">{{ $t('editPage.docker.fromRunningTips') }}</p>
+                <bk-button
+                    class="debug-btn"
+                    theme="danger"
+                    @click="stopDebug"
+                >
+                    {{ $t('editPage.docker.exitDebug') }}
+                </bk-button>
+                <p
+                    class="debug-tips"
+                    v-show="isRunning"
+                >
+                    {{ $t('editPage.docker.fromRunningTips') }}
+                </p>
             </div>
             <div class="container">
-                <my-terminal v-if="!isLoading" :url="url" :resize-url="resizeUrl" :exec-id="execId" :console-type="realDispatchType"></my-terminal>
+                <my-terminal
+                    v-if="!isLoading"
+                    :url="url"
+                    :resize-url="resizeUrl"
+                    :exec-id="execId"
+                    :console-type="realDispatchType"
+                ></my-terminal>
             </div>
             <div class="footer"></div>
         </section>
@@ -18,7 +38,8 @@
             v-else
             :title="config.title"
             :desc="config.desc"
-            :btns="config.btns">
+            :btns="config.btns"
+        >
         </empty-tips>
     </section>
 </template>

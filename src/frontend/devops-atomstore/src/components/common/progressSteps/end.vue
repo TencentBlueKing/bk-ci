@@ -1,7 +1,10 @@
 <template>
     <section class="main-body">
         <section class="progress-end">
-            <img src="../../../images/progressSuccess.svg" class="end-image">
+            <img
+                src="../../../images/progressSuccess.svg"
+                class="end-image"
+            >
             <span class="end-tip"> {{ $t('store.恭喜，成功发布到商店!') }} </span>
             <p class="end-buttons">
                 <bk-button @click="toWorkList">{{ $t('store.工作台') }}</bk-button>

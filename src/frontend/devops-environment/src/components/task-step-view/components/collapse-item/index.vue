@@ -4,9 +4,13 @@
             ref="collapseItem"
             v-bind="$attrs"
             hide-arrow
-            v-on="$listeners">
+            v-on="$listeners"
+        >
             <template #default>
-                <icon :name="iconType" size="14" />
+                <icon
+                    :name="iconType"
+                    size="14"
+                />
                 <span style="display: none;">{{ iconType }}</span>
                 <slot />
             </template>

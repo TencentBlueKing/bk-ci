@@ -9,8 +9,14 @@
         v-bk-tooltips.top="reviewTooltip"
         @click.stop="handleStageCheckIn"
     >
-        <Logo :name="reviewStatausIcon" size="28" />
-        <span class="stage-check-txt" v-if="checkTxt">{{ t(checkTxt) }}</span>
+        <Logo
+            :name="reviewStatausIcon"
+            size="28"
+        />
+        <span
+            class="stage-check-txt"
+            v-if="checkTxt"
+        >{{ t(checkTxt) }}</span>
     </div>
 </template>
 

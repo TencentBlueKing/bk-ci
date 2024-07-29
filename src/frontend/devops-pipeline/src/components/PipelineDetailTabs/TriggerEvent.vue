@@ -28,10 +28,16 @@
             </search-select>
         </header>
         <div class="trigger-event-timeline">
-            <trigger-event-timeline v-if="list.length > 0 || isLoadingMore" :list="list" />
-            <empty-exception v-else :type="emptyType" @clear="clearFilter(queryList)" />
+            <trigger-event-timeline
+                v-if="list.length > 0 || isLoadingMore"
+                :list="list"
+            />
+            <empty-exception
+                v-else
+                :type="emptyType"
+                @clear="clearFilter(queryList)"
+            />
         </div>
-
     </InfiniteScroll>
 </template>
 

@@ -1,12 +1,27 @@
 <template>
     <article class="api-setting">
         <h5 class="api-header">
-            <bk-input :placeholder="$t('store.请输入关键字搜索')" class="api-input" v-model="apiName" @input="getApiList" clearable></bk-input>
-            <bk-button theme="primary" @click="showAddApi">{{ $t('store.申请API') }}</bk-button>
+            <bk-input
+                :placeholder="$t('store.请输入关键字搜索')"
+                class="api-input"
+                v-model="apiName"
+                @input="getApiList"
+                clearable
+            ></bk-input>
+            <bk-button
+                theme="primary"
+                @click="showAddApi"
+            >
+                {{ $t('store.申请API') }}
+            </bk-button>
         </h5>
 
-        <section v-bkloading="{ isLoading: isLoading || isCanceling }" class="g-scroll-pagination-table">
-            <bk-table :data="apiList"
+        <section
+            v-bkloading="{ isLoading: isLoading || isCanceling }"
+            class="g-scroll-pagination-table"
+        >
+            <bk-table
+                :data="apiList"
                 :outer-border="false"
                 :header-border="false"
                 :header-cell-style="{ background: '#fff' }"
@@ -15,40 +30,121 @@
                 @page-change="pageChange"
                 @page-limit-change="pageLimitChange"
             >
-                <bk-table-column label="SDK API" prop="apiName" show-overflow-tooltip></bk-table-column>
-                <bk-table-column :label="$t('store.权限等级')" prop="apiLevel" :formatter="levelFormatter" show-overflow-tooltip></bk-table-column>
-                <bk-table-column :label="$t('store.状态')" prop="apiStatus" show-overflow-tooltip>
+                <bk-table-column
+                    label="SDK API"
+                    prop="apiName"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.权限等级')"
+                    prop="apiLevel"
+                    :formatter="levelFormatter"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.状态')"
+                    prop="apiStatus"
+                    show-overflow-tooltip
+                >
                     <template slot-scope="props">
-                        <span v-bk-tooltips="{ content: props.row.approveMsg, disabled: props.row.apiStatus !== 'REFUSE', width: 500 }" :class="props.row.apiStatus">
-                            {{props.row.apiStatus | statusFilter}}
+                        <span
+                            v-bk-tooltips="{ content: props.row.approveMsg, disabled: props.row.apiStatus !== 'REFUSE', width: 500 }"
+                            :class="props.row.apiStatus"
+                        >
+                            {{ props.row.apiStatus | statusFilter }}
                         </span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.操作')" width="180" class-name="handler-btn">
+                <bk-table-column
+                    :label="$t('store.操作')"
+                    width="180"
+                    class-name="handler-btn"
+                >
                     <template slot-scope="props">
-                        <bk-button text @click="handleApply(props.row)" v-if="['REFUSE'].includes(props.row.apiStatus)">{{ $t('store.申请') }}</bk-button>
-                        <bk-button text @click="handleCancelApply(props.row)" v-if="props.row.apiStatus === 'WAIT'">{{ $t('store.撤单') }}</bk-button>
+                        <bk-button
+                            text
+                            @click="handleApply(props.row)"
+                            v-if="['REFUSE'].includes(props.row.apiStatus)"
+                        >
+                            {{ $t('store.申请') }}
+                        </bk-button>
+                        <bk-button
+                            text
+                            @click="handleCancelApply(props.row)"
+                            v-if="props.row.apiStatus === 'WAIT'"
+                        >
+                            {{ $t('store.撤单') }}
+                        </bk-button>
                     </template>
                 </bk-table-column>
             </bk-table>
 
-            <bk-sideslider :is-show.sync="showAdd" :quick-close="true" :title="$t('store.申请API')" :width="640" :before-close="closeAddApi">
-                <bk-form :label-width="100" :model="apiObj" slot="content" class="add-api" ref="apiForm">
-                    <bk-form-item label="API" :required="true" :rules="[requireRule('API')]" property="apiNameList" error-display-type="normal">
-                        <bk-select v-model="apiObj.apiNameList" searchable multiple :loading="isLoadingUnApprovalApiList" @change="handleChangeForm">
-                            <bk-option v-for="api in unApprovalApiList"
+            <bk-sideslider
+                :is-show.sync="showAdd"
+                :quick-close="true"
+                :title="$t('store.申请API')"
+                :width="640"
+                :before-close="closeAddApi"
+            >
+                <bk-form
+                    :label-width="100"
+                    :model="apiObj"
+                    slot="content"
+                    class="add-api"
+                    ref="apiForm"
+                >
+                    <bk-form-item
+                        label="API"
+                        :required="true"
+                        :rules="[requireRule('API')]"
+                        property="apiNameList"
+                        error-display-type="normal"
+                    >
+                        <bk-select
+                            v-model="apiObj.apiNameList"
+                            searchable
+                            multiple
+                            :loading="isLoadingUnApprovalApiList"
+                            @change="handleChangeForm"
+                        >
+                            <bk-option
+                                v-for="api in unApprovalApiList"
                                 :key="api.apiName"
                                 :id="api.apiName"
-                                :name="api.aliasName">
+                                :name="api.aliasName"
+                            >
                             </bk-option>
                         </bk-select>
                     </bk-form-item>
-                    <bk-form-item :label="$t('store.使用场景')" :rules="[requireRule($t('store.使用场景'))]" :required="true" property="applyDesc" error-display-type="normal">
-                        <bk-input type="textarea" :rows="3" v-model="apiObj.applyDesc" :placeholder="$t('store.请输入使用场景')" @change="handleChangeForm"></bk-input>
+                    <bk-form-item
+                        :label="$t('store.使用场景')"
+                        :rules="[requireRule($t('store.使用场景'))]"
+                        :required="true"
+                        property="applyDesc"
+                        error-display-type="normal"
+                    >
+                        <bk-input
+                            type="textarea"
+                            :rows="3"
+                            v-model="apiObj.applyDesc"
+                            :placeholder="$t('store.请输入使用场景')"
+                            @change="handleChangeForm"
+                        ></bk-input>
                     </bk-form-item>
                     <bk-form-item>
-                        <bk-button theme="primary" @click="saveApi" :loading="isSaving">{{ $t('store.保存') }}</bk-button>
-                        <bk-button @click="closeAddApi" :disabled="isSaving">{{ $t('store.取消') }}</bk-button>
+                        <bk-button
+                            theme="primary"
+                            @click="saveApi"
+                            :loading="isSaving"
+                        >
+                            {{ $t('store.保存') }}
+                        </bk-button>
+                        <bk-button
+                            @click="closeAddApi"
+                            :disabled="isSaving"
+                        >
+                            {{ $t('store.取消') }}
+                        </bk-button>
                     </bk-form-item>
                 </bk-form>
             </bk-sideslider>

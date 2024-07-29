@@ -1,12 +1,27 @@
 <template>
     <article class="visible-setting">
         <h5 class="visible-header">
-            <bk-button theme="primary" @click="showDialog = true" :disabled="!userInfo.isProjectAdmin">{{ $t('store.添加') }}</bk-button>
-            <bk-button @click="bitchrRemove" :disabled="!userInfo.isProjectAdmin">{{ $t('store.批量删除') }}</bk-button>
+            <bk-button
+                theme="primary"
+                @click="showDialog = true"
+                :disabled="!userInfo.isProjectAdmin"
+            >
+                {{ $t('store.添加') }}
+            </bk-button>
+            <bk-button
+                @click="bitchrRemove"
+                :disabled="!userInfo.isProjectAdmin"
+            >
+                {{ $t('store.批量删除') }}
+            </bk-button>
         </h5>
 
-        <section v-bkloading="{ isLoading }" class="visible-table">
-            <bk-table :outer-border="false"
+        <section
+            v-bkloading="{ isLoading }"
+            class="visible-table"
+        >
+            <bk-table
+                :outer-border="false"
                 :header-border="false"
                 :header-cell-style="{ background: '#fff' }"
                 :empty-text="$t('store.未设置可见对象时，仅成员可以安装到名下项目中使用。设置可见对象后，对应用户可以在Store中查看并安装使用。')"
@@ -14,30 +29,53 @@
                 @select="select"
                 @select-all="selectAll"
             >
-                <bk-table-column type="selection" width="70" align="center"></bk-table-column>
-                <bk-table-column :label="$t('store.可见对象')" prop="deptName"></bk-table-column>
+                <bk-table-column
+                    type="selection"
+                    width="70"
+                    align="center"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.可见对象')"
+                    prop="deptName"
+                ></bk-table-column>
                 <bk-table-column :label="$t('store.状态')">
                     <template slot-scope="props">
                         <span>{{ statusMap[props.row.status] }}</span>
-                        <span class="audit-tips" v-if="props.row.status === 'APPROVING'"><i class="devops-icon icon-info-circle"></i> {{ $t('store.由蓝盾管理员审核') }} </span>
-                        <span class="audit-tips" v-else>{{ props.row.comment }}</span>
+                        <span
+                            class="audit-tips"
+                            v-if="props.row.status === 'APPROVING'"
+                        ><i class="devops-icon icon-info-circle"></i> {{ $t('store.由蓝盾管理员审核') }} </span>
+                        <span
+                            class="audit-tips"
+                            v-else
+                        >{{ props.row.comment }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.操作')" width="120" class-name="handler-btn">
+                <bk-table-column
+                    :label="$t('store.操作')"
+                    width="120"
+                    class-name="handler-btn"
+                >
                     <template slot-scope="props">
-                        <span :class="[{ 'disable': !userInfo.isProjectAdmin } ,'update-btn']" @click="handleDelete(props.row)"> {{ $t('store.删除') }} </span>
+                        <span
+                            :class="[{ 'disable': !userInfo.isProjectAdmin } ,'update-btn']"
+                            @click="handleDelete(props.row)"
+                        > {{ $t('store.删除') }} </span>
                     </template>
                 </bk-table-column>
             </bk-table>
         </section>
 
-        <organization-dialog :show-dialog="showDialog"
+        <organization-dialog
+            :show-dialog="showDialog"
             :is-loading="isSaveOrg"
             @saveHandle="saveHandle"
-            @cancelHandle="cancelHandle">
+            @cancelHandle="cancelHandle"
+        >
         </organization-dialog>
 
-        <bk-dialog v-model="deleteObj.show"
+        <bk-dialog
+            v-model="deleteObj.show"
             :loading="deleteObj.loading"
             @confirm="requestDeleteVisiable"
             @cancel="deleteObj.show = false"

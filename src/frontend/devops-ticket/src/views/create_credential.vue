@@ -13,16 +13,20 @@
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title
-            }">
-
+            }"
+        >
             <empty-tips
                 v-if="!hasPermission && showContent"
                 :title="emptyTipsConfig.title"
                 :desc="emptyTipsConfig.desc"
-                :btns="emptyTipsConfig.btns">
+                :btns="emptyTipsConfig.btns"
+            >
             </empty-tips>
             
-            <bk-form v-if="showContent && hasPermission" class="bk-form-wrapper">
+            <bk-form
+                v-if="showContent && hasPermission"
+                class="bk-form-wrapper"
+            >
                 <!-- 凭据类型 start -->
                 <bk-form-item
                     required
@@ -42,7 +46,10 @@
                 <!-- 凭据类型 end -->
 
                 <!-- 凭据名称 start -->
-                <bk-form-item required :label="$t('ticket.id')">
+                <bk-form-item
+                    required
+                    :label="$t('ticket.id')"
+                >
                     <bk-input
                         name="credentialId"
                         v-validate="{ required: true, regex: /^[a-zA-Z0-9\_]{1,40}$/ }"
@@ -53,8 +60,10 @@
                         }"
                         :disabled="nameReadOnly"
                     />
-                    <p class="error-tips"
-                        v-show="errors.has('credentialId')">
+                    <p
+                        class="error-tips"
+                        v-show="errors.has('credentialId')"
+                    >
                         {{ `${$t('ticket.credential.validateId')}` }}
                     </p>
                 </bk-form-item>
@@ -75,15 +84,22 @@
                             'is-danger': errors.has('credentialName')
                         }"
                     />
-                    <p class="error-tips"
-                        v-show="errors.has('credentialName')">
+                    <p
+                        class="error-tips"
+                        v-show="errors.has('credentialName')"
+                    >
                         {{ `${$t('ticket.credential.validateName')}` }}
                     </p>
                 </bk-form-item>
                 <!-- 凭据别名 end -->
 
                 <!-- 凭据内容 start -->
-                <bk-form-item v-for="(obj, key) in newModel" :key="key" :required="obj.rules" :label="$t(obj.label)">
+                <bk-form-item
+                    v-for="(obj, key) in newModel"
+                    :key="key"
+                    :required="obj.rules"
+                    :label="$t(obj.label)"
+                >
                     <bk-input
                         v-if="obj.type === 'password'"
                         v-validate="obj.rule"
@@ -108,23 +124,31 @@
                     >
                     </component>
                             
-                    <p class="error-tips"
-                        v-show="errors.has(key)">
-                        {{$t(obj.errorMsg)}}
+                    <p
+                        class="error-tips"
+                        v-show="errors.has(key)"
+                    >
+                        {{ $t(obj.errorMsg) }}
                     </p>
                 </bk-form-item>
                 <!-- 凭据内容 end -->
 
                 <!-- 凭据描述 start -->
                 <bk-form-item :label="$t('ticket.remark')">
-                    <textarea class="bk-form-textarea" :placeholder="$t('ticket.credential.credentialRemark')" name="credentialDesc" v-validate="{ required: false, max: 50 }"
+                    <textarea
+                        class="bk-form-textarea"
+                        :placeholder="$t('ticket.credential.credentialRemark')"
+                        name="credentialDesc"
+                        v-validate="{ required: false, max: 50 }"
                         :class="{
                             'is-danger': errors.has('credentialDesc')
                         }"
                         v-model="localConfig.credentialRemark"
                     ></textarea>
-                    <p class="error-tips"
-                        v-show="errors.has('credentialDesc')">
+                    <p
+                        class="error-tips"
+                        v-show="errors.has('credentialDesc')"
+                    >
                         {{ $t('ticket.credential.remarkLenLimit') }}
                     </p>
                 </bk-form-item>
@@ -141,11 +165,14 @@
                             }
                         }"
                         key="comfirmBtn"
-                        theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
+                        theme="primary"
+                        @click="submit"
+                    >
+                        {{ $t('ticket.comfirm') }}
+                    </bk-button>
                     <bk-button @click="cancel">{{ $t('ticket.cancel') }}</bk-button>
                 </div>
             </bk-form>
-
         </section>
     </section>
 </template>

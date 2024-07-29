@@ -1,6 +1,10 @@
 <template>
-    <section class="swiper-home" ref="swiper">
-        <hgroup :style="{ width: `${swiperMainWith}px`, transform: `translateX(${imageTransfer}px)` }"
+    <section
+        class="swiper-home"
+        ref="swiper"
+    >
+        <hgroup
+            :style="{ width: `${swiperMainWith}px`, transform: `translateX(${imageTransfer}px)` }"
             :class="[isTransition ? 'transition' : 'no-transition', 'swiper-main']"
             @mousedown="moveStart"
             @mousemove="moveing"
@@ -8,7 +12,8 @@
             @mouseout="mmoveEnd"
             @transitionend="transitionend"
         >
-            <h3 v-for="(pic, index) in picList"
+            <h3
+                v-for="(pic, index) in picList"
                 :key="index"
                 :class="[{ 'swiper-link': pic.link }, pic.class, 'swiper-img']"
                 :style="{ 'background-image': `url(${pic.logoUrl})` }"
@@ -17,15 +22,22 @@
             </h3>
         </hgroup>
         <ul class="swiper-index">
-            <li v-for="(pic, index) in pics"
+            <li
+                v-for="(pic, index) in pics"
                 :key="index"
                 :class="{ 'current-index': currentIndex === index + 1 }"
                 @mouseover="handleMouseIndex(index + 1)"
             >
             </li>
         </ul>
-        <i class="swiper-nav nav-left" @click="changeIndex(-1)"></i>
-        <i class="swiper-nav nav-right" @click="changeIndex(1)"></i>
+        <i
+            class="swiper-nav nav-left"
+            @click="changeIndex(-1)"
+        ></i>
+        <i
+            class="swiper-nav nav-right"
+            @click="changeIndex(1)"
+        ></i>
     </section>
 </template>
 

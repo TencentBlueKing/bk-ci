@@ -1,8 +1,12 @@
 <template>
     <ul class="progress-log">
-        <li class="log-item" v-for="(log, index) in computedLogs" :key="index">
-            [{{index + 1}}] - <span v-if="log.time">{{log.time|timeFilter}}</span>
-            <span :style="`color: ${log.color}`"> {{log.message}}</span>
+        <li
+            class="log-item"
+            v-for="(log, index) in computedLogs"
+            :key="index"
+        >
+            [{{ index + 1 }}] - <span v-if="log.time">{{ log.time|timeFilter }}</span>
+            <span :style="`color: ${log.color}`"> {{ log.message }}</span>
         </li>
     </ul>
 </template>

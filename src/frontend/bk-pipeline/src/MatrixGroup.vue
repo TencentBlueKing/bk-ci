@@ -1,12 +1,24 @@
 <template>
-    <div :class="['bk-pipeline-matrix-group', {
-        'un-exec-this-time': reactiveData.isExecDetail && isUnExecThisTime
-    }]">
-        <header class="bk-pipeline-matrix-group-header" @click="showMatrixPanel">
-            <div class="matrix-name" @click.stop="toggleMatrixOpen()">
-                <Logo name="angle-down" size="12" :class="matrixToggleCls"></Logo>
+    <div
+        :class="['bk-pipeline-matrix-group', {
+            'un-exec-this-time': reactiveData.isExecDetail && isUnExecThisTime
+        }]"
+    >
+        <header
+            class="bk-pipeline-matrix-group-header"
+            @click="showMatrixPanel"
+        >
+            <div
+                class="matrix-name"
+                @click.stop="toggleMatrixOpen()"
+            >
+                <Logo
+                    name="angle-down"
+                    size="12"
+                    :class="matrixToggleCls"
+                ></Logo>
                 <span :class="matrixTitleCls">
-                    {{matrix.name || t('jobMatrix')}}
+                    {{ matrix.name || t('jobMatrix') }}
                 </span>
             </div>
             <div class="matrix-status">
@@ -16,10 +28,17 @@
                     :depend-on-value="dependOnValue"
                 >
                 </status-icon>
-                <span v-if="statusDesc" :title="statusDesc" :class="matrixStatusDescCls">{{statusDesc}}</span>
+                <span
+                    v-if="statusDesc"
+                    :title="statusDesc"
+                    :class="matrixStatusDescCls"
+                >{{ statusDesc }}</span>
             </div>
         </header>
-        <section class="matrix-body" v-if="isMatrixOpen && hasMatrixJob">
+        <section
+            class="matrix-body"
+            v-if="isMatrixOpen && hasMatrixJob"
+        >
             <Job
                 v-for="(job, jobIndex) in computedJobs"
                 :key="job.id"

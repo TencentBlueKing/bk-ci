@@ -13,7 +13,12 @@
         @confirm="submit"
         @cancel="cancel"
     >
-        <bk-form :model="model" form-type="vertical" v-bkloading="{ isLoading: isSubmiting }" ref="copyForm">
+        <bk-form
+            :model="model"
+            form-type="vertical"
+            v-bkloading="{ isLoading: isSubmiting }"
+            ref="copyForm"
+        >
             <bk-form-item
                 v-for="item in formModel"
                 :key="item.name"

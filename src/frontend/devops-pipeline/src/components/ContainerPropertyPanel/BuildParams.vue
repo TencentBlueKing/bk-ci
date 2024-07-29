@@ -1,36 +1,55 @@
 <template>
     <div class="build-params-comp">
         <template>
-            <accordion show-checkbox :show-content="hasGlobalParams">
+            <accordion
+                show-checkbox
+                :show-content="hasGlobalParams"
+            >
                 <template slot="header">
                     <span>
                         {{ title }}
                         <bk-popover placement="right">
-                            <i style="display: block" class="devops-icon icon-info-circle"></i>
-                            <div slot="content" style="white-space: pre-wrap">
+                            <i
+                                style="display: block"
+                                class="devops-icon icon-info-circle"
+                            ></i>
+                            <div
+                                slot="content"
+                                style="white-space: pre-wrap"
+                            >
                                 <div>{{ $t("editPage.paramsTips") }}</div>
                             </div>
                         </bk-popover>
                     </span>
                 </template>
                 <template slot="content">
-                    <div class="no-prop" v-if="!hasGlobalParams">
+                    <div
+                        class="no-prop"
+                        v-if="!hasGlobalParams"
+                    >
                         <bk-button
                             theme="primary"
                             :disabled="disabled"
                             @click="editParam(null, true)"
-                        >{{ $t("editPage.addParams") }}</bk-button
                         >
+                            {{ $t("editPage.addParams") }}
+                        </bk-button>
                     </div>
                     <template v-else>
-                        <draggable v-model="globalParams" :options="paramsDragOptions">
+                        <draggable
+                            v-model="globalParams"
+                            :options="paramsDragOptions"
+                        >
                             <accordion
                                 condition
                                 v-for="(param, index) in globalParams"
                                 :key="param.paramIdKey"
                                 :is-error="errors.any(`param-${param.id}`)"
                             >
-                                <header class="param-header" slot="header">
+                                <header
+                                    class="param-header"
+                                    slot="header"
+                                >
                                     <span>
                                         <bk-popover
                                             style="vertical-align: middle"
@@ -39,7 +58,10 @@
                                         >
                                             <i class="devops-icon icon-info-circle-shape"></i>
                                             <div slot="content">
-                                                <p v-for="error in errors.all(`param-${param.id}`)" :key="error">
+                                                <p
+                                                    v-for="error in errors.all(`param-${param.id}`)"
+                                                    :key="error"
+                                                >
                                                     {{ error }}
                                                 </p>
                                             </div>
@@ -52,7 +74,10 @@
                                         class="devops-icon"
                                         :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]"
                                     />
-                                    <i v-if="!disabled" class="devops-icon icon-move" />
+                                    <i
+                                        v-if="!disabled"
+                                        class="devops-icon icon-move"
+                                    />
                                     <i
                                         v-if="!disabled"
                                         @click.stop.prevent="editParam(index, false)"
@@ -421,11 +446,17 @@
                                         ></key-value-normal>
                                     </bk-form-item>
 
-                                    <bk-form-item label-width="auto" v-if="isFileParam(param.type)">
+                                    <bk-form-item
+                                        label-width="auto"
+                                        v-if="isFileParam(param.type)"
+                                    >
                                         <file-param-input :file-path="param.defaultValue"></file-param-input>
                                     </bk-form-item>
 
-                                    <bk-form-item label-width="auto" :label="$t('desc')">
+                                    <bk-form-item
+                                        label-width="auto"
+                                        :label="$t('desc')"
+                                    >
                                         <vuex-input
                                             :disabled="disabled"
                                             :handle-change="

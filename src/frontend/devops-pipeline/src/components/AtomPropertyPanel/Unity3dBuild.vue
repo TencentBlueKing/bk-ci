@@ -1,16 +1,64 @@
 <template>
     <div class="u3d-build-panel bk-form bk-form-vertical">
-        <form-field v-for="(obj, key) in commonModel[&quot;row&quot;]" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-            <component :is="obj.component" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })" :name="key" :handle-change="handleUpdateElement" :value="element[key]" v-bind="obj"></component>
+        <form-field
+            v-for="(obj, key) in commonModel['row']"
+            :key="key"
+            :desc="obj.desc"
+            :required="obj.required"
+            :label="obj.label"
+            :is-error="errors.has(key)"
+            :error-msg="errors.first(key)"
+        >
+            <component
+                :is="obj.component"
+                v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
+                :name="key"
+                :handle-change="handleUpdateElement"
+                :value="element[key]"
+                v-bind="obj"
+            ></component>
         </form-field>
-        <accordion v-for="(prop, index) in getPlatformList" :key="index" show-checkbox :show-content="checkPlateform(prop.id)" :after-toggle="togglePlatform">
-            <header class="var-header" slot="header">
+        <accordion
+            v-for="(prop, index) in getPlatformList"
+            :key="index"
+            show-checkbox
+            :show-content="checkPlateform(prop.id)"
+            :after-toggle="togglePlatform"
+        >
+            <header
+                class="var-header"
+                slot="header"
+            >
                 <span>{{ prop.name }}</span>
-                <input class="accordion-checkbox" type="checkbox" :name="'platform'" :checked="checkPlateform(prop.id)" :value="prop.id" />
+                <input
+                    class="accordion-checkbox"
+                    type="checkbox"
+                    :name="'platform'"
+                    :checked="checkPlateform(prop.id)"
+                    :value="prop.id"
+                />
             </header>
-            <div slot="content" class="bk-form bk-form-vertical">
-                <form-field v-for="key of beloneKeys[prop.id]" :key="key" :desc="atomPropsModel[key].desc" :required="atomPropsModel[key].required" :label="atomPropsModel[key].label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                    <component :is="atomPropsModel[key].component" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(atomPropsModel[key].component) }, atomPropsModel[key].rule, { required: !!atomPropsModel[key].required })" :name="key" :handle-change="handleUpdateElement" :value="element[key]" v-bind="atomPropsModel[key]"></component>
+            <div
+                slot="content"
+                class="bk-form bk-form-vertical"
+            >
+                <form-field
+                    v-for="key of beloneKeys[prop.id]"
+                    :key="key"
+                    :desc="atomPropsModel[key].desc"
+                    :required="atomPropsModel[key].required"
+                    :label="atomPropsModel[key].label"
+                    :is-error="errors.has(key)"
+                    :error-msg="errors.first(key)"
+                >
+                    <component
+                        :is="atomPropsModel[key].component"
+                        v-validate.initial="Object.assign({}, { max: getMaxLengthByType(atomPropsModel[key].component) }, atomPropsModel[key].rule, { required: !!atomPropsModel[key].required })"
+                        :name="key"
+                        :handle-change="handleUpdateElement"
+                        :value="element[key]"
+                        v-bind="atomPropsModel[key]"
+                    ></component>
                 </form-field>
             </div>
         </accordion>
@@ -18,10 +66,10 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
     import { deepCopy } from '@/utils/util'
+    import { mapGetters } from 'vuex'
+    import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
 
     export default {
         name: 'u3d-build-code',

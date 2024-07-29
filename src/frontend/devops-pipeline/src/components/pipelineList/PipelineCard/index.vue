@@ -18,7 +18,7 @@
                             }
                         }"
                     >
-                        {{pipeline.pipelineName}}
+                        {{ pipeline.pipelineName }}
                     </span>
                     <logo
                         class="ml5 template-mode-icon"
@@ -27,18 +27,39 @@
                         size="12"
                         v-bk-tooltips="$t('pipelineConstraintModeTips')"
                     />
-                    <bk-tag v-if="pipeline.onlyDraftVersion" theme="success" class="draft-tag">{{ $t('draft') }}</bk-tag>
-                    <bk-tag v-else-if="pipeline.onlyBranchVersion" theme="warning" class="draft-tag">{{ $t('history.branch') }}</bk-tag>
+                    <bk-tag
+                        v-if="pipeline.onlyDraftVersion"
+                        theme="success"
+                        class="draft-tag"
+                    >
+                        {{ $t('draft') }}
+                    </bk-tag>
+                    <bk-tag
+                        v-else-if="pipeline.onlyBranchVersion"
+                        theme="warning"
+                        class="draft-tag"
+                    >
+                        {{ $t('history.branch') }}
+                    </bk-tag>
                 </h3>
                 <p class="bk-pipeline-card-summary">
                     <span>
-                        <logo size="16" name="record" />
-                        {{pipeline.buildCount}}{{ $t('runs') }}
+                        <logo
+                            size="16"
+                            name="record"
+                        />
+                        {{ pipeline.buildCount }}{{ $t('runs') }}
                     </span>
-                    <span v-if="pipeline.viewNames" class="pipeline-group-names-span">
-                        <logo size="16" name="pipeline-group" />
+                    <span
+                        v-if="pipeline.viewNames"
+                        class="pipeline-group-names-span"
+                    >
+                        <logo
+                            size="16"
+                            name="pipeline-group"
+                        />
                         <span v-bk-tooltips="{ content: viewNamesStr, delay: [300, 0], allowHTML: false }">
-                            {{viewNamesStr}}
+                            {{ viewNamesStr }}
                         </span>
                     </span>
                 </p>
@@ -80,43 +101,64 @@
                     v-bk-tooltips="pipeline.tooltips"
                     @click.stop="exec"
                 >
-                    <logo v-if="pipeline.lock" name="minus-circle"></logo>
+                    <logo
+                        v-if="pipeline.lock"
+                        name="minus-circle"
+                    ></logo>
                     <logo
                         v-else
                         name="play"
                     />
                 </span>
-                <ext-menu :data="pipeline" ext-cls="bk-pipeline-card-more-trigger" :config="pipeline.pipelineActions" />
+                <ext-menu
+                    :data="pipeline"
+                    ext-cls="bk-pipeline-card-more-trigger"
+                    :config="pipeline.pipelineActions"
+                />
             </aside>
 
-            <div :class="{
-                'collect-btn-background': true,
-                'is-collect': pipeline.hasCollect
-            }">
+            <div
+                :class="{
+                    'collect-btn-background': true,
+                    'is-collect': pipeline.hasCollect
+                }"
+            >
                 <bk-button
                     text
                     class="bk-pipeline-card-collect-btn"
                     :theme="pipeline.hasCollect ? 'warning' : ''"
-                    @click="collectPipeline(pipeline)">
-                    <i :class="{
-                        'devops-icon': true,
-                        'icon-star': !pipeline.hasCollect,
-                        'icon-star-shape': pipeline.hasCollect
-                    }" />
+                    @click="collectPipeline(pipeline)"
+                >
+                    <i
+                        :class="{
+                            'devops-icon': true,
+                            'icon-star': !pipeline.hasCollect,
+                            'icon-star-shape': pipeline.hasCollect
+                        }"
+                    />
                 </bk-button>
             </div>
         </header>
         <section class="bk-pipeline-card-info">
-            <i class="bk-pipeline-card-info-status-bar" :style="`background: ${statusColor}`"></i>
+            <i
+                class="bk-pipeline-card-info-status-bar"
+                :style="`background: ${statusColor}`"
+            ></i>
 
             <template v-if="pipeline.latestBuildNum">
                 <div class="bk-pipeline-card-info-row build-result-row">
-                    <span class="bk-pipeline-card-info-build-result" :style="`color: ${statusColor}`">
+                    <span
+                        class="bk-pipeline-card-info-build-result"
+                        :style="`color: ${statusColor}`"
+                    >
                         <pipeline-status-icon :status="pipeline.latestBuildStatus" />
                         {{ $t(`details.statusMap.${pipeline.latestBuildStatus}`) }}
                     </span>
                     <bk-tag ext-cls="bk-pipeline-card-info-build-time-tag">
-                        <span class="bk-pipeline-card-info-build-time-tag-span" v-bk-overflow-tips>
+                        <span
+                            class="bk-pipeline-card-info-build-time-tag-span"
+                            v-bk-overflow-tips
+                        >
                             {{ timeTag }}
                         </span>
                     </bk-tag>
@@ -125,30 +167,45 @@
                     class="pipeline-cell-link bk-pipeline-card-info-row"
                     :to="pipeline.latestBuildRoute"
                 >
-                    <b>{{latestBuildNum}}</b>
+                    <b>{{ latestBuildNum }}</b>
                     <span class="bk-pipeline-card-info-build-msg">{{ pipeline.lastBuildMsg }}</span>
                 </router-link>
                 <p class="bk-pipeline-card-info-row bk-pipeline-card-desc-row">
                     <span>
-                        <logo size="16" :name="pipeline.startType" />
+                        <logo
+                            size="16"
+                            :name="pipeline.startType"
+                        />
                         <span>{{ pipeline.latestBuildUserId }}</span>
                     </span>
                     <span v-if="pipeline.webhookAliasName">
-                        <logo name="branch" size="16" />
+                        <logo
+                            name="branch"
+                            size="16"
+                        />
                         <span>{{ pipeline.webhookAliasName }}</span>
                     </span>
-                    <span v-if="pipeline.webhookMessage" class="desc">
+                    <span
+                        v-if="pipeline.webhookMessage"
+                        class="desc"
+                    >
                         <span>{{ pipeline.webhookMessage }}</span>
                     </span>
                 </p>
             </template>
-            <div v-else class="un-exec-pipeline-card-info">
+            <div
+                v-else
+                class="un-exec-pipeline-card-info"
+            >
                 <pipeline-status-icon :status="pipeline.latestBuildStatus" />
                 {{ $t('unexecute') }}
             </div>
         </section>
-        <div v-if="pipeline.delete" class="pipeline-card-delete-mask">
-            <span>{{$t('alreadyDeleted')}}</span>
+        <div
+            v-if="pipeline.delete"
+            class="pipeline-card-delete-mask"
+        >
+            <span>{{ $t('alreadyDeleted') }}</span>
             <bk-button
                 v-if="!isRecentView"
                 text
@@ -156,12 +213,19 @@
                 theme="primary"
                 @click="removeHandler(pipeline)"
             >
-                {{$t('removeFromGroup')}}
+                {{ $t('removeFromGroup') }}
             </bk-button>
         </div>
-        <div v-else-if="!pipeline.permissions.canView && !pipeline.delete" class="pipeline-card-apply-mask">
-            <bk-button outline theme="primary" @click="applyPermission(pipeline)">
-                {{$t('apply')}}
+        <div
+            v-else-if="!pipeline.permissions.canView && !pipeline.delete"
+            class="pipeline-card-apply-mask"
+        >
+            <bk-button
+                outline
+                theme="primary"
+                @click="applyPermission(pipeline)"
+            >
+                {{ $t('apply') }}
             </bk-button>
         </div>
     </div>

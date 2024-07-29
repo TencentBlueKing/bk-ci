@@ -1,7 +1,13 @@
 <template>
     <div class="biz-container release-experience-wrapper experience">
-        <aside-nav :nav="nav" :menu-click="handleClick">
-            <router-view slot="content" class="biz-content"></router-view>
+        <aside-nav
+            :nav="nav"
+            :menu-click="handleClick"
+        >
+            <router-view
+                slot="content"
+                class="biz-content"
+            ></router-view>
         </aside-nav>
     </div>
 </template>

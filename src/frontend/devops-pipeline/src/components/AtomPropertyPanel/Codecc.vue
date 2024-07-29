@@ -1,24 +1,66 @@
 <template>
     <section>
         <div class="bk-form bk-form-vertical">
-            <div v-if="isThirdParty && container.baseOS === 'LINUX'" class="slave-tips">
+            <div
+                v-if="isThirdParty && container.baseOS === 'LINUX'"
+                class="slave-tips"
+            >
                 <p class="slave-tips-title">如果非root账号启动agent, 请使用root账号登录构建机运行以下命令：</p>
                 <p class="code-backgroud">mkdir -p /data/codecc_software<br>mount -t nfs -o {{ CODECC_SOFWARE_URL }}:/data/codecc_software /data/codecc_software</p>
             </div>
-            <template v-for="(obj, key) in commonModel[&quot;row&quot;]">
-                <form-field v-if="!obj.hidden" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                    <component :is="obj.component" v-validate.initial="Object.assign(obj.rule, { required: obj.required })" :name="key" :handle-change="key === &quot;tools&quot; ? handleChooseTools : (key === &quot;languages&quot; ? handleChooseLang : handleUpdateElement)" :value="element[key]" v-bind="obj"></component>
+            <template v-for="(obj, key) in commonModel['row']">
+                <form-field
+                    v-if="!obj.hidden"
+                    :key="key"
+                    :desc="obj.desc"
+                    :required="obj.required"
+                    :label="obj.label"
+                    :is-error="errors.has(key)"
+                    :error-msg="errors.first(key)"
+                >
+                    <component
+                        :is="obj.component"
+                        v-validate.initial="Object.assign(obj.rule, { required: obj.required })"
+                        :name="key"
+                        :handle-change="key === 'tools' ? handleChooseTools : (key === 'languages' ? handleChooseLang : handleUpdateElement)"
+                        :value="element[key]"
+                        v-bind="obj"
+                    ></component>
                 </form-field>
             </template>
             <template v-for="prop in accordionList">
-                <accordion show-checkbox show-content :key="prop.id" v-if="!newModel[prop.id].hidden || (showScript && prop.id === 'script')">
-                    <header class="var-header" slot="header">
+                <accordion
+                    show-checkbox
+                    show-content
+                    :key="prop.id"
+                    v-if="!newModel[prop.id].hidden || (showScript && prop.id === 'script')"
+                >
+                    <header
+                        class="var-header"
+                        slot="header"
+                    >
                         <span>{{ getPropName(prop.name) }}</span>
-                        <i class="devops-icon icon-angle-down" style="display:block"></i>
+                        <i
+                            class="devops-icon icon-angle-down"
+                            style="display:block"
+                        ></i>
                     </header>
-                    <div slot="content" class="bk-form bk-form-vertical">
-                        <form-field v-for="key of prop.item" v-if="!newModel[key].hidden" :key="key" :desc="newModel[key].desc" :required="newModel[key].required" :label="newModel[key].label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                            <component :is="newModel[key].component"
+                    <div
+                        slot="content"
+                        class="bk-form bk-form-vertical"
+                    >
+                        <form-field
+                            v-for="key of prop.item"
+                            v-if="!newModel[key].hidden"
+                            :key="key"
+                            :desc="newModel[key].desc"
+                            :required="newModel[key].required"
+                            :label="newModel[key].label"
+                            :is-error="errors.has(key)"
+                            :error-msg="errors.first(key)"
+                        >
+                            <component
+                                :is="newModel[key].component"
                                 v-validate.initial="Object.assign({}, newModel[key].rule, { required: newModel[key].required })"
                                 :lang="lang"
                                 :name="key"
@@ -33,21 +75,50 @@
                                 :turbo-disabled="turboDisabled"
                                 @handleChange="handleUpdateTurbo"
                                 :value="element[key]"
-                                v-bind="newModel[key]">
+                                v-bind="newModel[key]"
+                            >
                             </component>
                         </form-field>
                     </div>
                 </accordion>
             </template>
-            <accordion show-checkbox show-content key="otherChoice">
-                <header class="var-header" slot="header">
+            <accordion
+                show-checkbox
+                show-content
+                key="otherChoice"
+            >
+                <header
+                    class="var-header"
+                    slot="header"
+                >
                     <span>其它选项</span>
-                    <i class="devops-icon icon-angle-down" style="display:block"></i>
+                    <i
+                        class="devops-icon icon-angle-down"
+                        style="display:block"
+                    ></i>
                 </header>
-                <div slot="content" class="bk-form bk-form-vertical">
+                <div
+                    slot="content"
+                    class="bk-form bk-form-vertical"
+                >
                     <template v-for="key in otherChoice">
-                        <form-field v-if="!newModel[key].hidden" :key="key" :desc="newModel[key].desc" :required="newModel[key].required" :label="newModel[key].label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                            <component :is="newModel[key].component" v-validate.initial="Object.assign({}, newModel[key].rule, { required: newModel[key].required })" :name="key" :handle-change="handleUpdateElement" :value="element[key]" v-bind="newModel[key]"></component>
+                        <form-field
+                            v-if="!newModel[key].hidden"
+                            :key="key"
+                            :desc="newModel[key].desc"
+                            :required="newModel[key].required"
+                            :label="newModel[key].label"
+                            :is-error="errors.has(key)"
+                            :error-msg="errors.first(key)"
+                        >
+                            <component
+                                :is="newModel[key].component"
+                                v-validate.initial="Object.assign({}, newModel[key].rule, { required: newModel[key].required })"
+                                :name="key"
+                                :handle-change="handleUpdateElement"
+                                :value="element[key]"
+                                v-bind="newModel[key]"
+                            ></component>
                         </form-field>
                     </template>
                 </div>

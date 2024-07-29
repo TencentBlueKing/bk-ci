@@ -5,62 +5,116 @@
                 <div class="info">
                     <div class="left">{{ $t('environment.nodeInfo.cpuUsageRate') }}</div>
                     <div class="right">
-                        <bk-dropdown-menu :align="'right'" ref="cpuDropdown">
-                            <div style="cursor: pointer;" slot="dropdown-trigger">
-                                <span>{{cpuToggleRangeStr}}</span>
+                        <bk-dropdown-menu
+                            :align="'right'"
+                            ref="cpuDropdown"
+                        >
+                            <div
+                                style="cursor: pointer;"
+                                slot="dropdown-trigger"
+                            >
+                                <span>{{ cpuToggleRangeStr }}</span>
                                 <button class="dropdown-button">
                                     <i class="devops-icon icon-angle-down"></i>
                                 </button>
                             </div>
-                            <ul class="bk-dropdown-list" slot="dropdown-content">
+                            <ul
+                                class="bk-dropdown-list"
+                                slot="dropdown-content"
+                            >
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '1')">{{ $t('environment.nodeInfo.oneHour') }}</a>
+                                    <a
+                                        href="javascript:;"
+                                        @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '1')"
+                                    >{{ $t('environment.nodeInfo.oneHour') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '2')">{{ $t('environment.nodeInfo.oneDay') }}</a>
+                                    <a
+                                        href="javascript:;"
+                                        @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '2')"
+                                    >{{ $t('environment.nodeInfo.oneDay') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '3')">{{ $t('environment.nodeInfo.oneWeek') }}</a>
+                                    <a
+                                        href="javascript:;"
+                                        @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '3')"
+                                    >{{ $t('environment.nodeInfo.oneWeek') }}</a>
                                 </li>
                             </ul>
                         </bk-dropdown-menu>
                     </div>
                 </div>
-                <chart :option="cpuLine" ref="cpuLine1" autoresize :loading="cpuChartLoading" :loading-options="chartLoadingOption" v-show="!isEmptyCpu"></chart>
+                <chart
+                    :option="cpuLine"
+                    ref="cpuLine1"
+                    autoresize
+                    :loading="cpuChartLoading"
+                    :loading-options="chartLoadingOption"
+                    v-show="!isEmptyCpu"
+                ></chart>
                 <bk-exception
                     v-show="isEmptyCpu"
-                    class="exception-wrap-item exception-part" type="empty" scene="part"
+                    class="exception-wrap-item exception-part"
+                    type="empty"
+                    scene="part"
                 />
             </div>
             <div class="part top-right">
                 <div class="info">
                     <div class="left">{{ $t('environment.nodeInfo.ramUsageRate') }}</div>
                     <div class="right">
-                        <bk-dropdown-menu :align="'right'" ref="memoryDropdown">
-                            <div style="cursor: pointer;" slot="dropdown-trigger">
-                                <span>{{memToggleRangeStr}}</span>
+                        <bk-dropdown-menu
+                            :align="'right'"
+                            ref="memoryDropdown"
+                        >
+                            <div
+                                style="cursor: pointer;"
+                                slot="dropdown-trigger"
+                            >
+                                <span>{{ memToggleRangeStr }}</span>
                                 <button class="dropdown-button">
                                     <i class="devops-icon icon-angle-down"></i>
                                 </button>
                             </div>
-                            <ul class="bk-dropdown-list" slot="dropdown-content">
+                            <ul
+                                class="bk-dropdown-list"
+                                slot="dropdown-content"
+                            >
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '1')">{{ $t('environment.nodeInfo.oneHour') }}</a>
+                                    <a
+                                        href="javascript:;"
+                                        @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '1')"
+                                    >{{ $t('environment.nodeInfo.oneHour') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '2')">{{ $t('environment.nodeInfo.oneDay') }}</a>
+                                    <a
+                                        href="javascript:;"
+                                        @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '2')"
+                                    >{{ $t('environment.nodeInfo.oneDay') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '3')">{{ $t('environment.nodeInfo.oneWeek') }}</a>
+                                    <a
+                                        href="javascript:;"
+                                        @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '3')"
+                                    >{{ $t('environment.nodeInfo.oneWeek') }}</a>
                                 </li>
                             </ul>
                         </bk-dropdown-menu>
                     </div>
                 </div>
-                <chart :option="memoryLine" ref="memoryLine1" :loading="memChartLoading" :loading-options="chartLoadingOption" autoresize v-show="!isEmptyMemory"></chart>
+                <chart
+                    :option="memoryLine"
+                    ref="memoryLine1"
+                    :loading="memChartLoading"
+                    :loading-options="chartLoadingOption"
+                    autoresize
+                    v-show="!isEmptyMemory"
+                ></chart>
                 <bk-exception
                     v-show="isEmptyMemory"
-                    class="exception-wrap-item exception-part" type="empty" scene="part"
+                    class="exception-wrap-item exception-part"
+                    type="empty"
+                    scene="part"
                 />
             </div>
         </div>
@@ -69,62 +123,116 @@
                 <div class="info">
                     <div class="left">{{ $t('environment.nodeInfo.networkIo') }}</div>
                     <div class="right">
-                        <bk-dropdown-menu :align="'right'" ref="networkDropdown">
-                            <div style="cursor: pointer;" slot="dropdown-trigger">
-                                <span>{{networkToggleRangeStr}}</span>
+                        <bk-dropdown-menu
+                            :align="'right'"
+                            ref="networkDropdown"
+                        >
+                            <div
+                                style="cursor: pointer;"
+                                slot="dropdown-trigger"
+                            >
+                                <span>{{ networkToggleRangeStr }}</span>
                                 <button class="dropdown-button">
                                     <i class="devops-icon icon-angle-down"></i>
                                 </button>
                             </div>
-                            <ul class="bk-dropdown-list" slot="dropdown-content">
+                            <ul
+                                class="bk-dropdown-list"
+                                slot="dropdown-content"
+                            >
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '1')">{{ $t('environment.nodeInfo.oneHour') }}</a>
+                                    <a
+                                        href="javascript:;"
+                                        @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '1')"
+                                    >{{ $t('environment.nodeInfo.oneHour') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '2')">{{ $t('environment.nodeInfo.oneDay') }}</a>
+                                    <a
+                                        href="javascript:;"
+                                        @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '2')"
+                                    >{{ $t('environment.nodeInfo.oneDay') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '3')">{{ $t('environment.nodeInfo.oneWeek') }}</a>
+                                    <a
+                                        href="javascript:;"
+                                        @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '3')"
+                                    >{{ $t('environment.nodeInfo.oneWeek') }}</a>
                                 </li>
                             </ul>
                         </bk-dropdown-menu>
                     </div>
                 </div>
-                <chart :option="networkLine" ref="networkLine1" :loading="netChartLoading" :loading-options="chartLoadingOption" autoresize v-show="!isEmptyNetwork"></chart>
+                <chart
+                    :option="networkLine"
+                    ref="networkLine1"
+                    :loading="netChartLoading"
+                    :loading-options="chartLoadingOption"
+                    autoresize
+                    v-show="!isEmptyNetwork"
+                ></chart>
                 <bk-exception
                     v-show="isEmptyNetwork"
-                    class="exception-wrap-item exception-part" type="empty" scene="part"
+                    class="exception-wrap-item exception-part"
+                    type="empty"
+                    scene="part"
                 />
             </div>
             <div class="part">
                 <div class="info">
                     <div class="left">{{ $t('environment.nodeInfo.diskIo') }}</div>
                     <div class="right">
-                        <bk-dropdown-menu :align="'right'" ref="storageDropdown">
-                            <div style="cursor: pointer;" slot="dropdown-trigger">
-                                <span>{{storageToggleRangeStr}}</span>
+                        <bk-dropdown-menu
+                            :align="'right'"
+                            ref="storageDropdown"
+                        >
+                            <div
+                                style="cursor: pointer;"
+                                slot="dropdown-trigger"
+                            >
+                                <span>{{ storageToggleRangeStr }}</span>
                                 <button class="dropdown-button">
                                     <i class="devops-icon icon-angle-down"></i>
                                 </button>
                             </div>
-                            <ul class="bk-dropdown-list" slot="dropdown-content">
+                            <ul
+                                class="bk-dropdown-list"
+                                slot="dropdown-content"
+                            >
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '1')">{{ $t('environment.nodeInfo.oneHour') }}</a>
+                                    <a
+                                        href="javascript:;"
+                                        @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '1')"
+                                    >{{ $t('environment.nodeInfo.oneHour') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '2')">{{ $t('environment.nodeInfo.oneDay') }}</a>
+                                    <a
+                                        href="javascript:;"
+                                        @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '2')"
+                                    >{{ $t('environment.nodeInfo.oneDay') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '3')">{{ $t('environment.nodeInfo.oneWeek') }}</a>
+                                    <a
+                                        href="javascript:;"
+                                        @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '3')"
+                                    >{{ $t('environment.nodeInfo.oneWeek') }}</a>
                                 </li>
                             </ul>
                         </bk-dropdown-menu>
                     </div>
                 </div>
-                <chart :option="storageLine" ref="storageLine1" :loading="ioChartLoading" :loading-options="chartLoadingOption" autoresize v-show="!isEmptyDiskio"></chart>
+                <chart
+                    :option="storageLine"
+                    ref="storageLine1"
+                    :loading="ioChartLoading"
+                    :loading-options="chartLoadingOption"
+                    autoresize
+                    v-show="!isEmptyDiskio"
+                ></chart>
                 <bk-exception
                     v-show="isEmptyDiskio"
-                    class="exception-wrap-item exception-part" type="empty" scene="part"
+                    class="exception-wrap-item exception-part"
+                    type="empty"
+                    scene="part"
                 />
             </div>
         </div>

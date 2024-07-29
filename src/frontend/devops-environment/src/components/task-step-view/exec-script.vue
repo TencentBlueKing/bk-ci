@@ -2,15 +2,18 @@
     <div
         v-bkloading="{ isLoading }"
         class="exec-script-view"
-        :class="{ loading: isLoading }">
+        :class="{ loading: isLoading }"
+    >
         <detail-item
             :label="$t('environment.脚本内容：')"
-            layout="vertical">
+            layout="vertical"
+        >
             <ace-editor
                 :lang="language"
                 :options="languageOption"
                 readonly
-                :value="stepInfo.scriptContent" />
+                :value="stepInfo.scriptContent"
+            />
         </detail-item>
         <div>
             <detail-item :label="$t('environment.脚本参数：')">

@@ -1,11 +1,35 @@
 <template>
     <section v-bkloading="{ isLoading }">
-        <bk-form :label-width="100" :model="formData" class="manage-detail-edit" ref="editForm" v-if="!isLoading">
-            <bk-form-item :label="$t('store.微扩展名称')" :required="true" property="serviceName" :rules="[requireRule($t('store.微扩展名称')), numMax(20), nameRule]" ref="serviceName" error-display-type="normal">
-                <bk-input v-model="formData.serviceName" :placeholder="$t('store.请输入微扩展名称，不超过20个字符')"></bk-input>
+        <bk-form
+            :label-width="100"
+            :model="formData"
+            class="manage-detail-edit"
+            ref="editForm"
+            v-if="!isLoading"
+        >
+            <bk-form-item
+                :label="$t('store.微扩展名称')"
+                :required="true"
+                property="serviceName"
+                :rules="[requireRule($t('store.微扩展名称')), numMax(20), nameRule]"
+                ref="serviceName"
+                error-display-type="normal"
+            >
+                <bk-input
+                    v-model="formData.serviceName"
+                    :placeholder="$t('store.请输入微扩展名称，不超过20个字符')"
+                ></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('store.扩展点')" :required="true" property="extensionItemList" :rules="[requireRule($t('store.扩展点'))]" ref="extensionItemList" error-display-type="normal">
-                <bk-select :placeholder="$t('store.请选择扩展点')"
+            <bk-form-item
+                :label="$t('store.扩展点')"
+                :required="true"
+                property="extensionItemList"
+                :rules="[requireRule($t('store.扩展点'))]"
+                ref="extensionItemList"
+                error-display-type="normal"
+            >
+                <bk-select
+                    :placeholder="$t('store.请选择扩展点')"
                     class="service-item"
                     :scroll-height="300"
                     :clearable="true"
@@ -14,12 +38,15 @@
                     searchable
                     multiple
                     display-tag
-                    v-model="formData.extensionItemList">
+                    v-model="formData.extensionItemList"
+                >
                     <bk-option-group
                         v-for="(group, index) in serviceList"
                         :name="group.name"
-                        :key="index">
-                        <bk-option v-for="(option, key) in group.children"
+                        :key="index"
+                    >
+                        <bk-option
+                            v-for="(option, key) in group.children"
                             :key="key"
                             :id="option.id"
                             :name="option.name"
@@ -28,18 +55,47 @@
                     </bk-option-group>
                 </bk-select>
             </bk-form-item>
-            <bk-form-item :label="$t('store.标签')" property="labelIdList">
-                <bk-tag-input v-model="formData.labelIdList" :list="labelList" display-key="labelName" search-key="labelName" trigger="focus" :placeholder="$t('store.请选择标签')"></bk-tag-input>
+            <bk-form-item
+                :label="$t('store.标签')"
+                property="labelIdList"
+            >
+                <bk-tag-input
+                    v-model="formData.labelIdList"
+                    :list="labelList"
+                    display-key="labelName"
+                    search-key="labelName"
+                    trigger="focus"
+                    :placeholder="$t('store.请选择标签')"
+                ></bk-tag-input>
             </bk-form-item>
-            <bk-form-item :label="$t('store.简介')" property="summary" :required="true" :rules="[requireRule($t('store.简介'))]" ref="summary" error-display-type="normal">
-                <bk-input v-model="formData.summary" :placeholder="$t('store.请输入简介')"></bk-input>
+            <bk-form-item
+                :label="$t('store.简介')"
+                property="summary"
+                :required="true"
+                :rules="[requireRule($t('store.简介'))]"
+                ref="summary"
+                error-display-type="normal"
+            >
+                <bk-input
+                    v-model="formData.summary"
+                    :placeholder="$t('store.请输入简介')"
+                ></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('store.描述')" property="description">
+            <bk-form-item
+                :label="$t('store.描述')"
+                property="description"
+            >
                 <bk-radio-group v-model="formData.descInputType">
-                    <bk-radio value="MANUAL" class="service-input"> {{ $t('store.手动录入') }} </bk-radio>
+                    <bk-radio
+                        value="MANUAL"
+                        class="service-input"
+                    >
+                        {{ $t('store.手动录入') }}
+                    </bk-radio>
                     <bk-radio value="FILE"> {{ $t('store.fromReadme') }} </bk-radio>
                 </bk-radio-group>
-                <mavon-editor class="remark-input"
+                <mavon-editor
+                    class="remark-input"
                     v-if="formData.descInputType === 'MANUAL'"
                     ref="mdHook"
                     v-model="formData.description"
@@ -51,7 +107,8 @@
                 />
             </bk-form-item>
             <bk-form-item :label="$t('store.截图')">
-                <upload type="PICTURE"
+                <upload
+                    type="PICTURE"
                     :file-list.sync="imageList"
                     :limit="6"
                     :size="2"
@@ -59,19 +116,41 @@
                 ></upload>
             </bk-form-item>
             <bk-form-item :label="$t('store.视频教程')">
-                <upload type="VIDEO"
+                <upload
+                    type="VIDEO"
                     :file-list.sync="videoList"
                     :limit="4"
                     :size="50"
                     :tip="$t('store.支持mp4、ogg、webm格式，不超过4个，每个不超过50M')"
                 ></upload>
             </bk-form-item>
-            <bk-form-item :required="true" property="logoUrl" error-display-type="normal" class="edit-logo">
-                <select-logo :form="formData" type="SERVICE" :is-err="false" ref="logoUrlError"></select-logo>
+            <bk-form-item
+                :required="true"
+                property="logoUrl"
+                error-display-type="normal"
+                class="edit-logo"
+            >
+                <select-logo
+                    :form="formData"
+                    type="SERVICE"
+                    :is-err="false"
+                    ref="logoUrlError"
+                ></select-logo>
             </bk-form-item>
             <bk-form-item>
-                <bk-button theme="primary" @click="save" :loading="isSaving">{{ $t('store.保存') }}</bk-button>
-                <bk-button :disabled="isSaving" @click="$router.back()">{{ $t('store.取消') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    @click="save"
+                    :loading="isSaving"
+                >
+                    {{ $t('store.保存') }}
+                </bk-button>
+                <bk-button
+                    :disabled="isSaving"
+                    @click="$router.back()"
+                >
+                    {{ $t('store.取消') }}
+                </bk-button>
             </bk-form-item>
         </bk-form>
     </section>

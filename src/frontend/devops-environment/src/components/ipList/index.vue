@@ -19,7 +19,8 @@
             <template slot-scope="{ row }">
                 <div
                     class="ip-box"
-                    :class="row.result">
+                    :class="row.result"
+                >
                     {{ row.ip }}
                 </div>
             </template>
@@ -93,10 +94,14 @@
                 :fields="tableColumn"
                 :selected="selectedTableColumn"
                 :size="tableSize"
-                @setting-change="handleSettingChange" />
+                @setting-change="handleSettingChange"
+            />
         </bk-table-column>
         <template #empty>
-            <EmptyTableStatus :type="isSearch ? 'search-empty' : 'empty'" @clear="clearFilter" />
+            <EmptyTableStatus
+                :type="isSearch ? 'search-empty' : 'empty'"
+                @clear="clearFilter"
+            />
         </template>
     </bk-table>
 </template>

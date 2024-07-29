@@ -26,7 +26,8 @@
                     class="item-content installation-package-text"
                     style="margin-left: 20px;"
                     v-if="(curReleaseDetail.canExperience && !curReleaseDetail.expired && curReleaseDetail.online) && isApkOrIpa(curReleaseDetail) && isWindows && isMof"
-                    @click="downloadInstallation(curReleaseDetail.canExperience, curReleaseDetail.expired, curReleaseDetail.online, 'MoF')">
+                    @click="downloadInstallation(curReleaseDetail.canExperience, curReleaseDetail.expired, curReleaseDetail.online, 'MoF')"
+                >
                     {{ curReleaseDetail.installation_package }}（魔方有线安装）
                 </div>
             </div>
@@ -49,20 +50,41 @@
             <div class="base-detail-item version-desc-item">
                 <label class="item-label">版本描述：</label>
                 <div class="item-content">
-                    <p class="version-desc" v-html="curReleaseDetail.desc"></p>
+                    <p
+                        class="version-desc"
+                        v-html="curReleaseDetail.desc"
+                    ></p>
                 </div>
             </div>
         </div>
         <div class="qrcode-box">
-            <div class="qrcode-contetnt" v-if="curReleaseDetail.url"
-                v-bkloading="{ isLoading: codeLoading }">
-                <qrcode class="qrcode-view" :text="curReleaseDetail.url" :size="100"></qrcode>
+            <div
+                class="qrcode-contetnt"
+                v-if="curReleaseDetail.url"
+                v-bkloading="{ isLoading: codeLoading }"
+            >
+                <qrcode
+                    class="qrcode-view"
+                    :text="curReleaseDetail.url"
+                    :size="100"
+                ></qrcode>
             </div>
-            <div class="qrcode-contetnt" v-else>
-                <img src="../../images/nopermission-qrcode.png" class="qrcode-view">
+            <div
+                class="qrcode-contetnt"
+                v-else
+            >
+                <img
+                    src="../../images/nopermission-qrcode.png"
+                    class="qrcode-view"
+                >
                 <div class="bg-cover">无权限体验</div>
             </div>
-            <p v-if="curReleaseDetail.url">扫一扫，下载体验<span class="refresh-btn" @click="refreshUrl">刷新</span></p>
+            <p v-if="curReleaseDetail.url">
+                扫一扫，下载体验<span
+                    class="refresh-btn"
+                    @click="refreshUrl"
+                >刷新</span>
+            </p>
             <p v-else>如有需要，请联系<span>{{ curReleaseDetail.publisher }}</span></p>
         </div>
     </section>

@@ -1,7 +1,10 @@
 <template>
     <section class="devops-empty-tips">
         <p v-if="showLock">
-            <logo name="locked" size="52" />
+            <logo
+                name="locked"
+                size="52"
+            />
         </p>
         <h2 class="title">{{ title }}</h2>
         <p class="desc">{{ desc }}</p>

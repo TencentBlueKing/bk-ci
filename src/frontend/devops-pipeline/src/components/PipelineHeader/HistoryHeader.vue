@@ -2,7 +2,11 @@
     <div class="pipeline-history-header">
         <div class="pipeline-history-left-aside">
             <pipeline-bread-crumb :is-loading="isSwitchPipeline || switchingVersion" />
-            <pac-tag class="pipeline-pac-indicator" v-if="pacEnabled" :info="yamlInfo" />
+            <pac-tag
+                class="pipeline-pac-indicator"
+                v-if="pacEnabled"
+                :info="yamlInfo"
+            />
             <bk-popover :delay="[666, 0]">
                 <VersionSelector
                     :value="currentVersion"
@@ -35,7 +39,10 @@
                 :pipeline-id="pipelineId"
             />
         </div>
-        <aside v-show="!(isSwitchPipeline || switchingVersion)" class="pipeline-history-right-aside">
+        <aside
+            v-show="!(isSwitchPipeline || switchingVersion)"
+            class="pipeline-history-right-aside"
+        >
             <VersionDiffEntry
                 v-if="!isReleaseVersion"
                 :text="false"

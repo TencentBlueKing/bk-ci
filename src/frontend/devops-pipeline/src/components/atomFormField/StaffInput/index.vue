@@ -1,6 +1,9 @@
 <template>
     <div class="staff-input">
-        <div v-if="prependText" class="group-text prepend-box">
+        <div
+            v-if="prependText"
+            class="group-text prepend-box"
+        >
             {{ prependText }}
         </div>
         <bk-tag-input

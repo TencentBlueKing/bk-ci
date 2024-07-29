@@ -1,35 +1,66 @@
 <template>
     <section>
         <batch-add-options :submit-batch-add="handleBatchInput" />
-        <div class="Key-value-nomal" style="margin-top: 16px;">
-            <form-field :hide-colon="true" :label="$t('editPage.optionSetting')">
+        <div
+            class="Key-value-nomal"
+            style="margin-top: 16px;"
+        >
+            <form-field
+                :hide-colon="true"
+                :label="$t('editPage.optionSetting')"
+            >
                 <template v-if="list.length">
-                    <li class="param-item" v-for="(param, index) in list" :key="index">
-                        <form-field :is-error="keyErrs[index]" :error-msg="keyErrs[index]">
+                    <li
+                        class="param-item"
+                        v-for="(param, index) in list"
+                        :key="index"
+                    >
+                        <form-field
+                            :is-error="keyErrs[index]"
+                            :error-msg="keyErrs[index]"
+                        >
                             <vuex-input
                                 :disabled="disabled"
                                 :handle-change="(name, value) => handleEdit(name, value, index)"
                                 name="key"
                                 :placeholder="$t('editPage.optionValTips')"
-                                :value="param.key" />
+                                :value="param.key"
+                            />
                         </form-field>
-                        <form-field :is-error="valueErrs[index]" :error-msg="valueErrs[index]">
+                        <form-field
+                            :is-error="valueErrs[index]"
+                            :error-msg="valueErrs[index]"
+                        >
                             <vuex-input
                                 :disabled="disabled"
                                 :handle-change="(name, value) => handleEdit(name, value, index)"
                                 name="value"
                                 :placeholder="$t('editPage.optionNameTips')"
-                                :value="param.value" />
+                                :value="param.value"
+                            />
                         </form-field>
-                        <div class="operate-icon-div" v-if="!disabled">
-                            <i @click.stop.prevent="handleAdd(index)" class="bk-icon icon-plus-circle-shape" />
-                            <i @click.stop.prevent="handleDelete(index)" class="bk-icon icon-minus-circle-shape" />
+                        <div
+                            class="operate-icon-div"
+                            v-if="!disabled"
+                        >
+                            <i
+                                @click.stop.prevent="handleAdd(index)"
+                                class="bk-icon icon-plus-circle-shape"
+                            />
+                            <i
+                                @click.stop.prevent="handleDelete(index)"
+                                class="bk-icon icon-minus-circle-shape"
+                            />
                         </div>
                     </li>
                 </template>
-                <a :class="['text-link', 'hover-click']" v-if="!disabled && list.length === 0" @click.stop.prevent="handleAdd">
+                <a
+                    :class="['text-link', 'hover-click']"
+                    v-if="!disabled && list.length === 0"
+                    @click.stop.prevent="handleAdd"
+                >
                     <i class="devops-icon icon-plus-circle" />
-                    <span>{{$t('newui.pipelineParam.addItem')}}</span>
+                    <span>{{ $t('newui.pipelineParam.addItem') }}</span>
                 </a>
             </form-field>
         </div>

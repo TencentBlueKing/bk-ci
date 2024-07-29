@@ -1,7 +1,10 @@
 <template>
     <div>
         <pipeline-index v-if="!loadPreview"></pipeline-index>
-        <preview v-if="loadPreview" v-show="false"></preview>
+        <preview
+            v-if="loadPreview"
+            v-show="false"
+        ></preview>
     </div>
 </template>
 

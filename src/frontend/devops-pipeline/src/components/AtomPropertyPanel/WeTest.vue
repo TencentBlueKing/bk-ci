@@ -2,17 +2,37 @@
     <div class="pull-code-panel bk-form bk-form-vertical">
         <section>
             <template v-for="(obj, key) of newModel">
-                <form-field v-if="!obj.hidden" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                <form-field
+                    v-if="!obj.hidden"
+                    :key="key"
+                    :desc="obj.desc"
+                    :required="obj.required"
+                    :label="obj.label"
+                    :is-error="errors.has(key)"
+                    :error-msg="errors.first(key)"
+                >
                     <component
                         :class="[{ 'build-wetest-inline': key === 'taskId' || key === 'testAccountFile' || key === 'notifyType' }]"
-                        :is="obj.component" :name="key"
+                        :is="obj.component"
+                        :name="key"
                         v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
                         :handle-change="key === 'testType' ? handleTestType : handleUpdateElement"
                         :value="element[key]"
-                        v-bind="obj">
+                        v-bind="obj"
+                    >
                     </component>
-                    <bk-button v-if="key === 'taskId' || key === 'notifyType'" @click="edit(key)">{{ $t('edit') }}</bk-button>
-                    <a class="build-wetest-link" href="https://cdn.wetest.qq.com/com/c/WeTestAccountTemplate.xls" target="_blank" v-if="key === 'testAccountFile'">{{ $t('editPage.atomForm.templateDownload') }}</a>
+                    <bk-button
+                        v-if="key === 'taskId' || key === 'notifyType'"
+                        @click="edit(key)"
+                    >
+                        {{ $t('edit') }}
+                    </bk-button>
+                    <a
+                        class="build-wetest-link"
+                        href="https://cdn.wetest.qq.com/com/c/WeTestAccountTemplate.xls"
+                        target="_blank"
+                        v-if="key === 'testAccountFile'"
+                    >{{ $t('editPage.atomForm.templateDownload') }}</a>
                 </form-field>
             </template>
         </section>

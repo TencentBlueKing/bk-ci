@@ -2,16 +2,20 @@
     <div
         :class="['devops-undeploy', {
             'is-in-popup': isInPopup
-        }]">
+        }]"
+    >
         <img :src="imgUndeploy">
         <p class="undeploy-title">
-            {{serviceName}}
+            {{ serviceName }}
         </p>
         <p class="undeploy-desc">
-            {{serviceDesc}}
+            {{ serviceDesc }}
         </p>
         <footer v-if="!isInPopup">
-            <a :href="guideUrl" target="_blank">
+            <a
+                :href="guideUrl"
+                target="_blank"
+            >
                 <bk-button theme="primary">
                     {{ $t('learnMore') }}
                 </bk-button>

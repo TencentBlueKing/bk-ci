@@ -2,8 +2,27 @@
     <div class="pull-code-panel bk-form bk-form-vertical">
         <template>
             <template v-for="(obj, key) in newModel">
-                <form-field v-if="!obj.hidden" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                    <component :is="obj.component" :container="container" :element="element" :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })" :handle-change="handleMethods" :value="element[key]" v-bind="obj"></component>
+                <form-field
+                    v-if="!obj.hidden"
+                    :key="key"
+                    :desc="obj.desc"
+                    :desc-link="obj.descLink"
+                    :desc-link-text="obj.descLinkText"
+                    :required="obj.required"
+                    :label="obj.label"
+                    :is-error="errors.has(key)"
+                    :error-msg="errors.first(key)"
+                >
+                    <component
+                        :is="obj.component"
+                        :container="container"
+                        :element="element"
+                        :name="key"
+                        v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
+                        :handle-change="handleMethods"
+                        :value="element[key]"
+                        v-bind="obj"
+                    ></component>
                 </form-field>
             </template>
         </template>

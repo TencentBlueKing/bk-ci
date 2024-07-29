@@ -1,17 +1,38 @@
 <template>
     <div class="build-params-comp">
-        <accordion show-checkbox :show-content="isShowVersionParams" is-version="true">
+        <accordion
+            show-checkbox
+            :show-content="isShowVersionParams"
+            is-version="true"
+        >
             <template slot="header">
                 <span>
                     {{ $t('preview.introVersion') }}
-                    <bk-popover placement="right" :max-width="200">
-                        <i style="display:block;" class="bk-icon icon-info-circle"></i>
-                        <div slot="content" style="white-space: pre-wrap;">
+                    <bk-popover
+                        placement="right"
+                        :max-width="200"
+                    >
+                        <i
+                            style="display:block;"
+                            class="bk-icon icon-info-circle"
+                        ></i>
+                        <div
+                            slot="content"
+                            style="white-space: pre-wrap;"
+                        >
                             <div> {{ $t('editPage.introVersionTips') }} </div>
                         </div>
                     </bk-popover>
                 </span>
-                <input class="accordion-checkbox" :disabled="disabled" type="checkbox" name="versions" :checked="showVersions" @click.stop @change="toggleVersions" />
+                <input
+                    class="accordion-checkbox"
+                    :disabled="disabled"
+                    type="checkbox"
+                    name="versions"
+                    :checked="showVersions"
+                    @click.stop
+                    @change="toggleVersions"
+                />
             </template>
             <div slot="content">
                 <pipeline-versions-form
@@ -24,11 +45,16 @@
                     :handle-build-no-change="handleBuildNoChange"
                 ></pipeline-versions-form>
                 <form-field class="params-flex-col">
-                    <atom-checkbox :disabled="disabled" :text="$t('editPage.showOnStarting')" :value="execuVisible" name="required" :handle-change="handleBuildNoChange" />
+                    <atom-checkbox
+                        :disabled="disabled"
+                        :text="$t('editPage.showOnStarting')"
+                        :value="execuVisible"
+                        name="required"
+                        :handle-change="handleBuildNoChange"
+                    />
                 </form-field>
             </div>
         </accordion>
-
     </div>
 </template>
 

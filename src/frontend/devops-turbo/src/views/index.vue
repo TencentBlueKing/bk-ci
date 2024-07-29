@@ -1,15 +1,29 @@
 <template>
     <article class="turbo-home">
-        <bk-tab :active.sync="active" type="unborder-card" class="home-nav g-turbo-box-without-radius">
-            <bk-tab-panel v-for="(panel, index) in panels"
+        <bk-tab
+            :active.sync="active"
+            type="unborder-card"
+            class="home-nav g-turbo-box-without-radius"
+        >
+            <bk-tab-panel
+                v-for="(panel, index) in panels"
                 v-bind="panel"
-                :key="index">
+                :key="index"
+            >
                 <template slot="label">
-                    <section @click="gotoPage(panel.name)" class="home-nav-tab">{{ panel.label }}</section>
+                    <section
+                        @click="gotoPage(panel.name)"
+                        class="home-nav-tab"
+                    >
+                        {{ panel.label }}
+                    </section>
                 </template>
             </bk-tab-panel>
         </bk-tab>
-        <router-view class="turbo-main" v-bkloadng="{ isloading }"></router-view>
+        <router-view
+            class="turbo-main"
+            v-bkloadng="{ isloading }"
+        ></router-view>
     </article>
 </template>
 

@@ -1,15 +1,31 @@
 <template>
-    <article class="task-detail-home" v-bkloading="{ isLoading }">
+    <article
+        class="task-detail-home"
+        v-bkloading="{ isLoading }"
+    >
         <template v-if="hasPermission">
-            <bk-breadcrumb separator-class="bk-icon icon-angle-right" class="bread-crumb">
+            <bk-breadcrumb
+                separator-class="bk-icon icon-angle-right"
+                class="bread-crumb"
+            >
                 <bk-breadcrumb-item :to="{ name: 'taskList' }"> {{ $t('turbo.方案列表') }} </bk-breadcrumb-item>
                 <bk-breadcrumb-item> {{ $t('turbo.查看加速方案') }} </bk-breadcrumb-item>
             </bk-breadcrumb>
 
-            <section class="task-detail-body" v-if="!isLoading">
+            <section
+                class="task-detail-body"
+                v-if="!isLoading"
+            >
                 <main class="task-detail-left">
-                    <task-basic :form-data.sync="formData" :only-edit="false" ref="basic" />
-                    <task-param :form-data.sync="formData" :only-edit="false" />
+                    <task-basic
+                        :form-data.sync="formData"
+                        :only-edit="false"
+                        ref="basic"
+                    />
+                    <task-param
+                        :form-data.sync="formData"
+                        :only-edit="false"
+                    />
                 </main>
 
                 <main class="task-detail-right g-turbo-box">
@@ -20,7 +36,10 @@
 
                     <section class="task-record">
                         <h3 class="create-title g-turbo-deep-black-font"> {{ $t('turbo.更新记录') }} </h3>
-                        <bk-form :label-width="130" class="g-turbo-form-left record-form">
+                        <bk-form
+                            :label-width="130"
+                            class="g-turbo-form-left record-form"
+                        >
                             <bk-form-item :label="$t('turbo.创建人：')">
                                 {{ formData.createdBy }}
                             </bk-form-item>
@@ -38,7 +57,10 @@
                 </main>
             </section>
         </template>
-        <permission-exception v-else :message="errMessage" />
+        <permission-exception
+            v-else
+            :message="errMessage"
+        />
     </article>
 </template>
 

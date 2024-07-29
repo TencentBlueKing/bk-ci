@@ -2,9 +2,29 @@
     <div class="pull-code-panel bk-form bk-form-vertical">
         <section v-if="hybridId">
             <template v-for="(obj, key) of newModel">
-                <form-field v-if="!obj.hidden" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                    <component :is="obj.component" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="(key === 'srcType') ? handleChooseSrcType : handleUpdateElement" :value="element[key]" v-bind="obj"></component>
-                    <route-tips :visible="true" :src-tips="srcTips" :path-tips="''" v-if="key === 'srcPath' && element['srcPath']"></route-tips>
+                <form-field
+                    v-if="!obj.hidden"
+                    :key="key"
+                    :desc="obj.desc"
+                    :required="obj.required"
+                    :label="obj.label"
+                    :is-error="errors.has(key)"
+                    :error-msg="errors.first(key)"
+                >
+                    <component
+                        :is="obj.component"
+                        :name="key"
+                        v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                        :handle-change="(key === 'srcType') ? handleChooseSrcType : handleUpdateElement"
+                        :value="element[key]"
+                        v-bind="obj"
+                    ></component>
+                    <route-tips
+                        :visible="true"
+                        :src-tips="srcTips"
+                        :path-tips="''"
+                        v-if="key === 'srcPath' && element['srcPath']"
+                    ></route-tips>
                 </form-field>
             </template>
         </section>

@@ -1,8 +1,14 @@
 
 <template>
     <div class="biz-container">
-        <aside-nav :nav="nav" :menu-click="menuClick">
-            <router-view slot="content" style="width: 100%"></router-view>
+        <aside-nav
+            :nav="nav"
+            :menu-click="menuClick"
+        >
+            <router-view
+                slot="content"
+                style="width: 100%"
+            ></router-view>
         </aside-nav>
     </div>
 </template>

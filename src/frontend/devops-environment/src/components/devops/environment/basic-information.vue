@@ -20,16 +20,27 @@
             <div class="item-content">
                 <div class="item-label">{{ $t('environment.nodeInfo.maxParallelTaskCount') }}</div>
                 <div class="item-value">
-                    <div class="display-item" v-if="isEditCount">
-                        <input type="number" class="bk-form-input parallelTaskCount-input"
+                    <div
+                        class="display-item"
+                        v-if="isEditCount"
+                    >
+                        <input
+                            type="number"
+                            class="bk-form-input parallelTaskCount-input"
                             ref="parallelTaskCount"
                             name="parallelTaskCount"
                             :placeholder="$t('environment.nodeInfo.parallelTaskCountTips')"
                             v-validate.initial="`required|between:0,100|decimal:0`"
                             v-model="parallelTaskCount"
-                            :class="{ 'is-danger': errors.has('parallelTaskCount') }">
+                            :class="{ 'is-danger': errors.has('parallelTaskCount') }"
+                        >
                     </div>
-                    <div class="editing-item" v-else>{{ nodeDetails.parallelTaskCount || '--' }}</div>
+                    <div
+                        class="editing-item"
+                        v-else
+                    >
+                        {{ nodeDetails.parallelTaskCount || '--' }}
+                    </div>
                 </div>
                 <div class="handle-btn">
                     <div v-if="isEditCount">
@@ -55,7 +66,10 @@
             </div>
             <div class="item-content">
                 <div class="item-label">{{ $t('environment.status') }}</div>
-                <div class="item-value" :class="nodeDetails.status === 'NORMAL' ? 'normal' : 'abnormal'">
+                <div
+                    class="item-value"
+                    :class="nodeDetails.status === 'NORMAL' ? 'normal' : 'abnormal'"
+                >
                     {{ nodeDetails.status === 'NORMAL' ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
                 </div>
             </div>
@@ -69,10 +83,21 @@
             </div>
             <div class="item-content">
                 <div class="item-label">{{ nodeDetails.os === 'WINDOWS' ? $t('environment.nodeInfo.downloadLink') : $t('environment.nodeInfo.installCommand') }}</div>
-                <div class="item-value" :title="agentLink">{{ agentLink }}</div>
+                <div
+                    class="item-value"
+                    :title="agentLink"
+                >
+                    {{ agentLink }}
+                </div>
                 <div class="handle-btn">
-                    <span class="agent-url" @click="copyHandle">{{ $t('environment.copy') }}</span>
-                    <span @click="downloadHandle" v-if="nodeDetails.os === 'WINDOWS'">{{ $t('environment.download') }}</span>
+                    <span
+                        class="agent-url"
+                        @click="copyHandle"
+                    >{{ $t('environment.copy') }}</span>
+                    <span
+                        @click="downloadHandle"
+                        v-if="nodeDetails.os === 'WINDOWS'"
+                    >{{ $t('environment.download') }}</span>
                 </div>
             </div>
         </div>

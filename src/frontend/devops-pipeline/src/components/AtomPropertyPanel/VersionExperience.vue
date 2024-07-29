@@ -1,13 +1,29 @@
 <template>
     <div class="bk-form bk-form-vertical">
-        <form-field v-for="(obj, key) in newModel" :key="key" :desc="obj.desc" :required="obj.required" v-if="!obj.hidden" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)" :class="{ 'inline-warpper': key === 'relativeDate' }">
-            <component :is="obj.component"
+        <form-field
+            v-for="(obj, key) in newModel"
+            :key="key"
+            :desc="obj.desc"
+            :required="obj.required"
+            v-if="!obj.hidden"
+            :label="obj.label"
+            :is-error="errors.has(key)"
+            :error-msg="errors.first(key)"
+            :class="{ 'inline-warpper': key === 'relativeDate' }"
+        >
+            <component
+                :is="obj.component"
                 :name="key"
                 v-validate.initial="Object.assign({}, obj.rule, { required: obj.required })"
                 :handle-change="(key === 'enableGroupId') ? handleChoose : (key === 'timeType') ? updataDateType : handleUpdateElement"
-                :value="element[key]" v-bind="obj">
+                :value="element[key]"
+                v-bind="obj"
+            >
             </component>
-            <span class="inline-span" v-if="key === 'relativeDate'">{{obj.inlineText}}</span>
+            <span
+                class="inline-span"
+                v-if="key === 'relativeDate'"
+            >{{ obj.inlineText }}</span>
         </form-field>
     </div>
 </template>

@@ -1,9 +1,27 @@
 <template>
-    <article class="add-comment" @click.self="cancle">
-        <section class="add-main" v-bkloading="{ isLoading }">
-            <h3 class="add-title">为{{name}} {{ $t('store.评分') }} </h3>
-            <comment-rate class="add-rate" :edit="true" :rate="rate" :height="24" :width="23" @chooseRate="chooseRate"></comment-rate>
-            <textarea class="add-content g-input-border" v-model="comment" :placeholder="$t('store.请输入你的评论内容（字数上限为500字）')" ref="commentText"></textarea>
+    <article
+        class="add-comment"
+        @click.self="cancle"
+    >
+        <section
+            class="add-main"
+            v-bkloading="{ isLoading }"
+        >
+            <h3 class="add-title">为{{ name }} {{ $t('store.评分') }} </h3>
+            <comment-rate
+                class="add-rate"
+                :edit="true"
+                :rate="rate"
+                :height="24"
+                :width="23"
+                @chooseRate="chooseRate"
+            ></comment-rate>
+            <textarea
+                class="add-content g-input-border"
+                v-model="comment"
+                :placeholder="$t('store.请输入你的评论内容（字数上限为500字）')"
+                ref="commentText"
+            ></textarea>
             <h3 class="g-confirm-buttom">
                 <button @click="cancle"> {{ $t('store.取消') }} </button><button @click="confirm"> {{ $t('store.确定') }} </button>
             </h3>

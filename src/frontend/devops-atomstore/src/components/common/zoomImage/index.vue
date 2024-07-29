@@ -1,11 +1,13 @@
 <template>
     <transition name="fade">
-        <section v-if="imgSrc"
+        <section
+            v-if="imgSrc"
             class="full-screen"
             @mousemove="mouseMove"
             @mouseup="mouseUp"
         >
-            <img ref="screenImg"
+            <img
+                ref="screenImg"
                 :src="imgSrc"
                 @mousewheel.prevent="scrollImage"
                 @DOMMouseScroll.prevent="scrollImage"

@@ -1,16 +1,42 @@
 <template>
-    <article v-bkloading="{ isLoading }" class="service-progress-home">
-        <bread-crumbs :bread-crumbs="navList" type="service">
-            <a class="g-title-work" target="_blank" href="https://iwiki.oa.tencent.com/pages/viewpage.action?pageId=103523086"> {{ $t('store.微扩展指引') }} </a>
+    <article
+        v-bkloading="{ isLoading }"
+        class="service-progress-home"
+    >
+        <bread-crumbs
+            :bread-crumbs="navList"
+            type="service"
+        >
+            <a
+                class="g-title-work"
+                target="_blank"
+                href="https://iwiki.oa.tencent.com/pages/viewpage.action?pageId=103523086"
+            > {{ $t('store.微扩展指引') }} </a>
         </bread-crumbs>
-        <article v-if="!isLoading" class="service-progress-main">
+        <article
+            v-if="!isLoading"
+            class="service-progress-main"
+        >
             <header class="progress-header">
-                <bk-steps ext-cls="progress-steps" :status="currentStepStatus" :steps="progressStatus" :cur-step="currentStepIndex"></bk-steps>
-                <bk-button class="progress-cancle" :loading="isCancleLoading" :disabled="isOver" @click="cancelRelease"> {{ $t('store.中止发布') }} </bk-button>
+                <bk-steps
+                    ext-cls="progress-steps"
+                    :status="currentStepStatus"
+                    :steps="progressStatus"
+                    :cur-step="currentStepIndex"
+                ></bk-steps>
+                <bk-button
+                    class="progress-cancle"
+                    :loading="isCancleLoading"
+                    :disabled="isOver"
+                    @click="cancelRelease"
+                >
+                    {{ $t('store.中止发布') }}
+                </bk-button>
             </header>
 
             <section class="progress-main">
-                <component :is="currentStep.code"
+                <component
+                    :is="currentStep.code"
                     :store-build-info="storeBuildInfo"
                     :current-step="currentStep"
                     :detail="serviceDetail"
@@ -20,7 +46,8 @@
             </section>
         </article>
 
-        <bk-sideslider :is-show.sync="isShowDetail"
+        <bk-sideslider
+            :is-show.sync="isShowDetail"
             :title="$t('store.查看微扩展详情')"
             :quick-close="true"
             :width="640"
@@ -29,26 +56,52 @@
                 <section class="progress-detail-content">
                     <h3 class="detail-title">
                         <img :src="serviceDetail.logoUrl">
-                        <span>{{serviceDetail.serviceName}}</span>
+                        <span>{{ serviceDetail.serviceName }}</span>
                     </h3>
-                    <bk-form label-width="80" :model="serviceDetail">
-                        <bk-form-item :label="$t('store.微扩展标识') + '：'" property="serviceCode">
-                            <span class="lh30">{{serviceDetail.serviceCode}}</span>
+                    <bk-form
+                        label-width="80"
+                        :model="serviceDetail"
+                    >
+                        <bk-form-item
+                            :label="$t('store.微扩展标识') + '：'"
+                            property="serviceCode"
+                        >
+                            <span class="lh30">{{ serviceDetail.serviceCode }}</span>
                         </bk-form-item>
-                        <bk-form-item :label="$t('store.功能标签') + '：'" property="labelList">
+                        <bk-form-item
+                            :label="$t('store.功能标签') + '：'"
+                            property="labelList"
+                        >
                             <h5 class="detail-label">
-                                <span v-for="(label, index) in serviceDetail.labelList" :key="index" class="info-label">{{label.labelName}}</span>
+                                <span
+                                    v-for="(label, index) in serviceDetail.labelList"
+                                    :key="index"
+                                    class="info-label"
+                                >{{ label.labelName }}</span>
                             </h5>
                         </bk-form-item>
-                        <bk-form-item :label="$t('store.扩展点') + '：'" property="itemName">
-                            <span class="lh30">{{serviceDetail.itemName}}</span>
+                        <bk-form-item
+                            :label="$t('store.扩展点') + '：'"
+                            property="itemName"
+                        >
+                            <span class="lh30">{{ serviceDetail.itemName }}</span>
                         </bk-form-item>
-                        <bk-form-item :label="$t('store.简介') + '：'" property="summary">
-                            <span class="lh30">{{serviceDetail.summary}}</span>
+                        <bk-form-item
+                            :label="$t('store.简介') + '：'"
+                            property="summary"
+                        >
+                            <span class="lh30">{{ serviceDetail.summary }}</span>
                         </bk-form-item>
-                        <bk-form-item :label="$t('store.详细描述') + '：'" property="description">
-                            <p :class="{ 'overflow': !isDropdownShow }" ref="edit">
-                                <mavon-editor class="image-remark-input"
+                        <bk-form-item
+                            :label="$t('store.详细描述') + '：'"
+                            property="description"
+                        >
+                            <p
+                                :class="{ 'overflow': !isDropdownShow }"
+                                ref="edit"
+                            >
+                                <mavon-editor
+                                    class="image-remark-input"
                                     ref="mdHook"
                                     v-model="serviceDetail.description"
                                     :editable="false"
@@ -59,21 +112,37 @@
                                     preview-back-ground="#fafbfd"
                                 />
                             </p>
-                            <span class="toggle-btn" v-if="isOverflow" @click="isDropdownShow = !isDropdownShow">{{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
+                            <span
+                                class="toggle-btn"
+                                v-if="isOverflow"
+                                @click="isDropdownShow = !isDropdownShow"
+                            >{{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
                                 <i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
                             </span>
                         </bk-form-item>
-                        <bk-form-item :label="$t('store.发布者') + '：'" property="publisher">
-                            <span class="lh30">{{serviceDetail.publisher}}</span>
+                        <bk-form-item
+                            :label="$t('store.发布者') + '：'"
+                            property="publisher"
+                        >
+                            <span class="lh30">{{ serviceDetail.publisher }}</span>
                         </bk-form-item>
-                        <bk-form-item :label="$t('store.发布类型') + '：'" property="releaseType">
-                            <span class="lh30">{{serviceDetail.releaseType | releaseTypeFilter}}</span>
+                        <bk-form-item
+                            :label="$t('store.发布类型') + '：'"
+                            property="releaseType"
+                        >
+                            <span class="lh30">{{ serviceDetail.releaseType | releaseTypeFilter }}</span>
                         </bk-form-item>
-                        <bk-form-item :label="$t('store.版本') + '：'" property="version">
-                            <span class="lh30">{{serviceDetail.version}}</span>
+                        <bk-form-item
+                            :label="$t('store.版本') + '：'"
+                            property="version"
+                        >
+                            <span class="lh30">{{ serviceDetail.version }}</span>
                         </bk-form-item>
-                        <bk-form-item :label="$t('store.版本日志') + '：'" property="versionContent">
-                            <span class="lh30">{{serviceDetail.versionContent}}</span>
+                        <bk-form-item
+                            :label="$t('store.版本日志') + '：'"
+                            property="versionContent"
+                        >
+                            <span class="lh30">{{ serviceDetail.versionContent }}</span>
                         </bk-form-item>
                     </bk-form>
                 </section>

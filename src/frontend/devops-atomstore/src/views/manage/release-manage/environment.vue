@@ -1,16 +1,27 @@
 <template>
     <article class="manage-environment">
         <header class="environment-head">
-            <bk-button theme="primary" @click="addEnv">{{ $t('store.新增环境变量') }}</bk-button>
-            <bk-select v-model="envScope" class="head-item">
-                <bk-option v-for="option in scopesList"
+            <bk-button
+                theme="primary"
+                @click="addEnv"
+            >
+                {{ $t('store.新增环境变量') }}
+            </bk-button>
+            <bk-select
+                v-model="envScope"
+                class="head-item"
+            >
+                <bk-option
+                    v-for="option in scopesList"
                     :key="option.id"
                     :id="option.id"
-                    :name="option.name">
+                    :name="option.name"
+                >
                 </bk-option>
             </bk-select>
             <section :class="[{ error: searchError }, 'head-item']">
-                <bk-input class="head-input"
+                <bk-input
+                    class="head-input"
                     v-model="envName"
                     right-icon="bk-icon icon-search"
                     :clearable="true"
@@ -20,66 +31,173 @@
             </section>
         </header>
 
-        <main v-bkloading="{ isLoading }" class="g-scroll-table">
-            <bk-table v-if="!isLoading"
+        <main
+            v-bkloading="{ isLoading }"
+            class="g-scroll-table"
+        >
+            <bk-table
+                v-if="!isLoading"
                 :data="envList"
                 :outer-border="false"
                 :header-border="false"
                 :header-cell-style="{ background: '#fff' }"
             >
-                <bk-table-column :label="$t('store.变量名')" prop="varName"></bk-table-column>
-                <bk-table-column :label="$t('store.变量值')" prop="varValue"></bk-table-column>
-                <bk-table-column :label="$t('store.备注')" prop="varDesc"></bk-table-column>
-                <bk-table-column :label="$t('store.生效范围')" prop="scope" :formatter="convertScope"></bk-table-column>
-                <bk-table-column :label="$t('store.是否加密')" prop="encryptFlag" :formatter="convertEncryptFlag"></bk-table-column>
-                <bk-table-column :label="$t('store.操作')" width="220" class-name="handler-btn">
+                <bk-table-column
+                    :label="$t('store.变量名')"
+                    prop="varName"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.变量值')"
+                    prop="varValue"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.备注')"
+                    prop="varDesc"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.生效范围')"
+                    prop="scope"
+                    :formatter="convertScope"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.是否加密')"
+                    prop="encryptFlag"
+                    :formatter="convertEncryptFlag"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.操作')"
+                    width="220"
+                    class-name="handler-btn"
+                >
                     <template slot-scope="props">
-                        <span class="environment-btn" @click="editEnv(props.row)"> {{ $t('store.编辑') }} </span>
-                        <span class="environment-btn" @click="deleteEnv(props.row)"> {{ $t('store.删除') }} </span>
-                        <span class="environment-btn" @click="showHistory(props.row)"> {{ $t('store.变更历史') }} </span>
+                        <span
+                            class="environment-btn"
+                            @click="editEnv(props.row)"
+                        > {{ $t('store.编辑') }} </span>
+                        <span
+                            class="environment-btn"
+                            @click="deleteEnv(props.row)"
+                        > {{ $t('store.删除') }} </span>
+                        <span
+                            class="environment-btn"
+                            @click="showHistory(props.row)"
+                        > {{ $t('store.变更历史') }} </span>
                     </template>
                 </bk-table-column>
             </bk-table>
         </main>
 
-        <bk-sideslider :is-show.sync="addEnvObj.show" :quick-close="true" :title="addEnvObj.title" :width="640" @hidden="closeAddEnv">
-            <bk-form :label-width="100" :model="addEnvObj.form" slot="content" class="add-env" ref="envForm">
-                <bk-form-item :label="$t('store.变量名')" :required="true" :rules="[requireRule($t('store.变量名')), numMax(20), nameRule]" property="varName" error-display-type="normal">
-                    <bk-input v-model="addEnvObj.form.varName" :placeholder="$t('store.以大写字母开头，包含大写字母、下划线或数字')"></bk-input>
+        <bk-sideslider
+            :is-show.sync="addEnvObj.show"
+            :quick-close="true"
+            :title="addEnvObj.title"
+            :width="640"
+            @hidden="closeAddEnv"
+        >
+            <bk-form
+                :label-width="100"
+                :model="addEnvObj.form"
+                slot="content"
+                class="add-env"
+                ref="envForm"
+            >
+                <bk-form-item
+                    :label="$t('store.变量名')"
+                    :required="true"
+                    :rules="[requireRule($t('store.变量名')), numMax(20), nameRule]"
+                    property="varName"
+                    error-display-type="normal"
+                >
+                    <bk-input
+                        v-model="addEnvObj.form.varName"
+                        :placeholder="$t('store.以大写字母开头，包含大写字母、下划线或数字')"
+                    ></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.变量值')" :rules="[requireRule($t('store.变量值'))]" :required="true" property="varValue" error-display-type="normal">
-                    <bk-input type="textarea" :rows="3" v-model="addEnvObj.form.varValue" :placeholder="$t('store.请输入变量值')"></bk-input>
+                <bk-form-item
+                    :label="$t('store.变量值')"
+                    :rules="[requireRule($t('store.变量值'))]"
+                    :required="true"
+                    property="varValue"
+                    error-display-type="normal"
+                >
+                    <bk-input
+                        type="textarea"
+                        :rows="3"
+                        v-model="addEnvObj.form.varValue"
+                        :placeholder="$t('store.请输入变量值')"
+                    ></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.生效范围')" property="varValue">
-                    <bk-select v-model="addEnvObj.form.scope" :clearable="false">
-                        <bk-option v-for="option in scopesList"
+                <bk-form-item
+                    :label="$t('store.生效范围')"
+                    property="varValue"
+                >
+                    <bk-select
+                        v-model="addEnvObj.form.scope"
+                        :clearable="false"
+                    >
+                        <bk-option
+                            v-for="option in scopesList"
                             :key="option.id"
                             :id="option.id"
-                            :name="option.name">
+                            :name="option.name"
+                        >
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.备注')" property="varDesc">
-                    <bk-input type="textarea" :rows="3" v-model="addEnvObj.form.varDesc" :placeholder="$t('store.请输入备注')"></bk-input>
+                <bk-form-item
+                    :label="$t('store.备注')"
+                    property="varDesc"
+                >
+                    <bk-input
+                        type="textarea"
+                        :rows="3"
+                        v-model="addEnvObj.form.varDesc"
+                        :placeholder="$t('store.请输入备注')"
+                    ></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.是否加密')" property="encryptFlag">
-                    <bk-select v-model="addEnvObj.form.encryptFlag" :clearable="false">
-                        <bk-option v-for="option in encryptList"
+                <bk-form-item
+                    :label="$t('store.是否加密')"
+                    property="encryptFlag"
+                >
+                    <bk-select
+                        v-model="addEnvObj.form.encryptFlag"
+                        :clearable="false"
+                    >
+                        <bk-option
+                            v-for="option in encryptList"
                             :key="option.id"
                             :id="option.id"
-                            :name="option.name">
+                            :name="option.name"
+                        >
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
                 <bk-form-item>
-                    <bk-button theme="primary" @click="saveEnv" :loading="isSaving">{{ $t('store.确定') }}</bk-button>
-                    <bk-button @click="closeAddEnv" :disabled="isSaving">{{ $t('store.取消') }}</bk-button>
+                    <bk-button
+                        theme="primary"
+                        @click="saveEnv"
+                        :loading="isSaving"
+                    >
+                        {{ $t('store.确定') }}
+                    </bk-button>
+                    <bk-button
+                        @click="closeAddEnv"
+                        :disabled="isSaving"
+                    >
+                        {{ $t('store.取消') }}
+                    </bk-button>
                 </bk-form-item>
             </bk-form>
         </bk-sideslider>
 
-        <bk-sideslider :is-show.sync="envHistory.show" :quick-close="true" :title="`${$t('store.变更历史')}（${envHistory.name}）`" :width="640">
-            <bk-table slot="content"
+        <bk-sideslider
+            :is-show.sync="envHistory.show"
+            :quick-close="true"
+            :title="`${$t('store.变更历史')}（${envHistory.name}）`"
+            :width="640"
+        >
+            <bk-table
+                slot="content"
                 class="environment-history"
                 :data="envHistory.list"
                 v-bkloading="{ isLoading: envHistory.isLoading }"
@@ -87,20 +205,35 @@
                 :header-border="false"
                 :header-cell-style="{ background: '#fff' }"
             >
-                <bk-table-column :label="$t('store.变更前')" prop="beforeVarValue"></bk-table-column>
-                <bk-table-column :label="$t('store.变更后')" prop="afterVarValue"></bk-table-column>
-                <bk-table-column :label="$t('store.变更人')" prop="modifier"></bk-table-column>
-                <bk-table-column :label="$t('store.变更时间')" prop="updateTime" :formatter="convertTime" width="210"></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.变更前')"
+                    prop="beforeVarValue"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.变更后')"
+                    prop="afterVarValue"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.变更人')"
+                    prop="modifier"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.变更时间')"
+                    prop="updateTime"
+                    :formatter="convertTime"
+                    width="210"
+                ></bk-table-column>
             </bk-table>
         </bk-sideslider>
 
-        <bk-dialog v-model="deleteObj.show"
+        <bk-dialog
+            v-model="deleteObj.show"
             :loading="deleteObj.loading"
             @confirm="requestDelete"
             @cancel="deleteObj.show = false"
             :title="$t('store.删除')"
         >
-            {{`${$t('store.确定删除')}(${deleteObj.name})？`}}
+            {{ `${$t('store.确定删除')}(${deleteObj.name})？` }}
         </bk-dialog>
     </article>
 </template>

@@ -18,7 +18,11 @@
                                     :key="service.key"
                                     :to="addConsole(service.link_new)"
                                 >
-                                    <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="recent-logo-icon" />
+                                    <img
+                                        v-if="isAbsoluteUrl(service.logoUrl)"
+                                        :src="service.logoUrl"
+                                        class="recent-logo-icon"
+                                    />
                                     <Logo
                                         v-else
                                         :name="service.logoUrl"
@@ -80,7 +84,10 @@
                     </div>
                 </div>
 
-                <div class="devops-news" v-if="news.length > 0">
+                <div
+                    class="devops-news"
+                    v-if="news.length > 0"
+                >
                     <header>
                         <p class="title">
                             {{ $t("latestNews") }}
@@ -109,7 +116,13 @@
                 <article>
                     <h2>
                         {{ $t("bkdevopsTitle") }}
-                        <bk-tag v-if="BK_CI_VERSION" theme="info" type="stroke">{{ BK_CI_VERSION.trim() }}</bk-tag>
+                        <bk-tag
+                            v-if="BK_CI_VERSION"
+                            theme="info"
+                            type="stroke"
+                        >
+                            {{ BK_CI_VERSION.trim() }}
+                        </bk-tag>
                     </h2>
                     <p>
                         {{ $t("bkdevopsDesc") }}
@@ -136,7 +149,10 @@
             </aside>
         </div>
         <section class="devops-home-footer">
-            <p class="item" v-html="platformInfo.footerInfoHTML" />
+            <p
+                class="item"
+                v-html="platformInfo.footerInfoHTML"
+            />
             <p class="bkci-copyright">{{ platformInfo.footerCopyrightContent }}</p>
         </section>
         <consult-tools />

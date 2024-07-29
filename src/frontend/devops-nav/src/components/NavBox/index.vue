@@ -21,7 +21,11 @@
                             :href="addConsole(child.link_new)"
                             @click.prevent="gotoPage(child)"
                         >
-                            <img class="service-url-icon" v-if="isAbsoluteUrl(child.logoUrl)" :src="child.logoUrl" />
+                            <img
+                                class="service-url-icon"
+                                v-if="isAbsoluteUrl(child.logoUrl)"
+                                :src="child.logoUrl"
+                            />
                             <i
                                 v-else-if="serviceIcon(child.logoUrl) === 'logo-bcs'"
                                 class="devops-icon service-icon icon-logo-bcs"

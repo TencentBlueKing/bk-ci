@@ -3,7 +3,13 @@
         <header class="manage-detail-header">
             <span @click="$router.back()">{{ $t('store.取消编辑') }}</span>
         </header>
-        <component :is="`${$route.params.type}Edit`" :user-info="userInfo" :detail="detail" class="edit-main" ref="edit"></component>
+        <component
+            :is="`${$route.params.type}Edit`"
+            :user-info="userInfo"
+            :detail="detail"
+            class="edit-main"
+            ref="edit"
+        ></component>
     </article>
 </template>
 

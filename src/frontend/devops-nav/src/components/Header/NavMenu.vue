@@ -36,7 +36,11 @@
                                 :key="service.id"
                                 class="collect-item"
                             >
-                                <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="service-logo" />
+                                <img
+                                    v-if="isAbsoluteUrl(service.logoUrl)"
+                                    :src="service.logoUrl"
+                                    class="service-logo"
+                                />
                                 <logo
                                     v-else
                                     class="service-logo"

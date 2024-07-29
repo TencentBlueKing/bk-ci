@@ -2,19 +2,34 @@
     <div class="code-mode-check bk-form">
         <div class="bk-form-item">
             <template>
-                <label class="bk-label" v-if="label">{{ label }}：</label>
-                <bk-tooltip :placement="descDirection ? descDirection : right" v-if="desc">
-                    <i class="devops-icon" :class="[iconClass ? iconClass : 'icon-info-circle']"></i>
-                    <div slot="content" style="white-space: pre-wrap;font-weight: normal;">
+                <label
+                    class="bk-label"
+                    v-if="label"
+                >{{ label }}：</label>
+                <bk-tooltip
+                    :placement="descDirection ? descDirection : right"
+                    v-if="desc"
+                >
+                    <i
+                        class="devops-icon"
+                        :class="[iconClass ? iconClass : 'icon-info-circle']"
+                    ></i>
+                    <div
+                        slot="content"
+                        style="white-space: pre-wrap;font-weight: normal;"
+                    >
                         <div>{{ desc }}</div>
                     </div>
                 </bk-tooltip>
                 <div class="bk-form-content">
-                    <multiple-complete :name="name" type="text"
+                    <multiple-complete
+                        :name="name"
+                        type="text"
                         :value="value"
                         :disabled="disabled"
                         :placeholder="placeholder"
-                        :config="dataInputConfig" />
+                        :config="dataInputConfig"
+                    />
                 </div>
             </template>
         </div>

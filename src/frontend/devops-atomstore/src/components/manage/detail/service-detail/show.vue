@@ -1,8 +1,14 @@
 <template>
     <article>
         <section class="show-detail">
-            <img :src="detail.logoUrl || defaultPic" class="detail-img">
-            <ul class="detail-items" ref="detail">
+            <img
+                :src="detail.logoUrl || defaultPic"
+                class="detail-img"
+            >
+            <ul
+                class="detail-items"
+                ref="detail"
+            >
                 <li class="detail-item">
                     <span class="item-name">{{ detail.serviceName }}</span>
                 </li>
@@ -41,7 +47,11 @@
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.媒体信息') }}：</span>
-                    <media-list class="media-list" :list="detail.mediaList" v-if="detail.mediaList.length"></media-list>
+                    <media-list
+                        class="media-list"
+                        :list="detail.mediaList"
+                        v-if="detail.mediaList.length"
+                    ></media-list>
                 </li>
                 <slot></slot>
             </ul>

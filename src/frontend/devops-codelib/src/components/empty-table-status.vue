@@ -1,10 +1,18 @@
 <template>
-    <bk-exception :type="type" scene="part">
+    <bk-exception
+        :type="type"
+        scene="part"
+    >
         <div style="font-size: 14px;">{{ typeMap[type] }}</div>
         <template v-if="type === 'search-empty'">
             <div class="empty-tips">
                 {{ $t('codelib.可以尝试 调整关键词 或') }}
-                <button class="bk-text-button" @click="handleClear">{{$t('codelib.清空筛选条件')}}</button>
+                <button
+                    class="bk-text-button"
+                    @click="handleClear"
+                >
+                    {{ $t('codelib.清空筛选条件') }}
+                </button>
             </div>
         </template>
     </bk-exception>

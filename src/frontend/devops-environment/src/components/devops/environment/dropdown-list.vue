@@ -1,15 +1,28 @@
 <template>
     <ul class="dropdown-list first-col">
-        <li class="host-main" :class="{ 'disabled': !entry.canUse }"
-            v-for="(entry, index) in menuList" :key="index"
-            @click="handleNode(entry.id, entry.canUse)">
+        <li
+            class="host-main"
+            :class="{ 'disabled': !entry.canUse }"
+            v-for="(entry, index) in menuList"
+            :key="index"
+            @click="handleNode(entry.id, entry.canUse)"
+        >
             <span>{{ entry.name }}</span>
-            <i class="devops-icon icon-right-shape" v-if="entry.children"></i>
-            <ul class="dropdown-list second-col" v-if="entry.children"
-                :class="{ 'set-col': entry.id === 'hostConf' }">
-                <li v-for="(child, eindex) in entry.children" :key="eindex"
+            <i
+                class="devops-icon icon-right-shape"
+                v-if="entry.children"
+            ></i>
+            <ul
+                class="dropdown-list second-col"
+                v-if="entry.children"
+                :class="{ 'set-col': entry.id === 'hostConf' }"
+            >
+                <li
+                    v-for="(child, eindex) in entry.children"
+                    :key="eindex"
                     :class="{ 'disabled': !child.canUse }"
-                    @click="handleNode(child.id, child.canUse)">
+                    @click="handleNode(child.id, child.canUse)"
+                >
                     <span>{{ child.name }}</span>
                 </li>
             </ul>

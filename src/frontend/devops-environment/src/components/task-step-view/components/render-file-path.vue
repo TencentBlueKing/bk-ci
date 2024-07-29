@@ -4,7 +4,8 @@
             <div
                 v-for="(item, fileIndex) in renderData"
                 :key="fileIndex"
-                class="path-text-row">
+                class="path-text-row"
+            >
                 {{ item }}
             </div>
             <div v-if="hasMore">
@@ -12,11 +13,13 @@
             </div>
             <ul
                 slot="content"
-                class="source-file-tips-box">
+                class="source-file-tips-box"
+            >
                 <li
                     v-for="(item, fileIndex) in data"
                     :key="fileIndex"
-                    class="row">
+                    class="row"
+                >
                     <span class="dot" />
                     {{ item }}
                 </li>

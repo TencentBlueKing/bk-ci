@@ -7,7 +7,10 @@
             @click="toggleOrcode(show)"
         >
             <div class="flag-box">
-                <Icon name="phone" size="20" />
+                <Icon
+                    name="phone"
+                    size="20"
+                />
             </div>
         </div>
         <div

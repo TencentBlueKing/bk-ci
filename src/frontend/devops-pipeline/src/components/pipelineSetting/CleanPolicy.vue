@@ -1,5 +1,8 @@
 <template>
-    <div v-bkloading="{ isLoading: !pipelineSetting }" class="bkdevops-clean-policy-setting-tab">
+    <div
+        v-bkloading="{ isLoading: !pipelineSetting }"
+        class="bkdevops-clean-policy-setting-tab"
+    >
         <p class="hint">
             <i class="devops-icon icon-info-circle-shape"></i>
             {{ $t('settings.cleanTips') }}

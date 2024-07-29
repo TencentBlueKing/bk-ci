@@ -1,17 +1,31 @@
 <template>
-    <div class="devops-staff-selector" @click="toEdit">
+    <div
+        class="devops-staff-selector"
+        @click="toEdit"
+    >
         <div :class="['devops-staff-input', { 'active': isEdit, 'disabled': disabled }]">
-            <span class="placeholder"
+            <span
+                class="placeholder"
                 v-if="!isEdit && !selectedList.length && !value.length"
             >{{ placeholder }}</span>
-            <div class="tag-list" :class="!selectedList.length ? 'no-item' : ''">
-                <div class="select-editor" ref="selectEditor">
-                    <span class="tag-info"
+            <div
+                class="tag-list"
+                :class="!selectedList.length ? 'no-item' : ''"
+            >
+                <div
+                    class="select-editor"
+                    ref="selectEditor"
+                >
+                    <span
+                        class="tag-info"
                         v-for="(entry, index) in selectedList"
                         :key="index"
                         @click="selectInfo($event, entry)"
                     >{{ entry }}</span>
-                    <input type="text" ref="staffInput" id="staffInput"
+                    <input
+                        type="text"
+                        ref="staffInput"
+                        id="staffInput"
                         class="form-input"
                         autocomplete="off"
                         :name="name"
@@ -20,19 +34,35 @@
                         @keydown="keydown"
                         @mousedown="mousedown"
                         @paste="paste"
-                        @blur="hideAll" />
+                        @blur="hideAll"
+                    />
                 </div>
             </div>
         </div>
 
-        <div class="staff-selector-list" v-show="showList && list.length">
-            <ul class="outside-ul" ref="selectorList" @scroll.passive="scrollLoadMore">
-                <li v-for="(data, index) in renderList"
+        <div
+            class="staff-selector-list"
+            v-show="showList && list.length"
+        >
+            <ul
+                class="outside-ul"
+                ref="selectorList"
+                @scroll.passive="scrollLoadMore"
+            >
+                <li
+                    v-for="(data, index) in renderList"
                     class="staff-selector-list-item"
                     :key="data"
-                    @click.stop="selectList(data)">
-                    <div class="selector-node" :class="activeClass(index)">
-                        <img :src="localCoverAvatar(data)" class="avatar">
+                    @click.stop="selectList(data)"
+                >
+                    <div
+                        class="selector-node"
+                        :class="activeClass(index)"
+                    >
+                        <img
+                            :src="localCoverAvatar(data)"
+                            class="avatar"
+                        >
                         <span class="text">{{ data }}</span>
                     </div>
                 </li>

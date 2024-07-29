@@ -1,8 +1,12 @@
 <template>
-    <article class="detail-report-home" v-bkloading="{ isLoading }">
+    <article
+        class="detail-report-home"
+        v-bkloading="{ isLoading }"
+    >
         <template v-if="reportList.length">
             <ul class="report-list">
-                <li v-for="(report, index) in reportList"
+                <li
+                    v-for="(report, index) in reportList"
                     :key="index"
                     :class="{ 'text-overflow': true, active: reportIndex === index }"
                     @click="reportIndex = index"
@@ -12,23 +16,43 @@
                 </li>
             </ul>
 
-            <bk-table :data="chooseReport.thirdReports"
+            <bk-table
+                :data="chooseReport.thirdReports"
                 :outer-border="false"
                 :header-border="false"
                 :header-cell-style="{ background: '#FAFBFD' }"
                 v-if="chooseReport.type === 'THIRDPARTY'"
                 class="report-file"
             >
-                <bk-table-column :label="$t('name')" show-overflow-tooltip>
+                <bk-table-column
+                    :label="$t('name')"
+                    show-overflow-tooltip
+                >
                     <template slot-scope="props">
-                        <logo name="tiaozhuan" size="18" class="jump-icon" />
-                        <a :href="props.row.indexFileUrl" target="_blank" class="text-link">{{ props.row.name }}</a>
+                        <logo
+                            name="tiaozhuan"
+                            size="18"
+                            class="jump-icon"
+                        />
+                        <a
+                            :href="props.row.indexFileUrl"
+                            target="_blank"
+                            class="text-link"
+                        >{{ props.row.name }}</a>
                     </template>
                 </bk-table-column>
             </bk-table>
-            <iframe :src="chooseReport.indexFileUrl" frameborder="0" class="report-file" v-else></iframe>
+            <iframe
+                :src="chooseReport.indexFileUrl"
+                frameborder="0"
+                class="report-file"
+                v-else
+            ></iframe>
         </template>
-        <span class="bk-table-empty-text" v-if="!isLoading && reportList.length <= 0">
+        <span
+            class="bk-table-empty-text"
+            v-if="!isLoading && reportList.length <= 0"
+        >
             <i class="bk-table-empty-icon bk-icon icon-empty"></i>
             <div>{{ $t('empty') }}</div>
         </span>

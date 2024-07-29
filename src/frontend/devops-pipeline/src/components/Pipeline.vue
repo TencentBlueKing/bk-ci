@@ -1,14 +1,28 @@
 <template>
-    <div class="create-pipeline-wrapper" v-bkloading="loadingConf">
-        <header v-if="showHeader" class="create-pipeline-header">
+    <div
+        class="create-pipeline-wrapper"
+        v-bkloading="loadingConf"
+    >
+        <header
+            v-if="showHeader"
+            class="create-pipeline-header"
+        >
             <div>
-                <slot name="pipeline-name"><span style="cursor: default" :title="pipeline.name">{{ pipeline.name }}</span></slot>
+                <slot name="pipeline-name">
+                    <span
+                        style="cursor: default"
+                        :title="pipeline.name"
+                    >{{ pipeline.name }}</span>
+                </slot>
             </div>
             <div class="pipeline-bar">
                 <slot name="pipeline-bar"></slot>
             </div>
         </header>
-        <div v-if="hasPipelineModel" class="scroll-container">
+        <div
+            v-if="hasPipelineModel"
+            class="scroll-container"
+        >
             <div class="scroll-wraper">
                 <bk-pipeline
                     :pipeline="pipeline"
@@ -26,15 +40,23 @@
                 </bk-pipeline>
             </div>
         </div>
-        <div v-else-if="pipelineEditable" :class="['empty-pipeline-stage', {
-            'empty-pipeline-stage-disabled': !pipelineEditable
-        }]" @click="handleAddStage({ stageIndex: 0, isParallel: false, isFinally: false })">
+        <div
+            v-else-if="pipelineEditable"
+            :class="['empty-pipeline-stage', {
+                'empty-pipeline-stage-disabled': !pipelineEditable
+            }]"
+            @click="handleAddStage({ stageIndex: 0, isParallel: false, isFinally: false })"
+        >
             <i class="bk-icon left-icon icon-devops-icon icon-plus"></i>
-            <span>{{$t('clickToAddStage')}}</span>
+            <span>{{ $t('clickToAddStage') }}</span>
         </div>
 
-        <bk-exception v-else type="empty" scene="part">
-            {{$t('noPipelineStageTips')}}
+        <bk-exception
+            v-else
+            type="empty"
+            scene="part"
+        >
+            {{ $t('noPipelineStageTips') }}
         </bk-exception>
 
         <bk-dialog
@@ -48,7 +70,12 @@
         >
             <section class="bk-form bk-form-vertical bk-form-wrapper">
                 <ul class="stage-type-list">
-                    <li v-for="os in osList" :key="os.value" @click="insert(os.value)" :class="os.className">
+                    <li
+                        v-for="os in osList"
+                        :key="os.value"
+                        @click="insert(os.value)"
+                        :class="os.className"
+                    >
                         <i :class="`devops-icon icon-${os.value.toLowerCase()} stage-type-icon`" />
                         <span class="stage-label">{{ os.label }}</span>
                     </li>
@@ -56,7 +83,11 @@
             </section>
         </bk-dialog>
         <template v-if="container && pipelineEditable">
-            <atom-selector :container="container" :element="element" v-bind="editingElementPos" />
+            <atom-selector
+                :container="container"
+                :element="element"
+                v-bind="editingElementPos"
+            />
         </template>
         <template v-if="editingElementPos">
             <template v-if="(typeof editingElementPos.elementIndex !== 'undefined')">

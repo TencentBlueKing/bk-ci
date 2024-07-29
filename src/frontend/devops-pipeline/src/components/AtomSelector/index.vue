@@ -1,13 +1,38 @@
 <template>
     <portal to="atom-selector-popup">
         <transition name="selector-slide">
-            <div v-if="showAtomSelectorPopup" class="atom-selector-popup">
-
+            <div
+                v-if="showAtomSelectorPopup"
+                class="atom-selector-popup"
+            >
                 <header class="atom-selector-header">
-                    <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList" class="devops-icon icon-refresh atom-fresh" :class="fetchingAtomList ? 'spin-icon' : ''" /></h3>
-                    <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
+                    <h3>
+                        {{ $t('editPage.chooseAtom') }}<i
+                            @click="freshAtomList"
+                            class="devops-icon icon-refresh atom-fresh"
+                            :class="fetchingAtomList ? 'spin-icon' : ''"
+                        />
+                    </h3>
+                    <bk-input
+                        class="atom-search-input"
+                        ref="searchStr"
+                        :clearable="true"
+                        :placeholder="$t('editPage.searchTips')"
+                        right-icon="icon-search"
+                        :value="searchKey"
+                        @input="handleClear"
+                        @enter="handleSearch"
+                    ></bk-input>
                 </header>
-                <bk-tab v-if="!searchKey" class="atom-tab" size="small" ref="tab" :active.sync="classifyCode" type="unborder-card" v-bkloading="{ isLoading: fetchingAtomList }">
+                <bk-tab
+                    v-if="!searchKey"
+                    class="atom-tab"
+                    size="small"
+                    ref="tab"
+                    :active.sync="classifyCode"
+                    type="unborder-card"
+                    v-bkloading="{ isLoading: fetchingAtomList }"
+                >
                     <bk-tab-panel
                         ref="atomListDom"
                         v-for="classify in classifyCodeList"
@@ -18,7 +43,8 @@
                         render-directive="if"
                         :class="[{ [getClassifyCls(classify)]: true }, 'tab-section']"
                     >
-                        <atom-card v-for="(atom) in curTabList"
+                        <atom-card
+                            v-for="(atom) in curTabList"
                             :key="atom.atomCode"
                             :atom="atom"
                             :container="container"
@@ -32,15 +58,28 @@
                                 [getAtomClass(atom.atomCode)]: true
                             }"
                         ></atom-card>
-                        <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
+                        <div
+                            class="empty-atom-list"
+                            v-if="curTabList.length <= 0 && !fetchingAtomList"
+                        >
                             <empty-tips type="no-result"></empty-tips>
                         </div>
-
                     </bk-tab-panel>
                 </bk-tab>
-                <section v-else class="search-result" ref="searchResult" v-bkloading="{ isLoading: fetchingAtomList }">
-                    <h3 v-if="installArr.length" class="search-title">{{ $t('newlist.installed') }}（{{installArr.length}}）</h3>
-                    <atom-card v-for="atom in installArr"
+                <section
+                    v-else
+                    class="search-result"
+                    ref="searchResult"
+                    v-bkloading="{ isLoading: fetchingAtomList }"
+                >
+                    <h3
+                        v-if="installArr.length"
+                        class="search-title"
+                    >
+                        {{ $t('newlist.installed') }}（{{ installArr.length }}）
+                    </h3>
+                    <atom-card
+                        v-for="atom in installArr"
                         :key="atom.atomCode"
                         :atom="atom"
                         :container="container"
@@ -54,8 +93,14 @@
                         }"
                     ></atom-card>
 
-                    <h3 v-if="uninstallArr.length" class="search-title gap-border">{{ $t('editPage.notInstall') }}（{{uninstallArr.length}}）</h3>
-                    <atom-card v-for="atom in uninstallArr"
+                    <h3
+                        v-if="uninstallArr.length"
+                        class="search-title gap-border"
+                    >
+                        {{ $t('editPage.notInstall') }}（{{ uninstallArr.length }}）
+                    </h3>
+                    <atom-card
+                        v-for="atom in uninstallArr"
                         :key="atom.atomCode"
                         :atom="atom"
                         :container="container"
@@ -69,11 +114,13 @@
                             selected: atom.atomCode === atomCode
                         }"
                     ></atom-card>
-                    <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
+                    <div
+                        class="empty-atom-list"
+                        v-if="curTabList.length <= 0 && !fetchingAtomList"
+                    >
                         <empty-tips type="no-result"></empty-tips>
                     </div>
                 </section>
-
             </div>
         </transition>
     </portal>

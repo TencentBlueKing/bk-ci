@@ -1,8 +1,16 @@
 <template>
     <div class="paas-ci-empty">
-        <p class="code-check-title" v-if="isCodeCheck">{{ emptyTitle }}</p>
+        <p
+            class="code-check-title"
+            v-if="isCodeCheck"
+        >
+            {{ emptyTitle }}
+        </p>
         <div class="empty-pic-box">
-            <img :src="calcSrc" :alt="calcAlt">
+            <img
+                :src="calcSrc"
+                :alt="calcAlt"
+            >
             <p class="empty-pic-desc">
                 <slot>
                     {{ calcAlt }}

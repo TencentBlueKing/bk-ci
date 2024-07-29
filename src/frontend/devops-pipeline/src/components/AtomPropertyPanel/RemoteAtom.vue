@@ -11,7 +11,11 @@
                 @load="onLoad"
             />
         </div>
-        <atom-output :element="element" :atom-props-model="atomPropsModel" :set-parent-validate="() => {}"></atom-output>
+        <atom-output
+            :element="element"
+            :atom-props-model="atomPropsModel"
+            :set-parent-validate="() => {}"
+        ></atom-output>
     </section>
 </template>
 

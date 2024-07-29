@@ -1,19 +1,40 @@
 <template>
     <div class="record-list">
         <div class="search-area">
-            <input :placeholder="$t('searchForMore')" v-bk-focus="1" :disabled="searching" @compositionstart="handleCompositionStart" @compositionend="handleCompositionEnd" @input="handleInput" v-model.trim="searchValue" />
+            <input
+                :placeholder="$t('searchForMore')"
+                v-bk-focus="1"
+                :disabled="searching"
+                @compositionstart="handleCompositionStart"
+                @compositionend="handleCompositionEnd"
+                @input="handleInput"
+                v-model.trim="searchValue"
+            />
             <i class="devops-icon icon-search"></i>
         </div>
-        <div v-if="searching" class="record-list-searching-icon">
+        <div
+            v-if="searching"
+            class="record-list-searching-icon"
+        >
             <i class="devops-icon icon-circle-2-1 spin-icon" />
         </div>
         <ul v-else-if="records.length">
-            <li v-for="item in records" :title="item[paramName]" :key="item[paramId]" :class="{ 'active': selectedValue === item[paramName] }" @click.stop="handleRecordClick(item)">
+            <li
+                v-for="item in records"
+                :title="item[paramName]"
+                :key="item[paramId]"
+                :class="{ 'active': selectedValue === item[paramName] }"
+                @click.stop="handleRecordClick(item)"
+            >
                 {{ item[paramName] }}
             </li>
         </ul>
         <ul v-else>
-            <empty-exception slot="empty" type="search-empty" @clear="clearFilter" />
+            <empty-exception
+                slot="empty"
+                type="search-empty"
+                @clear="clearFilter"
+            />
         </ul>
     </div>
 </template>

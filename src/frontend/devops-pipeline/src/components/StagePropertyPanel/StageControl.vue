@@ -1,23 +1,49 @@
 <template>
-    <accordion show-checkbox show-content>
-        <header class="var-header" slot="header">
+    <accordion
+        show-checkbox
+        show-content
+    >
+        <header
+            class="var-header"
+            slot="header"
+        >
             <span>{{ $t('editPage.stageOption') }}</span>
-            <i class="bk-icon icon-angle-down" style="display:block"></i>
+            <i
+                class="bk-icon icon-angle-down"
+                style="display:block"
+            ></i>
         </header>
-        <div slot="content" class="bk-form bk-form-vertical">
+        <div
+            slot="content"
+            class="bk-form bk-form-vertical"
+        >
             <form-field>
-                <bk-checkbox :disabled="disabled" v-model="stageEnable">
+                <bk-checkbox
+                    :disabled="disabled"
+                    v-model="stageEnable"
+                >
                     {{ $t('enableStage') }}
                 </bk-checkbox>
             </form-field>
             <template v-if="!isFinally">
                 <form-field>
-                    <bk-checkbox :disabled="disabled" v-model="stageFastKill">
+                    <bk-checkbox
+                        :disabled="disabled"
+                        v-model="stageFastKill"
+                    >
                         {{ $t('stageFastKill') }}
                     </bk-checkbox>
-                    <i v-bk-tooltips="$t('stageFastKillDesc')" class="bk-icon icon-info-circle" />
+                    <i
+                        v-bk-tooltips="$t('stageFastKillDesc')"
+                        class="bk-icon icon-info-circle"
+                    />
                 </form-field>
-                <form-field required :label="$t('stageOptionLabel')" :is-error="errors.has('stageCondition')" :error-msg="errors.first('stageCondition')">
+                <form-field
+                    required
+                    :label="$t('stageOptionLabel')"
+                    :is-error="errors.has('stageCondition')"
+                    :error-msg="errors.first('stageCondition')"
+                >
                     <bk-select
                         name="stageCondition"
                         v-validate.initial="'required'"
@@ -25,10 +51,12 @@
                         v-model="stageCondition"
                         searchable
                     >
-                        <bk-option v-for="option in conditionConf"
+                        <bk-option
+                            v-for="option in conditionConf"
                             :key="option.id"
                             :id="option.id"
-                            :name="option.name">
+                            :name="option.name"
+                        >
                         </bk-option>
                     </bk-select>
                 </form-field>

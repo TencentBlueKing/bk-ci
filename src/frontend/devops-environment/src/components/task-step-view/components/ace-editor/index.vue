@@ -2,21 +2,25 @@
     <div
         ref="aceEditor"
         class="bkci-ace-editor"
-        :style="{ height: `${height}px` }">
+        :style="{ height: `${height}px` }"
+    >
         <div
             ref="contentWrapper"
             v-bkloading="{ isLoading: isLoading, opacity: 0.2 }"
             class="bkci-ace-content"
             :class="{ readonly }"
-            :style="boxStyle">
+            :style="boxStyle"
+        >
             <div
                 class="bkci-ace-title"
-                :style="{ height: `${tabHeight}px` }">
+                :style="{ height: `${tabHeight}px` }"
+            >
                 <div
                     v-for="(val, key) in tabList"
                     :key="val"
                     class="bkci-ace-mode-item"
-                    :class="{ 'active': currentLang === key }">
+                    :class="{ 'active': currentLang === key }"
+                >
                     {{ key }}
                 </div>
             </div>
@@ -24,7 +28,8 @@
                 <div class="ace-edit-content">
                     <div
                         :id="selfId"
-                        :style="editorStyle" />
+                        :style="editorStyle"
+                    />
                 </div>
                 <div class="right-side-panel">
                     <slot name="side" />

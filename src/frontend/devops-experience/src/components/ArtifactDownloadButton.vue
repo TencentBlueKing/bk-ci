@@ -4,12 +4,12 @@
             content: disabledTips || '你没有该流水线的下载构件权限，无法下载',
             disabled: !disabled,
             allowHTML: false
-        }">
+        }"
+    >
         <bk-button
             text
             @click="downLoadFile"
             :disabled="disabled"
-                        
         >
             <slot></slot>
         </bk-button>

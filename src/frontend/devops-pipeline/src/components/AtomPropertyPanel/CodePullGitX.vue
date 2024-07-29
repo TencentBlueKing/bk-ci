@@ -1,19 +1,51 @@
 <template>
     <form class="bk-form bk-form-vertical">
         <template v-for="(obj, key) in newModel">
-            <form-field v-if="!obj.hidden" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                <component :is="obj.component" :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })" :handle-change="handleMethods" :value="element[key]" v-bind="obj" @change="listChange" :repository-type="element[&quot;repositoryType&quot;]" :repository-hash-id="element[&quot;repositoryHashId&quot;]" :branch-name="element[&quot;branchName&quot;]" :element-type="element[&quot;@type&quot;]" :no-use-permission="noUsePermission" :set-no-use-permission="setNoUsePermission"></component>
-                <p class="bk-form-help is-warning" v-if="key === 'path' && obj.warn">{{ obj.warn }}</p>
-                <route-tips :visible="true" :src-tips="srcTips" :path-tips="pathTips" v-if="key === 'path' && element['repositoryHashId']"></route-tips>
+            <form-field
+                v-if="!obj.hidden"
+                :key="key"
+                :desc="obj.desc"
+                :required="obj.required"
+                :label="obj.label"
+                :is-error="errors.has(key)"
+                :error-msg="errors.first(key)"
+            >
+                <component
+                    :is="obj.component"
+                    :name="key"
+                    v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
+                    :handle-change="handleMethods"
+                    :value="element[key]"
+                    v-bind="obj"
+                    @change="listChange"
+                    :repository-type="element['repositoryType']"
+                    :repository-hash-id="element['repositoryHashId']"
+                    :branch-name="element['branchName']"
+                    :element-type="element['@type']"
+                    :no-use-permission="noUsePermission"
+                    :set-no-use-permission="setNoUsePermission"
+                ></component>
+                <p
+                    class="bk-form-help is-warning"
+                    v-if="key === 'path' && obj.warn"
+                >
+                    {{ obj.warn }}
+                </p>
+                <route-tips
+                    :visible="true"
+                    :src-tips="srcTips"
+                    :path-tips="pathTips"
+                    v-if="key === 'path' && element['repositoryHashId']"
+                ></route-tips>
             </form-field>
         </template>
     </form>
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
     import { mapGetters } from 'vuex'
+    import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
     export default {
         name: 'code-pull-atom',
         mixins: [atomMixin, validMixins],

@@ -8,10 +8,12 @@
                 :disabled="disabled"
                 :value="value"
                 :placeholder="placeholder"
-                @change="(newValue) => $emit('update-value', newValue)" />
+                @change="(newValue) => $emit('update-value', newValue)"
+            />
             <section
                 v-else
-                class="parameter-select input-main">
+                class="parameter-select input-main"
+            >
                 <bk-select
                     :disabled="disabled"
                     v-model="value"
@@ -19,11 +21,14 @@
                     @change="(newValue) => $emit('update-value', newValue)"
                     ext-cls="select-custom"
                     ext-popover-cls="select-popover-custom"
-                    searchable>
-                    <bk-option v-for="option in options"
+                    searchable
+                >
+                    <bk-option
+                        v-for="option in options"
                         :key="option.id"
                         :id="option.id"
-                        :name="option.name">
+                        :name="option.name"
+                    >
                     </bk-option>
                 </bk-select>
             </section>

@@ -1,10 +1,18 @@
 <template>
-    <div :class="['exec-material-row', {
-        'fit-content': isFitContent
-    }]">
+    <div
+        :class="['exec-material-row', {
+            'fit-content': isFitContent
+        }]"
+    >
         <div class="material-row-info-spans">
-            <span v-for="field in materialInfoKeys" :key="field">
-                <logo :name="iconArray[field] || 'commit'" size="14" />
+            <span
+                v-for="field in materialInfoKeys"
+                :key="field"
+            >
+                <logo
+                    :name="iconArray[field] || 'commit'"
+                    size="14"
+                />
                 <bk-link
                     v-if="includeLink(field)"
                     class="material-span"
@@ -20,7 +28,10 @@
                 >
                     <span v-bk-tooltips="{ delay: [300, 0], content: material.webhookSourceBranch, allowHTML: false }">{{ material.webhookSourceBranch }}</span>
                     <i class="devops-icon icon-arrows-right"></i>
-                    <logo :name="iconArray[field] || 'commit'" size="14" />
+                    <logo
+                        :name="iconArray[field] || 'commit'"
+                        size="14"
+                    />
                     <span v-bk-tooltips="{ delay: [300, 0], content: material.webhookBranch, allowHTML: false }">{{ material.webhookBranch }}</span>
                 </span>
                 <bk-popover
@@ -29,10 +40,11 @@
                     :delay="[300, 0]"
                     class="material-span-tooltip-box"
                 >
-                    <span :class="{
-                              'material-span': true,
-                              'material-url': field === 'materialId'
-                          }"
+                    <span
+                        :class="{
+                            'material-span': true,
+                            'material-url': field === 'materialId'
+                        }"
                         @click="handleToLink(field)"
                     >
                         {{ materialInfoValueMap[field] }}
@@ -40,7 +52,12 @@
                 </bk-popover>
             </span>
         </div>
-        <span v-if="showMore" @mouseenter="emitMouseEnter" @click="emitClick" class="exec-more-material">
+        <span
+            v-if="showMore"
+            @mouseenter="emitMouseEnter"
+            @click="emitClick"
+            class="exec-more-material"
+        >
             <i class="devops-icon icon-ellipsis" />
         </span>
     </div>

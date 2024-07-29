@@ -8,40 +8,68 @@
             :pagination="pagination"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
-            :empty-text="$t('environment.noData')">
-            <bk-table-column :label="$t('environment.pipeline')" prop="pipelineName" min-width="200">
+            :empty-text="$t('environment.noData')"
+        >
+            <bk-table-column
+                :label="$t('environment.pipeline')"
+                prop="pipelineName"
+                min-width="200"
+            >
                 <template slot-scope="props">
-                    <a class="item-pipelinename" :title="props.row.pipelineName"
+                    <a
+                        class="item-pipelinename"
+                        :title="props.row.pipelineName"
                         target="_blank"
-                        :href="`/console/pipeline/${props.row.projectId}/${props.row.pipelineId}/detail/${props.row.buildId}`">{{ props.row.pipelineName }}
+                        :href="`/console/pipeline/${props.row.projectId}/${props.row.pipelineId}/detail/${props.row.buildId}`"
+                    >{{ props.row.pipelineName }}
                     </a>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('environment.nodeInfo.buildNo')" prop="buildNumber">
+            <bk-table-column
+                :label="$t('environment.nodeInfo.buildNo')"
+                prop="buildNumber"
+            >
                 <template slot-scope="props">
                     <span>{{ props.row.buildNumber }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('environment.nodeInfo.ownJob')" prop="taskName" min-width="160">
+            <bk-table-column
+                :label="$t('environment.nodeInfo.ownJob')"
+                prop="taskName"
+                min-width="160"
+            >
                 <template slot-scope="props">
                     <span :title="props.row.taskName">{{ props.row.taskName }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('environment.nodeInfo.buildTaskStatus')" prop="status">
+            <bk-table-column
+                :label="$t('environment.nodeInfo.buildTaskStatus')"
+                prop="status"
+            >
                 <template slot-scope="props">
-                    <span :class="{
-                        'is-success': props.row.status === 'DONE',
-                        'is-fail': props.row.status === 'FAIL'
-                    }">{{ statusMap[props.row.status] }}</span>
-                    <span v-if="props.row.agentTask && props.row.agentTask.status === 'RUNNING'">{{`（${$t('environment.nodeInfo.agentTaskRunning')}）`}}</span>
+                    <span
+                        :class="{
+                            'is-success': props.row.status === 'DONE',
+                            'is-fail': props.row.status === 'FAIL'
+                        }"
+                    >{{ statusMap[props.row.status] }}</span>
+                    <span v-if="props.row.agentTask && props.row.agentTask.status === 'RUNNING'">{{ `（${$t('environment.nodeInfo.agentTaskRunning')}）` }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('environment.envInfo.creationTime')" prop="createdTime" min-width="160">
+            <bk-table-column
+                :label="$t('environment.envInfo.creationTime')"
+                prop="createdTime"
+                min-width="160"
+            >
                 <template slot-scope="props">
                     {{ localConvertTime(props.row.createdTime) }}
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('environment.updateTime')" prop="updatedTime" min-width="160">
+            <bk-table-column
+                :label="$t('environment.updateTime')"
+                prop="updatedTime"
+                min-width="160"
+            >
                 <template slot-scope="props">
                     {{ localConvertTime(props.row.updatedTime) }}
                 </template>

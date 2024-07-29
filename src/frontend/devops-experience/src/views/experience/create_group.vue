@@ -15,7 +15,11 @@
             ref="createGroupForm"
             :rules="groupRules"
         >
-            <bk-form-item label="体验组名称" required property="name">
+            <bk-form-item
+                label="体验组名称"
+                required
+                property="name"
+            >
                 <bk-input
                     placeholder="最长不超过20个字符"
                     maxlength="20"
@@ -24,7 +28,10 @@
                     v-model.trim="createGroupForm.name"
                 />
             </bk-form-item>
-            <bk-form-item label="描述" property="remark">
+            <bk-form-item
+                label="描述"
+                property="remark"
+            >
                 <bk-input
                     type="textarea"
                     placeholder="请输入"
@@ -54,7 +61,8 @@
                                 :loading="loadingGroup"
                                 :clearable="false"
                             >
-                                <bk-option v-for="option in importTypeList"
+                                <bk-option
+                                    v-for="option in importTypeList"
                                     :key="option.id"
                                     :id="option.id"
                                     :disabled="option.disabled"
@@ -86,7 +94,6 @@
                         @page-limit-change="handlePageLimitChange"
                         @filter-change="handleFilterChange"
                     >
-                        
                         <bk-exception
                             v-if="Object.keys(filters).length > 0"
                             slot="empty"
@@ -117,7 +124,6 @@
                             show-overflow-tooltip
                             filter-searchable
                             :filters="nameFilter"
-                            
                         />
                         <bk-table-column
                             label="内部/外部"
@@ -132,14 +138,19 @@
                             show-overflow-tooltip
                             filter-searchable
                             :filters="orgFilters"
-                            
                         />
                         <bk-table-column
                             label="操作"
                             width="80"
                         >
                             <template slot-scope="props">
-                                <bk-button theme="primary" text @click="remove(props.row)">移除</bk-button>
+                                <bk-button
+                                    theme="primary"
+                                    text
+                                    @click="remove(props.row)"
+                                >
+                                    移除
+                                </bk-button>
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -147,11 +158,21 @@
             </bk-form-item>
         </bk-form>
         
-        <footer class="group-import-footer" slot="footer">
-            <bk-button :disabled="isLoading || submitting" theme="primary" @click="handleSubmit">
+        <footer
+            class="group-import-footer"
+            slot="footer"
+        >
+            <bk-button
+                :disabled="isLoading || submitting"
+                theme="primary"
+                @click="handleSubmit"
+            >
                 提交
             </bk-button>
-            <bk-button :disabled="isLoading || submitting" @click="beforeClose">
+            <bk-button
+                :disabled="isLoading || submitting"
+                @click="beforeClose"
+            >
                 取消
             </bk-button>
         </footer>

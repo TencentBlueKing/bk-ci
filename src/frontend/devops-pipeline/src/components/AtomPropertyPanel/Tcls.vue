@@ -1,8 +1,31 @@
 <template>
     <div class="bk-form bk-form-vertical tcls-panel">
-        <form-field v-for="(obj, key) in newModel" :key="key" :desc="obj.desc" :required="obj.required" v-if="!obj.hidden" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-            <component :is="obj.component" :class="obj.class" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: obj.required })" :handle-change="(key === 'mtclsApp') ? handleChoose : handleUpdateElement" :value="element[key]" v-bind="obj"></component>
-            <bk-button inline="true" v-if="key === 'envId'" @click="handleGetEnvId">{{ $t('editPage.atomForm.reflash') }}</bk-button>
+        <form-field
+            v-for="(obj, key) in newModel"
+            :key="key"
+            :desc="obj.desc"
+            :required="obj.required"
+            v-if="!obj.hidden"
+            :label="obj.label"
+            :is-error="errors.has(key)"
+            :error-msg="errors.first(key)"
+        >
+            <component
+                :is="obj.component"
+                :class="obj.class"
+                :name="key"
+                v-validate.initial="Object.assign({}, obj.rule, { required: obj.required })"
+                :handle-change="(key === 'mtclsApp') ? handleChoose : handleUpdateElement"
+                :value="element[key]"
+                v-bind="obj"
+            ></component>
+            <bk-button
+                inline="true"
+                v-if="key === 'envId'"
+                @click="handleGetEnvId"
+            >
+                {{ $t('editPage.atomForm.reflash') }}
+            </bk-button>
         </form-field>
     </div>
 </template>

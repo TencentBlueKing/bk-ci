@@ -1,10 +1,25 @@
 <template>
     <section class="main-body">
-        <log :logs="logs" v-bkloading="{ isLoading: isLogLoading }"></log>
+        <log
+            :logs="logs"
+            v-bkloading="{ isLoading: isLogLoading }"
+        ></log>
 
         <footer class="main-footer">
-            <bk-button :disabled="currentStep.status !== 'success'" theme="primary" @click="nextStep"> {{ $t('store.下一步') }} </bk-button>
-            <bk-button :disabled="currentStep.status !== 'fail'" :loading="isLoading" @click="rebuild"> {{ $t('store.重新构建') }} </bk-button>
+            <bk-button
+                :disabled="currentStep.status !== 'success'"
+                theme="primary"
+                @click="nextStep"
+            >
+                {{ $t('store.下一步') }}
+            </bk-button>
+            <bk-button
+                :disabled="currentStep.status !== 'fail'"
+                :loading="isLoading"
+                @click="rebuild"
+            >
+                {{ $t('store.重新构建') }}
+            </bk-button>
         </footer>
     </section>
 </template>

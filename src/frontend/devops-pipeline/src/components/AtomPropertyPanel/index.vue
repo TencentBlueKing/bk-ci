@@ -9,7 +9,10 @@
         :z-index="2016"
         show-mask
     >
-        <header class="property-panel-header" slot="header">
+        <header
+            class="property-panel-header"
+            slot="header"
+        >
             <div class="atom-name-edit">
                 <input
                     v-if="nameEditing"
@@ -26,10 +29,19 @@
                     :value="element.name"
                 />
                 <p v-if="!nameEditing">{{ atomCode ? element.name : this.$t('editPage.pendingAtom') }}</p>
-                <i v-if="atomCode && editable" @click="toggleEditName(true)" class="devops-icon icon-edit" :class="nameEditing ? 'editing' : ''" />
+                <i
+                    v-if="atomCode && editable"
+                    @click="toggleEditName(true)"
+                    class="devops-icon icon-edit"
+                    :class="nameEditing ? 'editing' : ''"
+                />
             </div>
         </header>
-        <atom-content v-bind="$props" slot="content" :handle-update-atom="handleUpdateAtom">
+        <atom-content
+            v-bind="$props"
+            slot="content"
+            :handle-update-atom="handleUpdateAtom"
+        >
             <template slot="footer">
                 <slot name="footer"></slot>
             </template>

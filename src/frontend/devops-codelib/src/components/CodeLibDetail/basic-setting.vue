@@ -5,7 +5,11 @@
             <div class="label">
                 {{ $t('codelib.auth') }}
                 <bk-popover placement="top">
-                    <Icon name="help" size="14" class="auth-help-icon" />
+                    <Icon
+                        name="help"
+                        size="14"
+                        class="auth-help-icon"
+                    />
                     <div slot="content">
                         <template v-if="isGit || isTGit">
                             <p>{{ $t('codelib.此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
@@ -36,7 +40,11 @@
             </div>
             <div class="content">
                 <div class="auth">
-                    <Icon name="check-circle" size="14" class="icon-success" />
+                    <Icon
+                        name="check-circle"
+                        size="14"
+                        class="icon-success"
+                    />
                     <template v-if="repoInfo.svnType">
                         <span>
                             {{ repoInfo.svnType || curRepo.svnType }}@
@@ -111,7 +119,8 @@
                                 action: RESOURCE_ACTION.EDIT
                             }
                         }"
-                        @click="handleTogglePacStatus">
+                        @click="handleTogglePacStatus"
+                    >
                     </div>
                    
                     <bk-switcher
@@ -120,11 +129,15 @@
                         :disabled="(!repoInfo.enablePac && pacProjectName) || syncStatus === 'SYNC'"
                     >
                     </bk-switcher>
-                    <span class="ml10" v-if="!repoInfo.enablePac && pacProjectName">
+                    <span
+                        class="ml10"
+                        v-if="!repoInfo.enablePac && pacProjectName"
+                    >
                         {{ $t('codelib.当前代码库已在【】项目中开启 PAC 模式', [pacProjectName]) }}
                         <i
                             v-bk-tooltips="$t('codelib.相同代码库只支持在一个蓝盾项目下开启 PAC 模式')"
-                            class="bk-icon bk-dialog-mark bk-dialog-warning icon-exclamation info-icon" />
+                            class="bk-icon bk-dialog-mark bk-dialog-warning icon-exclamation info-icon"
+                        />
                     </span>
 
                     <div class="pac-enable">
@@ -133,16 +146,28 @@
                             : $t('codelib.未开启 PAC 模式') }}
                     </div>
 
-                    <div v-if="syncStatus === 'SUCCEED'" class="pipeline-count">
+                    <div
+                        v-if="syncStatus === 'SUCCEED'"
+                        class="pipeline-count"
+                    >
                         <i18n
                             tag="div"
-                            path="codelib.共N条流水线">
-                            <button class="bk-text-button" @click="isShowPipeline = true">{{ pipelineCount }}</button>
+                            path="codelib.共N条流水线"
+                        >
+                            <button
+                                class="bk-text-button"
+                                @click="isShowPipeline = true"
+                            >
+                                {{ pipelineCount }}
+                            </button>
                         </i18n>
                     </div>
                     
                     <!-- 同步中 -->
-                    <span class="async-status" v-if="syncStatus === 'SYNC'">
+                    <span
+                        class="async-status"
+                        v-if="syncStatus === 'SYNC'"
+                    >
                         <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary">
                             <div class="rotate rotate1"></div>
                             <div class="rotate rotate2"></div>
@@ -160,8 +185,16 @@
                     <template v-if="syncStatus === 'FAILED'">
                         <i class="bk-icon bk-dialog-mark bk-dialog-warning icon-exclamation failed-icon"></i>
                         <span class="ml5">{{ $t('codelib.代码库部分 YAML 文件同步失败') }}</span>
-                        <a class="ml10" text @click="handleShowSyncFailedDetail">{{ $t('codelib.查看失败详情') }}</a>
-                        <a class="ml10" text @click="handleRefreshSync">{{ $t('codelib.重试') }}</a>
+                        <a
+                            class="ml10"
+                            text
+                            @click="handleShowSyncFailedDetail"
+                        >{{ $t('codelib.查看失败详情') }}</a>
+                        <a
+                            class="ml10"
+                            text
+                            @click="handleRefreshSync"
+                        >{{ $t('codelib.重试') }}</a>
                     </template>
                 </div>
             </div>
@@ -256,7 +289,10 @@
                 </p>
             </span>
             <div class="ci-status-warpper">
-                <div v-if="hasCiFolder" class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary">
+                <div
+                    v-if="hasCiFolder"
+                    class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                >
                     <div class="rotate rotate1"></div>
                     <div class="rotate rotate2"></div>
                     <div class="rotate rotate3"></div>
@@ -266,18 +302,32 @@
                     <div class="rotate rotate7"></div>
                     <div class="rotate rotate8"></div>
                 </div>
-                <div v-else class="success-icon">
+                <div
+                    v-else
+                    class="success-icon"
+                >
                     <i class="bk-icon import-status-icon icon-check-1 success-icon"></i>
                 </div>
                 <div class="operate-btn">
                     <p>{{ hasCiFolder ? $t('codelib.等待处理') : $t('codelib.文件目录已清空') }}</p>
-                    <a :href="repoInfo.url" target="_blank">
-                        <icon name="tiaozhuan" size="14" class="jump-icon" />
+                    <a
+                        :href="repoInfo.url"
+                        target="_blank"
+                    >
+                        <icon
+                            name="tiaozhuan"
+                            size="14"
+                            class="jump-icon"
+                        />
                         {{ $t('codelib.前往代码库') }}
                     </a>
                     <div class="split-line"></div>
                     <a @click="handleCheckHasCiFolder(true)">
-                        <icon name="refresh" size="14" :class="{ 'refresh-icon': true, 'refreshing': refreshLoading }" />
+                        <icon
+                            name="refresh"
+                            size="14"
+                            :class="{ 'refresh-icon': true, 'refreshing': refreshLoading }"
+                        />
                         {{ $t('codelib.刷新') }}
                     </a>
                 </div>
@@ -292,7 +342,8 @@
                     {{ $t('codelib.关闭PAC') }}
                 </bk-button>
                 <bk-button
-                    @click="showClosePac = !showClosePac">
+                    @click="showClosePac = !showClosePac"
+                >
                     {{ $t('codelib.取消') }}
                 </bk-button>
             </span>
@@ -311,7 +362,10 @@
             <span class="oauth-confirm-title">
                 {{ $t('codelib.PAC 模式需使用 OAUTH 授权') }}
             </span>
-            <span v-if="isGit" class="oauth-confirm-tips">
+            <span
+                v-if="isGit"
+                class="oauth-confirm-tips"
+            >
                 <p>{{ $t('codelib.尚未授权，请先点击按钮授权。') }}</p>
                 <p>{{ $t('codelib.此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
                 <p>1.{{ $t('codelib.注册 Webhook 到工蜂') }}</p>
@@ -349,18 +403,30 @@
             header-position="left"
             :border="true"
             width="720"
-            :title="$t('codelib.代码库同步失败')">
-
+            :title="$t('codelib.代码库同步失败')"
+        >
             <div class="title-tips">{{ $t('codelib.检测到代码库中以下流水线 YAML 文件同步失败，请处理后重试') }}</div>
             <bk-table
                 :data="syncFailedPipelineList"
             >
-                <bk-table-column :label="$t('codelib.流水线文件')" width="220" prop="filePath" show-overflow-tooltip>
+                <bk-table-column
+                    :label="$t('codelib.流水线文件')"
+                    width="220"
+                    prop="filePath"
+                    show-overflow-tooltip
+                >
                     <template slot-scope="{ row }">
-                        <a :href="row.fileUrl" target="_blank">{{ row.filePath }}</a>
+                        <a
+                            :href="row.fileUrl"
+                            target="_blank"
+                        >{{ row.filePath }}</a>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('codelib.失败详情')" prop="reasonDetail" show-overflow-tooltip>
+                <bk-table-column
+                    :label="$t('codelib.失败详情')"
+                    prop="reasonDetail"
+                    show-overflow-tooltip
+                >
                 </bk-table-column>
             </bk-table>
             <template slot="footer">
@@ -374,7 +440,10 @@
             quick-close
             :title="$t('codelib.代码库下管理的流水线')"
         >
-            <div slot="content" style="padding: 20px;">
+            <div
+                slot="content"
+                style="padding: 20px;"
+            >
                 <bk-table
                     v-bkloading="{ isLoading: isFetchLoading }"
                     :data="pipelineList"
@@ -382,9 +451,15 @@
                     @page-change="handlePageChange"
                     @page-limit-change="handleLimitChange"
                 >
-                    <bk-table-column :label="$t('codelib.流水线名称')" prop="pipelineName">
+                    <bk-table-column
+                        :label="$t('codelib.流水线名称')"
+                        prop="pipelineName"
+                    >
                         <template slot-scope="{ row }">
-                            <a :href="`/console/pipeline/${projectId}/${row.pipelineId}/history/history`" target="_blank">{{ row.pipelineName }}</a>
+                            <a
+                                :href="`/console/pipeline/${projectId}/${row.pipelineId}/history/history`"
+                                target="_blank"
+                            >{{ row.pipelineName }}</a>
                         </template>
                     </bk-table-column>
                 </bk-table>

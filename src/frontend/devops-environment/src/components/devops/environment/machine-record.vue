@@ -10,14 +10,25 @@
             :pagination="pagination"
             :empty-text="$t('environment.noData')"
         >
-            <bk-table-column :label="$t('environment.time')" prop="actionTime" min-width="160">
+            <bk-table-column
+                :label="$t('environment.time')"
+                prop="actionTime"
+                min-width="160"
+            >
                 <template slot-scope="props">
                     {{ localConvertTime(props.row.actionTime) }}
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('environment.nodeInfo.ownJob')" prop="action" min-width="160">
+            <bk-table-column
+                :label="$t('environment.nodeInfo.ownJob')"
+                prop="action"
+                min-width="160"
+            >
                 <template slot-scope="props">
-                    <span :title="props.row.action" :class="props.row.action === 'ONLINE' ? 'online' : 'offline'">{{ props.row.action === 'ONLINE' ? $t('environment.nodeInfo.online') : $t('environment.nodeInfo.offline') }}</span>
+                    <span
+                        :title="props.row.action"
+                        :class="props.row.action === 'ONLINE' ? 'online' : 'offline'"
+                    >{{ props.row.action === 'ONLINE' ? $t('environment.nodeInfo.online') : $t('environment.nodeInfo.offline') }}</span>
                 </template>
             </bk-table-column>
         </bk-table>

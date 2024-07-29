@@ -1,12 +1,29 @@
 <template>
     <article class="edit-service-home">
-        <bread-crumbs :bread-crumbs="navList" type="service">
-            <a class="g-title-work" target="_blank" href="https://iwiki.oa.tencent.com/pages/viewpage.action?pageId=103523086"> {{ $t('store.微扩展指引') }} </a>
+        <bread-crumbs
+            :bread-crumbs="navList"
+            type="service"
+        >
+            <a
+                class="g-title-work"
+                target="_blank"
+                href="https://iwiki.oa.tencent.com/pages/viewpage.action?pageId=103523086"
+            > {{ $t('store.微扩展指引') }} </a>
         </bread-crumbs>
 
-        <main v-bkloading="{ isLoading }" class="edit-content">
-            <bk-form ref="serviceForm" class="edit-service" label-width="125" :model="form" v-show="!isLoading">
-                <bk-form-item class="wt660"
+        <main
+            v-bkloading="{ isLoading }"
+            class="edit-content"
+        >
+            <bk-form
+                ref="serviceForm"
+                class="edit-service"
+                label-width="125"
+                :model="form"
+                v-show="!isLoading"
+            >
+                <bk-form-item
+                    class="wt660"
                     :label="$t('store.名称')"
                     :required="true"
                     property="serviceName"
@@ -14,9 +31,13 @@
                     ref="serviceName"
                     error-display-type="normal"
                 >
-                    <bk-input v-model="form.serviceName" :placeholder="$t('store.请输入微扩展名称，不超过20个字符')"></bk-input>
+                    <bk-input
+                        v-model="form.serviceName"
+                        :placeholder="$t('store.请输入微扩展名称，不超过20个字符')"
+                    ></bk-input>
                 </bk-form-item>
-                <bk-form-item class="wt660"
+                <bk-form-item
+                    class="wt660"
                     :label="$t('store.扩展点')"
                     :required="true"
                     property="extensionItemList"
@@ -24,7 +45,8 @@
                     ref="extensionItemList"
                     error-display-type="normal"
                 >
-                    <bk-select :placeholder="$t('store.请选择扩展点')"
+                    <bk-select
+                        :placeholder="$t('store.请选择扩展点')"
                         class="service-item"
                         :scroll-height="300"
                         :clearable="true"
@@ -33,12 +55,15 @@
                         searchable
                         multiple
                         display-tag
-                        v-model="form.extensionItemList">
+                        v-model="form.extensionItemList"
+                    >
                         <bk-option-group
                             v-for="(group, index) in serviceList"
                             :name="group.name"
-                            :key="index">
-                            <bk-option v-for="(option, key) in group.children"
+                            :key="index"
+                        >
+                            <bk-option
+                                v-for="(option, key) in group.children"
                                 :key="key"
                                 :id="option.id"
                                 :name="option.name"
@@ -47,27 +72,51 @@
                         </bk-option-group>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.标签')"
+                <bk-form-item
+                    :label="$t('store.标签')"
                     property="labelIdList"
                     class="wt660"
                 >
-                    <bk-tag-input v-model="form.labelIdList" :list="labelList" display-key="labelName" search-key="labelName" trigger="focus" :placeholder="$t('store.请选择标签')"></bk-tag-input>
+                    <bk-tag-input
+                        v-model="form.labelIdList"
+                        :list="labelList"
+                        display-key="labelName"
+                        search-key="labelName"
+                        trigger="focus"
+                        :placeholder="$t('store.请选择标签')"
+                    ></bk-tag-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.简介')"
+                <bk-form-item
+                    :label="$t('store.简介')"
                     property="summary"
                     :required="true"
                     :rules="[requireRule]"
                     ref="summary"
                     error-display-type="normal"
                 >
-                    <bk-input v-model="form.summary" :placeholder="$t('store.请输入简介')"></bk-input>
+                    <bk-input
+                        v-model="form.summary"
+                        :placeholder="$t('store.请输入简介')"
+                    ></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.描述')" property="description">
-                    <bk-radio-group v-model="form.descInputType" class="service-input-type">
-                        <bk-radio value="MANUAL" class="mr21"> {{ $t('store.手动录入') }} </bk-radio>
+                <bk-form-item
+                    :label="$t('store.描述')"
+                    property="description"
+                >
+                    <bk-radio-group
+                        v-model="form.descInputType"
+                        class="service-input-type"
+                    >
+                        <bk-radio
+                            value="MANUAL"
+                            class="mr21"
+                        >
+                            {{ $t('store.手动录入') }}
+                        </bk-radio>
                         <bk-radio value="FILE"> {{ $t('store.fromReadme') }} </bk-radio>
                     </bk-radio-group>
-                    <mavon-editor class="service-remark-input"
+                    <mavon-editor
+                        class="service-remark-input"
                         v-if="form.descInputType === 'MANUAL'"
                         ref="mdHook"
                         preview-background="#fff"
@@ -82,7 +131,8 @@
                     <p class="form-title"> {{ $t('store.版本信息') }} </p>
                     <hr class="cut-line">
                 </div>
-                <bk-form-item :label="$t('store.发布类型')"
+                <bk-form-item
+                    :label="$t('store.发布类型')"
                     :required="true"
                     property="releaseType"
                     class="h32"
@@ -92,40 +142,67 @@
                     error-display-type="normal"
                 >
                     <bk-radio-group v-model="form.releaseType">
-                        <bk-radio value="NEW" class="mr12" v-if="form.serviceStatus === 'INIT'"> {{ $t('store.新上架') }} </bk-radio>
+                        <bk-radio
+                            value="NEW"
+                            class="mr12"
+                            v-if="form.serviceStatus === 'INIT'"
+                        >
+                            {{ $t('store.新上架') }}
+                        </bk-radio>
                         <template v-else>
-                            <bk-radio value="INCOMPATIBILITY_UPGRADE" class="mr12"> {{ $t('store.非兼容升级') }} </bk-radio>
-                            <bk-radio value="COMPATIBILITY_UPGRADE" class="mr12"> {{ $t('store.兼容式功能更新') }} </bk-radio>
+                            <bk-radio
+                                value="INCOMPATIBILITY_UPGRADE"
+                                class="mr12"
+                            >
+                                {{ $t('store.非兼容升级') }}
+                            </bk-radio>
+                            <bk-radio
+                                value="COMPATIBILITY_UPGRADE"
+                                class="mr12"
+                            >
+                                {{ $t('store.兼容式功能更新') }}
+                            </bk-radio>
                             <bk-radio value="COMPATIBILITY_FIX"> {{ $t('store.兼容式问题修正') }} </bk-radio>
                         </template>
                     </bk-radio-group>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.版本号')"
+                <bk-form-item
+                    :label="$t('store.版本号')"
                     property="version"
                     class="lh30"
                     :required="true"
                     error-display-type="normal"
                 >
-                    <span>{{$t('store.semverType', [form.version])}}</span>
-                    <span class="version-modify" @click="form.releaseType = 'COMPATIBILITY_FIX'" v-if="form.releaseType === 'CANCEL_RE_RELEASE'"> {{ $t('store.修改') }} </span>
+                    <span>{{ $t('store.semverType', [form.version]) }}</span>
+                    <span
+                        class="version-modify"
+                        @click="form.releaseType = 'COMPATIBILITY_FIX'"
+                        v-if="form.releaseType === 'CANCEL_RE_RELEASE'"
+                    > {{ $t('store.修改') }} </span>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.发布者')"
+                <bk-form-item
+                    :label="$t('store.发布者')"
                     :required="true"
                     property="publisher"
                     :rules="[requireRule]"
                     ref="publisher"
                     error-display-type="normal"
                 >
-                    <bk-input v-model="form.publisher" :placeholder="$t('store.请输入发布者')"></bk-input>
+                    <bk-input
+                        v-model="form.publisher"
+                        :placeholder="$t('store.请输入发布者')"
+                    ></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.版本日志')"
+                <bk-form-item
+                    :label="$t('store.版本日志')"
                     :required="true"
                     property="versionContent"
                     :rules="[requireRule]"
                     ref="versionContent"
                     error-display-type="normal"
                 >
-                    <mavon-editor class="service-remark-input"
+                    <mavon-editor
+                        class="service-remark-input"
                         :placeholder="$t('store.请输入版本日志')"
                         ref="versionMd"
                         preview-background="#fff"
@@ -136,11 +213,32 @@
                         @imgAdd="uploadimg('versionMd', ...arguments)"
                     />
                 </bk-form-item>
-                <select-logo ref="selectLogo" label="Logo" :form="form" type="SERVICE" :is-err="logoErr" right="25"></select-logo>
+                <select-logo
+                    ref="selectLogo"
+                    label="Logo"
+                    :form="form"
+                    type="SERVICE"
+                    :is-err="logoErr"
+                    right="25"
+                ></select-logo>
             </bk-form>
-            <section class="edit-service button-padding" v-show="!isLoading">
-                <bk-button theme="primary" @click="submitService" :loading="isCommitLoading"> {{ $t('store.提交') }} </bk-button>
-                <bk-button @click="$router.back()" :disabled="isCommitLoading"> {{ $t('store.取消') }} </bk-button>
+            <section
+                class="edit-service button-padding"
+                v-show="!isLoading"
+            >
+                <bk-button
+                    theme="primary"
+                    @click="submitService"
+                    :loading="isCommitLoading"
+                >
+                    {{ $t('store.提交') }}
+                </bk-button>
+                <bk-button
+                    @click="$router.back()"
+                    :disabled="isCommitLoading"
+                >
+                    {{ $t('store.取消') }}
+                </bk-button>
             </section>
         </main>
     </article>

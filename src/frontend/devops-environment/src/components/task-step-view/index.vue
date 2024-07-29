@@ -12,7 +12,8 @@
         <component
             :is="stepCom"
             ref="stepCom"
-            :data="data">
+            :data="data"
+        >
             <slot />
         </component>
     </detail-layout>

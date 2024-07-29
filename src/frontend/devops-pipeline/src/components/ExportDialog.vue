@@ -5,13 +5,33 @@
         :auto-close="false"
         :show-footer="false"
         :title="$t('newlist.chooseExport')"
-        @cancel="handleCancel">
+        @cancel="handleCancel"
+    >
         <ul class="export-list">
-            <li v-for="exportItem in exportList" :key="exportItem.exportUrl" class="export-item">
-                <logo :name="exportItem.icon" class="export-icon" />
+            <li
+                v-for="exportItem in exportList"
+                :key="exportItem.exportUrl"
+                class="export-item"
+            >
+                <logo
+                    :name="exportItem.icon"
+                    class="export-icon"
+                />
                 <h5 class="export-title">{{ exportItem.title }}</h5>
-                <p class="export-tip">{{ exportItem.tips }}<a :href="exportItem.tipsLink" v-if="exportItem.tipsLink" target="_blank">{{ $t('newlist.knowMore') }}</a></p>
-                <bk-button class="export-button" @click="downLoadFromApi(exportItem.exportUrl, exportItem.name)" :loading="isDownLoading">{{ $t('newlist.exportPipelineJson') }}</bk-button>
+                <p class="export-tip">
+                    {{ exportItem.tips }}<a
+                        :href="exportItem.tipsLink"
+                        v-if="exportItem.tipsLink"
+                        target="_blank"
+                    >{{ $t('newlist.knowMore') }}</a>
+                </p>
+                <bk-button
+                    class="export-button"
+                    @click="downLoadFromApi(exportItem.exportUrl, exportItem.name)"
+                    :loading="isDownLoading"
+                >
+                    {{ $t('newlist.exportPipelineJson') }}
+                </bk-button>
             </li>
         </ul>
     </bk-dialog>

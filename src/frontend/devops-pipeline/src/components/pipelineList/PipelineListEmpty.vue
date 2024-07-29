@@ -1,9 +1,14 @@
 <template>
-
     <section class="bk-pipeline-list-empty-tips">
-        <Logo name="empty" size="188"></Logo>
+        <Logo
+            name="empty"
+            size="188"
+        ></Logo>
         <p class="bk-pipeline-list-empty-tips-desc">{{ emptyTipsConfig.desc }}</p>
-        <p class="bk-pipeline-list-empty-tips-btns" v-if="emptyTipsConfig.btns.length">
+        <p
+            class="bk-pipeline-list-empty-tips-btns"
+            v-if="emptyTipsConfig.btns.length"
+        >
             <bk-button
                 v-for="(btn, index) of emptyTipsConfig.btns"
                 v-bind="btn.btnProps"

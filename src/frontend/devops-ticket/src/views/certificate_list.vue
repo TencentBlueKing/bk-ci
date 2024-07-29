@@ -6,21 +6,48 @@
             </template>
         </content-header>
 
-        <section class="sub-view-port" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
-            <div v-if="showContent && renderList.length" class="table-container">
+        <section
+            class="sub-view-port"
+            v-bkloading="{ isLoading: loading.isLoading, title: loading.title }"
+        >
+            <div
+                v-if="showContent && renderList.length"
+                class="table-container"
+            >
                 <bk-table
                     :data="renderList"
                     size="small"
                     :show-pagination-info="true"
                     :pagination="pagination"
                     @page-change="handlePageChange"
-                    @page-limit-change="handlePageCountChange">
-                    <bk-table-column :label="$t('ticket.alias')" prop="certId"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.type')" prop="certType" :formatter="getShowType"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.cert.uploader')" prop="creator"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.cert.expireDate')" prop="expireTime" :formatter="convertToTime"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.remark')" prop="certRemark"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.operation')" width="200">
+                    @page-limit-change="handlePageCountChange"
+                >
+                    <bk-table-column
+                        :label="$t('ticket.alias')"
+                        prop="certId"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.type')"
+                        prop="certType"
+                        :formatter="getShowType"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.cert.uploader')"
+                        prop="creator"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.cert.expireDate')"
+                        prop="expireTime"
+                        :formatter="convertToTime"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.remark')"
+                        prop="certRemark"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.operation')"
+                        width="200"
+                    >
                         <template slot-scope="props">
                             <template v-if="props.row.permissions.use">
                                 <bk-button
@@ -34,7 +61,12 @@
                                             action: CERT_RESOURCE_ACTION.EDIT
                                         }
                                     }"
-                                    theme="primary" text @click="handleEditCert(props.row)">{{ $t('ticket.edit') }}</bk-button>
+                                    theme="primary"
+                                    text
+                                    @click="handleEditCert(props.row)"
+                                >
+                                    {{ $t('ticket.edit') }}
+                                </bk-button>
                                 
                                 <bk-button
                                     v-perm="{
@@ -47,22 +79,34 @@
                                             action: CERT_RESOURCE_ACTION.DELETE
                                         }
                                     }"
-                                    theme="primary" text @click="handleDeleteCert(props.row)">{{ $t('ticket.delete') }}</bk-button>
+                                    theme="primary"
+                                    text
+                                    @click="handleDeleteCert(props.row)"
+                                >
+                                    {{ $t('ticket.delete') }}
+                                </bk-button>
                             </template>
                             <template v-else>
                                 <bk-button
                                     theme="primary"
                                     outline
-                                    @click="handleApplyPermission(props.row)">{{ $t('ticket.applyPermission') }}</bk-button>
+                                    @click="handleApplyPermission(props.row)"
+                                >
+                                    {{ $t('ticket.applyPermission') }}
+                                </bk-button>
                             </template>
                         </template>
                     </bk-table-column>
                 </bk-table>
             </div>
 
-            <empty-tips :title="tip.title" :desc="tip.desc" :btns="tip.btns" v-if="showContent && !renderList.length"></empty-tips>
+            <empty-tips
+                :title="tip.title"
+                :desc="tip.desc"
+                :btns="tip.btns"
+                v-if="showContent && !renderList.length"
+            ></empty-tips>
         </section>
-
     </article>
 </template>
 

@@ -1,10 +1,20 @@
 <template>
     <section>
-        <form-field :hide-colon="true" :desc="$t('editPage.batchAddTips')" :label="$t('editPage.batchAdd')">
-            <bk-input class="key-val" :type="'textarea'" v-model="batchInput" :row="3" :placeholder="$t('editPage.optionTips')" />
+        <form-field
+            :hide-colon="true"
+            :desc="$t('editPage.batchAddTips')"
+            :label="$t('editPage.batchAdd')"
+        >
+            <bk-input
+                class="key-val"
+                :type="'textarea'"
+                v-model="batchInput"
+                :row="3"
+                :placeholder="$t('editPage.optionTips')"
+            />
         </form-field>
         <div class="batch-confirm-div">
-            <span @click="handleBatchInput">{{$t('editPage.batchAddBtn')}}</span>
+            <span @click="handleBatchInput">{{ $t('editPage.batchAddBtn') }}</span>
         </div>
     </section>
 </template>

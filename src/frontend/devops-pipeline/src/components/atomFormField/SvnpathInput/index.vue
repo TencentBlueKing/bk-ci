@@ -1,7 +1,10 @@
 <template>
     <div class="svnpath-item">
         <vuex-input v-bind="$props" />
-        <span class="view-input-path" v-if="fullPath">{{ $t('editPage.realPath') }}：{{ fullPath }}</span>
+        <span
+            class="view-input-path"
+            v-if="fullPath"
+        >{{ $t('editPage.realPath') }}：{{ fullPath }}</span>
     </div>
 </template>
 

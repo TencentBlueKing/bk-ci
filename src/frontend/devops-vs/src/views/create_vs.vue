@@ -5,63 +5,116 @@
             <p slot="right">本服务由金刚团队（企业微信：KingKong）提供后台支持</p>
         </content-header>
 
-        <section class="sub-view-port" ref="scrollBox"
+        <section
+            class="sub-view-port"
+            ref="scrollBox"
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title
-            }">
+            }"
+        >
             <template v-if="showContent">
                 <div class="select-nav">
                     <div class="select-content pipeline-content">
                         <label class="select-label">流水线</label>
-                        <bk-select v-model="selectInfo.pipelineId" style="width: 300px;" :clearable="false" searchable :loading="isPipelineLoading">
-                            <bk-option v-for="(option, index) in pipelineList"
+                        <bk-select
+                            v-model="selectInfo.pipelineId"
+                            style="width: 300px;"
+                            :clearable="false"
+                            searchable
+                            :loading="isPipelineLoading"
+                        >
+                            <bk-option
+                                v-for="(option, index) in pipelineList"
                                 :key="index"
                                 :id="option.pipelineId"
-                                :name="option.pipelineName">
+                                :name="option.pipelineName"
+                            >
                             </bk-option>
                         </bk-select>
                     </div>
                     <div class="select-content construct-content">
                         <label class="select-label">构建号</label>
-                        <bk-select v-model="selectInfo.constructId" style="width: 300px;" :clearable="false" searchable :loading="isConstructLoading" @change="changeBuildNo">
-                            <bk-option v-for="(option, index) in constructList"
+                        <bk-select
+                            v-model="selectInfo.constructId"
+                            style="width: 300px;"
+                            :clearable="false"
+                            searchable
+                            :loading="isConstructLoading"
+                            @change="changeBuildNo"
+                        >
+                            <bk-option
+                                v-for="(option, index) in constructList"
                                 :key="index"
                                 :id="option.id"
-                                :name="option.buildNum">
+                                :name="option.buildNum"
+                            >
                             </bk-option>
                         </bk-select>
                     </div>
                 </div>
-                <bk-table style="margin-top: 15px;" :data="fileList" empty-text="暂无数据">
-                    <bk-table-column label="名称" class="name-item" width="300">
+                <bk-table
+                    style="margin-top: 15px;"
+                    :data="fileList"
+                    empty-text="暂无数据"
+                >
+                    <bk-table-column
+                        label="名称"
+                        class="name-item"
+                        width="300"
+                    >
                         <template slot-scope="props">
                             <div :title="props.row.name">
                                 <i class="devops-icon icon-file"></i>
-                                <span><span class="buildno-item" v-if="selectInfo.constructId === 'all'">{{ props.row.buildDesc }}&nbsp;</span>{{ props.row.name }}</span>
+                                <span><span
+                                    class="buildno-item"
+                                    v-if="selectInfo.constructId === 'all'"
+                                >{{ props.row.buildDesc }}&nbsp;</span>{{ props.row.name }}</span>
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="路径" prop="source" class="path-item">
+                    <bk-table-column
+                        label="路径"
+                        prop="source"
+                        class="path-item"
+                    >
                         <template slot-scope="props">
                             <span :title="props.row.fullName">{{ props.row.fullName }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="大小" prop="status" width="150">
+                    <bk-table-column
+                        label="大小"
+                        prop="status"
+                        width="150"
+                    >
                         <template slot-scope="props">
                             <span>{{ props.row.size }}&nbsp;MB</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="仓库类型" prop="create_time" width="150">
+                    <bk-table-column
+                        label="仓库类型"
+                        prop="create_time"
+                        width="150"
+                    >
                         <template slot-scope="props">
                             <span v-if="props.row.artifactoryType === 'CUSTOM_DIR'">自定义仓库</span>
                             <span v-if="props.row.artifactoryType === 'PIPELINE'">流水线仓库</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column width="150" :render-header="renderHeader">
+                    <bk-table-column
+                        width="150"
+                        :render-header="renderHeader"
+                    >
                         <template slot-scope="props">
-                            <span @click="toScanFile(props.row, '3')" class="handler-item">静态扫描</span>
-                            <span style="margin-left: 8px;" @click="toScanFile(props.row, '1')" class="handler-item">完整扫描</span>
+                            <span
+                                @click="toScanFile(props.row, '3')"
+                                class="handler-item"
+                            >静态扫描</span>
+                            <span
+                                style="margin-left: 8px;"
+                                @click="toScanFile(props.row, '1')"
+                                class="handler-item"
+                            >完整扫描</span>
                         </template>
                     </bk-table-column>
                 </bk-table>

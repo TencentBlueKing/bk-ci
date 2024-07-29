@@ -1,10 +1,25 @@
 <template>
     <section>
-        <bk-table :data="errorCodeData" v-bkloading="{ isLoading: isLoading }" class="mt20">
-            <bk-table-column :label="$t('store.错误码')" prop="errorCode" show-overflow-tooltip></bk-table-column>
-            <bk-table-column :label="$t('store.错误码说明')" prop="errorMsgZhCn" show-overflow-tooltip>
+        <bk-table
+            :data="errorCodeData"
+            v-bkloading="{ isLoading: isLoading }"
+            class="mt20"
+        >
+            <bk-table-column
+                :label="$t('store.错误码')"
+                prop="errorCode"
+                show-overflow-tooltip
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('store.错误码说明')"
+                prop="errorMsgZhCn"
+                show-overflow-tooltip
+            >
                 <template slot-scope="{ row }">
-                    <div v-html="row.errorMsgZhCn.replace(/[\n|\r]/gm, '<br>')" style="display: inline-block; padding: 10px 0;"></div>
+                    <div
+                        v-html="row.errorMsgZhCn.replace(/[\n|\r]/gm, '<br>')"
+                        style="display: inline-block; padding: 10px 0;"
+                    ></div>
                 </template>
             </bk-table-column>
         </bk-table>

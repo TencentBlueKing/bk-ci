@@ -3,15 +3,24 @@
         <content-header>
             <div slot="left">{{ $route.meta.title }}</div>
         </content-header>
-        <section class="sub-view-port" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
-            <bk-tab :active.sync="curTab" type="unborder-card">
+        <section
+            class="sub-view-port"
+            v-bkloading="{ isLoading: loading.isLoading, title: loading.title }"
+        >
+            <bk-tab
+                :active.sync="curTab"
+                type="unborder-card"
+            >
                 <bk-tab-panel
                     v-for="(panel, index) in panels"
                     v-bind="panel"
                     :key="index"
                 >
                     <template v-if="curTab === 'experienceGroup'">
-                        <div v-if="showContent && experienceList.length" class="table-operate-bar">
+                        <div
+                            v-if="showContent && experienceList.length"
+                            class="table-operate-bar"
+                        >
                             <span
                                 v-perm="{
                                     tooltips: '没有权限',
@@ -23,7 +32,10 @@
                                     }
                                 }"
                             >
-                                <bk-button theme="primary" @click="toCreateGroup">新增</bk-button>
+                                <bk-button
+                                    theme="primary"
+                                    @click="toCreateGroup"
+                                >新增</bk-button>
                             </span>
                         </div>
                         <bk-table
@@ -33,10 +45,20 @@
                             @page-change="requestList"
                             @page-limit-change="handlePageLimitChange"
                         >
-                            <bk-table-column label="名称" show-overflow-tooltip prop="name"></bk-table-column>
-                            <bk-table-column label="内部人员" prop="innerUsersCount">
+                            <bk-table-column
+                                label="名称"
+                                show-overflow-tooltip
+                                prop="name"
+                            ></bk-table-column>
+                            <bk-table-column
+                                label="内部人员"
+                                prop="innerUsersCount"
+                            >
                                 <template slot-scope="props">
-                                    <bk-popover placement="bottom" :disabled="props.row.innerUsersCount <= 0">
+                                    <bk-popover
+                                        placement="bottom"
+                                        :disabled="props.row.innerUsersCount <= 0"
+                                    >
                                         <span class="handler-inner">{{ props.row.innerUsersCount }}</span>
                                         <template slot="content">
                                             <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
@@ -46,9 +68,15 @@
                                     </bk-popover>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column label="内部组织" prop="deptsCount">
+                            <bk-table-column
+                                label="内部组织"
+                                prop="deptsCount"
+                            >
                                 <template slot-scope="props">
-                                    <bk-popover placement="bottom" :disabled="props.row.deptsCount <= 0">
+                                    <bk-popover
+                                        placement="bottom"
+                                        :disabled="props.row.deptsCount <= 0"
+                                    >
                                         <span class="handler-inner">{{ props.row.deptsCount }}</span>
                                         <template slot="content">
                                             <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
@@ -58,9 +86,15 @@
                                     </bk-popover>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column label="外部人员" prop="outerUsersCount">
+                            <bk-table-column
+                                label="外部人员"
+                                prop="outerUsersCount"
+                            >
                                 <template slot-scope="props">
-                                    <bk-popover placement="bottom" :disabled="props.row.outerUsersCount <= 0">
+                                    <bk-popover
+                                        placement="bottom"
+                                        :disabled="props.row.outerUsersCount <= 0"
+                                    >
                                         <span class="handler-outer">{{ props.row.outerUsersCount }}</span>
                                         <template slot="content">
                                             <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
@@ -70,9 +104,19 @@
                                     </bk-popover>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column label="创建人" prop="creator"></bk-table-column>
-                            <bk-table-column label="描述" show-overflow-tooltip prop="remark"></bk-table-column>
-                            <bk-table-column label="操作" prop="creator">
+                            <bk-table-column
+                                label="创建人"
+                                prop="creator"
+                            ></bk-table-column>
+                            <bk-table-column
+                                label="描述"
+                                show-overflow-tooltip
+                                prop="remark"
+                            ></bk-table-column>
+                            <bk-table-column
+                                label="操作"
+                                prop="creator"
+                            >
                                 <template slot-scope="props">
                                     <div class="handler-group">
                                         <bk-button
@@ -114,9 +158,11 @@
                                 </template>
                             </bk-table-column>
                         </bk-table>
-                        <empty-data v-if="showContent && !experienceList.length"
+                        <empty-data
+                            v-if="showContent && !experienceList.length"
                             :empty-info="emptyInfo"
-                            :to-create-fn="toCreateGroup">
+                            :to-create-fn="toCreateGroup"
+                        >
                         </empty-data>
                     </template>
                 </bk-tab-panel>

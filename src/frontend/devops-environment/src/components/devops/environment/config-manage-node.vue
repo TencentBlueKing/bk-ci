@@ -1,11 +1,14 @@
 <template>
-    <bk-dialog v-model="nodeSelectConf.isShow"
+    <bk-dialog
+        v-model="nodeSelectConf.isShow"
         :width="'900'"
         :ext-cls="'node-select-wrapper'"
-        :close-icon="false">
+        :close-icon="false"
+    >
         <div>
             <div class="node-list-header">
-                <div class="title">{{ $t('environment.nodeInfo.selectNodeTip') }}
+                <div class="title">
+                    {{ $t('environment.nodeInfo.selectNodeTip') }}
                     <span class="selected-node-prompt">
                         {{ $t('environment.nodeInfo.total') }}<span class="node-count"> {{ pagination.count }} </span>{{ $t('environment.nodes') }}
                     </span>
@@ -20,43 +23,79 @@
                     </bk-popover>
                 </div>
                 <div class="search-input-row">
-                    <bk-select v-model="operator" class="operator-select" :clearable="false" @change="changeOperator">
-                        <bk-option v-for="(option, index) in operatorList"
+                    <bk-select
+                        v-model="operator"
+                        class="operator-select"
+                        :clearable="false"
+                        @change="changeOperator"
+                    >
+                        <bk-option
+                            v-for="(option, index) in operatorList"
                             :key="index"
                             :id="option.id"
-                            :name="option.name">
+                            :name="option.name"
+                        >
                         </bk-option>
                     </bk-select>
                     <div class="biz-search-input">
                         <div class="biz-ip-searcher-wrapper">
-                            <div class="biz-searcher" @click="focusSearch" ref="bizSearcher">
-                                <ul class="search-key" ref="searchKey">
-                                    <li class="key-node" v-for="(entry, index) in searchKeyList" :key="index">
+                            <div
+                                class="biz-searcher"
+                                @click="focusSearch"
+                                ref="bizSearcher"
+                            >
+                                <ul
+                                    class="search-key"
+                                    ref="searchKey"
+                                >
+                                    <li
+                                        class="key-node"
+                                        v-for="(entry, index) in searchKeyList"
+                                        :key="index"
+                                    >
                                         <span>{{ entry }}</span>
-                                        <i class="devops-icon icon-close" @click="deleteKey(index)"></i>
+                                        <i
+                                            class="devops-icon icon-close"
+                                            @click="deleteKey(index)"
+                                        ></i>
                                     </li>
                                     <li class="input-item">
-                                        <input type="text" class="search-input" ref="searchInput"
+                                        <input
+                                            type="text"
+                                            class="search-input"
+                                            ref="searchInput"
                                             v-model="inputValue"
                                             :style="inputStyle"
                                             @blur="handleBlur"
                                             @paste="paste"
-                                            @keyup="keyupHandler">
+                                            @keyup="keyupHandler"
+                                        >
                                     </li>
                                 </ul>
                             </div>
                             <div class="actions">
-                                <i class="devops-icon icon-close" @click="deleteAllKey" v-if="searchKeyList.length"></i>
-                                <i class="devops-icon icon-search" @click="searchNode"></i>
+                                <i
+                                    class="devops-icon icon-close"
+                                    @click="deleteAllKey"
+                                    v-if="searchKeyList.length"
+                                ></i>
+                                <i
+                                    class="devops-icon icon-search"
+                                    @click="searchNode"
+                                ></i>
                             </div>
-                            <div class="ip-searcher-footer" v-if="isSearchFooter">
+                            <div
+                                class="ip-searcher-footer"
+                                v-if="isSearchFooter"
+                            >
                                 <p>{{ $t('environment.nodeInfo.searchNodePlaceholder') }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="node-table"
+            <div
+                class="node-table"
                 v-bkloading="{
                     isLoading: loading.isLoading,
                     title: loading.title
@@ -75,17 +114,55 @@
                     @select="toggleNodeSelect"
                     @select-all="toggleAllSelect"
                 >
-                    <bk-table-column type="selection" width="60" align="center" :selectable="isImported" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column label="IP" prop="ip" width="150" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('environment.nodeInfo.hostName')" prop="name" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('environment.operator')" width="150" prop="operator" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('environment.bkOperator')" width="150" prop="bakOperator" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('environment.status')" prop="nodeStatus" show-overflow-tooltip>
+                    <bk-table-column
+                        type="selection"
+                        width="60"
+                        align="center"
+                        :selectable="isImported"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        label="IP"
+                        prop="ip"
+                        width="150"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('environment.nodeInfo.hostName')"
+                        prop="name"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('environment.operator')"
+                        width="150"
+                        prop="operator"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('environment.bkOperator')"
+                        width="150"
+                        prop="bakOperator"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('environment.status')"
+                        prop="nodeStatus"
+                        show-overflow-tooltip
+                    >
                         <template slot-scope="{ row }">
                             <span>
-                                <StatusIcon v-if="successStatus.includes(row.nodeStatus)" status="success" />
-                                <StatusIcon v-else-if="failStatus.includes(row.nodeStatus)" status="error" />
-                                <StatusIcon v-else-if="['NOT_INSTALLED'].includes(row.nodeStatus)" status="normal" />
+                                <StatusIcon
+                                    v-if="successStatus.includes(row.nodeStatus)"
+                                    status="success"
+                                />
+                                <StatusIcon
+                                    v-else-if="failStatus.includes(row.nodeStatus)"
+                                    status="error"
+                                />
+                                <StatusIcon
+                                    v-else-if="['NOT_INSTALLED'].includes(row.nodeStatus)"
+                                    status="normal"
+                                />
                                 {{ ['NOT_IN_CC', 'NOT_IN_CMDB'].includes(row.nodeStatus) ? '' : $t('environment.nodeStatusMap')[row.nodeStatus] }}
                             </span>
                         </template>
@@ -95,8 +172,20 @@
         </div>
         <div slot="footer">
             <div class="footer-handler">
-                <bk-button theme="primary" @click="confirmFn" :disabled="!selectedNodeList.length || loading.isLoading">{{ importText }}</bk-button>
-                <bk-button theme="default" @click="cancelFn" :disabled="loading.isLoading">{{ $t('environment.cancel') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    @click="confirmFn"
+                    :disabled="!selectedNodeList.length || loading.isLoading"
+                >
+                    {{ importText }}
+                </bk-button>
+                <bk-button
+                    theme="default"
+                    @click="cancelFn"
+                    :disabled="loading.isLoading"
+                >
+                    {{ $t('environment.cancel') }}
+                </bk-button>
             </div>
         </div>
     </bk-dialog>

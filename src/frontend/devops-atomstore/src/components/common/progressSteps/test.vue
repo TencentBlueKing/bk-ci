@@ -1,14 +1,39 @@
 <template>
     <section class="main-body">
         <section class="progress-test">
-            <img src="../../../images/progressTest.png" class="test-image">
-            <span class="test-tip" v-html="$t('store.testTip')"></span>
-            <bk-button theme="primary" @click="goToTest" size="large"> {{ $t('store.前往测试') }} </bk-button>
+            <img
+                src="../../../images/progressTest.png"
+                class="test-image"
+            >
+            <span
+                class="test-tip"
+                v-html="$t('store.testTip')"
+            ></span>
+            <bk-button
+                theme="primary"
+                @click="goToTest"
+                size="large"
+            >
+                {{ $t('store.前往测试') }}
+            </bk-button>
         </section>
 
         <footer class="main-footer">
-            <bk-button theme="primary" @click="completeTest" :disabled="isRebuildLoading" :loading="isLoading"> {{ $t('store.下一步') }} </bk-button>
-            <bk-button :loading="isRebuildLoading" :disabled="isLoading" @click="rebuild"> {{ $t('store.重新构建') }} </bk-button>
+            <bk-button
+                theme="primary"
+                @click="completeTest"
+                :disabled="isRebuildLoading"
+                :loading="isLoading"
+            >
+                {{ $t('store.下一步') }}
+            </bk-button>
+            <bk-button
+                :loading="isRebuildLoading"
+                :disabled="isLoading"
+                @click="rebuild"
+            >
+                {{ $t('store.重新构建') }}
+            </bk-button>
         </footer>
     </section>
 </template>

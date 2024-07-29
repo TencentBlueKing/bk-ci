@@ -1,9 +1,32 @@
 <template>
     <div class="pull-code-panel bk-form bk-form-vertical distribution-panel">
         <section>
-            <form-field :inline="obj.inline" :class="obj.class" v-if="!obj.hidden" v-for="(obj, key) of newModel" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                <component :is="obj.component" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleMethods" :value="element[key]" v-bind="obj"></component>
-                <route-tips :visible="true" :src-tips="srcTips" :path-tips="''" v-if="key === 'srcPath' && element['srcPath']"></route-tips>
+            <form-field
+                :inline="obj.inline"
+                :class="obj.class"
+                v-if="!obj.hidden"
+                v-for="(obj, key) of newModel"
+                :key="key"
+                :desc="obj.desc"
+                :required="obj.required"
+                :label="obj.label"
+                :is-error="errors.has(key)"
+                :error-msg="errors.first(key)"
+            >
+                <component
+                    :is="obj.component"
+                    :name="key"
+                    v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                    :handle-change="handleMethods"
+                    :value="element[key]"
+                    v-bind="obj"
+                ></component>
+                <route-tips
+                    :visible="true"
+                    :src-tips="srcTips"
+                    :path-tips="''"
+                    v-if="key === 'srcPath' && element['srcPath']"
+                ></route-tips>
             </form-field>
         </section>
     </div>

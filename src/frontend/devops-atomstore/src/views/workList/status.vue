@@ -1,5 +1,8 @@
 <template>
-    <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary store-status" v-if="status === 'doing'">
+    <div
+        class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary store-status"
+        v-if="status === 'doing'"
+    >
         <div class="rotate rotate1"></div>
         <div class="rotate rotate2"></div>
         <div class="rotate rotate3"></div>
@@ -9,7 +12,12 @@
         <div class="rotate rotate7"></div>
         <div class="rotate rotate8"></div>
     </div>
-    <icon class="store-status" :name="`store-status-${status}`" size="12" v-else />
+    <icon
+        class="store-status"
+        :name="`store-status-${status}`"
+        size="12"
+        v-else
+    />
 </template>
 
 <script>

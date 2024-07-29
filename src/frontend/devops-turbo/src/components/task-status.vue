@@ -1,6 +1,14 @@
 <template>
     <span class="status-component">
-        <logo size="14" :name="lowerCaseProp()" :class="`${status} status-logo`"></logo><span :class="{ error: message }" v-bk-tooltips="{ content: message, disabled: !message }" v-if="showName">{{ getStatusName() }}</span>
+        <logo
+            size="14"
+            :name="lowerCaseProp()"
+            :class="`${status} status-logo`"
+        ></logo><span
+            :class="{ error: message }"
+            v-bk-tooltips="{ content: message, disabled: !message }"
+            v-if="showName"
+        >{{ getStatusName() }}</span>
     </span>
 </template>
 

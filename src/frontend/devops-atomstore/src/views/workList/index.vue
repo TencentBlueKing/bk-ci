@@ -1,12 +1,22 @@
 <template>
     <article class="g-store-main">
-        <bread-crumbs :bread-crumbs="navList" :type="currentTabName.slice(0, -4)"></bread-crumbs>
+        <bread-crumbs
+            :bread-crumbs="navList"
+            :type="currentTabName.slice(0, -4)"
+        ></bread-crumbs>
 
-        <transition-tab :panels="tabList"
+        <transition-tab
+            :panels="tabList"
             @tab-change="tabChange"
         >
             <template v-slot:tool>
-                <a class="title-work" target="_blank" :href="link.link" v-for="link in currentTab.links" :key="link.name">{{ link.name }}</a>
+                <a
+                    class="title-work"
+                    target="_blank"
+                    :href="link.link"
+                    v-for="link in currentTab.links"
+                    :key="link.name"
+                >{{ link.name }}</a>
             </template>
         </transition-tab>
 

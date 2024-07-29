@@ -1,19 +1,65 @@
 <template>
-    <div v-bkloading="{ isLoading }" class="xcode-panel bk-form bk-form-vertical">
+    <div
+        v-bkloading="{ isLoading }"
+        class="xcode-panel bk-form bk-form-vertical"
+    >
         <section v-if="hasTemplate && appId">
-            <form-field :desc="$t('editPage.atomForm.appidDesc')" :label="$t('editPage.atomForm.appidLabel')">
-                <vuex-input readonly :value="appName" disabled />
+            <form-field
+                :desc="$t('editPage.atomForm.appidDesc')"
+                :label="$t('editPage.atomForm.appidLabel')"
+            >
+                <vuex-input
+                    readonly
+                    :value="appName"
+                    disabled
+                />
             </form-field>
-            <form-field v-if="!obj.hidden" v-for="(obj, key) in atomPropsModel" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                <component :is="obj.component" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="(key === 'templateId') ? handleSelect : handleUpdateElement" :value="element[key]" v-bind="obj"></component>
+            <form-field
+                v-if="!obj.hidden"
+                v-for="(obj, key) in atomPropsModel"
+                :key="key"
+                :desc="obj.desc"
+                :required="obj.required"
+                :label="obj.label"
+                :is-error="errors.has(key)"
+                :error-msg="errors.first(key)"
+            >
+                <component
+                    :is="obj.component"
+                    :name="key"
+                    v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                    :handle-change="(key === 'templateId') ? handleSelect : handleUpdateElement"
+                    :value="element[key]"
+                    v-bind="obj"
+                ></component>
             </form-field>
 
-            <form-field v-if="!obj.hidden" v-for="(obj, key) in newModel" :key="key" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                <component :is="obj.component" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateNewElement" :value="element[key]" v-bind="obj"></component>
+            <form-field
+                v-if="!obj.hidden"
+                v-for="(obj, key) in newModel"
+                :key="key"
+                :required="obj.required"
+                :label="obj.label"
+                :is-error="errors.has(key)"
+                :error-msg="errors.first(key)"
+            >
+                <component
+                    :is="obj.component"
+                    :name="key"
+                    v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                    :handle-change="handleUpdateNewElement"
+                    :value="element[key]"
+                    v-bind="obj"
+                ></component>
             </form-field>
         </section>
         <section v-if="appId && !hasTemplate">
-            <div class="empty-tips"><a target="_blank" :href="gcloudUrl">{{ $t('editPage.atomForm.gcloudSettingTips') }}</a></div>
+            <div class="empty-tips">
+                <a
+                    target="_blank"
+                    :href="gcloudUrl"
+                >{{ $t('editPage.atomForm.gcloudSettingTips') }}</a>
+            </div>
         </section>
         <section v-if="!appId">
             <div class="empty-tips">{{ $t('editPage.atomForm.noAppidTips') }}</div>

@@ -1,5 +1,8 @@
 <template>
-    <section class="over-view-news" v-bkloading="{ isLoading }">
+    <section
+        class="over-view-news"
+        v-bkloading="{ isLoading }"
+    >
         <bk-timeline :list="list"></bk-timeline>
     </section>
 </template>
