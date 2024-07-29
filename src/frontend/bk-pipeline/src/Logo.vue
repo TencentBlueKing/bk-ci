@@ -1,6 +1,14 @@
 <template>
-    <span style="font-size:0" v-bind="$attrs" v-on="$listeners">
-        <svg :width="size" :height="size" style="fill: currentColor; stroke: currentColor">
+    <span
+        style="font-size:0"
+        v-bind="$attrs"
+        v-on="$listeners"
+    >
+        <svg
+            :width="size"
+            :height="size"
+            style="fill: currentColor; stroke: currentColor"
+        >
             <title v-if="title">{{ title }}</title>
             <use v-bind="{ 'xlink:href': svgHref }"></use>
         </svg>
