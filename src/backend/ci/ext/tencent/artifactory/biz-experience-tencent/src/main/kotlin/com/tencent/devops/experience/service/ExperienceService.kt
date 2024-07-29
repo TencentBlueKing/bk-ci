@@ -1034,7 +1034,7 @@ class ExperienceService @Autowired constructor(
                     bundle = e.bundleIdentifier,
                     platform = e.platform,
                     limit = BATCH_SEND_LIMIT
-                ).map { it.value2() }.toSet().subtract(innerReceivers)
+                ).map { it.userId }.toSet().subtract(innerReceivers)
                     .subtract(outerReceivers)
                 // 内部架构
                 val deptUsers = experienceBaseService.getDeptUserReceivers(groupIds)
@@ -1094,7 +1094,7 @@ class ExperienceService @Autowired constructor(
                 bundle = experienceRecord.bundleIdentifier,
                 platform = experienceRecord.platform,
                 limit = BATCH_SEND_LIMIT
-            ).map { it.value2() }.toSet().subtract(innerReceivers)
+            ).map { it.userId }.toSet().subtract(innerReceivers)
                 .subtract(outerReceivers)
             // 内部架构
             val deptUsers =

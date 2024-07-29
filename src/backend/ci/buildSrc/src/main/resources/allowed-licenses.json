@@ -21,7 +21,7 @@
       "moduleName": "net.java.dev.jna:jna-platform"
     },
     {
-      "moduleName": "javax.ws.rs:javax.ws.rs-api",
+      "moduleName": "jakarta.ws.rs:jakarta.ws.rs-api",
       "desc": "Javax 类库 , 可以直接引用"
     },
     {
