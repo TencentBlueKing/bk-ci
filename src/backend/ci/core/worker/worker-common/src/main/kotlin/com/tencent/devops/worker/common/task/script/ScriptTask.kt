@@ -40,12 +40,12 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_NO_FILES_TO_ARCHIVE
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.SCRIPT_EXECUTION_FAIL
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
@@ -62,6 +62,7 @@ import java.net.URLDecoder
 open class ScriptTask : ITask() {
 
     private val gatewayResourceApi = ApiFactory.create(QualityGatewaySDKApi::class)
+    private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
@@ -130,7 +131,7 @@ open class ScriptTask : ITask() {
                         arrayOf(archiveFileIfExecFail)
                     )
                 )
-                val token = RepoServiceFactory.getInstance().getRepoToken(
+                val token = archiveApi.getRepoToken(
                     userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
                     projectId = buildVariables.projectId,
                     repoName = "pipeline",

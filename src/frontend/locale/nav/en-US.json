@@ -215,5 +215,6 @@
     "reconnect": "Reconnect",
     "启用中": "Enabled",
     "undeployTitle": "The {0} service has not been deployed yet",
-    "turboServiceDesc": "Turbo compilation acceleration service is based on distributed compilation, caching, and container technologies. It aims to provide efficient, stable, and convenient acceleration services for businesses, thereby improving development efficiency. To use this feature, the acceleration service needs to be deployed."
+    "turboServiceDesc": "Turbo compilation acceleration service is based on distributed compilation, caching, and container technologies. It aims to provide efficient, stable, and convenient acceleration services for businesses, thereby improving development efficiency. To use this feature, the acceleration service needs to be deployed.",
+    "蓝盾": "BK-CI"
 }
