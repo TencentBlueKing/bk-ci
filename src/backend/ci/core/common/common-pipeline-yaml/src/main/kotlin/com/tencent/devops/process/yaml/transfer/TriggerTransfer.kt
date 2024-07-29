@@ -301,7 +301,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 CodeEventType.MERGE_REQUEST_ACCEPT ->
                     throw PipelineTransferException(
                         errorCode = CommonMessageCode.MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER,
-                        params = arrayOf(defaultName)
+                        params = arrayOf(git.name)
                     )
 
                 CodeEventType.REVIEW -> nowExist.review = ReviewRule(
