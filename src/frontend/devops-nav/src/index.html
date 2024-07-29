@@ -72,7 +72,7 @@
     function loadJsAssets(isVendors) {
       for (var i = 0; i < window.jsAssets.length; i++) {
         var js = window.jsAssets[i]
-        if (isVendors ? js.indexOf('vendors') > -1 : js.indexOf('vendors') === -1) {
+        if (isVendors === true ? js.indexOf('vendors') > -1 : js.indexOf('vendors') === -1) {
           importScript(js, document.body)
         }
       }
