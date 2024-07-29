@@ -5,9 +5,9 @@ spring:
     username: __BK_CI_MYSQL_USER__
     password: __BK_CI_MYSQL_PASSWORD__
   cloud:
+    function:
+      definition: logOriginEventIn;logOriginEventOut;logStorageEventIn;logStorageEventOut;logStatusEventIn;logStatusEventOut
     stream:
-      function:
-        definition: logOriginEventIn;logOriginEventOut;logStorageEventIn;logStorageEventOut;logStatusEventIn;logStatusEventOut
       bindings:
         # 配置MQ的绑定关系：destination为目标Exchange，group为该单例所在订阅组，binder为使用的组件类型
         # 参数值：<单例名称>-<消费者in或生产者out，默认in>-<编号，默认0>
