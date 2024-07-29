@@ -232,7 +232,12 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132044",
         formatErrorMessage = "client ip {0} request error: ip no permission to perform the operation {1}"
-    );
+    ),
+    NO_CRED_ID_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132045",
+        formatErrorMessage = "project {0} cred id {1} token  not found"
+    ), ;
 
     fun getErrorMessage(): String {
         return I18nUtil.getCodeLanMessage(this.errorCode)

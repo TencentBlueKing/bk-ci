@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.pojo.gitproxy
 
 data class LinktgitData(
-    val codeUrls: Set<String>
+    val codeUrls: Set<String>,
+    val credId: String?
 )

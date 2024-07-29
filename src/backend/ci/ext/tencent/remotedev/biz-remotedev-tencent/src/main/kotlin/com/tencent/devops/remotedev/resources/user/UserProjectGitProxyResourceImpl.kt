@@ -25,7 +25,7 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
         projectId: String,
         data: LinktgitData
     ): Result<Map<String, Boolean>> {
-        return Result(gitProxyTGitService.checkUserPermission(userId, projectId, data.codeUrls))
+        return Result(gitProxyTGitService.checkUserPermission(userId, projectId, data))
     }
 
     @AuditEntry(actionId = ActionId.TGIT_LINK_LIST)
@@ -39,12 +39,23 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
     }
 
     override fun getTGitNamespaces(
+        projectId: String,
         userId: String,
         page: Int,
         pageSize: Int,
-        svnProject: Boolean
+        svnProject: Boolean,
+        credId: String?
     ): Result<List<TGitNamespace>> {
-        return Result(gitProxyTGitService.getTGitNamespaces(userId, page, pageSize, svnProject))
+        return Result(
+            gitProxyTGitService.getTGitNamespaces(
+                projectId = projectId,
+                userId = userId,
+                page = page,
+                pageSize = pageSize,
+                svnProject = svnProject,
+                credId = credId
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.TGIT_LINK_CREATE)
