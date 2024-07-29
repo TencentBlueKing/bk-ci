@@ -41,6 +41,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ADD_PIPELINE_TIMER
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_DEL_PIPELINE_TIMER
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SAVE_PIPELINE_TIMER
 import com.tencent.devops.process.engine.pojo.PipelineTimer
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.plugin.trigger.dao.PipelineTimerBranchDao
 import com.tencent.devops.process.plugin.trigger.dao.PipelineTimerDao
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerChangeEvent
@@ -58,7 +59,8 @@ open class PipelineTimerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineTimerDao: PipelineTimerDao,
     private val pipelineTimerBranchDao: PipelineTimerBranchDao,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     companion object {
@@ -157,7 +159,10 @@ open class PipelineTimerService @Autowired constructor(
             return PipelineTimer(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                startUser = creator,
+                startUser = pipelineRepositoryService.getPipelineOauthUser(
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                ) ?: creator,
                 crontabExpressions = try {
                     JsonUtil.to(crontab, object : TypeReference<List<String>>() {})
                 } catch (ignored: Throwable) {
