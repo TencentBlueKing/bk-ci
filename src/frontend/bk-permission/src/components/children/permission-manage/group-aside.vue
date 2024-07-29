@@ -292,16 +292,31 @@ export default {
           case 'add_user_confirm':
             this.groupList[this.curGroupIndex].departmentCount += data.data.departments.length
             this.groupList[this.curGroupIndex].userCount += data.data.users.length
+            this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
           case 'remove_user_confirm':
             const departments = data.data.members.filter(i => i.type === 'department')
             const users = data.data.members.filter(i => i.type === 'user')
             this.groupList[this.curGroupIndex].departmentCount -= departments.length
             this.groupList[this.curGroupIndex].userCount -= users.length
+            this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
           case 'change_group_detail_tab':
             this.$emit('change-group-detail-tab', data.data.tab)
         }
+      }
+    },
+    async syncGroupIAM(groupId){
+      try {
+        await Promise.all([
+          http.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${projectId}/syncGroupAndMember`),
+          http.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${projectId}/${groupId}/syncGroupMember`)
+        ]);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: err.message
+        });
       }
     },
   },
