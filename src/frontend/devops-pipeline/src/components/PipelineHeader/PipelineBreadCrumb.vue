@@ -1,11 +1,18 @@
 <template>
     <bread-crumb :value="breadCrumbPath">
         <template v-if="!isLoading">
-            <bread-crumb-item v-for="(crumb, index) in breadCrumbs" :key="index" v-bind="crumb">
+            <bread-crumb-item
+                v-for="(crumb, index) in breadCrumbs"
+                :key="index"
+                v-bind="crumb"
+            >
                 <slot v-if="index === breadCrumbs.length - 1"></slot>
             </bread-crumb-item>
         </template>
-        <i v-else class="devops-icon icon-circle-2-1 spin-icon" />
+        <i
+            v-else
+            class="devops-icon icon-circle-2-1 spin-icon"
+        />
     </bread-crumb>
 </template>
 

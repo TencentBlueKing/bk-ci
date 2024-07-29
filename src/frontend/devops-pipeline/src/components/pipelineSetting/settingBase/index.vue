@@ -1,7 +1,15 @@
 <template>
-    <section class="bk-form pipeline-setting base" v-if="!isLoading">
+    <section
+        class="bk-form pipeline-setting base"
+        v-if="!isLoading"
+    >
         <div class="setting-container">
-            <form-field :required="true" :label="$t('name')" :is-error="errors.has('name')" :error-msg="errors.first('name')">
+            <form-field
+                :required="true"
+                :label="$t('name')"
+                :is-error="errors.has('name')"
+                :error-msg="errors.first('name')"
+            >
                 <bk-input
                     :placeholder="$t('settings.namePlaceholder')"
                     v-model.trim="templateSetting.pipelineName"
@@ -11,12 +19,18 @@
                 />
             </form-field>
 
-            <form-field :required="false" :label="$t('settings.label')" v-if="tagGroupList.length">
+            <form-field
+                :required="false"
+                :label="$t('settings.label')"
+                v-if="tagGroupList.length"
+            >
                 <div class="form-group form-group-inline">
-                    <div :class="grouInlineCol"
+                    <div
+                        :class="grouInlineCol"
                         v-for="(filter, index) in tagGroupList"
-                        :key="index">
-                        <label class="group-title">{{filter.name}}</label>
+                        :key="index"
+                    >
+                        <label class="group-title">{{ filter.name }}</label>
                         <bk-select
                             ext-cls="setting-select"
                             :value="labelValues[index]"
@@ -24,14 +38,23 @@
                             @clear="handleLabelSelect(index, [[]])"
                             multiple
                         >
-                            <bk-option v-for="(option, oindex) in filter.labels" :key="oindex" :id="option.id" :name="option.name">
+                            <bk-option
+                                v-for="(option, oindex) in filter.labels"
+                                :key="oindex"
+                                :id="option.id"
+                                :name="option.name"
+                            >
                             </bk-option>
                         </bk-select>
                     </div>
                 </div>
             </form-field>
 
-            <form-field :label="$t('desc')" :is-error="errors.has('desc')" :error-msg="errors.first('desc')">
+            <form-field
+                :label="$t('desc')"
+                :is-error="errors.has('desc')"
+                :error-msg="errors.first('desc')"
+            >
                 <textarea
                     name="desc"
                     v-model.trim="templateSetting.desc"
@@ -42,14 +65,20 @@
                 />
             </form-field>
 
-            <form-field :label="$t('settings.runLock')" class="opera-lock-radio">
+            <form-field
+                :label="$t('settings.runLock')"
+                class="opera-lock-radio"
+            >
                 <running-lock
                     :pipeline-setting="templateSetting"
                     :handle-running-lock-change="handleRunningLockChange"
                 />
             </form-field>
 
-            <form-field :label="$t('settings.notice')" style="margin-bottom: 0px">
+            <form-field
+                :label="$t('settings.notice')"
+                style="margin-bottom: 0px"
+            >
                 <notify-tab
                     :editable="!isDisabled && hasPermission"
                     :success-subscription-list="templateSetting?.successSubscriptionList ?? []"
@@ -58,7 +87,10 @@
                 />
             </form-field>
 
-            <div class="handle-btn" style="margin-left: 146px;">
+            <div
+                class="handle-btn"
+                style="margin-left: 146px;"
+            >
                 <bk-button
                     v-if="isEnabledPermission"
                     @click="saveTemplateSetting()"

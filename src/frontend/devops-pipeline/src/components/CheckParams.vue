@@ -2,10 +2,15 @@
     <div>
         <section
             class="check-params-item"
-            v-for="(param, paramIndex) in params" :key="paramIndex"
+            v-for="(param, paramIndex) in params"
+            :key="paramIndex"
             :is-error="!isMetadataVar && errors.any(`param-${paramIndex}`)"
         >
-            <form-field class="form-field" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
+            <form-field
+                class="form-field"
+                :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)"
+                :error-msg="errors.first(`param-${paramIndex}.key`)"
+            >
                 <vuex-input
                     :data-vv-scope="`param-${paramIndex}`"
                     :disabled="true"
@@ -14,7 +19,8 @@
                     v-validate.initial="`required|unique:${params.map(p => p.key).join(',')}|max: 50|${snonVarRule}`"
                     name="key"
                     :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
-                    :value="param.chineseName ? param.chineseName : param.key" />
+                    :value="param.chineseName ? param.chineseName : param.key"
+                />
             </form-field>
             <span :class="{ 'default-required': true ,'is-required': param.required }" />
             <div :class="{ 'bk-form-item': true, 'required-error-item': param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType) }">
@@ -27,7 +33,11 @@
                     @handleParamChange="handleParamChange"
                 />
             </div>
-            <i v-if="param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType)" v-bk-tooltips="paramRequiredTips" class="bk-icon icon-exclamation-circle-shape top-middle is-required-icon" />
+            <i
+                v-if="param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType)"
+                v-bk-tooltips="paramRequiredTips"
+                class="bk-icon icon-exclamation-circle-shape top-middle is-required-icon"
+            />
         </section>
     </div>
 </template>

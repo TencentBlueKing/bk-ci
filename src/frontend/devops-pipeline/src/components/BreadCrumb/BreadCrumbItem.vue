@@ -1,12 +1,35 @@
 <template>
-    <div v-bk-clickoutside="toggleCrumbList" :class="{ 'bread-crumb-item': true, 'active': isActive, 'disabled': !to && hasRecords }">
+    <div
+        v-bk-clickoutside="toggleCrumbList"
+        :class="{ 'bread-crumb-item': true, 'active': isActive, 'disabled': !to && hasRecords }"
+    >
         <slot>
-            <i v-if="icon" :class="`devops-icon icon-${icon} bread-crumb-item-icon`" />
-            <span @click="handleNameClick" :title="selectedValue" :disabled="!to" class="bread-crumb-name">{{selectedValue}}</span>
+            <i
+                v-if="icon"
+                :class="`devops-icon icon-${icon} bread-crumb-item-icon`"
+            />
+            <span
+                @click="handleNameClick"
+                :title="selectedValue"
+                :disabled="!to"
+                class="bread-crumb-name"
+            >{{ selectedValue }}</span>
         </slot>
-        <span @click.stop="breadCrumbItemClick" :class="{ 'devops-icon': true, 'icon-angle-right': true, 'active': isActive, 'is-cursor': hasRecords }"></span>
+        <span
+            @click.stop="breadCrumbItemClick"
+            :class="{ 'devops-icon': true, 'icon-angle-right': true, 'active': isActive, 'is-cursor': hasRecords }"
+        ></span>
         <template v-if="hasRecords">
-            <crumb-records v-if="isActive" :searching="searching" :param-id="paramId" :param-name="paramName" :records="records" :handle-record-click="handleRecordClick" @searchInput="handleSearch" :selected-value="selectedValue"></crumb-records>
+            <crumb-records
+                v-if="isActive"
+                :searching="searching"
+                :param-id="paramId"
+                :param-name="paramName"
+                :records="records"
+                :handle-record-click="handleRecordClick"
+                @searchInput="handleSearch"
+                :selected-value="selectedValue"
+            ></crumb-records>
         </template>
     </div>
 </template>

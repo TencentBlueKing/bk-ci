@@ -1,22 +1,37 @@
 <template>
-    <detail-container @close="$emit('close')"
+    <detail-container
+        @close="$emit('close')"
         :title="currentElement.name"
         :status="currentElement.status"
         :current-tab="currentTab"
         :is-hook="((currentElement.additionalOptions || {}).elementPostInfo || false)"
     >
-        <span class="head-tab" slot="tab">
+        <span
+            class="head-tab"
+            slot="tab"
+        >
             <template v-for="tab in tabList">
-                <span v-if="tab.show"
+                <span
+                    v-if="tab.show"
                     :key="tab.name"
                     :class="{ active: currentTab === tab.name }"
                     @click="currentTab = tab.name"
                 >{{ $t(`execDetail.${tab.name}`) }}</span>
             </template>
         </span>
-        <reference-variable slot="tool" class="head-tool" :global-envs="globalEnvs" :stages="stages" :container="container" v-if="currentTab === 'setting'" />
+        <reference-variable
+            slot="tool"
+            class="head-tool"
+            :global-envs="globalEnvs"
+            :stages="stages"
+            :container="container"
+            v-if="currentTab === 'setting'"
+        />
         <template v-slot:content>
-            <error-summary v-if="activeErorr && currentTab === 'log'" :error="activeErorr"></error-summary>
+            <error-summary
+                v-if="activeErorr && currentTab === 'log'"
+                :error="activeErorr"
+            ></error-summary>
             <plugin-log
                 :id="currentElement.id"
                 :key="currentElement.id"
@@ -36,7 +51,6 @@
                 :ref="key"
                 @toggle="(show) => toggleTab(key, show)"
                 @complete="completeLoading(key)"
-                
             ></component>
         </template>
     </detail-container>

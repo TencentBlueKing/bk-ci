@@ -1,8 +1,18 @@
 <template>
     <div class="flex-container">
-        <bk-dropdown-menu trigger="click" align="bottom">
-            <div slot="dropdown-trigger" class="more-operation-entry">
-                <i class="entry-circle" v-for="i in [1, 2, 3]" :key="i" />
+        <bk-dropdown-menu
+            trigger="click"
+            align="bottom"
+        >
+            <div
+                slot="dropdown-trigger"
+                class="more-operation-entry"
+            >
+                <i
+                    class="entry-circle"
+                    v-for="i in [1, 2, 3]"
+                    :key="i"
+                />
             </div>
             <div
                 v-if="curPipelineId"
@@ -10,7 +20,10 @@
                 class="more-operation-dropmenu"
                 slot="dropdown-content"
             >
-                <ul v-for="(parent, index) in actionConfMenus" :key="index">
+                <ul
+                    v-for="(parent, index) in actionConfMenus"
+                    :key="index"
+                >
                     <template v-for="(action, aIndex) in parent">
                         <li
                             v-if="!action.hidden"

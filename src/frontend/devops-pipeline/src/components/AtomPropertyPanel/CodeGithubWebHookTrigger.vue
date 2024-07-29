@@ -1,11 +1,28 @@
 <template>
     <div class="bk-form bk-form-vertical">
-        <route-tips :visible="githubAppUrl" :github-app-url="githubAppUrl" v-if="githubAppUrl"></route-tips>
+        <route-tips
+            :visible="githubAppUrl"
+            :github-app-url="githubAppUrl"
+            v-if="githubAppUrl"
+        ></route-tips>
         <template v-for="(obj, key) in atomPropsModel">
             <template v-if="obj.type === 'group'">
-                <form-field-group v-if="rely(obj, element)" :name="key" :value="element[key]" :handle-change="handleMethods" :key="key" v-bind="obj">
+                <form-field-group
+                    v-if="rely(obj, element)"
+                    :name="key"
+                    :value="element[key]"
+                    :handle-change="handleMethods"
+                    :key="key"
+                    v-bind="obj"
+                >
                     <template v-for="(i, index) in obj.children">
-                        <form-field :key="i.key" v-if="rely(i, element)" v-bind="i" :is-error="errors.has(i.key)" :error-msg="errors.first(i.key)">
+                        <form-field
+                            :key="i.key"
+                            v-if="rely(i, element)"
+                            v-bind="i"
+                            :is-error="errors.has(i.key)"
+                            :error-msg="errors.first(i.key)"
+                        >
                             <component
                                 :is="i.component"
                                 :name="i.key"
@@ -14,14 +31,21 @@
                                 :value="element[i.key] || atomPropsModel[key]?.children[index]?.default"
                                 v-bind="i"
                                 
-                                @change="listChange">
+                                @change="listChange"
+                            >
                             </component>
                         </form-field>
                     </template>
                 </form-field-group>
             </template>
             <template v-else>
-                <form-field v-if="!obj.hidden && rely(obj, element)" :key="key" v-bind="obj" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                <form-field
+                    v-if="!obj.hidden && rely(obj, element)"
+                    :key="key"
+                    v-bind="obj"
+                    :is-error="errors.has(key)"
+                    :error-msg="errors.first(key)"
+                >
                     <component
                         :is="obj.component"
                         :name="key"
@@ -29,7 +53,8 @@
                         :handle-change="handleMethods"
                         :value="element[key]"
                         :element="element"
-                        v-bind="obj">
+                        v-bind="obj"
+                    >
                     </component>
                 </form-field>
             </template>

@@ -1,14 +1,22 @@
 <template>
-    <div v-if="execDetail" class="pipeline-detail-header">
-        <pipeline-bread-crumb :show-record-entry="isDebugExec" :pipeline-name="execDetail?.pipelineName">
+    <div
+        v-if="execDetail"
+        class="pipeline-detail-header"
+    >
+        <pipeline-bread-crumb
+            :show-record-entry="isDebugExec"
+            :pipeline-name="execDetail?.pipelineName"
+        >
             <span class="build-num-switcher-wrapper">
                 {{ $t(isDebugExec ? 'draftExecDetail' : 'pipelinesDetail') }}
                 <build-num-switcher v-bind="buildNumConf" />
             </span>
         </pipeline-bread-crumb>
-        <aside :class="['pipeline-detail-right-aside', {
-            'is-debug-exec-detail': isDebugExec
-        }]">
+        <aside
+            :class="['pipeline-detail-right-aside', {
+                'is-debug-exec-detail': isDebugExec
+            }]"
+        >
             <bk-button
                 v-if="isRunning"
                 :disabled="loading"
@@ -80,7 +88,11 @@
             />
         </aside>
     </div>
-    <i v-else class="devops-icon icon-circle-2-1 spin-icon" style="margin-left: 20px;"></i>
+    <i
+        v-else
+        class="devops-icon icon-circle-2-1 spin-icon"
+        style="margin-left: 20px;"
+    ></i>
 </template>
 
 <script>

@@ -1,8 +1,12 @@
 <template>
-    <bk-form form-type="vertical" class="pipeline-execute-params-form">
+    <bk-form
+        form-type="vertical"
+        class="pipeline-execute-params-form"
+    >
         <form-field
             v-for="param in paramList"
-            :key="param.id" :required="param.required"
+            :key="param.id"
+            :required="param.required"
             :is-error="errors.has('devops' + param.name)"
             :error-msg="errors.first('devops' + param.name)"
             :label="param.label || param.id"
@@ -21,7 +25,10 @@
                     :disabled="disabled"
                     :placeholder="param.placeholder"
                 />
-                <div class="file-upload" v-if="showFileUploader(param.type)">
+                <div
+                    class="file-upload"
+                    v-if="showFileUploader(param.type)"
+                >
                     <file-param-input :file-path="param.value"></file-param-input>
                 </div>
             </section>

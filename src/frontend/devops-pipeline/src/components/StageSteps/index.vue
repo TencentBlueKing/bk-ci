@@ -1,14 +1,41 @@
 <template>
     <div class="stage-steps">
         <template v-for="step in steps">
-            <span v-if="step.tooltip" v-bk-tooltips="step.tooltip" :class="`stage-step ${step.statusCls}`" :key="step.icon">
-                <logo :class="`step-icon ${step.statusCls} ${getRunningCls(step.statusCls)}`" :name="step.icon" size="16" />
+            <span
+                v-if="step.tooltip"
+                v-bk-tooltips="step.tooltip"
+                :class="`stage-step ${step.statusCls}`"
+                :key="step.icon"
+            >
+                <logo
+                    :class="`step-icon ${step.statusCls} ${getRunningCls(step.statusCls)}`"
+                    :name="step.icon"
+                    size="16"
+                />
             </span>
-            <span v-else-if="step.status === 'RUNNING'" v-bk-tooltips="progressTooltips" :data-stageId="step.stageId" :class="`stage-step ${step.statusCls}`" :key="step.icon">
-                <logo :class="`step-icon ${step.statusCls} ${getRunningCls(step.statusCls)}`" :name="step.icon" size="16" />
+            <span
+                v-else-if="step.status === 'RUNNING'"
+                v-bk-tooltips="progressTooltips"
+                :data-stageId="step.stageId"
+                :class="`stage-step ${step.statusCls}`"
+                :key="step.icon"
+            >
+                <logo
+                    :class="`step-icon ${step.statusCls} ${getRunningCls(step.statusCls)}`"
+                    :name="step.icon"
+                    size="16"
+                />
             </span>
-            <span v-else :class="`stage-step ${step.statusCls}`" :key="step.icon">
-                <logo :class="`step-icon ${step.statusCls} ${getRunningCls(step.statusCls)}`" :name="step.icon" size="16" />
+            <span
+                v-else
+                :class="`stage-step ${step.statusCls}`"
+                :key="step.icon"
+            >
+                <logo
+                    :class="`step-icon ${step.statusCls} ${getRunningCls(step.statusCls)}`"
+                    :name="step.icon"
+                    size="16"
+                />
             </span>
         </template>
     </div>

@@ -1,36 +1,115 @@
 <template>
     <div class="cron-trigger">
-        <accordion show-checkbox :show-content="isShowBasicRule" :disabled="disabled" :after-toggle="toggleBasicRule">
-            <header class="var-header" slot="header">
+        <accordion
+            show-checkbox
+            :show-content="isShowBasicRule"
+            :disabled="disabled"
+            :after-toggle="toggleBasicRule"
+        >
+            <header
+                class="var-header"
+                slot="header"
+            >
                 <span>{{ $t('editPage.baseRule') }}</span>
-                <input :class="{ 'accordion-checkbox': true, 'disabled': disabled }" type="checkbox" :disabled="disabled" :checked="isShowBasicRule" style="margin-left: auto;" />
+                <input
+                    :class="{ 'accordion-checkbox': true, 'disabled': disabled }"
+                    type="checkbox"
+                    :disabled="disabled"
+                    :checked="isShowBasicRule"
+                    style="margin-left: auto;"
+                />
             </header>
             <div slot="content">
-                <form-field :required="true" :label="$t('editPage.baseRule')" :is-error="errors.has('newExpression')">
-                    <cron-timer :name="'newExpression'" ref="newExpression" :value="element['newExpression']" :handle-change="handleUpdateElement" v-validate.initial="{ 'required': isShowBasicRule }" />
+                <form-field
+                    :required="true"
+                    :label="$t('editPage.baseRule')"
+                    :is-error="errors.has('newExpression')"
+                >
+                    <cron-timer
+                        :name="'newExpression'"
+                        ref="newExpression"
+                        :value="element['newExpression']"
+                        :handle-change="handleUpdateElement"
+                        v-validate.initial="{ 'required': isShowBasicRule }"
+                    />
                 </form-field>
             </div>
         </accordion>
 
-        <accordion show-checkbox :show-content="advance" :disabled="disabled" :after-toggle="toggleAdvance">
-            <header class="var-header" slot="header">
+        <accordion
+            show-checkbox
+            :show-content="advance"
+            :disabled="disabled"
+            :after-toggle="toggleAdvance"
+        >
+            <header
+                class="var-header"
+                slot="header"
+            >
                 <span>{{ $t('editPage.crontabTitle') }}</span>
-                <input class="accordion-checkbox" type="checkbox" :checked="advance" :disabled="disabled" style="margin-left: auto;" />
+                <input
+                    class="accordion-checkbox"
+                    type="checkbox"
+                    :checked="advance"
+                    :disabled="disabled"
+                    style="margin-left: auto;"
+                />
             </header>
-            <div slot="content" class="cron-build-tab">
-                <form-field :required="false" :label="$t('editPage.planRule')" :is-error="errors.has('advanceExpression')" :error-msg="errors.first('advanceExpression')">
-                    <vuex-textarea name="advanceExpression" :handle-change="handleUpdateElement" :value="advanceValue" :placeholder="$t('editPage.crontabExpression')" v-validate.initial="{ 'required': advance }"></vuex-textarea>
+            <div
+                slot="content"
+                class="cron-build-tab"
+            >
+                <form-field
+                    :required="false"
+                    :label="$t('editPage.planRule')"
+                    :is-error="errors.has('advanceExpression')"
+                    :error-msg="errors.first('advanceExpression')"
+                >
+                    <vuex-textarea
+                        name="advanceExpression"
+                        :handle-change="handleUpdateElement"
+                        :value="advanceValue"
+                        :placeholder="$t('editPage.crontabExpression')"
+                        v-validate.initial="{ 'required': advance }"
+                    ></vuex-textarea>
                 </form-field>
             </div>
         </accordion>
-        <p class="empty-trigger-tips" v-if="!isShowBasicRule && !advance">{{ $t('editPage.triggerEmptyTips') }}</p>
-        <accordion show-checkbox :show-content="isShowCodelibConfig" :disabled="disabled" :after-toggle="toggleCodelibConfig">
-            <header class="var-header" slot="header">
+        <p
+            class="empty-trigger-tips"
+            v-if="!isShowBasicRule && !advance"
+        >
+            {{ $t('editPage.triggerEmptyTips') }}
+        </p>
+        <accordion
+            show-checkbox
+            :show-content="isShowCodelibConfig"
+            :disabled="disabled"
+            :after-toggle="toggleCodelibConfig"
+        >
+            <header
+                class="var-header"
+                slot="header"
+            >
                 <span>{{ $t('editPage.codelibConfigs') }}</span>
-                <input class="accordion-checkbox" type="checkbox" :checked="isShowCodelibConfig" :disabled="disabled" style="margin-left: auto;" />
+                <input
+                    class="accordion-checkbox"
+                    type="checkbox"
+                    :checked="isShowCodelibConfig"
+                    :disabled="disabled"
+                    style="margin-left: auto;"
+                />
             </header>
-            <div slot="content" class="cron-build-tab">
-                <form-field class="cron-build-tab" :desc="$t('editPage.timerTriggerCodelibTips')" :required="false" :label="$t('editPage.codelib')">
+            <div
+                slot="content"
+                class="cron-build-tab"
+            >
+                <form-field
+                    class="cron-build-tab"
+                    :desc="$t('editPage.timerTriggerCodelibTips')"
+                    :required="false"
+                    :label="$t('editPage.codelib')"
+                >
                     <div class="conditional-input-selector">
                         <bk-select
                             v-model="repositoryType"
@@ -45,7 +124,10 @@
                                 :id="item.value"
                                 :name="item.label"
                             >
-                                <slot name="option-item" v-bind="item"></slot>
+                                <slot
+                                    name="option-item"
+                                    v-bind="item"
+                                ></slot>
                             </bk-option>
                         </bk-select>
                         <request-selector
@@ -74,7 +156,11 @@
                     </div>
                 </form-field>
     
-                <form-field class="cron-build-tab" :label="$t('editPage.branches')" :desc="$t('editPage.timerTriggerBranchTips')">
+                <form-field
+                    class="cron-build-tab"
+                    :label="$t('editPage.branches')"
+                    :desc="$t('editPage.timerTriggerBranchTips')"
+                >
                     <BranchParameterArray
                         name="branches"
                         :repository-type="element['repositoryType']"
@@ -87,11 +173,16 @@
                     </BranchParameterArray>
                 </form-field>
                 <form-field class="bk-form-checkbox">
-                    <atom-checkbox :disabled="disabled" :text="$t('editPage.noScm')" :name="'noScm'" :value="element['noScm']" :handle-change="handleUpdateElement" />
+                    <atom-checkbox
+                        :disabled="disabled"
+                        :text="$t('editPage.noScm')"
+                        :name="'noScm'"
+                        :value="element['noScm']"
+                        :handle-change="handleUpdateElement"
+                    />
                 </form-field>
             </div>
         </accordion>
-
     </div>
 </template>
 

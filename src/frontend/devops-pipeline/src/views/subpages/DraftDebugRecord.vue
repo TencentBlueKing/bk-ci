@@ -1,5 +1,8 @@
 <template>
-    <BuildHistoryTab is-debug :pipeline-version="pipelineVersion" />
+    <BuildHistoryTab
+        is-debug
+        :pipeline-version="pipelineVersion"
+    />
 </template>
 
 <script>
