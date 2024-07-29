@@ -257,6 +257,7 @@ export default {
         .then(() => {
           this.handleHiddenDeleteGroup();
           this.refreshList();
+          this.syncGroupAndMemberIAM();
           Message({
             theme: 'success',
             message: this.$t('删除成功')
@@ -303,6 +304,7 @@ export default {
                 const group = this.groupList.find(group => group.groupId === data?.data?.id) || this.groupList[0];
                 this.handleChooseGroup(group);
               })
+              this.syncGroupAndMemberIAM();
             break;
           case 'create_user_group_cancel':
             this.handleChooseGroup(this.groupList[0]);
@@ -326,7 +328,17 @@ export default {
     },
     async syncGroupIAM(groupId){
       try {
-        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupMember`)
+        await http.syncGroupMember(this.projectCode, groupId);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: err.message
+        });
+      }
+    },
+    async syncGroupAndMemberIAM(){
+      try {
+        await http.syncGroupAndMember(this.projectCode);
       } catch (error) {
         Message({
           theme: 'error',
@@ -357,6 +369,7 @@ export default {
         })
         .then(() => {
           group.name = this.displayGroupName;
+          this.syncGroupAndMemberIAM();
           Message({
             theme: 'success',
             message: this.$t('修改成功')

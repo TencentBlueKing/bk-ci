@@ -216,11 +216,14 @@ const isHandOverfail = ref(false);
 const isShowPersonDialog = ref(false);
 const isShowRemoveDialog = ref(false);
 const isAuthorizedSuccess = ref(false);
-const handOverForm = ref({
-  id: '',
-  name: '',
-  type: '',
-});
+function getHandOverForm(){
+  return {
+    id: '',
+    name: '',
+    type: '',
+  }
+}
+const handOverForm = ref(getHandOverForm());
 const rules = {
   name: [
     { required: true, message: t('请输入移交人'), trigger: 'change' },
@@ -251,7 +254,6 @@ const props = defineProps({
 const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm', 'refresh']);
 
 defineExpose({
-  handOverfail,
   handOverClose,
 });
 
@@ -277,7 +279,7 @@ function handleRemoval(item) {
   if(item.type === "department") {
     isShowRemoveDialog.value = true;
   } else {
-    handOverForm.value && (handOverForm.value.name = '');
+    handOverForm.value && (Object.assign(handOverForm.value, getHandOverForm()));
     formRef.value?.clearValidate();
     isShowHandOverDialog.value = true;
   }
@@ -295,18 +297,15 @@ function handOverClose() {
  *  移出项目弹窗提交
  */
 async function handConfirm(flag){
-  if(flag === 'user'){
-    const isValidate = await formRef.value?.validate();
-    if(!isValidate) return;
-    emit('removeConfirm', removeUser.value, handOverForm.value);
-  } else {
-    emit('removeConfirm', removeUser.value);
-  }
-  handOverClose();
-}
-
-function handOverfail(flag) {
-  isHandOverfail.value = flag;
+  try {
+    if(flag === 'user'){
+      const isValidate = await formRef.value?.validate();
+      if(!isValidate) return;
+      emit('removeConfirm', removeUser.value, handOverForm.value);
+    } else {
+      emit('removeConfirm', removeUser.value);
+    }
+  } catch (error) {}
 }
 function handOverInputClear(){
   isChecking.value = false;
@@ -314,10 +313,8 @@ function handOverInputClear(){
   isHandOverfail.value = false;
 }
 async function handleChangeOverFormName ({list, userList}){
-  const val = list.join(',')
   userListData.value = userList;
-  handOverForm.value = userList.find(i => i.id === val);
-
+  handOverForm.value = userList.find(i => i.id === list[0]);
   if(!handOverForm.value){
     handOverInputClear();
     return;
@@ -357,7 +354,7 @@ function refresh(){
  */
 function refreshHandOverfail() {
   const param = {
-    list: [handOverForm.value.name],
+    list: [handOverForm.value.id],
     userList: userListData.value,
   }
   handleChangeOverFormName(param);

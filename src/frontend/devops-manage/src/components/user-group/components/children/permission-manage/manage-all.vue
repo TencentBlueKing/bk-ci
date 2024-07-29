@@ -16,11 +16,9 @@
       <div class="manage-aside">
         <manage-aside
           ref="manageAsideRef"
-          :project-id="projectId"
           :member-list="memberList"
           :person-list="personList"
           :table-loading="tableLoading"
-          :over-table="overTable"
           :active-tab="activeTab"
           @refresh="refresh"
           @handle-click="asideClick"
@@ -31,9 +29,28 @@
       </div>
       <div class="manage-content">
         <div class="manage-content-btn">
-          <bk-button :disabled="!isPermission" @click="batchOperator('renewal')" :loading="renewalLoading">{{t("批量续期")}}</bk-button>
-          <bk-button :disabled="!isPermission" @click="batchOperator('handover')" v-if="asideItem?.type==='user'" :loading="handoverLoading">{{t("批量移交")}}</bk-button>
-          <bk-button :disabled="!isPermission" @click="batchOperator('remove')" :loading="removerLoading">{{t("批量移出")}}</bk-button>
+          <bk-button
+            :disabled="!isPermission"
+            @click="batchOperator('renewal')"
+            :loading="renewalLoading"
+          >
+            {{t("批量续期")}}
+          </bk-button>
+          <bk-button
+            :disabled="!isPermission"
+            @click="batchOperator('handover')"
+            v-if="asideItem?.type==='user'"
+            :loading="handoverLoading"
+          >
+            {{t("批量移交")}}
+          </bk-button>
+          <bk-button
+            :disabled="!isPermission"
+            @click="batchOperator('remove')"
+            :loading="removerLoading"
+          >
+            {{t("批量移出")}}
+          </bk-button>
 
           <i18n-t keypath="已选择X个用户组" tag="div" class="main-desc" v-if="selectedLength">
             <span class="desc-primary">&nbsp;{{ selectedLength }}&nbsp;</span>
@@ -45,13 +62,14 @@
             :aside-item="asideItem"
             :source-list="sourceList"
             :selected-data="selectedData"
+            :active-flag="activeFlag"
             :handle-renewal="handleRenewal"
             :handle-hand-over="handOverDialog"
             :handle-remove="handleRemove"
             :get-select-list="getSelectList"
             :handle-select-all-data="handleSelectAll"
             :handle-load-more="handleLoadMore"
-            :handle-cancleClear="handleClear"
+            :handle-clear="handleClear"
             @collapse-click="collapseClick"
           />
         </div>
@@ -201,6 +219,7 @@
             :is-show-operation="false"
             :aside-item="asideItem"
             :batch-flag="batchFlag"
+            :active-flag="activeFlag"
             :page-limit-change="pageLimitChange"
             :page-value-change="pageValueChange"
           />
@@ -245,15 +264,22 @@
             <div class="main-line" style="margin-top: 40px;">
               <p class="main-label-remove">
                 <i18n-t keypath="确认从以上X个用户组中移出X吗？" tag="div">
-                  <span class="remove-num">{{ selectedLength }}</span>
-                  <span class="desc-warn">&nbsp;{{ t(unableText[batchFlag]) }}</span>
+                  <span class="remove-num">{{ totalCount - inoperableCount }}</span>
+                  <span class="remove-person">{{ userName }}</span>
                 </i18n-t>
               </p>
             </div>
           </div>
         </div>
         <div class="footer-btn">
-          <bk-button :theme="batchFlag === 'remove' ? 'danger' : 'primary'" @click="batchConfirm(batchFlag)" :loading="batchBtnLoading">{{t(btnTexts[batchFlag])}}</bk-button>
+          <bk-button
+            :disabled="totalCount === inoperableCount"
+            :theme="batchFlag === 'remove' ? 'danger' : 'primary'"
+            @click="batchConfirm(batchFlag)"
+            :loading="batchBtnLoading"
+          >
+            {{t(btnTexts[batchFlag])}}
+          </bk-button>
           <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
         </div>
       </div>
@@ -287,11 +313,14 @@ const expiredAt = ref(30);
 const isShowSlider = ref(false);
 const sliderTitle = ref();
 const batchFlag = ref();
-const handOverForm = ref({
-  id: '',
-  name: '',
-  type: '',
-});
+function getHandOverForm(){
+  return {
+    id: '',
+    name: '',
+    type: '',
+  }
+}
+const handOverForm = ref(getHandOverForm());
 const rules = {
   name: [
     { required: true, message: t('请输入移交人'), trigger: 'blur' },
@@ -350,6 +379,7 @@ const {
   selectSourceList,
   selectedRow,
   isPermission,
+  activeFlag,
 } = storeToRefs(groupTableStore);
 const {
   handleRenewal,
@@ -372,9 +402,9 @@ const {
   memberList,
   personList,
   tableLoading,
-  overTable,
   isLoading,
   activeTab,
+  memberPagination,
 } = storeToRefs(manageAsideStore);
 const {
   handleAsideClick,
@@ -385,13 +415,16 @@ const {
 } = manageAsideStore;
 
 onMounted(() => {
+  asideItem.value = undefined;
   getProjectMembers(projectId.value);
 });
 
 watch(searchValue, (newSearchValue) => {
+  memberPagination.value.current = 1;
   getProjectMembers(projectId.value, newSearchValue);
 });
 function handleSearch(value){
+  memberPagination.value.current = 1;
   getProjectMembers(projectId.value, value);
 }
 function asideClick(item){
@@ -432,15 +465,22 @@ function handleRenewalClosed() {
 async function handleHandoverConfirm() {
   const isValidate = await formRef.value.validate();
   if(!isValidate) return;
-  operatorLoading.value = true;
+
   const param = formatSelectParams(selectedRow.value.groupId);
-  delete handOverForm.value.displayName;
-  await http.batchHandover(projectId.value, param);
-  handleRemoveRow();
-  operatorLoading.value = false;
-  showMessage('success', t('用户组权限已移交给X。',[handOverForm.value.name]));
-  cancleClear('handover');
-  isShowHandover.value = false;
+  delete param.renewalDuration;
+  try {
+    operatorLoading.value = true;
+    const res = await http.batchHandover(projectId.value, param);
+    if (res) {
+      operatorLoading.value = false;
+      showMessage('success', t('用户组权限已移交给X。',[`${handOverForm.value.id}(${handOverForm.value.name})`]));
+      isShowHandover.value = false;
+      handleRemoveRow();
+      cancleClear('handover');
+    }
+  } catch (error) {
+    
+  }
 };
 /**
  * 移交弹窗关闭
@@ -455,10 +495,11 @@ async function handleHandoverConfirm() {
 async function handleRemoveConfirm() {
   operatorLoading.value = true;
   const param = formatSelectParams(selectedRow.value.groupId);
+  delete param.renewalDuration;
   await http.batchRemove(projectId.value, param);
-  handleRemoveRow();
   operatorLoading.value = false;
-  showMessage('success', t('X 已移出X用户组。', [asideItem.value.name, selectedRow.value.groupName]));
+  showMessage('success', t('X 已移出X用户组。', [`${asideItem.value.id}(${asideItem.value.name})`, selectedRow.value.groupName]));
+  handleRemoveRow();
   isShowRemove.value = false;
 }
 /**
@@ -475,6 +516,7 @@ function handleSelectAll(resourceType, asideItem){
  * @param flag 按钮标识
  */
 async function batchOperator(flag){
+  activeFlag.value=true;
   getSourceList();
   if (!selectedLength.value) {
     Message({
@@ -540,7 +582,7 @@ function cancleClear(batchFlag) {
   isShowSlider.value = false;
 
   if (batchFlag === 'handover') {
-    handOverForm.value && (handOverForm.value.name = '');
+    handOverForm.value && (Object.assign(handOverForm.value, getHandOverForm()));
     formRef.value?.clearValidate()
   } else if (batchFlag === 'renewal') {
     renewalRef.value.initTime();
@@ -585,7 +627,7 @@ function showMessage(theme, message) {
   });
 }
 function asideRemoveConfirm(removeUser, handOverForm) {
-  handleAsideRemoveConfirm(removeUser, handOverForm, projectId.value);
+  handleAsideRemoveConfirm(removeUser, handOverForm, projectId.value, manageAsideRef.value);
 }
 
 async function getMenuList (item, keyword) {
@@ -610,12 +652,11 @@ async function getMenuList (item, keyword) {
 }
 function handleChangeOverFormName ({list, userList}) {
   const val = list.join(',')
-  handOverForm.value.name = val
-  handoverToMap.value = userList.find(i => i.id === val)
+  handOverForm.value = userList.find(i => i.id === val)
 }
 
 function handleClearOverFormName () {
-  handOverForm.value.name = ''
+  Object.assign(handOverForm.value, getHandOverForm());
 }
 </script>
 

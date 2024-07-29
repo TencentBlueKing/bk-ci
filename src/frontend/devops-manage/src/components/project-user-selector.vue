@@ -29,7 +29,7 @@ function debounce (callBack) {
     window.clearTimeout(debounce.timeId)
     debounce.timeId = window.setTimeout(() => {
         callBack()
-    }, 300)
+    }, 0)
 }
 
 async function fetchProjectMembers (query) {
@@ -54,15 +54,15 @@ async function fetchProjectMembers (query) {
 }
 
 function handleChange (list) {
-    emits('change', { list, userList: userList.value })
+  emits('change', { list, userList: userList.value })
 }
 
 function removeAll (val) {
-    emits('removeAll', val)
+  emits('removeAll', val)
 }
 
 onMounted(() => {
-  fetchProjectMembers(projectId.value, {
+  fetchProjectMembers({
     memberType: 'user',
     page: 1,
     pageSize: 200

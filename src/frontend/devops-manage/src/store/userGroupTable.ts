@@ -81,6 +81,7 @@ export default defineStore('userGroupTable', () => {
   const selectedTableGroupType = ref('');
   const selectedLength = ref(0);
   const isPermission = ref(true);
+  const activeFlag =  ref(true);
   let currentRequestId = 0;
 
   watch(selectedData, ()=>{
@@ -91,6 +92,7 @@ export default defineStore('userGroupTable', () => {
    * 初始化数据
    */
   function initData() {
+    activeFlag.value = true;
     selectedRow.value = null;
     rowIndex.value = undefined;
     selectedTableGroupType.value = '';
@@ -243,6 +245,7 @@ export default defineStore('userGroupTable', () => {
       activeTableData.tableData = [...activeTableData.tableData];
       activeTableData.count = activeTableData.count! - 1;
     }
+    handleClear(selectedTableGroupType.value);
   }
   /**
    * 获取表格选择的数据
@@ -381,6 +384,7 @@ export default defineStore('userGroupTable', () => {
     selectSourceList,
     selectedRow,
     isPermission,
+    activeFlag,
     fetchUserGroupList,
     handleRenewal,
     handleHandOver,

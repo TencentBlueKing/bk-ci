@@ -32,7 +32,6 @@ export default defineStore('manageAside', () => {
   const memberList = ref<ManageAsideType[]>([]);
   const personList = ref([]);
   const tableLoading = ref(false);
-  const overTable = ref([]);
   const userName = ref('');
   const memberPagination = ref<Pagination>({ limit: 20, current: 1, count: 0 });
   const activeTab = ref();
@@ -68,7 +67,7 @@ export default defineStore('manageAside', () => {
   /**
    * 组织移出项目
    */
-  async function handleAsideRemoveConfirm(removeUser, handOverMember, projectId: string) {
+  async function handleAsideRemoveConfirm(removeUser: ManageAsideType, handOverMember: ManageAsideType, projectId: string, manageAsideRef: any) {
     const params = {
       targetMember: removeUser,
       ...(handOverMember && {handoverTo: handOverMember})
@@ -82,6 +81,7 @@ export default defineStore('manageAside', () => {
         message: `${removeUser!.name} 已成功移出本项目。`,
       });
       btnLoading.value = false;
+      manageAsideRef.handOverClose();
       getProjectMembers(projectId);
     } catch (error) {
 
@@ -90,7 +90,7 @@ export default defineStore('manageAside', () => {
   /**
    * 获取项目下全体成员
    */
-  async function getProjectMembers(projectId: string, searchValue?) {
+  async function getProjectMembers(projectId: string, searchValue?: any) {
     try {
       isLoading.value = true;
       const params: MemberListParamsType = {
@@ -126,7 +126,6 @@ export default defineStore('manageAside', () => {
     memberList,
     personList,
     tableLoading,
-    overTable,
     userName,
     memberPagination,
     activeTab,
