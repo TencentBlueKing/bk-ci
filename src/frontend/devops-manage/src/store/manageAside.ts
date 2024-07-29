@@ -68,7 +68,7 @@ export default defineStore('manageAside', () => {
   /**
    * 组织移出项目
    */
-  async function handleAsideRemoveConfirm(removeUser, handOverMember, projectId: string) {
+  async function handleAsideRemoveConfirm(removeUser, handOverMember, projectId: string, manageAsideRef) {
     const params = {
       targetMember: removeUser,
       ...(handOverMember && {handoverTo: handOverMember})
@@ -82,6 +82,7 @@ export default defineStore('manageAside', () => {
         message: `${removeUser!.name} 已成功移出本项目。`,
       });
       btnLoading.value = false;
+      manageAsideRef.handOverClose();
       getProjectMembers(projectId);
     } catch (error) {
 

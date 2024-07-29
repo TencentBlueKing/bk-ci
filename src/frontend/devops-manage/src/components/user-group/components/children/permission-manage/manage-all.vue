@@ -31,9 +31,28 @@
       </div>
       <div class="manage-content">
         <div class="manage-content-btn">
-          <bk-button :disabled="!isPermission" @click="batchOperator('renewal')" :loading="renewalLoading">{{t("批量续期")}}</bk-button>
-          <bk-button :disabled="!isPermission" @click="batchOperator('handover')" v-if="asideItem?.type==='user'" :loading="handoverLoading">{{t("批量移交")}}</bk-button>
-          <bk-button :disabled="!isPermission" @click="batchOperator('remove')" :loading="removerLoading">{{t("批量移出")}}</bk-button>
+          <bk-button
+            :disabled="!isPermission"
+            @click="batchOperator('renewal')"
+            :loading="renewalLoading"
+          >
+            {{t("批量续期")}}
+          </bk-button>
+          <bk-button
+            :disabled="!isPermission"
+            @click="batchOperator('handover')"
+            v-if="asideItem?.type==='user'"
+            :loading="handoverLoading"
+          >
+            {{t("批量移交")}}
+          </bk-button>
+          <bk-button
+            :disabled="!isPermission"
+            @click="batchOperator('remove')"
+            :loading="removerLoading"
+          >
+            {{t("批量移出")}}
+          </bk-button>
 
           <i18n-t keypath="已选择X个用户组" tag="div" class="main-desc" v-if="selectedLength">
             <span class="desc-primary">&nbsp;{{ selectedLength }}&nbsp;</span>
@@ -255,7 +274,14 @@
           </div>
         </div>
         <div class="footer-btn">
-          <bk-button :theme="batchFlag === 'remove' ? 'danger' : 'primary'" @click="batchConfirm(batchFlag)" :loading="batchBtnLoading">{{t(btnTexts[batchFlag])}}</bk-button>
+          <bk-button
+            :disabled="totalCount === inoperableCount"
+            :theme="batchFlag === 'remove' ? 'danger' : 'primary'"
+            @click="batchConfirm(batchFlag)"
+            :loading="batchBtnLoading"
+          >
+            {{t(btnTexts[batchFlag])}}
+          </bk-button>
           <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
         </div>
       </div>
@@ -289,11 +315,14 @@ const expiredAt = ref(30);
 const isShowSlider = ref(false);
 const sliderTitle = ref();
 const batchFlag = ref();
-const handOverForm = ref({
-  id: '',
-  name: '',
-  type: '',
-});
+function getHandOverForm(){
+  return {
+    id: '',
+    name: '',
+    type: '',
+  }
+}
+const handOverForm = ref(getHandOverForm());
 const rules = {
   name: [
     { required: true, message: t('请输入移交人'), trigger: 'blur' },
@@ -553,7 +582,7 @@ function cancleClear(batchFlag) {
   isShowSlider.value = false;
 
   if (batchFlag === 'handover') {
-    handOverForm.value && (handOverForm.value.name = '');
+    handOverForm.value && (Object.assign(handOverForm.value, getHandOverForm()));
     formRef.value?.clearValidate()
   } else if (batchFlag === 'renewal') {
     renewalRef.value.initTime();
@@ -598,7 +627,7 @@ function showMessage(theme, message) {
   });
 }
 function asideRemoveConfirm(removeUser, handOverForm) {
-  handleAsideRemoveConfirm(removeUser, handOverForm, projectId.value);
+  handleAsideRemoveConfirm(removeUser, handOverForm, projectId.value, manageAsideRef.value);
 }
 
 async function getMenuList (item, keyword) {
@@ -627,7 +656,7 @@ function handleChangeOverFormName ({list, userList}) {
 }
 
 function handleClearOverFormName () {
-  handOverForm.value.name = ''
+  Object.assign(handOverForm.value, getHandOverForm());
 }
 </script>
 
