@@ -1079,8 +1079,11 @@ importers:
       '@tencent/bk-magic-vue':
         specifier: 2.5.9-beta.6
         version: 2.5.9-beta.6(vue@2.7.16)
+      '@types/webpack-env':
+        specifier: ^1.15.2
+        version: 1.18.5
       axios:
-        specifier: 0.28.0
+        specifier: ^0.28.0
         version: 0.28.0
       bk-permission:
         specifier: workspace:bk-permission
@@ -1179,9 +1182,6 @@ importers:
       '@types/node':
         specifier: ^20.12.12
         version: 20.12.12
-      '@types/webpack-env':
-        specifier: ^1.18.5
-        version: 1.18.5
       '@typescript-eslint/eslint-plugin':
         specifier: ^1.9.0
         version: 1.13.0(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)(typescript@3.4.5)
@@ -1373,14 +1373,14 @@ importers:
         specifier: 2.5.9-beta.6
         version: 2.5.9-beta.6(vue@2.7.16)
       axios:
-        specifier: 0.28.0
+        specifier: ^0.28.0
         version: 0.28.0
       bk-permission:
-        specifier: workspace:bk-permission
-        version: link:../bk-permission
+        specifier: ^0.0.28
+        version: 0.0.28(@vue/composition-api@1.7.2(vue@2.7.16))
       bkui-pipeline:
-        specifier: workspace:bk-pipeline
-        version: link:../bk-pipeline
+        specifier: 0.1.34
+        version: 0.1.34
       clipboard:
         specifier: ^1.7.1
         version: 1.7.1
@@ -1430,7 +1430,7 @@ importers:
         specifier: ^6.0.2
         version: 6.7.2(@vue/composition-api@1.7.2(vue@2.7.16))(@vue/runtime-core@3.4.31)(echarts@5.5.0)(vue@2.7.16)
       vue-i18n:
-        specifier: ~8.18.1
+        specifier: ^8.18.1
         version: 8.18.2(vue@2.7.16)
       vue-json-viewer:
         specifier: ^2.2.5
@@ -1502,15 +1502,9 @@ importers:
       '@babel/preset-env':
         specifier: ^7.15.8
         version: 7.24.6(@babel/core@7.24.6)
-      '@babel/preset-react':
-        specifier: ^7.16.0
-        version: 7.24.6(@babel/core@7.24.6)
       '@babel/runtime':
-        specifier: ^7.15.4
-        version: 7.24.6
-      '@vue/babel-preset-jsx':
-        specifier: ^1.2.4
-        version: 1.4.0(@babel/core@7.24.6)(vue@2.7.16)
+        specifier: ^7.25.0
+        version: 7.25.0
       '@webpack-cli/serve':
         specifier: ^1.7.0
         version: 1.7.0(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@4.10.0)(webpack@5.76.1))(webpack@5.76.1))(webpack-dev-server@4.15.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@4.10.0)(webpack@5.76.1))
@@ -1568,9 +1562,6 @@ importers:
       mini-css-extract-plugin:
         specifier: 2.4.2
         version: 2.4.2(webpack@5.76.1(webpack-cli@4.10.0))
-      nx:
-        specifier: 19.5.1
-        version: 19.5.1
       sass:
         specifier: ^1.42.1
         version: 1.77.2
@@ -1584,13 +1575,13 @@ importers:
         specifier: ^5.3.6
         version: 5.3.10(webpack@5.76.1(webpack-cli@4.10.0))
       vue-loader:
-        specifier: ~15.10.0
+        specifier: ^15.10.0
         version: 15.10.1(@vue/compiler-sfc@3.4.31)(css-loader@6.11.0(webpack@5.76.1(webpack-cli@4.10.0)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.76.1(webpack-cli@4.10.0))
       vue-style-loader:
         specifier: ^3.0.3
         version: 3.1.2
       webpack:
-        specifier: ~5.76.1
+        specifier: ^5.58.1
         version: 5.76.1(webpack-cli@4.10.0)
 
   devops-quality:
@@ -3075,6 +3066,10 @@ packages:
 
   '@babel/runtime@7.24.7':
     resolution: {integrity: sha512-UwgBRMjJP+xv857DCngvqXI3Iq6J4v0wXmwc6sapg+zyhbwmQX67LUEFrkK5tbyJ30jGuG3ZvWpBiB9LCy1kWw==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/runtime@7.25.0':
+    resolution: {integrity: sha512-7dRy4DwXwtzBrPbZflqxnvfxLF8kdZXPkhymtDeFoFqE6ldzjQFgYTtYIFARcLEYDrqfBfYcZt1WqFxRoyC9Rw==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.24.6':
@@ -6101,10 +6096,23 @@ packages:
     peerDependencies:
       vue: ^2.5.22
 
+  bk-magic-vue@2.4.15-beta.7:
+    resolution: {integrity: sha512-HBsxFMa2NO0bSO7SySsnqkaHpW05vOLvP+K4zpesFQXftxHzgmLfo/xXBppyUcMHnDDotu4+YGyRlfob6GoA4g==}
+    peerDependencies:
+      vue: ^2.5.22
+
   bk-magic-vue@2.4.8:
     resolution: {integrity: sha512-zGEyU99T5TmtIX4fBZtS2ppE5Jaf1g1nw+i4cduOxCj8sgWX241RXpZexiN/sLUt5PuRD/rdJzbjTxhCX26Y4g==}
     peerDependencies:
       vue: ^2.5.22
+
+  bk-permission@0.0.28:
+    resolution: {integrity: sha512-Wb+aj0u6ILNal2qeBJ2xxob/F3VIvx4NSJVpACC4EPsaK1HvFDxtjd2GezdVrb4YRA0YDLT3bt2f2INwJASzBw==}
+    peerDependencies:
+      '@vue/composition-api': ^1.0.0
+
+  bkui-pipeline@0.1.34:
+    resolution: {integrity: sha512-hdm9BBOIjzS6/1HkObv/tkit/vCXLylOXlK5u5Pc3vR7SgYZQaaGrnSYnN3ASw99NfyEptj01aInxuBJkE1rAQ==}
 
   bkui-vue@0.0.1-beta.416:
     resolution: {integrity: sha512-DOc3MsQP6ew89rmTe9dLmUVw3dX8qoByLC4zEWtAsHcMQjtEutcIBuaYXRYoJZnFv+LDF7C8cgVrO18uDyDMdQ==}
@@ -16936,6 +16944,10 @@ snapshots:
     dependencies:
       regenerator-runtime: 0.14.1
 
+  '@babel/runtime@7.25.0':
+    dependencies:
+      regenerator-runtime: 0.14.1
+
   '@babel/template@7.24.6':
     dependencies:
       '@babel/code-frame': 7.24.6
@@ -17236,7 +17248,7 @@ snapshots:
 
   '@commitlint/cli@9.1.2':
     dependencies:
-      '@babel/runtime': 7.24.6
+      '@babel/runtime': 7.24.7
       '@commitlint/format': 9.1.2
       '@commitlint/lint': 9.1.2
       '@commitlint/load': 9.1.2
@@ -20750,7 +20762,6 @@ snapshots:
   '@vue/composition-api@1.7.2(vue@2.7.16)':
     dependencies:
       vue: 2.7.16
-    optional: true
 
   '@vue/composition-api@1.7.2(vue@3.4.31(typescript@4.9.5))':
     dependencies:
@@ -21913,12 +21924,29 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 2.6.12
 
+  bk-magic-vue@2.4.15-beta.7(vue@2.6.12):
+    dependencies:
+      highlight.js: 10.7.3
+      spark-md5: 3.0.2
+      tinycolor2: 1.6.0
+      vue: 2.6.12
+
   bk-magic-vue@2.4.8(vue@2.7.16):
     dependencies:
       highlight.js: 10.7.3
       spark-md5: 3.0.2
       tinycolor2: 1.6.0
       vue: 2.7.16
+
+  bk-permission@0.0.28(@vue/composition-api@1.7.2(vue@2.7.16)):
+    dependencies:
+      '@vue/composition-api': 1.7.2(vue@2.7.16)
+
+  bkui-pipeline@0.1.34:
+    dependencies:
+      bk-magic-vue: 2.4.15-beta.7(vue@2.6.12)
+      vue: 2.6.12
+      vuedraggable: 2.24.3
 
   bkui-vue@0.0.1-beta.416(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
     dependencies:
@@ -31206,7 +31234,7 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.24.7
+      '@babel/runtime': 7.25.0
 
   regex-not@1.0.2:
     dependencies:
@@ -34890,7 +34918,7 @@ snapshots:
       watchpack: 2.4.1
       webpack-sources: 3.2.3
     optionalDependencies:
-      webpack-cli: 4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1)
+      webpack-cli: 4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@4.10.0)(webpack@5.76.1))(webpack@5.76.1)
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
