@@ -697,12 +697,15 @@ class PipelineRepositoryService constructor(
 
                 if (model.instanceFromTemplate != true) {
                     if (null == pipelineSettingDao.getSetting(transactionContext, projectId, pipelineId)) {
-                        if (templateId != null &&
-                            (useSubscriptionSettings == true ||
-                                    useConcurrencyGroup == true || useLabelSettings == true)
+                        if (useTemplateSettings(
+                                templateId = templateId,
+                                useSubscriptionSettings = useSubscriptionSettings,
+                                useLabelSettings = useLabelSettings,
+                                useConcurrencyGroup = useConcurrencyGroup
+                            )
                         ) {
                             // 沿用模板的配置
-                            val setting = getSetting(projectId, templateId)
+                            val setting = getSetting(projectId, templateId!!)
                                 ?: throw ErrorCodeException(errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)
                             setting.pipelineId = pipelineId
                             setting.pipelineName = model.name
@@ -844,6 +847,16 @@ class PipelineRepositoryService constructor(
             versionNum = versionNum,
             versionName = versionName
         )
+    }
+
+    private fun useTemplateSettings(
+        templateId: String? = null,
+        useSubscriptionSettings: Boolean? = false,
+        useLabelSettings: Boolean? = false,
+        useConcurrencyGroup: Boolean? = false
+    ): Boolean {
+        return templateId != null &&
+                (useSubscriptionSettings == true || useConcurrencyGroup == true || useLabelSettings == true)
     }
 
     private fun update(
