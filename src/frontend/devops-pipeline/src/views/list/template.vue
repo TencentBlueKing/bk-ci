@@ -141,7 +141,36 @@
                     name: '',
                     desc: '',
                     labels: [],
-                    stages: [{ containers: [{ '@type': 'trigger', name: this.$t('buildTrigger'), elements: [{ '@type': 'manualTrigger', name: this.$t('manualTrigger'), id: 'T-1-1-1', canElementSkip: true, useLatestParameters: false, executeCount: 1, canRetry: false, classType: 'manualTrigger', taskAtom: '' }], params: [], canRetry: false, classType: 'trigger' }], id: 'stage-1' }]
+                    stages: [{
+                        containers: [{
+                            '@type': 'trigger',
+                            name: this.$t('buildTrigger'),
+                            elements: [{
+                                '@type': 'manualTrigger',
+                                name: this.$t('manualTrigger'),
+                                id: 'T-1-1-1',
+                                canElementSkip: true,
+                                useLatestParameters: false,
+                                executeCount: 1,
+                                canRetry: false,
+                                classType: 'manualTrigger',
+                                taskAtom: ''
+                            }],
+                            params: [],
+                            canRetry: false,
+                            classType: 'trigger'
+                        }],
+                        stageControlOption: {
+                            enable: true,
+                            runCondition: 'AFTER_LAST_FINISHED',
+                            customCondition: '',
+                            customVariables: [{ key: 'param1', value: '' }],
+                            manualTrigger: false,
+                            triggerUsers: [],
+                            timeout: 24
+                        },
+                        id: 'stage-1'
+                    }]
                 },
                 hasCreatePermission: false,
                 isEnabledPermission: false
