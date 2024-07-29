@@ -315,7 +315,7 @@ function handOverInputClear(){
 async function handleChangeOverFormName ({list, userList}){
   userListData.value = userList;
   handOverForm.value = userList.find(i => i.id === list[0]);
-  console.log(list, userList,handOverForm.value,'人名输入内容');
+  console.log(list, userList, handOverForm.value, '人名输入内容');
   if(!handOverForm.value){
     handOverInputClear();
     return;
