@@ -531,6 +531,7 @@ function handleShowPerson(item) {
     color: #63656E;
 
     span {
+      display: flex;
       vertical-align: middle;
     }
   }

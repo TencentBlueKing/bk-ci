@@ -337,7 +337,6 @@ export default {
       }
     },
     async syncGroupAndMemberIAM(){
-      console.log("🚀 ~ syncGroupAndMember ~ this.projectCode:", this.projectCode)
       try {
         await http.syncGroupAndMember(this.projectCode);
       } catch (error) {
