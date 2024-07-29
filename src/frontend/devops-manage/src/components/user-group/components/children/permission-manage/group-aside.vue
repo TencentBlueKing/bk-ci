@@ -326,10 +326,7 @@ export default {
     },
     async syncGroupIAM(groupId){
       try {
-        await Promise.all([
-          http.syncGroupAndMember(this.projectCode),
-          http.syncGroupMember(this.projectCode, groupId)
-        ]);
+        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupMember`)
       } catch (error) {
         Message({
           theme: 'error',
