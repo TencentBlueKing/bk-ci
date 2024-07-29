@@ -64,7 +64,7 @@
         },
         watch: {
             uploadFileName (val) {
-                this.uploadPathFromFileName(val)
+                this.updatePathFromFileName(val)
             }
         },
         created () {
@@ -85,13 +85,7 @@
                 this.fileDefaultVal.fileName = value
                 const val = `${this.fileDefaultVal.directory}/${this.fileDefaultVal.fileName}`
                 this.handleChange(this.name, val)
-            },
-            uploadPathFromFileName (value) {
-                this.fileDefaultVal.fileName = value
-                const val = `${this.fileDefaultVal.directory}/${this.fileDefaultVal.fileName}`
-                this.handleChange(this.name, val)
             }
-
         }
     }
 </script>
