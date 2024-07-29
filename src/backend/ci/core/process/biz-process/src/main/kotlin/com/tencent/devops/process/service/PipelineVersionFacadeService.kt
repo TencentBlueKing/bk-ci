@@ -507,7 +507,10 @@ class PipelineVersionFacadeService @Autowired constructor(
         }
     }
 
-    fun createPipelineFromTemplate(
+    /**
+     * 从自由模式下创建流水线
+     */
+    fun createPipelineFromFreedom(
         userId: String,
         projectId: String,
         request: TemplateInstanceCreateRequest
