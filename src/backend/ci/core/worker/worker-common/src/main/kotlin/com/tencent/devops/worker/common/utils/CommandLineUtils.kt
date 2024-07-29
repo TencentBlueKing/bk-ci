@@ -177,7 +177,7 @@ object CommandLineUtils {
         tmpLine: String
     ): Double? {
         val pattern = Pattern.compile("^[\"]?::set-progress-rate\\s*(.*)$")
-        val matcher = pattern.matcher(tmpLine)
+        val matcher = pattern.matcher(tmpLine.trim())
         if (matcher.find()) {
             val progressRate = matcher.group(1).removeSuffix("\"").toDoubleOrNull()
             if (taskId != null && progressRate != null) {

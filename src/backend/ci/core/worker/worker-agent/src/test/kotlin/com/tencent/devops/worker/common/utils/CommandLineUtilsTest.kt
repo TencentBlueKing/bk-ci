@@ -16,13 +16,13 @@ class CommandLineUtilsTest {
         Assertions.assertEquals(func("echo '::set-progress-rate 0.3758'"), null)
         Assertions.assertEquals(func("echo ::set-progress-rate 0.3758"), null)
         Assertions.assertEquals(func("print(\"::set-progress-rate 0.3758\")"), null)
-        /*多空格*/
-        Assertions.assertEquals(func(" ::set-progress-rate 0.3758"), null)
         /*windows兼容*/
         Assertions.assertEquals(func("\"::set-progress-rate 0.3758\""), 0.3758)
         /*默认*/
         Assertions.assertEquals(func("::set-progress-rate 0.3758"), 0.3758)
+        /*兼容多空格*/
         Assertions.assertEquals(func("::set-progress-rate    0.3758"), 0.3758)
+        Assertions.assertEquals(func(" ::set-progress-rate 0.3758"), 0.3758)
     }
 
     @Test
