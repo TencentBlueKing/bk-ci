@@ -701,6 +701,7 @@ function handleClearOverFormName () {
       width: 230px;
       background: #FFFFFF;
       box-shadow: 0 2px 4px 0 #1919290d;
+      flex-shrink: 0;
     }
     
     .manage-content {
