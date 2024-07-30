@@ -2093,7 +2093,7 @@
       "content" : ""
     },
     "failSubscription" : {
-      "types" : [ "RTX", "EMAIL" ],
+      "types" : [ "RTX" ],
       "groups" : [ "" ],
       "users" : "${BK_CI_START_USER_NAME}",
       "wechatGroupFlag" : false,
@@ -2103,7 +2103,7 @@
       "content" : "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行失败，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人：${BK_CI_START_USER_NAME}。 "
     },
     "failSubscriptionList" : [ {
-      "types" : [ "RTX", "EMAIL" ],
+      "types" : [ "RTX" ],
       "groups" : [ "" ],
       "users" : "${BK_CI_START_USER_NAME}",
       "wechatGroupFlag" : false,
