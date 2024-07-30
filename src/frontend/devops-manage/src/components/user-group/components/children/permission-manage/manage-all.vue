@@ -296,12 +296,12 @@ import ManageAside from './manage-aside.vue';
 import GroupTab from './group-tab.vue';
 import TimeLimit from './time-limit.vue';
 import http from '@/http/api';
-import ProjectUserSelector from '@/components/project-user-selector'
+import ProjectUserSelector from '@/components/project-user-selector';
 import NoPermission from '../no-enable-permission/no-permission.vue';
 import userGroupTable from "@/store/userGroupTable";
 import useManageAside from "@/store/manageAside";
 import { storeToRefs } from 'pinia';
-import { unableText, batchOperateTypes, btnTexts, batchTitle, batchMassageText } from "@/utils/constants"
+import { batchOperateTypes, btnTexts, batchTitle, batchMassageText } from "@/utils/constants.js";
 
 const batchBtnLoading = ref(false);
 const { t } = useI18n();
@@ -368,7 +368,11 @@ const userName = computed(() => {
   }
   return ''
 })
-
+const unableText = {
+  renewal: t('无法续期'),
+  handover: t('无法移交'),
+  remove: t('无法移出'),
+}
 const {
   sourceList,
   isShowRenewal,
@@ -445,12 +449,16 @@ function handOverDialog(row, resourceType, index){
  * 续期弹窗提交事件
  */
 async function handleRenewalConfirm() {
-  operatorLoading.value = true;
-  await handleUpDateRow(expiredAt.value);
-  operatorLoading.value = false;
-  showMessage('success', t('用户组权限已续期。'));
-  cancleClear('renewal');
-  isShowRenewal.value = false;
+  try {
+    operatorLoading.value = true;
+    await handleUpDateRow(expiredAt.value);
+    operatorLoading.value = false;
+    showMessage('success', t('用户组权限已续期。'));
+    cancleClear('renewal');
+    isShowRenewal.value = false;
+  } catch (error) {
+    operatorLoading.value = false;
+  }
 };
 /**
  * 续期弹窗关闭
@@ -479,7 +487,7 @@ async function handleHandoverConfirm() {
       cancleClear('handover');
     }
   } catch (error) {
-    
+    operatorLoading.value = false;
   }
 };
 /**
@@ -493,14 +501,18 @@ async function handleHandoverConfirm() {
  * 移出弹窗提交事件
  */
 async function handleRemoveConfirm() {
-  operatorLoading.value = true;
-  const param = formatSelectParams(selectedRow.value.groupId);
-  delete param.renewalDuration;
-  await http.batchRemove(projectId.value, param);
-  operatorLoading.value = false;
-  showMessage('success', t('X 已移出X用户组。', [`${asideItem.value.id}(${asideItem.value.name})`, selectedRow.value.groupName]));
-  handleRemoveRow();
-  isShowRemove.value = false;
+  try {
+    operatorLoading.value = true;
+    const param = formatSelectParams(selectedRow.value.groupId);
+    delete param.renewalDuration;
+    await http.batchRemove(projectId.value, param);
+    operatorLoading.value = false;
+    showMessage('success', t('X 已移出X用户组。', [`${asideItem.value.id}(${asideItem.value.name})`, selectedRow.value.groupName]));
+    handleRemoveRow();
+    isShowRemove.value = false;
+  } catch (error) {
+    operatorLoading.value = false;
+  }
 }
 /**
  * 授权期限选择
@@ -690,27 +702,19 @@ function handleClearOverFormName () {
       background: #FFFFFF;
       box-shadow: 0 2px 4px 0 #1919290d;
     }
-
+    
     .manage-content {
+      height: 100%;
       flex: 1;
       margin-left: 16px;
-      overflow-y: auto;
-
-      &::-webkit-scrollbar-thumb {
-        background-color: #c4c6cc !important;
-        border-radius: 5px !important;
-        &:hover {
-          background-color: #979ba5 !important;
-        }
-      }
-      &::-webkit-scrollbar {
-        width: 8px !important;
-        height: 8px !important;
-      }
 
       .manage-content-btn {
+        width: 100%;
+        height: 42px;
         display: flex;
         margin-bottom: 10px;
+        position: fixed;
+        z-index: 9;
 
         .bk-button {
           margin-right: 8px
@@ -731,8 +735,8 @@ function handleClearOverFormName () {
       }
 
       .group-tab {
-        width: 100%;
         height: 100%;
+        margin-top: 42px;
       }
     }
   }
@@ -866,9 +870,8 @@ function handleClearOverFormName () {
 }
 
 .no-permission {
-  width: calc(100% - 24px);
   height: calc(100% - 42px);
-  padding-top: 120px;
+  padding-top: 10%;
   background-color: #fff;
   box-shadow: 0 2px 4px 0 #1919290d;
 }
@@ -988,9 +991,5 @@ function handleClearOverFormName () {
 
 .text-blue{
   color: #699DF4;
-}
-
-.bk-exception{
-  margin-top: 240px;
 }
 </style>

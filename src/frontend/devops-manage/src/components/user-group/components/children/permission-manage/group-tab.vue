@@ -3,7 +3,7 @@
     <div class="manage-content-project" v-if="projectTable">
       <p class="project-group">{{t("项目级用户组")}}</p>
       <div class="project-group-table">
-        <bk-collapse-panel v-model="activeFlag" :item-click="() => groupTableStore.activeFlag = !groupTableStore.activeFlag">
+        <bk-collapse-panel v-model="activeFlag">
           <template #header>
             <p class="group-title">
               <i :class="{
@@ -18,6 +18,7 @@
             <TabTable
               :is-show-operation="isShowOperation"
               :data="projectTable.tableData"
+              :resource-name="projectTable.resourceTypeName"
               :resource-type="projectTable.resourceType"
               :group-total="projectTable.count"
               :limit="projectTable.limit"
@@ -61,6 +62,7 @@
             <TabTable
               :is-show-operation="isShowOperation"
               :data="item.tableData"
+              :resource-name="item.resourceTypeName"
               :resource-type="item.resourceType"
               :group-total="item.count"
               :pagination="item.pagination"
@@ -200,8 +202,21 @@ function collapseClick(resourceType) {
 
 <style lang="less" scoped>
 .group-tab {
-  width: 100%;
+  width: calc(100% - 8px);
   height: 100%;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #c4c6cc !important;
+    border-radius: 5px !important;
+    &:hover {
+      background-color: #979ba5 !important;
+    }
+  }
+  &::-webkit-scrollbar {
+    width: 8px !important;
+    height: 8px !important;
+  }
 
 
   .manage-content-common {

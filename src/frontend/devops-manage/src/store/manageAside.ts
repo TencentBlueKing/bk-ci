@@ -84,7 +84,7 @@ export default defineStore('manageAside', () => {
       manageAsideRef.handOverClose();
       getProjectMembers(projectId);
     } catch (error) {
-
+      btnLoading.value = false;
     }
   }
   /**

@@ -46,10 +46,16 @@
           {{ row.groupName }}
           <div class="overlay" v-if="shouldShowOverlay(row)">
             {{ row.unableMessage }}
+            <span
+              v-if="row.removeMemberButtonControl === 'TEMPLATE' && (['codecc_task','pipeline','pipeline_group'].includes(row.resourceType))"
+              @click="handleToResourcePage(row)"
+              class="text-blue"
+            >
+              [{{ row.groupName }}]
+            </span>
           </div>
         </template>
       </bk-table-column>
-      <bk-table-column :label="t('用户组描述')" prop="groupDesc" />
       <bk-table-column :label="t('有效期')" prop="expiredAtDisplay" />
       <bk-table-column :label="t('加入时间')" prop="joinedTime" >
         <template #default="{row}">
@@ -114,9 +120,9 @@
 
 <script setup name="TabTable">
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
+import { ref, defineProps, defineEmits, computed } from 'vue';
 import { timeFormatter } from '@/common/util.ts'
-import { useRoute } from 'vue-router'; 
-import { ref, defineProps, defineEmits, computed, onMounted } from 'vue';
 
 const props = defineProps({
   isShowOperation: {
@@ -130,6 +136,7 @@ const props = defineProps({
   pagination: Object,
   scrollLoading: Boolean,
   resourceType: String,
+  resourceName: String,
   groupTotal: Number,
   selectedData: Object,
   hasNext: Boolean,
@@ -189,15 +196,12 @@ function getUnableMessage(row){
       if(row.expiredAtDisplay === t('永久')){
         return t("无需续期");
       } else if (row.removeMemberButtonControl === 'TEMPLATE') {
-        return t("通过用户组获得权限，请到流水线里续期整个用户组");
+        return t("通过用户组获得权限，请到") + props.resourceName + t("里续期整个用户组")
       }
     case 'handover':
       return t("通过用户组获得权限，请到用户组里移出用户");
     case 'remove':
       let message = TOOLTIPS_CONTENT[row.removeMemberButtonControl];
-      if (row.removeMemberButtonControl === 'TEMPLATE') {
-        message += ` [${row.groupName}]`;
-      }
       return message;
     default:
       return '';
@@ -334,5 +338,24 @@ function handleToResourcePage (row) {
       color: #3a84ff;
     }
   }
+}
+.appendLastRow{
+  background-color: #fff;
+}
+.overlay{
+  position: absolute;
+  left: 0;
+  transform: translateY(-42px);
+  width: 100%;
+  height: 42px;
+  background: rgba(255, 232, 195, .7);
+  font-family: MicrosoftYaHei;
+  font-size: 12px;
+  color: #63656E;
+  text-align: center;
+}
+.text-blue{
+  cursor: pointer;
+  color: #699DF4;
 }
 </style>
