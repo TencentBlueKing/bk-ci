@@ -288,6 +288,8 @@ class SignInfoService(
 
             if (warnInfo.toString().isNotEmpty())
                 signHistoryDao.writeWarnInfo(dslContext, resignId, warnInfo.toString())
+        } catch (default: ErrorCodeException) {
+            throw default
         } catch (e: Exception) {
             logger.error("resignId=$resignId|checkInfoPlist|Failed to check info.plist")
         }
