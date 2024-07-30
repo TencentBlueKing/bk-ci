@@ -43,17 +43,16 @@ class RefreshTokenGranterTest : BkCiAbstractTest() {
         icon = "icon"
     )
 
-    private val accessTokenInfo = TAuthOauth2AccessTokenRecord(
-        "testAccessToken",
-        "testClientId",
-        "testUserName",
-        "",
-        "testGrantType",
-        System.currentTimeMillis() / 1000 + 1000,
-        "testRefreshToken",
-        1,
-        LocalDateTime.now()
-    )
+    private val accessTokenInfo = TAuthOauth2AccessTokenRecord().apply {
+        accessToken = "testAccessToken"
+        clientId = "testClientId"
+        userName = "testUserName"
+        grantType = "testGrantType"
+        expiredTime = System.currentTimeMillis() / 1000 + 1000
+        refreshToken = "testRefreshToken"
+        scopeId = 1
+        createTime = LocalDateTime.now()
+    }
 
     private val accessTokenRequest = Oauth2AccessTokenRequest(
         refreshToken = "testRefreshToken",
