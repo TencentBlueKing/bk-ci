@@ -313,17 +313,12 @@ class SubPipelineStartUpService @Autowired constructor(
             val parentOauthUser = pipelineRepositoryService.getPipelineOauthUser(
                 projectId = parentProjectId,
                 pipelineId = parentPipelineId
-            ) ?: readyToBuildPipelineInfo.lastModifyUser
+            ) ?: parentPipelineInfo.lastModifyUser
             // 校验父流水线授权人是否有子流水线执行权限
             checkPermission(userId = parentOauthUser, projectId = projectId, pipelineId = pipelineId)
-            // 子流水线启动用户
-            val startUser = pipelineRepositoryService.getPipelineOauthUser(
-                projectId = projectId,
-                pipelineId = pipelineId
-            ) ?: readyToBuildPipelineInfo.lastModifyUser
             // 子流水线的调用不受频率限制
             val subBuildId = pipelineBuildService.startPipeline(
-                userId = startUser,
+                userId = parentOauthUser,
                 pipeline = readyToBuildPipelineInfo,
                 startType = StartType.PIPELINE,
                 pipelineParamMap = params,
