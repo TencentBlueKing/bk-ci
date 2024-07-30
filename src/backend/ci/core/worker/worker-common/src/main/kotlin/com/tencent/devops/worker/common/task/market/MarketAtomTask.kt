@@ -208,12 +208,7 @@ open class MarketAtomTask : ITask() {
         } else {
             workspacePath
         }
-        // 将不带上下文的参数作为input文件内容
-        // TODO 由于蓝盾存量数据问题，不能只传插件声明的input，保持叠加所有流水线变量
-        val variablesMapWithoutContext = buildVariables.variablesWithoutContext
-            .associate { it.key to it.value.toString() }
-            .toMutableMap()
-        variablesMapWithoutContext.putAll(
+        variables = variables.plus(
             mapOf(
                 "bkWorkspace" to Paths.get(bkWorkspacePath).normalize().toString(),
                 "testVersionFlag" to if (AtomStatusEnum.TESTING.name == atomData.atomStatus) "Y" else "N",
@@ -225,9 +220,8 @@ open class MarketAtomTask : ITask() {
                 LOCALE_LANGUAGE to (AgentEnv.getLocaleLanguage())
             )
         )
-        buildTask.stepId?.let { variablesMapWithoutContext[PIPELINE_STEP_ID] to it }
 
-        // 解析并打印插件执行传入的所有参数，替换用户的插件入参时使用包含上下文的全量参数
+        // 解析并打印插件执行传入的所有参数
         val inputParams = map["input"]?.let { input ->
             parseInputParams(
                 inputMap = input as Map<String, Any>,
@@ -246,6 +240,13 @@ open class MarketAtomTask : ITask() {
             )
         }
 
+        buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }
+
+        // 将不带上下文的参数作为input文件内容
+        // TODO 由于蓝盾存量数据问题，不能只传插件声明的input，保持叠加所有流水线变量
+        val variablesMapWithoutContext = buildVariables.variablesWithoutContext
+            .associate { it.key to it.value.toString() }
+            .toMutableMap()
         val inputVariables = if (asCodeEnabled) {
             // 如果开启PAC,插件入参增加旧变量，防止开启PAC后,插件获取参数失败
             PipelineVarUtil.mixOldVarAndNewVar(variablesMapWithoutContext)
