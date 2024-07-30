@@ -36,7 +36,13 @@
           {{ row.groupName }}
           <div class="overlay" v-if="shouldShowOverlay(row)">
             {{ row.unableMessage }}
-            <span v-if="row.removeMemberButtonControl === 'TEMPLATE'" @click="toResource(row)" class="text-blue">[{{ row.groupName }}]</span>
+            <span
+              v-if="row.removeMemberButtonControl === 'TEMPLATE' && (['codecc_task','pipeline','pipeline_group'].includes(row.resourceType))"
+              @click="toResource(row)"
+              class="text-blue"
+            >
+              [{{ row.groupName }}]
+            </span>
           </div>
         </template>
       </bk-table-column>
@@ -104,7 +110,8 @@
 
 <script setup name="TabTable">
 import { useI18n } from 'vue-i18n';
-import { ref, defineProps, defineEmits, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { ref, defineProps, defineEmits, computed } from 'vue';
 import { timeFormatter } from '@/common/util.ts'
 
 const props = defineProps({
@@ -119,6 +126,7 @@ const props = defineProps({
   pagination: Object,
   scrollLoading: Boolean,
   resourceType: String,
+  resourceName: String,
   groupTotal: Number,
   selectedData: Object,
   hasNext: Boolean,
@@ -138,11 +146,13 @@ const emit = defineEmits([
   'pageValueChange',
 ])
 const { t } = useI18n();
+const route = useRoute();
 const refTable = ref(null);
 const isCurrentAll = ref(false);
 const resourceType = computed(() => props.resourceType);
 const groupTotal = computed(() => props.groupTotal);
 const remainingCount = computed(()=> props.groupTotal - props.data.length);
+const projectId = computed(() => route.params?.projectCode);
 const TOOLTIPS_CONTENT = {
   UNIQUE_MANAGER: t('唯一管理员，不可移出。请添加新的管理员后再移出'),
   UNIQUE_OWNER: t('唯一拥有者，不可移出。请添加新的拥有者后再移出'),
@@ -176,7 +186,7 @@ function getUnableMessage(row){
       if(row.expiredAtDisplay === t('永久')){
         return t("无需续期");
       } else if (row.removeMemberButtonControl === 'TEMPLATE') {
-        return t("通过用户组获得权限，请到流水线里续期整个用户组");
+        return t("通过用户组获得权限，请到") + props.resourceName + t("里续期整个用户组")
       }
     case 'handover':
       return t("通过用户组获得权限，请到用户组里移出用户");
@@ -260,7 +270,18 @@ function pageValueChange(value) {
   emit('pageValueChange',value, resourceType.value);
 }
 function toResource(row){
-
+ if(!['codecc_task','pipeline','pipeline_group'].includes(row.resourceType)) return;
+ switch (row.resourceType) {
+  case 'pipeline':
+    window.open(`${location.origin}/console/pipeline/${projectId.value}/${row.resourceCode}/history/permission`);
+    break;
+  case 'pipeline_group':
+    window.open(`${location.origin}/console/pipeline/${projectId.value}/list/listAuth/${row.resourceCode}/${row.resourceName}`);
+    break;
+  case 'codecc_task':
+    window.open(`${location.origin}/console/codecc/${projectId.value}/task/${row.resourceCode}/settings/authority`);
+    break;
+ }
 }
 </script>
 

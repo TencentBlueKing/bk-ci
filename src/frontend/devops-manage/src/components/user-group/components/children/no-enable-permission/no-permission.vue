@@ -5,7 +5,7 @@
     :description="t('该用户暂无项目权限')"
   >
     <p class="empty-text">
-      <i18n-t keypath="由于该用户仍有部分授权未移交，未能自动移出项目；如有需要，可前往「授权管理」处理" tag="div">
+      <i18n-t keypath="该用户无操作权限，但存在授权，可前往「授权管理」查看处理" tag="div">
         <bk-button text theme="primary" @click="goPermission">
           {{ t("授权管理") }}
         </bk-button>

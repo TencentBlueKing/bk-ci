@@ -449,12 +449,16 @@ function handOverDialog(row, resourceType, index){
  * 续期弹窗提交事件
  */
 async function handleRenewalConfirm() {
-  operatorLoading.value = true;
-  await handleUpDateRow(expiredAt.value);
-  operatorLoading.value = false;
-  showMessage('success', t('用户组权限已续期。'));
-  cancleClear('renewal');
-  isShowRenewal.value = false;
+  try {
+    operatorLoading.value = true;
+    await handleUpDateRow(expiredAt.value);
+    operatorLoading.value = false;
+    showMessage('success', t('用户组权限已续期。'));
+    cancleClear('renewal');
+    isShowRenewal.value = false;
+  } catch (error) {
+    operatorLoading.value = false;
+  }
 };
 /**
  * 续期弹窗关闭
@@ -483,7 +487,7 @@ async function handleHandoverConfirm() {
       cancleClear('handover');
     }
   } catch (error) {
-    
+    operatorLoading.value = false;
   }
 };
 /**
@@ -497,14 +501,18 @@ async function handleHandoverConfirm() {
  * 移出弹窗提交事件
  */
 async function handleRemoveConfirm() {
-  operatorLoading.value = true;
-  const param = formatSelectParams(selectedRow.value.groupId);
-  delete param.renewalDuration;
-  await http.batchRemove(projectId.value, param);
-  operatorLoading.value = false;
-  showMessage('success', t('X 已移出X用户组。', [`${asideItem.value.id}(${asideItem.value.name})`, selectedRow.value.groupName]));
-  handleRemoveRow();
-  isShowRemove.value = false;
+  try {
+    operatorLoading.value = true;
+    const param = formatSelectParams(selectedRow.value.groupId);
+    delete param.renewalDuration;
+    await http.batchRemove(projectId.value, param);
+    operatorLoading.value = false;
+    showMessage('success', t('X 已移出X用户组。', [`${asideItem.value.id}(${asideItem.value.name})`, selectedRow.value.groupName]));
+    handleRemoveRow();
+    isShowRemove.value = false;
+  } catch (error) {
+    operatorLoading.value = false;
+  }
 }
 /**
  * 授权期限选择

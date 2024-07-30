@@ -18,6 +18,7 @@
             <TabTable
               :is-show-operation="isShowOperation"
               :data="projectTable.tableData"
+              :resource-name="projectTable.resourceTypeName"
               :resource-type="projectTable.resourceType"
               :group-total="projectTable.count"
               :limit="projectTable.limit"
@@ -61,6 +62,7 @@
             <TabTable
               :is-show-operation="isShowOperation"
               :data="item.tableData"
+              :resource-name="item.resourceTypeName"
               :resource-type="item.resourceType"
               :group-total="item.count"
               :pagination="item.pagination"

@@ -338,7 +338,7 @@ export default defineStore('userGroupTable', () => {
           item.tableLoading = false;
           item.tableData = res.records;
         } catch (e) {
-          console.error(e)
+          item.tableLoading = false;
         }
       }
     }
