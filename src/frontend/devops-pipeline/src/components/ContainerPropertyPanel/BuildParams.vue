@@ -61,9 +61,7 @@
                                                 <p
                                                     v-for="error in errors.all(`param-${param.id}`)"
                                                     :key="error"
-                                                >
-                                                    {{ error }}
-                                                </p>
+                                                >{{ error }}</p>
                                             </div>
                                         </bk-popover>
                                         {{ param.id }}
