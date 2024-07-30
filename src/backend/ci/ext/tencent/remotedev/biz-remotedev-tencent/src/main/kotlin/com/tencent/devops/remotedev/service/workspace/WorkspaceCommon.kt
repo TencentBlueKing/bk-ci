@@ -123,7 +123,7 @@ class WorkspaceCommon @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceCommon::class.java)
-        private const val DEFAULT_WAIT_TIME = 60
+        const val DEFAULT_WAIT_TIME = 300
         private const val REPOID = "lsync"
         private const val LOCALDRIVER = "L"
         private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
