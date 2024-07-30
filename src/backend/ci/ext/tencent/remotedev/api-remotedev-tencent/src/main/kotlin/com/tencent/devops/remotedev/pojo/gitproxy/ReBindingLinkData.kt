@@ -6,8 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class ReBindingLinkData(
     @get:Schema(title = "蓝盾项目ID")
     val projectId: String,
-    @get:Schema(title = "需要重新绑定的工蜂项目ID")
-    val idList: Set<Long>,
+    @get:Schema(title = "需要重新绑定的工蜂项目ID和项目类型如 GIT/SVN")
+    val idMap: Map<Long, String>,
     @get:Schema(title = "凭据ID,为空时使用,调用用户的OAUTH")
     val credId: String?
 )
