@@ -245,6 +245,10 @@ class RbacPermissionResourceMemberService constructor(
         expiredAt: Long,
         iamGroupId: Int
     ): Boolean {
+        if (memberType == ManagerScopesEnum.getType(ManagerScopesEnum.USER) &&
+            deptService.isUserDeparted(memberId)) {
+            return true
+        }
         // 获取对应的资源组
         val authResourceGroup = authResourceGroupDao.get(
             dslContext = dslContext,
@@ -319,7 +323,7 @@ class RbacPermissionResourceMemberService constructor(
         val groupDepartmentSet = groupMembers.filter { it.type == deptType }.map { it.id }.toSet()
         // 校验用户是否应该加入用户组
         val iamMemberInfos = mutableListOf<ManagerMember>()
-        members?.forEach {
+        members?.filterNot { deptService.isUserDeparted(it) }?.forEach {
             val shouldAddUserToGroup = shouldAddUserToGroup(
                 groupUserMap = groupUserMap,
                 groupDepartmentSet = groupDepartmentSet,
@@ -690,6 +694,10 @@ class RbacPermissionResourceMemberService constructor(
     ) {
         logger.info("renewal group member ${renewalConditionReq.targetMember}|$projectCode|$groupId|$expiredAt")
         val targetMember = renewalConditionReq.targetMember
+        if (targetMember.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER) &&
+            deptService.isUserDeparted(targetMember.id)) {
+            return
+        }
         val secondsOfRenewalDuration = TimeUnit.DAYS.toSeconds(renewalConditionReq.renewalDuration.toLong())
         val secondsOfCurrentTime = System.currentTimeMillis() / 1000
         // 若权限已过期，则为当前时间+续期天数，若未过期，则为有效期+续期天数
