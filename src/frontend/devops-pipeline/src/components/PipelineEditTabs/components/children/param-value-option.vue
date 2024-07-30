@@ -51,14 +51,13 @@
                 name="defaultValue"
                 :list="boolList"
                 :disabled="disabled"
-                    
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
+                :handle-change="handleChange"
                 :value="param.defaultValue">
             </enum-input>
             <vuex-input
                 v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type)"
                 :disabled="disabled"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
+                :handle-change="handleChange"
                 name="defaultValue"
                 v-validate="{ required: valueRequired }"
                 :data-vv-scope="'pipelineParam'"
@@ -73,12 +72,12 @@
                 :disabled="disabled"
                 :value="param.defaultValue"
                 :upload-file-name="uploadFileName"
-                :handle-change="(name, value) => handleChange(name, value)"
+                :handle-change="handleChange"
             />
             <vuex-textarea
                 v-if="isTextareaParam(param.type)"
                 :disabled="disabled"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
+                :handle-change="handleChange"
                 name="defaultValue"
                 v-validate="{ required: valueRequired }"
                 :data-vv-scope="'pipelineParam'"
@@ -95,7 +94,7 @@
                 v-validate="{ required: valueRequired }"
                 :data-vv-scope="'pipelineParam'"
                 :value="param.defaultValue"
-                :handle-change="(name, value) => handleUpdateParam(name, value)">
+                :handle-change="handleChange">
             </request-selector>
             <request-selector
                 v-if="isBuildResourceParam(param.type)"
@@ -107,7 +106,7 @@
                 v-validate="{ required: valueRequired }"
                 :data-vv-scope="'pipelineParam'"
                 :value="param.defaultValue"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
+                :handle-change="handleChange"
                 :replace-key="param.replaceKey"
                 :search-url="param.searchUrl">
             </request-selector>
@@ -120,7 +119,7 @@
                 v-validate="{ required: valueRequired }"
                 :data-vv-scope="'pipelineParam'"
                 :value="param.defaultValue"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
+                :handle-change="handleChange"
                 :replace-key="param.replaceKey"
                 :search-url="param.searchUrl">
             </request-selector>
@@ -132,7 +131,7 @@
                 :disabled="disabled"
                 name="repoHashId"
                 :value="param.repoHashId"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
+                :handle-change="handleChange"
                 v-validate="'required'"
                 :data-vv-scope="'pipelineParam'"
                 :replace-key="param.replaceKey"
@@ -141,7 +140,7 @@
         </form-field>
 
         <form-field :hide-colon="true" v-if="isSvnParam(param.type)" :label="$t('editPage.relativePath')" :is-error="errors.has(`relativePath`)" :error-msg="errors.first(`pipelineParam.relativePath`)">
-            <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" name="relativePath" :placeholder="$t('editPage.relativePathTips')" :value="param.relativePath"></vuex-input>
+            <vuex-input :disabled="disabled" :handle-change="handleChange" name="relativePath" :placeholder="$t('editPage.relativePathTips')" :value="param.relativePath"></vuex-input>
         </form-field>
 
         <form-field :hide-colon="true" v-if="isGitParam(param.type)" :label="$t('editPage.gitRepo')" :is-error="errors.has(`repoHashId`)" :error-msg="errors.first(`pipelineParam.repoHashId`)">
@@ -150,7 +149,7 @@
                 :disabled="disabled"
                 name="repoHashId"
                 :value="param.repoHashId"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
+                :handle-change="handleChange"
                 v-validate="'required'"
                 :data-vv-scope="'pipelineParam'"
                 replace-key="{keyword}"
