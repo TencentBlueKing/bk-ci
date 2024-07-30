@@ -74,11 +74,11 @@
               text
               theme="primary"
               @click="handleRenewal(row)"
-              :disabled="row.expiredAtDisplay == t('永久') || row.removeMemberButtonControl === 'TEMPLATE'"
+              :disabled="row.expiredAtDisplay == t('永久') || row.removeMemberButtonControl === 'TEMPLATE' || row.departed"
               v-bk-tooltips="{
-                content: row.expiredAtDisplay == t('永久') ? t('无需续期') : t('通过用户组获得权限，请到流水线里续期整个用户组'),
+                content: row.expiredAtDisplay == t('永久') || row.departed ? t('无需续期') : t('通过用户组获得权限，请到流水线里续期整个用户组'),
                 placement: 'top',
-                disabled: row.expiredAtDisplay !== t('永久') && row.removeMemberButtonControl !== 'TEMPLATE'
+                disabled: row.expiredAtDisplay !== t('永久') && row.removeMemberButtonControl !== 'TEMPLATE' && !row.departed
               }"
             >
               {{t("续期")}}

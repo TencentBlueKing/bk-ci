@@ -30,7 +30,7 @@
       <div class="manage-content">
         <div class="manage-content-btn">
           <bk-button
-            :disabled="!isPermission"
+            :disabled="!isPermission || asideItem?.departed"
             @click="batchOperator('renewal')"
             :loading="renewalLoading"
           >
@@ -674,7 +674,7 @@ function handleClearOverFormName () {
 
 <style lang="less" scoped>
 .manage {
-  width: 100%;
+  width: calc(100% - 240px);
   height: 100%;
   overflow: hidden;
 
@@ -705,16 +705,16 @@ function handleClearOverFormName () {
     }
     
     .manage-content {
+      width: calc(100% - 246px);
       height: 100%;
       flex: 1;
       margin-left: 16px;
 
       .manage-content-btn {
-        width: 100%;
         height: 42px;
         display: flex;
         margin-bottom: 10px;
-        position: fixed;
+        position: absolute;
         z-index: 9;
 
         .bk-button {
@@ -873,6 +873,7 @@ function handleClearOverFormName () {
 .no-permission {
   height: calc(100% - 42px);
   padding-top: 10%;
+  margin-top: 42px;
   background-color: #fff;
   box-shadow: 0 2px 4px 0 #1919290d;
 }

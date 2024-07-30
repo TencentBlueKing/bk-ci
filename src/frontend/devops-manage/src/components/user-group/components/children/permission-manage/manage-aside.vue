@@ -25,7 +25,8 @@
         />
         <p class="item" v-if="item.type === 'user'">
           <bk-overflow-title type="tips">
-            {{ item.id }} ({{ item.name }})
+            {{ item.id }} ({{ item.name }})&nbsp;
+            <bk-tag v-if="item.departed" size="small" theme="danger">{{t("已离职")}}</bk-tag>
           </bk-overflow-title>
         </p>
         <p class="item" v-else  v-bk-tooltips="{ content: item.name, placement: 'top', disabled: !truncateMiddleText(item.name).includes(' ... ') }">
@@ -432,15 +433,19 @@ function handleShowPerson(item) {
   color: #63656E;
   cursor: pointer;
 
-  p{
-    flex: 1;
-    width: 150px;
+  .item {
+    width: 130px;
     height: 20px;
     font-family: MicrosoftYaHei;
     font-size: 12px;
     color: #63656E;
     letter-spacing: 0;
     line-height: 20px;
+
+    .bk-tag {
+      line-height: 20px;
+      display: inline-block !important;
+    }
   }
 
   .group-icon {
