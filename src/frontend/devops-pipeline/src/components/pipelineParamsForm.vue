@@ -20,9 +20,14 @@
                     }"
                     :disabled="disabled"
                     :placeholder="param.placeholder"
+                    :upload-file-name="uploadFileName"
                 />
                 <div class="file-upload" v-if="showFileUploader(param.type)">
-                    <file-param-input :file-path="param.value"></file-param-input>
+                    <file-upload
+                        name="fileName"
+                        :file-path="param.value"
+                        @handle-change="(value) => uploadPathFromFileName(value)"
+                    />
                 </div>
             </section>
             <span
@@ -44,6 +49,7 @@
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
+    import FileUpload from '@/components/FileUpload'
     import FileParamInput from '@/components/FileParamInput'
     import {
         BOOLEAN_LIST,
@@ -77,6 +83,7 @@
             VuexTextarea,
             FormField,
             metadataList,
+            FileUpload,
             FileParamInput
         },
         props: {
@@ -97,6 +104,11 @@
                 default: () => () => {}
             },
             highlightChangedParam: Boolean
+        },
+        data () {
+            return {
+                uploadFileName: ''
+            }
         },
         computed: {
             paramList () {
@@ -209,6 +221,10 @@
             },
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1
+            },
+
+            uploadPathFromFileName (value) {
+                this.uploadFileName = value
             }
         }
     }
