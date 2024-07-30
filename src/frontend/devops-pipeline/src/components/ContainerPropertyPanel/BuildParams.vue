@@ -137,6 +137,7 @@
                                             />
                                         </bk-form-item>
                                         <bk-form-item
+                                            v-if="!isFileParam(param.type)"
                                             label-width="auto"
                                             class="flex-col-span-1"
                                             :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
@@ -233,6 +234,30 @@
                                                 :replace-key="param.replaceKey"
                                                 :search-url="param.searchUrl"
                                             ></request-selector>
+                                        </bk-form-item>
+                                        <bk-form-item
+                                            v-else
+                                            label-width="auto"
+                                            :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
+                                            :required="isBooleanParam(param.type)"
+                                            :is-error="errors.has(`param-${param.id}.defaultValue`)"
+                                            :error-msg="errors.first(`param-${param.id}.defaultValue`)"
+                                            :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)"
+                                        >
+                                            <file-param-input
+                                                name="defaultValue"
+                                                :required="valueRequired"
+                                                :disabled="disabled"
+                                                :value="param.defaultValue"
+                                                :upload-file-name="uploadFileName"
+                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                            />
+                                            <file-upload
+                                                class="mt10"
+                                                name="fileName"
+                                                :file-path="param.defaultValue"
+                                                @handle-change="(value) => uploadPathFromFileName(value)"
+                                            ></file-upload>
                                         </bk-form-item>
                                     </div>
 
@@ -405,11 +430,6 @@
                                             "
                                         ></key-value-normal>
                                     </bk-form-item>
-
-                                    <bk-form-item label-width="auto" v-if="isFileParam(param.type)">
-                                        <file-param-input :file-path="param.defaultValue"></file-param-input>
-                                    </bk-form-item>
-
                                     <bk-form-item label-width="auto" :label="$t('desc')">
                                         <vuex-input
                                             :disabled="disabled"
@@ -447,6 +467,7 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import FileParamInput from '@/components/FileParamInput'
+    import FileUpload from '@/components/FileUpload'
     import {
         PROCESS_API_URL_PREFIX,
         REPOSITORY_API_URL_PREFIX,
@@ -504,6 +525,7 @@
             VuexTextarea,
             RequestSelector,
             KeyValueNormal,
+            FileUpload,
             FileParamInput
         },
         mixins: [validMixins],
@@ -537,7 +559,8 @@
         data () {
             return {
                 paramIdCount: 0,
-                renderParams: []
+                renderParams: [],
+                uploadFileName: ''
             }
         },
 
@@ -873,6 +896,10 @@
                         })
                         .map((opt) => ({ id: opt.key, name: opt.value }))
                     : []
+            },
+
+            uploadPathFromFileName (value) {
+                this.uploadFileName = value
             }
         }
     }
