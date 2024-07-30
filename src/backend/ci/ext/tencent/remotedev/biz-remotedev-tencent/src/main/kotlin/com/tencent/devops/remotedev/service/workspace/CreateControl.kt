@@ -48,7 +48,6 @@ import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -108,7 +107,6 @@ class CreateControl @Autowired constructor(
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
     private val whiteListService: WhiteListService,

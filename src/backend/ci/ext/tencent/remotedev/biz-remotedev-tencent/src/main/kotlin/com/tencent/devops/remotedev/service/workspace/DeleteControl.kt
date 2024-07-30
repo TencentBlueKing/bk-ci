@@ -605,9 +605,6 @@ class DeleteControl @Autowired constructor(
             )
         }
 
-        if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
-            remoteDevSettingService.computeWinUsageTime(userId = workspace.createUserId)
-        }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceCommon.updateLastHistory(transactionContext, workspaceName, operator)

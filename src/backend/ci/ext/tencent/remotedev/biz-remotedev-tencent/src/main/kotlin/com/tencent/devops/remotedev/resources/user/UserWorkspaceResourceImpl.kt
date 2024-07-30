@@ -245,11 +245,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(permissionService.checkUserCreate(userId))
     }
 
-    @Deprecated("LINUX 待删除")
-    override fun updateAllBkTicket(userId: String, bkTicket: String): Result<Boolean> {
-        return Result(true)
-    }
-
     @AuditEntry(actionId = ActionId.CGS_VIEW)
     override fun startCloudWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceStartCloudDetail?> {
         return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName))

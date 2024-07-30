@@ -52,7 +52,6 @@ import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.cron.HolidayHelper
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -130,7 +129,6 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
     private val workspaceCommon: WorkspaceCommon,
@@ -824,10 +822,6 @@ class WorkspaceService @Autowired constructor(
             }
         }
 
-        val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
-            Duration.between(it, now).seconds
-        }
-
         val endBilling = remoteDevSettingDao.fetchSingleUserBilling(dslContext, userId)
 
         val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toLong() ?: 10000
@@ -836,7 +830,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                (endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -889,11 +883,6 @@ class WorkspaceService @Autowired constructor(
             0
         }
 
-        val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
-            Duration.between(it, now).seconds
-        }
-
-        val endBilling = remoteDevSettingDao.fetchSingleUserBilling(dslContext, userId)
         return with(workspace) {
             WorkspaceDetail(
                 workspaceId = workspaceId,
@@ -901,8 +890,7 @@ class WorkspaceService @Autowired constructor(
                 displayName = displayName,
                 status = workspace.status,
                 lastUpdateTime = updateTime.timestamp(),
-                chargeableTime = endBilling.second +
-                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                chargeableTime = 0,
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 systemType = workspaceSystemType,

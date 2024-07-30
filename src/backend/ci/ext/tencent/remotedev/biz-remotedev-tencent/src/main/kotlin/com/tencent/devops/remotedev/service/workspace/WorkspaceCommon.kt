@@ -41,7 +41,6 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDailyCgsdataDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -100,7 +99,6 @@ class WorkspaceCommon @Autowired constructor(
     private val sharedDao: WorkspaceSharedDao,
     private val client: Client,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val redisCache: RedisCacheService,
     private val profile: Profile,
@@ -676,10 +674,6 @@ class WorkspaceCommon @Autowired constructor(
         operator: String
     ) {
         updateLastHistory(dslContext, workspace.workspaceName, operator)
-        if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
-            remoteDevSettingService.computeWinUsageTime(userId = workspace.createUserId)
-        }
-
         // 个人云桌面即使关机也需要计费
         if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU &&
             workspace.ownerType == WorkspaceOwnerType.PERSONAL
