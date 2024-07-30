@@ -188,9 +188,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         // var表中获取环境变量，并对老版本变量进行兼容
         val pipelineId = buildInfo.pipelineId
         val variables = buildVariableService.getAllVariable(projectId, buildInfo.pipelineId, buildId)
-        // 由于variables和variablesWithType传到下游已经有非常多地方用到，单独声明一个不带上下文的变量做区分
-        val variablesWithoutContext = buildVariableService.getAllVariableWithType(projectId, buildId)
-        val variablesWithType = variablesWithoutContext.toMutableList()
+        val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
         val model = containerBuildDetailService.getBuildModel(projectId, buildId)
         val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
             projectId, buildInfo.pipelineId, buildId, buildInfo
@@ -229,7 +227,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         is VMBuildContainer -> {
                             val envList = mutableListOf<BuildEnv>()
                             val tm = transMinuteTimeoutToMills(container.controlOption.jobControlOption.timeout)
-                            // 提前叠加了上下文
                             val contextMap = variables.plus(
                                 pipelineContextService.buildContext(
                                     projectId = projectId, pipelineId = pipelineId, buildId = buildId,
@@ -313,7 +310,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         containerHashId = c.containerHashId ?: "",
                         jobId = c.jobId,
                         variablesWithType = variablesWithType,
-                        variablesWithoutContext = variablesWithoutContext,
                         timeoutMills = timeoutMills,
                         containerType = c.getClassType(),
                         pipelineAsCodeSettings = asCodeSettings

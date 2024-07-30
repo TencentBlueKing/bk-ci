@@ -58,8 +58,6 @@ data class BuildVariables(
     val jobId: String?,
     @get:Schema(title = "参数类型集合（用于打印时区分敏感信息，建议不要作为传参使用）", required = false)
     var variablesWithType: List<BuildParameters>,
-    @get:Schema(title = "流水线变量表中的参数集合（未填充上下文，如：ci.xxx, jobs.xxx.status）", required = false)
-    var variablesWithoutContext: List<BuildParameters>,
     @get:Schema(title = "Job超时时间（毫秒）", required = true)
     var timeoutMills: Long = TimeUnit.MINUTES.toMillis(Timeout.DEFAULT_TIMEOUT_MIN.toLong()),
     @get:Schema(title = "容器类型", required = false)

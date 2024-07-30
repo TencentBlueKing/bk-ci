@@ -30,7 +30,6 @@ package com.tencent.devops.worker.common.task.script
 import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.pipeline.EnvReplacementParser
-import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
@@ -80,9 +79,7 @@ interface ICommand {
                 CI_TOKEN_CONTEXT to (variables[CI_TOKEN_CONTEXT] ?: ""),
                 JOB_OS_CONTEXT to AgentEnv.getOS().name
             )
-        ).toMutableMap()
-        // 增加上下文的替换
-        PipelineVarUtil.fillContextVarMap(contextMap)
+        )
         return if (asCodeEnabled == true) {
             EnvReplacementParser.parse(
                 value = command,
