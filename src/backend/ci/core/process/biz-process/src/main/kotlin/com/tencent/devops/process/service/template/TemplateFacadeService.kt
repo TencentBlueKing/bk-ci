@@ -382,7 +382,7 @@ class TemplateFacadeService @Autowired constructor(
                 templateName = saveAsTemplateReq.templateName,
                 versionName = INIT_TEMPLATE_NAME,
                 userId = userId,
-                template = template,
+                template = JsonUtil.toJson(templateModel, formatted = false),
                 storeFlag = false,
                 version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data,
                 desc = null
