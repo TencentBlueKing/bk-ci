@@ -57,7 +57,6 @@ import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.webhook.pojo.code.BK_CI_RUN
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.BuildVariables
@@ -243,11 +242,16 @@ open class MarketAtomTask : ITask() {
 
         buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }
 
+        // 将不带上下文的参数作为input文件内容
+        // TODO 由于蓝盾存量数据问题，不能只传插件声明的input，保持叠加所有流水线变量
+        val variablesMapWithoutContext = buildVariables.variablesWithoutContext
+            .associate { it.key to it.value.toString() }
+            .toMutableMap()
         val inputVariables = if (asCodeEnabled) {
             // 如果开启PAC,插件入参增加旧变量，防止开启PAC后,插件获取参数失败
-            PipelineVarUtil.mixOldVarAndNewVar(variables.toMutableMap())
+            PipelineVarUtil.mixOldVarAndNewVar(variablesMapWithoutContext)
         } else {
-            variables
+            variablesMapWithoutContext
         }.plus(inputParams).toMutableMap<String, Any>()
         val atomSensitiveConfWriteSwitch = System.getProperty("BK_CI_ATOM_PRIVATE_CONFIG_WRITE_SWITCH")?.toBoolean()
         if (atomSensitiveConfWriteSwitch != false) {
