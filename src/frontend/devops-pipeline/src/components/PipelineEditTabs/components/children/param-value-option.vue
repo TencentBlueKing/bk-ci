@@ -56,7 +56,7 @@
                 :value="param.defaultValue">
             </enum-input>
             <vuex-input
-                v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isFileParam(param.type) || isArtifactoryParam(param.type)"
+                v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type)"
                 :disabled="disabled"
                 :handle-change="(name, value) => handleUpdateParam(name, value)"
                 name="defaultValue"
@@ -65,6 +65,15 @@
                 :click-unfold="true"
                 :placeholder="$t('editPage.defaultValueTips')"
                 :value="param.defaultValue"
+            />
+            <file-param-input
+                v-if="isFileParam(param.type)"
+                name="defaultValue"
+                :required="valueRequired"
+                :disabled="disabled"
+                :value="param.defaultValue"
+                :upload-file-name="uploadFileName"
+                :handle-change="(name, value) => handleChange(name, value)"
             />
             <vuex-textarea
                 v-if="isTextareaParam(param.type)"
@@ -164,9 +173,11 @@
         </template>
 
         <form-field :hide-colon="true" v-if="isFileParam(param.type)">
-            <file-param-input
+            <file-upload
+                name="fileName"
                 :file-path="param.defaultValue"
-            ></file-param-input>
+                @handle-change="(value) => uploadPathFromFileName(value)"
+            ></file-upload>
         </form-field>
     </section>
 </template>
@@ -180,6 +191,7 @@
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
+    import FileUpload from '@/components/FileUpload'
     import FileParamInput from '@/components/FileParamInput'
     import validMixins from '@/components/validMixins'
     import {
@@ -224,6 +236,7 @@
             Selector,
             VuexTextarea,
             RequestSelector,
+            FileUpload,
             FileParamInput
         },
         mixins: [validMixins],
@@ -250,7 +263,8 @@
             return {
                 optionList: [],
                 selectDefautVal: '',
-                remoteParamOption: {}
+                remoteParamOption: {},
+                uploadFileName: ''
             }
         },
         computed: {
@@ -409,8 +423,9 @@
                 }
                 this.handleUpdateParam(key, value)
             },
-            handleUpdateParam (key, value) {
-                this.handleChange(key, value)
+
+            uploadPathFromFileName (value) {
+                this.uploadFileName = value
             }
         }
     }
