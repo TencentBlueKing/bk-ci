@@ -267,7 +267,11 @@ class SignInfoService(
                     // 关键字：CFBundleIdentifier, CFBundleName, CFBundleShortVersionString, CFBundleVersion
                     val rootDict = PropertyListParser.parse(infoPlist) as NSDictionary
                     var parameters = rootDict.objectForKey("CFBundleIdentifier") as NSString
-
+                    var exeParam = rootDict.objectForKey("CFBundleExecutable") as NSString
+                    if (it.nameWithoutExtension != exeParam.toString()) throw ErrorCodeException(
+                        errorCode = SignMessageCode.ERROR_PARS_INFO_PLIST,
+                        defaultMessage = "$it name is not equal to $exeParam"
+                    )
                     if (!rootDict.containsKey("CFBundleIdentifier"))
                         warnInfo.append("[WARN]").append("CFBundleIdentifier is empty,").append(infoPlist)
                     if (!rootDict.containsKey("CFBundleName"))
