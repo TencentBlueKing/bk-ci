@@ -125,54 +125,24 @@ import java.util.regex.Pattern
 import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
-abstract class AbsProjectServiceImpl : ProjectService {
-    @Autowired
-    lateinit var projectPermissionService: ProjectPermissionService
-
-    @Autowired
-    lateinit var dslContext: DSLContext
-
-    @Autowired
-    lateinit var projectDao: ProjectDao
-
-    @Autowired
-    lateinit var projectJmxApi: ProjectJmxApi
-
-    @Autowired
-    lateinit var redisOperation: RedisOperation
-
-    @Autowired
-    lateinit var client: Client
-
-    @Autowired
-    lateinit var projectDispatcher: ProjectDispatcher
-
-    @Autowired
-    lateinit var authPermissionApi: AuthPermissionApi
-
-    @Autowired
-    lateinit var projectAuthServiceCode: ProjectAuthServiceCode
-
-    @Autowired
-    lateinit var shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService
-
-    @Autowired
-    lateinit var objectMapper: ObjectMapper
-
-    @Autowired
-    lateinit var projectExtService: ProjectExtService
-
-    @Autowired
-    lateinit var projectApprovalService: ProjectApprovalService
-
-    @Autowired
-    lateinit var clientTokenService: ClientTokenService
-
-    @Autowired
-    lateinit var profile: Profile
-
-    @Autowired
-    lateinit var projectUpdateHistoryDao: ProjectUpdateHistoryDao
+abstract class AbsProjectServiceImpl @Autowired constructor(
+    val projectPermissionService: ProjectPermissionService,
+    val dslContext: DSLContext,
+    val projectDao: ProjectDao,
+    private val projectJmxApi: ProjectJmxApi,
+    val redisOperation: RedisOperation,
+    val client: Client,
+    private val projectDispatcher: ProjectDispatcher,
+    private val authPermissionApi: AuthPermissionApi,
+    private val projectAuthServiceCode: ProjectAuthServiceCode,
+    private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
+    private val objectMapper: ObjectMapper,
+    private val projectExtService: ProjectExtService,
+    private val projectApprovalService: ProjectApprovalService,
+    private val clientTokenService: ClientTokenService,
+    private val profile: Profile,
+    private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
+) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         if (name.isBlank()) {

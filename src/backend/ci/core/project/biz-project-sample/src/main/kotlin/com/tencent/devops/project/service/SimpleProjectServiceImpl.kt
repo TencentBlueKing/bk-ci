@@ -27,15 +27,26 @@
 
 package com.tencent.devops.project.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
+import com.tencent.devops.project.dispatch.ProjectDispatcher
+import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
@@ -46,13 +57,49 @@ import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
 
 @Suppress("ALL", "UNUSED")
 @Service
-class SimpleProjectServiceImpl : AbsProjectServiceImpl() {
+class SimpleProjectServiceImpl @Autowired constructor(
+    projectPermissionService: ProjectPermissionService,
+    dslContext: DSLContext,
+    projectDao: ProjectDao,
+    projectJmxApi: ProjectJmxApi,
+    redisOperation: RedisOperation,
+    client: Client,
+    projectDispatcher: ProjectDispatcher,
+    authPermissionApi: AuthPermissionApi,
+    projectAuthServiceCode: ProjectAuthServiceCode,
+    shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
+    objectMapper: ObjectMapper,
+    projectExtService: ProjectExtService,
+    projectApprovalService: ProjectApprovalService,
+    clientTokenService: ClientTokenService,
+    profile: Profile,
+    projectUpdateHistoryDao: ProjectUpdateHistoryDao
+) : AbsProjectServiceImpl(
+    projectPermissionService = projectPermissionService,
+    dslContext = dslContext,
+    projectDao = projectDao,
+    projectJmxApi = projectJmxApi,
+    redisOperation = redisOperation,
+    client = client,
+    projectDispatcher = projectDispatcher,
+    authPermissionApi = authPermissionApi,
+    projectAuthServiceCode = projectAuthServiceCode,
+    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
+    objectMapper = objectMapper,
+    projectExtService = projectExtService,
+    projectApprovalService = projectApprovalService,
+    clientTokenService = clientTokenService,
+    profile = profile,
+    projectUpdateHistoryDao = projectUpdateHistoryDao
+) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
         return UserDeptDetail(
