@@ -130,7 +130,8 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                     buildId = buildId,
                     startTime = startTime,
                     eventStatus = status,
-                    triggerType = triggerType
+                    triggerType = triggerType,
+                    scmType = repo.getScmType()
                 ),
                 targetBranch = targetBranch
             )
@@ -223,7 +224,8 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                     buildId = buildId,
                     startTime = startedAt?.timestampmilli() ?: 0L,
                     eventStatus = status,
-                    triggerType = StartType.WEB_HOOK.name
+                    triggerType = StartType.WEB_HOOK.name,
+                    scmType = ScmType.GITHUB
                 )
             )
         )

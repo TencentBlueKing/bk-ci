@@ -35,6 +35,8 @@ object CodeccUtils {
 
     const val BK_CI_CODECC_COMMUNITY_ATOM = "CodeCCCheckAtom"
 
+    const val BK_CI_CODECC_REPORT_URL = "BK_CI_CODECC_REPORT_URL"
+
     fun isCodeccAtom(atomName: String?): Boolean {
         return isCodeccNewAtom(atomName)
     }
