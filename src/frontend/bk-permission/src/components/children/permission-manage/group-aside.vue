@@ -15,14 +15,20 @@
           @click="handleChooseGroup(group)"
         >
           <span class="group-name" :title="group.name">{{ group.name }}</span>
-          <span class="user-num">
-            <img src="../../../svg/user.svg?inline" class="group-icon">
-            {{ group.userCount }}
-          </span>
-          <span class="group-num">
-            <img src="../../../svg/organization.svg?inline" class="group-icon">
-            {{ group.departmentCount }}
-          </span>
+          <div class="num-box">
+            <i :class="{
+              'group-icon manage-icon manage-icon-user-shape': true,
+              'active': activeTab === group.groupId
+            }" />
+            <div class="group-num">{{ group.userCount }}</div>
+          </div>
+          <div class="num-box">
+            <i :class="{
+              'group-icon manage-icon manage-icon-organization': true,
+              'active': activeTab === group.groupId
+            }" />
+            <div class="group-num">{{ group.departmentCount }}</div>
+          </div>
           <bk-popover
             v-if="resourceType === 'project'"
             class="group-more-option"
@@ -31,7 +37,7 @@
             :arrow="false"
             offset="15"
             :distance="0">
-            <img src="../../../svg/more.svg?inline" class="more-icon">
+            <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
             <template #content>
               <bk-button
                 class="btn"
@@ -308,11 +314,11 @@ export default {
     },
     async syncGroupIAM(groupId){
       try {
-        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupMember`);
+        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupMember`)
       } catch (error) {
         Message({
           theme: 'error',
-          message: err.message
+          message: error.message
         });
       }
     },
@@ -329,7 +335,7 @@ export default {
   border-right: 1px solid #dde0e6;
 }
 .group-list {
-  max-height: calc(100% - 130px);
+  max-height: calc(100% - 70px);
   height: auto;
   overflow-y: auto;
   &::-webkit-scrollbar-thumb {
@@ -375,8 +381,15 @@ export default {
     color: #fff;
   }
   .group-icon {
-    filter: invert(100%) sepia(0%) saturate(1%) hue-rotate(151deg) brightness(104%) contrast(101%);
+    color: #A3C5FD;
   }
+}
+.num-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-right: 10px;
 }
 .user-num,
 .group-num {
@@ -416,9 +429,9 @@ export default {
   color: #3A84FF !important;
 }
 .group-icon {
-  height: 12px;
-  width: 12px;
-  filter: invert(89%) sepia(8%) saturate(136%) hue-rotate(187deg) brightness(91%) contrast(86%);
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: #C4C6CC;
 }
 .line-split {
   width: 80%;
@@ -442,9 +455,6 @@ export default {
 .close-btn {
   margin-bottom: 20px;
   text-align: center;
-}
-.small-size {
-  scale: 0.9;
 }
 
 .close-manage-dialog {

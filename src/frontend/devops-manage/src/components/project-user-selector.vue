@@ -6,6 +6,7 @@
     :search-key="['id', 'name']"
     save-key="id"
     display-key="displayName"
+    is-async-list
     :list="userList"
     @input="handleInputUserName"
     @change="handleChange"

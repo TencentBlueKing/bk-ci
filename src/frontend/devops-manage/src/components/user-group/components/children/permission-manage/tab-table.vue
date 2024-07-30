@@ -1,7 +1,7 @@
 <template>
   <bk-loading :loading="loading" :zIndex="100">
     <bk-table
-      class="table"
+      class="resource-table"
       ref="refTable"
       :max-height="!isShowOperation && '464'"
       :data="tableList"
@@ -30,7 +30,17 @@
         </div>
       </template>
       <bk-table-column type="selection" :min-width="50" width="50" align="center" v-if="isShowOperation" />
-      <bk-table-column  v-if="resourceType !== 'project'" :label="groupName" prop="resourceName" />
+      <bk-table-column  v-if="resourceType !== 'project'" :label="groupName" prop="resourceName">
+        <template #default="{ row }">
+          <span
+            :class="{
+              'resource-name': true,
+              'hover-link': ['codecc_task', 'pipeline', 'pipeline_group'].includes(row.resourceType)
+            }" 
+            @click="handleToResourcePage(row)"
+          >{{ row.resourceName }}</span>
+        </template>
+      </bk-table-column>
       <bk-table-column :label="t('用户组')" prop="groupName">
         <template #default="{row}">
           {{ row.groupName }}
@@ -38,7 +48,7 @@
             {{ row.unableMessage }}
             <span
               v-if="row.removeMemberButtonControl === 'TEMPLATE' && (['codecc_task','pipeline','pipeline_group'].includes(row.resourceType))"
-              @click="toResource(row)"
+              @click="handleToResourcePage(row)"
               class="text-blue"
             >
               [{{ row.groupName }}]
@@ -145,19 +155,19 @@ const emit = defineEmits([
   'pageLimitChange',
   'pageValueChange',
 ])
-const { t } = useI18n();
 const route = useRoute();
+const { t } = useI18n();
 const refTable = ref(null);
 const isCurrentAll = ref(false);
 const resourceType = computed(() => props.resourceType);
 const groupTotal = computed(() => props.groupTotal);
 const remainingCount = computed(()=> props.groupTotal - props.data.length);
-const projectId = computed(() => route.params?.projectCode);
 const TOOLTIPS_CONTENT = {
   UNIQUE_MANAGER: t('唯一管理员，不可移出。请添加新的管理员后再移出'),
   UNIQUE_OWNER: t('唯一拥有者，不可移出。请添加新的拥有者后再移出'),
   TEMPLATE: t('通过用户组加入，不可直接移出。如需调整，请编辑用户组')
 }
+const projectId = computed(() => route.params?.projectCode);
 const tableList = computed(() => props.data.map(item => ({
     ...item,
     unableMessage: getUnableMessage(item),
@@ -269,42 +279,64 @@ function pageLimitChange(limit) {
 function pageValueChange(value) {
   emit('pageValueChange',value, resourceType.value);
 }
-function toResource(row){
- if(!['codecc_task','pipeline','pipeline_group'].includes(row.resourceType)) return;
- switch (row.resourceType) {
-  case 'pipeline':
-    window.open(`${location.origin}/console/pipeline/${projectId.value}/${row.resourceCode}/history/permission`);
-    break;
-  case 'pipeline_group':
-    window.open(`${location.origin}/console/pipeline/${projectId.value}/list/listAuth/${row.resourceCode}/${row.resourceName}`);
-    break;
-  case 'codecc_task':
-    window.open(`${location.origin}/console/codecc/${projectId.value}/task/${row.resourceCode}/settings/authority`);
-    break;
- }
+
+function handleToResourcePage (row) {
+  if (!(['codecc_task', 'pipeline', 'pipeline_group'].includes(row.resourceType))) return
+  switch (row.resourceType) {
+    case 'pipeline':
+      window.open(`${location.origin}/console/pipeline/${projectId.value}/${row.resourceCode}/history/permission`)
+      return
+    case 'pipeline_group':
+      window.open(`${location.origin}/console/pipeline/${projectId.value}/list/listAuth/${row.resourceCode}/${row.resourceName}`)
+      return
+    case 'codecc_task':
+      window.open(`${location.origin}/console/codecc/${projectId.value}/task/${row.resourceCode}/settings/authority`)
+      return
+  }
 }
 </script>
 
 <style lang="less" scoped>
-.table{
+.resource-table{
   margin-top: 4px;
   border: 1px solid #DCDEE5;
-}
-.prepend {
-  width: 100%;
-  height: 42px;
-  line-height: 42px;
-  background: #F0F1F5;
-  text-align: center;
-  box-shadow: 0 -1px 0 0 #DCDEE5;
-
-  span {
+  .prepend {
+    width: 100%;
+    height: 42px;
+    line-height: 42px;
+    background: #F0F1F5;
+    text-align: center;
+    box-shadow: 0 -1px 0 0 #DCDEE5;
+  
+    span {
+      font-family: MicrosoftYaHei;
+      font-size: 12px;
+      color: #3A84FF;
+      letter-spacing: 0;
+      line-height: 20px;
+      cursor: pointer;
+    }
+  }
+  .appendLastRow{
+    background-color: #fff;
+  }
+  .overlay{
+    position: absolute;
+    left: 0;
+    transform: translateY(-42px);
+    width: 100%;
+    height: 42px;
+    background: rgba(255, 232, 195, .7);
     font-family: MicrosoftYaHei;
     font-size: 12px;
-    color: #3A84FF;
-    letter-spacing: 0;
-    line-height: 20px;
+    color: #63656E;
+    text-align: center;
+  }
+  .hover-link {
     cursor: pointer;
+    &:hover {
+      color: #3a84ff;
+    }
   }
 }
 .appendLastRow{
