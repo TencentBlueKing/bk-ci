@@ -16,6 +16,7 @@
 
         @Action getAnnouncement
         @Action setAnnouncement
+        @Action getPlatformPreData
 
         @Watch('fetchError')
         handleFetchError (e) {
@@ -33,6 +34,7 @@
             if (announce && announce.id) {
                 this.setAnnouncement(announce)
             }
+            this.getPlatformPreData()
         }
     }
 </script>
