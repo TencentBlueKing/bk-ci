@@ -149,6 +149,7 @@ object JsonUtil {
             *  https://github.com/FasterXML/jackson-databind/issues/3900
             * */
             .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
             .disable(MapperFeature.SORT_CREATOR_PROPERTIES_FIRST).build().apply {
                 objectMapperInit()
             }
