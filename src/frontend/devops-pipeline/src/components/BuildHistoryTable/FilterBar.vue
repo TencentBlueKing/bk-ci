@@ -165,8 +165,11 @@
                 const { $route, historyPageStatus } = this
                 const pathQuery = $route.query
                 const queryArr = Object.keys(pathQuery)
-    
+
                 if (queryArr.length) {
+                    const page = pathQuery?.page ? parseInt(pathQuery?.page, 10) : 1
+                    const pageSize = pathQuery?.pageSize ? parseInt(pathQuery?.pageSize, 10) : 20
+
                     const hasTimeRange = queryArr.includes('startTimeStartTime') && queryArr.includes('endTimeEndTime')
                     const newSearchKey = queryArr.map(key => {
                         const newItem = this.filterData.find(item => item.id === key)
@@ -179,8 +182,10 @@
                             : [{ id: pathQuery[key], name: pathQuery[key] }]
                         return newItem
                     }).filter(item => !!item)
-                    
+
                     this.setHistoryPageStatus({
+                        page,
+                        pageSize,
                         dateTimeRange: hasTimeRange
                             ? [
                                 coverStrTimer(parseInt(pathQuery.startTimeStartTime)),
@@ -199,6 +204,7 @@
                         searchKey: newSearchKey
                     })
                 }
+                this.startQuery()
             },
             formatTime (date) {
                 try {

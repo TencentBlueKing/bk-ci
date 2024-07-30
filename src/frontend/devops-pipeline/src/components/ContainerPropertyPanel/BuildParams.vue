@@ -1,45 +1,67 @@
 <template>
     <div class="build-params-comp">
         <template>
-            <accordion show-checkbox :show-content="hasGlobalParams">
+            <accordion
+                show-checkbox
+                :show-content="hasGlobalParams"
+            >
                 <template slot="header">
                     <span>
                         {{ title }}
                         <bk-popover placement="right">
-                            <i style="display: block" class="devops-icon icon-info-circle"></i>
-                            <div slot="content" style="white-space: pre-wrap">
-                                <div>{{ $t("editPage.paramsTips") }}</div>
+                            <i
+                                style="display:block;"
+                                class="bk-icon icon-info-circle"
+                            ></i>
+                            <div
+                                slot="content"
+                                style="white-space: pre-wrap;"
+                            >
+                                <div> {{ $t('editPage.paramsTips') }} </div>
                             </div>
                         </bk-popover>
                     </span>
                 </template>
                 <template slot="content">
-                    <div class="no-prop" v-if="!hasGlobalParams">
+                    <div
+                        class="no-prop"
+                        v-if="!hasGlobalParams"
+                    >
                         <bk-button
                             theme="primary"
                             :disabled="disabled"
                             @click="editParam(null, true)"
-                        >{{ $t("editPage.addParams") }}</bk-button
                         >
+                            {{ $t('editPage.addParams') }}
+                        </bk-button>
                     </div>
                     <template v-else>
-                        <draggable v-model="globalParams" :options="paramsDragOptions">
+                        <draggable
+                            v-model="globalParams"
+                            :options="paramsDragOptions"
+                        >
                             <accordion
-                                condition
                                 v-for="(param, index) in globalParams"
+                                condition
                                 :key="param.paramIdKey"
                                 :is-error="errors.any(`param-${param.id}`)"
                             >
-                                <header class="param-header" slot="header">
+                                <header
+                                    class="param-header"
+                                    slot="header"
+                                >
                                     <span>
                                         <bk-popover
                                             style="vertical-align: middle"
                                             v-if="errors.all(`param-${param.id}`).length"
                                             placement="top"
                                         >
-                                            <i class="devops-icon icon-info-circle-shape"></i>
+                                            <i class="bk-icon icon-info-circle-shape"></i>
                                             <div slot="content">
-                                                <p v-for="error in errors.all(`param-${param.id}`)" :key="error">
+                                                <p
+                                                    v-for="error in errors.all(`param-${param.id}`)"
+                                                    :key="error"
+                                                >
                                                     {{ error }}
                                                 </p>
                                             </div>
@@ -52,7 +74,10 @@
                                         class="devops-icon"
                                         :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]"
                                     />
-                                    <i v-if="!disabled" class="devops-icon icon-move" />
+                                    <i
+                                        v-if="!disabled"
+                                        class="devops-icon icon-move"
+                                    />
                                     <i
                                         v-if="!disabled"
                                         @click.stop.prevent="editParam(index, false)"
@@ -88,9 +113,7 @@
                                                 :text="$t('editPage.showOnStarting')"
                                                 :value="param.required"
                                                 name="required"
-                                                :handle-change="
-                                                    (name, value) => handleUpdateParam(name, value, index)
-                                                "
+                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                             />
                                         </bk-form-item>
                                     </div>
@@ -106,12 +129,8 @@
                                                 :ref="`paramId${index}Input`"
                                                 :data-vv-scope="`param-${param.id}`"
                                                 :disabled="disabled"
-                                                :handle-change="
-                                                    (name, value) => handleUpdateParamId(name, value, index)
-                                                "
-                                                v-validate.initial="
-                                                    `required|unique:${validateParams.map((p) => p.id).join(',')}`
-                                                "
+                                                :handle-change="(name, value) => handleUpdateParamId(name, value, index)"
+                                                v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(',')}`"
                                                 name="id"
                                                 :placeholder="$t('nameInputTips')"
                                                 :value="param.id"
@@ -150,24 +169,14 @@
                                                 :list="boolList"
                                                 :disabled="disabled"
                                                 :data-vv-scope="`param-${param.id}`"
-                                                :handle-change="
-                                                    (name, value) => handleUpdateParam(name, value, index)
-                                                "
+                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 :value="param.defaultValue"
                                             >
                                             </enum-input>
                                             <vuex-input
-                                                v-if="
-                                                    isStringParam(param.type) ||
-                                                        isSvnParam(param.type) ||
-                                                        isGitParam(param.type) ||
-                                                        isArtifactoryParam(param.type) ||
-                                                        isFileParam(param.type)
-                                                "
+                                                v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type)"
                                                 :disabled="disabled"
-                                                :handle-change="
-                                                    (name, value) => handleUpdateParam(name, value, index)
-                                                "
+                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 name="defaultValue"
                                                 :click-unfold="true"
                                                 :data-vv-scope="`param-${param.id}`"
@@ -179,9 +188,7 @@
                                                 :click-unfold="true"
                                                 :hover-unfold="true"
                                                 :disabled="disabled"
-                                                :handle-change="
-                                                    (name, value) => handleUpdateParam(name, value, index)
-                                                "
+                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 name="defaultValue"
                                                 :data-vv-scope="`param-${param.id}`"
                                                 :placeholder="$t('editPage.defaultValueTips')"
@@ -196,9 +203,7 @@
                                                 :disabled="disabled"
                                                 name="defaultValue"
                                                 :value="param.defaultValue"
-                                                :handle-change="
-                                                    (name, value) => handleUpdateParam(name, value, index)
-                                                "
+                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 :data-vv-scope="`param-${param.id}`"
                                             ></request-selector>
                                             <request-selector
@@ -210,9 +215,7 @@
                                                 :disabled="disabled"
                                                 name="defaultValue"
                                                 :value="param.defaultValue"
-                                                :handle-change="
-                                                    (name, value) => handleUpdateParam(name, value, index)
-                                                "
+                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 :data-vv-scope="`param-${param.id}`"
                                                 :replace-key="param.replaceKey"
                                                 :search-url="param.searchUrl"
@@ -225,9 +228,7 @@
                                                 :disabled="disabled"
                                                 name="defaultValue"
                                                 :value="param.defaultValue"
-                                                :handle-change="
-                                                    (name, value) => handleUpdateParam(name, value, index)
-                                                "
+                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 :data-vv-scope="`param-${param.id}`"
                                                 :replace-key="param.replaceKey"
                                                 :search-url="param.searchUrl"
@@ -266,9 +267,7 @@
                                             :disabled="disabled"
                                             name="repoHashId"
                                             :value="param.repoHashId"
-                                            :handle-change="
-                                                (name, value) => handleUpdateParam(name, value, index)
-                                            "
+                                            :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                             :data-vv-scope="`param-${param.id}`"
                                             v-validate.initial="'required'"
                                             :replace-key="param.replaceKey"
@@ -285,9 +284,7 @@
                                     >
                                         <vuex-input
                                             :disabled="disabled"
-                                            :handle-change="
-                                                (name, value) => handleUpdateParam(name, value, index)
-                                            "
+                                            :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                             name="relativePath"
                                             :data-vv-scope="`param-${param.id}`"
                                             :placeholder="$t('editPage.relativePathTips')"
@@ -307,9 +304,7 @@
                                             :disabled="disabled"
                                             name="repoHashId"
                                             :value="param.repoHashId"
-                                            :handle-change="
-                                                (name, value) => handleUpdateParam(name, value, index)
-                                            "
+                                            :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                             :data-vv-scope="`param-${param.id}`"
                                             v-validate.initial="'required'"
                                             replace-key="{keyword}"
@@ -327,9 +322,7 @@
                                         <selector
                                             :disabled="disabled"
                                             :list="codeTypeList"
-                                            :handle-change="
-                                                (name, value) => handleCodeTypeChange(name, value, index)
-                                            "
+                                            :handle-change="(name, value) => handleCodeTypeChange(name, value, index)"
                                             name="scmType"
                                             :data-vv-scope="`param-${param.id}`"
                                             placeholder=""
@@ -348,10 +341,7 @@
                                                 :popover-min-width="510"
                                                 :disabled="disabled"
                                                 :list="baseOSList"
-                                                :handle-change="
-                                                    (name, value) =>
-                                                        handleBuildResourceChange(name, value, index, param)
-                                                "
+                                                :handle-change="(name, value) => handleBuildResourceChange(name, value, index, param)"
                                                 name="os"
                                                 :data-vv-scope="`param-${param.id}`"
                                                 placeholder=""
@@ -370,10 +360,7 @@
                                                 :disabled="disabled"
                                                 :list="getBuildTypeList(param.containerType.os)"
                                                 setting-key="type"
-                                                :handle-change="
-                                                    (name, value) =>
-                                                        handleBuildResourceChange(name, value, index, param)
-                                                "
+                                                :handle-change="(name, value) => handleBuildResourceChange(name, value, index, param)"
                                                 name="buildType"
                                                 :data-vv-scope="`param-${param.id}`"
                                                 placeholder=""
@@ -391,9 +378,7 @@
                                     >
                                         <vuex-input
                                             :disabled="disabled"
-                                            :handle-change="
-                                                (name, value) => handleUpdateParam(name, value, index)
-                                            "
+                                            :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                             name="glob"
                                             :data-vv-scope="`param-${param.id}`"
                                             :placeholder="$t('editPage.filterRuleTips')"
@@ -428,9 +413,7 @@
                                     <bk-form-item label-width="auto" :label="$t('desc')">
                                         <vuex-input
                                             :disabled="disabled"
-                                            :handle-change="
-                                                (name, value) => handleUpdateParam(name, value, index)
-                                            "
+                                            :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                             name="desc"
                                             :placeholder="$t('editPage.descTips')"
                                             :value="param.desc"
@@ -455,48 +438,48 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import { deepCopy } from '@/utils/util'
     import Accordion from '@/components/atomFormField/Accordion'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+    import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import RequestSelector from '@/components/atomFormField/RequestSelector'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import Selector from '@/components/atomFormField/Selector'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
-    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import FileParamInput from '@/components/FileParamInput'
-    import validMixins from '../validMixins'
-    import draggable from 'vuedraggable'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
     import {
-        STORE_API_URL_PREFIX,
+        PROCESS_API_URL_PREFIX,
         REPOSITORY_API_URL_PREFIX,
-        PROCESS_API_URL_PREFIX
+        STORE_API_URL_PREFIX
     } from '@/store/constants'
     import {
-        isTextareaParam,
-        isStringParam,
-        isBooleanParam,
-        isBuildResourceParam,
-        isEnumParam,
-        isMultipleParam,
-        isCodelibParam,
-        isSvnParam,
-        isGitParam,
-        isArtifactoryParam,
-        isSubPipelineParam,
-        isFileParam,
-        getRepoOption,
-        getParamsDefaultValueLabel,
-        getParamsDefaultValueLabelTips,
-        DEFAULT_PARAM,
-        PARAM_LIST,
-        STRING,
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
+        DEFAULT_PARAM,
+        getParamsDefaultValueLabel,
+        getParamsDefaultValueLabelTips,
+        getRepoOption,
+        isArtifactoryParam,
+        isBooleanParam,
+        isBuildResourceParam,
+        isCodelibParam,
+        isEnumParam,
+        isFileParam,
+        isGitParam,
+        isMultipleParam,
+        isStringParam,
+        isSubPipelineParam,
+        isSvnParam,
+        isTextareaParam,
+        PARAM_LIST,
+        STRING,
         SUB_PIPELINE_OPTION
     } from '@/store/modules/atom/paramsConfig'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { deepCopy } from '@/utils/util'
+    import draggable from 'vuedraggable'
+    import { mapGetters } from 'vuex'
+    import validMixins from '../validMixins'
 
     const BOOLEAN = [
         {
