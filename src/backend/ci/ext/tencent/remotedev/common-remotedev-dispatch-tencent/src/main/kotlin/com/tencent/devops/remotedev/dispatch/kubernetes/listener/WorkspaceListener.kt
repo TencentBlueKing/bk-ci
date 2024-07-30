@@ -55,9 +55,8 @@ class WorkspaceListener @Autowired constructor(
             traceId = event.traceId,
             userId = event.userId,
             workspaceName = event.workspaceName,
-            mountType = event.mountType ?: event.devFile.checkWorkspaceMountType(),
+            mountType = event.mountType,
             type = UpdateEventType.CREATE,
-            bkTicket = event.bkTicket,
             status = false
         )
         try {
@@ -104,7 +103,6 @@ class WorkspaceListener @Autowired constructor(
             workspaceName = event.workspaceName,
             mountType = event.mountType,
             type = event.type,
-            bkTicket = event.bkTicket,
             status = false,
             environmentUid = "",
             workspaceImageInfo = WorkspaceImageInfo(imageId = event.imageId ?: "")

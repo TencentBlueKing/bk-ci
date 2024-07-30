@@ -181,8 +181,6 @@ class StartControl @Autowired constructor(
                             traceId = bizId,
                             type = UpdateEventType.START,
                             workspaceName = workspace.workspaceName,
-                            settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
-                            bkTicket = bkTicket,
                             mountType = workspace.workspaceMountType,
                             gameId = gameId.first
                         )

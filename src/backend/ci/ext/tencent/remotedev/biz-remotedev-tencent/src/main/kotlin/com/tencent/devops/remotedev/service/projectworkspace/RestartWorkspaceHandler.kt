@@ -168,8 +168,6 @@ class RestartWorkspaceHandler @Autowired constructor(
                     traceId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz(),
                     type = UpdateEventType.RESTART,
                     workspaceName = workspaceName,
-                    settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
-                    bkTicket = "",
                     mountType = WorkspaceMountType.START,
                     gameId = gameId.first
                 )

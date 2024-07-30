@@ -412,7 +412,6 @@ class CreateControl @Autowired constructor(
                 userId = creator,
                 traceId = bizId,
                 workspaceName = ws.workspaceName,
-                devFilePath = null,
                 devFile = Devfile(
                     zoneId = zoneId,
                     machineType = windowsConfig.size,
@@ -420,7 +419,6 @@ class CreateControl @Autowired constructor(
                     imageCosFile = workspaceCreate.imageCosFile,
                     quotaType = QuotaType.parse(ws.ownerType)
                 ),
-                settingEnvs = emptyMap(),
                 projectId = projectId,
                 mountType = mountType,
                 ownerType = ws.ownerType,
@@ -739,12 +737,10 @@ class CreateControl @Autowired constructor(
                 userId = userId,
                 traceId = bizId,
                 workspaceName = ws.workspaceName,
-                devFilePath = null,
                 devFile = Devfile(
                     uid = uid,
                     environmentUid = envId
                 ),
-                settingEnvs = emptyMap(),
                 projectId = projectId,
                 mountType = mountType,
                 ownerType = ws.ownerType,

@@ -167,8 +167,6 @@ class StartWorkspaceHandler @Autowired constructor(
                     traceId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz(),
                     type = UpdateEventType.START,
                     workspaceName = workspaceName,
-                    settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
-                    bkTicket = "",
                     mountType = WorkspaceMountType.START,
                     gameId = gameId.first
                 )
