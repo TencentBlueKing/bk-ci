@@ -121,6 +121,7 @@ class ResourceService @Autowired constructor(
         return true
     }
 
+    @Suppress("MaxLineLength")
     private fun buildResult(method: CallbackMethodEnum, response: String): CallbackBaseResponseDTO1 {
         return when (method) {
             CallbackMethodEnum.SEARCH_INSTANCE -> objectMapper.readValue<SearchInstanceInfo>(response)
