@@ -1346,6 +1346,16 @@ class RepositoryService @Autowired constructor(
         }
     }
 
+    fun updateStoreRepoProject(userId: String, projectId: String, repositoryId: Long): Result<Boolean> {
+        repositoryDao.updateStoreRepoProject(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            repositoryId = repositoryId
+        )
+        return Result(true)
+    }
+
     fun getGitProjectIdByRepositoryHashId(userId: String, repositoryHashIdList: List<String>): List<String> {
         return repositoryDao.getGitProjectIdByRepositoryHashId(dslContext, repositoryHashIdList)
     }

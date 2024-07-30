@@ -34,11 +34,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.service.PROFILE_AUTO
 import com.tencent.devops.common.service.PROFILE_DEFAULT
 import com.tencent.devops.common.service.PROFILE_DEVELOPMENT
 import com.tencent.devops.common.service.PROFILE_PRODUCTION
-import com.tencent.devops.common.service.PROFILE_STREAM
 import com.tencent.devops.common.service.PROFILE_TEST
 import com.tencent.devops.common.service.Profile
 import org.apache.commons.lang3.StringUtils
@@ -235,17 +233,7 @@ object CommonUtils {
                 PROFILE_TEST
             }
             profile.isProd() -> {
-                when {
-                    profile.isAuto() -> {
-                        PROFILE_AUTO
-                    }
-                    profile.isStream() -> {
-                        PROFILE_STREAM
-                    }
-                    else -> {
-                        PROFILE_PRODUCTION
-                    }
-                }
+                getProdDbClusterName(profile)
             }
             profile.isLocal() -> {
                 PROFILE_DEFAULT
@@ -254,6 +242,36 @@ object CommonUtils {
                 PROFILE_PRODUCTION
             }
         }
+    }
+
+    private fun getProdDbClusterName(profile: Profile): String {
+        // 从配置文件获取db集群名称列表
+        val dbClusterNames = (SpringContextUtil.getValue("bk.db.clusterNames") ?: PROFILE_PRODUCTION).split(",")
+        val activeProfiles = profile.getActiveProfiles()
+        var finalDbClusterName = PROFILE_PRODUCTION
+        run breaking@{
+            // 获取当前服务器集群对应的db集群名称
+            activeProfiles.forEach { activeProfile ->
+                val dbClusterName = getDbClusterNameByProfile(dbClusterNames, activeProfile)
+                dbClusterName?.let {
+                    finalDbClusterName = dbClusterName
+                    return@breaking
+                }
+            }
+        }
+        return finalDbClusterName
+    }
+
+    private fun getDbClusterNameByProfile(
+        dbClusterNames: List<String>,
+        activeProfile: String
+    ): String? {
+        dbClusterNames.forEach { dbClusterName ->
+            if (activeProfile.contains(dbClusterName)) {
+                return dbClusterName
+            }
+        }
+        return null
     }
 
     /**

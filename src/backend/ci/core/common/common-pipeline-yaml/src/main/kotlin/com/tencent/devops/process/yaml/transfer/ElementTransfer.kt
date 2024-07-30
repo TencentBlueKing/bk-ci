@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.transfer
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
@@ -151,6 +152,19 @@ class ElementTransfer @Autowired(required = false) constructor(
                             else -> return@m ""
                         }
                     }
+                // ui->code,repositoryType为null时,repoType才需要在code模式下展示
+                val (repoType, repoHashId, repoName) = when {
+                    element.repositoryType == TriggerRepositoryType.ID && !element.repoHashId.isNullOrBlank() ->
+                        Triple(null, element.repoHashId, null)
+
+                    element.repositoryType == TriggerRepositoryType.NAME && !element.repoName.isNullOrBlank() ->
+                        Triple(null, null, element.repoName)
+
+                    element.repositoryType == TriggerRepositoryType.SELF ->
+                        Triple(null, null, null)
+
+                    else -> Triple(TriggerRepositoryType.NONE.name, null, null)
+                }
                 schedules.add(
                     SchedulesRule(
                         name = element.name,
@@ -160,8 +174,9 @@ class ElementTransfer @Autowired(required = false) constructor(
                         } else {
                             element.advanceExpression
                         },
-                        repoId = element.repoHashId,
-                        repoName = element.repoName,
+                        repoType = repoType,
+                        repoId = repoHashId,
+                        repoName = repoName,
                         branches = element.branches,
                         always = (element.noScm != true).nullIfDefault(false),
                         enable = element.isElementEnable().nullIfDefault(true)
@@ -207,7 +222,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = gitElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "Git事件触发"
+                defaultName = "Git"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_GIT })
         }
@@ -221,7 +236,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = tGitElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "TGit事件触发"
+                defaultName = "TGit"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_TGIT })
         }
@@ -235,7 +250,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = githubElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "GitHub事件触发"
+                defaultName = "GitHub"
             )
             res.putAll(gitTrigger.groupBy { ScmType.GITHUB })
         }
@@ -249,7 +264,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = svnElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "SVN事件触发"
+                defaultName = "SVN"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_SVN })
         }
@@ -263,7 +278,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = p4Element,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "P4事件触发"
+                defaultName = "P4"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_P4 })
         }
@@ -277,7 +292,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = gitlabElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "Gitlab变更触发"
+                defaultName = "Gitlab"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_GITLAB })
         }
@@ -338,7 +353,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             manualSkip = continueOnError == Step.ContinueOnErrorType.MANUAL_SKIP,
             timeout = step.timeoutMinutes?.toLongOrNull() ?: VariableDefault.DEFAULT_TASK_TIME_OUT,
             timeoutVar = step.timeoutMinutes ?: VariableDefault.DEFAULT_TASK_TIME_OUT.toString(),
-            retryWhenFailed = step.retryTimes != null,
+            retryWhenFailed = step.retryTimes != null && step.retryTimes > 0,
             retryCount = step.retryTimes ?: VariableDefault.DEFAULT_RETRY_COUNT,
             runCondition = runCondition,
             customCondition = if (runCondition == RunCondition.CUSTOM_CONDITION_MATCH) step.ifFiled else null,

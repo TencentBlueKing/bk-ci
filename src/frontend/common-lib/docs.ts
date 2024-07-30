@@ -1,5 +1,5 @@
 // const commonPrefix = `${DOCS_URL_PREFIX}/docs/markdown/持续集成平台/产品白皮书`
-const commonPrefix = `${DOCS_URL_PREFIX}/markdown/Devops/UserGuide`
+const commonPrefix = `${DOCS_URL_PREFIX}/docs/markdown/Devops/UserGuide`
 export const BkciDocs = {
     BKCI_DOC: `${commonPrefix}/intro/README.md`, // 首页跳转文档
     GATE_DOC: `${commonPrefix}/Services/Quailty-gate/quailty-gate.md`, // 质量红线文档
@@ -12,7 +12,7 @@ export const BkciDocs = {
     TEMPLATE_GUIDE_DOC: `${commonPrefix}/Services/Store/ci-templates/start-new-template.md`, // 模板指引文档
     TURBO_GUIDE_DOC: `${commonPrefix}/Services/Turbo/linux-tubo-speed/use_in_linux.md`, // turbo指引文档
     BKAPP_NAV_OPEN_SOURCE_URL: 'https://github.com/TencentBlueKing/bk-ci', // 开源社区
-    FEED_BACK_URL: 'https://bk.tencent.com/s-mart/community/question' // 问题反馈
+    FEED_BACK_URL: `${DOCS_URL_PREFIX}/s-mart/community/question` // 问题反馈
 }
 export const pipelineDocs = {
     ALIAS_BUILD_NO_DOC: `${commonPrefix}/Services/Pipeline/pipeline-edit-guide/alias-buildno.md`, // 构建号别名文档

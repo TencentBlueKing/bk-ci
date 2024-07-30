@@ -298,6 +298,7 @@ class PipelineContainerService @Autowired constructor(
     ): PipelineBuildContainer {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
         var taskSeq = 0
+        var needStartVM = false // 是否需要启动构建
         val parentElements = container.elements
 
         parentElements.forEach nextElement@{ atomElement ->
@@ -359,23 +360,30 @@ class PipelineContainerService @Autowired constructor(
                     )
                 }
             }
+            // 确认是否要启动构建机/无编译环境
+            if (!needStartVM && startVMTaskSeq > 0) {
+                needStartVM = true
+            }
         }
         container.startVMTaskSeq = startVMTaskSeq
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
-        supplyVMTask(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            userId = context.userId,
-            stage = stage,
-            container = container,
-            containerSeq = context.containerSeq,
-            startVMTaskSeq = startVMTaskSeq,
-            lastTimeBuildTasks = listOf(),
-            updateExistsTask = mutableListOf(),
-            buildTaskList = buildTaskList,
-            executeCount = context.executeCount
-        )
+        // 判断是否为无编译环境的写法保持和 prepareBuildContainerTasks() 一致
+        if (needStartVM) {
+            supplyVMTask(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = context.userId,
+                stage = stage,
+                container = container,
+                containerSeq = context.containerSeq,
+                startVMTaskSeq = startVMTaskSeq,
+                lastTimeBuildTasks = listOf(),
+                updateExistsTask = mutableListOf(),
+                buildTaskList = buildTaskList,
+                executeCount = context.executeCount
+            )
+        }
 
         return PipelineBuildContainer(
             projectId = projectId,
@@ -384,6 +392,7 @@ class PipelineContainerService @Autowired constructor(
             stageId = stage.id!!,
             containerId = container.id!!,
             containerHashId = container.containerHashId ?: "",
+            jobId = container.jobId,
             containerType = container.getClassType(),
             seq = context.containerSeq,
             status = BuildStatus.QUEUE,
@@ -418,7 +427,7 @@ class PipelineContainerService @Autowired constructor(
         var needUpdateContainer = false
         var taskSeq = 0
         val containerElements = container.elements
-        val retryFlag = lastTimeBuildTasks.isEmpty()
+        val newBuildFlag = lastTimeBuildTasks.isEmpty()
 
         containerElements.forEach nextElement@{ atomElement ->
             modelCheckPlugin.checkElementTimeoutVar(container, atomElement, contextMap = context.variables)
@@ -440,7 +449,7 @@ class PipelineContainerService @Autowired constructor(
             if (status.isFinish()) {
                 logger.info("[${context.buildId}|${atomElement.id}] status=$status")
                 atomElement.status = status.name
-                if (retryFlag && ElementUtils.getTaskAddFlag(
+                if (newBuildFlag && ElementUtils.getTaskAddFlag(
                         element = atomElement,
                         stageEnableFlag = stage.isStageEnable(),
                         containerEnableFlag = container.isContainerEnable(),
@@ -465,7 +474,7 @@ class PipelineContainerService @Autowired constructor(
             }
 
             // 全新构建，其中构建矩阵不需要添加待执行插件
-            if (retryFlag) {
+            if (newBuildFlag) {
                 if (container.matrixGroupFlag != true) {
                     context.taskCount++
                     val buildTask = genBuildTaskToList(
@@ -561,8 +570,8 @@ class PipelineContainerService @Autowired constructor(
         }
         container.startVMTaskSeq = startVMTaskSeq
 
-        // 构建矩阵没有对应的重试插件，单独增加重试记录
-        if (context.needRerunStage(stage = stage) && container.matrixGroupFlag == true) {
+        // 构建矩阵永远跟随stage重试，在需要重试的stage中，单独增加重试记录
+        if (container.matrixGroupFlag == true && !context.needSkipContainerWhenFailRetry(stage, container)) {
             container.retryFreshMatrixOption()
             cleanContainersInMatrixGroup(
                 transactionContext = dslContext,
@@ -595,9 +604,9 @@ class PipelineContainerService @Autowired constructor(
             )
         }
         logger.info(
-            "prepareBuildContainerTasks|buildId=${context.buildId}|matrixGroupFlag=${container.matrixGroupFlag}|" +
-                "needUpdateContainer=$needUpdateContainer|needStartVM=$needStartVM|" +
-                "startVMTaskSeq=${container.startVMTaskSeq}"
+            "prepareBuildContainerTasks|buildId=${context.buildId}|containerId=${container.id}|" +
+                "matrixGroupFlag=${container.matrixGroupFlag}|needUpdateContainer=$needUpdateContainer|" +
+                "needStartVM=$needStartVM|startVMTaskSeq=$startVMTaskSeq|"
         )
         if (needUpdateContainer) {
             container.resetBuildOption(context.executeCount)
@@ -654,6 +663,7 @@ class PipelineContainerService @Autowired constructor(
                             stageId = stage.id!!,
                             containerId = container.id!!,
                             containerHashId = container.containerHashId ?: "",
+                            jobId = container.jobId,
                             containerType = container.getClassType(),
                             seq = context.containerSeq,
                             status = BuildStatus.QUEUE,
@@ -931,7 +941,8 @@ class PipelineContainerService @Autowired constructor(
         subProjectId = null,
         subBuildId = null,
         atomCode = atomElement.getAtomCode(),
-        stepId = atomElement.stepId
+        stepId = atomElement.stepId,
+        jobId = container.jobId
     )
 
     fun setUpTriggerContainer(

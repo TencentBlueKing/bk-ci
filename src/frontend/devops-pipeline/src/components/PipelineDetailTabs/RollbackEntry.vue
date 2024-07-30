@@ -153,7 +153,11 @@
                     })
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         version,
-                        versionName
+                        versionName,
+                        baseVersion: this.version,
+                        baseVersionName: this.versionName,
+                        canDebug: true,
+                        canRelease: true
                     })
 
                     if (version) {

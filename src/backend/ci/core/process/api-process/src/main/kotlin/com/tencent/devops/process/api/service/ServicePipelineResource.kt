@@ -31,11 +31,13 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -46,15 +48,13 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
+import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.process.pojo.PipelineRemoteToken
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
@@ -295,7 +295,7 @@ interface ServicePipelineResource {
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，不指定则为空", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<PipelineInfo?>
@@ -316,7 +316,11 @@ interface ServicePipelineResource {
         pipelineId: String,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @Parameter(description = "是否检查权限", required = false)
+        @QueryParam("checkFlag")
+        @DefaultValue("true")
+        checkFlag: Boolean? = true
     ): Result<Boolean>
 
     @Operation(summary = "流水线编排列表")

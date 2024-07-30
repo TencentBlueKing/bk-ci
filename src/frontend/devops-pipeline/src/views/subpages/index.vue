@@ -54,7 +54,8 @@
                 'setPipelineYaml',
                 'selectPipelineVersion',
                 'setPipelineWithoutTrigger',
-                'requestPipelineSummary'
+                'requestPipelineSummary',
+                'resetAtomModalMap'
             ]),
             async fetchPipelineInfo () {
                 try {
@@ -66,9 +67,11 @@
                         resourceCode: this.$route.params.pipelineId,
                         action: RESOURCE_ACTION.VIEW
                     })
-                    this.$router.replace({
-                        name: 'PipelineManageList'
-                    })
+                    if (error?.code !== 403) {
+                        this.$router.replace({
+                            name: 'PipelineManageList'
+                        })
+                    }
                     return false
                 } finally {
                     this.isLoading = false

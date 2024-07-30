@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TStoreProjectRelRecord
+import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.time.LocalDateTime
@@ -265,7 +266,8 @@ class StoreProjectRelDao {
             storeProjectTypes?.let {
                 conditions.add(TYPE.`in`(storeProjectTypes))
             }
-            instanceId?.let {
+            // 测试中的应用对应的调试项目下无需判断测试版本的应用已安装
+            if (!instanceId.isNullOrBlank() && storeProjectTypes?.contains(StoreProjectTypeEnum.TEST.type.toByte()) != true) {
                 conditions.add(INSTANCE_ID.eq(instanceId))
             }
             val baseQuery = dslContext.select(STORE_CODE, VERSION)
@@ -416,6 +418,21 @@ class StoreProjectRelDao {
             .and(b.CREATOR.eq(userId))
             .and(a.STORE_TYPE.eq(storeType.type.toByte()))
         return finalStep.fetchOne(0, String::class.java)
+    }
+
+    /**
+     * 更新组件关联初始化项目信息
+     */
+    fun updateStoreInitProject(dslContext: DSLContext, userId: String, storeProjectInfo: StoreProjectInfo) {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            dslContext.update(this)
+                .set(PROJECT_CODE, storeProjectInfo.projectId)
+                .set(MODIFIER, userId)
+                .where(STORE_CODE.eq(storeProjectInfo.storeCode))
+                .and(STORE_TYPE.eq(storeProjectInfo.storeType.type.toByte()))
+                .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+                .execute()
+        }
     }
 
     /**
@@ -576,6 +593,21 @@ class StoreProjectRelDao {
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .and(INSTANCE_ID.eq(instanceId))
                 .execute()
+        }
+    }
+
+    fun getInitProjectInfoByStoreCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte
+    ): TStoreProjectRelRecord? {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode)
+                    .and(STORE_TYPE.eq(storeType))
+                    .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+                )
+                .fetchOne()
         }
     }
 }

@@ -9,13 +9,14 @@
     import { Component, Watch } from 'vue-property-decorator'
     import { Action, State } from 'vuex-class'
     
-    @Component
+    @Component()
     export default class App extends Vue {
         @State fetchError
         @State moduleLoading
 
         @Action getAnnouncement
         @Action setAnnouncement
+        @Action getPlatformPreData
 
         @Watch('fetchError')
         handleFetchError (e) {
@@ -33,6 +34,7 @@
             if (announce && announce.id) {
                 this.setAnnouncement(announce)
             }
+            this.getPlatformPreData()
         }
     }
 </script>

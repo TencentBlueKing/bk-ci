@@ -33,10 +33,8 @@ import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationCreateDTO
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationUpdateDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
@@ -51,6 +49,7 @@ import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -77,7 +76,6 @@ import org.springframework.beans.factory.annotation.Value
 @Suppress("LongParameterList", "TooManyFunctions")
 class PermissionGradeManagerService @Autowired constructor(
     private val client: Client,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
     private val iamV2ManagerService: V2ManagerService,
     private val iamConfiguration: IamConfiguration,
     private val authMonitorSpaceDao: AuthMonitorSpaceDao,
@@ -88,7 +86,8 @@ class PermissionGradeManagerService @Autowired constructor(
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     private val traceEventDispatcher: TraceEventDispatcher,
     private val itsmService: ItsmService,
-    private val authAuthorizationScopesService: AuthAuthorizationScopesService
+    private val authAuthorizationScopesService: AuthAuthorizationScopesService,
+    private val permissionResourceGroupService: PermissionResourceGroupService
 ) {
 
     companion object {
@@ -418,71 +417,11 @@ class PermissionGradeManagerService @Autowired constructor(
             groupType = GroupType.DEFAULT.value
         )
         defaultGroupConfigs.forEach { groupConfig ->
-            createProjectGroupByGroupCode(
-                projectCode = projectCode,
+            permissionResourceGroupService.createProjectGroupByGroupCode(
+                projectId = projectCode,
                 groupCode = groupConfig.groupCode
             )
         }
-    }
-
-    fun createProjectGroupByGroupCode(
-        projectCode: String,
-        groupCode: String
-    ) {
-        val projectInfo = authResourceService.get(
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode
-        )
-        val groupConfig = authResourceGroupConfigDao.getByGroupCode(
-            dslContext = dslContext,
-            resourceType = AuthResourceType.PROJECT.value,
-            groupCode = groupCode
-        ) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.DEFAULT_GROUP_CONFIG_NOT_FOUND,
-            defaultMessage = "group($groupCode) config not exist"
-        )
-        val resourceGroupInfo = authResourceGroupDao.get(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
-            groupCode = groupConfig.groupCode
-        )
-        if (resourceGroupInfo != null) {
-            return
-        }
-        val name = groupConfig.groupName
-        val description = groupConfig.description
-        val managerRoleGroup = ManagerRoleGroup(name, description, false)
-        val managerRoleGroupDTO = ManagerRoleGroupDTO.builder()
-            .groups(listOf(managerRoleGroup))
-            .createAttributes(false)
-            .syncSubjectTemplate(true)
-            .build()
-        val iamGroupId = iamV2ManagerService.batchCreateRoleGroupV2(projectInfo.relationId.toInt(), managerRoleGroupDTO)
-        authResourceGroupDao.create(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
-            resourceName = projectInfo.resourceName,
-            iamResourceCode = projectCode,
-            groupCode = groupConfig.groupCode,
-            groupName = name,
-            defaultGroup = false,
-            relationId = iamGroupId.toString()
-        )
-        permissionGroupPoliciesService.grantGroupPermission(
-            authorizationScopesStr = groupConfig.authorizationScopes,
-            projectCode = projectCode,
-            projectName = projectInfo.resourceName,
-            resourceType = groupConfig.resourceType,
-            groupCode = groupConfig.groupCode,
-            iamResourceCode = projectCode,
-            resourceName = projectInfo.resourceName,
-            iamGroupId = iamGroupId
-        )
     }
 
     fun modifyGradeDefaultGroup(

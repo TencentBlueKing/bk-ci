@@ -217,6 +217,7 @@
             <div class="job-matrix">
                 <job-matrix
                     v-if="!isTriggerContainer(container)"
+                    :enable-matrix="container.matrixGroupFlag"
                     :matrix-control-option="container.matrixControlOption"
                     :update-container-params="handleContainerChange"
                     :set-parent-validate="setContainerValidate"

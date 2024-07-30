@@ -43,6 +43,9 @@ enum class PipelineRunLockType {
     GROUP_LOCK;
 
     companion object {
+        /**
+         * 注意，数字与枚举的ordinal不一样，ordinal是下标为0开始 ，而这以1为开始
+         */
         fun toValue(type: PipelineRunLockType?): Int {
             return when (type) {
                 null -> 1
@@ -63,12 +66,6 @@ enum class PipelineRunLockType {
                 5 -> GROUP_LOCK
                 else -> MULTIPLE
             }
-        }
-
-        fun checkLock(runLockType: Int?): Boolean {
-            return if (runLockType == null) {
-                false
-            } else valueOf(runLockType) == LOCK
         }
     }
 }
