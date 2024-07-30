@@ -329,7 +329,7 @@ export default {
   border-right: 1px solid #dde0e6;
 }
 .group-list {
-  max-height: calc(100% - 130px);
+  max-height: calc(100% - 70px);
   height: auto;
   overflow-y: auto;
   &::-webkit-scrollbar-thumb {

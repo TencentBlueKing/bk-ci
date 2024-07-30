@@ -517,9 +517,6 @@ export default {
   margin-bottom: 20px;
   text-align: center;
 }
-.small-size {
-  scale: 0.9;
-}
 .rename-input {
   position: relative;
   width: 90%;
