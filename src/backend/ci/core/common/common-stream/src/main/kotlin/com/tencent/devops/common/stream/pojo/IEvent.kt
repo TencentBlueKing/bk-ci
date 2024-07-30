@@ -32,7 +32,7 @@ import com.tencent.devops.common.stream.constants.StreamHeader.X_DELAY
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.messaging.Message
-import org.springframework.messaging.support.MessageBuilder
+import org.springframework.integration.support.MessageBuilder
 
 /**
  * 流水线事件
