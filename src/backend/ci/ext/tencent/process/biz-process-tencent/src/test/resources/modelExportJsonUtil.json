@@ -1359,7 +1359,7 @@
           "data" : {
             "input" : {
               "shell" : "python",
-              "script" : "print(\"<a target='_blank' href='https://git.woa.com/userId/ci-document/merge_requests/${{ldout_iid}}'>https://git.woa.com/userId/ci-document/merge_requests/${{ldout_iid}}</a>\")",
+              "script" : "",
               "charsetType" : "DEFAULT"
             },
             "output" : { },
