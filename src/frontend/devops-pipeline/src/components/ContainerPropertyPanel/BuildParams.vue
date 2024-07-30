@@ -231,7 +231,15 @@
                                             ></request-selector>
                                         </bk-form-item>
 
-                                        <bk-form-item v-else label-width="auto" :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)">
+                                        <bk-form-item
+                                            v-else
+                                            label-width="auto"
+                                            :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
+                                            :required="isBooleanParam(param.type)"
+                                            :is-error="errors.has(`param-${param.id}.defaultValue`)"
+                                            :error-msg="errors.first(`param-${param.id}.defaultValue`)"
+                                            :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)"
+                                        >
                                             <file-param-input
                                                 name="defaultValue"
                                                 :required="valueRequired"
@@ -241,13 +249,12 @@
                                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                             />
                                             <file-upload
-                                                class="pt10"
+                                                class="mt10"
                                                 name="fileName"
                                                 :file-path="param.defaultValue"
                                                 @handle-change="(value) => uploadPathFromFileName(value)"
                                             ></file-upload>
                                         </bk-form-item>
-
                                     </div>
 
                                     <bk-form-item
@@ -383,8 +390,17 @@
                                         </bk-form-item>
                                     </template>
 
-                                    <bk-form-item label-width="auto" :label="$t('desc')">
-                                        <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="desc" :placeholder="$t('editPage.descTips')" :value="param.desc" />
+                                    <bk-form-item
+                                        label-width="auto"
+                                        :label="$t('desc')"
+                                    >
+                                        <vuex-input
+                                            :disabled="disabled"
+                                            :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                            name="desc"
+                                            :placeholder="$t('editPage.descTips')"
+                                            :value="param.desc"
+                                        />
                                     </bk-form-item>
                                 </bk-form>
                             </accordion>
