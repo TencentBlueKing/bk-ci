@@ -7,7 +7,8 @@ const state = () => ({
         brandName: '腾讯蓝鲸智云',
         brandNameEn: 'BlueKing',
         favicon: `${window.PUBLIC_URL_PREFIX}/static/favicon.ico`,
-        version: window.BK_CI_VERSION
+        version: window.BK_CI_VERSION,
+        i18n: {}
     }
 })
 const getters = {
