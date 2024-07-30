@@ -108,7 +108,7 @@ object QualityUtils {
                     val indicatorElementName = indicator?.elementType ?: ""
 
                     val elementCnName = ElementUtils.getElementCnName(indicatorElementName, projectId).let {
-                        if (githubRepo) {
+                        if (githubRepo && !reportUrl.isNullOrBlank()) {
                             "<a target='_blank' href='$reportUrl'>$it</a>"
                         } else {
                             it
