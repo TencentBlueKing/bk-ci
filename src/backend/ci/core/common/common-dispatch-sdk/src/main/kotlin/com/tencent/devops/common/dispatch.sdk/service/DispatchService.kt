@@ -163,7 +163,7 @@ class DispatchService constructor(
         if (statusResult.isNotOk() || startBuildTask == null || buildContainer == null) {
             logger.warn(
                 "The build event($event) fail to check if pipeline task is running " +
-                    "because of statusResult(${statusResult.message})"
+                        "because of statusResult(${statusResult.message})"
             )
             val errorMessage = I18nUtil.getCodeLanMessage(UNABLE_GET_PIPELINE_JOB_STATUS)
             throw BuildFailureException(
@@ -204,20 +204,30 @@ class DispatchService constructor(
     }
 
     fun onContainerFailure(event: PipelineAgentStartupEvent, e: BuildFailureException) {
-        logger.warn("[${event.buildId}|${event.vmSeqId}] Container startup failure")
+        onContainerFailure(event.projectId, event.pipelineId, event.buildId, event.vmSeqId, e)
+    }
+
+    private fun onContainerFailure(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        e: BuildFailureException
+    ) {
+        logger.warn("[$buildId|$vmSeqId] Container startup failure")
         try {
             client.get(ServiceBuildResource::class).setVMStatus(
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                buildId = event.buildId,
-                vmSeqId = event.vmSeqId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
                 status = BuildStatus.FAILED,
                 errorType = e.errorType,
                 errorCode = e.errorCode,
                 errorMsg = e.formatErrorMessage
             )
         } catch (ignore: ClientException) {
-            logger.error("SystemErrorLogMonitor|onContainerFailure|${event.buildId}|error=${e.message},${e.errorCode}")
+            logger.error("SystemErrorLogMonitor|onContainerFailure|$buildId|error=${e.message},${e.errorCode}")
         }
     }
 

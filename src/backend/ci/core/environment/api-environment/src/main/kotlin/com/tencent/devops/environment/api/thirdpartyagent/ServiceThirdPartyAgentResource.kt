@@ -447,4 +447,16 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "修改数据", required = true)
         data: BatchUpdateAgentEnvVar
     ): Result<Boolean>
+
+    @Operation(summary = "根据环境名称获取环境ID")
+    @GET
+    @Path("/get_env_by_name")
+    fun getEnvByName(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "Environment name", required = true)
+        @QueryParam("envName")
+        envName: String
+    )
 }

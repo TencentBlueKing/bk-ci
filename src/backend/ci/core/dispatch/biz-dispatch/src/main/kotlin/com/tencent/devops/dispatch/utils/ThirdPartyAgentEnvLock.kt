@@ -35,13 +35,13 @@ import kotlin.math.min
 class ThirdPartyAgentEnvLock(
     redisOperation: RedisOperation,
     projectId: String,
-    envId: String
+    envId: String,
+    expiredTimeInSeconds: Long?
 ) : RedisLock(
     redisOperation = redisOperation,
     lockKey = "DISPATCH_REDIS_LOCK_ENV_${projectId}_$envId",
-    expiredTimeInSeconds = 60L
+    expiredTimeInSeconds = expiredTimeInSeconds ?: 60L
 ) {
-
     fun tryLock(timeout: Long = 1000, interval: Long = 100): Boolean {
         val sleepTime = min(interval, timeout) // sleep时间不超过timeout
         val start = System.currentTimeMillis()

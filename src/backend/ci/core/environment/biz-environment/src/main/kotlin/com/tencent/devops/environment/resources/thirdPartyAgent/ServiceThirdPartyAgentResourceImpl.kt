@@ -38,7 +38,6 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
-import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -73,7 +72,6 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
     private val agentPipelineService: AgentPipelineService,
     private val slaveGatewayService: SlaveGatewayService,
-    private val permissionService: EnvironmentPermissionService,
     private val nodeService: NodeService,
     private val agentService: ThirdPartAgentService
 ) : ServiceThirdPartyAgentResource {
@@ -313,5 +311,9 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
                 data = data.envVars
             )
         )
+    }
+
+    override fun getEnvByName(projectId: String, envName: String) {
+        TODO("Not yet implemented")
     }
 }
