@@ -489,7 +489,7 @@ function handlePersonClose(){
     line-height: 20px;
 
     .bk-tag {
-      line-height: 20px;
+      line-height: 16px;
       display: inline-block !important;
     }
   }
