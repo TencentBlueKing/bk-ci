@@ -50,6 +50,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.regex.Pattern
+import org.apache.commons.lang3.StringUtils
 import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
