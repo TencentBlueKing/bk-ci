@@ -3,11 +3,11 @@
     <bk-table
       class="resource-table"
       ref="refTable"
-      :max-height="!isShowOperation && '464'"
+      :max-height="!isShowOperation && 464"
       :data="tableList"
       show-overflow-tooltip
       :pagination="pagination"
-      :border="['row', 'outer']"
+      :border="border"
       remote-pagination
       empty-cell-text="--"
       :scroll-loading="scrollLoading"
@@ -19,13 +19,13 @@
       <template #prepend>
         <div v-if="isCurrentAll" class="prepend">
           {{t('已选择全量数据X条', [groupTotal])}}
-          &nbsp; | &nbsp;
+          <span class="prepend-line">|</span>
           <span @click="handleClear">{{t("清除选择")}}</span>
         </div>
         <div v-else-if="isShowOperation && selectedData[resourceType]?.length" class="prepend">
           {{t('已选择X条数据，', [selectedData[resourceType].length])}}
           <span @click="handleSelectAllData">{{ t('选择全量数据X条', [groupTotal]) }}</span>
-          &nbsp; | &nbsp;
+          <span class="prepend-line">|</span>
           <span @click="handleClear">{{t("清除选择")}}</span>
         </div>
       </template>
@@ -69,7 +69,7 @@
       </bk-table-column>
       <bk-table-column :label="t('操作')" v-if="isShowOperation" :show-overflow-tooltip="false">
         <template #default="{row, index}">
-          <div class="operation-btn">
+          <div>
             <bk-button
               text
               theme="primary"
@@ -86,7 +86,7 @@
             <bk-button
               text
               theme="primary"
-              style="margin:0 8px"
+              class="operation-btn"
               @click="handleHandOver(row, index)"
               :disabled="row.removeMemberButtonControl === 'TEMPLATE'"
               v-bk-tooltips="{
@@ -94,7 +94,9 @@
                 placement: 'top',
                 disabled: row.removeMemberButtonControl !== 'TEMPLATE'
               }"
-            >{{t("移交")}}</bk-button>
+            >
+              {{t("移交")}}
+            </bk-button>
             <bk-button
               text
               theme="primary"
@@ -104,7 +106,9 @@
                 content: TOOLTIPS_CONTENT[row.removeMemberButtonControl] || '',
                 disabled: row.removeMemberButtonControl === 'OTHER'
               }"
-            >{{t("移出")}}</bk-button>
+            >
+              {{t("移出")}}
+            </bk-button>
           </div>
         </template>
       </bk-table-column>
@@ -173,6 +177,7 @@ const tableList = computed(() => props.data.map(item => ({
     unableMessage: getUnableMessage(item),
   }))
 );
+const border = ['row', 'outer'];
 function shouldShowOverlay(row){
   if (props.isShowOperation) {
     return false;
@@ -307,7 +312,9 @@ function handleToResourcePage (row) {
     background: #F0F1F5;
     text-align: center;
     box-shadow: 0 -1px 0 0 #DCDEE5;
-  
+    .prepend-line {
+      padding: 0 4px;
+    }
     span {
       font-family: MicrosoftYaHei;
       font-size: 12px;
@@ -316,6 +323,9 @@ function handleToResourcePage (row) {
       line-height: 20px;
       cursor: pointer;
     }
+  }
+  .operation-btn{
+    margin: 0 8px;
   }
   .appendLastRow{
     background-color: #fff;

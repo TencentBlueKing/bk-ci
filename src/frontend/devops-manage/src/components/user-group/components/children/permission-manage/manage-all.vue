@@ -53,7 +53,7 @@
           </bk-button>
 
           <i18n-t keypath="已选择X个用户组" tag="div" class="main-desc" v-if="selectedLength">
-            <span class="desc-primary">&nbsp;{{ selectedLength }}&nbsp;</span>
+            <span class="desc-primary">{{ selectedLength }}</span>
           </i18n-t>
         </div>
         <div v-if="isPermission" class="group-tab">
@@ -114,17 +114,34 @@
         <span>{{t("到期时间")}}：</span> 
         <template v-if="selectedRow?.expiredAtDisplay === t('已过期')">
           <span class="text-gray">{{t("已过期")}}</span>
-          <span class="text-blue"> &nbsp; -> &nbsp; {{ expiredAt }} {{ t("天") }} </span>
+          <span class="text-blue">
+            <i class="manage-icon manage-icon-arrows-right"></i> 
+            {{ expiredAt }} {{ t("天") }}
+          </span>
         </template>
         <template v-else>
           <span class="text-gray">{{ selectedRow?.expiredAtDisplay }}</span class="text-blue">
-          <span> &nbsp; -> &nbsp; {{ Number(selectedRow?.expiredAtDisplay.replace(/\D/g, '')) + expiredAt }} {{ t("天") }} </span>
+          <span class="text-blue">
+            <i class="manage-icon manage-icon-arrows-right"></i> 
+            {{ Number(selectedRow?.expiredAtDisplay.replace(/\D/g, '')) + expiredAt }} {{ t("天") }}
+          </span>
         </template>
       </p>
     </template>
     <template #footer>
-      <bk-button theme="primary" :loading="operatorLoading" @click="handleRenewalConfirm"> {{t('续期')}} </bk-button>
-      <bk-button class="btn-margin" @click="handleRenewalClosed"> {{t('取消')}} </bk-button>
+      <bk-button
+        theme="primary"
+        :loading="operatorLoading"
+        @click="handleRenewalConfirm"
+      >
+        {{t('续期')}}
+      </bk-button>
+      <bk-button
+        class="btn-margin"
+        @click="handleRenewalClosed"
+      >
+        {{t('取消')}}
+      </bk-button>
     </template>
   </bk-dialog>
   <bk-dialog
@@ -165,8 +182,19 @@
       </p>
     </template>
     <template #footer>
-      <bk-button theme="primary" :loading="operatorLoading" @click="handleHandoverConfirm"> {{t('移交')}} </bk-button>
-      <bk-button class="btn-margin" @click="handleHandoverClosed"> {{t('取消')}} </bk-button>
+      <bk-button
+        theme="primary"
+        :loading="operatorLoading"
+        @click="handleHandoverConfirm"
+      >
+        {{t('移交')}}
+      </bk-button>
+      <bk-button
+        class="btn-margin"
+        @click="handleHandoverClosed"
+      >
+        {{t('取消')}}
+      </bk-button>
     </template>
   </bk-dialog>
   <bk-dialog
@@ -175,7 +203,7 @@
     footer-align="center"
     class="remove-dialog"
     :is-show="isShowRemove"
-    @closed="() => isShowRemove = false"
+    @closed="handleRemoveClosed"
   >
     <template #header>
       <img src="@/css/svg/warninfo.svg" class="manage-icon-tishi">
@@ -190,8 +218,19 @@
       </p>
     </template>
     <template #footer>
-      <bk-button theme="danger" :loading="operatorLoading" @click="handleRemoveConfirm"> {{t('确认移出')}} </bk-button>
-      <bk-button class="btn-margin" @click="() => isShowRemove = false"> {{t('关闭')}} </bk-button>
+      <bk-button
+        theme="danger"
+        :loading="operatorLoading"
+        @click="handleRemoveConfirm"
+      >
+        {{t('确认移出')}}
+      </bk-button>
+      <bk-button
+        class="btn-margin"
+        @click="handleRemoveClosed"
+      >
+        {{t('关闭')}}
+      </bk-button>
     </template>
   </bk-dialog>
   <bk-sideslider
@@ -206,11 +245,11 @@
       <div class="slider-main">
         <p class="main-desc">
           <i18n-t keypath="已选择X个用户组" tag="div">
-            <span class="desc-primary">&nbsp;{{ totalCount }}&nbsp;</span>
+            <span class="desc-primary">{{ totalCount }}</span>
           </i18n-t>
           <i18n-t v-if="inoperableCount" keypath="；其中X个用户组无法移出，本次操作将忽略" tag="div">
-            <span class="desc-warn">&nbsp;{{ inoperableCount }}&nbsp;</span>
-            <span class="desc-warn">&nbsp;{{ unableText[batchFlag] }}</span>
+            <span class="desc-warn">{{ inoperableCount }}</span>
+            <span class="desc-warn">{{ unableText[batchFlag] }}</span>
           </i18n-t>
         </p>
         <div>
@@ -238,7 +277,7 @@
             </div>
           </div>
           <div v-if="batchFlag === 'handover'">
-            <div class="main-line" style="margin-top: 26px;">
+            <div class="main-line main-line-handover">
               <p class="main-label">{{t("移交给")}}</p>
               <bk-form
                 ref="formRef"
@@ -261,7 +300,7 @@
             </div>
           </div>
           <div v-if="batchFlag === 'remove'">
-            <div class="main-line" style="margin-top: 40px;">
+            <div class="main-line main-line-remove">
               <p class="main-label-remove">
                 <i18n-t keypath="确认从以上X个用户组中移出X吗？" tag="div">
                   <span class="remove-num">{{ totalCount - inoperableCount }}</span>
@@ -514,6 +553,9 @@ async function handleRemoveConfirm() {
     operatorLoading.value = false;
   }
 }
+function handleRemoveClosed(){
+  isShowRemove.value = false;
+}
 /**
  * 授权期限选择
  */
@@ -731,6 +773,7 @@ function handleClearOverFormName () {
           .desc-primary {
             font-weight: 700;
             color: #3A84FF;
+            padding: 0 4px;
           }
         }
       }
@@ -812,6 +855,9 @@ function handleClearOverFormName () {
     }
     .text-blue{
       color: #699DF4;
+    }
+    .manage-icon-arrows-right{
+      margin: 0 4px;
     }
   }
 }
@@ -914,11 +960,13 @@ function handleClearOverFormName () {
       .desc-primary {
         color: #3A84FF;
         font-weight: 700;
+        padding: 0 4px;
       }
 
       .desc-warn {
         color: #FF9C01;
         font-weight: 700;
+        padding: 0 4px;
       }
     }
   }
@@ -976,6 +1024,13 @@ function handleClearOverFormName () {
             font-weight: 700;
           }
         }
+      }
+
+      .main-line-handover {
+        margin-top: 26px;
+      }
+      .main-line-remove {
+        margin-top: 40px;
       }
     }
 

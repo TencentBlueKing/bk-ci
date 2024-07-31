@@ -64,7 +64,7 @@
               <div v-else-if="selectList.length" class="prepend">
                 {{ t('已选择X条数据，', [selectList.length]) }}
                 <span @click="handleSelectAllData"> {{ t('选择全量数据X条', [pagination.count]) }}</span> 
-                &nbsp; | &nbsp;
+                <span class="prepend-line">|</span>
                 <span @click="handleClear">{{ t('清除选择') }}</span> 
               </div>
             </template>
@@ -75,13 +75,15 @@
     <bk-dialog
       :is-show="showResetDialog"
       :key="resourceType"
-      :theme="'primary'"
+      theme="primary"
       :width="640"
       :title="t('批量重置')"
       @closed="dialogClose"
     >
       <div class="dialog">
-        <bk-tag radius="20px" class="tag">{{ t('已选择X个XX', [isSelectAll ? pagination.count : selectList.length, searchName]) }}</bk-tag>
+        <bk-tag radius="20px" class="tag">
+          {{ t('已选择X个XX', [isSelectAll ? pagination.count : selectList.length, searchName]) }}
+        </bk-tag>
         <bk-form
           ref="formRef"
           :model="resetFormData"
@@ -122,11 +124,11 @@
           <div class="failed-tips">
             <div class="manage-icon manage-icon-warning-circle-fill warning-icon"></div>
             <i18n-t keypath="检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权" tag="div">
-              <span style="color: #ef9b30; padding: 0 5px; font-weight: 700;">{{ failedCount }}</span>
-              <span style="color: #63656E; font-weight: 700;">{{ t('前往处理') }}</span>
-              <span style="color: #63656E; font-weight: 700;">{{ t('继续重置其余') }}</span>
-              <span style="color: #63656E; font-weight: 700;">{{ searchName }}</span>
-              <span style="color: #63656E; font-weight: 700;">{{ t('授权') }}</span>
+              <span class="tips-count">{{ failedCount }}</span>
+              <span class="tips-text">{{ t('前往处理') }}</span>
+              <span class="tips-text">{{ t('继续重置其余') }}</span>
+              <span class="tips-text">{{ searchName }}</span>
+              <span class="tips-text">{{ t('授权') }}</span>
             </i18n-t>
           </div>
           <bk-table
@@ -643,6 +645,10 @@ function handleChangeName ({ list }) {
         text-align: center;
         box-shadow: 0 -1px 0 0 #DCDEE5;
 
+        .prepend-line {
+          padding: 0 4px;
+        }
+        
         span{
           font-family: MicrosoftYaHei;
           font-size: 12px;
@@ -681,6 +687,17 @@ function handleChangeName ({ list }) {
       display: flex;
       align-items: center;
       margin: 10px 0;
+
+      .tips-count {
+        color: #ef9b30;
+        padding: 0 5px;
+        font-weight: 700;
+      }
+
+      .tips-text {
+        color: #63656E;
+        font-weight: 700;
+      }
     }
     .warning-icon {
       font-size: 18px;
