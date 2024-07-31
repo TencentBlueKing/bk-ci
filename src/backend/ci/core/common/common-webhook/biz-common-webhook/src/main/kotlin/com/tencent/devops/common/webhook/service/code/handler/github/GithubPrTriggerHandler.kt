@@ -187,7 +187,8 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
                 pipelineId = pipelineId,
                 enable = skipWip,
                 keyWord = KeywordSkipFilter.KEYWORD_SKIP_WIP,
-                triggerOnMessage = getMessage(event)
+                triggerOnMessage = getMessage(event),
+                failedReason = I18Variable(WebhookI18nConstants.MR_SKIP_WIP).toJsonStr()
             )
             val userId = getUsername(event)
             val actionFilter = ContainsFilter(

@@ -198,7 +198,8 @@ class TGitMrTriggerHandler(
                 pipelineId = pipelineId,
                 enable = skipWip,
                 keyWord = KEYWORD_SKIP_WIP,
-                triggerOnMessage = getMessage(event)
+                triggerOnMessage = getMessage(event),
+                failedReason = I18Variable(WebhookI18nConstants.MR_SKIP_WIP).toJsonStr()
             )
             val userId = getUsername(event)
             val userFilter = UserFilter(

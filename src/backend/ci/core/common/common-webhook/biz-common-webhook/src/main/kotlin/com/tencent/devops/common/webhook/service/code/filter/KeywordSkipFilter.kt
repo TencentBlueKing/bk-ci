@@ -33,7 +33,8 @@ class KeywordSkipFilter(
     private val pipelineId: String,
     private val keyWord: List<String>,
     private val enable: Boolean? = true,
-    private val triggerOnMessage: String?
+    private val triggerOnMessage: String?,
+    private val failedReason: String = ""
 ) : WebhookFilter {
 
     companion object {
@@ -46,7 +47,10 @@ class KeywordSkipFilter(
         logger.info("$pipelineId|triggerOnMessage:$triggerOnMessage|skipWord:$keyWord|enable:$enable")
         return when{
             enable == false -> true
-            keyWord.none { triggerOnMessage?.contains(it) == true } -> false
+            keyWord.none { triggerOnMessage?.contains(it) == true } -> {
+                response.failedReason = failedReason
+                false
+            }
             else -> true
         }
     }
