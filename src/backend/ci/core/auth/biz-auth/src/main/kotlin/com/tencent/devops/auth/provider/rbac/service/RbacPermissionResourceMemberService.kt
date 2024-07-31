@@ -137,7 +137,7 @@ class RbacPermissionResourceMemberService constructor(
                 iamMemberInfos.add(ManagerMember(deptType, it))
             }
         }
-        logger.info("batch add project user:|$projectCode|$iamGroupId|$expiredTime|$iamMemberInfos")
+        logger.info("batch add project user :|$projectCode|$iamGroupId|$expiredTime|$iamMemberInfos")
         if (iamMemberInfos.isNotEmpty()) {
             val managerMemberGroup =
                 ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
