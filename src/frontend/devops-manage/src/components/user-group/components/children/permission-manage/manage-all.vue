@@ -455,16 +455,19 @@ const {
 } = manageAsideStore;
 
 onMounted(() => {
-  asideItem.value = undefined;
-  getProjectMembers(projectId.value);
+  init();
 });
 
 watch(searchValue, (newSearchValue) => {
-  memberPagination.value.current = 1;
-  getProjectMembers(projectId.value, newSearchValue);
+  init(newSearchValue);
 });
 function handleSearch(value){
+  if(!value.length) return;
+  init(value);
+}
+function init(value){
   memberPagination.value.current = 1;
+  asideItem.value = undefined;
   getProjectMembers(projectId.value, value);
 }
 function asideClick(item){

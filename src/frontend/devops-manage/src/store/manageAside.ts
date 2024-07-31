@@ -1,6 +1,6 @@
 import http from '@/http/api';
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Message } from 'bkui-vue';
 import userGroupTable from "@/store/userGroupTable";
 
@@ -41,7 +41,6 @@ export default defineStore('manageAside', () => {
    * 人员组织侧边栏点击事件
    */
   function handleAsideClick(item: ManageAsideType) {
-    // 调用接口，获取侧边表格数据和折叠面板数
     asideItem.value = item;
     activeTab.value = item.id;
     groupTableStore.fetchUserGroupList(item);
@@ -51,6 +50,7 @@ export default defineStore('manageAside', () => {
    */
   async function handleAsidePageChange(current: number, projectId: string) {
     if (memberPagination.value.current !== current) {
+      asideItem.value = undefined;
       memberPagination.value.current = current;
       getProjectMembers(projectId);
     }
