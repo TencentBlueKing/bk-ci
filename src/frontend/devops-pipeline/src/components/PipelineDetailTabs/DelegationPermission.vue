@@ -180,17 +180,17 @@
                         }
                     })
                     this.showResetDialog = false
-                    if (res.SUCCESS.length) {
-                        this.fetchResourceAuth()
-                        this.$bkMessage({
-                            theme: 'success',
-                            message: this.$t('delegation.resetSuc')
-                        })
-                    } else if (res.FAILED.length) {
+                    if (res?.FAILED?.length) {
                         const message = res.FAILED[0]?.handoverFailedMessage || ''
                         this.$bkMessage({
                             theme: 'error',
                             message
+                        })
+                    } else {
+                        this.fetchResourceAuth()
+                        this.$bkMessage({
+                            theme: 'success',
+                            message: this.$t('delegation.resetSuc')
                         })
                     }
                 } catch (e) {
