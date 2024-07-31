@@ -170,7 +170,7 @@ class RbacPermissionResourceMemberService constructor(
             when {
                 record.type != ManagerScopesEnum.getType(ManagerScopesEnum.USER) -> record
                 record.name.isNullOrEmpty() -> {
-                    val newUserName = deptService.getUserDisPlayName(userId = record.id) ?: record.id
+                    val newUserName = deptService.getUserDisPlayName(userId = record.id)
                     record.copy(name = newUserName, departed = deptService.isUserDeparted(record.id))
                 }
                 else -> record.copy(departed = deptService.isUserDeparted(record.id))
