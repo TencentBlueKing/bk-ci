@@ -81,7 +81,6 @@ export default defineStore('userGroupTable', () => {
   const selectedTableGroupType = ref('');
   const selectedLength = ref(0);
   const isPermission = ref(true);
-  const activeFlag =  ref(true);
   let currentRequestId = 0;
 
   watch(selectedData, ()=>{
@@ -92,7 +91,6 @@ export default defineStore('userGroupTable', () => {
    * 初始化数据
    */
   function initData() {
-    activeFlag.value = true;
     selectedRow.value = null;
     rowIndex.value = undefined;
     selectedTableGroupType.value = '';
@@ -170,6 +168,7 @@ export default defineStore('userGroupTable', () => {
         sourceList.value.forEach(item => {
           if(item.resourceType === "project" && projectResult) {
             item.tableData = projectResult.records;
+            item.activeFlag = true;
           }
           if(item.resourceType === "pipeline" && pipelineGroupResult) {
             item.tableData = pipelineGroupResult.records;
@@ -330,7 +329,6 @@ export default defineStore('userGroupTable', () => {
       if (!item.count || item.tableData.length) {
         return;
       } else {
-        item.activeFlag = true;
         try {
           item.tableLoading = true;
           paginations.value[resourceType] = [0, 10]
@@ -384,7 +382,6 @@ export default defineStore('userGroupTable', () => {
     selectSourceList,
     selectedRow,
     isPermission,
-    activeFlag,
     fetchUserGroupList,
     handleRenewal,
     handleHandOver,

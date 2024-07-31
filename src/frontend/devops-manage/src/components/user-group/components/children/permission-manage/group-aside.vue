@@ -57,14 +57,14 @@
                   text
                   @click="handleShowRename(group)"
                 >
-                  {{ $t('重命名') }}
+                  {{ t('重命名') }}
                 </bk-button>
                 <bk-button
                   class="btn"
                   :disabled="group.defaultGroup"
                   text
                   @click="handleShowDeleteGroup(group)">
-                  {{ $t('删除') }}
+                  {{ t('删除') }}
                 </bk-button>
               </div>
             </template>
@@ -79,14 +79,14 @@
       @click="handleCreateGroup">
       <span class="add-group-btn">
         <i class="manage-icon manage-icon-add-fill add-icon"></i>
-        {{ $t('新建用户组') }}
+        {{ t('新建用户组') }}
       </span>
     </div>
     <div
       v-if="resourceType !== 'project'"
       class="close-btn"
     >
-      <bk-button @click="handleCloseManage" :loading="isClosing">{{ $t('关闭权限管理') }}</bk-button>
+      <bk-button @click="handleCloseManage" :loading="isClosing">{{ t('关闭权限管理') }}</bk-button>
     </div>
     <bk-dialog
       dialogType="show"
@@ -100,30 +100,30 @@
     >
       <template #header>
         <div class="manage-icon manage-icon-warning-circle-fill title-icon"></div>
-        <p class="delete-title">{{ $t('确认删除【】用户组？', [deleteObj.group.name]) }}</p>
+        <p class="delete-title">{{ t('确认删除【】用户组？', [deleteObj.group.name]) }}</p>
       </template>
       <div class="delete-tips">
-        <p>{{ $t('删除用户组【】将执行如下操作：', [deleteObj.group.name]) }}</p>
+        <p>{{ t('删除用户组【】将执行如下操作：', [deleteObj.group.name]) }}</p>
         <p>
           <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
-          {{ $t('将用户和组织从组中移除') }}
+          {{ t('将用户和组织从组中移除') }}
         </p>
         <p>
           <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
-          {{ $t('删除组内用户继承该组的权限') }}
+          {{ t('删除组内用户继承该组的权限') }}
         </p>
         <p>
           <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
-          {{ $t('删除组信息和组权限') }}
+          {{ t('删除组信息和组权限') }}
         </p>
       </div>
       <div class="confirm-delete">
         <i18n-t keypath="此操作提交后将不能恢复，为避免误删除，请再次确认你的操作：" style="color: #737987;font-size: 14px;" tag="div">
-          <span style="color: red;">{{$t('不能恢复')}}</span>
+          <span style="color: red;">{{t('不能恢复')}}</span>
         </i18n-t>
         <bk-input
           v-model="keyWords"
-          :placeholder="$t('请输入待删除的用户组名')"
+          :placeholder="t('请输入待删除的用户组名')"
           class="confirm-input"
         ></bk-input>
       </div>
@@ -134,13 +134,13 @@
           :disabled="disableDeleteBtn"
           @click="handleDeleteGroup"
         >
-          {{ $t('删除') }}
+          {{ t('删除') }}
         </bk-button>
         <bk-button
           class="btn"
           @click="handleHiddenDeleteGroup"
         >
-          {{ $t('取消') }}
+          {{ t('取消') }}
         </bk-button>
       </div>
     </bk-dialog>
@@ -152,7 +152,7 @@ import ScrollLoadList from '../../widget-components/scroll-load-list';
 import ajax from '../../../ajax/index';
 import { Message } from 'bkui-vue';
 import http from '@/http/api';
-
+import { useI18n } from 'vue-i18n';
 export default {
   components: {
     ScrollLoadList,
@@ -185,6 +185,7 @@ export default {
   },
   emits: ['choose-group', 'create-group', 'close-manage'],
   data() {
+    const { t } = useI18n();
     return {
       page: 1,
       activeTab: '',
@@ -201,6 +202,7 @@ export default {
       renameGroupId: 0,
       curGroupIndex: -1,
       keyWords: '',
+      t,
     };
   },
   computed: {
@@ -226,8 +228,7 @@ export default {
         .get(`${this.ajaxPrefix}/auth/api/user/auth/resource/${this.projectCode}/${this.resourceType}/${this.resourceCode}/listGroup?page=${this.page}&pageSize=${pageSize}`)
         .then(({ data }) => {
           this.hasLoadEnd = !data.hasNext;
-          this.groupList.push(...data.records);
-          this.groupList.push();
+          this.groupList = [...this.groupList, ...data.records];
           // 首页需要加载
           if (this.page === 1) {
             const chooseGroup = this.groupList.find(group => +group.groupId === +this.$route.query?.groupId) || this.groupList[0];
@@ -260,7 +261,7 @@ export default {
           this.syncGroupAndMemberIAM();
           Message({
             theme: 'success',
-            message: this.$t('删除成功')
+            message: this.t('删除成功')
           });
         })
         .finally(() => {
@@ -372,7 +373,7 @@ export default {
           this.syncGroupAndMemberIAM();
           Message({
             theme: 'success',
-            message: this.$t('修改成功')
+            message: this.t('修改成功')
           });
         })
         .catch((err) => {

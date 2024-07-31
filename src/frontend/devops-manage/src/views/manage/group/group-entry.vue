@@ -12,6 +12,7 @@
 import http from '@/http/api';
 import PermissionMain from '@/components/user-group/components/permission-main.vue';
 import { Message } from 'bkui-vue';
+import { useI18n } from 'vue-i18n';
 
 export default {
   components: {
@@ -19,8 +20,10 @@ export default {
   },
 
   data() {
+    const { t } = useI18n();
     return {
-      resourceType: 'project'
+      resourceType: 'project',
+      t,
     };
   },
 
@@ -51,7 +54,7 @@ export default {
         .then(() => {
           Message({
             theme: 'success',
-            message: this.$t('修改成功'),
+            message: this.t('修改成功'),
           })
         })
     }

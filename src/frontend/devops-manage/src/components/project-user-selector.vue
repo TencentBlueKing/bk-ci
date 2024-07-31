@@ -7,7 +7,7 @@
     save-key="id"
     display-key="displayName"
     is-async-list
-    :list="userList"
+    :list="curUserList"
     @input="handleInputUserName"
     @change="handleChange"
     @removeAll="removeAll">
@@ -22,16 +22,10 @@ import http from '@/http/api';
 
 const { t } = useI18n();
 const route = useRoute();
+const emits = defineEmits(['change', 'removeAll']);
 const userList = ref([]);
 const projectId = computed(() => route.params?.projectCode);
-const emits = defineEmits(['change', 'removeAll']);
-
-function debounce (callBack) {
-    window.clearTimeout(debounce.timeId)
-    debounce.timeId = window.setTimeout(() => {
-        callBack()
-    }, 0)
-}
+const curUserList = computed(() => userList.value);
 
 async function fetchProjectMembers (query) {
   const res = await http.getProjectMembers(projectId.value, query)
@@ -51,7 +45,7 @@ async function fetchProjectMembers (query) {
     pageSize: 200,
     userName: val
   }
-  debounce(() => fetchProjectMembers(query))
+  fetchProjectMembers(query)
 }
 
 function handleChange (list) {

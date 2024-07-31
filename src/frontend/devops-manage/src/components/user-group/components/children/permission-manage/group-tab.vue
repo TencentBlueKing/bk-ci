@@ -3,12 +3,12 @@
     <div class="manage-content-project" v-if="projectTable">
       <p class="project-group">{{t("项目级用户组")}}</p>
       <div class="project-group-table">
-        <bk-collapse-panel v-model="activeFlag">
+        <bk-collapse-panel v-model="projectTable.activeFlag">
           <template #header>
             <p class="group-title">
               <i :class="{
-                'manage-icon manage-icon-down-shape': activeFlag,
-                'manage-icon manage-icon-right-shape': !activeFlag,
+                'manage-icon manage-icon-down-shape': projectTable.activeFlag,
+                'manage-icon manage-icon-right-shape': !projectTable.activeFlag,
               }" style="color: #989ca7; margin-right: 10px;" />
               {{ projectTable.resourceTypeName }} ({{ projectTable.resourceType }})
               <span class="group-num">{{projectTable.count}}</span>
@@ -52,7 +52,8 @@
               <i :class="{
                 'manage-icon manage-icon-down-shape': item.activeFlag,
                 'manage-icon manage-icon-right-shape': !item.activeFlag,
-              }" style="color: #989ca7; margin-right: 10px;" />
+                'shape-icon': true,
+              }" />
               <img v-if="item.resourceType" :src="getServiceIcon(item.resourceType)" class="service-icon" alt="">
               {{item.resourceTypeName}} ({{ item.resourceType }})
               <span class="group-num">{{item.count}}</span>
@@ -96,39 +97,37 @@ import { useI18n } from 'vue-i18n';
 import { defineProps, defineEmits, computed } from 'vue';
 import userGroupTable from '@/store/userGroupTable';
 import TabTable from './tab-table.vue';
+import pipelineIcon from '../../../svg/color-logo-pipeline.svg';
+import codelibIcon from '../../../svg/color-logo-codelib.svg';
+import codeccIcon from '../../../svg/color-logo-codecc.svg';
+import environmentIcon from '../../../svg/color-logo-environment.svg';
+import experienceIcon from '../../../svg/color-logo-experience.svg';
+import qualityIcon from '../../../svg/color-logo-quality.svg';
+import ticketIcon from '../../../svg/color-logo-ticket.svg';
+import turboIcon from '../../../svg/color-logo-turbo.svg';
 
 const { t } = useI18n();
 const groupTableStore = userGroupTable();
 const projectTable = computed(() => props.sourceList.find(item => item.resourceType == 'project'));
 const sourceTable= computed(() => props.sourceList.filter(item => item.resourceType != 'project'));
-const activeFlag= computed(() => props.activeFlag);
-
-const pipelineIcon = computed(() => require('../../../svg/color-logo-pipeline.svg'));
-const codelibIcon = computed(() => require('../../../svg/color-logo-codelib.svg'));
-const codeccIcon = computed(() => require('../../../svg/color-logo-codecc.svg'));
-const environmentIcon = computed(() => require('../../../svg/color-logo-environment.svg'));
-const experienceIcon = computed(() => require('../../../svg/color-logo-experience.svg'));
-const qualityIcon = computed(() => require('../../../svg/color-logo-quality.svg'));
-const ticketIcon = computed(() => require('../../../svg/color-logo-ticket.svg'));
-const turboIcon = computed(() => require('../../../svg/color-logo-turbo.svg'));
 
 const getServiceIcon = (type) => {
   const iconMap = {
-    'pipeline': pipelineIcon.value,
-    'pipeline_group': pipelineIcon.value,
-    'repertory': codelibIcon.value,
-    'credential': ticketIcon.value,
-    'cert': ticketIcon.value,
-    'environment': environmentIcon.value,
-    'env_node': pipelineIcon.value,
-    'codecc_task': codeccIcon.value,
-    'codecc_rule_set': codeccIcon.value,
-    'codecc_ignore_type': codeccIcon.value,
-    'experience_task': experienceIcon.value,
-    'experience_group': experienceIcon.value,
-    'rule': qualityIcon.value,
-    'quality_group': qualityIcon.value,
-    'pipeline_template': pipelineIcon.value,
+    'pipeline': pipelineIcon,
+    'pipeline_group': pipelineIcon,
+    'repertory': codelibIcon,
+    'credential': ticketIcon,
+    'cert': ticketIcon,
+    'environment': environmentIcon,
+    'env_node': pipelineIcon,
+    'codecc_task': codeccIcon,
+    'codecc_rule_set': codeccIcon,
+    'codecc_ignore_type': codeccIcon,
+    'experience_task': experienceIcon,
+    'experience_group': experienceIcon,
+    'rule': qualityIcon,
+    'quality_group': qualityIcon,
+    'pipeline_template': pipelineIcon,
   }
   return iconMap[type]
 }
@@ -273,6 +272,10 @@ function collapseClick(resourceType) {
         width: 14px;
         height: 14px;
         margin-right: 5px;
+      }
+      .shape-icon {
+        color: #989ca7;
+        margin-right: 10px;
       }
     }
   

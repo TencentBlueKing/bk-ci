@@ -25,8 +25,7 @@ const router = useRouter();
 
 function goPermission() {
   router.push({
-    path: 'permission',
-    // params:
+    name: 'permission'
   });
 }
 </script>
