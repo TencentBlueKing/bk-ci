@@ -671,7 +671,6 @@ class PipelineBuildFacadeService(
             )
             // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用
             pipelineYamlFacadeService.buildYamlManualParamMap(
-                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId
             )?.let {
