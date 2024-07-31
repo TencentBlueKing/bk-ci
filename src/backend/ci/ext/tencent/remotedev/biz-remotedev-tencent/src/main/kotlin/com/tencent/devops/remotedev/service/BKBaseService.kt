@@ -76,12 +76,11 @@ class BKBaseService @Autowired constructor(
         val url = "${bkConfig.baseUrl}/prod/v3/queryengine/query_sync/"
         val body = BakeBaseQuerySyncReq(
             bkdataDataToken = bkConfig.baseToken,
-            bkAppCode = bkConfig.appCode,
-            bkAppSecret = bkConfig.appSecret,
             sql = sql
         )
         val request = Request.Builder()
             .url(url)
+            .addHeader("x-bkapi-authorization", headerStr())
             .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
@@ -153,79 +152,17 @@ class BKBaseService @Autowired constructor(
         return UserLoginTimeResp(resp.data.totalRecords, result)
     }
 
-    fun fetchActiveIps(
-        date: LocalDateTime,
-        limit: Int = 1000,
-        offset: Int = 0,
-        result: MutableMap<String, Int> = mutableMapOf()
-    ): Map<String, Int> {
-        val sql = "select zone_id,inner_ip,count(distinct thedate) as cnt " +
-            "from 100656_ads_desktop_daily_activity_res.hdfs " +
-            "where thedate > '${date.format(theDateFormat)}' and activity_flag > 0 " +
-            "group by inner_ip,zone_id order by inner_ip LIMIT $limit OFFSET $offset"
-
-        val resp = doHttp(sql) ?: return result
-
-        try {
-            resp.data?.list?.forEach { l ->
-                result["${l["zone_id"] as String}.${l["inner_ip"] as String}"] = l["cnt"] as Int
-            } ?: return result
-            if (resp.data.list.size == limit) {
-                fetchActiveIps(
-                    date = date, limit = limit, offset = offset + limit, result = result
-                )
-            }
-        } catch (e: Exception) {
-            logger.error("fetchActiveIps parse data error", e)
-            return result
-        }
-
-        return result
-    }
-
-    // 获取云桌面的活跃时长
-    fun fetchActiveTimes(
-        date: LocalDateTime,
-        limit: Int = 1000,
-        offset: Int = 0,
-        result: MutableMap<String, Int> = mutableMapOf()
-    ): Map<String, Int> {
-        val sql = "select zone_id,inner_ip,sum(activity_minus_cnt) as cnt " +
-            "from 100656_ads_desktop_daily_activity_res.hdfs " +
-            "where thedate > '${date.format(theDateFormat)}' " +
-            "group by inner_ip,zone_id order by inner_ip LIMIT $limit OFFSET $offset"
-
-        val resp = doHttp(sql) ?: return result
-
-        try {
-            resp.data?.list?.forEach { l ->
-                result["${l["zone_id"] as String}.${l["inner_ip"] as String}"] = l["cnt"] as Int
-            } ?: return result
-            if (resp.data.list.size == limit) {
-                fetchActiveTimes(
-                    date = date, limit = limit, offset = offset + limit, result = result
-                )
-            }
-        } catch (e: Exception) {
-            logger.error("fetchActiveTimes parse data error", e)
-            return result
-        }
-
-        return result
-    }
-
     private fun doHttp(
         sql: String
     ): BakeBaseQuerySyncResp? {
         val body = BakeBaseQuerySyncReq(
             bkdataDataToken = bkConfig.baseToken,
-            bkAppCode = bkConfig.appCode,
-            bkAppSecret = bkConfig.appSecret,
             sql = sql
         )
         val url = "${bkConfig.baseUrl}/prod/v3/queryengine/query_sync/"
         val request = Request.Builder()
             .url(url)
+            .addHeader("x-bkapi-authorization", headerStr())
             .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
         try {
@@ -293,12 +230,11 @@ class BKBaseService @Autowired constructor(
         val url = "${bkConfig.baseUrl}/prod/v3/queryengine/query_sync/"
         val body = BakeBaseQuerySyncReq(
             bkdataDataToken = bkConfig.baseToken,
-            bkAppCode = bkConfig.appCode,
-            bkAppSecret = bkConfig.appSecret,
             sql = sql
         )
         val request = Request.Builder()
             .url(url)
+            .addHeader("x-bkapi-authorization", headerStr())
             .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
@@ -334,6 +270,11 @@ class BKBaseService @Autowired constructor(
         }
 
         return result
+    }
+    private fun headerStr(): String {
+        return objectMapper.writeValueAsString(
+            mapOf("bk_app_code" to bkConfig.appCode, "bk_app_secret" to bkConfig.appSecret)
+        ).replace("\\s".toRegex(), "")
     }
 
     companion object {
@@ -381,10 +322,6 @@ data class BakeBaseQuerySyncReq(
     val bkdataAuthenticationMethod: String = "token",
     @JsonProperty("bkdata_data_token")
     val bkdataDataToken: String,
-    @JsonProperty("bk_app_code")
-    val bkAppCode: String,
-    @JsonProperty("bk_app_secret")
-    val bkAppSecret: String,
     val sql: String,
     @JsonProperty("prefer_storage")
     val preferStorage: String = ""
