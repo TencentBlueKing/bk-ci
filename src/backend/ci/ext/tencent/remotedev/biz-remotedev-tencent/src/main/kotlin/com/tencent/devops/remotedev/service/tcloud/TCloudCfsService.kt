@@ -9,6 +9,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncTCloudCfs
 import com.tencent.devops.remotedev.pojo.tcloud.ProjectCfsData
+import com.tencent.devops.remotedev.pojo.tcloud.UpdateCfsData
 import com.tencentcloudapi.cfs.v20190719.CfsClient
 import com.tencentcloudapi.cfs.v20190719.models.CreateCfsRuleRequest
 import com.tencentcloudapi.cfs.v20190719.models.DeleteCfsRuleRequest
@@ -46,7 +47,7 @@ class TCloudCfsService @Autowired constructor(
     ) {
         val record = projectTCloudCfsDao.fetchAny(dslContext, projectId)
         if (record == null) {
-            logger.debug("fetchCfsLinkCfsPermission $projectId no cfs")
+            logger.debug("$LOG_UPDATE_TCLOUD_CFS_RULES $projectId no cfs")
             return
         }
 
@@ -62,10 +63,10 @@ class TCloudCfsService @Autowired constructor(
             val gpResp = try {
                 client.DescribeCfsRules(DescribeCfsRulesRequest().apply { this.pGroupId = pgId })
             } catch (e: Exception) {
-                logger.error("fetchCfsLinkCfsPermission|DescribeCfsRules error", e)
+                logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|DescribeCfsRules error", e)
                 return
             }
-            logger.debug("fetchCfsLinkCfsPermission|willdelete|${gpResp.ruleList}|$ip")
+            logger.info("$LOG_UPDATE_TCLOUD_CFS_RULES|will delete|${gpResp.ruleList}|$ip")
             gpResp.ruleList.forEach {
                 if (it.authClientIp == ip) {
                     createOrDeleteCfsRule(
@@ -99,11 +100,11 @@ class TCloudCfsService @Autowired constructor(
                 }
             )
         } catch (e: Exception) {
-            logger.error("fetchCfsLinkCfsPermission|DescribeCfsFileSystems error", e)
+            logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|DescribeCfsFileSystems error", e)
             return null
         }
         if (resp.totalCount < 1 || resp.fileSystems.firstOrNull() == null) {
-            logger.error("fetchCfsLinkCfsPermission|DescribeCfsFileSystems 0|${resp.requestId}")
+            logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|DescribeCfsFileSystems 0|${resp.requestId}")
             return null
         }
         return resp.fileSystems.first().pGroup.pGroupId
@@ -138,11 +139,13 @@ class TCloudCfsService @Autowired constructor(
                 }
             ).ruleList.map { it.authClientIp }.toSet()
         } catch (e: Exception) {
-            logger.error("addProjectCfsId|DescribeCfsRules error", e)
+            logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|addProjectCfsId|DescribeCfsRules error", e)
             emptySet()
         }
 
         val realIps = ips.subtract(rules)
+
+        logger.info("$LOG_UPDATE_TCLOUD_CFS_RULES|will create|$projectId|$cfsId|$pgId|$ips")
 
         realIps.forEach { ip ->
             createOrDeleteCfsRule(pgId = pgId, ip = ip, ruleId = "", region = region, delete = false)
@@ -156,14 +159,17 @@ class TCloudCfsService @Autowired constructor(
         region: String,
         delete: Boolean
     ) {
+        logger.info("$LOG_UPDATE_TCLOUD_CFS_RULES|createOrDeleteCfsRule|$pgId|$ip|$ruleId|$region|$delete")
         AsyncExecute.dispatch(
-            rabbitTemplate, AsyncTCloudCfs(
+            rabbitTemplate = rabbitTemplate,
+            data = AsyncTCloudCfs(
                 pgId = pgId,
                 ip = ip,
                 ruleId = ruleId,
                 region = region,
                 delete = delete
-            )
+            ),
+            errorLogTag = LOG_UPDATE_TCLOUD_CFS_RULES
         )
     }
 
@@ -189,7 +195,7 @@ class TCloudCfsService @Autowired constructor(
                     }
                 )
             } catch (e: Exception) {
-                logger.error("doCreateOrDeleteCfsRule|DeleteCfsRule error", e)
+                logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|doCreateOrDeleteCfsRule|DeleteCfsRule error", e)
                 return
             }
         } else {
@@ -204,7 +210,7 @@ class TCloudCfsService @Autowired constructor(
                     }
                 )
             } catch (e: Exception) {
-                logger.error("doCreateOrDeleteCfsRule|CreateCfsRule error", e)
+                logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|doCreateOrDeleteCfsRule|CreateCfsRule error", e)
                 return
             }
         }
@@ -231,6 +237,55 @@ class TCloudCfsService @Autowired constructor(
         projectTCloudCfsDao.delete(dslContext, projectId, cfsId)
     }
 
+    fun updateCfsRules4Op(
+        data: UpdateCfsData
+    ) {
+        val record = projectTCloudCfsDao.fetchAny(dslContext, data.projectId)
+        if (record == null) {
+            logger.debug("$LOG_UPDATE_TCLOUD_CFS_RULES ${data.projectId} no cfs")
+            return
+        }
+
+        val client = buildCfsClient(record.region)
+
+        var pgId = record.pgId
+        if (pgId == null) {
+            pgId = getPGId(client, record.cfsId) ?: return
+            projectTCloudCfsDao.updatePGId(dslContext, data.projectId, record.cfsId, pgId)
+        }
+
+        if (data.remove) {
+            val gpResp = try {
+                client.DescribeCfsRules(DescribeCfsRulesRequest().apply { this.pGroupId = pgId })
+            } catch (e: Exception) {
+                logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|DescribeCfsRules error", e)
+                return
+            }.ruleList.map { it.authClientIp to it.ruleId }
+            logger.info("$LOG_UPDATE_TCLOUD_CFS_RULES|updateCfsRules4Op|will delete|${data.ips}")
+            gpResp.forEach { (ip, ruleId) ->
+                if (data.ips.contains(ip)) {
+                    createOrDeleteCfsRule(
+                        pgId = pgId,
+                        ip = "",
+                        ruleId = ruleId,
+                        region = record.region,
+                        delete = true
+                    )
+                }
+            }
+        } else {
+            data.ips.forEach { ip ->
+                createOrDeleteCfsRule(
+                    pgId = pgId,
+                    ip = ip,
+                    ruleId = "",
+                    region = record.region,
+                    delete = false
+                )
+            }
+        }
+    }
+
     private fun buildCfsClient(region: String): CfsClient {
         val cred = Credential(secretId, secretKey)
         val profile = HttpProfile().apply {
@@ -249,5 +304,8 @@ class TCloudCfsService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(TCloudCfsService::class.java)
         private const val TCLOUD_DOMAIN = "cfs.internal.tencentcloudapi.com"
         private const val TCLOUD_PGID_REDIS_KEY_PREFIX = "remotedev:tcloud:pgid"
+
+        // 日志标志常量，方便配置告警或者搜索日志
+        private const val LOG_UPDATE_TCLOUD_CFS_RULES = "update_tcloud_project_cfs_rules"
     }
 }

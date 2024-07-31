@@ -271,4 +271,13 @@ class SignHistoryDao {
             )
         }
     }
+
+    fun writeWarnInfo(dslContext: DSLContext, resignId: String, warnInfo: String) {
+        with(TSignHistory.T_SIGN_HISTORY) {
+            dslContext.update(this)
+                .set(ERROR_MESSAGE, warnInfo)
+                .where(RESIGN_ID.eq(resignId))
+                .execute()
+        }
+    }
 }

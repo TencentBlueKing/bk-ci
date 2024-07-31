@@ -5,3 +5,10 @@ data class ProjectCfsData(
     val cfsId: String,
     val region: String
 )
+
+data class UpdateCfsData(
+    val projectId: String,
+    val cfsId: String,
+    val ips: Set<String>,
+    val remove: Boolean
+)

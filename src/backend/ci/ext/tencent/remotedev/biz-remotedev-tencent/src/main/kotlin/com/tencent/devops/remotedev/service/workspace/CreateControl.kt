@@ -572,7 +572,7 @@ class CreateControl @Autowired constructor(
                 tCloudCfsService.addOrRemoveCfsPermissionRule(ws.projectId, ip, false)
 
                 // 关联tgit相关
-                gitProxyTGitService.addOrRemoveAclIp(ws.projectId, setOf(ip), false)
+                gitProxyTGitService.addOrRemoveAclIp(ws.projectId, setOf(ip), false, null)
             }
 
             if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {
