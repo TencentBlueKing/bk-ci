@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型-构建任务")
@@ -57,6 +58,8 @@ data class BuildTask(
     val params: Map<String, String>? = null,
     @get:Schema(title = "环境参数", required = false)
     var buildVariable: Map<String, String>? = null,
+    @get:Schema(title = "流水线变量表中的参数集合（未填充上下文，如：ci.xxx, jobs.xxx.status）", required = false)
+    var variablesWithoutContext: List<BuildParameters>? = null,
     @get:Schema(title = "容器类型", required = false)
     val containerType: String? = null,
     @get:Schema(title = "签名token", required = false)

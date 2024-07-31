@@ -590,17 +590,22 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             }
 
             else -> {
-                val allVariable = buildVariableService.getAllVariable(task.projectId, task.pipelineId, buildId)
+                val variableWithType = buildVariableService.getAllVariableWithType(task.projectId, buildId)
+                val variablesMapWithoutContext = variableWithType.associateBy { it.key }.toMutableMap()
+                val allVariable = variableWithType.associate { it.key to it.value.toString() }
                 // 构造扩展变量
-                val extMap = buildExtService.buildExt(task, allVariable)
                 val buildVariable = mutableMapOf(
                     PIPELINE_VMSEQ_ID to vmSeqId,
                     PIPELINE_ELEMENT_ID to task.taskId
                 )
-
                 PipelineVarUtil.fillOldVar(buildVariable)
+                // 扩展变量后，增加上下文前，扩展无上下文的变量
+                buildVariable.forEach { (key, value) ->
+                    if (!variablesMapWithoutContext.contains(key))
+                        variablesMapWithoutContext[key] = BuildParameters(key, value)
+                }
                 buildVariable.putAll(allVariable)
-                buildVariable.putAll(extMap)
+                buildVariable.putAll(buildExtService.buildExt(task, allVariable))
 
                 // 如果状态未改变，则做认领任务动作
                 if (!task.status.isRunning()) {
@@ -658,6 +663,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         !it.first.startsWith("@type")
                     }.toMap(),
                     buildVariable = buildVariable,
+                    variablesWithoutContext = variablesMapWithoutContext.map { it.value },
                     containerType = task.containerType,
                     signToken = signToken
                 )

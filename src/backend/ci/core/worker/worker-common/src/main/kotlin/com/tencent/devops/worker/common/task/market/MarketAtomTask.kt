@@ -188,7 +188,7 @@ open class MarketAtomTask : ITask() {
         // 将Job传入的流水线变量先进行凭据替换
         // 插件接收的流水线参数 = Job级别参数 + Task调度时参数 + 本插件上下文 + 编译机环境参数
         val acrossInfo by lazy { TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId) }
-        var variables = buildVariables.variables.plus(buildTask.buildVariable ?: emptyMap()).map {
+        val variables = buildVariables.variables.plus(buildTask.buildVariable ?: emptyMap()).map {
             it.key to it.value.parseCredentialValue(
                 context = buildTask.buildVariable,
                 acrossProjectId = acrossInfo?.targetProjectId
@@ -213,6 +213,11 @@ open class MarketAtomTask : ITask() {
         val variablesMapWithoutContext = buildVariables.variablesWithoutContext
             .associate { it.key to it.value.toString() }
             .toMutableMap()
+        buildTask.variablesWithoutContext?.let { taskVariables ->
+            variablesMapWithoutContext.putAll(
+                taskVariables.associate { it.key to it.value.toString() }
+            )
+        }
         variablesMapWithoutContext.putAll(
             mapOf(
                 "bkWorkspace" to Paths.get(bkWorkspacePath).normalize().toString(),
