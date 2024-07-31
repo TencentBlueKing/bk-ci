@@ -116,7 +116,7 @@
         computed: {
             ...mapState('atom', ['pipelineInfo']),
             hasResetPermission () {
-                return this.pipelineInfo.permissions.canManage
+                return this.pipelineInfo?.permissions.canManage
             },
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
