@@ -455,6 +455,7 @@ const {
 } = manageAsideStore;
 
 onMounted(() => {
+  memberPagination.value.current = 1;
   asideItem.value = undefined;
   getProjectMembers(projectId.value);
 });
@@ -814,11 +815,6 @@ function handleClearOverFormName () {
     .dialog-header-common();
   }
 
-  ::v-deep .bk-dialog-content{
-    margin-top: 40px !important;
-    margin-bottom: 78px !important;
-  }
-
   .required {
     position: relative;
     margin-right: 16px;
@@ -862,10 +858,6 @@ function handleClearOverFormName () {
 
   .dialog-header {
     .dialog-header-common();
-  }
-
-  ::v-deep .bk-dialog-content{
-    margin-bottom: 56px !important;
   }
 
   .handover-text {
