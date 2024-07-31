@@ -102,6 +102,7 @@ export default defineStore('userGroupTable', () => {
    * 获取项目成员有权限的用户组数量
    */
   async function getCollapseList(memberId: string) {
+    paginations.value = []
     try {
       const res = await http.getMemberGroups(projectId.value, memberId);
       collapseList.value = res;
@@ -117,7 +118,7 @@ export default defineStore('userGroupTable', () => {
         tableData: [],
       }))
 
-      sourceList.value.map(i => i.resourceType).forEach(i => {
+      collapseList.value.map(i => i.resourceType).forEach(i => {
         paginations.value[i] = [0, 10]
       })
     } catch (error) {
@@ -159,16 +160,14 @@ export default defineStore('userGroupTable', () => {
       const results = await Promise.all(
         resourceTypes.map(resourceType => getGroupList(resourceType))
       );
-      const [projectResult, resourceGroupResult] = results;
-
       if(currentRequestId === requestId) {
         sourceList.value.forEach((item, index) => {
-          if(item.resourceType === "project" && projectResult) {
-            item.tableData = projectResult.records;
+          if(item.resourceType === "project" && results[index]) {
+            item.tableData = results[index].records;
             item.activeFlag = true;
           }
-          if(index === 1 && resourceGroupResult) {
-            item.tableData = resourceGroupResult.records;
+          if((index === 0 || index === 1) && results[index]) {
+            item.tableData = results[index].records;
             item.activeFlag = true;
           }
         })
