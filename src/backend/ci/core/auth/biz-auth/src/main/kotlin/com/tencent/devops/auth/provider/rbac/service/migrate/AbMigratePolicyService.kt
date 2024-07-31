@@ -383,7 +383,8 @@ abstract class AbMigratePolicyService(
                         projectCode = projectCode,
                         memberId = userId,
                         memberType = ManagerScopesEnum.getType(ManagerScopesEnum.USER),
-                        expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_DAY),
+                        expiredAt = System.currentTimeMillis() / MILLISECOND +
+                            TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_DAY),
                         iamGroupId = groupId
                     )
                 }

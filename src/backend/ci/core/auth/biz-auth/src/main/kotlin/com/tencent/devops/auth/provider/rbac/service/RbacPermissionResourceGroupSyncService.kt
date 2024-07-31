@@ -94,12 +94,8 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     override fun batchSyncGroupAndMember(projectCodes: List<String>) {
         logger.info("sync all group and member|$projectCodes")
         if (projectCodes.isEmpty()) return
-        val traceId = MDC.get(TraceTag.BIZID)
         projectCodes.forEach { projectCode ->
-            syncProjectsExecutorService.submit {
-                MDC.put(TraceTag.BIZID, traceId)
-                syncGroupAndMember(projectCode = projectCode)
-            }
+            syncGroupAndMember(projectCode = projectCode)
         }
     }
 
@@ -163,7 +159,9 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     }
 
     override fun syncGroupAndMember(projectCode: String) {
-        syncProjectsExecutorService.execute {
+        val traceId = MDC.get(TraceTag.BIZID)
+        syncProjectsExecutorService.submit {
+            MDC.put(TraceTag.BIZID, traceId)
             SyncGroupAndMemberLock(redisOperation, projectCode).use { lock ->
                 if (!lock.tryLock()) {
                     logger.info("sync group and member|running:$projectCode")
