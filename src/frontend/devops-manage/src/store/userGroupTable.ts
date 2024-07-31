@@ -62,10 +62,7 @@ export default defineStore('userGroupTable', () => {
   const isLoading = ref(true);
 
   const projectId = computed(() => route.params?.projectCode as string);
-  const paginations = ref({
-    'project': [0, 10],
-    'pipeline': [0, 10]
-  })
+  const paginations = ref({})
 
   const sourceList = ref<SourceType[]>([]);
   const collapseList = ref<CollapseListType[]>([]);
@@ -100,10 +97,6 @@ export default defineStore('userGroupTable', () => {
     Object.keys(selectedData).forEach(key => {
       delete selectedData[key];
     });
-    paginations.value = {
-      'project': [0, 10],
-      'pipeline': [0, 10]
-    };
   }
   /**
    * 获取项目成员有权限的用户组数量
@@ -123,6 +116,10 @@ export default defineStore('userGroupTable', () => {
         scrollLoading: false,
         tableData: [],
       }))
+
+      sourceList.value.map(i => i.resourceType).forEach(i => {
+        paginations.value[i] = [0, 10]
+      })
     } catch (error) {
       console.log(error);
     }
@@ -158,21 +155,21 @@ export default defineStore('userGroupTable', () => {
     memberItem.value = asideItem;
     try {
       isLoading.value = true;
-      const resourceTypes = ['project', 'pipeline'];
+      const resourceTypes = sourceList.value.map(i => i.resourceType).slice(0, 2);
       const results = await Promise.all(
         resourceTypes.map(resourceType => getGroupList(resourceType))
       );
-      const [projectResult, pipelineGroupResult] = results;
+      const [projectResult, resourceGroupResult] = results;
 
       if(currentRequestId === requestId) {
-        sourceList.value.forEach(item => {
+        sourceList.value.forEach((item, index) => {
           if(item.resourceType === "project" && projectResult) {
             item.tableData = projectResult.records;
             item.activeFlag = true;
           }
-          if(item.resourceType === "pipeline" && pipelineGroupResult) {
-            item.tableData = pipelineGroupResult.records;
-            item.count && (item.activeFlag = true);
+          if(index === 1 && resourceGroupResult) {
+            item.tableData = resourceGroupResult.records;
+            item.activeFlag = true;
           }
         })
         isLoading.value = false;

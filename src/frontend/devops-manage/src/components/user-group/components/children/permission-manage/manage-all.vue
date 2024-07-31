@@ -696,7 +696,7 @@ async function getMenuList (item, keyword) {
     return {
       ...i,
       displayName: i.name,
-      name: i.type === 'user' ?  `${i.id} (${i.name})` : i.id,
+      name: i.type === 'user' ? (i.departed ? i.id : `${i.id} (${i.name})`) : i.id,
     }
   })
 }
@@ -814,11 +814,6 @@ function handleClearOverFormName () {
     .dialog-header-common();
   }
 
-  ::v-deep .bk-dialog-content{
-    margin-top: 40px !important;
-    margin-bottom: 78px !important;
-  }
-
   .required {
     position: relative;
     margin-right: 16px;
@@ -862,10 +857,6 @@ function handleClearOverFormName () {
 
   .dialog-header {
     .dialog-header-common();
-  }
-
-  ::v-deep .bk-dialog-content{
-    margin-bottom: 56px !important;
   }
 
   .handover-text {
