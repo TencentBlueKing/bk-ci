@@ -39,9 +39,7 @@ import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.cron.HolidayHelper
 import com.tencent.devops.remotedev.dao.WorkspaceDao
-import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
@@ -75,9 +73,7 @@ class SleepControl @Autowired constructor(
     private val permissionService: PermissionService,
     private val dispatcher: RemoteDevDispatcher,
     private val workspaceCommon: WorkspaceCommon,
-    private val notifyControl: NotifyControl,
-    private val holidayHelper: HolidayHelper,
-    private val workspaceJoinDao: WorkspaceJoinDao
+    private val notifyControl: NotifyControl
 ) {
 
     companion object {
