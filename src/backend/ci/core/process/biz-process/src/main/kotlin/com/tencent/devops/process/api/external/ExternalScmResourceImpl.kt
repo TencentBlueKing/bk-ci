@@ -58,10 +58,15 @@ class ExternalScmResourceImpl @Autowired constructor(
     override fun webHookCodeGitCommit(
         event: String,
         secret: String?,
+        sourceType: String?,
         traceId: String,
         body: String
-    ): Result<Boolean> =
-        Result(
+    ): Result<Boolean> {
+        // 工蜂的测试请求,应该忽略
+        if (sourceType == "Test") {
+            return Result(true)
+        }
+        return Result(
             CodeWebhookEventDispatcher.dispatchEvent(
                 streamBridge = streamBridge,
                 event = GitWebhookEvent(
@@ -70,7 +75,7 @@ class ExternalScmResourceImpl @Autowired constructor(
                     secret = secret
                 )
             )
-        )
+        )}
 
     override fun webHookGitlabCommit(event: String) =
         Result(CodeWebhookEventDispatcher.dispatchEvent(streamBridge, GitlabWebhookEvent(requestContent = event)))

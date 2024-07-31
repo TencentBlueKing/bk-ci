@@ -47,8 +47,6 @@ data class TemplateInstanceCreateRequest(
     var instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
     @get:Schema(title = "是否为空模板", required = false)
     var emptyTemplate: Boolean? = false,
-    @get:Schema(title = "标签", required = false)
-    var labels: List<String> = emptyList(),
     @get:Schema(title = "静态流水线组", required = false)
     var staticViews: List<String> = emptyList()
 )

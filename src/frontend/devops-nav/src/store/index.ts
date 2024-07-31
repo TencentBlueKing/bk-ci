@@ -6,6 +6,7 @@ import {
 } from './constants'
 import getters from './getters'
 import mutations from './mutations'
+import platFormConfig from './modules/platform-config'
 
 const allServices: ObjectMap[] = window.allServices
 const projectList: ObjectMap[] = window.projectList
@@ -16,7 +17,10 @@ for (const key in window.Pages) {
     modules[key] = window.Pages[key].store
 }
 export default new Store<RootState>({
-    modules,
+    modules: {
+        ...modules,
+        platFormConfig
+    },
     mutations,
     actions,
     getters,

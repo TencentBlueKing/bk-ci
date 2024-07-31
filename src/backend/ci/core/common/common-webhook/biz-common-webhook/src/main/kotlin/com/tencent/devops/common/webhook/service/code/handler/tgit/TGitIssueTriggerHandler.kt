@@ -175,6 +175,7 @@ class TGitIssueTriggerHandler(
         return listOf(actionFilter)
     }
 
+    @Suppress("ComplexMethod")
     override fun retrieveParams(event: GitIssueEvent, projectId: String?, repository: Repository?): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         with(event.objectAttributes) {

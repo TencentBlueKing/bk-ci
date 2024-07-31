@@ -46,7 +46,7 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class LogMQConfiguration @Autowired constructor() {
+class LogMQConfiguration {
 
     @Bean
     fun buildLogPrintService(

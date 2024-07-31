@@ -5,7 +5,7 @@
 
                 <header class="atom-selector-header">
                     <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList" class="devops-icon icon-refresh atom-fresh" :class="fetchingAtomList ? 'spin-icon' : ''" /></h3>
-                    <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
+                    <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="icon-search" :value="searchKey" @input="handleClear" @right-icon-click="handleSearch" @enter="handleSearch"></bk-input>
                 </header>
                 <bk-tab v-if="!searchKey" class="atom-tab" size="small" ref="tab" :active.sync="classifyCode" type="unborder-card" v-bkloading="{ isLoading: fetchingAtomList }">
                     <bk-tab-panel
