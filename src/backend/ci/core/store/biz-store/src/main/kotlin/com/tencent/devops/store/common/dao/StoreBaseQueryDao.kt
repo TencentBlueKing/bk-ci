@@ -139,12 +139,12 @@ class StoreBaseQueryDao {
         return with(TStoreBase.T_STORE_BASE) {
             val conditions = mutableListOf(STORE_CODE.`in`(storeCodes))
             conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            val testStatusEnumList = listOf(
+                StoreStatusEnum.TESTING,
+                StoreStatusEnum.AUDITING
+            )
             if (testComponentFlag) {
-                val statusEnumList = listOf(
-                    StoreStatusEnum.TESTING,
-                    StoreStatusEnum.AUDITING
-                )
-                conditions.add(STATUS.`in`(statusEnumList))
+                conditions.add(STATUS.`in`(testStatusEnumList))
                 val subQuery = dslContext.select(
                     STORE_CODE,
                     STORE_TYPE,
@@ -163,6 +163,7 @@ class StoreBaseQueryDao {
                     .fetch()
             } else {
                 conditions.add(LATEST_FLAG.eq(true))
+                conditions.add(STATUS.notIn(testStatusEnumList))
                 dslContext.selectFrom(this)
                     .where(conditions)
                     .fetch()

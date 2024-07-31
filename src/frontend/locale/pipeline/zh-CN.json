@@ -1020,7 +1020,9 @@
     "branches": "分支",
     "codelibConfigs": "代码库配置",
     "timerTriggerCodelibTips": "- Git 仓库，分支非必填，缺省时为默认分支\n- SVN 仓库，分支必填，为仓库根路径下的一级子目录",
-    "timerTriggerBranchTips": "若多个分支均有变更，满足条件时每个分支将触发一次"
+    "timerTriggerBranchTips": "若多个分支均有变更，满足条件时每个分支将触发一次",
+    "filePathTips": "请填写存放文件的目录",
+    "fileNameTips": "文件名，上传文件后自动读取"
   },
   "storeMap": {
     "textarea": "文本框",
@@ -1546,5 +1548,6 @@
   "eventID": "事件ID",
   "runningSteps": "正在运行的步骤：",
   "completeness": "完成度：",
-  "pacDesc": "Pipeline as Code 模式，简称 PAC 模式。开启并将流水线文件提交到代码库后，可通过维护代码库文件的方式来维护流水线。"
+  "pacDesc": "Pipeline as Code 模式，简称 PAC 模式。开启并将流水线文件提交到代码库后，可通过维护代码库文件的方式来维护流水线。",
+  "debugHint": "调试和执行不共享构建号，但共享并发控制。调试记录仅在草稿版本调试期间有效，版本发布后将自动清理。"
 }

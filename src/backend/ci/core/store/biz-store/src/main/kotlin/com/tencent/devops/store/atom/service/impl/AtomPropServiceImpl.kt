@@ -91,7 +91,7 @@ class AtomPropServiceImpl @Autowired constructor(
                 logoUrl = logoUrl?.let {
                     StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
                 }
-                logoUrl = RegexUtils.trimProtocol(atomPropRecord[tAtom.LOGO_URL])
+                logoUrl = RegexUtils.trimProtocol(logoUrl)
                 val atomProp = AtomProp(
                     atomCode = atomCode,
                     os = JsonUtil.to(atomPropRecord[tAtom.OS], object : TypeReference<List<String>>() {}),
