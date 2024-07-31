@@ -138,7 +138,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         setProperty("$bindingPrefix.destination", event.destination)
         setProperty(
             "$bindingPrefix.consumer.concurrency",
-            "\${bkScs.consumer.concurrency.$bindingName:${consumer.concurrency}}"
+            "\${bkScs.consumer.concurrency.$bindingName:${consumer.defaultConcurrency}}"
         )
         if (consumer.anonymous) {
             // 如果队列匿名则在消费者销毁后删除该队列

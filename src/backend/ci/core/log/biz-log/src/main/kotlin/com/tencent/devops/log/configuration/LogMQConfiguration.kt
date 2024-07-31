@@ -46,7 +46,7 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class LogMQConfiguration @Autowired constructor() {
+class LogMQConfiguration {
 
     @Bean
     fun buildLogPrintService(
@@ -56,17 +56,17 @@ class LogMQConfiguration @Autowired constructor() {
         @Autowired logServiceConfig: LogServiceConfig
     ) = BuildLogPrintService(streamBridge, logPrintBean, storageProperties, logServiceConfig)
 
-    @EventConsumer
+    @EventConsumer(defaultConcurrency = 10)
     fun logOriginEventConsumer(
         @Autowired listenerService: BuildLogListenerService
     ) = ScsConsumerBuilder.build<LogOriginEvent> { listenerService.handleEvent(it) }
 
-    @EventConsumer
+    @EventConsumer(defaultConcurrency = 10)
     fun logStorageEventConsumer(
         @Autowired listenerService: BuildLogListenerService
     ) = ScsConsumerBuilder.build<LogStorageEvent> { listenerService.handleEvent(it) }
 
-    @EventConsumer
+    @EventConsumer(defaultConcurrency = 10)
     fun logStatusEventConsumer(
         @Autowired listenerService: BuildLogListenerService
     ) = ScsConsumerBuilder.build<LogStatusEvent> { listenerService.handleEvent(it) }

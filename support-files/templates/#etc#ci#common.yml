@@ -49,20 +49,6 @@ spring:
     pool:
       max-active: 16
       max-wait:  2000
-# rabbitmq config
-  rabbitmq:
-    # 引擎核心业务MQ
-    core:
-      virtual-host: __BK_CI_RABBITMQ_VHOST__
-      username: __BK_CI_RABBITMQ_USER__
-      password: __BK_CI_RABBITMQ_PASSWORD__
-      addresses: __BK_CI_RABBITMQ_ADDR__
-    # 拓展功能模块MQ -- 如果主rabbitmq出现性能瓶颈, 可以考虑使用额外的实例
-    extend:
-      virtual-host: __BK_CI_RABBITMQ_VHOST__
-      username: __BK_CI_RABBITMQ_USER__
-      password: __BK_CI_RABBITMQ_PASSWORD__
-      addresses: __BK_CI_RABBITMQ_ADDR__
   metrics:
     servo:
       enabled: false
