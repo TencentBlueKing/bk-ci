@@ -3,11 +3,11 @@
     class="manage-user-selector"
     clearable
     :placeholder="t('输入授权人，选中回车进行校验')"
-    :search-key="['id', 'name']"
+    :search-key="searchKeyArr"
     save-key="id"
     display-key="displayName"
     is-async-list
-    :list="curUserList"
+    :list="userList"
     @input="handleInputUserName"
     @change="handleChange"
     @removeAll="removeAll">
@@ -25,7 +25,7 @@ const route = useRoute();
 const emits = defineEmits(['change', 'removeAll']);
 const userList = ref([]);
 const projectId = computed(() => route.params?.projectCode);
-const curUserList = computed(() => userList.value);
+const searchKeyArr = computed(() => ['id', 'name']);
 
 async function fetchProjectMembers (query) {
   const res = await http.getProjectMembers(projectId.value, query)
