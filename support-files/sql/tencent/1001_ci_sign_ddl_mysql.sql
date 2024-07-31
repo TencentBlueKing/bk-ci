@@ -77,3 +77,8 @@ CREATE TABLE IF NOT EXISTS `T_SIGN_IPA_UPLOAD` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='签名包上传记录表';
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+    -- ----------------------------
+    -- Table fields of T_SIGN_HISTORY
+    -- ----------------------------
+ALTER TABLE T_SIGN_HISTORY ADD COLUMN KEYSTORE_APP_ID VARCHAR(64) DEFAULT NULL COMMENT 'keystore应用ID';
