@@ -25,11 +25,20 @@
         />
         <p class="item" v-if="item.type === 'user'">
           <bk-overflow-title type="tips">
-            {{ item.id }} ({{ item.name }})&nbsp;
-            <bk-tag v-if="item.departed" size="small" theme="danger">{{t("已离职")}}</bk-tag>
+            {{ item.id }}
+            <span v-if="item.name && !item.departed"> ({{ item.name }}) </span>
+            <bk-tag v-else size="small" theme="danger"> {{ t("已离职")}}</bk-tag>
           </bk-overflow-title>
         </p>
-        <p class="item" v-else  v-bk-tooltips="{ content: item.name, placement: 'top', disabled: !truncateMiddleText(item.name).includes(' ... ') }">
+        <p
+          v-else
+          class="item"
+          v-bk-tooltips="{
+            content: item.name,
+            placement: 'top',
+            disabled: !truncateMiddleText(item.name).includes(' ... ')
+          }"
+        >
           {{truncateMiddleText(item.name)}}
         </p>
         <bk-popover
@@ -123,7 +132,7 @@
 
         <div v-if="isHandOverfail" class="hand-over-fail">
           <p class="err-text">
-            <p style="display: flex; line-height: 14px;">
+            <p class="deal">
               <i class="manage-icon manage-icon-close"></i>
               <i18n-t keypath="检测到以下授权将无法移交给X，请先前往「授权管理」单独处理" tag="div" >
                 <span> {{ handOverForm.name }} </span>
@@ -135,7 +144,9 @@
             </p>
           </p>
           <div class="hand-over-table-group" v-for="item in overTable" :key="item.id">
-            <p class="hand-over-table-item">{{item.name}}({{ item.resourceType }})</p>
+            <p class="hand-over-table-item">
+              {{item.name}}({{ item.resourceType }})
+            </p>
             <p class="blue-text" @click="goAauthorization(item.resourceType)">
               <i class="manage-icon manage-icon-jump"></i>
               <span>{{t("前往处理")}}</span>
@@ -145,18 +156,30 @@
       </div>
     </template>
     <template #footer>
-      <bk-button theme="primary" @click="handConfirm('user')" :loading="manageAsideStore.btnLoading" :disabled="!isAuthorizedSuccess"> {{t("移交并移出")}} </bk-button>
-      <bk-button class="btn-margin" @click="handOverClose"> {{t("关闭")}} </bk-button>
+      <bk-button
+        theme="primary"
+        @click="handConfirm('user')"
+        :loading="manageAsideStore.btnLoading"
+        :disabled="!isAuthorizedSuccess"
+      >
+        {{t("移交并移出")}}
+      </bk-button>
+      <bk-button
+        class="btn-margin"
+        @click="handOverClose"
+      >
+        {{t("关闭")}}
+      </bk-button>
     </template>
   </bk-dialog>
   <bk-dialog
     :width="480"
-    :theme="'primary'"
-    :dialog-type="'confirm'"
+    theme="primary"
+    dialog-type="confirm"
     :confirm-text="t('关闭')"
     :is-show="isShowPersonDialog"
-    @closed="() => isShowPersonDialog = false"
-    @confirm="() => isShowPersonDialog = false"
+    @closed="handlePersonClose"
+    @confirm="handlePersonClose"
   >
     <template #header>
       {{t("人员列表")}}
@@ -191,8 +214,19 @@
         </p>
     </template>
     <template #footer>
-      <bk-button theme="danger" @click="handConfirm('department')" :loading="manageAsideStore.btnLoading"> {{t("确认移出")}} </bk-button>
-      <bk-button class="btn-margin" @click="handOverClose"> {{t("关闭")}} </bk-button>
+      <bk-button
+        theme="danger"
+        @click="handConfirm('department')"
+        :loading="manageAsideStore.btnLoading"
+      >
+        {{t("确认移出")}}
+      </bk-button>
+      <bk-button
+        class="btn-margin"
+        @click="handOverClose"
+      >
+        {{t("关闭")}}
+      </bk-button>
     </template>
   </bk-dialog>
 </template>
@@ -347,8 +381,16 @@ async function handleChangeOverFormName ({list, userList}){
     handOverInputClear();
   }
 }
-function refresh(){
-  emit('refresh');
+async function refresh(){
+  try {
+    await http.syncGroupAndMember(projectId.value);
+    emit('refresh');
+  } catch (error) {
+    Message({
+      theme: 'error',
+      message: err.message
+    });
+  }
 }
 /**
  * 移出失败刷新数据
@@ -370,6 +412,9 @@ function handleShowPerson(item) {
   isShowPersonDialog.value = true;
   removeUser.value = item;
   emit('getPersonList',item, projectId.value)
+}
+function handlePersonClose(){
+  isShowPersonDialog.value = false;
 }
 </script>
 
@@ -434,7 +479,8 @@ function handleShowPerson(item) {
   cursor: pointer;
 
   .item {
-    width: 130px;
+    width: 150px;
+    flex: 1;
     height: 20px;
     font-family: MicrosoftYaHei;
     font-size: 12px;
@@ -561,6 +607,11 @@ function handleShowPerson(item) {
       span {
         font-weight: 700;
         vertical-align: middle;
+      }
+
+      .deal {
+        display: flex;
+        line-height: 14px;
       }
     }
 
