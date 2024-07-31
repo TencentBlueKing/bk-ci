@@ -113,7 +113,8 @@ import org.springframework.stereotype.Service
     "ReturnCount",
     "TooManyFunctions",
     "MagicNumber",
-    "LargeClass"
+    "LargeClass",
+    "ComplexMethod"
 )
 @Service
 class EngineVMBuildService @Autowired(required = false) constructor(
