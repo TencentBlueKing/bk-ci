@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
@@ -75,7 +74,6 @@ class SleepControl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val permissionService: PermissionService,
-    private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
     private val workspaceCommon: WorkspaceCommon,
     private val notifyControl: NotifyControl,
