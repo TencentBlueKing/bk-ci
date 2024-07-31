@@ -22,21 +22,14 @@
           :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
           @click="handleChooseGroup(group)"
           >
-          <!-- v-show="group.groupId !== renameGroupId" -->
           <span class="group-name" :title="group.name">{{ group.name }}</span>
-          <div class="num-box">
+          <div class="num-box" v-for="item in groupCountField" :key="item">
             <i :class="{
-              'group-icon manage-icon manage-icon-user-shape': true,
+              'group-icon manage-icon manage-icon-user-shape': item === 'userCount',
+              'group-icon manage-icon manage-icon-organization': item === 'departmentCount',
               'active': activeTab === group.groupId
             }" />
-            <div class="group-num">{{ group.userCount }}</div>
-          </div>
-          <div class="num-box">
-            <i :class="{
-              'group-icon manage-icon manage-icon-organization': true,
-              'active': activeTab === group.groupId
-            }" />
-            <div class="group-num">{{ group.departmentCount }}</div>
+            <div class="group-num">{{ group[item] }}</div>
           </div>
           <bk-popover
             v-if="resourceType === 'project'"
@@ -202,6 +195,7 @@ export default {
       renameGroupId: 0,
       curGroupIndex: -1,
       keyWords: '',
+      groupCountField: ['userCount', 'departmentCount'],
       t,
     };
   },

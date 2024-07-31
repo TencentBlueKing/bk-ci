@@ -9,7 +9,8 @@
               <i :class="{
                 'manage-icon manage-icon-down-shape': projectTable.activeFlag,
                 'manage-icon manage-icon-right-shape': !projectTable.activeFlag,
-              }" style="color: #989ca7; margin-right: 10px;" />
+                'shape-icon': true,
+              }" />
               {{ projectTable.resourceTypeName }} ({{ projectTable.resourceType }})
               <span class="group-num">{{projectTable.count}}</span>
             </p>
