@@ -83,7 +83,9 @@ data class CodeGitlabWebHookTriggerElement(
     @get:Schema(title = "push事件action")
     val includePushAction: List<String>? = null,
     @get:Schema(title = "mr事件action")
-    val includeMrAction: List<String>? = null
+    val includeMrAction: List<String>? = null,
+    @get:Schema(title = "跳过WIP")
+    val skipWip: Boolean? = false
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitlabWebHookTrigger"

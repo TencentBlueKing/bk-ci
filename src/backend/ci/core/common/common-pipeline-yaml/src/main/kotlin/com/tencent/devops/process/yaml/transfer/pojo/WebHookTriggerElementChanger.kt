@@ -100,7 +100,9 @@ data class WebHookTriggerElementChanger(
     @get:Schema(title = "第三方应用鉴权token")
     val thirdSecretToken: String? = null,
     @get:Schema(title = "是否启用插件")
-    val enable: Boolean
+    val enable: Boolean,
+    @get:Schema(title = "跳过WIP")
+    val skipWip: Boolean? = false
 ) {
     constructor(data: CodeGitWebHookTriggerElement) : this(
         name = data.name,
@@ -133,7 +135,8 @@ data class WebHookTriggerElementChanger(
         enableThirdFilter = data.enableThirdFilter,
         thirdUrl = data.thirdUrl,
         thirdSecretToken = data.thirdSecretToken,
-        enable = data.isElementEnable()
+        enable = data.isElementEnable(),
+        skipWip = data.skipWip
     )
 
     constructor(data: CodeTGitWebHookTriggerElement) : this(
@@ -165,7 +168,8 @@ data class WebHookTriggerElementChanger(
         includeMrAction = data.data.input.includeMrAction,
         includePushAction = data.data.input.includePushAction,
         enableThirdFilter = data.data.input.enableThirdFilter,
-        enable = data.isElementEnable()
+        enable = data.isElementEnable(),
+        skipWip = data.data.input.skipWip
     )
 
     constructor(data: CodeGithubWebHookTriggerElement) : this(
@@ -196,7 +200,8 @@ data class WebHookTriggerElementChanger(
         includeMrAction = data.includeMrAction,
         includePushAction = data.includePushAction,
         enableThirdFilter = data.enableThirdFilter,
-        enable = data.isElementEnable()
+        enable = data.isElementEnable(),
+        skipWip = data.skipWip
     )
 
     constructor(data: CodeSVNWebHookTriggerElement) : this(
@@ -244,6 +249,7 @@ data class WebHookTriggerElementChanger(
         includeSourceBranchName = data.includeSourceBranchName,
         includeMrAction = data.includeMrAction,
         includePushAction = data.includePushAction,
-        enable = data.isElementEnable()
+        enable = data.isElementEnable(),
+        skipWip = data.skipWip
     )
 }
