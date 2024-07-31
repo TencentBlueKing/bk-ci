@@ -79,7 +79,11 @@ data class CodeGitlabWebHookTriggerElement(
     @get:Schema(title = "用于包含的提交信息", required = false)
     val includeCommitMsg: String? = null,
     @get:Schema(title = "用于排除的提交信息", required = false)
-    val excludeCommitMsg: String? = null
+    val excludeCommitMsg: String? = null,
+    @get:Schema(title = "push事件action")
+    val includePushAction: List<String>? = null,
+    @get:Schema(title = "mr事件action")
+    val includeMrAction: List<String>? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitlabWebHookTrigger"
@@ -100,6 +104,7 @@ data class CodeGitlabWebHookTriggerElement(
         val props = when (eventType) {
             CodeEventType.PUSH -> {
                 listOf(
+                    vuexInput(name = "action", value = joinToString(includePushAction)),
                     vuexInput(name = "branchName", value = branchName),
                     vuexInput(name = "excludeBranchName", value = excludeBranchName),
                     vuexInput(name = "includePaths", value = includePaths),
@@ -111,6 +116,7 @@ data class CodeGitlabWebHookTriggerElement(
 
             CodeEventType.MERGE_REQUEST -> {
                 listOf(
+                    vuexInput(name = "action", value = joinToString(includeMrAction)),
                     vuexInput(name = "branchName", value = branchName),
                     vuexInput(name = "excludeBranchName", value = excludeBranchName),
                     vuexInput(

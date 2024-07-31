@@ -216,7 +216,6 @@ class StartWorkspaceHandler @Autowired constructor(
                     status = WorkspaceStatus.RUNNING,
                     dslContext = transactionContext
                 )
-                remoteDevBillingDao.newBilling(transactionContext, workspace.workspaceName, event.userId)
 
                 val lastHistory = workspaceHistoryDao.fetchAnyHistory(
                     dslContext = transactionContext,

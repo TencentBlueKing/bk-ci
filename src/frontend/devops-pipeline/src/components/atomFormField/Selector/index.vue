@@ -93,8 +93,7 @@
                 const props = {
                     value: this.value,
                     loading: this.isLoading,
-                    // disabled: this.disabled || this.readOnly,
-                    disabled: this.disabled,
+                    disabled: this.disabled || this.readOnly,
                     searchable: this.searchable,
                     multiple: this.multiSelect,
                     clearable: this.clearable,

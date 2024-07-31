@@ -28,7 +28,7 @@
 package com.tencent.devops.process.yaml.parsers.template
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.process.yaml.transfer.TransferMapper
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
@@ -313,9 +313,7 @@ variables:
         val sb = yamlContent ?: getStrFromResource(testYaml!!)
 
         val yaml = ScriptYmlUtils.formatYaml(sb)
-        val preTemplateYamlObject = TransferMapper.getObjectMapper().readValue(
-            yaml, PreTemplateScriptBuildYaml::class.java
-        )
+        val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
         preTemplateYamlObject.resources?.pools?.forEach { pool ->
             resourceExt?.put(pool.format(), pool)
         }
@@ -328,12 +326,12 @@ variables:
             repo = null,
             resourcePoolMapExt = resourceExt,
             conf = YamlTemplateConf(useOldParametersExpression = useOldParametersExpression)
-        ).replace() as PreScriptBuildYaml
+        ).replace()
         if (!normalized) {
             return preScriptBuildYaml
         }
         val (normalOb, trans) = ScriptYmlUtils.normalizeGitCiYaml(preScriptBuildYaml, "")
-        val yamls = TransferMapper.toYaml(normalOb)
+        val yamls = YamlUtil.toYaml(normalOb)
         println("------------ Trans -----------")
         println(JsonUtil.toJson(trans))
         println("------------------------")
@@ -349,7 +347,6 @@ variables:
             "templates/${param.targetRepo!!.repository}/templates/${param.path}"
         }
         val sb = getStrFromResource(newPath)
-        println(newPath)
         return ScriptYmlUtils.formatYaml(sb)
     }
 

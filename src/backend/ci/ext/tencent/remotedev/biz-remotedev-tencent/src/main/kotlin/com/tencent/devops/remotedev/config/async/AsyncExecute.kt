@@ -6,21 +6,27 @@ import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
 
 object AsyncExecute {
-    fun dispatch(streamBridge: StreamBridge, data: AsyncExecuteEventData) {
+    fun dispatch(streamBridge: StreamBridge, data: AsyncExecuteEventData, errorLogTag: String? = null) {
         dispatch(
-            streamBridge, AsyncExecuteEvent(
+            streamBridge = streamBridge,
+            event = AsyncExecuteEvent(
                 eventStr = JsonUtil.toJson(data, false),
                 type = data.toType()
-            )
+            ), errorLogTag = errorLogTag
         )
     }
 
-    private fun dispatch(streamBridge: StreamBridge, event: AsyncExecuteEvent) {
+    private fun dispatch(streamBridge: StreamBridge, event: AsyncExecuteEvent, errorLogTag: String? = null) {
         try {
             logger.info("AsyncExecuteDispatch|${event.type}|${event.eventStr}")
             event.sendTo(streamBridge)
         } catch (e: Throwable) {
-            logger.error("AsyncExecuteDispatch|error:", e)
+            if (errorLogTag.isNullOrBlank()) {
+                logger.error("AsyncExecuteDispatch|error:", e)
+            } else {
+                // 针对某些特殊的需要配置告警的场景添加
+                logger.error("$errorLogTag|AsyncExecuteDispatch|error:", e)
+            }
         }
     }
 

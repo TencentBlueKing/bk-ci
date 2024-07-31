@@ -270,15 +270,10 @@ class PipelineRecordModelService @Autowired constructor(
         // 获取开机任务的序号
         val startVMTaskSeq = buildRecordContainer.containerVar[Container::startVMTaskSeq.name]?.toString()?.toInt() ?: 1
         containerRecordTasks.forEach { containerRecordTask ->
-            if (startVMTaskSeq > 1 && startVMTaskSeq > containerRecordTask.taskSeq) {
-                // 当开机任务的序号大于1时，说明第一个任务不是开机任务，job含有内置插件任务，需要重新调整开机任务前面的task任务的taskSeq值
-                containerRecordTask.taskSeq += 1
-            }
+            handleTaskSeq(startVMTaskSeq, containerRecordTask)
             val taskVarMap = generateTaskVarMap(
-                containerRecordTask = containerRecordTask,
-                taskId = containerRecordTask.taskId,
-                containerBaseMap = containerBaseMap,
-                matrixTaskFlag = matrixTaskFlag,
+                containerRecordTask = containerRecordTask, taskId = containerRecordTask.taskId,
+                containerBaseMap = containerBaseMap, matrixTaskFlag = matrixTaskFlag,
                 taskBaseMaps = taskBaseMaps
             )
             while (containerRecordTask.taskSeq - preContainerRecordTaskSeq > 1) {
@@ -316,6 +311,16 @@ class PipelineRecordModelService @Autowired constructor(
         if (tasks.isNotEmpty()) {
             // 将转换后的task变量数据放入job中
             containerVarMap[Container::elements.name] = tasks
+        }
+    }
+
+    private fun handleTaskSeq(
+        startVMTaskSeq: Int,
+        containerRecordTask: BuildRecordTask
+    ) {
+        if (startVMTaskSeq < 1 || (startVMTaskSeq > 1 && startVMTaskSeq > containerRecordTask.taskSeq)) {
+            // 当开机任务的序号大于1时，说明第一个任务不是开机任务，job含有内置插件任务，需要重新调整开机任务前面的task任务的taskSeq值
+            containerRecordTask.taskSeq += 1
         }
     }
 
@@ -443,7 +448,7 @@ class PipelineRecordModelService @Autowired constructor(
             // 如果跳过的是矩阵类task，则需要生成完整的model对象以便合并
             taskVarMap["@type"] = MatrixStatusElement.classType
             taskVarMap[MatrixStatusElement::originClassType.name] =
-                taskBaseMap[MatrixStatusElement::classType.name].toString()
+                taskBaseMap[MatrixStatusElement.classType].toString()
             taskVarMap[MatrixStatusElement::originAtomCode.name] = taskBaseMap[KEY_ATOM_CODE].toString()
             taskVarMap[MatrixStatusElement::originTaskAtom.name] = taskBaseMap[KEY_TASK_ATOM].toString()
             taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)

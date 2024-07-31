@@ -58,6 +58,8 @@ import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.OpService
 import com.tencent.devops.environment.service.job.PermissionManageService
 import com.tencent.devops.environment.service.job.TencentStockDataUpdateService
+import com.tencent.devops.environment.service.sync.UpdateCmdbNodeService
+import com.tencent.devops.environment.service.sync.UpdateGseAgentInfoService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -67,6 +69,8 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     private val jobService: JobService,
     private val opService: OpService,
     private val permissionManageService: PermissionManageService,
+    private val updateCmdbNodeService: UpdateCmdbNodeService,
+    private val updateGseAgentInfoService: UpdateGseAgentInfoService,
     private val tencentStockDataUpdateService: TencentStockDataUpdateService
 ) : TencentServiceJobResource {
     companion object {
@@ -206,11 +210,11 @@ class TencentServiceJobResourceImpl @Autowired constructor(
 
     override fun checkDeployNodesInCmdb(userId: String) {
         if (userId.isBlank()) throw ParamBlankException("userId is blank.")
-        tencentStockDataUpdateService.checkDeployNodesInCmdb()
+        updateCmdbNodeService.updateCmdbNodeInfo()
     }
 
     override fun updateGseAgent(userId: String) {
-        tencentStockDataUpdateService.updateGseAgentStatusAndVersionPeriodically()
+        updateGseAgentInfoService.updateGseAgentStatusAndVersion()
     }
 
     override fun addStockNodeToCC(userId: String) {

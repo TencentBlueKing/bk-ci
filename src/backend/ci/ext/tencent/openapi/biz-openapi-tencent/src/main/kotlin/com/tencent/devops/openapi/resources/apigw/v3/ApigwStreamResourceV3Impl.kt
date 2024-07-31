@@ -188,11 +188,13 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         enabled: Boolean,
+        productName: String?,
         projectInfo: GitCIProjectInfo
     ): Result<Boolean> {
         return client.get(ServiceGitBasicSettingResource::class).enableGitCI(
             userId = userId,
             enabled = enabled,
+            productName = productName,
             projectInfo = projectInfo
         )
     }

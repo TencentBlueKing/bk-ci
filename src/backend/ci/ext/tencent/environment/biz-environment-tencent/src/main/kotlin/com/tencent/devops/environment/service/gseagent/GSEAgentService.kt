@@ -60,7 +60,7 @@ import com.tencent.devops.environment.pojo.job.agentres.Step
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
 import com.tencent.devops.environment.service.job.ChooseAgentInstallChannelIdService
 import com.tencent.devops.environment.service.job.NodeManApi
-import com.tencent.devops.environment.service.job.TencentQueryFromCCService
+import com.tencent.devops.environment.service.cc.TencentQueryFromCCService
 import com.tencent.devops.environment.utils.FileUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
