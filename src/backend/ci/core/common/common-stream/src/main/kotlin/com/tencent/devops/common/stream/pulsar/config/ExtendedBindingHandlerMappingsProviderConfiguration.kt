@@ -30,6 +30,7 @@ package com.tencent.devops.common.stream.pulsar.config
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.stream.pulsar.convert.PulsarMessageConverter
 import com.tencent.devops.common.stream.pulsar.custom.PulsarConfigBeanPostProcessor
+import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.source.ConfigurationPropertyName
 import org.springframework.cloud.function.json.JacksonMapper
@@ -41,6 +42,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.messaging.converter.CompositeMessageConverter
 
 @Configuration
+@AutoConfigureAfter(name = ["org.springframework.cloud.function.context.config.ContextFunctionCatalogAutoConfiguration"])
 class ExtendedBindingHandlerMappingsProviderConfiguration {
     @Bean
     fun pulsarExtendedPropertiesDefaultMappingsProvider(): MappingsProvider {
@@ -69,8 +71,8 @@ class ExtendedBindingHandlerMappingsProviderConfiguration {
     /**
      * 覆盖ContextFunctionCatalogAutoConfiguration中的JsonMapper
      */
-    @Primary
     @Bean
+    @Primary
     fun jsonMapper(objectMapper: ObjectMapper): JsonMapper {
         return JacksonMapper(objectMapper)
     }
