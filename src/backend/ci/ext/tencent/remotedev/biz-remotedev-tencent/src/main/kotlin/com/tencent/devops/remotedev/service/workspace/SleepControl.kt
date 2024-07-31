@@ -53,7 +53,6 @@ import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
-import com.tencent.devops.remotedev.service.BKBaseService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
@@ -77,7 +76,6 @@ class SleepControl @Autowired constructor(
     private val dispatcher: RemoteDevDispatcher,
     private val workspaceCommon: WorkspaceCommon,
     private val notifyControl: NotifyControl,
-    private val bkBaseService: BKBaseService,
     private val holidayHelper: HolidayHelper,
     private val workspaceJoinDao: WorkspaceJoinDao
 ) {
