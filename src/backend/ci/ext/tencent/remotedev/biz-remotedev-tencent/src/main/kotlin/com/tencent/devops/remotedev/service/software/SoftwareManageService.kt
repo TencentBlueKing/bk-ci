@@ -388,8 +388,6 @@ class SoftwareManageService @Autowired constructor(
         logger.info("updateSoftwareInstalledRecords|type|$type|softwareList|$softwareList")
         if (type == "SYSTEM") {
             softwareManageDao.updateSystemInstalledRecords(dslContext, softwareList)
-        } else {
-            softwareManageDao.updateUserInstalledRecords(dslContext, softwareList)
         }
     }
 }
