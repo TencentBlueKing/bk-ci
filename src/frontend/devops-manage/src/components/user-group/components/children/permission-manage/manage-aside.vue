@@ -611,6 +611,7 @@ function handlePersonClose(){
 
       .deal {
         display: flex;
+        align-items: center;
         line-height: 14px;
       }
     }
@@ -635,6 +636,8 @@ function handlePersonClose(){
     }
 
     .blue-text {
+      display: flex;
+      align-items: center;
       cursor: pointer;
       color: #3A84FF;
       font-size: 12px;
