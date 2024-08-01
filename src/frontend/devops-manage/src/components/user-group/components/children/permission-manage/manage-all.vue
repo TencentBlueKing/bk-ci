@@ -303,8 +303,7 @@
             <div class="main-line main-line-remove">
               <p class="main-label-remove">
                 <i18n-t keypath="确认从以上X个用户组中移出X吗？" tag="div">
-                  <span class="remove-num">{{ totalCount - inoperableCount }}</span>
-                  <span class="remove-person">{{ userName }}</span>
+                  <span class="remove-num">{{ totalCount - inoperableCount }}</span><span class="remove-person">{{ userName }}</span>
                 </i18n-t>
               </p>
             </div>

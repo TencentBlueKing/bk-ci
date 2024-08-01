@@ -124,8 +124,8 @@
           <div class="failed-tips">
             <div class="manage-icon manage-icon-warning-circle-fill warning-icon"></div>
             <i18n-t keypath="检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权" tag="div">
-              <span class="tips-count">{{ failedCount }}</span>
-              <template #op1>
+              <span class="tips-count">{{ failedCount }}</span><span class="tips-text">{{ t('前往处理') }}</span><span class="tips-text">{{ t('继续重置其余') }}</span><span class="tips-text">{{ searchName }}</span><span class="tips-text">{{ t('授权') }}</span>
+              <!-- <template #op1>
                 <span class="tips-text">{{ t('前往处理') }}</span>
               </template>
               <template #op2>
@@ -136,7 +136,7 @@
               </template>
               <template #op4>
                 <span class="tips-text">{{ t('授权') }}</span>
-              </template>
+              </template> -->
             </i18n-t>
           </div>
           <bk-table
