@@ -34,26 +34,10 @@
         props: {
             resetQueryCondition: Function
         },
-        data () {
-            return {
-                triggerList: [],
-                statusList: [],
-                repoList: [],
-                branchList: []
-            }
-        },
         computed: {
             ...mapGetters({
                 historyPageStatus: 'pipelines/getHistoryPageStatus'
             }),
-            conditionsMap () {
-                return {
-                    trigger: this.triggerList,
-                    status: this.statusList,
-                    materialAlias: this.repoList,
-                    materialBranch: this.branchList
-                }
-            },
             datePickerConf () {
                 return {
                     format: 'yyyy-MM-dd HH:mm:ss',
@@ -66,19 +50,45 @@
                         name: this.$t('status'),
                         id: 'status',
                         multiable: true,
-                        children: this.statusList
+                        remoteMethod: async () => {
+                            const statusList = await this.getConditionList('status')
+                            return statusList.map(item => ({
+                                name: item.value,
+                                id: item.id
+                            }))
+                        }
                     },
                     {
                         name: this.$t('materialRepo'),
                         id: 'materialAlias',
                         multiable: true,
-                        children: this.repoList
+                        remoteMethod: async (search) => {
+                            const repoList = await this.getConditionList('repo', {
+                                type: 'MATERIAL',
+                                search
+                            })
+                            return repoList.map(item => ({
+                                name: item,
+                                id: item
+                            }))
+                        },
+                        inputInclude: true
                     },
                     {
                         name: this.$t('triggerRepo'),
-                        id: 'triggerRepo',
+                        id: 'triggerAlias',
                         multiable: true,
-                        children: this.repoList
+                        remoteMethod: async (search) => {
+                            const repoList = await this.getConditionList('repo', {
+                                type: 'TRIGGER',
+                                search
+                            })
+                            return repoList.map(item => ({
+                                name: item,
+                                id: item
+                            }))
+                        },
+                        inputInclude: true
                     },
                     {
                         name: 'Commit ID',
@@ -92,19 +102,45 @@
                         name: this.$t('history.triggerType'),
                         id: 'trigger',
                         multiable: true,
-                        children: this.triggerList
+                        remoteMethod: async () => {
+                            const repoList = await this.getConditionList('trigger')
+                            return repoList.map(item => ({
+                                name: item.value,
+                                id: item.id
+                            }))
+                        }
                     },
                     {
                         name: this.$t('materialBranch'),
                         id: 'materialBranch',
                         multiable: true,
-                        children: this.branchList
+                        remoteMethod: async (search) => {
+                            const repoList = await this.getConditionList('branchName', {
+                                type: 'MATERIAL',
+                                search
+                            })
+                            return repoList.map(item => ({
+                                name: item,
+                                id: item
+                            }))
+                        },
+                        inputInclude: true
                     },
                     {
                         name: this.$t('triggerBranch'),
                         id: 'triggerBranch',
                         multiable: true,
-                        children: this.branchList
+                        remoteMethod: async (search) => {
+                            const repoList = await this.getConditionList('branchName', {
+                                type: 'TRIGGER',
+                                search
+                            })
+                            return repoList.map(item => ({
+                                name: item,
+                                id: item
+                            }))
+                        },
+                        inputInclude: true
                     },
                     {
                         name: this.$t('history.remark'),
@@ -117,49 +153,12 @@
             }
         },
         created () {
-            this.init()
             this.handlePathQuery()
         },
         methods: {
             ...mapActions('pipelines', [
                 'setHistoryPageStatus'
             ]),
-            async init () {
-                try {
-                    const [statusList, repoList, branchList, triggerList] = await Promise.all([
-                        'status',
-                        'repo',
-                        `branchName?materialAlias=${this.$route.query.materialAlias ?? ''}`,
-                        'trigger'
-                    ].map(this.getConditionList))
-                    this.statusList = statusList.map(item => ({
-                        name: item.value,
-                        id: item.id
-                    }))
-                    this.repoList = repoList.map(item => ({
-                        name: item,
-                        id: item
-                    }))
-                    this.branchList = branchList.map(item => ({
-                        name: item,
-                        id: item
-                    }))
-                    this.triggerList = triggerList.map(item => ({
-                        name: item.value,
-                        id: item.id
-                    }))
-                    this.historyPageStatus.searchKey.forEach(item => {
-                        if (this.conditionsMap[item.id]) {
-                            item.values = item.values.map(item => ({
-                                id: item,
-                                name: this.conditionsMap[item.id].find(val => val.id === item)?.name ?? 'unknown'
-                            }))
-                        }
-                    })
-                } catch (error) {
-                    console.error(error)
-                }
-            },
             async handlePathQuery () {
                 // TODO 筛选参数目前不支持带#字符串回填
                 const { $route, historyPageStatus } = this
@@ -231,10 +230,11 @@
                 this.startQuery()
             },
 
-            async getConditionList (condition) {
+            async getConditionList (condition, query = {}) {
                 try {
                     const { $route: { params }, $ajax } = this
-                    const url = `${PROCESS_API_URL_PREFIX}/user/builds/${params.projectId}/${params.pipelineId}/historyCondition/${condition}`
+                    const querySearch = new URLSearchParams(query)
+                    const url = `${PROCESS_API_URL_PREFIX}/user/builds/${params.projectId}/${params.pipelineId}/historyCondition/${condition}?${querySearch}`
                     const res = await $ajax.get(url)
 
                     return res.data

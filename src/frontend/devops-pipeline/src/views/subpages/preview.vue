@@ -326,12 +326,19 @@
                     this.paramList = startupInfo.properties.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
                         isChanged: p.defaultValue !== p.value,
-                        readOnly: false
+                        readOnly: false,
+                        label: `${p.id}(${p.name || p.id})`
                     }))
                     this.versionParamList = startupInfo.properties.filter(p => allVersionKeyList.includes(p.id))
                     this.buildList = startupInfo.properties.filter(p => p.propertyType === 'BUILD')
-                    this.constantParams = startupInfo.properties.filter(p => p.constant)
-                    this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD')
+                    this.constantParams = startupInfo.properties.filter(p => p.constant).map(p => ({
+                        ...p,
+                        label: `${p.id}(${p.name || p.id})`
+                    }))
+                    this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
+                        ...p,
+                        label: `${p.id}(${p.name || p.id})`
+                    }))
                     this.getParamsValue(values)
                     this.setExecuteParams({
                         pipelineId: this.pipelineId,
