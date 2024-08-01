@@ -22,6 +22,7 @@ interface MemberListParamsType {
   userName?: string;
   deptName?: string;
   memberType?: string;
+  departedFlag? : boolean;
 }
 
 export default defineStore('manageAside', () => {
@@ -41,7 +42,6 @@ export default defineStore('manageAside', () => {
    * 人员组织侧边栏点击事件
    */
   function handleAsideClick(item: ManageAsideType) {
-    if(item.id === asideItem.value?.id) return;
     asideItem.value = item;
     activeTab.value = item.id;
     groupTableStore.fetchUserGroupList(item);
@@ -53,7 +53,7 @@ export default defineStore('manageAside', () => {
     if (memberPagination.value.current !== current) {
       asideItem.value = undefined;
       memberPagination.value.current = current;
-      getProjectMembers(projectId);
+      getProjectMembers(projectId, true);
     }
   }
   /**
@@ -83,7 +83,7 @@ export default defineStore('manageAside', () => {
       });
       btnLoading.value = false;
       manageAsideRef.handOverClose();
-      getProjectMembers(projectId);
+      getProjectMembers(projectId, true);
     } catch (error) {
       btnLoading.value = false;
     }
@@ -91,12 +91,13 @@ export default defineStore('manageAside', () => {
   /**
    * 获取项目下全体成员
    */
-  async function getProjectMembers(projectId: string, searchValue?: any) {
+  async function getProjectMembers(projectId: string, departedFlag?: boolean, searchValue?: any) {
     try {
       isLoading.value = true;
       const params: MemberListParamsType = {
         page: memberPagination.value.current,
         pageSize: memberPagination.value.limit,
+        ...(departedFlag && {departedFlag}),
       };
       searchValue?.forEach(item => {
         if (item.id === 'user') {

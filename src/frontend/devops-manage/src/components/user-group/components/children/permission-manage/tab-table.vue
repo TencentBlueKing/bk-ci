@@ -255,7 +255,7 @@ function handleClear() {
  * @param row 行数据
  */
 function handleRenewal(row) {
-  emit('handleRenewal', row, resourceType.value);
+  emit('handleRenewal', row, resourceType.value, refTable.value);
 }
 /**
  * 移交按钮点击

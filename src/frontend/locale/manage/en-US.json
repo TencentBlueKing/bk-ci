@@ -182,7 +182,7 @@
     "待移出用户": "Users to be removed",
     "所在用户组": "User Group",
     "已选择X个用户组": "Selected {0} user groups",
-    "；其中X个用户组无法移出，本次操作将忽略": "; Among them, {0} user groups {1}, will be ignored in this operation",
+    "；其中X个用户组X，本次操作将忽略": "; Among them, {0} user groups {1}, will be ignored in this operation",
     "无法移出": "cannot be removed",
     "续期对象": "Renewal Object",
     "用户": "User",

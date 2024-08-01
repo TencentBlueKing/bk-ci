@@ -246,7 +246,7 @@
           <i18n-t keypath="已选择X个用户组" tag="div">
             <span class="desc-primary">{{ totalCount }}</span>
           </i18n-t>
-          <i18n-t v-if="inoperableCount" keypath="；其中X个用户组无法移出，本次操作将忽略" tag="div">
+          <i18n-t v-if="inoperableCount" keypath="；其中X个用户组X，本次操作将忽略" tag="div">
             <span class="desc-warn">{{ inoperableCount }}</span>
             <span class="desc-warn">{{ unableText[batchFlag] }}</span>
           </i18n-t>
@@ -455,20 +455,20 @@ const {
 } = manageAsideStore;
 
 onMounted(() => {
-  init();
+  init(true);
 });
 
 watch(searchValue, (newSearchValue) => {
-  init(newSearchValue);
+  init(undefined, newSearchValue);
 });
 function handleSearch(value){
   if(!value.length) return;
-  init(value);
+  init(undefined, value);
 }
-function init(value){
+function init(flag, searchValue){
   memberPagination.value.current = 1;
   asideItem.value = undefined;
-  getProjectMembers(projectId.value, value);
+  getProjectMembers(projectId.value, flag, searchValue);
 }
 function asideClick(item){
   handleAsideClick(item, projectId.value);
@@ -494,6 +494,7 @@ async function handleRenewalConfirm() {
     operatorLoading.value = false;
     showMessage('success', t('用户组权限已续期。'));
     cancleClear('renewal');
+    // tableRef.value.clearSelection();
     isShowRenewal.value = false;
   } catch (error) {
     operatorLoading.value = false;
@@ -667,7 +668,7 @@ async function batchConfirm(batchFlag) {
       showMessage('success', t(batchMassageText[batchFlag]));
       batchBtnLoading.value = false;
       cancleClear(batchFlag);
-      getProjectMembers(projectId.value);
+      getProjectMembers(projectId.value, true);
     }
   } catch (error) {
     batchBtnLoading.value = false;
@@ -694,7 +695,7 @@ async function getMenuList (item, keyword) {
   } else if (item.id === 'department' && keyword) {
     query.departName = keyword
   }
-  const res = await http.getProjectMembers(projectId.value, query)
+  const res = await http.getProjectMembers(projectId.value, undefined, query)
   return res.records.map(i => {
     return {
       ...i,
