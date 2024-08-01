@@ -1344,7 +1344,7 @@ class PipelineBuildDao {
 
         if (!triggerBranch.isNullOrBlank()) {
             where.and(
-                JooqUtils.jsonExtract(WEBHOOK_INFO, "\$[*].webhookBranch", lower = true)
+                JooqUtils.jsonExtract(WEBHOOK_INFO, "\$.webhookBranch", lower = true)
                     .like("%${triggerBranch.lowercase()}%")
             )
         }
@@ -1404,7 +1404,7 @@ class PipelineBuildDao {
 
         if (!triggerBranch.isNullOrBlank()) {
             where.and(
-                JooqUtils.jsonExtract(WEBHOOK_INFO, "\$[*].webhookBranch", lower = true)
+                JooqUtils.jsonExtract(WEBHOOK_INFO, "\$.webhookBranch", lower = true)
                     .like("%${triggerBranch.lowercase()}%")
             )
         }
