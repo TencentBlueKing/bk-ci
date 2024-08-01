@@ -278,6 +278,8 @@ export default defineStore('userGroupTable', () => {
    * 加载更多
    */
   async function handleLoadMore(resourceType: string) {
+    let item = sourceList.value.find((item: SourceType) => item.resourceType == resourceType);
+    if (item?.scrollLoading) return;
     const pagination = paginations.value[resourceType];
     const currentOffset = pagination[0];
     const nextOffsetAdjustment = pagination[2] || 0;
@@ -285,8 +287,7 @@ export default defineStore('userGroupTable', () => {
     const newOffset = currentOffset + 10 - nextOffsetAdjustment;
     pagination[0] = newOffset;
 
-    let item = sourceList.value.find((item: SourceType) => item.resourceType == resourceType);
-    if(item){
+    if (item){
       item.scrollLoading = true;
       const res = await getGroupList(resourceType);
       item.scrollLoading = false;
