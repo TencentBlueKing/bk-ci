@@ -200,8 +200,7 @@ data class WebHookTriggerElementChanger(
         includeMrAction = data.includeMrAction,
         includePushAction = data.includePushAction,
         enableThirdFilter = data.enableThirdFilter,
-        enable = data.isElementEnable(),
-        skipWip = data.skipWip
+        enable = data.isElementEnable()
     )
 
     constructor(data: CodeSVNWebHookTriggerElement) : this(
@@ -249,7 +248,6 @@ data class WebHookTriggerElementChanger(
         includeSourceBranchName = data.includeSourceBranchName,
         includeMrAction = data.includeMrAction,
         includePushAction = data.includePushAction,
-        enable = data.isElementEnable(),
-        skipWip = data.skipWip
+        enable = data.isElementEnable()
     )
 }

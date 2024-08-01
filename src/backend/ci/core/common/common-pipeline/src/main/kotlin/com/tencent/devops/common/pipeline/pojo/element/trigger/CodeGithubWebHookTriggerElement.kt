@@ -94,9 +94,7 @@ data class CodeGithubWebHookTriggerElement(
     @get:Schema(title = "issue事件action")
     val includeIssueAction: List<String>? = null,
     @get:Schema(title = "pull request事件action")
-    val includeMrAction: List<String>? = listOf(MERGE_ACTION_OPEN, MERGE_ACTION_REOPEN, MERGE_ACTION_PUSH_UPDATE),
-    @get:Schema(title = "跳过WIP")
-    val skipWip: Boolean? = false
+    val includeMrAction: List<String>? = listOf(MERGE_ACTION_OPEN, MERGE_ACTION_REOPEN, MERGE_ACTION_PUSH_UPDATE)
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGithubWebHookTrigger"

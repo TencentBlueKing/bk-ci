@@ -84,7 +84,6 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
-import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
@@ -183,13 +182,6 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
-            val wipFilter = KeywordSkipFilter(
-                pipelineId = pipelineId,
-                enable = skipWip,
-                keyWord = KeywordSkipFilter.KEYWORD_SKIP_WIP,
-                triggerOnMessage = getMessage(event),
-                failedReason = I18Variable(WebhookI18nConstants.MR_SKIP_WIP).toJsonStr()
-            )
             val userId = getUsername(event)
             val actionFilter = ContainsFilter(
                 pipelineId = pipelineId,
@@ -230,7 +222,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
                     params = listOf(targetBranch)
                 ).toJsonStr()
             )
-            return listOf(wipFilter, actionFilter, userFilter, targetBranchFilter)
+            return listOf(actionFilter, userFilter, targetBranchFilter)
         }
     }
 

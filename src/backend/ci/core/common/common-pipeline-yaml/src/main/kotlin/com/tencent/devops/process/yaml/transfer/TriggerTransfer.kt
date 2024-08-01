@@ -601,8 +601,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeMrAction = mr.action,
                     eventType = CodeEventType.PULL_REQUEST,
                     repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName,
-                    skipWip = mr.skipWip
+                    repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(mr.enable)
             )
         }
@@ -828,8 +827,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     ),
                     eventType = CodeEventType.MERGE_REQUEST,
                     repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName,
-                    skipWip = mr.skipWip
+                    repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(mr.enable).apply {
                     version = "2.*"
                 }
