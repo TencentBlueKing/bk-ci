@@ -67,7 +67,7 @@ class BKItsmService @Autowired constructor(
         val resp = try {
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body!!.string()
-                logger.debug("createTicket｜$url|$body|${response.code}|$data")
+                logger.debug("createTicket｜{}|{}|{}|{}", url, body, response.code, data)
                 if (!response.isSuccessful) {
                     logger.error("createTicket｜$url|$body|${response.code}|$data")
                     throw ErrorCodeException(
