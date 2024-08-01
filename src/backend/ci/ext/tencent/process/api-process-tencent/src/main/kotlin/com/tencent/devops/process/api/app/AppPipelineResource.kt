@@ -175,7 +175,7 @@ interface AppPipelineResource {
         search: String?,
         @Parameter(description = "搜索类型,触发/源材料", required = false)
         @QueryParam("type")
-        type: HistorySearchType? = HistorySearchType.MATERIAL
+        type: HistorySearchType?
     ): Result<List<String>>
 
     @Operation(summary = "获取流水线构建中的查询条件-状态")
@@ -214,7 +214,7 @@ interface AppPipelineResource {
         search: String?,
         @Parameter(description = "搜索类型, 触发/源材料", required = false)
         @QueryParam("type")
-        type: HistorySearchType? = HistorySearchType.MATERIAL
+        type: HistorySearchType?
     ): Result<List<String>>
 
     @Operation(summary = "列出用户某项目下的流水线的所有收藏")
