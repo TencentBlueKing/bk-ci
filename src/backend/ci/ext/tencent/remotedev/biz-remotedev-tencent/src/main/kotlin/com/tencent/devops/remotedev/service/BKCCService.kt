@@ -87,6 +87,8 @@ class BKCCService @Autowired constructor(
         logger.debug("updateHost|hostIds|{}|props|{}", hostIds, props)
         val url = "${bkConfig.ccHost}/update_host/"
         val body = UpdateHostReqBody(
+            bkAppCode = bkConfig.appCode,
+            bkAppSecret = bkConfig.appSecret,
             bkUserName = bkConfig.ccUserName,
             bkHostId = hostIds.joinToString(separator = ","),
             data = props
@@ -176,6 +178,10 @@ class BKCCService @Autowired constructor(
 }
 
 data class UpdateHostReqBody(
+    @JsonProperty("bk_app_code")
+    val bkAppCode: String,
+    @JsonProperty("bk_app_secret")
+    val bkAppSecret: String,
     @JsonProperty("bk_username")
     val bkUserName: String,
     @JsonProperty("bk_host_id")
