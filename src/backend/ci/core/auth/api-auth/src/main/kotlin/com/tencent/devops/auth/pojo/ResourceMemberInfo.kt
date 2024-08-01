@@ -11,5 +11,5 @@ data class ResourceMemberInfo(
     @get:Schema(title = "成员类型")
     val type: String,
     @get:Schema(title = "是否离职")
-    val departed: Boolean? = false
+    val departed: Boolean? = null
 )

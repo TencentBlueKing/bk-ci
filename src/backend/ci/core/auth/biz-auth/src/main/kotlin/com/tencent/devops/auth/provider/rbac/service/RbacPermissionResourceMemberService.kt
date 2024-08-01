@@ -170,18 +170,30 @@ class RbacPermissionResourceMemberService constructor(
             limit = limit.limit
         )
 
+        // 不查询离职相关信息，防止调用用户管理接口，响应慢
+        if (departedFlag == false) {
+            return SQLPage(count = count, records = records)
+        }
+
         val userMembers = records.filter {
             it.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)
         }.map { it.id }
-        if (userMembers.isEmpty() || departedFlag == false)
-            return SQLPage(count = count, records = records)
 
-        val userInfos = deptService.listMemberInfos(
-            memberIds = userMembers,
-            memberType = ManagerScopesEnum.USER
-        ).associateBy { it.name }
+        val userInfos = if (userMembers.isNotEmpty()) {
+            deptService.listMemberInfos(
+                memberIds = userMembers,
+                memberType = ManagerScopesEnum.USER
+            ).associateBy { it.name }
+        } else {
+            emptyMap()
+        }
+
         val finalRecords = records.map {
-            if (it.type != ManagerScopesEnum.getType(ManagerScopesEnum.USER)) it else it.updateMember(userInfos)
+            if (it.type != ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
+                it.copy(departed = false)
+            } else {
+                it.updateMember(userInfos)
+            }
         }
         return SQLPage(count = count, records = finalRecords)
     }
@@ -190,8 +202,8 @@ class RbacPermissionResourceMemberService constructor(
         val userInfo = userInfos[this.id]
         return when {
             userInfo == null -> this.copy(name = this.id, departed = true)
-            this.name.isNullOrEmpty() -> this.copy(name = userInfo.displayName)
-            else -> this
+            this.name.isNullOrEmpty() -> this.copy(departed = false, name = userInfo.displayName)
+            else -> this.copy(departed = false)
         }
     }
 
