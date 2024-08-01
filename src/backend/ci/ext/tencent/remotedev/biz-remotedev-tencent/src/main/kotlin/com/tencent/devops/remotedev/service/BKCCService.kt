@@ -127,6 +127,8 @@ class BKCCService @Autowired constructor(
         }
         val url = "${bkConfig.ccHost}/list_biz_hosts/"
         val body = ListBizHostsReqBody(
+            bkAppCode = bkConfig.appCode,
+            bkAppSecret = bkConfig.appSecret,
             bkUserName = bkConfig.ccUserName,
             page = page,
             bkBizId = bkConfig.ccBizId!!,
@@ -191,6 +193,10 @@ data class UpdateHostResp<T>(
 )
 
 data class ListBizHostsReqBody(
+    @JsonProperty("bk_app_code")
+    val bkAppCode: String,
+    @JsonProperty("bk_app_secret")
+    val bkAppSecret: String,
     @JsonProperty("bk_username")
     val bkUserName: String,
     val page: ListBizHostsReqPage,
