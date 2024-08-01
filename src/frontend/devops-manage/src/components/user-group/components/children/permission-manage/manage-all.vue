@@ -248,7 +248,9 @@
           </i18n-t>
           <i18n-t v-if="inoperableCount" keypath="；其中X个用户组X，本次操作将忽略" tag="div">
             <span class="desc-warn">{{ inoperableCount }}</span>
-            <span class="desc-warn">{{ t(unableText[batchFlag]) }}</span>
+            <template #op>
+              <span class="desc-warn">{{ unableText[batchFlag] }}</span>
+            </template>
           </i18n-t>
         </p>
         <div>
@@ -406,9 +408,9 @@ const userName = computed(() => {
   return ''
 })
 const unableText = {
-  renewal: '无法续期',
-  handover: '无法移交',
-  remove: '无法移出',
+  renewal: t('无法续期'),
+  handover: t('无法移交'),
+  remove: t('无法移出'),
 }
 const {
   sourceList,
@@ -687,7 +689,7 @@ async function getMenuList (item, keyword) {
   const query = {
     memberType: item.id,
     page: 1,
-    pageSize: 200
+    pageSize: 400
   }
   if (item.id === 'user' && keyword) {
     query.userName = keyword
