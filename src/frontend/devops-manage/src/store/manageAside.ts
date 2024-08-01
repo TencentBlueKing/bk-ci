@@ -41,6 +41,7 @@ export default defineStore('manageAside', () => {
    * 人员组织侧边栏点击事件
    */
   function handleAsideClick(item: ManageAsideType) {
+    if(item.id === asideItem.value?.id) return;
     asideItem.value = item;
     activeTab.value = item.id;
     groupTableStore.fetchUserGroupList(item);
