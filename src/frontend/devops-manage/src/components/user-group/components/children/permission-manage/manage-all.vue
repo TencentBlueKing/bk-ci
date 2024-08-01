@@ -247,10 +247,7 @@
             <span class="desc-primary">{{ totalCount }}</span>
           </i18n-t>
           <i18n-t v-if="inoperableCount" keypath="；其中X个用户组X，本次操作将忽略" tag="div">
-            <span class="desc-warn">{{ inoperableCount }}</span>
-            <template #op>
-              <span class="desc-warn">{{ unableText[batchFlag] }}</span>
-            </template>
+            <span class="desc-warn">{{ inoperableCount }}</span><span class="desc-warn">{{ unableText[batchFlag] }}</span>
           </i18n-t>
         </p>
         <div>

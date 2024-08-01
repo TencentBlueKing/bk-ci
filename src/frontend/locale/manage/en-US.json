@@ -182,7 +182,7 @@
     "待移出用户": "Users to be removed",
     "所在用户组": "User Group",
     "已选择X个用户组": "Selected {0} user groups",
-    "；其中X个用户组X，本次操作将忽略": "; Among them, {0} user groups {op}, will be ignored in this operation",
+    "；其中X个用户组X，本次操作将忽略": "; Among them, {0} user groups {1}, will be ignored in this operation",
     "无法移出": "cannot be removed",
     "续期对象": "Renewal Object",
     "用户": "User",
@@ -245,5 +245,5 @@
     "清空筛选条件": "Clear filter conditions",
     "输入授权人，选中回车进行校验": "Enter the authorizer, select and press Enter to verify",
     "已离职": "Resigned",
-    "授权校验中": "授权校验中"
+    "授权校验中": "Authorization verification in progress"
 }
