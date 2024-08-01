@@ -50,6 +50,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.regex.Pattern
+import org.apache.commons.lang3.StringUtils
 import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -116,6 +117,7 @@ class SignInfoService(
             pipelineId = info.pipelineId,
             buildId = info.buildId,
             taskId = info.taskId,
+            appId = info.appId,
             archiveType = info.archiveType,
             archivePath = info.archivePath,
             md5 = info.md5
@@ -225,6 +227,18 @@ class SignInfoService(
             )
         }
         return info
+    }
+
+    /**
+     * 校验appId是否存在(keystore应用关联签名)
+     * */
+    fun checkAppIdIsExist(ipaSignInfo: IpaSignInfo) {
+        if (StringUtils.isBlank(ipaSignInfo.appId)) {
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER,
+                defaultMessage = "keystore appId不能为空"
+            )
+        }
     }
 
     fun decodeIpaSignInfo(ipaSignInfoHeader: String, objectMapper: ObjectMapper): IpaSignInfo {
