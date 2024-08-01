@@ -148,6 +148,7 @@ class RbacPermissionResourceMemberService constructor(
         page: Int,
         pageSize: Int
     ): SQLPage<ResourceMemberInfo> {
+        logger.info("list project members:$projectCode|$departedFlag|$memberType|$userName|$deptName")
         if (!userName.isNullOrEmpty() && !deptName.isNullOrEmpty()) {
             return SQLPage(count = 0, records = emptyList())
         }

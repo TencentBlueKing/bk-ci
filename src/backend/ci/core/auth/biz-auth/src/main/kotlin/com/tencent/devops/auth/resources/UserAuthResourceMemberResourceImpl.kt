@@ -38,7 +38,7 @@ class UserAuthResourceMemberResourceImpl(
                 memberType = memberType,
                 userName = userName,
                 deptName = deptName,
-                departedFlag = departedFlag,
+                departedFlag = departedFlag ?: false,
                 page = page,
                 pageSize = pageSize
             )

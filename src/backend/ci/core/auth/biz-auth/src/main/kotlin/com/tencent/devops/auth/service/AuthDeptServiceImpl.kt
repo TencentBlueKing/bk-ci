@@ -314,7 +314,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                     bk_username = "admin",
                     fields = USER_NAME_AND_DISPLAY_NAME_LABEL,
                     lookupField = USERNAME,
-                    exactLookups = memberIds.joinToString { "," }
+                    exactLookups = memberIds.joinToString(",")
                 )
                 getUserInfo(userSearch).results.map { it.toUserAndDeptInfoVo() }
             }
@@ -325,7 +325,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                     bk_username = "admin",
                     fields = DEPT_LABEL,
                     lookupField = ID,
-                    exactLookups = memberIds.joinToString { "," }
+                    exactLookups = memberIds.joinToString(",")
                 )
                 getDeptInfo(deptSearch).results.map { it.toUserAndDeptInfoVo() }
             }
