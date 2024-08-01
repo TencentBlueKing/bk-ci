@@ -246,9 +246,9 @@
           <i18n-t keypath="已选择X个用户组" tag="div">
             <span class="desc-primary">{{ totalCount }}</span>
           </i18n-t>
-          <i18n-t v-if="inoperableCount" keypath="；其中X个用户组无法移出，本次操作将忽略" tag="div">
+          <i18n-t v-if="inoperableCount" keypath="；其中X个用户组X，本次操作将忽略" tag="div">
             <span class="desc-warn">{{ inoperableCount }}</span>
-            <span class="desc-warn">{{ unableText[batchFlag] }}</span>
+            <span class="desc-warn">{{ t(unableText[batchFlag]) }}</span>
           </i18n-t>
         </p>
         <div>
@@ -406,9 +406,9 @@ const userName = computed(() => {
   return ''
 })
 const unableText = {
-  renewal: t('无法续期'),
-  handover: t('无法移交'),
-  remove: t('无法移出'),
+  renewal: '无法续期',
+  handover: '无法移交',
+  remove: '无法移出',
 }
 const {
   sourceList,
@@ -455,20 +455,20 @@ const {
 } = manageAsideStore;
 
 onMounted(() => {
-  init();
+  init(true);
 });
 
 watch(searchValue, (newSearchValue) => {
-  init(newSearchValue);
+  init(undefined, newSearchValue);
 });
 function handleSearch(value){
   if(!value.length) return;
-  init(value);
+  init(undefined, value);
 }
-function init(value){
+function init(flag, searchValue){
   memberPagination.value.current = 1;
   asideItem.value = undefined;
-  getProjectMembers(projectId.value, value);
+  getProjectMembers(projectId.value, flag, searchValue);
 }
 function asideClick(item){
   handleAsideClick(item, projectId.value);
@@ -667,7 +667,7 @@ async function batchConfirm(batchFlag) {
       showMessage('success', t(batchMassageText[batchFlag]));
       batchBtnLoading.value = false;
       cancleClear(batchFlag);
-      getProjectMembers(projectId.value);
+      getProjectMembers(projectId.value, true);
     }
   } catch (error) {
     batchBtnLoading.value = false;

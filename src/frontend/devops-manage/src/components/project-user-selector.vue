@@ -15,7 +15,7 @@
 </template>
 
 <script setup name="ProjectUserSelector">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import http from '@/http/api';
@@ -32,7 +32,7 @@ async function fetchProjectMembers (query) {
   userList.value = res.records.map(i => {
     return {
       ...i,
-      displayName: i.type === 'user' ? (i.departed ? i.id : `${i.id} (${i.name})`) : i.id,
+      displayName: i.type === 'user' ? (!i.name ? i.id : `${i.id} (${i.name})`) : i.id,
     }
   })
 }
@@ -55,12 +55,4 @@ function handleChange (list) {
 function removeAll (val) {
   emits('removeAll', val)
 }
-
-onMounted(() => {
-  fetchProjectMembers({
-    memberType: 'user',
-    page: 1,
-    pageSize: 200
-  })
-})
 </script>

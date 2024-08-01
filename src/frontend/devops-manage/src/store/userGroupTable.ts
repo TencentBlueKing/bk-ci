@@ -162,10 +162,6 @@ export default defineStore('userGroupTable', () => {
       );
       if(currentRequestId === requestId) {
         sourceList.value.forEach((item, index) => {
-          if(item.resourceType === "project" && results[index]) {
-            item.tableData = results[index].records;
-            item.activeFlag = true;
-          }
           if((index === 0 || index === 1) && results[index]) {
             item.tableData = results[index].records;
             item.activeFlag = true;
@@ -178,14 +174,16 @@ export default defineStore('userGroupTable', () => {
       console.error(error);
     }
   }
+  const currentTableRef= ref();
   /**
    * 续期按钮点击
    * @param row 行数据
    */
-  function handleRenewal(row: GroupTableType, resourceType: string) {
+  function handleRenewal(row: GroupTableType, resourceType: string, tableRef) {
     selectedRow.value = row;
     selectedTableGroupType.value = resourceType;
     isShowRenewal.value = true;
+    currentTableRef.value = tableRef
   }
   /**
    * 移交按钮点击
@@ -222,6 +220,8 @@ export default defineStore('userGroupTable', () => {
         };
         const res = await http.renewal(projectId.value, params)
         activeTable.tableData = activeTable.tableData.map(item => item.groupId === selectedRow.value!.groupId ? res : item)
+        delete selectedData[selectedTableGroupType.value];
+        currentTableRef.value.clearSelection();
       } catch (error) {
         console.log(error);
       }
