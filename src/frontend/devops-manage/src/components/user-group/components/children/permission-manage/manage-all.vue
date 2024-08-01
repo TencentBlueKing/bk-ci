@@ -698,8 +698,8 @@ async function getMenuList (item, keyword) {
   return res.records.map(i => {
     return {
       ...i,
-      displayName: i.name,
-      name: i.type === 'user' ? (i.departed ? i.id : `${i.id} (${i.name})`) : i.id,
+      displayName: i.name || i.id,
+      name: i.type === 'user' ? (!i.name ? i.id : `${i.id} (${i.name})`) : i.id,
     }
   })
 }
