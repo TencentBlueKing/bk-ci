@@ -30,6 +30,7 @@ class AuthAuthorizationDao {
                         RESOURCE_CODE,
                         RESOURCE_NAME,
                         HANDOVER_FROM,
+                        HANDOVER_FROM_CN_NAME,
                         HANDOVER_TIME
                     ).values(
                         resourceAuthorizationDto.projectCode,
@@ -37,9 +38,11 @@ class AuthAuthorizationDao {
                         resourceAuthorizationDto.resourceCode,
                         resourceAuthorizationDto.resourceName,
                         resourceAuthorizationDto.handoverFrom,
+                        resourceAuthorizationDto.handoverFromCnName,
                         handoverDateTime
                     ).onDuplicateKeyUpdate()
                         .set(HANDOVER_FROM, resourceAuthorizationDto.handoverFrom)
+                        .set(HANDOVER_FROM_CN_NAME, resourceAuthorizationDto.handoverFromCnName)
                         .set(RESOURCE_NAME, resourceAuthorizationDto.resourceName)
                         .set(HANDOVER_TIME, handoverDateTime)
                         .set(UPDATE_TIME, LocalDateTime.now())
@@ -59,6 +62,7 @@ class AuthAuthorizationDao {
                         .let {
                             if (resourceAuthorizationDto is ResourceAuthorizationHandoverDTO) {
                                 it.set(HANDOVER_FROM, resourceAuthorizationDto.handoverTo)
+                                    .set(HANDOVER_FROM_CN_NAME, resourceAuthorizationDto.handoverToCnName)
                                     .set(HANDOVER_TIME, LocalDateTime.now())
                             } else {
                                 it
@@ -158,7 +162,8 @@ class AuthAuthorizationDao {
             resourceName = resourceName,
             resourceCode = resourceCode,
             handoverTime = handoverTime.timestampmilli(),
-            handoverFrom = handoverFrom
+            handoverFrom = handoverFrom,
+            handoverFromCnName = handoverFromCnName
         )
     }
 }

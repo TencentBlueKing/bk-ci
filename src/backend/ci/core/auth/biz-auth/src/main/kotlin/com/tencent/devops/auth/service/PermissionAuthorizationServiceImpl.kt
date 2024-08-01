@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.service
 
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthAuthorizationDao
@@ -30,7 +31,8 @@ class PermissionAuthorizationServiceImpl constructor(
     private val dslContext: DSLContext,
     private val authAuthorizationDao: AuthAuthorizationDao,
     private val client: Client,
-    private val permissionResourceValidateService: PermissionResourceValidateService
+    private val permissionResourceValidateService: PermissionResourceValidateService,
+    private val deptService: DeptService
 ) : PermissionAuthorizationService {
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionAuthorizationServiceImpl::class.java)
@@ -43,6 +45,7 @@ class PermissionAuthorizationServiceImpl constructor(
 
     override fun addResourceAuthorization(resourceAuthorizationList: List<ResourceAuthorizationDTO>): Boolean {
         logger.info("add resource authorization:$resourceAuthorizationList")
+        addHandoverFromCnName(resourceAuthorizationList)
         authAuthorizationDao.batchAddOrUpdate(
             dslContext = dslContext,
             resourceAuthorizationList = resourceAuthorizationList
@@ -86,6 +89,7 @@ class PermissionAuthorizationServiceImpl constructor(
 
     override fun modifyResourceAuthorization(resourceAuthorizationList: List<ResourceAuthorizationDTO>): Boolean {
         logger.info("modify resource authorizations:$resourceAuthorizationList")
+        addHandoverFromCnName(resourceAuthorizationList)
         authAuthorizationDao.batchUpdate(
             dslContext = dslContext,
             resourceAuthorizationHandoverList = resourceAuthorizationList
@@ -112,6 +116,7 @@ class PermissionAuthorizationServiceImpl constructor(
         resourceAuthorizationHandoverList: List<ResourceAuthorizationHandoverDTO>
     ): Boolean {
         logger.info("batch modify handoverFrom:$resourceAuthorizationHandoverList")
+        addHandoverToCnName(resourceAuthorizationHandoverList)
         authAuthorizationDao.batchUpdate(
             dslContext = dslContext,
             resourceAuthorizationHandoverList = resourceAuthorizationHandoverList
@@ -185,6 +190,38 @@ class PermissionAuthorizationServiceImpl constructor(
             }
         }
         return result
+    }
+
+    private fun addHandoverFromCnName(
+        resourceAuthorizationList: List<ResourceAuthorizationDTO>
+    ) {
+        val handoverFromList = resourceAuthorizationList.map { it.handoverFrom ?: "" }
+        val userId2UserInfo = deptService.listMemberInfos(
+            memberIds = handoverFromList,
+            memberType = ManagerScopesEnum.USER
+        ).associateBy { it.name }
+        resourceAuthorizationList.map {
+            val handoverFrom = it.handoverFrom ?: ""
+            it.copyHandoverFromCnName(
+                handoverFromCnName = userId2UserInfo[handoverFrom]?.displayName ?: handoverFrom
+            )
+        }
+    }
+
+    private fun addHandoverToCnName(
+        resourceAuthorizationList: List<ResourceAuthorizationHandoverDTO>
+    ) {
+        val handoverToList = resourceAuthorizationList.map { it.handoverTo ?: "" }
+        val userId2UserInfo = deptService.listMemberInfos(
+            memberIds = handoverToList,
+            memberType = ManagerScopesEnum.USER
+        ).associateBy { it.name }
+        resourceAuthorizationList.map {
+            val handoverTo = it.handoverTo ?: ""
+            it.copy(
+                handoverTo = userId2UserInfo[handoverTo]?.displayName ?: handoverTo
+            )
+        }
     }
 
     private fun validateOperatorPermission(

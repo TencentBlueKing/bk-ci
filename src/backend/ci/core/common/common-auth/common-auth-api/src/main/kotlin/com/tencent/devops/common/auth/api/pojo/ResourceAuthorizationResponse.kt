@@ -3,6 +3,7 @@ package com.tencent.devops.common.auth.api.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "资源授权返回体")
+@Suppress("LongParameterList")
 class ResourceAuthorizationResponse(
     @get:Schema(title = "项目ID")
     val projectCode: String,
@@ -15,5 +16,7 @@ class ResourceAuthorizationResponse(
     @get:Schema(title = "授权时间")
     val handoverTime: Long,
     @get:Schema(title = "授予人")
-    val handoverFrom: String
+    val handoverFrom: String,
+    @get:Schema(title = "授予人中文民名称")
+    val handoverFromCnName: String
 )

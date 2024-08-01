@@ -16,8 +16,12 @@ data class ResourceAuthorizationHandoverDTO(
     override val handoverTime: Long? = null,
     @get:Schema(title = "授予人")
     override val handoverFrom: String? = null,
+    @get:Schema(title = "授予人中文名称")
+    override var handoverFromCnName: String? = null,
     @get:Schema(title = "交接人")
     val handoverTo: String? = null,
+    @get:Schema(title = "交接人")
+    val handoverToCnName: String? = null,
     @get:Schema(title = "交接失败信息")
     val handoverFailedMessage: String? = null
 ) : ResourceAuthorizationDTO(

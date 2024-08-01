@@ -367,7 +367,7 @@ class AuthResourceGroupMemberDao {
             .unionAll(
                 dslContext.select(
                     tResourceAuthorization.HANDOVER_FROM.`as`("MEMBER_ID"),
-                    inline("").`as`("MEMBER_NAME"),
+                    tResourceAuthorization.HANDOVER_FROM_CN_NAME.`as`("MEMBER_NAME"),
                     inline("user").`as`("MEMBER_TYPE")
                 )
                     .from(tResourceAuthorization)

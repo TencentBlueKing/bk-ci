@@ -29,7 +29,6 @@ import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
-import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
@@ -180,32 +179,22 @@ class RbacPermissionResourceMemberService constructor(
             it.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)
         }.map { it.id }
 
-        val userInfos = if (userMembers.isNotEmpty()) {
-            deptService.listMemberInfos(
-                memberIds = userMembers,
-                memberType = ManagerScopesEnum.USER
-            ).associateBy { it.name }
+        val departedMembers = if (userMembers.isNotEmpty()) {
+            deptService.listDepartedMembers(
+                memberIds = userMembers
+            )
         } else {
-            emptyMap()
+            return SQLPage(count = count, records = records)
         }
 
-        val finalRecords = records.map {
+        val recordsWithDepartedFlag = records.map {
             if (it.type != ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
                 it.copy(departed = false)
             } else {
-                it.updateMember(userInfos)
+                it.copy(departed = departedMembers.contains(it.id))
             }
         }
-        return SQLPage(count = count, records = finalRecords)
-    }
-
-    private fun ResourceMemberInfo.updateMember(userInfos: Map<String, UserAndDeptInfoVo>): ResourceMemberInfo {
-        val userInfo = userInfos[this.id]
-        return when {
-            userInfo == null -> this.copy(name = this.id, departed = true)
-            this.name.isNullOrEmpty() -> this.copy(departed = false, name = userInfo.displayName)
-            else -> this.copy(departed = false)
-        }
+        return SQLPage(count = count, records = recordsWithDepartedFlag)
     }
 
     override fun getMemberGroupsCount(
