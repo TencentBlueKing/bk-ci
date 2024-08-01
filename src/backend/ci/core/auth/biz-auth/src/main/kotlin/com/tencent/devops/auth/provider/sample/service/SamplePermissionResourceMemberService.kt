@@ -160,6 +160,7 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         memberType: String?,
         userName: String?,
         deptName: String?,
+        departedFlag: Boolean?,
         page: Int,
         pageSize: Int
     ): SQLPage<ResourceMemberInfo> {
