@@ -288,7 +288,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             memberIds = memberIds,
             memberType = ManagerScopesEnum.USER
         ).map { it.name }
-        return memberIds.apply { subtract(activeMembers.toSet()) }
+        return memberIds.subtract(activeMembers.toSet()).toList()
     }
 
     override fun isUserDeparted(userId: String): Boolean {

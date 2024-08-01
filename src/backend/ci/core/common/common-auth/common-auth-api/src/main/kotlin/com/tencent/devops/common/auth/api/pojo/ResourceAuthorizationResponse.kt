@@ -17,6 +17,6 @@ class ResourceAuthorizationResponse(
     val handoverTime: Long,
     @get:Schema(title = "授予人")
     val handoverFrom: String,
-    @get:Schema(title = "授予人中文民名称")
-    val handoverFromCnName: String
+    @get:Schema(title = "授予人中文名称")
+    val handoverFromCnName: String?
 )

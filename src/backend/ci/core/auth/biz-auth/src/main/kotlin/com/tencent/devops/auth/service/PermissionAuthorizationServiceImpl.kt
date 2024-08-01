@@ -195,7 +195,7 @@ class PermissionAuthorizationServiceImpl constructor(
     private fun addHandoverFromCnName(
         resourceAuthorizationList: List<ResourceAuthorizationDTO>
     ) {
-        val handoverFromList = resourceAuthorizationList.map { it.handoverFrom ?: "" }
+        val handoverFromList = resourceAuthorizationList.map { it.handoverFrom ?: "" }.distinct()
         val userId2UserInfo = deptService.listMemberInfos(
             memberIds = handoverFromList,
             memberType = ManagerScopesEnum.USER
@@ -211,7 +211,7 @@ class PermissionAuthorizationServiceImpl constructor(
     private fun addHandoverToCnName(
         resourceAuthorizationList: List<ResourceAuthorizationHandoverDTO>
     ) {
-        val handoverToList = resourceAuthorizationList.map { it.handoverTo ?: "" }
+        val handoverToList = resourceAuthorizationList.map { it.handoverTo ?: "" }.distinct()
         val userId2UserInfo = deptService.listMemberInfos(
             memberIds = handoverToList,
             memberType = ManagerScopesEnum.USER
