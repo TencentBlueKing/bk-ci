@@ -216,7 +216,7 @@ class PermissionAuthorizationServiceImpl constructor(
             memberIds = handoverToList,
             memberType = ManagerScopesEnum.USER
         ).associateBy { it.name }
-        resourceAuthorizationList.map {
+        resourceAuthorizationList.forEach {
             val handoverTo = it.handoverTo ?: ""
             it.copy(
                 handoverTo = userId2UserInfo[handoverTo]?.displayName ?: handoverTo

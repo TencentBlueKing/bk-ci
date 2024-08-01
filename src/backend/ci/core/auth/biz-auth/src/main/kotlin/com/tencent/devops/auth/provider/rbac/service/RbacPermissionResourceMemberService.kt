@@ -968,6 +968,12 @@ class RbacPermissionResourceMemberService constructor(
                 handoverMemberDTO.handoverTo.id
             )
         )
+        if (expiredAt < currentTimeSeconds) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.INVALID_EXPIRED_PERM_NOT_ALLOW_TO_HANDOVER
+            )
+        }
+
         addIamGroupMember(
             groupId = groupId,
             members = members,

@@ -139,4 +139,5 @@ object AuthMessageCode {
     const val ERROR_GROUP_MEMBERS_NOT_EXIST = "2121086" // 用户组[{0}]下不存在成员[{1}]
     const val ERROR_BATCH_OPERATE_GROUP_MEMBERS = "2121087" // 批量操作组成员失败
     const val INVALID_HANDOVER_TO = "2121088" // 目标对象和交接人不允许相同
+    const val INVALID_EXPIRED_PERM_NOT_ALLOW_TO_HANDOVER = "2121089" // 已过期的权限不允许交接
 }
