@@ -14,7 +14,7 @@ data class BkUserInfo(
     @JsonProperty("display_name")
     val displayName: String,
     @get:Schema(title = "是否启用")
-    val enabled: Boolean,
+    val enabled: Boolean?,
     @get:Schema(title = "用户额外信息")
     val extras: BkUserExtras?,
     @get:Schema(title = "用户部门")

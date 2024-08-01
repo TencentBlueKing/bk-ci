@@ -53,6 +53,9 @@ interface UserAuthResourceMemberResource {
         @Parameter(description = "组织搜索")
         @QueryParam("deptName")
         deptName: String?,
+        @Parameter(description = "是否展示是否离职标识")
+        @QueryParam("departedFlag")
+        departedFlag: Boolean?,
         @Parameter(description = "第几页")
         @QueryParam("page")
         page: Int,

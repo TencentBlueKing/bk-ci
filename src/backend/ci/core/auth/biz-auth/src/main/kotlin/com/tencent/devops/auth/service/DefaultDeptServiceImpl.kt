@@ -85,7 +85,12 @@ class DefaultDeptServiceImpl : DeptService {
         type = memberType
     )
 
-    override fun getUserDisPlayName(userId: String): String? = null
+    override fun listMemberInfos(
+        memberIds: List<String>,
+        memberType: ManagerScopesEnum
+    ): List<UserAndDeptInfoVo> = emptyList()
+
+    override fun listDepartedMembers(memberIds: List<String>): List<String> = emptyList()
 
     override fun isUserDeparted(userId: String): Boolean = false
 }

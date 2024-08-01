@@ -28,6 +28,7 @@ class UserAuthResourceMemberResourceImpl(
         memberType: String?,
         userName: String?,
         deptName: String?,
+        departedFlag: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<SQLPage<ResourceMemberInfo>> {
@@ -37,6 +38,7 @@ class UserAuthResourceMemberResourceImpl(
                 memberType = memberType,
                 userName = userName,
                 deptName = deptName,
+                departedFlag = departedFlag,
                 page = page,
                 pageSize = pageSize
             )

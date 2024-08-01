@@ -39,6 +39,7 @@ interface PermissionResourceMemberService {
         memberType: String?,
         userName: String?,
         deptName: String?,
+        departedFlag: Boolean? = false,
         page: Int,
         pageSize: Int
     ): SQLPage<ResourceMemberInfo>

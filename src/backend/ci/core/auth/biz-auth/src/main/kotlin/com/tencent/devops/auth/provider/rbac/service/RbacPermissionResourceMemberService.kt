@@ -29,6 +29,7 @@ import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
+import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
@@ -143,13 +144,15 @@ class RbacPermissionResourceMemberService constructor(
         memberType: String?,
         userName: String?,
         deptName: String?,
+        departedFlag: Boolean?,
         page: Int,
         pageSize: Int
     ): SQLPage<ResourceMemberInfo> {
-        // 不允许用户名称和部门名称同时搜索
         if (!userName.isNullOrEmpty() && !deptName.isNullOrEmpty()) {
             return SQLPage(count = 0, records = emptyList())
         }
+
+        val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val count = authResourceGroupMemberDao.countProjectMember(
             dslContext = dslContext,
             projectCode = projectCode,
@@ -157,7 +160,6 @@ class RbacPermissionResourceMemberService constructor(
             userName = userName,
             deptName = deptName
         )
-        val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val records = authResourceGroupMemberDao.listProjectMember(
             dslContext = dslContext,
             projectCode = projectCode,
@@ -166,17 +168,31 @@ class RbacPermissionResourceMemberService constructor(
             deptName = deptName,
             offset = limit.offset,
             limit = limit.limit
-        ).map { record ->
-            when {
-                record.type != ManagerScopesEnum.getType(ManagerScopesEnum.USER) -> record
-                record.name.isNullOrEmpty() -> {
-                    val newUserName = deptService.getUserDisPlayName(userId = record.id)
-                    record.copy(name = newUserName, departed = newUserName == null)
-                }
-                else -> record.copy(departed = deptService.isUserDeparted(record.id))
-            }
+        )
+
+        val userMembers = records.filter {
+            it.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)
+        }.map { it.id }
+        if (userMembers.isEmpty() || departedFlag == false)
+            return SQLPage(count = count, records = records)
+
+        val userInfos = deptService.listMemberInfos(
+            memberIds = userMembers,
+            memberType = ManagerScopesEnum.USER
+        ).associateBy { it.name }
+        val finalRecords = records.map {
+            if (it.type != ManagerScopesEnum.getType(ManagerScopesEnum.USER)) it else it.updateMember(userInfos)
         }
-        return SQLPage(count = count, records = records)
+        return SQLPage(count = count, records = finalRecords)
+    }
+
+    private fun ResourceMemberInfo.updateMember(userInfos: Map<String, UserAndDeptInfoVo>): ResourceMemberInfo {
+        val userInfo = userInfos[this.id]
+        return when {
+            userInfo == null -> this.copy(name = this.id, departed = true)
+            this.name.isNullOrEmpty() -> this.copy(name = userInfo.displayName)
+            else -> this
+        }
     }
 
     override fun getMemberGroupsCount(
@@ -290,7 +306,7 @@ class RbacPermissionResourceMemberService constructor(
         members: List<ManagerMember>,
         expiredAt: Long
     ): Boolean {
-        val membersOfNeedToAdd = members.toMutableList().removeRetiredMembers()
+        val membersOfNeedToAdd = members.toMutableList().removeDepartedMembers()
         if (membersOfNeedToAdd.isNotEmpty()) {
             val managerMemberGroup =
                 ManagerMemberGroupDTO.builder().members(membersOfNeedToAdd).expiredAt(expiredAt).build()
@@ -323,22 +339,29 @@ class RbacPermissionResourceMemberService constructor(
         val groupDepartmentSet = groupMembers.filter { it.type == deptType }.map { it.id }.toSet()
         // 校验用户是否应该加入用户组
         val iamMemberInfos = mutableListOf<ManagerMember>()
-        members?.filterNot { deptService.isUserDeparted(it) }?.forEach {
-            val shouldAddUserToGroup = shouldAddUserToGroup(
-                groupUserMap = groupUserMap,
-                groupDepartmentSet = groupDepartmentSet,
-                member = it
+        if (!members.isNullOrEmpty()) {
+            val departedMembers = deptService.listDepartedMembers(
+                memberIds = members
             )
-            if (shouldAddUserToGroup) {
-                iamMemberInfos.add(ManagerMember(userType, it))
+            members.filterNot { departedMembers.contains(it) }.forEach {
+                val shouldAddUserToGroup = shouldAddUserToGroup(
+                    groupUserMap = groupUserMap,
+                    groupDepartmentSet = groupDepartmentSet,
+                    member = it
+                )
+                if (shouldAddUserToGroup) {
+                    iamMemberInfos.add(ManagerMember(userType, it))
+                }
+            }
+        }
+        if (!departments.isNullOrEmpty()) {
+            departments.forEach {
+                if (!groupDepartmentSet.contains(it)) {
+                    iamMemberInfos.add(ManagerMember(deptType, it))
+                }
             }
         }
 
-        departments?.forEach {
-            if (!groupDepartmentSet.contains(it)) {
-                iamMemberInfos.add(ManagerMember(deptType, it))
-            }
-        }
         logger.info("batch add project user:|$projectCode|$iamGroupId|$expiredTime|$iamMemberInfos")
         if (iamMemberInfos.isNotEmpty()) {
             addIamGroupMember(
@@ -659,7 +682,7 @@ class RbacPermissionResourceMemberService constructor(
         members: List<ManagerMember>,
         expiredAt: Long
     ): Boolean {
-        val membersOfNeedToRenewal = members.toMutableList().removeRetiredMembers()
+        val membersOfNeedToRenewal = members.toMutableList().removeDepartedMembers()
         if (membersOfNeedToRenewal.isNotEmpty()) {
             iamV2ManagerService.renewalRoleGroupMemberV2(
                 groupId,
@@ -1322,10 +1345,16 @@ class RbacPermissionResourceMemberService constructor(
         )
     }
 
-    private fun MutableList<ManagerMember>.removeRetiredMembers(): List<ManagerMember> {
+    private fun MutableList<ManagerMember>.removeDepartedMembers(): List<ManagerMember> {
+        val userMemberIds = this.filter { it.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER) }.map { it.id }
+        if (userMemberIds.isEmpty()) return this
+        // 获取离职的人员
+        val departedMembers = deptService.listDepartedMembers(
+            memberIds = userMemberIds
+        )
         return this.filterNot {
             it.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER) &&
-                deptService.isUserDeparted(it.id)
+                departedMembers.contains(it.id)
         }
     }
 

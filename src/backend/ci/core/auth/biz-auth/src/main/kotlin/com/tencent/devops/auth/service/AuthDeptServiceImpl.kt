@@ -40,7 +40,8 @@ import com.tencent.devops.auth.common.Constants.LEVEL
 import com.tencent.devops.auth.common.Constants.NAME
 import com.tencent.devops.auth.common.Constants.PARENT
 import com.tencent.devops.auth.common.Constants.USERNAME
-import com.tencent.devops.auth.common.Constants.USER_LABLE
+import com.tencent.devops.auth.common.Constants.USER_LABEL
+import com.tencent.devops.auth.common.Constants.USER_NAME_AND_DISPLAY_NAME_LABEL
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.entity.SearchDeptUserEntity
 import com.tencent.devops.auth.entity.SearchProfileDeptEntity
@@ -57,7 +58,6 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -65,13 +65,11 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.util.Optional
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 
 class AuthDeptServiceImpl @Autowired constructor(
-    val redisOperation: RedisOperation,
-    val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper
 ) : DeptService {
 
     @Value("\${esb.code:#{null}}")
@@ -96,10 +94,10 @@ class AuthDeptServiceImpl @Autowired constructor(
     private val memberInfoCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
         .expireAfterWrite(24, TimeUnit.HOURS)
-        .build<String/*userId*/, Optional<UserAndDeptInfoVo>>()
+        .build<String/*userId*/, UserAndDeptInfoVo>()
 
     // 已离职成员
-    private val departedMembers = CopyOnWriteArrayList<String>()
+    private val departedMembersCache = CopyOnWriteArrayList<String>()
 
     override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo {
         val search = SearchUserAndDeptEntity(
@@ -150,7 +148,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_app_code = appCode,
             bk_app_secret = appSecret,
             bk_username = userId,
-            fields = USER_LABLE,
+            fields = USER_LABEL,
             lookupField = USERNAME,
             accessToken = accessToken
         )
@@ -245,51 +243,78 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? {
-        return memberInfoCache.getIfPresent(name)?.get() ?: getUserAndPutInCache(userId, name)
+        return memberInfoCache.getIfPresent(name) ?: getUserAndPutInCache(userId, name)
     }
 
     override fun getMemberInfo(
         memberId: String,
         memberType: ManagerScopesEnum
     ): UserAndDeptInfoVo {
-        return memberInfoCache.getIfPresent(memberId)?.get() ?: fetchMemberInfo(memberId, memberType).also {
-            memberInfoCache.put(memberId, Optional.of(it))
-        }
+        return listMemberInfos(
+            memberIds = listOf(memberId),
+            memberType = memberType
+        ).firstOrNull() ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.USER_NOT_EXIST,
+            params = arrayOf(memberId),
+            defaultMessage = "member $memberId not exist"
+        )
     }
 
-    override fun getUserDisPlayName(userId: String): String? {
-        return try {
-            getMemberInfo(
-                memberId = userId,
-                memberType = ManagerScopesEnum.USER
-            ).displayName
-        } catch (ignore: Exception) {
-            // 用户不存在
-            departedMembers.add(userId)
-            null
+    override fun listMemberInfos(
+        memberIds: List<String>,
+        memberType: ManagerScopesEnum
+    ): List<UserAndDeptInfoVo> {
+        val cacheResult = memberInfoCache.getAllPresent(memberIds)
+        val membersNotInCache = memberIds.filterNot { cacheResult.containsKey(it) || departedMembersCache.contains(it) }
+
+        if (membersNotInCache.isNotEmpty()) {
+            val fetchedMembers = fetchMemberInfos(membersNotInCache, memberType)
+            fetchedMembers.forEach { memberInfoCache.put(it.name, it) }
+
+            if (memberType == ManagerScopesEnum.USER) {
+                val departedMembers = membersNotInCache.subtract(fetchedMembers.map { it.name }.toSet())
+                if (departedMembers.isNotEmpty()) {
+                    departedMembersCache.addAll(departedMembers)
+                }
+            }
         }
+        return memberInfoCache.getAllPresent(memberIds).values.toList()
+    }
+
+    override fun listDepartedMembers(memberIds: List<String>): List<String> {
+        val activeMembers = listMemberInfos(
+            memberIds = memberIds,
+            memberType = ManagerScopesEnum.USER
+        ).map { it.name }
+        return memberIds.apply { subtract(activeMembers.toSet()) }
     }
 
     override fun isUserDeparted(userId: String): Boolean {
-        return if (departedMembers.contains(userId)) {
+        return if (departedMembersCache.contains(userId)) {
             true
         } else {
-            getUserDisPlayName(userId) == null
+            listMemberInfos(
+                memberIds = listOf(userId),
+                memberType = ManagerScopesEnum.USER
+            ).isEmpty()
         }
     }
 
-    private fun fetchMemberInfo(memberId: String, memberType: ManagerScopesEnum): UserAndDeptInfoVo {
-        val memberInfo = when (memberType) {
+    private fun fetchMemberInfos(
+        memberIds: List<String>,
+        memberType: ManagerScopesEnum
+    ): List<UserAndDeptInfoVo> {
+        val memberInfos = when (memberType) {
             ManagerScopesEnum.USER -> {
                 val userSearch = SearchUserAndDeptEntity(
                     bk_app_code = appCode!!,
                     bk_app_secret = appSecret!!,
                     bk_username = "admin",
-                    fields = USER_LABLE,
+                    fields = USER_NAME_AND_DISPLAY_NAME_LABEL,
                     lookupField = USERNAME,
-                    exactLookups = memberId
+                    exactLookups = memberIds.joinToString { "," }
                 )
-                getUserInfo(userSearch).results.firstOrNull()?.toUserAndDeptInfoVo()
+                getUserInfo(userSearch).results.map { it.toUserAndDeptInfoVo() }
             }
             ManagerScopesEnum.DEPARTMENT -> {
                 val deptSearch = SearchUserAndDeptEntity(
@@ -298,17 +323,13 @@ class AuthDeptServiceImpl @Autowired constructor(
                     bk_username = "admin",
                     fields = DEPT_LABEL,
                     lookupField = ID,
-                    exactLookups = memberId
+                    exactLookups = memberIds.joinToString { "," }
                 )
-                getDeptInfo(deptSearch).results.firstOrNull()?.toUserAndDeptInfoVo()
+                getDeptInfo(deptSearch).results.map { it.toUserAndDeptInfoVo() }
             }
-            else -> null
-        } ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.USER_NOT_EXIST,
-            params = arrayOf(memberId),
-            defaultMessage = "member $memberId not exist"
-        )
-        return memberInfo
+            else -> emptyList()
+        }
+        return memberInfos
     }
 
     private fun BkUserInfo.toUserAndDeptInfoVo(): UserAndDeptInfoVo {
@@ -342,7 +363,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             userId = userId,
             type = ManagerScopesEnum.USER,
             exactLookups = true
-        ).firstOrNull().also { if (it != null) memberInfoCache.put(name, Optional.of(it)) }
+        ).firstOrNull().also { if (it != null) memberInfoCache.put(name, it) }
     }
 
     private fun getUserDeptFamily(userId: String): String {
