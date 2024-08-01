@@ -218,7 +218,7 @@ class PermissionAuthorizationServiceImpl constructor(
         ).associateBy { it.name }
         resourceAuthorizationList.forEach {
             val handoverTo = it.handoverTo ?: ""
-            it.copy(
+            it.copyHandoverToCnName(
                 handoverToCnName = userId2UserInfo[handoverTo]?.displayName ?: handoverTo
             )
         }

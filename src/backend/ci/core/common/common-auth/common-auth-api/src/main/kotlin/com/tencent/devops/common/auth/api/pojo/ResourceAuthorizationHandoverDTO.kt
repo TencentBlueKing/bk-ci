@@ -20,8 +20,8 @@ data class ResourceAuthorizationHandoverDTO(
     override var handoverFromCnName: String? = null,
     @get:Schema(title = "交接人")
     val handoverTo: String? = null,
-    @get:Schema(title = "交接人")
-    val handoverToCnName: String? = null,
+    @get:Schema(title = "交接人中文名稱")
+    var handoverToCnName: String? = null,
     @get:Schema(title = "交接失败信息")
     val handoverFailedMessage: String? = null
 ) : ResourceAuthorizationDTO(
@@ -30,4 +30,8 @@ data class ResourceAuthorizationHandoverDTO(
     resourceName = resourceName,
     resourceCode = resourceCode,
     handoverFrom = handoverFrom
-)
+) {
+    fun copyHandoverToCnName(handoverToCnName: String) {
+        this.handoverToCnName = handoverToCnName
+    }
+}
