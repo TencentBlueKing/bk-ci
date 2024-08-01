@@ -35,20 +35,22 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.yaml.creator.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.pojo.QualityElementInfo
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -142,16 +144,18 @@ class ModelCreate @Autowired constructor(
                 )
             )
         }
+        val model = Model(
+            name = modelName,
+            desc = "",
+            stages = stageList,
+            labels = labelList,
+            instanceFromTemplate = false,
+            pipelineCreator = event.userId
+        )
+        modelInstallAtom(model, event.projectCode, event.elementInstallUserId)
 
         return PipelineModelAndSetting(
-            model = Model(
-                name = modelName,
-                desc = "",
-                stages = stageList,
-                labels = labelList,
-                instanceFromTemplate = false,
-                pipelineCreator = event.userId
-            ),
+            model = model,
             setting = PipelineSetting(
                 concurrencyGroup = yaml.concurrency?.group,
                 // Cancel-In-Progress 配置group后默认为true
@@ -170,6 +174,26 @@ class ModelCreate @Autowired constructor(
                 pipelineAsCodeSettings = asCodeSettings
             )
         )
+    }
+
+    private fun modelInstallAtom(model: Model, projectId: String, elementInstallUserId: String) {
+        val install = client.get(ServiceMarketAtomResource::class).getProjectElements(
+            projectCode = projectId
+        ).data?.keys ?: emptyList()
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                container.elements.forEach { element ->
+                    if (element is MarketBuildAtomElement && element.getAtomCode() !in install) {
+                        ModelCommon.installMarketAtom(
+                            client = client,
+                            projectCode = projectId,
+                            userId = elementInstallUserId,
+                            atomCode = element.getAtomCode()
+                        )
+                    }
+                }
+            }
+        }
     }
 
     @Suppress("NestedBlockDepth")
