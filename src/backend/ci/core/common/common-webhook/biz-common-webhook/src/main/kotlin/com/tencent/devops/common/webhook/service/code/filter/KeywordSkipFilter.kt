@@ -45,12 +45,13 @@ class KeywordSkipFilter(
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info("$pipelineId|triggerOnMessage:$triggerOnMessage|skipWord:$keyWord|enable:$enable")
-        return when{
+        return when {
             enable == false -> true
-            keyWord.none { triggerOnMessage?.contains(it) == true } -> {
+            keyWord.any { triggerOnMessage?.contains(it) == true } -> {
                 response.failedReason = failedReason
                 false
             }
+
             else -> true
         }
     }
