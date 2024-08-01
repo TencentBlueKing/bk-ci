@@ -162,7 +162,11 @@ class BKCCService @Autowired constructor(
     }
     private fun headerStr(): String {
         return objectMapper.writeValueAsString(
-            mapOf("bk_app_code" to bkConfig.appCode, "bk_app_secret" to bkConfig.appSecret, "bk_username" to bkConfig.ccUserName)
+            mapOf(
+                "bk_app_code" to bkConfig.appCode,
+                "bk_app_secret" to bkConfig.appSecret,
+                "bk_username" to bkConfig.ccUserName
+            )
         ).replace("\\s".toRegex(), "")
     }
 
