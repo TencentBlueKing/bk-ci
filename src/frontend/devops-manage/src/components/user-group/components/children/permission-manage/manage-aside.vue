@@ -239,7 +239,7 @@ import { useRoute } from 'vue-router';
 import useManageAside from "@/store/manageAside";
 import { Success, Spinner } from 'bkui-vue/lib/icon';
 import ProjectUserSelector from '@/components/project-user-selector'
-import { ref, defineProps, defineEmits, computed, watch, defineExpose } from 'vue';
+import { ref, defineProps, defineEmits, computed, defineExpose } from 'vue';
 
 const { t } = useI18n();
 const route = useRoute();

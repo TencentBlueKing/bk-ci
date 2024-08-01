@@ -248,7 +248,7 @@
           </i18n-t>
           <i18n-t v-if="inoperableCount" keypath="；其中X个用户组X，本次操作将忽略" tag="div">
             <span class="desc-warn">{{ inoperableCount }}</span>
-            <span class="desc-warn">{{ unableText[batchFlag] }}</span>
+            <span class="desc-warn">{{ t(unableText[batchFlag]) }}</span>
           </i18n-t>
         </p>
         <div>
@@ -406,9 +406,9 @@ const userName = computed(() => {
   return ''
 })
 const unableText = {
-  renewal: t('无法续期'),
-  handover: t('无法移交'),
-  remove: t('无法移出'),
+  renewal: '无法续期',
+  handover: '无法移交',
+  remove: '无法移出',
 }
 const {
   sourceList,
@@ -494,7 +494,6 @@ async function handleRenewalConfirm() {
     operatorLoading.value = false;
     showMessage('success', t('用户组权限已续期。'));
     cancleClear('renewal');
-    // tableRef.value.clearSelection();
     isShowRenewal.value = false;
   } catch (error) {
     operatorLoading.value = false;
@@ -695,7 +694,7 @@ async function getMenuList (item, keyword) {
   } else if (item.id === 'department' && keyword) {
     query.departName = keyword
   }
-  const res = await http.getProjectMembers(projectId.value, undefined, query)
+  const res = await http.getProjectMembers(projectId.value, query)
   return res.records.map(i => {
     return {
       ...i,

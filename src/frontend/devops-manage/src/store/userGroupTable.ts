@@ -162,10 +162,6 @@ export default defineStore('userGroupTable', () => {
       );
       if(currentRequestId === requestId) {
         sourceList.value.forEach((item, index) => {
-          if(item.resourceType === "project" && results[index]) {
-            item.tableData = results[index].records;
-            item.activeFlag = true;
-          }
           if((index === 0 || index === 1) && results[index]) {
             item.tableData = results[index].records;
             item.activeFlag = true;
