@@ -32,7 +32,7 @@ async function fetchProjectMembers (query) {
   userList.value = res.records.map(i => {
     return {
       ...i,
-      displayName: `${i.id}(${i.name})`,
+      displayName: i.type === 'user' ? (i.departed ? i.id : `${i.id} (${i.name})`) : i.id,
     }
   })
 }
