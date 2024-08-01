@@ -176,6 +176,7 @@ class ModelCreate @Autowired constructor(
         )
     }
 
+    @Suppress("NestedBlockDepth")
     private fun modelInstallAtom(model: Model, projectId: String, elementInstallUserId: String) {
         val install = client.get(ServiceMarketAtomResource::class).getProjectElements(
             projectCode = projectId
