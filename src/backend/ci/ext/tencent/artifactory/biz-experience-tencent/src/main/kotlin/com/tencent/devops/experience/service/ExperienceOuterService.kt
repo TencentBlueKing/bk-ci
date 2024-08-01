@@ -1,9 +1,5 @@
 package com.tencent.devops.experience.service
 
-import com.tencent.bkuser.api.ProfilesApi
-import com.tencent.bkuser.api.V1Api
-import com.tencent.bkuser.model.Profile
-import com.tencent.bkuser.model.ProfileLogin
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -13,7 +9,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
-import com.tencent.devops.experience.constant.ExperienceMessageCode.ACCOUNT_HAS_BEEN_BLOCKED
 import com.tencent.devops.experience.constant.ExperienceMessageCode.ACCOUNT_INFORMATION_ABNORMAL
 import com.tencent.devops.experience.constant.ExperienceMessageCode.LOGIN_ACCOUNT_FREQUENT
 import com.tencent.devops.experience.constant.ExperienceMessageCode.LOGIN_EXPIRED
@@ -21,7 +16,6 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode.LOGIN_IP_FRE
 import com.tencent.devops.experience.constant.ExperienceMessageCode.OUTER_LOGIN_WRONG_PASSWORD
 import com.tencent.devops.experience.constant.ExperienceMessageCode.UNABLE_GET_IP
 import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_TAI_ACCOUNT
-import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
 import com.tencent.devops.experience.dao.ExperienceOuterLoginRecordDao
 import com.tencent.devops.experience.pojo.outer.OuterCanAddParam
 import com.tencent.devops.experience.pojo.outer.OuterCanAddVO
@@ -37,21 +31,17 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.redis.connection.RedisStringCommands
-import org.springframework.data.redis.core.types.Expiration
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.ws.rs.core.Response
 
 @Service
+@SuppressWarnings("ALL")
 class ExperienceOuterService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val loginApi: V1Api,
-    private val profileApi: ProfilesApi,
     private val experienceOuterLoginRecordDao: ExperienceOuterLoginRecordDao,
-    private val groupOuterDao: ExperienceGroupOuterDao,
     private val dslContext: DSLContext
 ) {
     @Value("\${esb.code:#{null}}")
@@ -94,29 +84,10 @@ class ExperienceOuterService @Autowired constructor(
         }
 
         try {
-            var exception: Exception? = null
-            var outerProfileVO: OuterProfileVO? = null
-            // 先用太湖登录
-            try {
-                outerProfileVO = taiLogin(params)
-            } catch (e: Exception) {
-                exception = e
-            }
-            // 再用蓝鲸外部登录
-            if (null == outerProfileVO) {
-                try {
-                    outerProfileVO = bkOuterLogin(params)
-                    exception = null
-                } catch (ignored: Exception) {
-                }
-            }
-            // 没有一个正常登录,则抛异常
-            if (null != exception) {
-                throw exception
-            }
+            val outerProfileVO: OuterProfileVO = taiLogin(params)
 
             // 设置token
-            val token = DigestUtils.md5Hex(outerProfileVO!!.username + outerProfileVO.email + UUIDUtil.generate())
+            val token = DigestUtils.md5Hex(outerProfileVO.username + outerProfileVO.email + UUIDUtil.generate())
             redisOperation.set(tokenRedisKey(token), JsonUtil.toJson(outerProfileVO), EXPIRE_SECS)
 
             // 单token有效
@@ -161,10 +132,6 @@ class ExperienceOuterService @Autowired constructor(
         try {
             // 获取账号信息
             val profileVO = JsonUtil.getObjectMapper().readValue(profileStr, OuterProfileVO::class.java)
-
-            // TOKEN对应的账号是否正常
-            checkNormal(token, profileVO)
-
             return profileVO
         } catch (e: Exception) {
             logger.warn("decode profile failed , token:{}", token, e)
@@ -177,15 +144,6 @@ class ExperienceOuterService @Autowired constructor(
 
     fun renewToken(token: String) {
         redisOperation.expire(tokenRedisKey(token), EXPIRE_SECS)
-    }
-
-    fun outerList(projectId: String): List<String> {
-        return profileApi.v2ProfilesList(
-            null, null, 100000, listOf("username", "departments"), "domain", listOf(DOMAIN),
-            null, null, null, null, null, null, null, null
-        ).results
-            .filter { it.departments?.any { d -> d.fullName == projectId } ?: false }
-            .map { it.username.replace("@$DOMAIN", "") }
     }
 
     fun isBlackIp(realIp: String?): Boolean {
@@ -201,7 +159,6 @@ class ExperienceOuterService @Autowired constructor(
 
     fun outerCanAdd(projectId: String, param: OuterCanAddParam): OuterCanAddVO {
         val userIds = param.userIds.split(",")
-        val bkOuters = outerList(projectId)
 
         val legalUserIds = mutableListOf<String>()
         val illegalUserIds = mutableListOf<String>()
@@ -214,8 +171,6 @@ class ExperienceOuterService @Autowired constructor(
                 ).data ?: false
             }
             if (UserUtil.isTaiUser(u) && isProjectUser.value) {
-                legalUserIds.add(u)
-            } else if (!UserUtil.isTaiUser(u) && bkOuters.contains(u)) {
                 legalUserIds.add(u)
             } else {
                 illegalUserIds.add(u)
@@ -232,70 +187,6 @@ class ExperienceOuterService @Autowired constructor(
         if (null != oldToken) {
             redisOperation.delete(tokenRedisKey(oldToken))
         }
-    }
-
-    private fun checkNormal(token: String, profileVO: OuterProfileVO) {
-        if (profileVO.type == TYPE_TAI) {
-            // 太湖账户没有异常体系
-            return
-        }
-        val checkKey = "e:out:check:$token"
-        val checkNow = redisOperation.execute {
-            it.stringCommands().set(
-                checkKey.toByteArray(),
-                "0".toByteArray(),
-                Expiration.seconds(30),
-                RedisStringCommands.SetOption.SET_IF_ABSENT
-            )
-        }
-        if (checkNow == true) {
-            val profilesRead = try {
-                profileApi.v2ProfilesRead("${profileVO.username}@$DOMAIN", "status", "username")
-            } catch (e: Exception) {
-                null
-            }
-            if (null == profilesRead || profilesRead.status != Profile.StatusEnum.NORMAL) {
-                redisOperation.set(checkKey, "1") // 将缓存置为不正常用户
-                logger.warn("v2ProfilesRead , status is not normal , token:{}", token)
-                throw ErrorCodeException(
-                    statusCode = Response.Status.BAD_REQUEST.statusCode,
-                    errorCode = ACCOUNT_HAS_BEEN_BLOCKED
-                )
-            }
-        } else {
-            val checkResult = redisOperation.get(checkKey)
-            if (checkResult == "1") {
-                logger.warn("v2ProfilesRead, redis , status is not normal , token:{}", token)
-                throw ErrorCodeException(
-                    statusCode = Response.Status.BAD_REQUEST.statusCode,
-                    errorCode = ACCOUNT_HAS_BEEN_BLOCKED
-                )
-            }
-        }
-    }
-
-    private fun bkOuterLogin(params: OuterLoginParam): OuterProfileVO {
-        // 登录账号
-        val data = ProfileLogin()
-        data.username = params.username
-        data.password = params.password
-        data.domain = DOMAIN
-        val profile = loginApi.v1LoginLogin(data)
-
-        // 判断账号没有被封
-        if (profile.status != Profile.StatusEnum.NORMAL) {
-            logger.warn("bkOuterLogin status is not normal , status : {}", profile.status)
-            throw ErrorCodeException(
-                statusCode = Response.Status.BAD_REQUEST.statusCode,
-                errorCode = ACCOUNT_HAS_BEEN_BLOCKED
-            )
-        }
-        return OuterProfileVO(
-            username = profile.username.replace("@$DOMAIN", ""),
-            logo = logo(),
-            email = profile.email,
-            type = TYPE_BK_OUTER
-        )
     }
 
     private fun taiLogin(params: OuterLoginParam): OuterProfileVO {
@@ -353,7 +244,7 @@ class ExperienceOuterService @Autowired constructor(
 
     private fun isAccountLimit(username: String): Boolean {
         val nowMinute = LocalDateTime.now().plusMinutes(1).withSecond(0)
-        val limitKey = "e:out:l:ip:$username:${df.format(nowMinute)}"
+        val limitKey = "e:out:l:account:$username:${df.format(nowMinute)}"
         val limit = redisOperation.increment(limitKey, 1)
         if (limit == 1L) {
             redisOperation.expire(limitKey, 60)
@@ -377,8 +268,6 @@ class ExperienceOuterService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ExperienceOuterService::class.java)
         private val df = DateTimeFormatter.ofPattern("HHmmss")
         private const val EXPIRE_SECS: Long = 30 * 24 * 60 * 60
-        private const val DOMAIN = "app.devops"
-        private const val TYPE_BK_OUTER = 1
         private const val TYPE_TAI = 2
     }
 }

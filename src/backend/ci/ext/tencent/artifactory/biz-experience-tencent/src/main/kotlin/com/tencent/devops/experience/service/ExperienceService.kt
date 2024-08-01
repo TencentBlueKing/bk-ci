@@ -1439,36 +1439,40 @@ class ExperienceService @Autowired constructor(
         experienceId: Long,
         fullPath: String
     ) {
-        val userIdsForDefend = mutableSetOf<String>()
-        // 临时内部
-        experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).forEach { userIdsForDefend.add(it.value1()) }
-        // 临时外部
-        experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).forEach { userIdsForDefend.add(it.value1()) }
-        // 体验组
-        val groupIds = experienceBaseService.getGroupIdsByRecordId(experienceId)
-        userIdsForDefend.addAll(experienceBaseService.getDeptUserReceivers(groupIds))
-        userIdsForDefend.addAll(experienceBaseService.getGroupIdToInnerUserIds(groupIds).values.flatten())
-        userIdsForDefend.addAll(experienceBaseService.getGroupIdToOuters(groupIds).values.flatten())
+        threadPool.submit {
+            val userIdsForDefend = mutableSetOf<String>()
+            // 临时内部
+            experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId)
+                .forEach { userIdsForDefend.add(it.value1()) }
+            // 临时外部
+            experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId)
+                .forEach { userIdsForDefend.add(it.value1()) }
+            // 体验组
+            val groupIds = experienceBaseService.getGroupIdsByRecordId(experienceId)
+            userIdsForDefend.addAll(experienceBaseService.getDeptUserReceivers(groupIds))
+            userIdsForDefend.addAll(experienceBaseService.getGroupIdToInnerUserIds(groupIds).values.flatten())
+            userIdsForDefend.addAll(experienceBaseService.getGroupIdToOuters(groupIds).values.flatten())
 
-        // 保存加固任务
-        val taskNum = 100.0
-        val tasksResult = client.get(ServiceArtifactoryDownLoadResource::class).apkDefender(
-            userId = userId,
-            request = ApkDefenderRequest(
-                projectId = projectId,
-                artifactoryType = artifactoryType,
-                fullPath = fullPath,
-                userIds = userIdsForDefend,
-                batchSize = ceil(userIdsForDefend.size / taskNum).toInt()
+            // 保存加固任务
+            val taskNum = 100.0
+            val tasksResult = client.get(ServiceArtifactoryDownLoadResource::class).apkDefender(
+                userId = userId,
+                request = ApkDefenderRequest(
+                    projectId = projectId,
+                    artifactoryType = artifactoryType,
+                    fullPath = fullPath,
+                    userIds = userIdsForDefend,
+                    batchSize = ceil(userIdsForDefend.size / taskNum).toInt()
+                )
             )
-        )
-        val taskIds = tasksResult.data!!.tasks.map { it.id }
-        logger.info("apkDefend , experienceId: $experienceId , taskIds: $taskIds")
+            val taskIds = tasksResult.data!!.tasks.map { it.id }
+            logger.info("apkDefend , experienceId: $experienceId , taskIds: $taskIds")
 
-        redisOperation.leftPush(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, "$experienceId")
-        val apkDefendersKey = ExperienceConstant.apkDefendersKey(experienceId)
-        redisOperation.sadd(apkDefendersKey, *taskIds.toTypedArray())
-        redisOperation.expire(apkDefendersKey, 3700) // 多100秒缓冲
+            redisOperation.leftPush(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, "$experienceId")
+            val apkDefendersKey = ExperienceConstant.apkDefendersKey(experienceId)
+            redisOperation.sadd(apkDefendersKey, *taskIds.toTypedArray())
+            redisOperation.expire(apkDefendersKey, 3700) // 多100秒缓冲
+        }
     }
 
     companion object {

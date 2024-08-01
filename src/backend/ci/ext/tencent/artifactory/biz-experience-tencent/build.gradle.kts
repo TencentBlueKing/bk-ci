@@ -45,5 +45,4 @@ dependencies {
     api(project(":core:notify:api-notify"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:artifactory:model-experience-tencent"))
-    api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
 }
