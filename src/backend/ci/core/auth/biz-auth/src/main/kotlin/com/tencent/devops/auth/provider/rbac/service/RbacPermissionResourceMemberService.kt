@@ -792,7 +792,7 @@ class RbacPermissionResourceMemberService constructor(
             iamV2ManagerService.deleteRoleGroupMemberV2(
                 groupId,
                 type,
-                membersOfNeedToDelete.joinToString { "," }
+                membersOfNeedToDelete.joinToString(",")
             )
         }
         return true
