@@ -689,7 +689,7 @@ async function getMenuList (item, keyword) {
   const query = {
     memberType: item.id,
     page: 1,
-    pageSize: 200
+    pageSize: 400
   }
   if (item.id === 'user' && keyword) {
     query.userName = keyword

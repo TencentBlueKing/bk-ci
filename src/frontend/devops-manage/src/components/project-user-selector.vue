@@ -42,7 +42,7 @@ async function fetchProjectMembers (query) {
   const query = {
     memberType: 'user',
     page: 1,
-    pageSize: 200,
+    pageSize: 400,
     userName: val
   }
   fetchProjectMembers(query)

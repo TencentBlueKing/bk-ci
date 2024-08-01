@@ -139,7 +139,7 @@
     "项目类型": "Project Type",
     "创建项目申请单已撤回": "Creation of project application has been withdrawn",
     "全员": "EveryOne",
-    "检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权": "The following {0} authorizations cannot be reset. Please {2} or {3} {4} {5}",
+    "检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权": "The following {0} authorizations cannot be reset. Please {op1} or {op2} {op3} {op4}",
     "前往处理": "navigate to handle them",
     "继续重置其余": "continue to reset the remaining",
     "授权": "authorizations",
