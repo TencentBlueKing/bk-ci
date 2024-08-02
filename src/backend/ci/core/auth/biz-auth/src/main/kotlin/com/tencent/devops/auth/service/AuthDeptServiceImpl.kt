@@ -94,6 +94,11 @@ class AuthDeptServiceImpl @Autowired constructor(
         .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String/*userId*/, Set<String>>()
 
+    private val userInfoCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(24, TimeUnit.HOURS)
+        .build<String/*userId*/, UserAndDeptInfoVo>()
+
     private val memberInfoCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
         .expireAfterWrite(24, TimeUnit.HOURS)
@@ -236,6 +241,8 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getUserDeptInfo(userId: String): Set<String> {
+        if (userId.endsWith("@tai"))
+            return emptySet()
         if (userDeptCache.getIfPresent(userId) != null) {
             return userDeptCache.getIfPresent(userId)!!
         }
@@ -246,7 +253,7 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? {
-        return memberInfoCache.getIfPresent(name) ?: getUserAndPutInCache(userId, name)
+        return userInfoCache.getIfPresent(name) ?: getUserAndPutInCache(userId, name)
     }
 
     override fun getMemberInfo(
@@ -377,7 +384,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             userId = userId,
             type = ManagerScopesEnum.USER,
             exactLookups = true
-        ).firstOrNull().also { if (it != null) memberInfoCache.put(name, it) }
+        ).firstOrNull().also { if (it != null) userInfoCache.put(name, it) }
     }
 
     private fun getUserDeptFamily(userId: String): String {
