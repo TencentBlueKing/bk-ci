@@ -29,11 +29,12 @@ package com.tencent.devops.metrics.pojo.message
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "CodeCC上报消息")
-@Event(StreamBinding.METRICS_STATISTIC_CODE_CHECK_DAILY)
+@Event(StreamBinding.METRICS_STATISTIC_CODE_CHECK_DAILY, binder = StreamBinder.EXTEND_RABBIT)
 data class CodeCheckReportEvent(
     @get:Schema(title = "统计日期")
     val statisticsTime: String,

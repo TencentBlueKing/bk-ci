@@ -29,11 +29,12 @@
 package com.tencent.devops.common.event.pojo.measure
 
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 
-@Event(StreamBinding.METRICS_PROJECT_USER_DAILY)
+@Event(StreamBinding.METRICS_PROJECT_USER_DAILY, binder = StreamBinder.EXTEND_RABBIT)
 data class ProjectUserDailyEvent(
     @get:Schema(title = "项目ID")
     override val projectId: String,

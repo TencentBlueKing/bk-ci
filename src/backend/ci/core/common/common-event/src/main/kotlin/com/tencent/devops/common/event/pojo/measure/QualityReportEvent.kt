@@ -29,10 +29,11 @@ package com.tencent.devops.common.event.pojo.measure
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Event(destination = StreamBinding.METRICS_STATISTIC_QUALITY_DAILY)
+@Event(destination = StreamBinding.METRICS_STATISTIC_QUALITY_DAILY, binder = StreamBinder.EXTEND_RABBIT)
 data class QualityReportEvent(
     @get:Schema(title = "统计时间")
     val statisticsTime: String,

@@ -93,6 +93,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 setProperty("$rabbitPropPrefix.producer.exchangeType", "topic")
                 val prefix = "spring.cloud.stream.bindings.$bindingName"
                 setProperty("$prefix.destination", event.destination)
+                setProperty("$prefix.binder", event.binder)
             }
 
             // 反射扫描所有带有 StreamConsumer 注解的bean方法
@@ -136,6 +137,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName-in-0"
         val pulsarPropPrefix = "spring.cloud.stream.pulsar.bindings.$bindingName-in-0"
         setProperty("$bindingPrefix.destination", event.destination)
+        setProperty("$bindingPrefix.binder", event.binder)
         setProperty(
             "$bindingPrefix.consumer.concurrency",
             "\${bkScs.consumer.concurrency.$bindingName:${consumer.defaultConcurrency}}"

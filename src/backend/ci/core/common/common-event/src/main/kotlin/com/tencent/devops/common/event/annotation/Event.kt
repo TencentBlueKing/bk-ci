@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.event.annotation
 
+import com.tencent.devops.common.stream.constants.StreamBinder
 import java.lang.annotation.Inherited
 
 /**
@@ -39,5 +40,6 @@ import java.lang.annotation.Inherited
 @Inherited
 annotation class Event(
     val destination: String,
-    val delayMills: Int = 0
+    val delayMills: Int = 0,
+    val binder: String = StreamBinder.CORE_RABBIT
 )
