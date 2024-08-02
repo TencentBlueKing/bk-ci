@@ -40,7 +40,8 @@ class ServiceSensitiveApiPermissionResourceImpl @Autowired constructor(
 ) : ServiceSensitiveApiPermissionResource {
 
     override fun verifyApi(
-        installedPkgShaContent: String?,
+        signFileName: String?,
+        fileShaContent: String?,
         osName: String?,
         osArch: String?,
         storeCode: String,
@@ -49,7 +50,8 @@ class ServiceSensitiveApiPermissionResourceImpl @Autowired constructor(
         version: String?
     ): Result<Boolean> {
         return sensitiveApiService.verifyApi(
-            installedPkgShaContent = installedPkgShaContent,
+            signFileName = signFileName,
+            fileShaContent = fileShaContent,
             osName = osName,
             osArch = osArch,
             storeType = StoreTypeEnum.valueOf(storeType),

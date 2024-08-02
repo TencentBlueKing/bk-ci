@@ -72,7 +72,8 @@ interface SensitiveApiService {
 
     @Suppress("LongParameterList")
     fun verifyApi(
-        installedPkgShaContent: String? = null,
+        signFileName: String? = null,
+        fileShaContent: String? = null,
         osName: String? = null,
         osArch: String? = null,
         storeType: StoreTypeEnum,

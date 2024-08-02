@@ -30,9 +30,11 @@ package com.tencent.devops.store.pojo.common
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "更新组件已安装包sha1摘要值请求报文")
-data class InstalledPkgShaContentRequest(
-    @get:Schema(title = "已安装包sha1摘要值", required = true)
-    val installedPkgShaContent: String,
+data class InstalledPkgFileShaContentRequest(
+    @get:Schema(title = "签名文件名称", required = true)
+    val signFileName: String,
+    @get:Schema(title = "文件sha1摘要值", required = true)
+    val fileShaContent: String,
     @get:Schema(title = "操作系统名称", required = false)
     val osName: String? = null,
     @get:Schema(title = "操作系统CPU架构", required = false)

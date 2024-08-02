@@ -34,7 +34,7 @@ import com.tencent.devops.store.common.service.OpStoreComponentService
 import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
 import com.tencent.devops.store.common.service.StoreReleaseService
-import com.tencent.devops.store.pojo.common.InstalledPkgShaContentRequest
+import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
 import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
@@ -163,19 +163,19 @@ class OpStoreComponentResourceImpl @Autowired constructor(
         )
     }
 
-    override fun updateComponentInstalledPkgShaContent(
+    override fun updateComponentInstalledPkgFileShaContent(
         userId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
-        installedPkgShaContentRequest: InstalledPkgShaContentRequest
+        installedPkgFileShaContentRequest: InstalledPkgFileShaContentRequest
     ): Result<Boolean> {
         return storeComponentManageService.updateComponentInstalledPkgShaContent(
             userId = userId,
             storeType = storeType,
             storeCode = storeCode,
             version = version,
-            installedPkgShaContentRequest = installedPkgShaContentRequest
+            installedPkgFileShaContentRequest = installedPkgFileShaContentRequest
         )
     }
 }
