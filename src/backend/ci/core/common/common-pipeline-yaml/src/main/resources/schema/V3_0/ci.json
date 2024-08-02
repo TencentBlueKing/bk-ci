@@ -255,6 +255,9 @@
                         "type" : "string"
                       }
                     }
+                  },
+                  "skip-wip" : {
+                    "type" : "boolean"
                   }
                 }
               } ]
@@ -943,6 +946,9 @@
                       "type" : "string"
                     }
                   }
+                },
+                "skip-wip" : {
+                  "type" : "boolean"
                 }
               }
             } ]
