@@ -32,12 +32,13 @@ import com.tencent.devops.auth.ScmRetryUtils
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.TimeUnit
 
 class StreamGitPermissionServiceImpl @Autowired constructor(
     val client: Client,
@@ -51,11 +52,50 @@ class StreamGitPermissionServiceImpl @Autowired constructor(
             .expireAfterAccess(5, TimeUnit.HOURS)
             .build<String, Boolean>()
 
+    private val projectUsersCache =
+        CacheBuilder.newBuilder()
+            .maximumSize(MAX_SIZE)
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .build<String, List<String>>()
+
     private val projectMemberCache =
         CacheBuilder.newBuilder()
             .maximumSize(MAX_SIZE)
             .expireAfterAccess(5, TimeUnit.MINUTES)
             .build<String, Boolean?>()
+
+    override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
+        val projectMembers = projectUsersCache.getIfPresent("$projectCode@@${group?.name}")
+        if (projectMembers != null) {
+            return projectMembers
+        }
+        val level = when (group) {
+            BkAuthGroup.MANAGER, BkAuthGroup.CI_MANAGER, BkAuthGroup.CIADMIN -> 40
+            BkAuthGroup.DEVELOPER -> 30
+            BkAuthGroup.VIEWER -> 10
+            else -> return emptyList()
+        }
+        val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
+        var page = 1
+        val users = mutableListOf<String>()
+        while (true) {
+            val res = ScmRetryUtils.callScm(0, logger) {
+                client.getScm(ServiceGitCiResource::class).getProjectMembersAll(
+                    gitProjectId = gitProjectId,
+                    page = page,
+                    pageSize = 100,
+                    search = null
+                ).data!!
+            }
+            users.addAll(res.filter { it.accessLevel >= level }.map { it.username })
+            if (res.size != 100) {
+                break
+            }
+            page += 1
+        }
+        projectUsersCache.put("$projectCode@@${group.name}", users)
+        return users
+    }
 
     override fun isPublicProject(projectCode: String, userId: String?): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
