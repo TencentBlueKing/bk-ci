@@ -245,5 +245,6 @@
     "清空筛选条件": "Clear filter conditions",
     "输入授权人，选中回车进行校验": "Enter the authorizer, select and press Enter to verify",
     "已离职": "Resigned",
-    "授权校验中": "Authorization verification in progress"
+    "授权校验中": "Authorization verification in progress",
+    "目标对象和交接人不允许相同。": "The target and the transferee cannot be the same person."
 }

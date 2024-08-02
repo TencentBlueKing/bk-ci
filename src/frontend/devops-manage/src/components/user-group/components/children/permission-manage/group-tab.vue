@@ -17,6 +17,7 @@
           </template>
           <template #content>
             <TabTable
+              v-if="projectTable.tableData?.length"
               :is-show-operation="isShowOperation"
               :data="projectTable.tableData"
               :resource-name="projectTable.resourceTypeName"

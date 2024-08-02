@@ -513,6 +513,10 @@ async function handleHandoverConfirm() {
 
   const param = formatSelectParams(selectedRow.value.groupId);
   delete param.renewalDuration;
+  if(asideItem.value.id === handOverForm.value.id){
+    showMessage('error', t('目标对象和交接人不允许相同。'));
+    return
+  }
   try {
     operatorLoading.value = true;
     const res = await http.batchHandover(projectId.value, param);
@@ -656,6 +660,11 @@ async function batchConfirm(batchFlag) {
     } else if (batchFlag === 'handover') {
       const flag = await formRef.value.validate();
       if (!flag) return;
+      if(asideItem.value.id === handOverForm.value.id){
+        showMessage('error', t('目标对象和交接人不允许相同。'));
+        batchBtnLoading.value = false;
+        return
+      }
       res = await http.batchHandover(projectId.value, params);
     } else if (batchFlag === 'remove') {
       res = await http.batchRemove(projectId.value, params);
@@ -690,14 +699,14 @@ async function getMenuList (item, keyword) {
   if (item.id === 'user' && keyword) {
     query.userName = keyword
   } else if (item.id === 'department' && keyword) {
-    query.departName = keyword
+    query.deptName = keyword
   }
   const res = await http.getProjectMembers(projectId.value, query)
   return res.records.map(i => {
     return {
       ...i,
       displayName: i.name || i.id,
-      name: i.type === 'user' ? (!i.name ? i.id : `${i.id} (${i.name})`) : i.id,
+      name: i.type === 'user' ? (!i.name ? i.id : `${i.id} (${i.name})`) : i.name,
     }
   })
 }

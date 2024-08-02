@@ -104,7 +104,7 @@ export default defineStore('manageAside', () => {
           params.userName = item.values[0].id;
           params.memberType = item.id;
         } else if (item.id === 'department') {
-          params.deptName = item.values[0].id;
+          params.deptName = item.values[0].name;
           params.memberType = item.id;
         }
       })

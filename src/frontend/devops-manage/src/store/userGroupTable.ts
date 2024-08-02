@@ -240,6 +240,7 @@ export default defineStore('userGroupTable', () => {
       activeTableData.tableData = [...activeTableData.tableData];
       activeTableData.count = activeTableData.count! - 1;
     }
+    isPermission.value = sourceList.value.every(item => item.count !== 0)
     handleClear(selectedTableGroupType.value);
   }
   /**
