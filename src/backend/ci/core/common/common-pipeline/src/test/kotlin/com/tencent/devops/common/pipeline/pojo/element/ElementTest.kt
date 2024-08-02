@@ -28,8 +28,10 @@
 package com.tencent.devops.common.pipeline.pojo.element
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
@@ -45,6 +47,21 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class ElementTest {
+
+    @Test
+    fun testElementJsonOrder() {
+        val jsonFile = ElementTest::class.java.classLoader.getResource("windowsElement.json")
+        val expected = jsonFile!!.readText().trim('\n')
+        val wel = WindowsScriptElement(
+            id = "e-326ce1c320204980a3d2a0f241bccd63",
+            name = "batch script",
+            script = "unity build",
+            scriptType = BuildScriptType.BAT
+        )
+        wel.additionalOptions = elementAdditionalOptions()
+        val actual = JsonUtil.toSortJson(wel)
+        assertEquals(expected, actual)
+    }
 
     @Test
     fun unknownSubType() {
