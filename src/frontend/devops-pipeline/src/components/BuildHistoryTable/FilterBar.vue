@@ -34,6 +34,12 @@
         props: {
             resetQueryCondition: Function
         },
+        data () {
+            return {
+                statusList: [],
+                triggerList: []
+            }
+        },
         computed: {
             ...mapGetters({
                 historyPageStatus: 'pipelines/getHistoryPageStatus'
@@ -50,34 +56,32 @@
                         name: this.$t('status'),
                         id: 'status',
                         multiable: true,
-                        remoteMethod: async () => {
-                            const statusList = await this.getConditionList('status')
-                            return statusList.map(item => ({
-                                name: item.value,
-                                id: item.id
-                            }))
-                        }
+                        children: this.statusList.map(item => ({
+                            id: item.id,
+                            name: item.value
+                        }))
                     },
                     {
                         name: this.$t('materialRepo'),
                         id: 'materialAlias',
-                        multiable: true,
-                        remoteMethod: async (search) => {
-                            const repoList = await this.getConditionList('repo', {
-                                type: 'MATERIAL',
-                                search
-                            })
-                            return repoList.map(item => ({
-                                name: item,
-                                id: item
-                            }))
-                        },
+                        // multiable: true,
+                        remoteMethod:
+                            async (search) => {
+                                const repoList = await this.getConditionList('repo', {
+                                    type: 'MATERIAL',
+                                    search
+                                })
+                                return repoList.map(item => ({
+                                    name: item,
+                                    id: item
+                                }))
+                            },
                         inputInclude: true
                     },
                     {
                         name: this.$t('triggerRepo'),
                         id: 'triggerAlias',
-                        multiable: true,
+                        // multiable: true,
                         remoteMethod: async (search) => {
                             const repoList = await this.getConditionList('repo', {
                                 type: 'TRIGGER',
@@ -102,21 +106,19 @@
                         name: this.$t('history.triggerType'),
                         id: 'trigger',
                         multiable: true,
-                        remoteMethod: async () => {
-                            const repoList = await this.getConditionList('trigger')
-                            return repoList.map(item => ({
-                                name: item.value,
-                                id: item.id
-                            }))
-                        }
+                        children: this.triggerList.map(item => ({
+                            id: item.id,
+                            name: item.value
+                        }))
                     },
                     {
                         name: this.$t('materialBranch'),
                         id: 'materialBranch',
-                        multiable: true,
+                        // multiable: true,
                         remoteMethod: async (search) => {
                             const repoList = await this.getConditionList('branchName', {
                                 type: 'MATERIAL',
+                                alias: this.getSearchKeyById('materialAlias'),
                                 search
                             })
                             return repoList.map(item => ({
@@ -129,10 +131,11 @@
                     {
                         name: this.$t('triggerBranch'),
                         id: 'triggerBranch',
-                        multiable: true,
+                        // multiable: true,
                         remoteMethod: async (search) => {
                             const repoList = await this.getConditionList('branchName', {
                                 type: 'TRIGGER',
+                                alias: this.getSearchKeyById('triggerAlias'),
                                 search
                             })
                             return repoList.map(item => ({
@@ -153,13 +156,30 @@
             }
         },
         created () {
-            this.handlePathQuery()
+            this.init()
         },
         methods: {
             ...mapActions('pipelines', [
                 'setHistoryPageStatus'
             ]),
-            async handlePathQuery () {
+            async init () {
+                try {
+                    const [statusList, triggerList] = await Promise.all([
+                        'status',
+                        'trigger'
+                    ].map(this.getConditionList))
+                    const conditionsMap = {
+                        status: statusList,
+                        trigger: triggerList
+                    }
+                    this.statusList = statusList
+                    this.triggerList = triggerList
+                    this.handlePathQuery(conditionsMap)
+                } catch (error) {
+                    console.error(error)
+                }
+            },
+            handlePathQuery (conditionsMap) {
                 // TODO 筛选参数目前不支持带#字符串回填
                 const { $route, historyPageStatus } = this
                 const pathQuery = $route.query
@@ -173,12 +193,17 @@
                     const newSearchKey = queryArr.map(key => {
                         const newItem = this.filterData.find(item => item.id === key)
                         if (!newItem) return null
+                        const valueMap = conditionsMap[key]?.reduce((acc, item) => {
+                                acc[item.id] = item.value
+                                return acc
+                            }, {})
+
                         newItem.values = newItem.multiable
                             ? pathQuery[key].split(',').map(v => ({
                                 id: v,
-                                name: v
+                                name: valueMap?.[v] ?? v
                             }))
-                            : [{ id: pathQuery[key], name: pathQuery[key] }]
+                            : [{ id: pathQuery[key], name: valueMap?.[pathQuery[key]] ?? pathQuery[key] }]
                         return newItem
                     }).filter(item => !!item)
 
@@ -250,6 +275,14 @@
                     searchKey
                 })
                 this.startQuery()
+            },
+            getSearchKeyById (id) {
+                try {
+                    const values = this.historyPageStatus.searchKey.find(item => item.id === id)?.values
+                    return Array.isArray(values) ? values.map(i => i.id).join(',') : ''
+                } catch (error) {
+                    return ''
+                }
             }
         }
     }
