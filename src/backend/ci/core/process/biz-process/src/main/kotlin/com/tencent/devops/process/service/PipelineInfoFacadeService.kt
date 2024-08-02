@@ -102,13 +102,6 @@ import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.store.api.template.ServiceTemplateResource
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.dao.DuplicateKeyException
-import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.time.LocalDateTime
 import java.util.LinkedList
@@ -116,6 +109,13 @@ import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.dao.DuplicateKeyException
+import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
@@ -212,7 +212,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             exportStringToFile(targetVersion.yaml ?: "", "${settingInfo.pipelineName}$suffix")
         } else {
             val suffix = PipelineStorageType.MODEL.fileSuffix
-            exportStringToFile(JsonUtil.toJson(modelAndSetting), "${settingInfo.pipelineName}$suffix")
+            exportStringToFile(JsonUtil.toSortJson(modelAndSetting), "${settingInfo.pipelineName}$suffix")
         }
     }
 
