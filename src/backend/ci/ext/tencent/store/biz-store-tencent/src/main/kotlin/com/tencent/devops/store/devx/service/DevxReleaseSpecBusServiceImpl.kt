@@ -91,6 +91,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
 
     companion object {
         private const val KEY_OS_RUN_INFO = "osRunInfo"
+        private const val KEY_CHECK_REPEAT_FILE_NAME_FLAG = "checkRepeatFileNameFlag"
     }
 
     @Value("\${store.devx.sign.windows.supportFileTypes:exe}")
@@ -205,7 +206,8 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             KEY_STORE_TYPE to StoreTypeEnum.getStoreType(baseRecord.storeType.toInt()),
             KEY_VERSION to baseRecord.version,
             KEY_PROJECT_ID to storeInnerPipelineConfig.innerPipelineProject,
-            KEY_OS_RUN_INFO to if (!osRunInfos.isNullOrEmpty()) JsonUtil.toJson(osRunInfos!!) else "[]"
+            KEY_OS_RUN_INFO to if (!osRunInfos.isNullOrEmpty()) JsonUtil.toJson(osRunInfos!!) else "[]",
+            KEY_CHECK_REPEAT_FILE_NAME_FLAG to "true"
         )
     }
 
