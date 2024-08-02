@@ -2,7 +2,10 @@
     <div class="codelib-content">
         <template v-if="hasCodelibs || aliasName.length || isLoading">
             <div id="codelib-list-content">
-                <layout :flod.sync="isListFlod" @on-flod="handleLayoutFlod">
+                <layout
+                    :flod.sync="isListFlod"
+                    @on-flod="handleLayoutFlod"
+                >
                     <template>
                         <section class="header-content">
                             <link-code-lib
@@ -19,7 +22,8 @@
                                 :create-codelib="createCodelib"
                             >
                             </link-code-lib>
-                            <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
+                            <bk-input
+                                :placeholder="$t('codelib.aliasNamePlaceholder')"
                                 :class="{
                                     'codelib-search': true,
                                     'is-fold-search': isListFlod

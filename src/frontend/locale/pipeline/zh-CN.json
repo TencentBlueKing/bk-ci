@@ -1453,6 +1453,7 @@
   "oauth": "OAUTH 授权",
   "refreshOauthStatus": "刷新授权状态",
   "oauthPacTips": "尚未授权，请先点击按钮授权。<br/> 授权后，将使用你的身份提交 YAML 文件到代码库。需拥有代码库开发者及以上权限。",
+  "withoutOauthCodelib": "当前环境支持的代码库源，尚未对接 PAC 功能，请咨询",
   "reExec": "重新执行",
   "reDebug": "重新调试",
   "pipelineConf": "流水线配置",

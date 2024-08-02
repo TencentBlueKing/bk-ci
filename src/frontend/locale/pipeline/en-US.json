@@ -1452,6 +1452,7 @@
   "oauth": "OAUTH Authorization",
   "refreshOauthStatus": "Refresh Authorization Status",
   "oauthPacTips": "Not yet authorized, please click the button to authorize first.<br/> After authorization, your identity will be used to submit the YAML file to the code repository. You need to have developer or higher permissions in the code repository.",
+  "withoutOauthCodelib": "The code library source supported by the current environment has not yet been connected to the PAC function, please consult us",
   "reExec": "Re-execute",
   "reDebug": "Re-debug",
   "pipelineConf": "Pipeline Configuration",
