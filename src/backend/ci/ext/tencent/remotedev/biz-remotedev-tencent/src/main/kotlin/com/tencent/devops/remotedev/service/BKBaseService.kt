@@ -11,7 +11,6 @@ import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeResp
 import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeRespData
 import java.security.cert.CertificateException
 import java.text.SimpleDateFormat
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
@@ -76,6 +75,8 @@ class BKBaseService @Autowired constructor(
         val url = "${bkConfig.baseUrl}/prod/v3/queryengine/query_sync/"
         val body = BakeBaseQuerySyncReq(
             bkdataDataToken = bkConfig.baseToken,
+            bkAppCode = bkConfig.appCode,
+            bkAppSecret = bkConfig.appSecret,
             sql = sql
         )
         val request = Request.Builder()
@@ -157,6 +158,8 @@ class BKBaseService @Autowired constructor(
     ): BakeBaseQuerySyncResp? {
         val body = BakeBaseQuerySyncReq(
             bkdataDataToken = bkConfig.baseToken,
+            bkAppCode = bkConfig.appCode,
+            bkAppSecret = bkConfig.appSecret,
             sql = sql
         )
         val url = "${bkConfig.baseUrl}/prod/v3/queryengine/query_sync/"
@@ -187,36 +190,6 @@ class BKBaseService @Autowired constructor(
         }
     }
 
-    fun fetchOnlineIps(
-        date: LocalDateTime,
-        limit: Int = 1000,
-        offset: Int = 0,
-        result: MutableMap<String, String> = mutableMapOf()
-    ): Map<String, String> {
-        val sql = "SELECT node_id, MAX(dtEventTime) as Maxtime " +
-            "FROM 100656_cgs_report_game_all.hdfs " +
-            "WHERE thedate >= '${date.format(theDateFormat)}' " +
-            "GROUP BY node_id order by node_id LIMIT $limit OFFSET $offset"
-
-        val resp = doHttp(sql) ?: return result
-
-        try {
-            resp.data?.list?.forEach { l ->
-                result.put(l["node_id"] as String, l["Maxtime"] as String)
-            } ?: return result
-            if (resp.data.list.size == limit) {
-                fetchOnlineIps(
-                    date = date, limit = limit, offset = offset + limit, result = result
-                )
-            }
-        } catch (e: Exception) {
-            logger.error("fetchOnlineUserMin parse data error", e)
-            return result
-        }
-
-        return result
-    }
-
     fun fetchLastOnline(
         nodeIds: Set<String>
     ): Map<String, String> {
@@ -230,6 +203,8 @@ class BKBaseService @Autowired constructor(
         val url = "${bkConfig.baseUrl}/prod/v3/queryengine/query_sync/"
         val body = BakeBaseQuerySyncReq(
             bkdataDataToken = bkConfig.baseToken,
+            bkAppCode = bkConfig.appCode,
+            bkAppSecret = bkConfig.appSecret,
             sql = sql
         )
         val request = Request.Builder()
@@ -322,6 +297,10 @@ data class BakeBaseQuerySyncReq(
     val bkdataAuthenticationMethod: String = "token",
     @JsonProperty("bkdata_data_token")
     val bkdataDataToken: String,
+    @JsonProperty("bk_app_code")
+    val bkAppCode: String,
+    @JsonProperty("bk_app_secret")
+    val bkAppSecret: String,
     val sql: String,
     @JsonProperty("prefer_storage")
     val preferStorage: String = ""
