@@ -214,7 +214,6 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun deleteWorkspace(
-        userId: String,
         workspaceName: String,
         bakWorkspaceName: String?
     ) {

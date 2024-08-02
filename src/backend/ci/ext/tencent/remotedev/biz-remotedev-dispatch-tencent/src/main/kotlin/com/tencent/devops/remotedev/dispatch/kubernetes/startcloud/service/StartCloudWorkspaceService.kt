@@ -58,7 +58,7 @@ class StartCloudWorkspaceService @Autowired constructor(
     }
 
     override fun deleteWorkspace(userId: String, workspaceName: String, bakWorkspaceName: String?): Result<Boolean> {
-        remoteDevService.deleteWorkspace(userId, workspaceName, bakWorkspaceName)
+        remoteDevService.deleteWorkspace(workspaceName, bakWorkspaceName)
         return Result(true)
     }
 

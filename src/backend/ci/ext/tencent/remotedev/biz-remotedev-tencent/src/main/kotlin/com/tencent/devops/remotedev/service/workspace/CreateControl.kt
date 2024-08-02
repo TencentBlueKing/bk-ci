@@ -826,7 +826,6 @@ class CreateControl @Autowired constructor(
         }
 
         whiteListService.windowsGpuCheck(userId, workspaceNames.size)
-        workspaceCommon.checkWorkspaceAvailability(userId, WorkspaceMountType.START, WorkspaceOwnerType.PERSONAL)
         prepareWindowsCreate(
             creator = userId,
             projectId = projectId,

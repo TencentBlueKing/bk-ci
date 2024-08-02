@@ -414,32 +414,6 @@ class WorkspaceCommon @Autowired constructor(
         return true
     }
 
-    fun getSystemOperator(workspaceOwner: String, mountType: WorkspaceMountType): String =
-        when (mountType) {
-            WorkspaceMountType.START -> workspaceOwner
-            else -> ADMIN_NAME
-        }
-
-    fun checkWorkspaceAvailability(
-        userId: String,
-        type: WorkspaceMountType,
-        ownerType: WorkspaceOwnerType
-    ) {
-        when {
-//            --story=116722016 【个人云桌面续期优化】去掉个人云桌面体验时长的限制
-//            type == WorkspaceMountType.START && ownerType == WorkspaceOwnerType.PERSONAL -> {
-//                val timeLeft = remoteDevSettingService.userWinTimeLeft(userId)
-//                if (timeLeft <= 0) {
-//                    throw ErrorCodeException(
-//                        errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE_WIN_GPU.errorCode
-//                    )
-//                }
-//            }
-
-            else -> {}
-        }
-    }
-
     fun syncStartCloudResourceList(): List<EnvironmentResourceData> {
         return kotlin.runCatching {
             SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)

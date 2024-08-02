@@ -90,7 +90,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         bkTicket: String,
         workspaceName: String
     ): Result<WorkspaceResponse> {
-        return Result(startControl.startWorkspace(userId, bkTicket, workspaceName))
+        return Result(startControl.startWorkspace(userId, workspaceName))
     }
 
     @AuditEntry(actionId = ActionId.CGS_STOP)

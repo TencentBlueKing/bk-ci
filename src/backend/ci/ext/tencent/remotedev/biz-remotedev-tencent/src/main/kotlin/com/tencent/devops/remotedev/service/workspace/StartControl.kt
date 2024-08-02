@@ -95,7 +95,7 @@ class StartControl @Autowired constructor(
         ),
         content = ActionAuditContent.CGS_START_CONTENT
     )
-    fun startWorkspace(userId: String, bkTicket: String, workspaceName: String): WorkspaceResponse {
+    fun startWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId start workspace $workspaceName")
 
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -166,11 +166,7 @@ class StartControl @Autowired constructor(
                         workspaceName = workspaceName,
                         mountType = workspace.workspaceMountType
                     )
-                    workspaceCommon.checkWorkspaceAvailability(
-                        userId = userId,
-                        type = workspace.workspaceMountType,
-                        ownerType = workspace.ownerType
-                    )
+
                     createWorkspaceHistoryForStart(userId, workspaceName)
                     updateWorkspaceStatus(workspace.workspaceName, workspace.status, userId)
                     val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
