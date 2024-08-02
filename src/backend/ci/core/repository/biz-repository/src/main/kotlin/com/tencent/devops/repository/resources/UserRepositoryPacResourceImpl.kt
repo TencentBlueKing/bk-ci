@@ -35,11 +35,13 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.UserRepositoryPacResource
 import com.tencent.devops.repository.service.RepositoryPacService
+import com.tencent.devops.scm.config.GitConfig
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserRepositoryPacResourceImpl @Autowired constructor(
-    private val repositoryPacService: RepositoryPacService
+    private val repositoryPacService: RepositoryPacService,
+    private val gitConfig: GitConfig
 ) : UserRepositoryPacResource {
 
     override fun getPacProjectId(
@@ -122,14 +124,19 @@ class UserRepositoryPacResourceImpl @Autowired constructor(
     }
 
     override fun supportScmType(): Result<List<IdValue>> {
-        return Result(listOf(ScmType.CODE_GIT).map {
-            IdValue(
-                id = it.name,
-                value = I18nUtil.getCodeLanMessage(
-                    messageCode = "TRIGGER_TYPE_${it.name}",
-                    defaultMessage = it.name
+        // TODO 源码管理需要优化
+        return if (gitConfig.clientId.isBlank()) {
+            return Result(emptyList())
+        } else {
+            Result(listOf(ScmType.CODE_GIT).map {
+                IdValue(
+                    id = it.name,
+                    value = I18nUtil.getCodeLanMessage(
+                        messageCode = "TRIGGER_TYPE_${it.name}",
+                        defaultMessage = it.name
+                    )
                 )
-            )
-        })
+            })
+        }
     }
 }

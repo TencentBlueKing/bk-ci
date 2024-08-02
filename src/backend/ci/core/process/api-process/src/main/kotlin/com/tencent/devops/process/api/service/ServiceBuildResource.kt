@@ -507,10 +507,10 @@ interface ServiceBuildResource {
         customVersion: Int? = null,
         @Parameter(description = "触发代码库", required = false)
         @QueryParam("triggerAlias")
-        triggerAlias: List<String>?,
+        triggerAlias: List<String>? = null,
         @Parameter(description = "触发分支", required = false)
         @QueryParam("triggerBranch")
-        triggerBranch: List<String>?
+        triggerBranch: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "获取构建详情")

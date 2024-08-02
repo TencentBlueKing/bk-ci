@@ -128,7 +128,9 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         buildNoEnd: Int?,
         buildMsg: String?,
         startUser: List<String>?,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         logger.info(
             "OPENAPI_BUILD_V4|$userId|get history build|$projectId|$pipelineId|$page|$pageSize" +
@@ -165,7 +167,9 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
             startUser = startUser,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            triggerAlias = triggerAlias,
+            triggerBranch = triggerBranch
         )
     }
 

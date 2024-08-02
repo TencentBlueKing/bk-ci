@@ -73,7 +73,7 @@ class PipelineBuildDao {
     companion object {
         private val mapper = PipelineBuildInfoJooqMapper()
         private val debugMapper = PipelineDebugBuildInfoJooqMapper()
-        private const val DEFAULT_PAGE_SIZE = 10
+        private const val DEFAULT_PAGE_SIZE = 100
     }
 
     fun create(dslContext: DSLContext, startBuildContext: StartBuildContext) {
@@ -1344,7 +1344,7 @@ class PipelineBuildDao {
 
         if (!triggerBranch.isNullOrBlank()) {
             where.and(
-                JooqUtils.jsonExtract(WEBHOOK_INFO, "\$[*].webhookBranch", lower = true)
+                JooqUtils.jsonExtract(WEBHOOK_INFO, "\$.webhookBranch", lower = true)
                     .like("%${triggerBranch.lowercase()}%")
             )
         }
@@ -1404,7 +1404,7 @@ class PipelineBuildDao {
 
         if (!triggerBranch.isNullOrBlank()) {
             where.and(
-                JooqUtils.jsonExtract(WEBHOOK_INFO, "\$[*].webhookBranch", lower = true)
+                JooqUtils.jsonExtract(WEBHOOK_INFO, "\$.webhookBranch", lower = true)
                     .like("%${triggerBranch.lowercase()}%")
             )
         }

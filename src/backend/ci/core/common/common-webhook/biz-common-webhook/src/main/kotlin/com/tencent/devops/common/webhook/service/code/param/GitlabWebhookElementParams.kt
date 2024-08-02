@@ -65,9 +65,6 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
         } else {
             EnvUtils.parseEnv(element.excludeUsers!!.joinToString(","), variables)
         }
-        if (element.branchName == null) {
-            return null
-        }
         params.version = element.version
         when {
             // action上线后【流水线配置层面】兼容存量merge_request_accept和push事件
@@ -103,7 +100,7 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
                 params.includePushAction = WebhookUtils.joinToString(element.includePushAction)
             }
         }
-        params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
+        params.branchName = EnvUtils.parseEnv(element.branchName ?: "", variables)
         params.codeType = CodeType.GITLAB
         params.eventType = element.eventType
         params.block = element.block ?: false
