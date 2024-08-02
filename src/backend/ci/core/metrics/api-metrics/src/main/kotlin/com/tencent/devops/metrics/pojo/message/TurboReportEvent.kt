@@ -29,11 +29,12 @@ package com.tencent.devops.metrics.pojo.message
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Turbo上报消息")
-@Event(destination = StreamBinding.METRICS_STATISTIC_TURBO_DAILY)
+@Event(destination = StreamBinding.METRICS_STATISTIC_TURBO_DAILY, binder = StreamBinder.EXTEND_RABBIT)
 data class TurboReportEvent(
     @get:Schema(title = "统计日期")
     val statisticsTime: String,

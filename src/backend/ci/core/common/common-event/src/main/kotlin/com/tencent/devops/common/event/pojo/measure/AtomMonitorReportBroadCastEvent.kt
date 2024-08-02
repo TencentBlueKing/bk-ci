@@ -29,9 +29,10 @@ package com.tencent.devops.common.event.pojo.measure
 
 import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(destination = StreamBinding.ENGINE_ATOM_MONITOR_DATA_REPORT_FANOUT)
+@Event(destination = StreamBinding.ENGINE_ATOM_MONITOR_DATA_REPORT_FANOUT, binder = StreamBinder.EXTEND_RABBIT)
 data class AtomMonitorReportBroadCastEvent(
     override val projectId: String,
     override val pipelineId: String,

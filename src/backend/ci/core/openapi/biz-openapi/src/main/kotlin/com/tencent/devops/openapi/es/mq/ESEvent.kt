@@ -29,10 +29,11 @@ package com.tencent.devops.openapi.es.mq
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.openapi.es.ESMessage
 
-@Event(StreamBinding.OPENAPI_LOG_EVENT)
+@Event(StreamBinding.OPENAPI_LOG_EVENT, binder = StreamBinder.EXTEND_RABBIT)
 data class ESEvent(
     val logs: ESMessage,
     override var retryTime: Int = 2,
