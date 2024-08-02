@@ -188,6 +188,6 @@ class DeliverControl @Autowired constructor(
         }
 
         // 同步tgit proxy
-        gitProxyTGitService.refreshProjectTGitSpecUser(workspace.projectId)
+        gitProxyTGitService.refreshProjectTGitSpecUser(workspace.projectId, null)
     }
 }

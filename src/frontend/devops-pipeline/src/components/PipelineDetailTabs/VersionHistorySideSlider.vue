@@ -9,7 +9,7 @@
         :transfer="false"
     >
         <header slot="header">
-            {{$t('template.versionList')}}
+            {{ $t('template.versionList') }}
             <bk-popover class="pipeline-version-rule-tips">
                 <span class="pipeline-version-rule-tips-trigger">
                     <i class="devops-icon icon-question-circle" />
@@ -23,7 +23,11 @@
                 </div>
             </bk-popover>
         </header>
-        <main slot="content" class="pipeline-version-history" v-bkloading="{ isLoading }">
+        <main
+            slot="content"
+            class="pipeline-version-history"
+            v-bkloading="{ isLoading }"
+        >
             <header class="pipeline-version-history-header">
                 <search-select
                     class="pipeline-version-search-select"
@@ -33,7 +37,10 @@
                     @change="queryVersionList"
                 />
             </header>
-            <section class="pipeline-version-history-content" ref="tableBox">
+            <section
+                class="pipeline-version-history-content"
+                ref="tableBox"
+            >
                 <bk-table
                     :data="pipelineVersionList"
                     :pagination="pagination"
@@ -42,16 +49,39 @@
                     :max-height="$refs?.tableBox?.offsetHeight"
                     size="small"
                 >
-                    <empty-exception :type="emptyType" slot="empty" @clear="clearFilter"></empty-exception>
-                    <bk-table-column v-for="column in columns" :key="column.prop" v-bind="column">
-                        <template v-if="column.prop === 'versionName'" v-slot="{ row }">
-                            <div :class="['pipeline-version-name-cell', {
-                                'active-version-name': row.version === releaseVersion
-                            }]">
+                    <empty-exception
+                        :type="emptyType"
+                        slot="empty"
+                        @clear="clearFilter"
+                    ></empty-exception>
+                    <bk-table-column
+                        v-for="column in columns"
+                        :key="column.prop"
+                        v-bind="column"
+                    >
+                        <template
+                            v-if="column.prop === 'versionName'"
+                            v-slot="{ row }"
+                        >
+                            <div
+                                :class="['pipeline-version-name-cell', {
+                                    'active-version-name': row.version === releaseVersion
+                                }]"
+                            >
                                 <span>
-                                    <i class="devops-icon icon-edit-line" v-if="row.isDraft" />
-                                    <logo v-else-if="row.isBranchVersion" name="branch" size="16" />
-                                    <i v-else class="devops-icon icon-check-circle" />
+                                    <i
+                                        class="devops-icon icon-edit-line"
+                                        v-if="row.isDraft"
+                                    />
+                                    <logo
+                                        v-else-if="row.isBranchVersion"
+                                        name="branch"
+                                        size="16"
+                                    />
+                                    <i
+                                        v-else
+                                        class="devops-icon icon-check-circle"
+                                    />
                                 </span>
                                 {{ row.versionName }}
                                 <!-- <span>
@@ -60,8 +90,21 @@
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :width="222" :label="$t('operate')">
-                        <div slot-scope="props" class="pipeline-history-version-operate">
+                    <bk-table-column
+                        :width="280"
+                        :label="$t('operate')"
+                    >
+                        <div
+                            slot-scope="props"
+                            class="pipeline-history-version-operate"
+                        >
+                            <bk-button
+                                v-if="props.row.isDraft"
+                                text
+                                @click="goDebugRecords"
+                            >
+                                {{ $t('draftExecRecords') }}
+                            </bk-button>
                             <rollback-entry
                                 v-if="props.row.canRollback"
                                 :has-permission="canEdit"
@@ -301,6 +344,14 @@
             clearFilter (refresh = true) {
                 this.filterKeys = []
                 refresh && this.queryVersionList()
+            },
+            goDebugRecords () {
+                this.$router.push({
+                    name: 'draftDebugRecord',
+                    params: {
+                        version: this.pipelineInfo?.version
+                    }
+                })
             }
         }
     }

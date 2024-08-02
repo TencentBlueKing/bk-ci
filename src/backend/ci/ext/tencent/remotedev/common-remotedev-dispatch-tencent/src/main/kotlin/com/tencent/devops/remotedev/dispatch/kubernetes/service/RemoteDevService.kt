@@ -84,7 +84,7 @@ class RemoteDevService @Autowired constructor(
                 errorMessage = "Repeated creation for ${workspace.workspaceName}"
             )
         }
-        val mountType = event.mountType ?: event.devFile.checkWorkspaceMountType()
+        val mountType = event.mountType
         val result = remoteDevServiceFactory.loadRemoteDevService(mountType)
             .createWorkspace(userId, event)
 
@@ -215,7 +215,6 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun deleteWorkspace(
-        userId: String,
         workspaceName: String,
         bakWorkspaceName: String?
     ) {

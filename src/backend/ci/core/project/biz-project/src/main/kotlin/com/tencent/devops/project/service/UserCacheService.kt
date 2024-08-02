@@ -44,7 +44,7 @@ class UserCacheService @Autowired constructor(
      */
     fun getDetailFromCache(userId: String): UserDeptDetail {
         val userRecord = userDao.get(dslContext, userId)
-        return getUserDeptDetail(userRecord)
+        return getUserDeptDetail(userRecord, userId)
     }
 
     fun listDetailFromCache(userIds: List<String>): List<UserDeptDetail> {
@@ -55,9 +55,10 @@ class UserCacheService @Autowired constructor(
         return userDao.usernamesByParentId(dslContext, parentId)
     }
 
-    fun getUserDeptDetail(userRecord: TUserRecord?): UserDeptDetail {
+    fun getUserDeptDetail(userRecord: TUserRecord?, userId: String? = null): UserDeptDetail {
         return if (userRecord == null) {
             UserDeptDetail(
+                userId = userId,
                 bgName = "",
                 bgId = "0",
                 centerName = "",

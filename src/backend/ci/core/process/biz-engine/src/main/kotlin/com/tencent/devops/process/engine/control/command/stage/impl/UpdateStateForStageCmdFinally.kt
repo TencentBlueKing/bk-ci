@@ -47,7 +47,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
 import com.tencent.devops.process.engine.service.record.StageBuildRecordService
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
@@ -62,7 +61,6 @@ class UpdateStateForStageCmdFinally(
     private val pipelineStageService: PipelineStageService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContainerService: PipelineContainerService,
-    private val stageBuildDetailService: StageBuildDetailService,
     private val stageBuildRecordService: StageBuildRecordService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
@@ -155,7 +153,23 @@ class UpdateStateForStageCmdFinally(
 
                 return finishBuild(commandContext = commandContext)
             }
-            event.actionType = ActionType.START // final 需要执行
+            if (nextStage.controlOption?.finally == true) {
+                val pendingStages = pipelineStageService.getPendingStages(event.projectId, event.buildId)
+                    .filter { it.stageId != nextStage.stageId }
+                pendingStages.forEach { pendingStage ->
+                    pendingStage.status = BuildStatus.UNEXEC
+                    stageBuildRecordService.updateStageStatus(
+                        projectId = pendingStage.projectId,
+                        pipelineId = pendingStage.pipelineId,
+                        buildId = pendingStage.buildId,
+                        stageId = pendingStage.stageId,
+                        executeCount = pendingStage.executeCount,
+                        buildStatus = BuildStatus.UNEXEC
+                    )
+                }
+                pipelineStageService.batchUpdate(transactionContext = null, stageList = pendingStages)
+                event.actionType = ActionType.START // final 需要执行
+            }
         } else {
             nextStage = pipelineStageService.getNextStage(
                 projectId = event.projectId,

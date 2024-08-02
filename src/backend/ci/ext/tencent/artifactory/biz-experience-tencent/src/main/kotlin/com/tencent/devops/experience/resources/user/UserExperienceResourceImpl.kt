@@ -163,7 +163,7 @@ class UserExperienceResourceImpl @Autowired constructor(
     }
 
     override fun outerList(userId: String, projectId: String): Result<List<OuterSelectorVO>> {
-        return Result(experienceOuterService.outerList(projectId).map { OuterSelectorVO(it) })
+        return Result(emptyList())
     }
 
     override fun outerCanAdd(userId: String, projectId: String, param: OuterCanAddParam): Result<OuterCanAddVO> {

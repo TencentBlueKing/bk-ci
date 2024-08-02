@@ -48,7 +48,6 @@ import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -108,7 +107,6 @@ class CreateControl @Autowired constructor(
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
     private val whiteListService: WhiteListService,
@@ -414,7 +412,6 @@ class CreateControl @Autowired constructor(
                 userId = creator,
                 traceId = bizId,
                 workspaceName = ws.workspaceName,
-                devFilePath = null,
                 devFile = Devfile(
                     zoneId = zoneId,
                     machineType = windowsConfig.size,
@@ -422,7 +419,6 @@ class CreateControl @Autowired constructor(
                     imageCosFile = workspaceCreate.imageCosFile,
                     quotaType = QuotaType.parse(ws.ownerType)
                 ),
-                settingEnvs = emptyMap(),
                 projectId = projectId,
                 mountType = mountType,
                 ownerType = ws.ownerType,
@@ -572,7 +568,7 @@ class CreateControl @Autowired constructor(
                 tCloudCfsService.addOrRemoveCfsPermissionRule(ws.projectId, ip, false)
 
                 // 关联tgit相关
-                gitProxyTGitService.addOrRemoveAclIp(ws.projectId, setOf(ip), false)
+                gitProxyTGitService.addOrRemoveAclIp(ws.projectId, setOf(ip), false, null)
             }
 
             if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {
@@ -741,12 +737,10 @@ class CreateControl @Autowired constructor(
                 userId = userId,
                 traceId = bizId,
                 workspaceName = ws.workspaceName,
-                devFilePath = null,
                 devFile = Devfile(
                     uid = uid,
                     environmentUid = envId
                 ),
-                settingEnvs = emptyMap(),
                 projectId = projectId,
                 mountType = mountType,
                 ownerType = ws.ownerType,
@@ -832,7 +826,6 @@ class CreateControl @Autowired constructor(
         }
 
         whiteListService.windowsGpuCheck(userId, workspaceNames.size)
-        workspaceCommon.checkWorkspaceAvailability(userId, WorkspaceMountType.START, WorkspaceOwnerType.PERSONAL)
         prepareWindowsCreate(
             creator = userId,
             projectId = projectId,

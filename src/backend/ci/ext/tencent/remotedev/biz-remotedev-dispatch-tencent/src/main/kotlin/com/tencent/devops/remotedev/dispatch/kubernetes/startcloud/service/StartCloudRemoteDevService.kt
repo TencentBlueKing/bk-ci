@@ -316,7 +316,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 )
                 return DispatchBuildTaskStatus(
                     DispatchBuildTaskStatusEnum.FAILED,
-                    "DevCloud任务超时（10min）"
+                    "任务超时($timeout)"
                 )
             }
 

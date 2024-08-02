@@ -172,22 +172,24 @@ object CommandLineUtils {
         return result.toString()
     }
 
-    private fun reportProgressRate(
+    fun reportProgressRate(
         taskId: String?,
         tmpLine: String
-    ) {
-        val pattern = Pattern.compile("::set-progress-rate\\s*(.*)")
-        val matcher = pattern.matcher(tmpLine)
+    ): Double? {
+        val pattern = Pattern.compile("^[\"]?::set-progress-rate\\s*(.*)$")
+        val matcher = pattern.matcher(tmpLine.trim())
         if (matcher.find()) {
-            val progressRate = matcher.group(1)
-            if (taskId != null) {
+            val progressRate = matcher.group(1).removeSuffix("\"").toDoubleOrNull()
+            if (taskId != null && progressRate != null) {
                 Heartbeat.recordTaskProgressRate(
                     taskId = taskId,
-                    progressRate = progressRate.toDouble()
+                    progressRate = progressRate
                 )
             }
             logger.info("report progress rate:$tmpLine|$taskId|$progressRate")
+            return progressRate
         }
+        return null
     }
 
     private fun appendResultToFile(
@@ -210,46 +212,48 @@ object CommandLineUtils {
         appendOutputToFile(tmpLine, workspace, resultLogFile, jobId, stepId)
     }
 
-    private fun appendVariableToFile(
+    fun appendVariableToFile(
         tmpLine: String,
         workspace: File?,
         resultLogFile: String
-    ) {
+    ): String? {
         val pattenVar = "[\"]?::set-variable\\sname=.*"
         val prefixVar = "::set-variable name="
         if (Pattern.matches(pattenVar, tmpLine)) {
             val value = tmpLine.removeSurrounding("\"").removePrefix(prefixVar)
             val keyValue = value.split("::")
             if (keyValue.size >= 2) {
-                File(workspace, resultLogFile).appendText(
-                    "variables.${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
-                )
+                val res = "variables.${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
+                File(workspace, resultLogFile).appendText(res)
+                return res
             }
         }
+        return null
     }
 
-    private fun appendRemarkToFile(
+    fun appendRemarkToFile(
         tmpLine: String,
         workspace: File?,
         resultLogFile: String
-    ) {
+    ): String? {
         val pattenVar = "[\"]?::set-remark\\s.*"
         val prefixVar = "::set-remark "
         if (Pattern.matches(pattenVar, tmpLine)) {
             val value = tmpLine.removeSurrounding("\"").removePrefix(prefixVar)
-            File(workspace, resultLogFile).appendText(
-                "BK_CI_BUILD_REMARK=$value\n"
-            )
+            val res = "BK_CI_BUILD_REMARK=$value\n"
+            File(workspace, resultLogFile).appendText(res)
+            return res
         }
+        return null
     }
 
-    private fun appendOutputToFile(
+    fun appendOutputToFile(
         tmpLine: String,
         workspace: File?,
         resultLogFile: String,
         jobId: String,
         stepId: String
-    ) {
+    ): String? {
         val pattenOutput = "[\"]?::set-output\\sname=.*"
         val prefixOutput = "::set-output name="
         if (Pattern.matches(pattenOutput, tmpLine)) {
@@ -257,29 +261,31 @@ object CommandLineUtils {
             val keyValue = value.split("::")
             val keyPrefix = "jobs.$jobId.steps.$stepId.outputs."
             if (keyValue.size >= 2) {
-                File(workspace, resultLogFile).appendText(
-                    "$keyPrefix${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
-                )
+                val res = "$keyPrefix${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
+                File(workspace, resultLogFile).appendText(res)
+                return res
             }
         }
+        return null
     }
 
-    private fun appendGateToFile(
+    fun appendGateToFile(
         tmpLine: String,
         workspace: File?,
         resultLogFile: String
-    ) {
+    ): String? {
         val pattenOutput = "[\"]?::set-gate-value\\sname=.*"
         val prefixOutput = "::set-gate-value name="
         if (Pattern.matches(pattenOutput, tmpLine)) {
             val value = tmpLine.removeSurrounding("\"").removePrefix(prefixOutput)
             val keyValue = value.split("::")
             if (keyValue.size >= 2) {
-                File(workspace, resultLogFile).appendText(
-                    "${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
-                )
+                val res = "${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
+                File(workspace, resultLogFile).appendText(res)
+                return res
             }
         }
+        return null
     }
 
     fun execute(file: File, workspace: File?, print2Logger: Boolean, prefix: String = ""): String {

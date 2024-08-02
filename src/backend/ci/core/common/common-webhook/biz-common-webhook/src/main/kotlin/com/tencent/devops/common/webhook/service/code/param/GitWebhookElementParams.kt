@@ -76,7 +76,7 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
             element.eventType == CodeEventType.MERGE_REQUEST &&
                     !WebhookUtils.isActionGitTriggerVersion(element.version) &&
                     element.includeMrAction == null -> {
-                params.includeMrAction = joinToString(
+                params.includeMrAction = WebhookUtils.joinToString(
                     listOf(
                         CodeGitWebHookTriggerElement.MERGE_ACTION_OPEN,
                         CodeGitWebHookTriggerElement.MERGE_ACTION_REOPEN,
@@ -88,7 +88,7 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
             element.eventType == CodeEventType.PUSH &&
                     !WebhookUtils.isActionGitTriggerVersion(element.version) &&
                     element.includePushAction == null -> {
-                params.includePushAction = joinToString(
+                params.includePushAction = WebhookUtils.joinToString(
                     listOf(
                         CodeGitWebHookTriggerElement.PUSH_ACTION_CREATE_BRANCH,
                         CodeGitWebHookTriggerElement.PUSH_ACTION_PUSH_FILE
@@ -97,8 +97,8 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
             }
 
             else -> {
-                params.includeMrAction = joinToString(element.includeMrAction)
-                params.includePushAction = joinToString(element.includePushAction)
+                params.includeMrAction = WebhookUtils.joinToString(element.includeMrAction)
+                params.includePushAction = WebhookUtils.joinToString(element.includePushAction)
             }
         }
         params.eventType = element.eventType
@@ -112,24 +112,16 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
         params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
         params.webhookQueue = element.webhookQueue ?: false
-        params.includeCrState = joinToString(element.includeCrState)
-        params.includeCrTypes = joinToString(element.includeCrTypes)
+        params.includeCrState = WebhookUtils.joinToString(element.includeCrState)
+        params.includeCrTypes = WebhookUtils.joinToString(element.includeCrTypes)
         params.includeNoteComment = element.includeNoteComment
-        params.includeNoteTypes = joinToString(element.includeNoteTypes)
-        params.includeIssueAction = joinToString(element.includeIssueAction)
+        params.includeNoteTypes = WebhookUtils.joinToString(element.includeNoteTypes)
+        params.includeIssueAction = WebhookUtils.joinToString(element.includeIssueAction)
         params.fromBranches = EnvUtils.parseEnv(element.fromBranches ?: "", variables)
         params.enableThirdFilter = element.enableThirdFilter
         params.thirdUrl = EnvUtils.parseEnv(element.thirdUrl ?: "", variables)
         params.thirdSecretToken = EnvUtils.parseEnv(element.thirdSecretToken ?: "", variables)
         return params
-    }
-
-    private fun joinToString(list: List<String>?): String {
-        return if (list.isNullOrEmpty()) {
-            ""
-        } else {
-            list.joinToString(",")
-        }
     }
 
     private fun isBlock(element: CodeGitWebHookTriggerElement): Boolean {

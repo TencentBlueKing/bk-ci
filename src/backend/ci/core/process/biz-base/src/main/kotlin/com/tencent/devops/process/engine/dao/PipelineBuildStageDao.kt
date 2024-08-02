@@ -37,6 +37,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.RecordMapper
@@ -198,11 +199,25 @@ class PipelineBuildStageDao {
         }
     }
 
-    fun listBuildStages(dslContext: DSLContext, projectId: String, buildId: String): List<PipelineBuildStage> {
+    fun listBuildStages(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        statusSet: Set<BuildStatus>? = null,
+        num: Int? = null
+    ): List<PipelineBuildStage> {
         return with(T_PIPELINE_BUILD_STAGE) {
-            dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
-                .orderBy(SEQ.asc()).fetch(mapper)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(BUILD_ID.eq(buildId))
+            conditions.add(PROJECT_ID.eq(projectId))
+            if (!statusSet.isNullOrEmpty()) {
+                conditions.add(STATUS.`in`(statusSet.map { it.ordinal }))
+            }
+            val baseStep = dslContext.selectFrom(this).where(conditions).orderBy(SEQ.asc())
+            if (num != null) {
+                baseStep.limit(num)
+            }
+            baseStep.fetch(mapper)
         }
     }
 
@@ -263,12 +278,13 @@ class PipelineBuildStageDao {
         buildId: String,
         statusSet: Set<BuildStatus>
     ): PipelineBuildStage? {
-        with(T_PIPELINE_BUILD_STAGE) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId)).and(BUILD_ID.eq(buildId))
-                .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .orderBy(SEQ.asc()).limit(1).fetchOne(mapper)
-        }
+        return listBuildStages(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            statusSet = statusSet,
+            num = 1
+        ).getOrNull(0)
     }
 
     class PipelineBuildStageJooqMapper : RecordMapper<TPipelineBuildStageRecord, PipelineBuildStage> {

@@ -79,7 +79,7 @@ enum class ErrorCodeEnum(
     WORKSPACE_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2132014",
-        formatErrorMessage = "The workspace has error , please try again later or contact Cloud Desktop (IT Services)."
+        formatErrorMessage = "The workspace has error , please try again later or contact 8000 helper."
     ),
     WORKSPACE_ERROR_FIX(
         errorType = ErrorType.USER,
@@ -90,7 +90,7 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132016",
         formatErrorMessage = "Workspace [{0}] is not currently running," +
-            "please try again later or contact Cloud Desktop (IT Services)."
+            "please try again later or contact 8000 helper."
     ),
     CHECK_USER_TICKET_FAIL(
         errorType = ErrorType.USER,

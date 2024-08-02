@@ -29,7 +29,6 @@ package com.tencent.devops.process.yaml.v2.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.v2.models.on.PreTriggerOn
 
 /**
@@ -43,7 +42,6 @@ data class PreTemplateScriptBuildYaml(
     val version: String?,
     val name: String?,
     val label: List<String>? = null,
-    @JsonProperty("on")
     val triggerOn: PreTriggerOn?,
     val variables: Map<String, Any>?,
     val stages: List<Map<String, Any>>?,

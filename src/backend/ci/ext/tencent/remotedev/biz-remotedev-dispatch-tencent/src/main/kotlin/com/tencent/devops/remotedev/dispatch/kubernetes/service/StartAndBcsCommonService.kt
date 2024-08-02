@@ -31,7 +31,7 @@ class StartAndBcsCommonService @Autowired constructor(
 ) {
     @Suppress("ComplexMethod")
     fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
+        logger.info("StartAndBcsCommonService|workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
         val task = workspaceOpHisDao.getTask(dslContext, taskStatus.uid) ?: kotlin.run {
             logger.warn("workspaceTaskCallback|fail with wrong task|$taskStatus")
             return false

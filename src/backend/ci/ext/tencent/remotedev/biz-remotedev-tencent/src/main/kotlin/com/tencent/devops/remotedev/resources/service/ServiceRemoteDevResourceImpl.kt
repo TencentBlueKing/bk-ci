@@ -690,7 +690,8 @@ class ServiceRemoteDevResourceImpl(
             remove = when (data.opType) {
                 OperateCvmDataType.ADD -> false
                 OperateCvmDataType.DELETE -> true
-            }
+            },
+            tgitId = null
         )
         return Result(true)
     }

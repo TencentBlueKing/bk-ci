@@ -263,18 +263,6 @@ class RemoteDevSettingDao {
         }
     }
 
-    fun batchUpdateWinUsageRemainingTime(
-        dslContext: DSLContext,
-        data: List<Pair<String, Int>>
-    ) {
-        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
-            data.forEach { (userId, time) ->
-                dslContext.update(this)
-                    .set(WIN_USAGE_REMAINING_TIME, time).where(USER_ID.eq(userId)).execute()
-            }
-        }
-    }
-
     fun fetchSingleUserWinTimeLeft(
         dslContext: DSLContext,
         userId: String
