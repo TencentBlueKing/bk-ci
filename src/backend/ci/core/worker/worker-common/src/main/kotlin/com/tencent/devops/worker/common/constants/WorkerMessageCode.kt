@@ -37,8 +37,8 @@ package com.tencent.devops.worker.common.constants
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev）
- * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）remotedev
+ *    32: remotedev 35：misc-杂项）
+ * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
  * @since: 2023-3-20
@@ -138,10 +138,10 @@ object WorkerMessageCode {
     const val AGENT_NETWORK_CONNECT_FAILED = "2130074" // 构建机网络连接问题(Agent Network Connect Failed)
     const val AGENT_NETWORK_TIMEOUT = "2130075" // 构建机网络超时问题(Agent Network Timeout)
     const val AGENT_NETWORK_UNKNOWN = "2130076" // 构建机网络未知异常(Agent Network Unknown)
+    const val CHECK_DOCKER_IMAGE_INFO_FAILED = "2130077" // 校验镜像信息失败
 
     const val BK_CERTIFICATE_ID_EMPTY = "bkCertificateIdEmpty" // 证书ID为空
     const val BK_BUILD_IMAGE_SUCCEED = "bkBuildImageSucceed" // 构建镜像成功！
-    const val BK_ARCHIVE_PLUGIN_FILE = "bkArchivePluginFile" // 归档插件文件
     const val BK_NO_FILES_TO_ARCHIVE = "bkNoFilesToArchive" // 脚本执行失败之后没有匹配到任何待归档文件
     // 每行命令运行返回值非零时，继续执行脚本
     const val BK_COMMAND_LINE_RETURN_VALUE_NON_ZERO = "bkCommandLineReturnValueNonZero"

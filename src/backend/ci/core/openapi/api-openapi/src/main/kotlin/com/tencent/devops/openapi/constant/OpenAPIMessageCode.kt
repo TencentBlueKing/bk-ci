@@ -37,8 +37,8 @@ package com.tencent.devops.openapi.constant
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev）
- * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）remotedev
+ *    32: remotedev 35：misc-杂项）
+ * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
  * @since: 2023-3-20
@@ -69,7 +69,7 @@ object OpenAPIMessageCode {
     const val BK_PARAM_TYPE = "bkParamType" // 参数类型
     const val BK_PARAM_ILLUSTRATE = "bkParamIllustrate" // 参数说明
     const val BK_HAVE_TO = "bkHaveTo" // 必须
-    const val BK_ILLUSTRATE = "BK_ILLUSTRATE" // 说明
+    const val BK_ILLUSTRATE = "bkIllustrate" // 说明
     const val BK_DEFAULT_VALUE = "bkDefaultValue" // 默认值
     const val BK_APPLICATION_STATE_REQUIRED = "bkApplicationStateRequired" // 应用态必填、用户态不填
     const val BK_USER_NAME = "bkUserName" // 用户名
@@ -91,4 +91,5 @@ object OpenAPIMessageCode {
     const val BK_THE_FIELD_IS_READ_ONLY = "bkTheFieldIsReadOnly" // 该字段只读
     const val BK_OBJECT_PROPERTY_ILLUSTRATE = "bkObjectPropertyIllustrate" // Any 任意类型，参照实际请求或返回
     const val BK_NO_SUCH_PARAMETER = "bkNoSuchParameter" // 无此参数
+    const val APP_CODE_PERMISSION_DENIED_MESSAGE = "appCodePermissionDeniedMessage"
 }

@@ -16,13 +16,14 @@ const ProjectManage = () => import('../views/ProjectManage.vue')
 
 const Maintaining = () => import('../views/503.vue')
 
+const UnDeploy = () => import('../views/UnDeploy.vue')
+
 Vue.use(Router)
 
 let mod: Route[] = []
 for (const key in window.Pages) {
     mod = mod.concat(window.Pages[key].routes)
 }
-
 const iframeRoutes = window.serviceObject.iframeRoutes.map(r => ({
     path: urlJoin('/console', r.path, ':restPath*'),
     name: r.name,
@@ -63,6 +64,11 @@ const routes = [
                 path: 'maintaining',
                 name: '503',
                 component: Maintaining
+            },
+            {
+                path: 'undeploy/:id',
+                name: 'undeploy',
+                component: UnDeploy
             }
         ]
     }
@@ -90,7 +96,9 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     router.beforeEach((to, from, next) => {
         const serviceAlias = getServiceAliasByPath(to.path)
         const currentPage = window.serviceObject.serviceMap[serviceAlias]
-
+        if (to.name !== from.name) {
+            document.title = currentPage ? String(`${currentPage.name} | ${i18n.t('documentTitle')}`) : String(i18n.t('documentTitle'))
+        }
         window.currentPage = currentPage
         store.dispatch('updateCurrentPage', currentPage) // update currentPage
         if (!currentPage) { // console 首页
@@ -128,6 +136,13 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
             })
         } else {
             goNext(to, next)
+        }
+
+        const devopsApp = window.document.getElementsByClassName('devops-app')[0]
+        if (to.name === 'my-project') {
+            devopsApp && devopsApp.setAttribute('class', 'devops-app permission-model')
+        } else {
+            devopsApp && devopsApp.setAttribute('class', 'devops-app')
         }
     })
 

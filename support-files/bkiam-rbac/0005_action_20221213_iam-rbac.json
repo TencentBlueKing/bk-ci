@@ -157,6 +157,62 @@
         "related_actions": [
           "project_visit"
         ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_manage-archived-pipeline",
+        "name": "管理已归档流水线",
+        "name_en": "Manage Archived Pipeline",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_api-operate",
+        "name": "api操作",
+        "name_en": "Api Operate",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "hidden": true,
         "version": 1
       }
     },
@@ -427,6 +483,40 @@
         "id": "pipeline_manage",
         "name": "流水线权限管理",
         "name_en": "Pipeline Manage",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_list",
+          "pipeline_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_archive",
+        "name": "归档流水线",
+        "name_en": "Pipeline Archive",
         "auth_type": "rbac",
         "type": "edit",
         "related_resource_types": [
@@ -2119,6 +2209,748 @@
         ],
         "related_actions": [
           "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_create",
+        "name": "创建云桌面",
+        "name_en": "Cgs Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_list",
+        "name": "云桌面列表",
+        "name_en": "Cgs List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_view",
+        "name": "查看云桌面",
+        "name_en": "Cgs View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_stop",
+        "name": "云桌面关机",
+        "name_en": "Cgs Stop",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_start",
+        "name": "云桌面开机",
+        "name_en": "Cgs Start",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_restart",
+        "name": "云桌面重启",
+        "name_en": "Cgs Restart",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_assign",
+        "name": "分配云桌面用户",
+        "name_en": "Cgs Assign",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_edit-type",
+        "name": "变更云桌面机型",
+        "name_en": "Cgs Modify Type",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_rebuild-system-disk",
+        "name": "重建系统盘",
+        "name_en": "Cgs Rebuild System Disk",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_make-image",
+        "name": "制作镜像",
+        "name_en": "Cgs Make Image",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_expand-disk",
+        "name": "磁盘扩容",
+        "name_en": "Cgs Expand Disk",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_delete",
+        "name": "删除云桌面",
+        "name_en": "Cgs Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_share",
+        "name": "分享云桌面",
+        "name_en": "Cgs Share",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_edit",
+        "name": "编辑云桌面",
+        "name_en": "Cgs Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "image_list",
+        "name": "镜像列表",
+        "name_en": "Image List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "image",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "image_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "image_delete",
+        "name": "镜像删除",
+        "name_en": "Image Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "image",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "image_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "image_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "image_edit",
+        "name": "镜像修改",
+        "name_en": "Image Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "image",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "image_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "image_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "code_proxy_create",
+        "name": "关联代理仓库",
+        "name_en": "Proxy Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "code_proxy_list",
+        "name": "代理仓库列表",
+        "name_en": "Proxy List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "code_proxy",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "code_proxy_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "code_proxy_delete",
+        "name": "删除关联代理仓库",
+        "name_en": "Proxy Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "code_proxy",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "code_proxy_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "proxy_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_template_create",
+        "name": "创建流水线模板",
+        "name_en": "Pipeline Template Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_template_list",
+        "name": "流水线模板列表",
+        "name_en": "Pipeline Template List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline_template",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_template_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_template_delete",
+        "name": "删除流水线模板",
+        "name_en": "Pipeline Template Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline_template",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_template_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_template_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_template_view",
+        "name": "查看流水线模板",
+        "name_en": "Pipeline Template View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline_template",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_template_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_template_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_template_edit",
+        "name": "编辑流水线模板",
+        "name_en": "Pipeline Template Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline_template",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_template_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_template_list",
+          "pipeline_template_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_template_manage",
+        "name": "管理流水线模板",
+        "name_en": "Pipeline Template Manage",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline_template",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_template_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_template_list",
+          "pipeline_template_view"
         ],
         "version": 1
       }

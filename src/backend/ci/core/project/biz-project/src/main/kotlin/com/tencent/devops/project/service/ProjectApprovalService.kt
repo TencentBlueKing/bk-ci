@@ -36,6 +36,7 @@ import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectApprovalDao
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
@@ -52,29 +53,28 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("TooManyFunctions")
 class ProjectApprovalService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectApprovalDao: ProjectApprovalDao,
     private val projectDao: ProjectDao,
     private val projectExtService: ProjectExtService,
-    private val projectDispatcher: ProjectDispatcher
+    private val projectDispatcher: ProjectDispatcher,
+    private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectApprovalService::class.java)
+        private const val REVOKE_ITSM_APPLICATION = "REVOKED"
     }
 
     fun create(
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
         approvalStatus: Int,
-        subjectScopes: List<SubjectScopeInfo>
+        subjectScopes: List<SubjectScopeInfo>,
+        tipsStatus: Int
     ): Int {
-        val tipsStatus = if (approvalStatus == ProjectApproveStatus.CREATE_PENDING.status) {
-            ProjectTipsStatus.SHOW_CREATE_PENDING.status
-        } else {
-            ProjectTipsStatus.SHOW_SUCCESSFUL_CREATE.status
-        }
         return projectApprovalDao.create(
             dslContext = dslContext,
             userId = userId,
@@ -103,6 +103,15 @@ class ProjectApprovalService @Autowired constructor(
             approvalStatus = approvalStatus,
             subjectScopes = subjectScopes,
             tipsStatus = tipsStatus
+        )
+    }
+
+    fun rollBack(
+        projectApprovalInfo: ProjectApprovalInfo
+    ) {
+        projectApprovalDao.update(
+            dslContext = dslContext,
+            projectApprovalInfo = projectApprovalInfo
         )
     }
 
@@ -157,12 +166,6 @@ class ProjectApprovalService @Autowired constructor(
                 logoAddress = logoAddr
             )
         }
-        // 兼容旧版权限中心，如果旧版权限中心创建成功,则使用旧版权限中心projectId
-        val authProjectId = projectExtService.createOldAuthProject(
-            userId = applicant,
-            accessToken = null,
-            projectCreateInfo = projectCreateInfo
-        ) ?: projectInfo.projectId
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             projectApprovalDao.updateApprovalStatusByCallback(
@@ -178,14 +181,7 @@ class ProjectApprovalService @Autowired constructor(
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.APPROVED.status
             )
-            if (authProjectId.isNotEmpty() && projectInfo.projectId != authProjectId) {
-                projectDao.updateAuthProjectId(
-                    dslContext = context,
-                    englishName = projectId,
-                    projectId = authProjectId
-                )
-            }
-            createExtProjectInfo(applicant, authProjectId, projectCreateInfo, projectInfo, projectId)
+            createExtProjectInfo(applicant, projectInfo.projectId, projectCreateInfo, projectInfo, projectId)
         }
     }
 
@@ -212,13 +208,21 @@ class ProjectApprovalService @Autowired constructor(
         }
     }
 
-    fun createReject(projectId: String, applicant: String, approver: String) {
-        logger.info("project create reject|$projectId|$applicant|$approver")
+    fun createRejectOrRevoke(
+        projectId: String,
+        itsmTicketStatus: String,
+        applicant: String,
+        approver: String
+    ) {
+        logger.info("create project reject or revoke|$projectId|$itsmTicketStatus|$applicant|$approver")
         projectDao.getByEnglishName(dslContext = dslContext, englishName = projectId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
             params = arrayOf(projectId),
             defaultMessage = "project $projectId is not exist"
         )
+        val tipsStatus =
+            if (itsmTicketStatus == REVOKE_ITSM_APPLICATION) ProjectTipsStatus.SHOW_CREATE_REVOKE.status
+            else ProjectTipsStatus.SHOW_CREATE_REJECT.status
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             projectApprovalDao.updateApprovalStatusByCallback(
@@ -226,7 +230,7 @@ class ProjectApprovalService @Autowired constructor(
                 projectCode = projectId,
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.CREATE_REJECT.status,
-                tipsStatus = ProjectTipsStatus.SHOW_CREATE_REJECT.status
+                tipsStatus = tipsStatus
             )
             projectDao.updateApprovalStatus(
                 dslContext = context,
@@ -260,6 +264,8 @@ class ProjectApprovalService @Autowired constructor(
                 description = description ?: "",
                 bgId = bgId?.toLong() ?: 0L,
                 bgName = bgName ?: "",
+                businessLineId = businessLineId,
+                businessLineName = businessLineName,
                 deptId = deptId?.toLong() ?: 0L,
                 deptName = deptName ?: "",
                 centerId = centerId?.toLong() ?: 0L,
@@ -270,7 +276,8 @@ class ProjectApprovalService @Autowired constructor(
                 ccAppId = projectInfo.ccAppId,
                 ccAppName = projectInfo.ccAppName,
                 kind = projectInfo.kind,
-                projectType = projectType ?: 0
+                projectType = projectType ?: 0,
+                productId = projectApprovalInfo.productId
             )
         }
         val logoAddress = projectUpdateInfo.logoAddress
@@ -291,6 +298,11 @@ class ProjectApprovalService @Autowired constructor(
                 subjectScopesStr = JsonUtil.toJson(projectUpdateInfo.subjectScopes!!),
                 logoAddress = logoAddress
             )
+            projectUpdateHistoryDao.updateProjectHistoryStatus(
+                dslContext = context,
+                englishName = projectId,
+                approvalStatus = ProjectApproveStatus.APPROVED.status
+            )
             projectDispatcher.dispatch(
                 ProjectUpdateBroadCastEvent(
                     userId = applicant,
@@ -310,13 +322,21 @@ class ProjectApprovalService @Autowired constructor(
         }
     }
 
-    fun updateReject(projectId: String, applicant: String, approver: String) {
+    fun updateRejectOrRevoke(
+        projectId: String,
+        itsmTicketStatus: String,
+        applicant: String,
+        approver: String
+    ) {
         logger.info("project update reject|$projectId|$applicant|$approver")
         projectDao.getByEnglishName(dslContext = dslContext, englishName = projectId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
             params = arrayOf(projectId),
             defaultMessage = "project $projectId is not exist"
         )
+        val tipsStatus =
+            if (itsmTicketStatus == REVOKE_ITSM_APPLICATION) ProjectTipsStatus.NOT_SHOW.status
+            else ProjectTipsStatus.SHOW_UPDATE_REJECT.status
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             projectApprovalDao.updateApprovalStatusByCallback(
@@ -324,13 +344,18 @@ class ProjectApprovalService @Autowired constructor(
                 projectCode = projectId,
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.APPROVED.status,
-                tipsStatus = ProjectTipsStatus.SHOW_UPDATE_REJECT.status
+                tipsStatus = tipsStatus
             )
             projectDao.updateApprovalStatus(
                 dslContext = context,
                 englishName = projectId,
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.APPROVED.status
+            )
+            projectUpdateHistoryDao.updateProjectHistoryStatus(
+                dslContext = context,
+                englishName = projectId,
+                approvalStatus = ProjectApproveStatus.UPDATE_REJECT_OR_REVOKE.status
             )
         }
     }
@@ -380,7 +405,8 @@ class ProjectApprovalService @Autowired constructor(
                     type = AuthConstants.ALL_MEMBERS,
                     name = AuthConstants.ALL_MEMBERS_NAME
                 )
-            )
+            ),
+            tipsStatus = ProjectTipsStatus.NOT_SHOW.status
         )
     }
 }

@@ -53,10 +53,11 @@ import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRecordLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineElementService
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
@@ -77,8 +78,8 @@ open class BaseBuildRecordService(
     private val redisOperation: RedisOperation,
     private val stageTagService: StageTagService,
     private val recordModelService: PipelineRecordModelService,
-    private val pipelineResDao: PipelineResDao,
-    private val pipelineResVersionDao: PipelineResVersionDao,
+    private val pipelineResourceDao: PipelineResourceDao,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineElementService: PipelineElementService
 ) {
 
@@ -105,7 +106,7 @@ open class BaseBuildRecordService(
                 dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, executeCount = executeCount
             ) ?: run {
-                message = "Will not update"
+                message = "Model record is empty"
                 return
             }
             startUser = record.startUser
@@ -117,7 +118,7 @@ open class BaseBuildRecordService(
             watcher.start("updatePipelineRecord")
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)
             if (!change && cancelUser.isNullOrBlank()) {
-                message = "Will not update"
+                message = "Build status did not change"
                 return
             }
             buildRecordModelDao.updateRecord(
@@ -127,7 +128,7 @@ open class BaseBuildRecordService(
                 buildId = buildId,
                 executeCount = executeCount,
                 buildStatus = finalStatus,
-                modelVar = emptyMap(), // 暂时没有变量，保留修改可能
+                modelVar = record.modelVar, // 暂时没有变量，保留修改可能
                 startTime = null,
                 endTime = null,
                 errorInfoList = null,
@@ -157,12 +158,27 @@ open class BaseBuildRecordService(
         buildId: String,
         fixedExecuteCount: Int,
         buildRecordModel: BuildRecordModel,
-        executeCount: Int?
+        executeCount: Int?,
+        queryDslContext: DSLContext? = null,
+        debug: Boolean? = false
     ): Model? {
-        val resourceStr = pipelineResVersionDao.getVersionModelString(
-            dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = version
-        ) ?: pipelineResDao.getVersionModelString(
-            dslContext = dslContext,
+        val watcher = Watcher(id = "getRecordModel#$buildId")
+        watcher.start("getVersionModelString")
+        val resourceStr = if (debug == true) {
+            pipelineBuildDao.getDebugResourceStr(
+                dslContext = queryDslContext ?: dslContext,
+                projectId = projectId,
+                buildId = buildId
+            )
+        } else {
+            pipelineResourceVersionDao.getVersionModelString(
+                dslContext = queryDslContext ?: dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+        } ?: pipelineResourceDao.getVersionModelString(
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             version = version
@@ -172,10 +188,12 @@ open class BaseBuildRecordService(
         )
         var recordMap: Map<String, Any>? = null
         return try {
+            watcher.start("fillElementWhenNewBuild")
             val fullModel = JsonUtil.to(resourceStr, Model::class.java)
-            // 为model填充element
-            pipelineElementService.fillElementWhenNewBuild(fullModel, projectId, pipelineId)
-            val baseModelMap = JsonUtil.toMutableMap(fullModel)
+            fullModel.stages.forEach {
+                PipelineUtils.transformUserIllegalReviewParams(it.checkIn?.reviewParams)
+            }
+            val baseModelMap = JsonUtil.toMutableMap(bean = fullModel, skipEmpty = false)
             val mergeBuildRecordParam = MergeBuildRecordParam(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -184,17 +202,23 @@ open class BaseBuildRecordService(
                 recordModelMap = buildRecordModel.modelVar,
                 pipelineBaseModelMap = baseModelMap
             )
-            recordMap = recordModelService.generateFieldRecordModelMap(mergeBuildRecordParam)
+            watcher.start("generateFieldRecordModelMap")
+            recordMap = recordModelService.generateFieldRecordModelMap(mergeBuildRecordParam, queryDslContext)
+            watcher.start("generatePipelineBuildModel")
             ModelUtils.generatePipelineBuildModel(
                 baseModelMap = baseModelMap,
                 modelFieldRecordMap = recordMap
             )
-        } catch (t: Throwable) {
-            PipelineBuildRecordService.logger.warn(
+        } catch (ignore: Throwable) {
+            logger.warn(
                 "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap ?: "")})" +
-                    "-$executeCount with error: ", t
+                    "-$executeCount with error: ",
+                ignore
             )
             null
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher)
         }
     }
 
@@ -210,7 +234,7 @@ open class BaseBuildRecordService(
         }
     }
 
-    private fun pipelineRecordChangeEvent(
+    protected fun pipelineRecordChangeEvent(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -222,7 +246,7 @@ open class BaseBuildRecordService(
             ?: return
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
-                source = "pauseTask",
+                source = "recordChange",
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,

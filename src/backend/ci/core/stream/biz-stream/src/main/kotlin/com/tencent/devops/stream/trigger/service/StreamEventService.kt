@@ -45,6 +45,7 @@ import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.pojo.StreamMessageSaveLock
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.toGitState
+import com.tencent.devops.stream.trigger.service.GitCheckService.Companion.GIT_COMMIT_CHECK_NONE_TARGET_BRANCH
 import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import com.tencent.devops.stream.util.StreamTriggerMessageUtils
@@ -121,9 +122,10 @@ class StreamEventService @Autowired constructor(
                         gitProjectId = getGitProjectId(),
                         messageId = action.data.context.requestEventId.toString()
                     ),
-                    context = "${context.pipeline!!.filePath}@${action.metaData.streamObjectKind.name}",
+                    context = "${context.pipeline!!.displayName}@${action.metaData.streamObjectKind.name}",
                     description = TriggerReason.getTriggerReason(reason)?.summary ?: reason,
                     mrId = null,
+                    targetBranch = action.data.context.mrTargetBranch ?: GIT_COMMIT_CHECK_NONE_TARGET_BRANCH,
                     addCommitCheck = action.api::addCommitCheck
                 )
             }

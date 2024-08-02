@@ -30,10 +30,10 @@ package com.tencent.devops.auth.dao
 
 import com.tencent.devops.model.auth.tables.TAuthResourceGroup
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 @Suppress("LongParameterList", "TooManyFunctions")
@@ -118,6 +118,18 @@ class AuthResourceGroupDao {
                 .and(RESOURCE_CODE.eq(resourceCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .let { if (groupCode == null) it else it.and(GROUP_CODE.eq(groupCode)) }
+                .fetchOne()
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        projectCode: String,
+        relationId: String
+    ): TAuthResourceGroupRecord? {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RELATION_ID.eq(relationId))
                 .fetchOne()
         }
     }

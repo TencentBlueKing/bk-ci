@@ -28,8 +28,9 @@
 
 package com.tencent.devops.auth.service.iam
 
-import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
+import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
+import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
@@ -67,36 +68,30 @@ interface PermissionResourceGroupService {
         groupId: Int
     ): List<IamGroupPoliciesVo>
 
-    /**
-     * 用户续期
-     */
-    fun renewal(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int,
-        memberRenewalDTO: GroupMemberRenewalDTO
-    ): Boolean
-
-    fun deleteGroupMember(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): Boolean
-
     fun deleteGroup(
-        userId: String,
+        userId: String?,
         projectId: String,
         resourceType: String,
         groupId: Int
     ): Boolean
 
-    fun rename(
+    fun createGroup(
+        projectId: String,
+        groupAddDTO: GroupAddDTO
+    ): Int
+
+    fun renameGroup(
         userId: String,
         projectId: String,
         resourceType: String,
         groupId: Int,
         renameGroupDTO: RenameGroupDTO
+    ): Boolean
+
+    fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>>
+
+    fun createProjectGroupByGroupCode(
+        projectId: String,
+        groupCode: String
     ): Boolean
 }

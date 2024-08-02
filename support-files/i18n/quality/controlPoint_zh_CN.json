@@ -1,7 +1,7 @@
 [ {
   "id" : 1,
-  "elementType" : "linuxPaasCodeCCScript",
-  "name" : "CodeCC代码检查任务",
+  "elementType" : "CodeccCheckAtomDebug",
+  "name" : "腾讯代码分析",
   "stage" : "开发",
   "availablePosition" : "BEFORE,AFTER",
   "defaultPosition" : "BEFORE",
@@ -14,7 +14,7 @@
   "id" : 3,
   "elementType" : "jobDevOpsFastPushFile",
   "name" : "作业平台-构件分发",
-  "stage" : "部署测试环境",
+  "stage" : "测试",
   "availablePosition" : "BEFORE",
   "defaultPosition" : "BEFORE",
   "enable" : true,

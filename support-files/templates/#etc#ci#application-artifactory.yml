@@ -1,13 +1,16 @@
 # 服务配置文件模板
 spring:
   datasource:
-    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_artifactory?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_artifactory?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
     username: __BK_CI_MYSQL_USER__
     password: __BK_CI_MYSQL_PASSWORD__
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21920
 server:
   port: __BK_CI_ARTIFACTORY_API_PORT__
+  undertow:
+    buffer-size: 10MB
+    max-http-post-size: 5120MB
 
 # 以下为构件存储目录，需要做分布式分享
 # 如果微服务是部署多机节点，则以下目录需要做成分布式高可用的，比如NFS，CephFS挂载

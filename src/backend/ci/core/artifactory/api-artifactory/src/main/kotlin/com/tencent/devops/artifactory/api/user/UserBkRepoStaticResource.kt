@@ -29,9 +29,11 @@ package com.tencent.devops.artifactory.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
@@ -40,25 +42,30 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_BK_REPO"], description = "版本仓库-BkRepo静态文件")
+@Tag(name = "USER_BK_REPO", description = "版本仓库-BkRepo静态文件")
 @Path("/user/bkrepo/statics")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserBkRepoStaticResource {
-    @ApiOperation("上传静态文件")
+    @Operation(summary = "上传静态文件")
     @POST
     @Path("/file/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadStaticFile(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("文件", required = true)
+        @Parameter(description = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        @Parameter(description = "类型", required = false)
+        @QueryParam("type")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE, required = false)
+        type: String? = null
     ): Result<String?>
 }

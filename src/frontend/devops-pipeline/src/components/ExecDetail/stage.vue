@@ -4,8 +4,21 @@
         :status="stage.status"
         :current-tab="currentTab"
     >
+        <span class="head-tab" slot="tab">
+            <!-- <span @click="currentTab = 'log'" :class="{ active: currentTab === 'log' }">{{ $t('execDetail.log') }}</span> -->
+            <span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">{{ $t('execDetail.setting') }}</span>
+        </span>
         <template v-slot:content>
-            <stage-content :stage="stage"
+            <stage-log
+                v-if="currentTab === 'log'"
+                :id="stage.id"
+                :build-id="execDetail.id"
+                :stage="stage"
+                :execute-count="stage.executeCount"
+            />
+            <stage-content
+                v-else
+                :stage="stage"
                 :stage-index="editingElementPos.stageIndex"
                 :editable="false"
             />
@@ -16,11 +29,13 @@
 <script>
     import detailContainer from './detailContainer'
     import StageContent from '@/components/StagePropertyPanel/StageContent.vue'
+    import StageLog from './log/stageLog.vue'
 
     export default {
         components: {
             detailContainer,
-            StageContent
+            StageContent,
+            StageLog
         },
         props: {
             execDetail: {
@@ -34,7 +49,7 @@
         },
         data () {
             return {
-                currentTab: 'stage'
+                currentTab: 'setting'
             }
         },
 

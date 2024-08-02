@@ -30,9 +30,11 @@
 @import './mixins/scroller.scss';
 @import '@/scss/dialog-position';
 
-@include scroller(#a5a5a5, 9px);
+@include scroller(#DCDEE5, 9px);
 html,
 body {
+    position: fixed;
+    inset: 0;
     height: 100%;
     color: $fontWeightColor;
     font-family: "pingFangSC-Regular", "Microsoft Yahei";
@@ -489,6 +491,14 @@ table tr:hover {
 
 .biz-simaple-table {
 	width: 100%;
+}
+
+.draft-tag {
+    padding: 0 4px !important;
+    margin: 0 !important;
+    line-height: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0;
 }
 
 .biz-tab-content {
@@ -1181,4 +1191,11 @@ table tr:hover {
             line-height: 42px;
         }
     }
+}
+
+.hourglass-queue {
+    animation: hourglassSpin;
+    animation-delay: 0.5s, 0.5s;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
 }

@@ -17,13 +17,15 @@ class GitCheckDao {
         pipelineId: String,
         repositoryConfig: RepositoryConfig,
         commitId: String,
-        context: String
+        context: String,
+        targetBranch: String?
     ): TRepositoryGitCheckRecord? {
         with(TRepositoryGitCheck.T_REPOSITORY_GIT_CHECK) {
             val step = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(COMMIT_ID.eq(commitId))
                 .and(CONTEXT.eq(context))
+                .and(TARGET_BRANCH.eq(targetBranch ?: ""))
             when (repositoryConfig.repositoryType) {
                 RepositoryType.ID -> step.and(REPO_ID.eq(repositoryConfig.getRepositoryId()))
                 RepositoryType.NAME -> step.and(REPO_NAME.eq(repositoryConfig.getRepositoryId()))
@@ -48,7 +50,8 @@ class GitCheckDao {
                 CREATE_TIME,
                 UPDATE_TIME,
                 CONTEXT,
-                SOURCE
+                SOURCE,
+                TARGET_BRANCH
             ).values(
                 repositoryGitCheck.pipelineId,
                 repositoryGitCheck.buildNumber,
@@ -58,7 +61,8 @@ class GitCheckDao {
                 now,
                 now,
                 repositoryGitCheck.context,
-                repositoryGitCheck.source.name
+                repositoryGitCheck.source.name,
+                repositoryGitCheck.targetBranch
             ).execute()
         }
     }

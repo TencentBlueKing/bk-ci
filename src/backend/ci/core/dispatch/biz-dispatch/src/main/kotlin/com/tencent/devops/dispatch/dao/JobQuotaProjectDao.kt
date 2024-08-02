@@ -39,11 +39,17 @@ import java.time.LocalDateTime
 @Repository
 class JobQuotaProjectDao {
 
-    fun get(dslContext: DSLContext, projectId: String, jobQuotaVmType: JobQuotaVmType): TDispatchQuotaProjectRecord? {
+    fun get(
+        dslContext: DSLContext,
+        projectId: String,
+        jobQuotaVmType: JobQuotaVmType,
+        channelCode: String
+    ): TDispatchQuotaProjectRecord? {
         with(TDispatchQuotaProject.T_DISPATCH_QUOTA_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(VM_TYPE.eq(jobQuotaVmType.name))
+                .and(CHANNEL_CODE.eq(channelCode))
                 .fetchOne()
         }
     }
@@ -65,6 +71,7 @@ class JobQuotaProjectDao {
             dslContext.insertInto(this,
                 PROJECT_ID,
                 VM_TYPE,
+                CHANNEL_CODE,
                 RUNNING_JOBS_MAX,
                 RUNNING_TIME_JOB_MAX,
                 RUNNING_TIME_PROJECT_MAX,
@@ -75,6 +82,7 @@ class JobQuotaProjectDao {
                 .values(
                     jobQuota.projectId,
                     jobQuota.vmType.name,
+                    jobQuota.channelCode,
                     jobQuota.runningJobMax,
                     jobQuota.runningTimeJobMax,
                     jobQuota.runningTimeProjectMax,
@@ -86,12 +94,18 @@ class JobQuotaProjectDao {
         }
     }
 
-    fun delete(dslContext: DSLContext, projectId: String, jobQuotaVmType: JobQuotaVmType) {
+    fun delete(
+        dslContext: DSLContext,
+        projectId: String,
+        jobQuotaVmType: JobQuotaVmType,
+        channelCode: String
+    ) {
         with(TDispatchQuotaProject.T_DISPATCH_QUOTA_PROJECT) {
             dslContext.deleteFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(VM_TYPE.eq(jobQuotaVmType.name))
-                    .execute()
+                .where(PROJECT_ID.eq(projectId))
+                .and(VM_TYPE.eq(jobQuotaVmType.name))
+                .and(CHANNEL_CODE.eq(channelCode))
+                .execute()
         }
     }
 
@@ -110,6 +124,7 @@ class JobQuotaProjectDao {
                 .set(OPERATOR, jobQuota.operator ?: "")
                 .where(PROJECT_ID.eq(projectId))
                 .and(VM_TYPE.eq(jobQuotaVmType.name))
+                .and(CHANNEL_CODE.eq(jobQuota.channelCode))
                 .execute() == 1
         }
     }

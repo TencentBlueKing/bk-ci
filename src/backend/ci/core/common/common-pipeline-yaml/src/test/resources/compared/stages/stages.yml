@@ -1,0 +1,71 @@
+version: v2.0
+name: ""
+label: []
+on:
+  push:
+    branches:
+    - '*'
+  tag:
+    tags:
+    - '*'
+  mr:
+    target-branches:
+    - '*'
+    action:
+    - open
+    - reopen
+    - push-update
+stages:
+- name: template_stage_id_1
+  label: []
+  fast-kill: false
+  jobs:
+  - id: template_stage_id_1_job_id_1
+    name: template_stage_id_1_job_id_1
+    runs-on:
+      self-hosted: false
+      pool-name: docker
+    services: []
+    steps:
+    - run: |
+        echo "template_stage_id_1_job_id_1 username world"
+      runAdditionalOptions: {}
+  - id: template_stage_id_1_job_id_2
+    name: template_stage_id_1_job_id_1
+    runs-on:
+      self-hosted: false
+      pool-name: docker
+    services: []
+    steps:
+    - run: |
+        echo "template_stage_id_1_job_id_2 stagename STAGENAME"
+      runAdditionalOptions: {}
+- name: stage_template_2
+  label: []
+  fast-kill: false
+  jobs:
+  - id: cyc_stage_id_1_job_id_1
+    name: cyc_stage_id_1_job_id_1
+    runs-on:
+      self-hosted: false
+      pool-name: docker
+    services: []
+    steps:
+    - run: |
+        echo "cyc_stage_id_1_job_id_1 username CYC_STAGE2"
+      runAdditionalOptions: {}
+- name: stage_template_1
+  label: []
+  fast-kill: false
+  jobs:
+  - id: cyc_stage_id_1_job_id_1
+    name: cyc_stage_id_1_job_id_1
+    runs-on:
+      self-hosted: false
+      pool-name: docker
+    services: []
+    steps:
+    - run: |
+        echo "cyc_stage_id_1_job_id_1 username CYC_STAGE1"
+      runAdditionalOptions: {}
+finally: []

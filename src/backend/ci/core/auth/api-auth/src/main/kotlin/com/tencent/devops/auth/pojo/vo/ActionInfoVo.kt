@@ -1,16 +1,17 @@
 package com.tencent.devops.auth.pojo.vo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("操作实体")
+@Schema(title = "操作实体")
 data class ActionInfoVo(
-    @ApiModelProperty("action")
+    @get:Schema(title = "action")
     val action: String,
-    @ApiModelProperty("动作名")
+    @get:Schema(title = "动作名")
+    @BkFieldI18n
     val actionName: String,
-    @ApiModelProperty("蓝盾-关联资源类型")
+    @get:Schema(title = "蓝盾-关联资源类型")
     val resourceType: String,
-    @ApiModelProperty("IAM-关联资源类型")
+    @get:Schema(title = "IAM-关联资源类型")
     val relatedResourceType: String
 )

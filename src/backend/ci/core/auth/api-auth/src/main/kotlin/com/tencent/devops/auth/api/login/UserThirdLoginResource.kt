@@ -28,8 +28,8 @@
 package com.tencent.devops.auth.api.login
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.HeaderParam
@@ -38,7 +38,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(tags = ["AUTH_THIRD_LOGIN_OUT"], description = "权限-第三方登陆")
+@Tag(name = "AUTH_THIRD_LOGIN_OUT", description = "权限-第三方登录")
 @Path("/user/third/login")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -48,7 +48,7 @@ interface UserThirdLoginResource {
     @Path("/out")
     fun thirdLoginOut(
         @HeaderParam(AUTH_HEADER_USER_ID)
-        @ApiParam("登出用户id")
+        @Parameter(description = "登出用户id")
         userId: String
     ): Response
 }

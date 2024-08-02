@@ -27,13 +27,18 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线-插件执行包相关信息修改请求报文体")
+@Schema(title = "流水线-插件执行包相关信息修改请求报文体")
 data class AtomPkgInfoUpdateRequest(
-    @ApiModelProperty("插件环境信息", required = false)
+    @get:Schema(title = "插件代码", required = true)
+    val atomCode: String,
+    @get:Schema(title = "插件版本号", required = true)
+    val version: String,
+    @get:Schema(title = "插件环境信息", required = false)
     val atomEnvRequests: List<AtomEnvRequest>,
-    @ApiModelProperty("task.json参数", required = false)
-    val taskDataMap: Map<String, Any>
+    @get:Schema(title = "task.json参数", required = false)
+    val taskDataMap: Map<String, Any>,
+    @get:Schema(title = "重新上传标识", required = true)
+    val reUploadFlag: Boolean = false
 )

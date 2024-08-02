@@ -17,10 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import {
     ALL_PIPELINE_VIEW_ID
 } from '@/store/constants'
+import { v4 as uuidv4 } from 'uuid'
 
 export function isVNode (node) {
     return typeof node === 'object' && Object.prototype.hasOwnProperty.call(node, 'componentOptions')
@@ -191,20 +191,6 @@ export function findIndexByKeyValue (arr, oldKey, oldValue) {
     })
 }
 
-export function deepClone (obj) {
-    const _obj = {}
-
-    for (const key in obj) {
-        if (obj[key].toString().toLowerCase() === '[object object]') {
-            _obj[key] = deepClone(obj[key])
-        } else {
-            _obj[key] = key === 'text' ? '' : obj[key]
-        }
-    }
-
-    return _obj
-}
-
 /**
  *  将字符串去掉指定内容之后转成数字
  *  @param {String} str - 需要转换的字符串
@@ -268,6 +254,25 @@ export function convertMStoString (time) {
     }
 
     return time ? getDays(Math.floor(time / 1000)) : `0${window.pipelineVue.$i18n.t('timeMap.seconds')}`
+}
+
+export function convertMillSec (ms, full = false) {
+    if (!Number.isInteger(ms)) return '--'
+    const millseconds = ms % 1000 > 0 ? `.${`${ms % 1000}`.padStart(3, '0')}` : ''
+    const day = Math.floor(ms / (24 * 60 * 60 * 1000))
+    if (day > 0) {
+        // 先减去天数，再计算小时
+        ms -= day * (24 * 60 * 60 * 1000)
+    }
+    const seconds = Math.floor(ms / 1000) % 60
+    const minutes = Math.floor(ms / 1000 / 60) % 60
+    const hours = Math.floor(ms / 1000 / 60 / 60) % 24
+
+    return `${day ? day + window.pipelineVue.$i18n.t('timeMap.days') : ''} ${[
+        ...(hours > 0 ? [hours] : [full ? '00' : '']),
+        minutes,
+        seconds
+    ].map(prezero).join(':')}${full ? '' : millseconds}`
 }
 
 /**
@@ -334,6 +339,7 @@ function prezero (num) {
 }
 
 export function convertTime (ms) {
+    if (!ms) return '--'
     const time = new Date(ms)
 
     return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}`
@@ -376,7 +382,7 @@ export function convertFileSize (size, unit) {
             return convertFileSize(calcSize, next)
         }
     } else {
-        return `${calcSize.toFixed(2)}${next || unit}`
+        return `${calcSize.toFixed(2)} ${next || unit}`
     }
 }
 
@@ -453,6 +459,13 @@ const isDOMElement = obj => {
 }
 
 export const deepCopy = obj => {
+    return JSON.parse(JSON.stringify(obj))
+}
+
+export const deepClone = obj => {
+    if (typeof structuredClone === 'function') {
+        return structuredClone(obj)
+    }
     return JSON.parse(JSON.stringify(obj))
 }
 
@@ -574,17 +587,21 @@ export function throttle (func, interval = DEFAULT_TIME_INTERVAL) {
     }
 }
 
-export function navConfirm ({ content, title, ...restProps }) {
+export function navConfirm ({ content, title, cancelText, ...restProps }) {
     return new Promise((resolve, reject) => {
         if (typeof window.globalVue.$leaveConfirm !== 'function') {
             reject(new Error('')); return
         }
 
-        window.globalVue.$leaveConfirm({ content, title, ...restProps })
+        window.globalVue.$leaveConfirm({ content, title, cancelText, ...restProps })
 
-        window.globalVue.$once('order::leaveConfirm', resolve)
+        window.globalVue.$once('order::leaveConfirm', () => {
+            resolve(true)
+        })
 
-        window.globalVue.$once('order::leaveCancel', reject)
+        window.globalVue.$once('order::leaveCancel', () => {
+            resolve(false)
+        })
     })
 }
 
@@ -596,16 +613,28 @@ export function getQueryParamList (arr = [], key) {
             if (index < arrLen - 1) result += '&'
             return result
         }, '')
-    } else if (arr && typeof arr === 'string') {
+    } else if (typeof arr !== 'undefined') {
         return `${key}=${encodeURIComponent(arr)}`
     }
 }
 
-export function getParamsValuesMap (params = []) {
+// 将vue-router的query参数转换成字符串
+export function getQueryParamString (query) {
+    const params = []
+    for (const key in query) {
+        if (Object.prototype.hasOwnProperty.call(query, key)) {
+            const value = query[key].indexOf(',') > -1 ? query[key].split(',') : query[key]
+            params.push(getQueryParamList(value, key))
+        }
+    }
+    return params.join('&')
+}
+
+export function getParamsValuesMap (params = [], valueKey = 'defaultValue', initValues = {}) {
     if (!Array.isArray(params)) return {}
     return params.reduce((values, param) => {
         if (param.id) {
-            values[param.id] = param.defaultValue
+            values[param.id] = initValues[param.id] ?? param[valueKey]
         }
         return values
     }, {})
@@ -717,4 +746,172 @@ export function cacheViewId (projectId, viewId) {
 
 export function getCacheViewId (projectId) {
     return localStorage.getItem(cacheViewIdKey(projectId)) ?? ALL_PIPELINE_VIEW_ID
+}
+
+export function getMaterialIconByType (type) {
+    const materialIconMap = {
+        CODE_SVN: 'CODE_SVN',
+        CODE_GIT: 'CODE_GIT',
+        CODE_GITLAB: 'CODE_GITLAB',
+        GITHUB: 'codeGithubWebHookTrigger',
+        CODE_TGIT: 'CODE_GIT',
+        CODE_P4: 'CODE_P4',
+        CODE_REMOTE: 'remoteTrigger',
+        CODE_SERVICE: 'openApi'
+    }
+    return materialIconMap[type] ?? 'CODE_GIT'
+}
+
+export const prettyDateTimeFormat = (target) => {
+    if (!target) {
+        return ''
+    }
+    const formatStr = (str) => {
+        if (String(str).length === 1) {
+            return `0${str}`
+        }
+        return str
+    }
+    const d = new Date(target)
+    const year = d.getFullYear()
+    const month = formatStr(d.getMonth() + 1)
+    const date = formatStr(d.getDate())
+    const hours = formatStr(d.getHours())
+    const minutes = formatStr(d.getMinutes())
+    const seconds = formatStr(d.getSeconds())
+    return `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`
+}
+
+export function areDeeplyEqual (obj1, obj2) {
+    const stack = [[obj1, obj2]]
+    let current, left, right
+
+    while (stack.length > 0) {
+        current = stack.pop()
+        left = current[0]
+        right = current[1]
+
+        if (left === right) {
+            continue
+        }
+
+        if (typeof left !== 'object' || left === null
+            || typeof right !== 'object' || right === null) {
+            return false
+        }
+        const ignoreKeys = ['isError', 'id', 'pipelineCreator', 'containerHashId', 'containerId', 'executeCount']
+        // 排除 isError 字段
+        const leftKeys = Object.keys(left).filter(key => !ignoreKeys.includes(key))
+        const rightKeys = Object.keys(right).filter(key => !ignoreKeys.includes(key))
+        if (leftKeys.length !== rightKeys.length) {
+            return false
+        }
+
+        for (let i = 0; i < leftKeys.length; i++) {
+            const key = leftKeys[i]
+            if (!Object.hasOwnProperty.call(right, key)) {
+                return false
+            }
+            if (left[key] === right[key]) {
+                continue
+            }
+            if (typeof left[key] === 'object' && typeof right[key] === 'object') {
+                stack.push([left[key], right[key]])
+            } else {
+                return false
+            }
+        }
+    }
+
+    return true
+}
+
+export function generateDisplayName (version, versionName) {
+    if (!version || !versionName) return '--'
+    return `V${version} (${versionName})`
+}
+
+export function weekAgo () {
+    // 获取当前日期
+    const now = new Date()
+
+    // 获取一周前的日期
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(now.getDate() - 7)
+
+    // 创建开始和结束日期对象
+    const start = new Date(oneWeekAgo.setHours(0, 0, 0))
+    const end = new Date(now.setHours(23, 59, 59))
+    return [start, end]
+}
+
+export function isEmptyObj (obj) {
+    try {
+        return Object.keys(obj).length === 0
+    } catch (error) {
+        console.error(error)
+        return false
+    }
+}
+
+export function flatSearchKey (searchKey) {
+    return searchKey.reduce((searchMap, item) => {
+        if (Array.isArray(item.values)) {
+            if (typeof searchMap[item.id] === 'undefined') {
+                searchMap[item.id] = Array.from(new Set(item.values.map(v => v.id)))
+            } else {
+                searchMap[item.id] = Array.from(new Set([
+                    ...searchMap[item.id],
+                    ...item.values.map(v => v.id)
+                ]))
+            }
+        }
+        return searchMap
+    }, {})
+}
+
+export function parseErrorMsg (msg) {
+    try {
+        return JSON.parse(msg)
+    } catch (e) {
+        return {
+            message: msg
+        }
+    }
+}
+
+export function showPipelineCheckMsg (showTooltips, message, h) {
+    const errorInfo = parseErrorMsg(message)
+    showTooltips({
+        theme: 'error',
+        delay: 0,
+        ellipsisLine: 0,
+        message: h('div', {
+            class: 'pipeline-save-error-list-box'
+        }, errorInfo.errors.map(item => h('div', {
+            class: 'pipeline-save-error-list-item'
+        }, [
+            h('p', {}, item.errorTitle),
+            h('ul', {
+                class: 'pipeline-save-error-list'
+            }, item.errorDetails.map(err => h('li', {
+                domProps: {
+                    innerHTML: err
+                }
+            })))
+        ])))
+    })
+}
+
+export async function copyToClipboard (text) {
+    if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+    } else {
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand('Copy')
+        document.body.removeChild(textArea)
+    }
 }

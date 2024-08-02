@@ -33,7 +33,7 @@ import javax.ws.rs.NameBinding
 @Retention(AnnotationRetention.RUNTIME)
 @NameBinding
 annotation class BkInterfaceI18n(
-    val fixKeyHeadPrefixName: String = "", // 固定字段头部前缀名称
-    val keyPrefixNames: Array<String> = [], // 字段前缀名称数组
-    val fixKeyTailPrefixName: String = "" // 固定字段尾部前缀名称
+    // 字段前缀名称数组（支持二种方式，1、常量名称：xxx写法 2、动态名称：{xxx}写法，值会根据花括号中的xxx去实体对象获取）
+    val keyPrefixNames: Array<String> = [],
+    val responseDataCacheFlag: Boolean = false // 接口响应数据是否从缓存中获取，如果从缓存中获取拦截器一定会做国际化替换
 )

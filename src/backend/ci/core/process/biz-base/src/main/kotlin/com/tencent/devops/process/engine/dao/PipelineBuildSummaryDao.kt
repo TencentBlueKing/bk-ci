@@ -27,10 +27,10 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_SUMMARY
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
@@ -44,6 +44,7 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_LIST_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -51,7 +52,6 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -100,18 +100,43 @@ class PipelineBuildSummaryDao {
         }
     }
 
-    fun updateBuildNo(dslContext: DSLContext, projectId: String, pipelineId: String, buildNo: Int) {
-
+    fun resetDebugInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) {
         with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.update(this)
-                .set(BUILD_NO, buildNo)
+                .set(DEBUG_BUILD_NO, 0)
+                .set(DEBUG_BUILD_NUM, 0)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
         }
     }
 
-    fun getBuildNo(dslContext: DSLContext, projectId: String, pipelineId: String): Int? {
+    fun updateBuildNo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildNo: Int,
+        debug: Boolean
+    ) {
+        with(T_PIPELINE_BUILD_SUMMARY) {
+            val noColumn = if (debug) DEBUG_BUILD_NO else BUILD_NO
+            dslContext.update(this)
+                .set(noColumn, buildNo)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
+        }
+    }
+
+    fun getBuildNo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        debug: Boolean
+    ): Int? {
         return with(T_PIPELINE_BUILD_SUMMARY) {
-            dslContext.select(BUILD_NO)
+            val noColumn = if (debug) DEBUG_BUILD_NO else BUILD_NO
+            dslContext.select(noColumn)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne(0, Int::class.java)
@@ -122,25 +147,25 @@ class PipelineBuildSummaryDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        buildId: String,
+        debug: Boolean,
         buildNum: Int = 0,
         buildNumAlias: String? = null
     ): Int {
-
         with(T_PIPELINE_BUILD_SUMMARY) {
+            val numColumn = if (debug) DEBUG_BUILD_NUM else BUILD_NUM
             if (buildNum == 0) {
                 dslContext.update(this)
-                    .set(BUILD_NUM, BUILD_NUM + 1)
+                    .set(numColumn, numColumn + 1)
                     .set(BUILD_NUM_ALIAS, buildNumAlias)
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             } else {
                 dslContext.update(this)
-                    .set(BUILD_NUM, buildNum)
+                    .set(numColumn, buildNum)
                     .set(BUILD_NUM_ALIAS, buildNumAlias)
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             }
-        }
-        return with(T_PIPELINE_BUILD_SUMMARY) {
-            dslContext.select(BUILD_NUM)
+            return dslContext.select(numColumn)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne(0, Int::class.java)!!
@@ -150,7 +175,7 @@ class PipelineBuildSummaryDao {
     fun listPipelineInfoBuildSummaryCount(
         dslContext: DSLContext,
         projectId: String,
-        channelCode: ChannelCode,
+        channelCode: ChannelCode? = null,
         pipelineIds: Collection<String>? = null,
         viewId: String? = null,
         favorPipelines: List<String> = emptyList(),
@@ -180,7 +205,7 @@ class PipelineBuildSummaryDao {
     fun listPipelineInfoBuildSummary(
         dslContext: DSLContext,
         projectId: String,
-        channelCode: ChannelCode,
+        channelCode: ChannelCode? = null,
         sortType: PipelineSortType? = null,
         pipelineIds: Collection<String>? = null,
         favorPipelines: List<String> = emptyList(),
@@ -221,7 +246,7 @@ class PipelineBuildSummaryDao {
 
     private fun generatePipelineFilterCondition(
         projectId: String,
-        channelCode: ChannelCode,
+        channelCode: ChannelCode? = null,
         pipelineIds: Collection<String>?,
         viewId: String?,
         favorPipelines: List<String>,
@@ -233,7 +258,9 @@ class PipelineBuildSummaryDao {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(T_PIPELINE_INFO.PROJECT_ID.eq(projectId))
-        conditions.add(T_PIPELINE_INFO.CHANNEL.eq(channelCode.name))
+        if (channelCode != null) {
+            conditions.add(T_PIPELINE_INFO.CHANNEL.eq(channelCode.name))
+        }
         if (includeDelete == false) {
             conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
         }
@@ -463,28 +490,55 @@ class PipelineBuildSummaryDao {
      */
     fun startLatestRunningBuild(
         dslContext: DSLContext,
-        latestRunningBuild: LatestRunningBuild
+        latestRunningBuild: LatestRunningBuild,
+        executeCount: Int,
+        debug: Boolean
     ): Int {
         return with(latestRunningBuild) {
-            with(T_PIPELINE_BUILD_SUMMARY) {
-                dslContext.update(this)
-                    .set(LATEST_BUILD_ID, buildId)
-                    .set(LATEST_STATUS, status.ordinal) // 一般必须是RUNNING
-                    .set(LATEST_TASK_COUNT, taskCount)
-                    .set(LATEST_START_USER, userId)
-                    .set(QUEUE_COUNT, QUEUE_COUNT - 1)
-                    .set(RUNNING_COUNT, RUNNING_COUNT + 1)
-                    .set(LATEST_START_TIME, LocalDateTime.now())
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId)) // 并发的情况下，不再考虑LATEST_BUILD_ID，没有意义，而且会造成Slow SQL
-                    .execute()
+            if (debug) {
+                /* debug 下只更新计数 */
+                with(T_PIPELINE_BUILD_SUMMARY) {
+                    dslContext.update(this)
+                        .set(QUEUE_COUNT, QUEUE_COUNT - 1)
+                        .set(RUNNING_COUNT, RUNNING_COUNT + 1)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .execute()
+                }
+            } else {
+                with(T_PIPELINE_BUILD_SUMMARY) {
+                    dslContext.update(this)
+                        .let {
+                            if (executeCount == 1) {
+                                // 只有首次才写入LATEST_BUILD_ID
+                                it.set(LATEST_BUILD_ID, buildId).set(LATEST_STATUS, status.ordinal)
+                            } else {
+                                // 重试时只有最新的构建才能刷新LATEST_STATUS
+                                it.set(
+                                    LATEST_STATUS,
+                                    DSL.`when`(LATEST_BUILD_ID.eq(buildId), status.ordinal).otherwise(LATEST_STATUS)
+                                )
+                            }
+                        }
+                        .set(LATEST_TASK_COUNT, taskCount)
+                        .set(LATEST_START_USER, userId)
+                        .set(QUEUE_COUNT, QUEUE_COUNT - 1)
+                        .set(RUNNING_COUNT, RUNNING_COUNT + 1)
+                        .set(LATEST_START_TIME, LocalDateTime.now())
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId)) // 并发的情况下，不再考虑LATEST_BUILD_ID，没有意义，而且会造成Slow SQL
+                        .execute()
+                }
             }
         }
     }
 
     /**
-     * 更新运行中的任务信息摘要
+     * 更新运行中的任务信息摘要,
+     *
+     * 卡片界面上 已经不再展示当前正在执行的插件任务名称, 因此该函数废弃,减少热点流水线的锁竞争.
      */
+    @Suppress("UNUSED")
     fun updateCurrentBuildTask(
         dslContext: DSLContext,
         projectId: String,
@@ -509,18 +563,24 @@ class PipelineBuildSummaryDao {
     fun finishLatestRunningBuild(
         dslContext: DSLContext,
         latestRunningBuild: LatestRunningBuild,
-        isStageFinish: Boolean
+        isStageFinish: Boolean,
+        debug: Boolean
     ) {
         return with(latestRunningBuild) {
             with(T_PIPELINE_BUILD_SUMMARY) {
                 val update =
                     dslContext.update(this)
-                        .set(LATEST_STATUS, status.ordinal) // 不一定是FINISH，也有可能其它失败的status
-                        .set(LATEST_END_TIME, endTime) // 结束时间
+                        .set(
+                            LATEST_STATUS,
+                            DSL.`when`(LATEST_BUILD_ID.eq(buildId), status.ordinal).otherwise(LATEST_STATUS)
+                        )
+                if (!debug) {
+                    // 不一定是FINISH，也有可能其它失败的status
+                    update.set(LATEST_END_TIME, endTime) // 结束时间
                         .set(LATEST_TASK_ID, "") // 结束时清空
                         .set(LATEST_TASK_NAME, "") // 结束时清空
                         .set(FINISH_COUNT, FINISH_COUNT + 1)
-
+                }
                 if (!isStageFinish) update.set(RUNNING_COUNT, RUNNING_COUNT - 1)
                 update.where(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId)) //  并发的情况下，不用考虑是否是当前的LATEST_BUILD_ID，而且会造成Slow SQL
@@ -537,16 +597,24 @@ class PipelineBuildSummaryDao {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        runningIncrement: Int = 1
+        runningIncrement: Int = 1,
+        debug: Boolean
     ) {
         with(T_PIPELINE_BUILD_SUMMARY) {
             val update = dslContext.update(this).set(RUNNING_COUNT, RUNNING_COUNT + runningIncrement)
-
-            if (runningIncrement > 0) {
-                update.set(LATEST_STATUS, BuildStatus.RUNNING.ordinal)
-            } else {
-                update.set(LATEST_STATUS, BuildStatus.STAGE_SUCCESS.ordinal)
-                    .set(LATEST_END_TIME, LocalDateTime.now())
+            if (!debug) {
+                if (runningIncrement > 0) {
+                    update.set(
+                        LATEST_STATUS,
+                        DSL.`when`(LATEST_BUILD_ID.eq(buildId), BuildStatus.RUNNING.ordinal).otherwise(LATEST_STATUS)
+                    )
+                } else {
+                    update.set(
+                        LATEST_STATUS,
+                        DSL.`when`(LATEST_BUILD_ID.eq(buildId), BuildStatus.STAGE_SUCCESS.ordinal)
+                            .otherwise(LATEST_STATUS)
+                    ).set(LATEST_END_TIME, LocalDateTime.now())
+                }
             }
             update.where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId)) //  并发的情况下，不用考虑是否是当前的LATEST_BUILD_ID，而且会造成Slow SQL

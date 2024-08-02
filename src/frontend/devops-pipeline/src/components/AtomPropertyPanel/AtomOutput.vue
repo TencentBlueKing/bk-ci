@@ -16,16 +16,25 @@
                     </bk-popover>
                     <i class="bk-icon icon-edit edit-namespace" @click="editNamespace"></i>
                 </label>
-                <div class="bk-form-content">
+                <div class="bk-form-content output-namespace-tips">
                     <bk-alert type="warning" :closable="true" style="margin-bottom: 8px;">
-                        <div slot="title">{{ namespaceTips }}</div>
+                        <template slot="title">
+                            {{ namespaceTips }}
+                            <a
+                                class="primary-link"
+                                target="_blank"
+                                :href="variableNamespaceDocs"
+                            >
+                                {{ $t('context') }}
+                            </a>
+                        </template>
                     </bk-alert>
                     <vuex-input v-if="showEditNamespace" name="namespace" v-validate.initial="{ varRule: true }" :handle-change="handleUpdateAtomOutputNameSpace" :value="namespace" />
                     <p v-if="errors.has('namespace')" class="bk-form-help is-danger">{{errors.first('namespace')}}</p>
                 </div>
             </div>
             <div class="atom-output-var-list">
-                <h4>{{ $t('editPage.outputItemList') }}：</h4>
+                <h4>{{ $t('editPage.outputItemList') }}</h4>
                 <p v-for="(output, key) in outputProps" :key="key">
                     {{ namespace ? `${namespace}_` : '' }}{{ key }}
                     <bk-popover placement="right">
@@ -55,7 +64,8 @@
             return {
                 showEditNamespace: false,
                 namespaceTips: this.$t('namespaceTips'),
-                outputNamespaceDesc: this.$t('outputNameSpaceDescTips')
+                outputNamespaceDesc: this.$t('outputNameSpaceDescTips'),
+                variableNamespaceDocs: this.$pipelineDocs.NAMESPACE_DOC
             }
         },
         computed: {
@@ -77,12 +87,9 @@
                 }
             }
         },
-        created () {
-            console.log('create output', this.atomPropsModel.output, this.element)
-        },
         methods: {
             editNamespace () {
-                this.showEditNamespace = true
+                this.showEditNamespace = !this.showEditNamespace
             }
         }
     }
@@ -93,11 +100,16 @@
         margin-bottom: 12px;
     }
     .edit-namespace {
-            cursor: pointer;
-            margin-left: 2px;
-            font-size: 12px;
-        }
+        cursor: pointer;
+        margin-left: 2px;
+        font-size: 12px;
+    }
+    .output-namespace-tips,
     .atom-output-var-list {
+        pointer-events: auto;
+    }
+    .atom-output-var-list {
+        pointer-events: auto;
         > h4,
         > p {
             margin: 0;

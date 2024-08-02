@@ -20,7 +20,9 @@ export const titlesMap = {
     perm: 'documentTitlePerm',
     ticket: 'documentTitleTicket',
     store: 'documentTitleStore',
-    metrics: 'documentTitleMetrics'
+    metrics: 'documentTitleMetrics',
+    manage: 'documentTitleManage',
+    permission: 'documentTitlePermission'
 }
 export function mapDocumnetTitle (service) {
     return titlesMap[service] || 'documentTitleHome'

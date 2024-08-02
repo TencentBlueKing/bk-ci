@@ -30,9 +30,9 @@ package com.tencent.devops.dockerhost.api
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.Status
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
@@ -42,47 +42,47 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["DOCKER_HOST"], description = "DockerHost")
+@Tag(name = "DOCKER_HOST", description = "DockerHost")
 @Path("/dockernew")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface BuildDockerHostResource {
 
-    @ApiOperation("Docker build")
+    @Operation(summary = "Docker build")
     @POST
     @Path("/build/{projectId}/{pipelineId}/{vmSeqId}/{buildId}")
     fun dockerBuild(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "流水线Id", required = true)
+        @Parameter(description = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "vmSeqId", required = true)
+        @Parameter(description = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @ApiParam(value = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam(value = "elementId", required = true)
+        @Parameter(description = "elementId", required = true)
         @QueryParam("elementId")
         elementId: String,
-        @ApiParam(value = "是否开启镜像扫描", required = false)
+        @Parameter(description = "是否开启镜像扫描", required = false)
         @QueryParam("scanFlag")
         scanFlag: Boolean?,
-        @ApiParam("镜像构建参数", required = true)
+        @Parameter(description = "镜像构建参数", required = true)
         dockerBuildParam: DockerBuildParam
     ): Result<Boolean>
 
-    @ApiOperation("Docker build")
+    @Operation(summary = "Docker build")
     @GET
     @Path("/build/{vmSeqId}/{buildId}")
     fun getDockerBuildStatus(
-        @ApiParam(value = "vmSeqId", required = true)
+        @Parameter(description = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @ApiParam(value = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<Pair<Status, String>>

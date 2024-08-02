@@ -28,17 +28,23 @@
 package com.tencent.devops.metrics.service.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.PageUtil.MAX_PAGE_SIZE
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.dao.ProjectInfoDao
-import com.tencent.devops.metrics.service.ProjectInfoManageService
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineErrorTypeInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineLabelInfo
 import com.tencent.devops.metrics.pojo.dto.QueryProjectAtomListDTO
 import com.tencent.devops.metrics.pojo.dto.QueryProjectPipelineLabelDTO
+import com.tencent.devops.metrics.pojo.po.SaveProjectAtomRelationDataPO
 import com.tencent.devops.metrics.pojo.qo.QueryProjectInfoQO
+import com.tencent.devops.metrics.service.ProjectInfoManageService
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
 import com.tencent.devops.model.metrics.tables.records.TProjectPipelineLabelInfoRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -47,14 +53,19 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Callable
 import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 @Service
 class ProjectInfoServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectInfoDao: ProjectInfoDao,
-    private val client: Client
+    private val client: Client,
+    private val redisOperation: RedisOperation,
+    private val metricsConfig: MetricsConfig
 ) : ProjectInfoManageService {
 
     private val atomCodeCache = Caffeine.newBuilder()
@@ -138,14 +149,13 @@ class ProjectInfoServiceImpl @Autowired constructor(
             logger.info("begin syncPipelineLabelData")
         var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
         val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
-        val pipelineLabelSyncsNumber = 100
         if (projectMinId != null && projectMaxId != null) {
 
                 do {
                     val projectIds = client.get(ServiceProjectResource::class)
                         .getProjectListById(
                             minId = projectMinId,
-                            maxId = projectMinId + pipelineLabelSyncsNumber
+                            maxId = projectMinId + MAX_PAGE_SIZE
                         ).data?.map { it.englishName }
                     val labelInfosResult = client.get(ServicePipelineResource::class)
                         .getPipelineLabelInfos(userId, projectIds ?: emptyList()).data
@@ -169,7 +179,7 @@ class ProjectInfoServiceImpl @Autowired constructor(
                             pipelineLabelRelateInfos
                         )
                     }
-                    projectMinId += (pipelineLabelSyncsNumber + 1)
+                    projectMinId += (MAX_PAGE_SIZE + 1)
                 } while (projectMinId <= projectMaxId)
                 logger.info("end syncPipelineLabelData")
             }
@@ -177,7 +187,93 @@ class ProjectInfoServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun syncProjectAtomData(userId: String): Boolean {
+        val executor = ThreadPoolExecutor(
+            metricsConfig.maxThreadHandleProjectNum,
+            metricsConfig.maxThreadHandleProjectNum,
+            0L,
+            TimeUnit.MILLISECONDS,
+            LinkedBlockingQueue(10),
+            Executors.defaultThreadFactory(),
+            ThreadPoolExecutor.DiscardPolicy()
+        )
+        try {
+            logger.info("begin op sync project atom data")
+            val projectMinId = client.get(ServiceProjectResource::class).getMinId().data
+            val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
+
+            if (projectMinId != null && projectMaxId != null) {
+                val projectRanges =
+                    calculateProjectRanges(projectMinId, projectMaxId, metricsConfig.maxThreadHandleProjectNum)
+                projectRanges.forEach { (startProjectPrimaryId, endProjectPrimaryId) ->
+                    executor.submit(Callable {
+                        val projectIds = client.get(ServiceProjectResource::class)
+                            .getProjectListById(
+                                minId = startProjectPrimaryId,
+                                maxId = endProjectPrimaryId
+                            ).data?.map { it.englishName }
+                        projectIds?.let { saveProjectAtomInfo(it) }
+                    })
+                }
+            }
+        } catch (ignore: Throwable) {
+            logger.warn("op ProjectInfoServiceImpl sync project atom data fail", ignore)
+        }
+        return true
+    }
+
+    private fun calculateProjectRanges(
+        projectMinId: Long,
+        projectMaxId: Long,
+        maxThreadHandleProjectNum: Int
+    ): List<Pair<Long, Long>> {
+        val avgProjectNum = projectMaxId / maxThreadHandleProjectNum
+        return (1..maxThreadHandleProjectNum).map { index ->
+            val startProjectPrimaryId = (index - 1) * avgProjectNum + 1
+            val endProjectPrimaryId = if (index != maxThreadHandleProjectNum) {
+                index * avgProjectNum
+            } else {
+                index * avgProjectNum + projectMinId % maxThreadHandleProjectNum
+            }
+            Pair(startProjectPrimaryId, endProjectPrimaryId)
+        }
+    }
+
+    private fun saveProjectAtomInfo(projectIds: List<String>) {
+        try {
+            var page = PageUtil.DEFAULT_PAGE
+            do {
+                val projectAtomInfo = projectInfoDao.queryProjectAtomNewNameInfos(
+                    dslContext = dslContext,
+                    projectIds = projectIds,
+                    page = page,
+                    pageSize = MAX_PAGE_SIZE
+                )
+                val saveProjectAtomRelationPOs = mutableListOf<SaveProjectAtomRelationDataPO>()
+                projectAtomInfo.forEach {
+                    val saveProjectAtomRelationDataPO = SaveProjectAtomRelationDataPO(
+                        id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId("METRICS_PROJECT_ATOM_RELEVANCY_INFO").data ?: 0,
+                        projectId = it.value1(),
+                        atomCode = it.value2(),
+                        atomName = it.value3(),
+                        creator = SYSTEM,
+                        modifier = SYSTEM
+                    )
+                    saveProjectAtomRelationPOs.add(saveProjectAtomRelationDataPO)
+                }
+                if (saveProjectAtomRelationPOs.isNotEmpty()) {
+                    projectInfoDao.batchSaveProjectAtomInfo(dslContext, saveProjectAtomRelationPOs)
+                }
+                page ++
+            } while (projectAtomInfo.size == MAX_PAGE_SIZE)
+        } catch (ignore: Throwable) {
+            logger.warn("ProjectInfoServiceImpl sync project atom data fail", ignore)
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectInfoServiceImpl::class.java)
+        private var executor: ThreadPoolExecutor? = null
     }
 }

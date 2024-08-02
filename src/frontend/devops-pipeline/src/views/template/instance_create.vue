@@ -38,7 +38,7 @@
                                     {{ $t('template.applyTemplateSetting') }}
                                 </bk-checkbox>
                                 <bk-popover placement="top">
-                                    <i class="bk-icon icon-info-circle"></i>
+                                    <i class="devops-icon icon-info-circle"></i>
                                     <div slot="content" style="white-space: pre-wrap; min-width: 200px">
                                         <div>{{ $t('template.applySettingTips') }}</div>
                                     </div>
@@ -51,11 +51,54 @@
                     <div class="instance-pipeline">
                         <label class="conf-title">{{ $t('template.newPipelineName') }}</label>
                         <div class="pipeline-name-box">
-                            <div :class="{ &quot;pipeline-item&quot;: true, &quot;active-item&quot;: entry.selected, &quot;unselect-hover&quot;: !entry.selected }"
-                                v-for="(entry, index) in pipelineNameList" :key="index" @click="lastCilckPipeline(index)">{{ entry.pipelineName }}
-                                <i class="delete-btn" v-if="!hashVal" @click="deletePipelineName(index)"></i>
+                            <div :class="{
+                                     'pipeline-item': !entry.isEditing,
+                                     'active-item': entry.selected && !entry.isEditing,
+                                     'unselect-hover': !entry.selected,
+                                     'edit-item': entry.isEditing
+                                 }"
+                                v-for="(entry, index) in pipelineNameList" :key="index" @click="lastClickPipeline(index)">
+                                <div v-show="entry.isEditing">
+                                    <bk-input
+                                        ref="pipelineNameInput"
+                                        class="pipeline-name-input"
+                                        v-model="displayName"
+                                        :maxlength="128"
+                                        :placeholder="$t('pipelineNameInputTips')"
+                                    />
+                                    <div class="edit-tools">
+                                        <i
+                                            class="devops-icon icon-check-1 group-card-edit-icon mr10"
+                                            @click="handelSavePipelineName(index)"
+                                            v-bk-tooltips="$t('save')"
+                                        />
+                                        <i
+                                            class="devops-icon icon-close group-card-edit-icon"
+                                            @click="handelCancelSave(index)"
+                                            v-bk-tooltips="$t('cancel')"
+                                        />
+                                    </div>
+                                </div>
+                                <div v-show="!entry.isEditing">
+                                    <div class="pipeline-name" v-bk-overflow-tips>
+                                        {{ entry.pipelineName }}
+                                    </div>
+                                    <bk-icon
+                                        class="edit-btn"
+                                        type="edit"
+                                        size="12"
+                                        @click="handleChangePipelineName(index)"
+                                        v-bk-tooltips="$t('rename')"
+                                    />
+                                    <i
+                                        class="delete-btn"
+                                        v-if="!hashVal"
+                                        @click="deletePipelineName(index)"
+                                        v-bk-tooltips="$t('delete')"
+                                    />
+                                </div>
                             </div>
-                            <div class="pipeline-item add-item" @click="addPipelineName()" v-if="!hashVal">
+                            <div class="pipeline-item add-item" @click="addPipelineName" v-if="!hashVal">
                                 <i class="plus-icon"></i>
                                 <span>{{ $t('template.addPipelineInstance') }}</span>
                             </div>
@@ -68,25 +111,16 @@
                 <section v-for="(param, index) in pipelineNameList" :key="index">
                     <template v-if="param.pipelineName === currentPipelineParams.pipelineName">
                         <section class="params-item" v-if="param.buildParams">
-                            <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('template.newPipelineName') }}</div>
+                            <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('versionNum') }}</div>
                             <div v-if="param.buildParams" class="build-params-content">
-                                <div class="buildNo-params-content">
-                                    <pipeline-params-form
-                                        :ref="`paramsForm${index}`"
-                                        :param-values="param.paramValues"
-                                        :handle-param-change="handleParamChange"
-                                        :params="param.versionParams">
-                                    </pipeline-params-form>
-                                </div>
-                                <div class="params-flex-col" ref="buildForm">
-                                    <form-field :required="true" :label="$t('buildNum')">
-                                        <vuex-input :disabled="disabled" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="&quot;required|numeric&quot;" :value="param.buildParams.buildNo" :handle-change="handleBuildNoChange" />
-                                        <p v-if="errors.has('buildNo')" :class="errors.has('buildNo') ? 'error-tips' : 'normal-tips'">{{ $t('template.buildNumErrTips') }}</p>
-                                    </form-field>
-                                    <form-field class="flex-colspan-2" :required="true" :is-error="errors.has(&quot;buildNoType&quot;)" :error-msg="errors.first(&quot;buildNoType&quot;)">
-                                        <enum-input :list="buildNoRules" :disabled="disabled" name="buildNoType" v-validate.initial="&quot;required|string&quot;" :value="param.buildParams.buildNoType" :handle-change="handleBuildNoChange" />
-                                    </form-field>
-                                </div>
+                                <pipeline-versions-form
+                                    :ref="`paramsForm${index}`"
+                                    :build-no="param.buildParams"
+                                    :disabled="disabled"
+                                    :version-param-values="param.paramValues"
+                                    :handle-version-change="handleParamChange"
+                                    :handle-build-no-change="handleBuildNoChange"
+                                ></pipeline-versions-form>
                             </div>
                         </section>
                         <section class="params-item" v-if="param.params && param.params.filter(item => buildNoParams.indexOf(item.id) === -1 ).length">
@@ -119,16 +153,20 @@
                 <span class="cancel-btn" @click="toInstanceManage()">{{ $t('cancel') }}</span>
             </div>
         </div>
-        <instance-pipeline-name :show-instance-create="showInstanceCreate"
-            @comfire="comfireHandler"
-            @cancel="cancelHandler"></instance-pipeline-name>
-        <instance-message :show-instance-message="showInstanceMessage"
+        <instance-pipeline-name
+            :show-instance-create="showInstanceCreate"
+            @confirm="confirmHandler"
+            @cancel="cancelHandler">
+        </instance-pipeline-name>
+        <instance-message
+            :show-instance-message="showInstanceMessage"
             :success-list="successList"
             :fail-list="failList"
             :fail-message="failMessage"
             @cancel="cancelMessage">
         </instance-message>
-        <bk-dialog v-model="showUpdateDialog"
+        <bk-dialog
+            v-model="showUpdateDialog"
             :close-icon="false"
             header-position="left"
             :title="$t('template.updateDialogTitle')">
@@ -145,16 +183,14 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
+    import Logo from '@/components/Logo'
     import innerHeader from '@/components/devops/inner_header'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
-    import instancePipelineName from '@/components/template/instance-pipeline-name.vue'
     import instanceMessage from '@/components/template/instance-message.vue'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import FormField from '@/components/AtomPropertyPanel/FormField'
-    import Logo from '@/components/Logo'
+    import instancePipelineName from '@/components/template/instance-pipeline-name.vue'
     import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { mapGetters } from 'vuex'
+    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
 
     export default {
         components: {
@@ -162,10 +198,8 @@
             PipelineParamsForm,
             instancePipelineName,
             instanceMessage,
-            VuexInput,
-            FormField,
-            EnumInput,
-            Logo
+            Logo,
+            PipelineVersionsForm
         },
         data () {
             return {
@@ -193,7 +227,8 @@
                 buildParams: {},
                 paramValues: {},
                 templateParamValues: {},
-                showUpdateDialog: false
+                showUpdateDialog: false,
+                displayName: ''
             }
         },
         computed: {
@@ -212,6 +247,12 @@
             curVersionId () {
                 return this.$route.params.curVersionId
             },
+            pipelineName () {
+                return this.$route.params.pipelineName
+            },
+            type () {
+                return this.$route.params.type
+            },
             hashVal () {
                 if (this.$route.hash) {
                     const hashVal = this.$route.hash.substr(1, this.$route.hash.length)
@@ -229,6 +270,9 @@
             }
             if (this.$route.query.useTemplateSettings === 'true') {
                 this.isTemplateSetting = true
+            }
+            if (this.curVersionId) {
+                this.instanceVersion = this.curVersionId
             }
         },
         methods: {
@@ -311,7 +355,7 @@
 
                 if (!this.hashVal) {
                     this.pipelineNameList.forEach(item => {
-                        item.params = [].concat(this.deepCopy(this.paramList))
+                        item.params = this.deepCopyParams(this.paramList)
                         item.pipelineParams = item.params.filter(item => this.buildNoParams.indexOf(item.id) === -1)
                         item.versionParams = item.params.filter(item => this.buildNoParams.indexOf(item.id) > -1)
                         item.paramValues = this.deepCopy(this.paramValues)
@@ -326,7 +370,7 @@
             handlePipeLineName () {
                 const params = this.$route.params || {}
                 const name = params.pipelineName
-                if (name) this.comfireHandler(name)
+                if (name) this.confirmHandler(name)
             },
 
             handlePipelineParams (data) {
@@ -345,7 +389,7 @@
                             values[param.id] = param.defaultValue
                             return values
                         }, {})
-                        pipelineItem.params = [].concat(this.deepCopy(data[item].param))
+                        pipelineItem.params = this.deepCopyParams(data[item].param)
                         pipelineItem.pipelineParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) === -1)
                         pipelineItem.versionParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) > -1)
                         pipelineItem.paramValues = paramValues
@@ -372,6 +416,9 @@
                 if (this.hashVal && newVal) this.requestPipelineParams(this.hashVal, newVal)
             },
             addPipelineName () {
+                this.pipelineNameList.forEach(pipeline => {
+                    this.$set(pipeline, 'isEditing', false)
+                })
                 if (!this.instanceVersion) {
                     this.$showTips({
                         message: this.$t('template.templateVersionErrTips'),
@@ -400,7 +447,7 @@
                     }
                 })
             },
-            lastCilckPipeline (key) {
+            lastClickPipeline (key) {
                 this.pipelineNameList.forEach((item, index) => {
                     item.selected = index === key
                     if (index === key) {
@@ -411,8 +458,26 @@
             deletePipelineName (key) {
                 this.pipelineNameList.splice(key, 1)
             },
-            comfireHandler (data) {
-                const tmpParam = [].concat(this.deepCopy(this.paramList))
+
+            async handleChangePipelineName (index) {
+                this.pipelineNameList.forEach((pipeline, i) => {
+                    if (i === index) {
+                        this.displayName = pipeline.pipelineName
+                        this.$set(pipeline, 'isEditing', true)
+                    } else {
+                        this.$set(pipeline, 'isEditing', false)
+                    }
+                })
+            },
+            handelSavePipelineName (index) {
+                this.$set(this.pipelineNameList[index], 'isEditing', false)
+                this.$set(this.pipelineNameList[index], 'pipelineName', this.displayName)
+            },
+            handelCancelSave (index) {
+                this.$set(this.pipelineNameList[index], 'isEditing', false)
+            },
+            confirmHandler (data) {
+                const tmpParam = this.deepCopyParams(this.paramList)
                 const pipelineParams = tmpParam.filter(item => this.buildNoParams.indexOf(item.id) === -1)
                 const versionParams = tmpParam.filter(item => this.buildNoParams.indexOf(item.id) > -1)
 
@@ -445,6 +510,12 @@
             deepCopy (value, target) {
                 return JSON.parse(JSON.stringify(value))
             },
+            deepCopyParams (params) {
+                return [].concat(this.deepCopy(params)).map(p => ({
+                    ...p,
+                    readOnly: false
+                }))
+            },
             async submit () {
                 if (!this.pipelineNameList.length) {
                     this.$showTips({
@@ -469,6 +540,14 @@
                             param: pipeline.params
                         })
                     })
+                    const isRequired = params.some(item => item.buildNo && !item.buildNo.buildNo)
+                    if (isRequired) {
+                        this.$showTips({
+                            message: this.$t('template.buildNumErrTips'),
+                            theme: 'error'
+                        })
+                        return
+                    }
 
                     loading.isLoading = true
 
@@ -532,9 +611,6 @@
 
     .pipeline-subpages {
         min-height: 100%;
-        .bk-exception {
-            position: absolute;
-        }
     }
     .create-instance-wrapper {
         flex-direction: column;
@@ -623,6 +699,30 @@
                 .pipeline-name-box {
                     margin-top: 12px;
                 }
+                .edit-item {
+                    position: relative;
+                    float: left;
+                    margin-bottom: 12px;
+                    margin-right: 20px;
+                }
+                .edit-tools {
+                    position: absolute;
+                    top: 13px;
+                    right: 20px;
+                    font-size: 10px;
+                }
+                .group-card-edit-icon {
+                    cursor: pointer;
+                }
+                .pipeline-name-input {
+                    width: 200px;
+                    margin-right: 10px;
+                    input {
+                        height: 36px;
+                        line-height: 36px;
+                        padding-right: 60px !important;
+                    }
+                }
                 .pipeline-item {
                     float: left;
                     position: relative;
@@ -630,21 +730,33 @@
                     line-height: 36px;
                     margin-bottom: 12px;
                     margin-right: 20px;
-                    padding: 0 32px 0 18px;
+                    padding: 0 50px 0 18px;
                     background-color: #fff;
                     border: 1px solid #c3cdd7;
                     // color: #fff;
                     font-size: 14px;
                     cursor: pointer;
+                    max-width: 200px;
+                }
+                .pipeline-name {
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
+                .edit-btn {
+                    position: absolute;
+                    top: 12px;
+                    right: 30px;
+                    cursor: pointer;
                 }
                 .delete-btn {
                     display: inline-block;
-                    width: 10px;
-                    height: 10px;
+                    width: 14px;
+                    height: 14px;
                     overflow: hidden;
                     position: absolute;
-                    top: 14px;
-                    right: 15px;
+                    top: 12px;
+                    right: 10px;
                     cursor: pointer;
                 }
                 .delete-btn::before,
@@ -761,48 +873,8 @@
             border: 1px solid #EBF0F5;
         }
         .build-params-content {
-            padding-bottom: 20px;
+            padding: 20px 0 20px 20px;
             background: #fff;
-        }
-        .buildNo-params-content {
-            min-width: 940px;
-            padding: 20px 0 0;
-            padding-left: 20px;
-            .bk-form-item {
-                float: left;
-                width: 320px;
-                margin-top: 20px;
-                margin-left: 10px;
-                .bk-label {
-                    width: 160px;
-                }
-                .bk-form-input {
-                    width: 145px !important;
-                }
-            }
-        }
-        .params-flex-col {
-            display: flex;
-            padding: 0 40px;
-            background: #fff;
-            .bk-form-item {
-                display: flex;
-                margin: 20px 30px 0 20px;
-                font-size: 14px;
-                .bk-label {
-                    width: 108px;
-                    margin-right: 22px;
-                    line-height: 36px;
-                    text-align: right;
-                    font-weight: bold;
-                }
-                .bk-form-input {
-                    width: 145px;
-                }
-                &:last-child {
-                    min-width: 420px;
-                }
-            }
         }
         .create-instance-footer {
             margin-top: 20px;

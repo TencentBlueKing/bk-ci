@@ -27,12 +27,15 @@
 
 package com.tencent.devops.scm
 
+import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RevisionInfo
 
 @Suppress("ALL")
@@ -56,6 +59,10 @@ interface IScm {
     fun checkTokenAndUsername()
 
     fun addWebHook(hookUrl: String)
+
+    fun getWebHooks(): List<GitHook> = emptyList()
+
+    fun updateWebHook(hookId: Long, hookUrl: String) = Unit
 
     fun createBranch(branch: String, ref: String) {}
     fun deleteBranch(branch: String) {}
@@ -87,4 +94,8 @@ interface IScm {
     fun getMrCommitList(mrId: Long, page: Int, size: Int) = emptyList<GitCommit>()
 
     fun getProjectInfo(projectName: String): GitProjectInfo? = null
+
+    fun getCommitReviewInfo(crId: Long): GitCommitReviewInfo? = null
+
+    fun getLoginSession(): LoginSession? = null
 }

@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 
@@ -60,4 +61,18 @@ interface Ip4Service {
         repositoryId: String,
         repositoryType: RepositoryType?
     ): P4ServerInfo
+
+    fun getChangelist(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        change: Int
+    ): P4ChangeList
+
+    fun getShelvedChangeList(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        change: Int
+    ): P4ChangeList
 }

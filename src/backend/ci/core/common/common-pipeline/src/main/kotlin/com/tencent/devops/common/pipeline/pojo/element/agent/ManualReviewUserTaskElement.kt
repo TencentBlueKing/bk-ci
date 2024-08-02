@@ -29,41 +29,69 @@ package com.tencent.devops.common.pipeline.pojo.element.agent
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.utils.TransferUtil
+import io.swagger.v3.oas.annotations.media.Schema
+import org.json.JSONObject
 
-@ApiModel("人工审核", description = ManualReviewUserTaskElement.classType)
+@Suppress("ComplexMethod")
+@Schema(title = "人工审核", description = ManualReviewUserTaskElement.classType)
 data class ManualReviewUserTaskElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "人工审核",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("审核人", required = true)
+    @get:Schema(title = "审核人", required = true)
     var reviewUsers: MutableList<String> = mutableListOf(),
-    @ApiModelProperty("描述", required = false)
+    @get:Schema(title = "描述", required = false)
     var desc: String? = "",
-    @ApiModelProperty("审核意见", required = false)
+    @get:Schema(title = "审核意见", required = false)
     var suggest: String? = "",
-    @ApiModelProperty("参数列表", required = false)
+    @get:Schema(title = "参数列表", required = false)
     var params: MutableList<ManualReviewParam> = mutableListOf(),
-    @ApiModelProperty("输出变量名空间", required = false)
+    @get:Schema(title = "输出变量名空间", required = false)
     var namespace: String? = "",
-    @ApiModelProperty("发送的通知类型", required = false)
+    @get:Schema(title = "发送的通知类型", required = false)
     var notifyType: MutableList<String>? = null,
-    @ApiModelProperty("发送通知的标题", required = false)
+    @get:Schema(title = "发送通知的标题", required = false)
     var notifyTitle: String? = null,
-    @ApiModelProperty("是否以markdown格式发送审核说明", required = false)
+    @get:Schema(title = "是否以markdown格式发送审核说明", required = false)
     var markdownContent: Boolean? = false,
-    @ApiModelProperty("企业微信群id", required = false)
-    var notifyGroup: MutableList<String>? = null
+    @get:Schema(title = "企业微信群id", required = false)
+    var notifyGroup: MutableList<String>? = null,
+    @get:Schema(title = "审核提醒时间（小时），支持每隔x小时提醒一次", required = false)
+    var reminderTime: Int? = null
 ) : Element(name, id, status) {
     companion object {
         const val classType = "manualReviewUserTask"
     }
 
     override fun getTaskAtom() = "manualReviewTaskAtom"
+
+    override fun transferYaml(defaultValue: JSONObject?): PreStep {
+        val input = mutableMapOf<String, Any>().apply {
+            reviewUsers.ifEmpty { null }?.run { put(::reviewUsers.name, this) }
+            desc?.ifEmpty { null }?.run { put(::desc.name, this) }
+            suggest?.ifEmpty { null }?.run { put(::suggest.name, this) }
+            params.ifEmpty { null }?.run { put(::params.name, this) }
+            namespace?.ifEmpty { null }?.run { put(::namespace.name, this) }
+            notifyType?.ifEmpty { null }?.run { put(::notifyType.name, this) }
+            notifyTitle?.ifEmpty { null }?.run { put(::notifyTitle.name, this) }
+            markdownContent?.run { put(::markdownContent.name, this) }
+            notifyGroup?.ifEmpty { null }?.run { put(::notifyGroup.name, this) }
+            reminderTime?.run { put(::reminderTime.name, this) }
+        }
+        return PreStep(
+            name = name,
+            id = stepId,
+            // 插件上的
+            ifFiled = TransferUtil.parseStepIfFiled(this),
+            uses = "${getAtomCode()}@$version",
+            with = TransferUtil.simplifyParams(defaultValue, input).ifEmpty { null }
+        )
+    }
 
     override fun getClassType() = classType
 }

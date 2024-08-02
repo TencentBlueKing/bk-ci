@@ -16,20 +16,20 @@
                     :header-border="false"
                     :header-cell-style="{ background: '#fff' }"
                 >
-                    <bk-table-column :label="$t('store.申请人')" prop="applicant"></bk-table-column>
-                    <bk-table-column :label="$t('store.审批状态')" prop="approveStatus" :formatter="statusFormatter"></bk-table-column>
-                    <bk-table-column :label="$t('store.申请原因')">
+                    <bk-table-column :label="$t('store.申请人')" prop="applicant" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column :label="$t('store.审批状态')" prop="approveStatus" :formatter="statusFormatter" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column :label="$t('store.申请原因')" show-overflow-tooltip>
                         <template slot-scope="props">
                             <span class="table-text" :title="props.row.content">{{props.row.content}}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('store.审批结果说明')">
+                    <bk-table-column :label="$t('store.审批结果说明')" show-overflow-tooltip>
                         <template slot-scope="props">
                             <span class="table-text" :title="props.row.approveMsg">{{props.row.approveMsg}}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('store.创建日期')" prop="createTime" :formatter="timeFormatter"></bk-table-column>
-                    <bk-table-column :label="$t('store.更新日期')" prop="updateTime" :formatter="timeFormatter"></bk-table-column>
+                    <bk-table-column :label="$t('store.创建日期')" prop="createTime" :formatter="timeFormatter" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column :label="$t('store.更新日期')" prop="updateTime" :formatter="timeFormatter" show-overflow-tooltip></bk-table-column>
                     <bk-table-column :label="$t('store.操作')" width="120" class-name="handler-btn">
                         <template slot-scope="props">
                             <span class="update-btn" @click="approve(props.row)" v-if="props.row.approveStatus === 'WAIT'"> {{ $t('store.审批') }} </span>

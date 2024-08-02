@@ -189,6 +189,27 @@ export function debounce (callBack, time = 200) {
     debounce.timeId = window.setTimeout(callBack, time)
 }
 
+export function throttle (func, interval) {
+    let lastFunc
+    let lastRan
+    return function () {
+        const context = this
+        const args = arguments
+        if (!lastRan) {
+            func.apply(context, args)
+            lastRan = Date.now()
+        } else {
+            clearTimeout(lastFunc)
+            lastFunc = setTimeout(function () {
+                if ((Date.now() - lastRan) >= interval) {
+                    func.apply(context, args)
+                    lastRan = Date.now()
+                }
+            }, interval - (Date.now() - lastRan))
+        }
+    }
+}
+
 export function getWSpath (path = '') {
     const state = store.state || {}
     return path + (path.endsWith('/') ? '' : '/') + state.projectId

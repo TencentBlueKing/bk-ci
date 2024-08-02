@@ -23,42 +23,48 @@
 
 import Vue from 'vue'
 import App from './App'
+import enClass from './directives/focus/en-class'
+import enStyle from './directives/focus/en-style'
+import focus from './directives/focus/index.js'
 import createRouter from './router'
 import store from './store'
-import focus from './directives/focus/index.js'
 
-import VeeValidate from 'vee-validate'
-import validationENMessages from 'vee-validate/dist/locale/en'
-import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
-import ExtendsCustomRules from './utils/customRules'
-import validDictionary from './utils/validDictionary'
 import mavonEditor from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
 import PortalVue from "portal-vue"; // eslint-disable-line
+import VeeValidate from 'vee-validate'
+import validationENMessages from 'vee-validate/dist/locale/en'
+import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import createLocale from '../../locale'
-import '@icon-cool/bk-icon-devops/src/index'
-import '@icon-cool/bk-icon-devops'
+import ExtendsCustomRules from './utils/customRules'
+import validDictionary from './utils/validDictionary'
 
 import {
-    actionMap,
-    resourceMap,
-    resourceTypeMap
-} from '../../common-lib/permission-conf'
-import { pipelineDocs } from '../../common-lib/docs'
+    handlePipelineNoPermission,
+    RESOURCE_ACTION
+} from '@/utils/permission'
 import bkMagic from 'bk-magic-vue'
-import BkPipeline from 'bkui-pipeline'
 
-// 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css')
+import { pipelineDocs } from '../../common-lib/docs'
+// 权限指令
+import 'bk-magic-vue/dist/bk-magic-vue.min.css'
+import { BkPermission, PermissionDirective } from 'bk-permission'
+import 'bk-permission/dist/main.css'
 
 const { i18n, setLocale } = createLocale(
     require.context('@locale/pipeline/', false, /\.json$/)
 )
+const isInIframe = window.self !== window.parent
 
 Vue.use(focus)
-Vue.use(bkMagic)
+Vue.use(enClass)
+Vue.use(enStyle)
 Vue.use(PortalVue)
 Vue.use(mavonEditor)
+Vue.use(PermissionDirective(handlePipelineNoPermission))
+Vue.use(BkPermission, {
+    i18n
+})
 
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.
@@ -71,14 +77,9 @@ Vue.use(VeeValidate, {
 })
 VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
-Vue.use(BkPipeline, {
-    i18n
-})
 
 Vue.prototype.$setLocale = setLocale
-Vue.prototype.$permissionActionMap = actionMap
-Vue.prototype.$permissionResourceMap = resourceMap
-Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
+Vue.prototype.$permissionResourceAction = RESOURCE_ACTION
 Vue.prototype.$pipelineDocs = pipelineDocs
 Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
@@ -89,61 +90,36 @@ Vue.prototype.$bkMessage = function (config) {
 String.prototype.isBkVar = function () {
     return /\$\{{2}([\w\_\.\s-]+)\}{2}/g.test(this) || /\$\{([\w\_\.\s-]+)\}/g.test(this)
 }
-
 /* eslint-disable */
 
 Vue.mixin({
     methods: {
-        // handleError (e, permissionAction, instance, projectId, resourceMap = this.$permissionResourceMap.pipeline) {
-        handleError(e, noPermissionList) {
-            if (e.code === 403) {
-                // 没有权限编辑
-                // this.setPermissionConfig(resourceMap, permissionAction, instance ? [instance] : [], projectId)
-                this.$showAskPermissionDialog({
-                    noPermissionList,
-                });
+        handleError (e, data, delay = 3000) {
+            if (e.code === 403) { // 没有权限编辑
+                handlePipelineNoPermission(data)
             } else {
                 this.$showTips({
                     message: e.message || e,
-                    theme: "error",
-                });
+                    delay,
+                    theme: 'error'
+                })
             }
         },
-        /**
-         * 设置权限弹窗的参数
-         */
-        setPermissionConfig(
-            resourceId,
-            actionId,
-            instanceId = [],
-            projectId = this.$route.params.projectId
-        ) {
-            this.$showAskPermissionDialog({
-                noPermissionList: [
-                    {
-                        actionId,
-                        resourceId,
-                        instanceId,
-                        projectId,
-                    },
-                ],
-            });
-        },
-    },
-});
+    }
+})
 
-if (window.top === window.self) {
+if (!isInIframe) {
     // 只能以iframe形式嵌入
     location.href = `${WEB_URL_PREFIX}${location.pathname}`;
 }
 
 global.pipelineVue = new Vue({
     el: "#app",
-    router: createRouter(store),
+    router: createRouter(store, isInIframe),
     i18n,
     store,
     components: {
-        App,
+        App
     },
-    template: "<App/>",
-});
+    template: '<App/>'
+})

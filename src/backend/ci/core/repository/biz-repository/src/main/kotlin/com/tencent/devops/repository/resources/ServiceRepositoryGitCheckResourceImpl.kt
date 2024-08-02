@@ -16,9 +16,10 @@ class ServiceRepositoryGitCheckResourceImpl @Autowired constructor(
         pipelineId: String,
         commitId: String,
         context: String,
+        targetBranch: String?,
         repositoryConfig: RepositoryConfig
     ): Result<RepositoryGitCheck?> {
-        return Result(gitCheckService.getGitCheck(pipelineId, repositoryConfig, commitId, context))
+        return Result(gitCheckService.getGitCheck(pipelineId, repositoryConfig, commitId, targetBranch, context))
     }
 
     override fun createGitCheck(gitCheck: RepositoryGitCheck) {

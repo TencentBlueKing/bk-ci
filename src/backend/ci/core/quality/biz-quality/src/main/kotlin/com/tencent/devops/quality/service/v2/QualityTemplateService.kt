@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.RuleIndicatorSet
@@ -40,11 +41,16 @@ import com.tencent.devops.quality.api.v2.pojo.RuleTemplate
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateData
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateIndicatorMap
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateUpdateData
+import com.tencent.devops.quality.constant.QUALITY_CONTROL_POINT_NAME_KEY
+import com.tencent.devops.quality.constant.QUALITY_RULE_TEMPLATE_DESC_KEY
+import com.tencent.devops.quality.constant.QUALITY_RULE_TEMPLATE_NAME_KEY
+import com.tencent.devops.quality.constant.QUALITY_RULE_TEMPLATE_STAGE_KEY
 import com.tencent.devops.quality.dao.v2.QualityControlPointDao
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityRuleTemplateDao
 import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
 import com.tencent.devops.quality.pojo.po.QualityRuleTemplatePO
+import java.io.File
 import java.util.concurrent.Executors
 import javax.annotation.PostConstruct
 import org.jooq.DSLContext
@@ -63,7 +69,8 @@ class QualityTemplateService @Autowired constructor(
     private val qualityControlPointDao: QualityControlPointDao,
     private val ruleTemplateIndicatorDao: QualityTemplateIndicatorMapDao,
     private val indicatorDao: QualityIndicatorDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    val commonConfig: CommonConfig
 ) {
 
     @PostConstruct
@@ -74,12 +81,12 @@ class QualityTemplateService @Autowired constructor(
             expiredTimeInSeconds = 60
 
         )
-        if (redisLock.tryLock()) {
-            Executors.newFixedThreadPool(1).submit {
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
                 try {
                     logger.info("start init quality rule template")
                     val classPathResource = ClassPathResource(
-                        "ruleTemplate_${I18nUtil.getDefaultLocaleLanguage()}.json"
+                        "i18n${File.separator}ruleTemplate_${commonConfig.devopsDefaultLocaleLanguage}.json"
                     )
                     val inputStream = classPathResource.inputStream
                     val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
@@ -87,6 +94,8 @@ class QualityTemplateService @Autowired constructor(
                         JsonUtil.to(json, object : TypeReference<List<QualityRuleTemplatePO>>() {})
                     ruleTemplateDao.batchCrateQualityRuleTemplate(dslContext, qualityRuleTemplatePOs)
                     logger.info("init quality rule template end")
+                } catch (ignored: Throwable) {
+                    logger.warn("init quality rule template fail! error:${ignored.message}")
                 } finally {
                     redisLock.unlock()
                 }
@@ -101,8 +110,14 @@ class QualityTemplateService @Autowired constructor(
             val indicators = indicatorService.serviceList(indicatorIds)
             RuleIndicatorSet(
                 hashId = HashUtil.encodeLongId(record.id),
-                name = record.name,
-                desc = record.desc,
+                name = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_RULE_TEMPLATE_NAME_KEY.format("${record.id}"),
+                    defaultMessage = record.name
+                ),
+                desc = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_RULE_TEMPLATE_DESC_KEY.format("${record.id}"),
+                    defaultMessage = record.desc
+                ),
                 indicators = indicators
             )
         } ?: listOf()
@@ -122,20 +137,37 @@ class QualityTemplateService @Autowired constructor(
             val indicators = indicatorService.serviceList(indicatorIds)
             RuleTemplate(
                 hashId = HashUtil.encodeLongId(record.id),
-                name = record.name,
-                desc = record.desc,
+                name = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_RULE_TEMPLATE_NAME_KEY.format("${record.id}"),
+                    defaultMessage = record.name
+                ),
+                desc = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_RULE_TEMPLATE_DESC_KEY.format("${record.id}"),
+                    defaultMessage = record.desc
+                ),
                 indicators = indicators,
-                stage = record.stage,
+                stage = I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_RULE_TEMPLATE_STAGE_KEY.format("${record.id}"),
+                    defaultMessage = record.stage
+                ),
                 controlPoint = record.controlPoint,
-                controlPointName = controlPoint?.name ?: "",
-                controlPointPosition = ControlPointPosition(record.controlPointPosition),
-                availablePosition = listOf(ControlPointPosition("BEFORE"), ControlPointPosition("AFTER"))
+                controlPointName = controlPoint?.let {
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format("${it.elementType}"),
+                        defaultMessage = it.name
+                    )
+                } ?: "",
+                controlPointPosition = ControlPointPosition.create(record.controlPointPosition),
+                availablePosition = listOf(ControlPointPosition.create("BEFORE"), ControlPointPosition.create("AFTER"))
             )
         } ?: listOf()
     }
 
     fun opList(userId: String, page: Int?, pageSize: Int?): Page<TemplateData> {
-        val controlPointMap = controlPointService.listAllControlPoint().map { it.elementType to it }.toMap()
+        val controlPointMap = controlPointService.listAllControlPoint().map {
+            it.name = it.name
+            it.elementType to it
+        }.toMap()
 
         val data = ruleTemplateDao.list(userId, page!!, pageSize!!, dslContext).map { record ->
             val templateIndicatorMap = ruleTemplateIndicatorDao.listByTemplateId(record.id, dslContext)

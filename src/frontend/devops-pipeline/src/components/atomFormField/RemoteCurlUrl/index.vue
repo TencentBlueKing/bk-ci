@@ -1,17 +1,21 @@
 <template>
     <div v-bkloading="{ isLoading }" class="remote-trigger">
-        <p>{{ $t('editPage.remoteCurlTips') }}</p>
+        <route-tips :visible="true" :tips="$t('editPage.remoteCurlTips')"></route-tips>
         <p>{{ $t('editPage.example') }}：</p>
         <p class="curl-url">curl -X POST {{baseUrl}}/external/pipelines/{{value}}/build -H "Content-Type: application/json" -H "X-DEVOPS-UID: " -d "{{stringifyParmas}}" </p>
     </div>
 </template>
 
 <script>
-    import atomFieldMixin from '../atomFieldMixin'
-    import { mapActions } from 'vuex'
+    import RouteTips from '@/components/atomFormField/RouteTips'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import { mapActions } from 'vuex'
+    import atomFieldMixin from '../atomFieldMixin'
     export default {
         name: 'remote-curl-url',
+        components: {
+            RouteTips
+        },
         mixins: [atomFieldMixin],
         props: {
             container: Object,
@@ -19,7 +23,7 @@
         },
         computed: {
             baseUrl () {
-                return `${location.host}${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}`
+                return `${location.origin}${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}`
             },
             stringifyParmas () {
                 const { params } = this.container
@@ -34,18 +38,6 @@
             },
             projectId () {
                 return this.$route.params.projectId
-            }
-        },
-        watch: {
-            value (newVal, oldVal) {
-                const { params } = this.$route
-                if (newVal !== oldVal) {
-                    this.getRemoteTriggerToken({
-                        ...params,
-                        preToken: newVal,
-                        element: this.element
-                    })
-                }
             }
         },
         mounted () {
@@ -71,10 +63,8 @@
         }
     }
     .curl-url {
-        font-weight: bold;
-        color: #c7c7c7;
-        background: #373636;
-        border-radius: 5px;
+        color: #63656E;
+        background: #F5F7FA;
         padding: 10px;
         word-break: break-word;
     }

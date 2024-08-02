@@ -30,6 +30,8 @@ package com.tencent.devops.common.pipeline.pojo.element
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.IModelTemplate
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
@@ -45,7 +47,6 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageEl
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -56,9 +57,10 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.utils.ElementUtils
+import io.swagger.v3.oas.annotations.media.Schema
+import org.json.JSONObject
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
@@ -89,58 +91,67 @@ import io.swagger.annotations.ApiModelProperty
     JsonSubTypes.Type(value = QualityGateInElement::class, name = QualityGateInElement.classType),
     JsonSubTypes.Type(value = QualityGateOutElement::class, name = QualityGateOutElement.classType),
     JsonSubTypes.Type(value = CodeTGitWebHookTriggerElement::class, name = CodeTGitWebHookTriggerElement.classType),
-    JsonSubTypes.Type(
-        value = CodeGitGenericWebHookTriggerElement::class,
-        name = CodeGitGenericWebHookTriggerElement.classType
-    ),
     JsonSubTypes.Type(value = CodeP4WebHookTriggerElement::class, name = CodeP4WebHookTriggerElement.classType)
 )
 @Suppress("ALL")
-@ApiModel("Element 基类")
+@Schema(title = "Element 基类")
 abstract class Element(
-    @ApiModelProperty("任务名称", required = false)
+    @get:Schema(title = "任务名称", required = false)
     open val name: String,
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     open var id: String? = null,
-    @ApiModelProperty("状态(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @get:Schema(title = "状态(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var status: String? = null,
-    @ApiModelProperty("执行次数(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @get:Schema(title = "执行次数(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var executeCount: Int = 1,
-    @ApiModelProperty("是否重试(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @get:Schema(title = "是否重试(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var canRetry: Boolean? = null,
-    @ApiModelProperty("是否跳过(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @get:Schema(title = "是否跳过(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var canSkip: Boolean? = null,
-    @ApiModelProperty("执行时间(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @get:Schema(title = "执行时间(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     @Deprecated("即将被timeCost代替")
     open var elapsed: Long? = null,
-    @ApiModelProperty("启动时间(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @get:Schema(title = "启动时间(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     @Deprecated("即将被timeCost代替")
     open var startEpoch: Long? = null,
-    @ApiModelProperty("插件原始版本(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @get:Schema(title = "插件原始版本(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var originVersion: String? = null,
-    @ApiModelProperty("插件版本", required = true)
+    @get:Schema(title = "插件版本", required = true)
     open var version: String = "1.*",
-    @ApiModelProperty("模板对比的时候是不是有变更(temporary field)", required = false)
+    @get:Schema(title = "模板对比的时候是不是有变更(temporary field)", required = false)
     open var templateModify: Boolean? = null, // 模板对比的时候是不是又变更
-    @ApiModelProperty("附加参数", required = false)
+    @get:Schema(title = "附加参数", required = false)
     open var additionalOptions: ElementAdditionalOptions? = null,
-    @ApiModelProperty("用户自定义ID，用于上下文键值设置", required = false)
+    @get:Schema(title = "用户自定义ID，用于上下文键值设置", required = false)
     open var stepId: String? = null, // 用于上下文键值设置
-    @ApiModelProperty("各项耗时", required = true)
+    @get:Schema(title = "各项耗时", required = true)
     open var timeCost: BuildRecordTimeCost? = null,
-    @ApiModelProperty("错误类型(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @get:Schema(title = "用户自定义环境变量（插件运行时写入环境）", required = false)
+    open var customEnv: List<NameAndValue>? = null,
+    @get:Schema(title = "错误类型(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorType: String? = null,
-    @ApiModelProperty("错误代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @get:Schema(title = "错误代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorCode: Int? = null,
-    @ApiModelProperty("错误信息(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @get:Schema(title = "错误信息(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorMsg: String? = null,
-    @ApiModelProperty("插件名称,构建结束后的快照名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @get:Schema(
+        title = "插件名称,构建结束后的快照名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）",
+        required = false
+    )
     open var atomName: String? = null,
-    @ApiModelProperty("所属插件分类代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @get:Schema(title = "所属插件分类代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var classifyCode: String? = null,
-    @ApiModelProperty("所属插件分类名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
-    open var classifyName: String? = null
-) {
+    @get:Schema(
+        title = "所属插件分类名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false
+    )
+    open var classifyName: String? = null,
+    @get:Schema(title = "任务运行进度", required = false)
+    open var progressRate: Double? = null,
+    override var template: String? = null,
+    override var ref: String? = null,
+    override var variables: Map<String, String>? = null,
+    var asyncStatus: String? = null
+) : IModelTemplate {
 
     open fun getAtomCode() = getClassType()
 
@@ -154,12 +165,10 @@ abstract class Element(
 
     open fun cleanUp() {}
 
-    open fun isElementEnable(): Boolean {
-        if (additionalOptions == null) {
-            return true
-        }
+    open fun transferYaml(defaultValue: JSONObject?): PreStep? = null
 
-        return additionalOptions!!.enable
+    open fun isElementEnable(): Boolean {
+        return additionalOptions?.enable ?: true
     }
 
     /**
@@ -197,11 +206,13 @@ abstract class Element(
         val postFlag = elementPostInfo != null
         // post插件的父插件如果跳过执行，则其自身也需要跳过执行
         val elementId = if (postFlag) elementPostInfo?.parentElementId else id
-        if (variables[SkipElementUtils.getSkipElementVariableName(elementId)] == "true") { // 参数中指明要求跳过
+        if (variables[ElementUtils.getSkipElementVariableName(elementId)] == "true") { // 参数中指明要求跳过
             if (additionalOptions == null) {
                 additionalOptions = ElementAdditionalOptions(runCondition = RunCondition.PRE_TASK_SUCCESS)
             }
             additionalOptions!!.enable = false
         }
     }
+
+    open fun initTaskVar(): MutableMap<String, Any> = mutableMapOf()
 }

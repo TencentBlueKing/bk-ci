@@ -27,15 +27,14 @@
 
 package com.tencent.devops.environment.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("DevCloud制作镜像参数")
+@Schema(title = "DevCloud制作镜像参数")
 data class DevCloudImageParam(
-    @ApiModelProperty("镜像名", required = true)
+    @get:Schema(title = "镜像名", required = true)
     val name: String,
-    @ApiModelProperty("镜像TAG", required = true)
+    @get:Schema(title = "镜像TAG", required = true)
     val tag: String,
-    @ApiModelProperty("描述", required = true)
+    @get:Schema(title = "描述", required = true)
     val description: String?
 )

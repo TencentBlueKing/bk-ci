@@ -3,6 +3,7 @@ import {
   ref,
   onMounted,
   watch,
+  computed,
   h,
 } from 'vue';
 import http from '@/http/api';
@@ -14,11 +15,12 @@ import {
   useRouter,
 } from 'vue-router';
 import useFilter from '@/composables/use-filter';
+import EmptyTableStatus from '@/components/empty-table-status.vue'
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
 const router = useRouter()
 
-const emit = defineEmits(['change']);
+const emit = defineEmits(['change', 'clear']);
 
 const {
   handleChange
@@ -30,6 +32,7 @@ const columns = [
   {
     label: t('Pipeline'),
     field: 'pipelineName',
+    showOverflowTooltip: true,
     render ({ cell, row }) {
       return h(
         'span',
@@ -83,38 +86,40 @@ const columns = [
   {
     label: t('Plugin'),
     field: 'atomName',
+    showOverflowTooltip: true,
   },
   {
     label: t('Start Time'),
     field: 'startTime',
+    showOverflowTooltip: true,
     sort: true,
   },
   {
     label: t('Username'),
     field: 'startUser',
+    showOverflowTooltip: true,
   },
   {
     label: t('Error Type'),
     field: 'errorTypeName',
+    showOverflowTooltip: true,
   },
   {
     label: t('Error Code'),
     field: 'errorCode',
+    showOverflowTooltip: true,
     sort: true,
   },
   {
     label: t('Error Message'),
     field: 'errorMsg',
+    showOverflowTooltip: true,
     sort: true,
     render ({ cell, row }) {
       return h(
         'span',
-        {
-          title: row.errorMsg, 
-        },
         [
-          cell,
-          row.errorMsg
+          cell
         ]
       );
     },
@@ -126,6 +131,31 @@ const pagination = ref({
   count: 0,
   limit: 10,
 });
+
+const emptyType = computed(() => {
+  return (
+    props.status.pipelineIds.length
+    ||  props.status.pipelineLabelIds.length
+    ||  props.status.errorTypes.length
+    ||  props.status.errorCodes.length
+    ||  props.status.startTime
+    ||  props.status.endTime
+  )
+    ? 'search-empty'
+    : 'empty'
+
+})
+
+const handleClear = () => {
+  emit('clear', {
+    pipelineIds: [],
+    pipelineLabelIds: [],
+    errorTypes: [],
+    errorCodes: [],
+    startTime: '',
+    endTime: '',
+  })
+}
 
 const handlePageChange = (current) => {
   pagination.value.current = current;
@@ -177,6 +207,9 @@ onMounted(getData);
       :pagination="pagination"
       @page-value-change="handlePageChange"
       @page-limit-change="handlePageLimitChange">
+      <template #empty>
+        <EmptyTableStatus :type="emptyType" @clear="handleClear" />
+      </template>
     </bk-table>
   </bk-loading>
 </template>

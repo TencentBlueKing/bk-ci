@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.pojo
 
+import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -40,31 +41,39 @@ data class BuildInfo(
     val pipelineId: String,
     val buildId: String,
     val version: Int,
+    val versionName: String?,
+    val yamlVersion: String?,
     val buildNum: Int,
     val trigger: String,
     var status: BuildStatus,
-    val queueTime: Long,
+    var queueTime: Long,
     val executeTime: Long,
-    val startUser: String, // 真正用来执行构建的人的身份（一般像Git触发，有可能]与触发人不一样，因为Git平台帐号不一定是人）
-    val triggerUser: String, // 真正的触发人（不一定是人，也可能是机器帐号，比如git平台帐号）
-    val startTime: Long?,
+    val startUser: String, // 真正用来执行构建的人的身份（一般像Git触发，有可能]与触发人不一样，因为Git平台账号不一定是人）
+    val triggerUser: String, // 真正的触发人（不一定是人，也可能是机器账号，比如git平台账号）
+    var startTime: Long?,
     var endTime: Long?,
     val taskCount: Int,
     val firstTaskId: String,
     val parentBuildId: String?,
     val parentTaskId: String?,
     val channelCode: ChannelCode,
-    val buildParameters: List<BuildParameters>?,
+    var buildParameters: List<BuildParameters>?,
     var errorInfoList: List<ErrorInfo>?,
     val stageStatus: List<BuildStageStatus>?,
+    val debug: Boolean,
     @Deprecated("后续只用executeCount做判断")
     val retryFlag: Boolean? = null,
     val executeCount: Int? = 1,
-    val concurrencyGroup: String? = null,
+    var concurrencyGroup: String? = null,
+    val webhookType: String?,
     val webhookInfo: WebhookInfo? = null,
     val buildMsg: String? = null,
     val material: List<PipelineBuildMaterial>? = null,
+    val artifactList: List<FileInfo>? = null,
     val remark: String? = null,
+    val recommendVersion: String?,
+    val buildNumAlias: String?,
+    val updateTime: Long? = null,
     val errorType: Int? = null,
     val errorCode: Int? = null,
     val errorMsg: String? = null
@@ -75,7 +84,7 @@ data class BuildInfo(
             endTime != null &&
             endTime!! > 0 &&
             startTime != null &&
-            endTime!! > startTime
+            endTime!! > startTime!!
         -> true
         else -> status.isFinish()
     }
@@ -85,7 +94,7 @@ data class BuildInfo(
             endTime != null &&
             endTime!! > 0 &&
             startTime != null &&
-            endTime!! > startTime
+            endTime!! > startTime!!
         -> true
         else -> status.isSuccess()
     }

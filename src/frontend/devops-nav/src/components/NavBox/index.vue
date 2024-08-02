@@ -10,55 +10,57 @@
                 <h4>
                     {{ service.title }}
                 </h4>
-                <li
-                    v-for="child in service.children"
-                    :key="child.id"
-                    class="menu-item"
-                    :disabled="child.status !== 'ok' && child.status !== 'new' && child.status !== 'hot'"
-                >
-                    <a
-                        :href="addConsole(child.link_new)"
-                        @click.prevent="gotoPage(child)"
+                <template v-for="child in service.children">
+                    <li
+                        v-if="child.status !== 'planning'"
+                        :key="child.id"
+                        class="menu-item"
+                        :disabled="child.status !== 'ok' && child.status !== 'new' && child.status !== 'hot'"
                     >
-                        <img class="service-url-icon" v-if="isAbsoluteUrl(child.logoUrl)" :src="child.logoUrl" />
-                        <i
-                            v-else-if="serviceIcon(child.logoUrl) === 'logo-bcs'"
-                            class="devops-icon service-icon icon-logo-bcs"
+                        <a
+                            :href="addConsole(child.link_new)"
+                            @click.prevent="gotoPage(child)"
                         >
-                            <span
-                                v-for="key in [1,2,3,4]"
-                                :key="key"
-                                :class="`path${key}`"
+                            <img class="service-url-icon" v-if="isAbsoluteUrl(child.logoUrl)" :src="child.logoUrl" />
+                            <i
+                                v-else-if="serviceIcon(child.logoUrl) === 'logo-bcs'"
+                                class="devops-icon service-icon icon-logo-bcs"
+                            >
+                                <span
+                                    v-for="key in [1,2,3,4]"
+                                    :key="key"
+                                    :class="`path${key}`"
+                                />
+                            </i>
+                            <icon
+                                v-else
+                                class="devops-icon service-icon"
+                                :size="20"
+                                :name="serviceIcon(child.logoUrl)"
                             />
-                        </i>
-                        <icon
-                            v-else
-                            class="devops-icon service-icon"
-                            :size="20"
-                            :name="serviceIcon(child.logoUrl)"
-                        />
-                        <span class="service-name">{{ serviceName(child.name) }}</span>
-                        <!-- <span class="service-id">{{ serviceId(child.name) }}</span> -->
-                        <span
-                            v-if="child.status === 'new'"
-                            class="new-service-icon"
-                        >new</span>
-                    </a>
-                    <template v-if="showCollectStar">
-                        <i
-                            v-if="child.collected"
-                            :title="$t('collected')"
-                            class="devops-icon collect-icon icon-star-shape"
-                            @click.stop="toggleCollect(child, false)"
-                        />
-                        <i
-                            v-else
-                            :title="$t('toCollect')"
-                            class="devops-icon collect-icon icon-star"
-                            @click.stop="toggleCollect(child, true)"
-                        />
-                    </template>
-                </li>
+                            <span class="service-name">{{ serviceName(child.name) }}</span>
+                            <!-- <span class="service-id">{{ serviceId(child.name) }}</span> -->
+                            <span
+                                v-if="child.status === 'new'"
+                                class="new-service-icon"
+                            >new</span>
+                        </a>
+                        <template v-if="showCollectStar">
+                            <i
+                                v-if="child.collected"
+                                :title="$t('collected')"
+                                class="devops-icon collect-icon icon-star-shape"
+                                @click.stop="toggleCollect(child, false)"
+                            />
+                            <i
+                                v-else
+                                :title="$t('toCollect')"
+                                class="devops-icon collect-icon icon-star"
+                                @click.stop="toggleCollect(child, true)"
+                            />
+                        </template>
+                    </li>
+                </template>
             </ul>
         </div>
     </div>
@@ -83,9 +85,6 @@
         @Prop()
         toggleCollect
 
-        @Prop()
-        getDocumentTitle
-
         @Prop({ default: 207 })
         columnWidth: string
 
@@ -94,9 +93,18 @@
 
         isAbsoluteUrl = isAbsoluteUrl
         
-       gotoPage ({ link_new: linkNew, newWindow = false, newWindowUrl = '' }) {
+       gotoPage ({ link_new: linkNew, name, status, newWindow = false, newWindowUrl = '' }) {
            const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
            const nAlias = getServiceAliasByPath(linkNew)
+           if (status === 'developing') {
+                this.$router.push({
+                    name: 'undeploy',
+                    params: {
+                        id: nAlias
+                    }
+                })
+                return
+            }
            const destUrl = this.addConsole(linkNew)
 
            if (cAlias === nAlias && this.currentPage && this.currentPage.inject_type === 'iframe') {
@@ -104,7 +112,6 @@
                return
            }
            (newWindow && newWindowUrl) ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
-           document.title = this.getDocumentTitle(linkNew)
        }
 
        addConsole (link: string): string {
@@ -223,7 +230,6 @@
                     }
 
                     &[disabled] {
-                        pointer-events: none;
                         color: $fontLigtherColor;
                         cursor: default;
 

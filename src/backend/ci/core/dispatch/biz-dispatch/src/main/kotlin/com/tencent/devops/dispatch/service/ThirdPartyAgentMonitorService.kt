@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.service
 
-import com.tencent.devops.common.api.constant.BK_BUILD_AGENT_DETAIL_LINK_ERROR
 import com.tencent.devops.common.api.constant.BUILD_RUNNING
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -36,6 +35,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.constants.BK_BUILD_AGENT_DETAIL_LINK_ERROR
 import com.tencent.devops.dispatch.constants.BK_DOCKER_BUILD_VOLUME
 import com.tencent.devops.dispatch.constants.BK_DOCKER_WAS_RECENTLY_BUILT
 import com.tencent.devops.dispatch.constants.BK_HEARTBEAT_TIME
@@ -46,7 +46,7 @@ import com.tencent.devops.dispatch.constants.BK_WAS_RECENTLY_BUILT
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.engine.common.VMUtils
 import java.util.Date
@@ -205,8 +205,10 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
             buildId = event.buildId,
             message = sb.toString(),
             tag = tag,
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = null,
+            stepId = event.stepId
         )
         sb.clear()
     }

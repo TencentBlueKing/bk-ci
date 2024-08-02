@@ -123,7 +123,7 @@ class P4Api(
     }
 
     fun getChangelistFiles(change: Int): List<P4FileSpec> {
-        return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
+        val changeFiles = P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
             p4Server.connectionRetry()
             p4Server.getChangelistFiles(change = change)
         }.map { iFileSpec ->
@@ -132,6 +132,8 @@ class P4Api(
                 depotPathString = iFileSpec.depotPathString
             )
         }
+        logger.info("get change list files size|$p4port|$username|${changeFiles.size}")
+        return changeFiles
     }
 
     fun getShelvedFiles(change: Int): List<P4FileSpec> {
@@ -282,6 +284,48 @@ class P4Api(
             p4Server.getServer().serverInfo.run {
                 P4ServerInfo(
                     caseSensitive = this.isCaseSensitive
+                )
+            }
+        }
+    }
+
+    /**
+     * 获取修改列表
+     */
+    fun getChangelist(
+        change: Int
+    ): P4ChangeList {
+        return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
+            p4Server.connectionRetry()
+            p4Server.getServer().getChangelist(change).run {
+                P4ChangeList(
+                    description = this.description,
+                    fileList = this.getFiles(true).map { iFileSpec ->
+                        P4FileSpec(
+                            opStatus = iFileSpec.opStatus.name,
+                            depotPathString = iFileSpec.depotPathString
+                        )
+                    }
+                )
+            }
+        }
+    }
+
+    fun getShelvedChangeList(
+        change: Int
+    ): P4ChangeList {
+        return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
+            p4Server.connectionRetry()
+            val description = p4Server.getServer().getChangelist(change).description
+            p4Server.getServer().getShelvedFiles(change).run {
+                P4ChangeList(
+                    description = description,
+                    fileList = this.map { iFileSpec ->
+                        P4FileSpec(
+                            opStatus = iFileSpec.opStatus.name,
+                            depotPathString = iFileSpec.depotPathString
+                        )
+                    }
                 )
             }
         }

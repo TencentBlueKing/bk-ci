@@ -37,8 +37,8 @@ package com.tencent.devops.environment.constant
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev）
- * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）remotedev
+ *    32: remotedev 35：misc-杂项）
+ * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
  * @since: 2023-3-20
@@ -71,7 +71,7 @@ object EnvironmentMessageCode {
     const val ERROR_ENV_DEPLOY_CAN_NOT_ADD_AGENT = "2105022" // 构建节点[{0}]不能添加到非构建环境
     const val ERROR_NODE_CHANGE_USER_NOT_SUPPORT = "2105023" // 节点类型【{0}】不支持修改导入人
     const val ERROR_NODE_IMPORT_EXCEED = "2105024" // 环境管理：导入节点数不能超过配额[{0}]
-    const val ERROR_NODE_IP_ILLEGAL_USER = "2105025" // 环境管理：非法 IP [{0}], 请确认是否是服务器的责任人
+    const val ERROR_NODE_IP_ILLEGAL_USER = "2105025" // 环境管理：非法 IP [{0}], 请确认当前用户[{1}]是否是服务器的主备负责人 - 测试机导入｜重新导入
     const val ERROR_QUOTA_LIMIT = "2105026" // 环境管理：配额不足，总量{0}, 已使用: {1}
     const val ERROR_VM_CAN_NOT_DESTROY = "2105027" // 环境管理：虚拟机状态为:{0}, 不允许销毁！请稍后操作！
     const val ERROR_VM_CAN_NOT_IMAGED = "2105028" // 环境管理：虚拟机状态为:{0}, 无法制作镜像!
@@ -91,7 +91,18 @@ object EnvironmentMessageCode {
     const val ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV = "2105042" // 无权限使用第三方构建机环境
     const val ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST = "2105043" // 第三方构建机环境节点不存在
     const val ERROR_PIPE_NOT_FOUND = "2105044" // 环境管理：不存在该管道信息
-    const val ERROR_NODE_NO_USE_PERMISSSION = "2105045" // 环境管理：没有节点使用权限
+    const val ERROR_NODE_NO_USE_PERMISSSION = "2105045" // 环境管理：节点[{0}]没有使用权限
+    // "2105046" 环境管理: 不在CMDB中的IP [{0}]; 无权限的IP [{1}], 请确认当前用户[{2}]或节点导入人[{3}]是否为这些节点的主备负责人 - 脚本执行｜文件分发
+    const val ERROR_NODE_IP_ILLEGAL = "2105046"
+    const val ERROR_CMDB_INTERFACE_TIME_OUT = "2105047" // 环境管理: CMDB接口请求超时，请重试
+    const val ERROR_CMDB_RESPONSE = "2105048" // 环境管理: CMDB接口请求异常，请重试
+    const val ERROR_SCRIPT_EXECUTE_HOST_EMPTY = "2105049" // 环境管理: 脚本执行: 主机为空
+    const val ERROR_DISTRIBUTE_FILE_EXECUTE_TARGET_HOST_EMPTY = "2105050" // 环境管理: 文件分发: 执行目标主机为空
+    const val ERROR_DISTRIBUTE_FILE_FILE_SOURCE_HOST_EMPTY = "2105051" // 环境管理: 文件分发: 文件源主机为空
+    const val ERROR_ENV_LIST_NODE_NOT_IN_CC_OR_CMDB = "2105052" // 环境管理: 环境中的[{0}]不在CC/CMDB中
+    const val ERROR_NODE_LIST_NODE_NOT_IN_CC_OR_CMDB = "2105053" // 环境管理: 节点中的[{0}]不在CC/CMDB中
+    const val ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT = "2105054" // 环境管理: 请求的job实例不属于当前项目或已过期(超过一个月)
+    const val ERROR_FAIL_TO_CREATE_AGENT_INSTALL_TASK = "2105055" // 环境管理: 创建Agent安装任务失败：{0}
 
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器

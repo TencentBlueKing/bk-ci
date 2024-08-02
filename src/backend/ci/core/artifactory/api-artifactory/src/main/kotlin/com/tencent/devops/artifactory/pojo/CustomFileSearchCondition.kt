@@ -27,13 +27,12 @@
 
 package com.tencent.devops.artifactory.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("自定义仓库查询条件")
+@Schema(title = "自定义仓库查询条件")
 data class CustomFileSearchCondition(
-    @ApiModelProperty("通配符", required = false)
+    @get:Schema(title = "通配符", required = false)
     val glob: String?,
-    @ApiModelProperty("元数据", required = true)
+    @get:Schema(title = "元数据", required = true)
     val properties: Map<String, String>
 )

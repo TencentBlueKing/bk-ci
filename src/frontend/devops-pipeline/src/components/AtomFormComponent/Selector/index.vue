@@ -79,7 +79,6 @@
             }
         },
         created () {
-            console.log(this.hasUrl, 'this.hasUrl')
             if (this.hasUrl) {
                 this.freshList()
             }

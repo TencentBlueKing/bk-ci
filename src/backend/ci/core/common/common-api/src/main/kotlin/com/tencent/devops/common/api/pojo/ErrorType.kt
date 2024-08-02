@@ -29,6 +29,7 @@ package com.tencent.devops.common.api.pojo
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+import com.tencent.devops.common.api.util.MessageUtil
 
 enum class ErrorType(
     @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "errorType", reusePrefixFlag = false)
@@ -59,5 +60,12 @@ enum class ErrorType(
                 else -> PLUGIN
             }
         }
+    }
+
+    fun getI18n(language: String): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = "errorType.${this.typeName}",
+            language = language
+        )
     }
 }

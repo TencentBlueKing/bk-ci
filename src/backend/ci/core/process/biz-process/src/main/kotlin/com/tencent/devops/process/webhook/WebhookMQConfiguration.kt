@@ -337,6 +337,50 @@ class WebhookMQConfiguration @Autowired constructor() {
         )
     }
 
+    // replay 消息队列配置
+    @Bean
+    fun replayEventExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_REPLAY_BUILD_REQUEST_EVENT, true, false)
+        directExchange.isDelayed = true
+        return directExchange
+    }
+
+    @Bean
+    fun replayEventQueue(): Queue {
+        return Queue(MQ.QUEUE_REPLAY_BUILD_REQUEST_EVENT, true)
+    }
+
+    @Bean
+    fun replayEventBind(
+        @Autowired replayEventQueue: Queue,
+        @Autowired replayEventExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(replayEventQueue).to(replayEventExchange).with(MQ.ROUTE_REPLAY_BUILD_REQUEST_EVENT)
+    }
+
+    @Bean
+    fun replayEventListener(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired replayEventQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired webhookEventListener: WebhookEventListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        logger.info("Start webhook replay event listener")
+        val adapter = MessageListenerAdapter(webhookEventListener, WebhookEventListener::handleReplayEvent.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = replayEventQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 1,
+            consecutiveActiveTrigger = 1,
+            concurrency = 10,
+            maxConcurrency = 20
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(WebhookMQConfiguration::class.java)
     }

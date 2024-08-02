@@ -63,3 +63,11 @@ const val BK_NO_AGENT_AVAILABLE = "bkNoAgentAvailable" // 没有可用Agent，�
 const val BK_ENV_BUSY = "bkEnvBusy" // 构建环境并发保护，稍后重试...
 const val BK_QUEUE_TIMEOUT_MINUTES = "bkQueueTimeoutMinutes" //  构建环境无可分配构建机，等待超时（queue-timeout-minutes={0}）
 const val BK_AGENT_IS_BUSY = "bkAgentIsBusy" // 构建机繁忙，继续重试(Agent is busy)
+const val BK_BUILD_AGENT_DETAIL_LINK_ERROR = "bkBuildAgentDetailLinkError" // 构建机Agent详情链接
+const val BK_ENV_WORKER_ERROR_IGNORE = "bkEnvWorkerErrorIgnore" // 构建机环境中{0}节点启动构建进程失败，自动切换其他节点重试
+const val AGENT_REUSE_MUTEX_REDISPATCH = "agentReuseMuteXRedispatch" // 构建机复用互斥，节点 {0} 已被 {1} 构建使用，重新调度
+// 构建机复用互斥，等待被依赖的节点 {0} 调度到具体节点后再进行复用调度
+const val AGENT_REUSE_MUTEX_WAIT_REUSED_ENV = "agentReuseMuteXWaitReusedEnv"
+const val BK_ENV_NODE_DISABLE = "bkEnvNodeDisable"
+const val BK_THIRD_JOB_ENV_CURR = "bkThirdJobEnvCurr" // 当前环境下所有构建机并发{0}已经超过配置的{1},排队{2}分钟
+const val BK_THIRD_JOB_NODE_CURR = "bkThirdJobNodeCurr" // 当前环境下所有节点运行任务都超过了配置的{0},排队{1}分钟

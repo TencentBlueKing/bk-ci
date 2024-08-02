@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service.record
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -44,8 +45,8 @@ import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateContainerTimeCost
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateMatrixTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
@@ -68,9 +69,9 @@ class ContainerBuildRecordService(
     private val recordTaskDao: BuildRecordTaskDao,
     private val containerBuildDetailService: ContainerBuildDetailService,
     recordModelService: PipelineRecordModelService,
-    pipelineResDao: PipelineResDao,
+    pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
-    pipelineResVersionDao: PipelineResVersionDao,
+    pipelineResourceVersionDao: PipelineResourceVersionDao,
     pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
@@ -83,9 +84,9 @@ class ContainerBuildRecordService(
     pipelineEventDispatcher = pipelineEventDispatcher,
     redisOperation = redisOperation,
     recordModelService = recordModelService,
-    pipelineResDao = pipelineResDao,
+    pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResVersionDao = pipelineResVersionDao,
+    pipelineResourceVersionDao = pipelineResourceVersionDao,
     pipelineElementService = pipelineElementService
 ) {
 
@@ -203,7 +204,7 @@ class ContainerBuildRecordService(
         )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "updateContainerStatus#$containerId"
+            cancelUser = null, operation = "$operation#$containerId"
         ) {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -217,9 +218,7 @@ class ContainerBuildRecordService(
                     return@transaction
                 }
                 val containerVar = mutableMapOf<String, Any>()
-                containerVar.putAll(recordContainer.containerVar)
-
-                val containerName = containerVar[Container::name.name]?.toString() ?: ""
+                val containerName = recordContainer.containerVar[Container::name.name]?.toString() ?: ""
                 var startTime: LocalDateTime? = null
                 var endTime: LocalDateTime? = null
                 // 存在互斥组的先将名字修改
@@ -227,11 +226,16 @@ class ContainerBuildRecordService(
                     if (recordContainer.startTime == null) {
                         startTime = LocalDateTime.now()
                     }
-                    when (recordContainer.containerType) {
-                        VMBuildContainer.classType -> containerVar[VMBuildContainer::mutexGroup.name]
-                        NormalContainer.classType -> containerVar[NormalContainer::mutexGroup.name]
+                    val mutexGroup = when (recordContainer.containerType) {
+                        VMBuildContainer.classType -> containerVar[VMBuildContainer::mutexGroup.name]?.let {
+                            it as MutexGroup
+                        }
+                        NormalContainer.classType -> containerVar[NormalContainer::mutexGroup.name]?.let {
+                            it as MutexGroup
+                        }
                         else -> null
-                    }?.let {
+                    }
+                    if (mutexGroup?.enable == true) {
                         containerVar[Container::name.name] = ContainerUtils.getMutexWaitName(containerName)
                     }
                 } else {
@@ -244,9 +248,6 @@ class ContainerBuildRecordService(
                 if (buildStatus.isFinish()) {
                     if (recordContainer.endTime == null) {
                         endTime = LocalDateTime.now()
-                    }
-                    if (!BuildStatus.parse(containerVar[Container::startVMStatus.name]?.toString()).isFinish()) {
-                        containerVar[Container::startVMStatus.name] = buildStatus.name
                     }
                     newTimestamps[BuildTimestampType.JOB_CONTAINER_SHUTDOWN] = BuildRecordTimeStamp(
                         null, LocalDateTime.now().timestampmilli()
@@ -274,8 +275,8 @@ class ContainerBuildRecordService(
                 recordContainerDao.updateRecord(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, containerId = containerId, executeCount = executeCount,
-                    containerVar = containerVar.plus(containerVar), buildStatus = buildStatus,
-                    startTime = startTime, endTime = endTime,
+                    containerVar = recordContainer.containerVar.plus(containerVar), buildStatus = buildStatus,
+                    startTime = recordContainer.startTime ?: startTime, endTime = endTime,
                     timestamps = mergeTimestamps(newTimestamps, recordContainer.timestamps)
                 )
             }
@@ -363,10 +364,11 @@ class ContainerBuildRecordService(
             containerId = containerId,
             vmInfo = vmInfo
         )
+        logger.info("ENGINE|$buildId|saveBuildVmInfo|containerId=$containerId|$vmInfo")
         if (executeCount == null) return
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "containerSkip#$containerId"
+            cancelUser = null, operation = "saveBuildVmInfo($projectId,$pipelineId)"
         ) {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -380,16 +382,15 @@ class ContainerBuildRecordService(
                     return@transaction
                 }
                 val containerVar = mutableMapOf<String, Any>()
-                containerVar.putAll(recordContainer.containerVar)
                 if (recordContainer.containerType == VMBuildContainer.classType &&
-                    containerVar[VMBuildContainer::showBuildResource.name] == true
+                    recordContainer.containerVar[VMBuildContainer::showBuildResource.name] == true
                 ) {
                     containerVar[VMBuildContainer::name.name] = vmInfo.name
                 }
                 recordContainerDao.updateRecord(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, containerId = containerId, executeCount = executeCount,
-                    containerVar = containerVar.plus(containerVar), buildStatus = null,
+                    containerVar = recordContainer.containerVar.plus(containerVar), buildStatus = null,
                     startTime = null, endTime = null, timestamps = null
                 )
             }
@@ -413,7 +414,7 @@ class ContainerBuildRecordService(
                 buildId = buildId, containerId = containerId, executeCount = executeCount
             ) ?: run {
                 logger.warn(
-                    "ENGINE|$buildId|updateContainerByMap| get container($containerId) record failed."
+                    "ENGINE|$buildId|updateContainerRecord| get container($containerId) record failed."
                 )
                 return@transaction
             }
@@ -436,11 +437,33 @@ class ContainerBuildRecordService(
             recordContainerDao.updateRecord(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, containerId = containerId, executeCount = executeCount,
-                containerVar = recordContainer.containerVar.plus(containerVar),
-                startTime = startTime, endTime = endTime, buildStatus = buildStatus,
+                containerVar = recordContainer.containerVar.plus(containerVar), buildStatus = buildStatus,
+                startTime = recordContainer.startTime ?: startTime, endTime = endTime,
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordContainer.timestamps) }
             )
         }
+    }
+
+    /**
+     * 获取job在stage中的执行順序
+     * */
+    fun getContainerOrderInStage(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        stageId: String,
+        containerId: String
+    ): Int {
+        val containerIdList = recordContainerDao.getLatestNormalRecords(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            executeCount = executeCount
+        ).map { it.containerId }
+        return containerIdList.indexOf(containerId)
     }
 
     companion object {

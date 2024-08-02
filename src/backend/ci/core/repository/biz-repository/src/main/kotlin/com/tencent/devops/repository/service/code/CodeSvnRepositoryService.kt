@@ -31,8 +31,10 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
 import com.tencent.devops.repository.constant.RepositoryMessageCode.SVN_INVALID
 import com.tencent.devops.repository.dao.RepositoryCodeSvnDao
@@ -41,12 +43,13 @@ import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.CodeSvnRepository.Companion.SVN_TYPE_HTTP
 import com.tencent.devops.repository.pojo.CodeSvnRepository.Companion.SVN_TYPE_SSH
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -80,7 +83,8 @@ class CodeSvnRepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.CODE_SVN
+                type = ScmType.CODE_SVN,
+                enablePac = repository.enablePac
             )
             // 如果repository为null，则默认为TC
             repositoryCodeSvnDao.create(
@@ -107,6 +111,16 @@ class CodeSvnRepositoryService @Autowired constructor(
         if (!StringUtils.equals(record.type, ScmType.CODE_SVN.name)) {
             throw OperationException(I18nUtil.getCodeLanMessage(SVN_INVALID))
         }
+        // 不得切换代码库
+        if (diffRepoUrl(record, repository)) {
+            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         checkCredentialInfo(projectId = projectId, repository = repository)
         dslContext.transaction { configuration ->
@@ -115,7 +129,8 @@ class CodeSvnRepositoryService @Autowired constructor(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
                 aliasName = repository.aliasName,
-                url = repository.getFormatURL()
+                url = repository.getFormatURL(),
+                updateUser = userId
             )
             repositoryCodeSvnDao.edit(
                 dslContext = transactionContext,
@@ -144,7 +159,9 @@ class CodeSvnRepositoryService @Autowired constructor(
             userName = record.userName,
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
-            svnType = record.svnType
+            svnType = record.svnType,
+            enablePac = repository.enablePac,
+            yamlSyncStatus = repository.yamlSyncStatus
         )
     }
 
@@ -152,6 +169,7 @@ class CodeSvnRepositoryService @Autowired constructor(
         repoCredentialInfo: RepoCredentialInfo,
         repository: CodeSvnRepository
     ): TokenCheckResult {
+        val projectName = SvnUtils.getSvnProjectName(repository.getFormatURL())
         return when (repository.svnType) {
             SVN_TYPE_HTTP -> {
                 var username = repoCredentialInfo.username
@@ -170,25 +188,25 @@ class CodeSvnRepositoryService @Autowired constructor(
                         message = I18nUtil.getCodeLanMessage(CommonMessageCode.PWD_EMPTY)
                     )
                 }
-                scmService.checkPrivateKeyAndToken(
-                    projectName = repository.projectName,
+                scmService.checkUsernameAndPassword(
+                    projectName = projectName,
                     url = repository.getFormatURL(),
                     type = ScmType.CODE_SVN,
-                    privateKey = repoCredentialInfo.password,
-                    passPhrase = repoCredentialInfo.passPhrase,
-                    token = null,
+                    username = username,
+                    password = repoCredentialInfo.password,
+                    token = repoCredentialInfo.token,
                     region = repository.region,
-                    userName = username
+                    repoUsername = repository.userName
                 )
             }
             SVN_TYPE_SSH -> {
                 scmService.checkPrivateKeyAndToken(
-                    projectName = repository.projectName,
+                    projectName = projectName,
                     url = repository.getFormatURL(),
                     type = ScmType.CODE_SVN,
                     privateKey = repoCredentialInfo.privateKey,
                     passPhrase = repoCredentialInfo.passPhrase,
-                    token = "",
+                    token = repoCredentialInfo.token,
                     region = repository.region,
                     userName = repository.userName
                 )
@@ -222,12 +240,12 @@ class CodeSvnRepositoryService @Autowired constructor(
         return repoCredentialInfo
     }
 
-    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
+    override fun getRepoDetailMap(repositoryIds: List<Long>): Map<Long, RepositoryDetailInfo> {
         return repositoryCodeSvnDao.list(
             dslContext = dslContext,
             repositoryIds = repositoryIds.toSet()
         ).associateBy({ it.repositoryId }, {
-            RepoAuthInfo(
+            RepositoryDetailInfo(
                 authType = it.svnType?.toUpperCase() ?: RepoAuthType.SSH.name,
                 credentialId = it.credentialId,
                 svnType = it.svnType
@@ -245,6 +263,42 @@ class CodeSvnRepositoryService @Autowired constructor(
             repository = repository
         )
     }
+
+    fun diffRepoUrl(
+        sourceRepo: TRepositoryRecord,
+        targetRepo: CodeSvnRepository
+    ): Boolean {
+        val sourceRepoUrl = sourceRepo.url
+        val targetRepoUrl = targetRepo.url
+        val sourceProjectName = SvnUtils.getSvnProjectName(sourceRepoUrl)
+        val targetProjectName = SvnUtils.getSvnProjectName(targetRepoUrl)
+        val targetSubPath = targetRepoUrl.substring(
+            targetRepoUrl.indexOf(targetRepoUrl) +
+                    targetRepoUrl.length
+        )
+        val sourceSubPath = targetRepoUrl.substring(
+            targetRepoUrl.indexOf(targetRepoUrl) +
+                    targetRepoUrl.length
+        )
+        return sourceProjectName != targetProjectName || targetSubPath != sourceSubPath
+    }
+
+    override fun getPacProjectId(userId: String, repoUrl: String): String? = null
+
+    override fun pacCheckEnabled(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord,
+        retry: Boolean
+    ) = Unit
+
+    override fun getGitFileTree(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord
+    ) = emptyList<GitFileInfo>()
+
+    override fun getPacRepository(externalId: String): TRepositoryRecord? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeSvnRepositoryService::class.java)

@@ -1,7 +1,10 @@
 #!/bin/bash
+JAVA_TOOL_OPTIONS_TMP=$JAVA_TOOL_OPTIONS
 echo "source env files..."
 source service.env
-MEM_OPTS="-XX:+UseContainerSupport -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0 -XX:MetaspaceSize=500m -XX:MaxMetaspaceSize=500m -XX:-UseAdaptiveSizePolicy"
+export JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS $JAVA_TOOL_OPTIONS_TMP"
+
+MEM_OPTS="-XX:+UseContainerSupport -Xss512k -XX:MaxMetaspaceSize=500m -XX:CompressedClassSpaceSize=100m -XX:ReservedCodeCacheSize=400m -XX:-UseAdaptiveSizePolicy -XX:MaxGCPauseMillis=100"
 GC_LOG="-Xloggc:/data/workspace/$MS_NAME/jvm/gc-%t.log -XX:+PrintTenuringDistribution -XX:+PrintGCDetails -XX:+PrintGCDateStamps"
 API_PORT=80
 
@@ -29,7 +32,7 @@ java_argv+=(
   "-Dspring.main.allow-bean-definition-overriding=true"
   "-Dspring.main.allow-circular-references=true"
   "-Dservice-suffix="
-  "-Dspring.profiles.active=local,dev"
+  "-Dspring.profiles.active=prod,kubernetes"
   "-Dspring.application.name=$MS_NAME"
   "-Dspring.main.allow-circular-references=true"
   "-Dspring.cloud.kubernetes.config.includeProfileSpecificSources=false"

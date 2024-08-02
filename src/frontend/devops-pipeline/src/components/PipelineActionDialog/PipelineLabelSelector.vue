@@ -1,5 +1,5 @@
 <template>
-    <ul class="pipeline-label-selector" v-bkloading="{ isLoading }">
+    <ul class="pipeline-label-selector" ref="labelSelectorParent" v-bkloading="{ isLoading }">
         <template v-if="tagSelectModelList.length > 0">
             <li
                 v-for="item in tagSelectModelList"
@@ -7,9 +7,13 @@
             >
                 <label class="pipeline-selector-label"> {{item.name}} </label>
                 <bk-select
+                    :disabled="!editable"
                     class="sub-label-select"
-                    :value="labelIdMap[item.id]"
+                    :value="labelMap[item.id]"
                     @change="item.handleChange"
+                    :popover-options="{
+                        appendTo: $refs.labelSelectorParent
+                    }"
                     multiple
                 >
                     <bk-option
@@ -34,14 +38,19 @@
         emits: ['input', 'change'],
         props: {
             value: {
-                type: Object,
-                default: () => ({})
+                type: Array,
+                default: () => []
+            },
+            editable: {
+                type: Boolean,
+                default: true
             }
         },
         data () {
             return {
                 isLoading: false,
-                labelIdMap: this.value
+                labelMap: {},
+                labelSet: new Set(this.value)
             }
         },
         computed: {
@@ -58,6 +67,7 @@
         watch: {
             value (newVal) {
                 this.updateValue(newVal)
+                this.labelSet = new Set(newVal)
             }
         },
         created () {
@@ -70,22 +80,38 @@
             async init () {
                 this.isLoading = true
                 await this.requestTagList(this.$route.params)
-                this.updateValue()
+                this.updateValue(this.value)
+                this.emitChange(Array.from(this.labelSet), this.labelMap)
                 this.isLoading = false
             },
-            updateValue (val = {}) {
-                this.labelIdMap = this.tagGroupList.reduce((acc, tag) => {
-                    acc[tag.id] = val[tag.id] ?? []
+            updateValue (val = []) {
+                const labelIdMap = this.tagGroupList.map(tag => tag.labels).flat().reduce((acc, label) => {
+                    acc[label.id] = label
+                    return acc
+                }, {})
+                this.labelMap = this.tagGroupList.reduce((acc, tag) => {
+                    acc[tag.id] = val.filter(id => labelIdMap[id]?.groupId === tag.id)
                     return acc
                 }, {})
             },
             handleChange (groupId, labelIds) {
-                this.labelIdMap[groupId] = labelIds
-                this.emitChange(this.labelIdMap)
+                if (labelIds.length === 0) {
+                    this.labelMap[groupId].forEach(id => {
+                        this.labelSet.delete(id)
+                    })
+                } else {
+                    this.labelSet = new Set([
+                        ...this.labelSet,
+                        ...labelIds
+                    ])
+                }
+                this.labelMap[groupId] = labelIds
+
+                this.emitChange(Array.from(this.labelSet), this.labelMap)
             },
-            emitChange (labelIdMap) {
-                this.$emit('change', labelIdMap)
-                this.$emit('input', labelIdMap)
+            emitChange (value, labelMap) {
+                this.$emit('change', value, labelMap)
+                this.$emit('input', value, labelMap)
             }
         }
     }
@@ -98,14 +124,16 @@
         border-radius: 2px;
         border: 1px solid #DCDEE5;
         padding: 16px;
+        display: grid;
+        grid-gap: 16px;
         > li {
+            width: 100%;
             display: flex;
-            &:not(:last-child) {
-                padding-bottom: 16px;
-            }
+            overflow: hidden;
             .pipeline-selector-label {
                 width: 80px;
                 text-align: right;
+                font-size: 12px;
                 @include ellipsis();
                 margin-right: 22px;
             }

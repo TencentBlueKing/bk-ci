@@ -27,24 +27,31 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
 import com.tencent.devops.common.event.pojo.measure.BuildEndTaskMetricsData
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.metrics.dao.DispatchJobMetricsDao
 import com.tencent.devops.metrics.dao.MetricsDataQueryDao
 import com.tencent.devops.metrics.dao.MetricsDataReportDao
+import com.tencent.devops.metrics.dao.ProjectInfoDao
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailDetailDataPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomIndexStatisticsDailyPO
+import com.tencent.devops.metrics.pojo.po.SaveAtomMonitorDailyPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SaveErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineFailDetailDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineStageOverviewDataPO
+import com.tencent.devops.metrics.pojo.po.SaveProjectAtomRelationDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomIndexStatisticsDailyPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomOverviewDataPO
@@ -53,6 +60,7 @@ import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.service.MetricsDataClearService
 import com.tencent.devops.metrics.service.MetricsDataReportService
+import com.tencent.devops.metrics.service.ProjectBuildSummaryService
 import com.tencent.devops.metrics.utils.ErrorCodeInfoCacheUtil
 import com.tencent.devops.model.metrics.tables.records.TAtomFailSummaryDataRecord
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
@@ -64,6 +72,7 @@ import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import kotlin.math.roundToLong
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.exception.TooManyRowsException
@@ -71,7 +80,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import kotlin.math.roundToLong
 
 @Service
 @Suppress("ComplexMethod", "NestedBlockDepth", "LongMethod", "LongParameterList")
@@ -79,9 +87,12 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val metricsDataQueryDao: MetricsDataQueryDao,
     private val metricsDataReportDao: MetricsDataReportDao,
+    private val projectInfoDao: ProjectInfoDao,
+    private val dispatchJobMetricsDao: DispatchJobMetricsDao,
     private val metricsDataClearService: MetricsDataClearService,
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val projectBuildSummaryService: ProjectBuildSummaryService
 ) : MetricsDataReportService {
 
     companion object {
@@ -105,6 +116,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             val savePipelineStageOverviewDataPOs = mutableListOf<SavePipelineStageOverviewDataPO>()
             val updatePipelineStageOverviewDataPOs = mutableListOf<UpdatePipelineStageOverviewDataPO>()
             val saveAtomOverviewDataPOs = mutableListOf<SaveAtomOverviewDataPO>()
+            val saveProjectAtomRelationPOs = mutableListOf<SaveProjectAtomRelationDataPO>()
             val updateAtomOverviewDataPOs = mutableListOf<UpdateAtomOverviewDataPO>()
             val saveAtomFailSummaryDataPOs = mutableListOf<SaveAtomFailSummaryDataPO>()
             val updateAtomFailSummaryDataPOs = mutableListOf<UpdateAtomFailSummaryDataPO>()
@@ -134,7 +146,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                             atomOverviewDataRecords = atomOverviewDataRecords,
                             updateAtomOverviewDataPOs = updateAtomOverviewDataPOs,
                             currentTime = currentTime,
-                            saveAtomOverviewDataPOs = saveAtomOverviewDataPOs
+                            saveAtomOverviewDataPOs = saveAtomOverviewDataPOs,
+                            saveProjectAtomRelationPOs = saveProjectAtomRelationPOs
                         )
                         atomFailSummaryDataReport(
                             buildEndPipelineMetricsData = buildEndPipelineMetricsData,
@@ -178,6 +191,9 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 if (updateAtomOverviewDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)
                 }
+                if (saveProjectAtomRelationPOs.isNotEmpty()) {
+                    projectInfoDao.batchSaveProjectAtomInfo(dslContext, saveProjectAtomRelationPOs)
+                }
                 if (saveAtomFailSummaryDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchSaveAtomFailSummaryData(context, saveAtomFailSummaryDataPOs)
                 }
@@ -193,10 +209,35 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     }
                 }
             }
+            if (buildEndPipelineMetricsData.channelCode == ChannelCode.BS.name) {
+                projectBuildSummaryService.saveProjectBuildCount(
+                    projectId = projectId,
+                    trigger = buildEndPipelineMetricsData.trigger
+                )
+            }
             logger.info("[$projectId|$pipelineId|$buildId]|end metricsDataReport")
         } finally {
             lock.unlock()
         }
+
+        return true
+    }
+
+    override fun saveDispatchJobMetrics(dispatchJobMetricsDataList: List<DispatchJobMetricsData>): Boolean {
+        // 批量插入时获取批量的自增ID
+        val idList = client.get(ServiceAllocIdResource::class)
+            .batchGenerateSegmentId("T_DISPATCH_JOB_DAILY_METRICS", (dispatchJobMetricsDataList.size))
+            .data?.toMutableList()
+        if (idList == null || idList.size != dispatchJobMetricsDataList.size) {
+            logger.error("SaveDispatchJobMetrics fail to get idList. " +
+                    "${idList?.size ?: 0}|${dispatchJobMetricsDataList.size}")
+            return false
+        }
+
+        val newDispatchJobMetricsDataList = dispatchJobMetricsDataList.map {
+            it.copy(id = idList.removeAt(0) ?: 0)
+        }
+        dispatchJobMetricsDao.batchSaveDispatchJobMetrics(dslContext, newDispatchJobMetricsDataList)
         return true
     }
 
@@ -361,7 +402,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         atomOverviewDataRecords: Result<TAtomOverviewDataRecord>?,
         updateAtomOverviewDataPOs: MutableList<UpdateAtomOverviewDataPO>,
         currentTime: LocalDateTime,
-        saveAtomOverviewDataPOs: MutableList<SaveAtomOverviewDataPO>
+        saveAtomOverviewDataPOs: MutableList<SaveAtomOverviewDataPO>,
+        saveProjectAtomRelationPOs: MutableList<SaveProjectAtomRelationDataPO>
     ) {
         val projectId = buildEndPipelineMetricsData.projectId
         val pipelineId = buildEndPipelineMetricsData.pipelineId
@@ -481,6 +523,43 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             )
         }
 
+        if (projectInfoDao.projectAtomRelationCountByAtomCode(
+                dslContext = dslContext,
+                projectId = projectId,
+                atomCode = atomCode,
+                atomName = taskMetricsData.atomCode
+            ) <= 0
+        ) {
+            saveProjectAtomRelationPOs.add(
+                SaveProjectAtomRelationDataPO(
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("METRICS_PROJECT_ATOM_RELEVANCY_INFO").data ?: 0,
+                    projectId = projectId,
+                    atomCode = atomCode,
+                    atomName = taskMetricsData.atomName,
+                    creator = SYSTEM,
+                    modifier = SYSTEM
+                )
+            )
+        }
+        metricsDataReportDao.saveAtomMonitorDailyData(
+            dslContext = dslContext,
+            saveAtomMonitorDailyPO = SaveAtomMonitorDailyPO(
+                id = client.get(ServiceAllocIdResource::class)
+                    .generateSegmentId("ATOM_MONITOR_DATA_DAILY").data ?: 0,
+                atomCode = taskMetricsData.atomCode,
+                executeCount = 1,
+                errorType = taskMetricsData.errorType ?: -1,
+                statisticsTime = DateTimeUtil.stringToLocalDateTime(
+                    dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
+                    formatStr = YYYY_MM_DD
+                ),
+                creator = startUser,
+                modifier = startUser,
+                createTime = currentTime,
+                updateTime = currentTime
+            )
+        )
         if (taskSuccessFlag) return
         val lock = RedisLock(redisOperation, metricsDataReportKey(atomCode), 40)
         try {
@@ -851,7 +930,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             val currentTotalAvgCostTime = currentTotalCostTime.toDouble().div(currentTotalExecuteCount).roundToLong()
             val currentSuccessAvgCostTime = if (buildSuccessFlag) {
                 val currentSuccessCostTime = originSuccessAvgCostTime * originSuccessExecuteCount +
-                    pipelineBuildCostTime
+                        pipelineBuildCostTime
                 currentSuccessCostTime.toDouble().div(currentSuccessExecuteCount).roundToLong()
             } else {
                 originSuccessAvgCostTime
@@ -918,12 +997,15 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             errorCodePrefix.startsWith("8") -> {
                 ErrorCodeTypeEnum.ATOM
             }
+
             errorCodePrefix.startsWith("100") -> {
                 ErrorCodeTypeEnum.GENERAL
             }
+
             errorCodePrefix.toInt() in 101..599 -> {
                 ErrorCodeTypeEnum.PLATFORM
             }
+
             else -> return false
         }
         return client.get(ServiceStoreResource::class).isComplianceErrorCode(

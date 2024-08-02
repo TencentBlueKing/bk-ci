@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
@@ -71,6 +72,17 @@ object PipelineUtils {
                     )
                 )
             }
+            if (param.constant == true) {
+                if (param.defaultValue.toString().isBlank()) throw OperationException(
+                    message = I18nUtil.getCodeLanMessage(
+                        ProcessMessageCode.ERROR_PIPELINE_CONSTANTS_BLANK_ERROR,
+                        params = arrayOf(param.id)
+                    )
+                )
+                // 常量一定不作为入参，且只读不可覆盖
+                param.required = false
+                param.readOnly = true
+            }
             map[param.id] = param
         }
         return map
@@ -102,6 +114,15 @@ object PipelineUtils {
                 else -> {
                     checkVariablesLength(param.key, param.value.toString())
                 }
+            }
+        }
+    }
+
+    fun transformUserIllegalReviewParams(reviewParams: List<ManualReviewParam>?) {
+        reviewParams?.forEach { param ->
+            val value = param.value
+            if (param.valueType == ManualReviewParamType.MULTIPLE && value is String && value.isBlank()) {
+                param.value = null
             }
         }
     }
@@ -165,7 +186,7 @@ object PipelineUtils {
         val triggerContainer = TriggerContainer(
             name = templateTrigger.name,
             elements = templateTrigger.elements,
-            params = instanceParam,
+            params = cleanOptions(instanceParam),
             buildNo = buildNo,
             containerId = templateTrigger.containerId,
             containerHashId = templateTrigger.containerHashId
@@ -178,5 +199,30 @@ object PipelineUtils {
             labels = labels ?: templateModel.labels,
             instanceFromTemplate = instanceFromTemplate
         )
+    }
+
+    /**
+     * 清空options
+     *
+     * 当参数类型为GIT/SNV分支、代码库、子流水线时,流水线保存、模板保存和模板实例化时,需要清空options参数,减少model大小.
+     * options需在运行时实时计算
+     */
+    fun cleanOptions(params: List<BuildFormProperty>): List<BuildFormProperty> {
+        val filterParams = mutableListOf<BuildFormProperty>()
+        params.forEach {
+            when (it.type) {
+                BuildFormPropertyType.SVN_TAG,
+                BuildFormPropertyType.GIT_REF,
+                BuildFormPropertyType.CODE_LIB,
+                BuildFormPropertyType.SUB_PIPELINE,
+                BuildFormPropertyType.CONTAINER_TYPE -> {
+                    filterParams.add(it.copy(options = emptyList(), replaceKey = null, searchUrl = null))
+                }
+
+                else ->
+                    filterParams.add(it)
+            }
+        }
+        return filterParams
     }
 }

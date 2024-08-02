@@ -33,11 +33,14 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.constant.ProjectMessageCode.ERROR_PROJECT_NOT_RELATED_PRODUCT
 import com.tencent.devops.repository.pojo.AppInstallationResult
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -59,6 +62,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
     private val permissionService: StreamPermissionService,
     private val streamGitTransferService: StreamGitTransferService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val client: Client,
     private val streamGitConfig: StreamGitConfig
 ) : UserGitBasicSettingResource {
 
@@ -78,6 +82,15 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
             permission = AuthPermission.EDIT
         )
         val setting = streamBasicSettingService.getStreamConf(gitProjectId)
+
+        if (enabled) {
+            val enabledCheck = client.get(ServiceProjectResource::class).get(projectId).data?.productId != null
+            if (!enabledCheck) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_PROJECT_NOT_RELATED_PRODUCT
+                )
+            }
+        }
         val result = if (setting == null) {
             streamBasicSettingService.initStreamConf(
                 userId = userId,

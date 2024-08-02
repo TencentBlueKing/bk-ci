@@ -1,18 +1,19 @@
 package com.tencent.devops.auth.pojo.vo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("资源类型")
+@Schema(title = "资源类型")
 data class ResourceTypeInfoVo(
-    @ApiModelProperty("ID")
+    @get:Schema(title = "ID")
     val id: Int,
-    @ApiModelProperty("资源类型")
+    @get:Schema(title = "资源类型")
     val resourceType: String,
-    @ApiModelProperty("资源类型名")
+    @get:Schema(title = "资源类型名")
+    @BkFieldI18n(keyPrefixName = "resourceType")
     val name: String,
-    @ApiModelProperty("父类资源")
+    @get:Schema(title = "父类资源")
     val parent: String,
-    @ApiModelProperty("所属系统")
+    @get:Schema(title = "所属系统")
     val system: String
 )

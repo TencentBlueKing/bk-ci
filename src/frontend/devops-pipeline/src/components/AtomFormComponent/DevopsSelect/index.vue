@@ -21,7 +21,7 @@
             <ul>
                 <template v-if="hasGroup">
                     <li v-for="(item, index) in filteredList"
-                        :key="item.id"
+                        :key="item.id + index"
                         :disabled="item.disabled">
                         <div class="option-group-name">{{ item.name }}</div>
                         <div class="option-group-item"
@@ -41,7 +41,7 @@
                 <template v-else>
                     <li
                         v-for="(item, index) in filteredList"
-                        :key="item.id"
+                        :key="item.id + index"
                         :class="{
                             'option-item': true,
                             active: item.active,
@@ -62,10 +62,10 @@
 </template>
 
 <script>
+    import { debounce, isObject } from '@/utils/util'
     import mixins from '../mixins'
     import scrollMixins from '../SelectInput/scrollMixins'
     import selectorMixins from '../selectorMixins'
-    import { debounce, isObject } from '@/utils/util'
 
     export default {
         name: 'devops-select',
@@ -240,6 +240,7 @@
             },
 
             handleBlur () {
+                if (!this.optionListVisible) return
                 this.optionListVisible = false
                 this.resetSelectPointer()
                 this.isFocused = false
@@ -349,14 +350,15 @@
                 }
                 if (defaultVal && !this.loading) {
                     this.showValValidTips(defaultVal)
-                    this.handleChange(this.name, '')
+                    // this.handleChange(this.name, '')
                 }
                 return ''
             },
             showValValidTips (val) {
                 this.$bkMessage({
                     theme: 'error',
-                    message: `${this.$t('editPage.invalidValue', [this.label])}: ${val}`
+                    message: `${this.$t('editPage.invalidValue', [this.label])}: ${val}`,
+                    limit: 1
                 })
             },
             async getOptionList () {

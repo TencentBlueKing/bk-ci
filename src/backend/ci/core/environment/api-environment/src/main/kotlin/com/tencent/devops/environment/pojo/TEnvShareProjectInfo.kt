@@ -27,25 +27,24 @@
 
 package com.tencent.devops.environment.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("T_ENV_SHARE_PROJECT POJO")
+@Schema(title = "T_ENV_SHARE_PROJECT POJO")
 data class TEnvShareProjectInfo(
-    @ApiModelProperty("环境ID")
+    @get:Schema(title = "环境ID")
     val envId: Long,
-    @ApiModelProperty("名称")
+    @get:Schema(title = "名称")
     val envName: String,
-    @ApiModelProperty("主项目ID")
+    @get:Schema(title = "主项目ID")
     val mainProjectId: String,
-    @ApiModelProperty("共享的目标项目ID")
+    @get:Schema(title = "共享的目标项目ID")
     val sharedProjectId: String?,
-    @ApiModelProperty("目标项目名称")
+    @get:Schema(title = "目标项目名称")
     val sharedProjectName: String,
-    @ApiModelProperty("类型")
+    @get:Schema(title = "类型")
     val type: String?,
-    @ApiModelProperty("创建者")
+    @get:Schema(title = "创建者")
     val creator: String?,
     val createTime: LocalDateTime,
     val updateTime: LocalDateTime

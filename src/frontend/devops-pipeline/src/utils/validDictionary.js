@@ -22,10 +22,12 @@ const dictionary = {
         messages: {
             alpha: field => '字段只能包含字母',
             unique: field => `${field}字段不能重复`,
+            notInList: field => `${field}字段不能重复`,
             required: field => '字段不能为空',
             excludeComma: field => '字段不能包含英文逗号',
             string: field => '字段只能包含数字，字母和下划线',
-            varRule: field => `${field}只能以字母和下划线开头，同时只包含字母，数字以及下划线`,
+            varRule: field => '字段只能以字母和下划线开头，同时只包含字母，数字以及下划线',
+            constVarRule: field => '由大写字母和数字、下划线组成，需以字母开头',
             numeric: field => '字段只能包含数字',
             regex: (field, regex) => {
                 return `字段不符合(${regex})正则表达式规则`
@@ -48,12 +50,15 @@ const dictionary = {
             nonVarRule: field => '该字段不需要包含${{}}',
             notStartWithBKCI: field => '该字段不能以BK_CI开头',
             paramsRule: field => '字段只能包含英文字母、数字及下划线',
-            timeoutsRule: field => '请输入1-10080之间的正整数，支持引用流水线变量'
+            timeoutsRule: field => '请输入1-10080之间的正整数，支持引用流水线变量',
+            reminderTimeRule: field => '请输入1-168之间的正整数',
+            maxConcurrencyRule: field => '请输入1-1000之间的正整数'
         }
     },
     'en-US': {
         messages: {
             unique: field => `${field} field cannot be repeated`,
+            notInList: field => `${field} field cannot be repeated`,
             excludeComma: field => 'Field cannot contain English commas',
             string: field => 'Fields can only contain numbers, letters, and underscores',
             numeric: field => 'Fields can only contain numbers',
@@ -72,14 +77,16 @@ const dictionary = {
             min_value: (field, args) => {
                 return `Minimum must not be less than ${args[0]}`
             },
-            varRule: field => `${field} only begin with letters and underscores, and only contain letters, numbers, and underscores`,
+            varRule: field => 'Field only begin with letters and underscores, and only contain letters, numbers, and underscores',
+            constVarRule: field => 'Field only begin with upper letters, and only contain upper letters, numbers, and underscores',
             pullmode: field => 'Field cannot be empty',
             excludeEmptyCapital: field => 'The field must be filled and only supports English letter, numbers or variables ',
             mutualGroup: field => 'Field only supports English, numbers or fill in variables',
             nonVarRule: field => 'This field does not need to be included ${{}}',
             notStartWithBKCI: field => "Field can not start with 'BK_CI'",
             paramsRule: () => 'Field only support English letter, numbers and underscores',
-            timeoutsRule: field => 'Please enter an integer between 1-10080, or a pipeline variable'
+            timeoutsRule: field => 'Please enter an integer between 1-10080, or a pipeline variable',
+            reminderTimeRule: field => ''
         }
     }
 }

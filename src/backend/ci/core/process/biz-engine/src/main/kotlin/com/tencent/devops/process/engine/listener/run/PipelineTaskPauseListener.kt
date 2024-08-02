@@ -105,7 +105,8 @@ class PipelineTaskPauseListener @Autowired constructor(
         val newElementRecord = pipelineTaskPauseService.getPauseTask(
             projectId = task.projectId,
             buildId = task.buildId,
-            taskId = task.taskId
+            taskId = task.taskId,
+            executeCount = task.executeCount
         )
         if (newElementRecord != null) {
             newElement = JsonUtil.to(newElementRecord.newValue, Element::class.java)
@@ -153,6 +154,7 @@ class PipelineTaskPauseListener @Autowired constructor(
                 userId = userId,
                 projectId = task.projectId,
                 actionType = ActionType.REFRESH,
+                executeCount = task.executeCount,
                 containerType = ""
             )
         )
@@ -160,8 +162,10 @@ class PipelineTaskPauseListener @Autowired constructor(
             buildId = task.buildId,
             message = "[${task.taskName}] processed. user: $userId, action: continue",
             tag = task.taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount ?: 1,
+            jobId = null,
+            stepId = task.stepId
         )
     }
 
@@ -186,8 +190,10 @@ class PipelineTaskPauseListener @Autowired constructor(
             buildId = task.buildId,
             message = "[${task.taskName}] processed. user: $userId, action: terminate",
             tag = task.taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount ?: 1,
+            jobId = null,
+            stepId = task.stepId
         )
         val containerRecord = pipelineContainerService.getContainer(
             projectId = task.projectId,
@@ -208,17 +214,25 @@ class PipelineTaskPauseListener @Autowired constructor(
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
                 stageId = task.stageId,
+                executeCount = task.executeCount,
                 containerType = containerRecord?.containerType ?: "vmBuild"
             ),
+            // pause task 结束
             PipelineBuildStatusBroadCastEvent(
                 source = "pauseCancel-${task.containerId}-${task.buildId}",
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
                 userId = task.starter,
                 buildId = task.buildId,
-                taskId = null,
-                stageId = null,
-                actionType = ActionType.END
+                taskId = task.taskId,
+                stageId = task.stageId,
+                actionType = ActionType.END,
+                containerHashId = task.containerHashId,
+                jobId = task.jobId,
+                stepId = task.stepId,
+                atomCode = task.atomCode,
+                executeCount = task.executeCount,
+                buildStatus = BuildStatus.CANCELED.name
             )
         )
     }

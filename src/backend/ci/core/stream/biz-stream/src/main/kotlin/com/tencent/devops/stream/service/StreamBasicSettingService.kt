@@ -30,8 +30,8 @@ package com.tencent.devops.stream.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
+import com.tencent.devops.environment.api.thirdpartyagent.UserThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -51,6 +51,7 @@ import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -65,6 +66,9 @@ class StreamBasicSettingService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StreamBasicSettingService::class.java)
     }
+
+    @Value("\${pac.defaultEnable:#{null}}")
+    private val defaultEnable: Boolean? = null
 
     fun listAgentBuilds(
         user: String,
@@ -243,7 +247,7 @@ class StreamBasicSettingService @Autowired constructor(
                     centerName = "",
                     secrecy = false,
                     kind = 0,
-                    properties = ProjectProperties(PipelineAsCodeSettings(true))
+                    properties = ProjectProperties(PipelineAsCodeSettings(defaultEnable != false))
                 ),
                 needValidate = false,
                 needAuth = false,

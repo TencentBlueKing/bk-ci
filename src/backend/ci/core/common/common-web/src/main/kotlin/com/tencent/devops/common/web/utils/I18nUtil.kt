@@ -29,43 +29,65 @@ package com.tencent.devops.common.web.utils
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.LocaleUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.CookieUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceLocaleResource
 import org.slf4j.LoggerFactory
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
 import java.net.URLDecoder
 
 object I18nUtil {
 
     private val logger = LoggerFactory.getLogger(I18nUtil::class.java)
 
+    private val syncObj = Object()
+
     /**
      * 从redis缓存获取用户的国际化语言信息
      * @param userId 用户ID
      * @return 语言信息
      */
-    fun getUserLocaleLanguageFromCache(userId: String): String? {
-        val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
-        return redisOperation.get(LocaleUtil.getUserLocaleLanguageKey(userId))
+    private fun getUserLocaleLanguageFromCache(userId: String): String? {
+        // 先从Cookie获取,没有再从本地缓存中获取用户设置的语言信息
+        var language = getCookieLocale() ?: BkI18nLanguageCacheUtil.getIfPresent(userId)
+        if (language.isNullOrBlank()) {
+            // 本地缓存中获取不到语言信息再从redis中获取
+            val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
+            language = redisOperation.get(LocaleUtil.getUserLocaleLanguageKey(userId))
+            if (!language.isNullOrBlank()) {
+                // 如果redis中用户语言不为空，则把用户的语言缓存到本地
+                BkI18nLanguageCacheUtil.put(userId, language)
+            }
+        }
+        return language
     }
+
+    private var devopsDefaultLocaleLanguage: String? = null // 部署配置不会动态变化, 运行时可一次解析固化.
 
     /**
      * 获取蓝盾默认支持的语言
      * @return 系统默认语言
      */
     fun getDefaultLocaleLanguage(): String {
-        val commonConfig: CommonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return commonConfig.devopsDefaultLocaleLanguage
+        return devopsDefaultLocaleLanguage ?: run {
+            synchronized(syncObj) {
+                if (devopsDefaultLocaleLanguage.isNullOrBlank()) {
+                    val commonConfig: CommonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
+                    devopsDefaultLocaleLanguage = commonConfig.devopsDefaultLocaleLanguage
+                }
+            }
+            devopsDefaultLocaleLanguage ?: DEFAULT_LOCALE_LANGUAGE
+        }
     }
 
     /**
@@ -73,9 +95,8 @@ object I18nUtil {
      * @return 渠道信息
      */
     fun getRequestChannel(): String? {
-        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
-        return if (null != attributes) {
-            val request = attributes.request
+        val request = BkApiUtil.getHttpServletRequest()
+        return if (null != request) {
             (request.getAttribute(REQUEST_CHANNEL) ?: request.getHeader(REQUEST_CHANNEL))?.toString()
         } else {
             null // 不是接口请求来源则返回null
@@ -83,13 +104,55 @@ object I18nUtil {
     }
 
     /**
+     * 获取蓝鲸标准的语言Header Key
+     */
+    fun getBKLanguageKey(): String {
+        return BK_LANGUAGE
+    }
+
+    /**
+     * 获取Http Cookie中用户携带的语言（蓝鲸标准）
+     * @return 语言,如果没有,则为空
+     */
+    fun getBKLanguageFromCookie(): String? {
+        val request = BkApiUtil.getHttpServletRequest()
+        return request?.let { CookieUtil.getCookieValue(request, BK_LANGUAGE) }
+    }
+
+    /**
+     * 获取Http Cookie中用户携带的语言
+     * @return 语言,如果没有,则为空
+     */
+    private fun getCookieLocale(): String? {
+        // 从request请求中获取本地语言信息
+        val request = BkApiUtil.getHttpServletRequest()
+        return request?.let { bkLanguageTransMap[CookieUtil.getCookieValue(request, BK_LANGUAGE)] }
+    }
+
+    // 蓝鲸专定义的语言头, 有差异,要定制转换
+    private const val BK_LANGUAGE = "blueking_language"
+    private val bkLanguageTransMap = mapOf(
+        "zh-cn" to "zh_CN",
+        "zh-CN" to "zh_CN",
+        "en" to "en_US",
+        "en-US" to "en_US",
+        "zh-HK" to "zh_HK",
+        "zh-hk" to "zh_HK",
+        "zh-tw" to "zh_TW",
+        "zh-TW" to "zh_TW",
+        "zh-mo" to "zh_MO",
+        "zh-MO" to "zh_MO",
+        "zh-sg" to "zh_SG",
+        "zh-SG" to "zh_SG"
+    )
+
+    /**
      * 获取接口请求用户信息
      * @return 用户ID
      */
     fun getRequestUserId(): String? {
-        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
-        return if (null != attributes) {
-            val request = attributes.request
+        val request = BkApiUtil.getHttpServletRequest()
+        return if (null != request) {
             request.getHeader(AUTH_HEADER_USER_ID)?.toString()
         } else {
             null
@@ -116,6 +179,7 @@ object I18nUtil {
                         client.get(ServiceLocaleResource::class).getUserLocale(userId).data?.language ?: defaultLanguage
                     val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
                     // 把查出来的用户语言放入缓存
+                    BkI18nLanguageCacheUtil.put(userId, language)
                     redisOperation.set(LocaleUtil.getUserLocaleLanguageKey(userId), language)
                 }
                 language
@@ -127,6 +191,12 @@ object I18nUtil {
             defaultLanguage
         }
     }
+
+    /**
+     * 获取用户语言信息
+     * @return 用户语言信息
+     */
+    fun getRequestUserLanguage() = getLanguage(getRequestUserId())
 
     /**
      * 根据语言环境获取对应的描述信息
@@ -164,6 +234,13 @@ object I18nUtil {
         }
     }
 
+    fun I18Variable.getCodeLanMessage(): String {
+        return getCodeLanMessage(
+            messageCode = code,
+            params = params?.toTypedArray()
+        )
+    }
+
     /**
      * 生成请求响应对象
      * @param messageCode 状态码
@@ -171,7 +248,6 @@ object I18nUtil {
      * @param data 数据对象
      * @return Result响应结果对象
      */
-    @Suppress("UNCHECKED_CAST")
     fun <T> generateResponseDataObject(
         messageCode: String,
         params: Array<String>? = null,
@@ -191,12 +267,11 @@ object I18nUtil {
 
     /**
      * 获取模块标识
-     * @param attributes 属性列表
      * @return 模块标识
      */
-    fun getModuleCode(attributes: ServletRequestAttributes?): String {
-        val moduleCode = if (null != attributes) {
-            val request = attributes.request
+    fun getModuleCode(): String {
+        val request = BkApiUtil.getHttpServletRequest()
+        val moduleCode = if (null != request) {
             // 从请求头中获取服务名称
             val serviceName = request.getHeader(AUTH_HEADER_DEVOPS_SERVICE_NAME) ?: SystemModuleEnum.COMMON.name
             try {

@@ -3,9 +3,43 @@
         <template v-if="template">
             <pipeline :pipeline="pipeline" :template-type="template.templateType" :is-saving="isSaving" :is-editing="isEditing">
                 <div slot="pipeline-bar">
-                    <bk-button @click="savePipeline()" theme="primary"
+                    <span
+                        v-if="template.templateType === 'CONSTRAINT' && isEnabledPermission"
+                        v-bk-tooltips="{
+                            content: $t('template.editStoreTemplateTips'),
+                            disabled: template.templateType !== 'CONSTRAINT'
+                        }"
+                    >
+                        <bk-button
+                            theme="primary"
+                            disabled
+                        >
+                            {{ $t('save') }}
+                        </bk-button>
+                    </span>
+                    <bk-button
+                        v-else-if="template.templateType !== 'CONSTRAINT' && isEnabledPermission"
+                        @click="savePipeline"
+                        theme="primary"
+                        v-perm="{
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline_template',
+                                resourceCode: templateId,
+                                action: TEMPLATE_RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                    >
+                        {{ $t('save') }}
+                    </bk-button>
+                    <bk-button
+                        v-else-if="!isEnabledPermission"
+                        @click="savePipeline"
+                        theme="primary"
                         :disabled="isSaveDisable"
-                    >{{ $t('save') }}</bk-button>
+                    >
+                        {{ $t('save') }}
+                    </bk-button>
                     <bk-button @click="openVersionSideBar">{{ $t('template.versionList') }}</bk-button>
                     <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
                 </div>
@@ -26,8 +60,39 @@
                             <bk-table-column :label="$t('lastUpdater')" prop="creator"></bk-table-column>
                             <bk-table-column :label="$t('operate')" width="150">
                                 <template slot-scope="props">
-                                    <bk-button theme="primary" text @click.stop="requestTemplateByVersion(props.row.version)">{{ $t('load') }}</bk-button>
-                                    <bk-button theme="primary" text :disabled="!template.hasPermission || currentVersionId === props.row.version || template.templateType === 'CONSTRAINT'" @click="deleteVersion(props.row)">{{ $t('delete') }}</bk-button>
+                                    <bk-button
+                                        theme="primary"
+                                        text
+                                        @click.stop="requestTemplateByVersion(props.row.version)"
+                                    >
+                                        {{ $t('load') }}
+                                    </bk-button>
+                                    <bk-button
+                                        v-if="isEnabledPermission"
+                                        theme="primary"
+                                        text
+                                        :disabled="template.templateType === 'CONSTRAINT'"
+                                        @click="deleteVersion(props.row)"
+                                        v-perm="{
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: 'pipeline_template',
+                                                resourceCode: templateId,
+                                                action: TEMPLATE_RESOURCE_ACTION.EDIT
+                                            }
+                                        }"
+                                    >
+                                        {{ $t('delete') }}
+                                    </bk-button>
+                                    <bk-button
+                                        v-else
+                                        theme="primary"
+                                        text
+                                        :disabled="!template.hasPermission || currentVersionId === props.row.version || template.templateType === 'CONSTRAINT'"
+                                        @click="deleteVersion(props.row)"
+                                    >
+                                        {{ $t('delete') }}
+                                    </bk-button>
                                 </template>
                             </bk-table-column>
                         </bk-table>
@@ -43,10 +108,27 @@
             :close-icon="false"
             :auto-close="false"
             width="400"
-            @confirm="saveTemplate">
+            @confirm="saveTemplate"
+        >
             <div>
-                <form-field v-if="showVersionDialog" required="true" :label="$t('template.saveAsVersion')" :is-error="errors.has(&quot;saveVersionName&quot;)" :error-msg="errors.first(&quot;saveVersionName&quot;)">
-                    <auto-complete v-validate="Object.assign({}, { max: 64, required: true })" :list="versionList" name="saveVersionName" open-list="true" :placeholder="$t('template.versionInputTips')" :value="saveVersionName" display-key="name" setting-key="versionName" :handle-change="handleVersionChange"></auto-complete>
+                <form-field
+                    v-if="showVersionDialog"
+                    required="true"
+                    :label="$t('template.saveAsVersion')"
+                    :is-error="errors.has('saveVersionName')"
+                    :error-msg="errors.first('saveVersionName')"
+                >
+                    <auto-complete
+                        v-validate="autoCompleteRules"
+                        :list="versionList"
+                        name="saveVersionName"
+                        open-list="true"
+                        :placeholder="$t('template.versionInputTips')"
+                        :value="saveVersionName"
+                        display-key="name"
+                        setting-key="versionName"
+                        :handle-change="handleVersionChange"
+                    />
                 </form-field>
             </div>
         </bk-dialog>
@@ -54,15 +136,19 @@
 </template>
 
 <script>
-    import { mapActions, mapState, mapGetters } from 'vuex'
-    import Pipeline from '@/components/Pipeline'
-    import AutoComplete from '@/components/atomFormField/AutoComplete'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import MiniMap from '@/components/MiniMap'
+    import Pipeline from '@/components/Pipeline'
+    import AutoComplete from '@/components/atomFormField/AutoComplete'
+    import {
+        TEMPLATE_RESOURCE_ACTION
+    } from '@/utils/permission'
     import {
         convertMStoStringByRule,
-        navConfirm
+        navConfirm,
+        showPipelineCheckMsg
     } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
@@ -70,6 +156,9 @@
             AutoComplete,
             FormField,
             MiniMap
+        },
+        props: {
+            isEnabledPermission: Boolean
         },
         data () {
             return {
@@ -79,7 +168,8 @@
                 isLoading: true,
                 saveVersionName: '',
                 confirmMsg: this.$t('editPage.confirmMsg'),
-                confirmTitle: this.$t('editPage.confirmTitle')
+                confirmTitle: this.$t('editPage.confirmTitle'),
+                cancelText: this.$t('cancel')
             }
         },
         computed: {
@@ -94,6 +184,12 @@
             ...mapState([
                 'fetchError'
             ]),
+            autoCompleteRules () {
+                return {
+                    max: 64,
+                    required: true
+                }
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -115,6 +211,9 @@
             },
             isSaveDisable () {
                 return this.isSaving || !this.template.hasPermission || this.template.templateType === 'CONSTRAINT'
+            },
+            TEMPLATE_RESOURCE_ACTION () {
+                return TEMPLATE_RESOURCE_ACTION
             }
         },
         watch: {
@@ -140,7 +239,9 @@
             this.requestMatchTemplateRules()
         },
         beforeDestroy () {
-            this.setPipeline()
+            this.setPipeline(null)
+            this.setPipelineEditing(false)
+            this.setAtomEditing(false)
             this.removeLeaveListenr()
             this.errors.clear()
         },
@@ -151,9 +252,11 @@
             this.leaveConfirm(to, from, next)
         },
         methods: {
+            // TODO: 优化
             ...mapActions('atom', [
                 'setPipeline',
                 'setPipelineEditing',
+                'setAtomEditing',
                 'requestTemplate',
                 'updateContainer'
             ]),
@@ -181,7 +284,6 @@
             savePipeline () {
                 try {
                     const { checkPipelineInvalid, pipeline, pipelineSetting } = this
-                    console.log(this, 'pipelineSetting')
                     const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
                     if (inValid) {
                         throw new Error(message)
@@ -215,7 +317,7 @@
                     const { data } = await this.$ajax.put(`/process/api/user/templates/projects/${this.projectId}/templates/${this.templateId}?versionName=${this.saveVersionName}`, this.pipeline)
                     if (data) {
                         this.$showTips({
-                            message: `${this.pipeline.name} ${this.$t('updateSuc')}`,
+                            message: `${this.pipeline.name}${' '}${this.$t('updateSuc')}`,
                             theme: 'success'
                         })
                         this.setPipelineEditing(false)
@@ -228,10 +330,15 @@
                         })
                     }
                 } catch (err) {
-                    this.$showTips({
-                        message: err.message || err,
-                        theme: 'error'
-                    })
+                    if (err.code === 2101244) {
+                        showPipelineCheckMsg(this.$bkMessage, err.message, this.$createElement)
+                    } else {
+                        this.$showTips({
+                            message: err.message || err,
+                            theme: 'error'
+                        })
+                    }
+
                     result = false
                 } finally {
                     this.isSaving = false
@@ -273,9 +380,9 @@
             deleteVersion (row) {
                 if (this.template.hasPermission && this.currentVersionId !== row.version && this.template.templateType !== 'CONSTRAINT') {
                     const content = `${this.$t('delete')}${row.versionName}`
-                    navConfirm({ type: 'warning', content })
-                        .then(() => {
-                            this.confirmDeleteVersion(row)
+                    navConfirm({ type: 'warning', content, cancelText: this.$t('cancel') })
+                        .then((val) => {
+                            val && this.confirmDeleteVersion(row)
                         }).catch(() => {})
                 }
             },
@@ -296,9 +403,13 @@
                 })
             },
             leaveConfirm (to, from, next) {
+                if (this.template.templateType === 'CONSTRAINT' || (this.isEnabledPermission && !this.template.hasPermission)) {
+                    next(true)
+                    return
+                }
                 if (this.isEditing) {
-                    navConfirm({ content: this.confirmMsg, type: 'warning' })
-                        .then(() => next())
+                    navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
+                        .then(next)
                         .catch(() => next(false))
                 } else {
                     next(true)

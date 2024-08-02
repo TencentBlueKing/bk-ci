@@ -29,16 +29,24 @@ package com.tencent.devops.repository.service.code
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GITHUB_INVALID
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
 import com.tencent.devops.repository.pojo.GithubRepository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
+import com.tencent.devops.repository.service.github.GithubTokenService
+import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -46,7 +54,9 @@ import org.springframework.stereotype.Component
 class CodeGithubRepositoryService @Autowired constructor(
     private val repositoryDao: RepositoryDao,
     private val repositoryGithubDao: RepositoryGithubDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val githubRepositoryService: GithubRepositoryService,
+    private val githubTokenService: GithubTokenService
 ) : CodeRepositoryService<GithubRepository> {
     override fun repositoryType(): String {
         return GithubRepository::class.java.name
@@ -63,9 +73,16 @@ class CodeGithubRepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.GITHUB
+                type = ScmType.GITHUB,
+                enablePac = repository.enablePac
             )
-            repositoryGithubDao.create(transactionContext, repositoryId, repository.projectName, userId)
+            repositoryGithubDao.create(
+                dslContext = transactionContext,
+                repositoryId = repositoryId,
+                projectName = repository.projectName,
+                userName = userId,
+                gitProjectId = getProjectId(repository, userId)
+            )
         }
         return repositoryId
     }
@@ -86,16 +103,45 @@ class CodeGithubRepositoryService @Autowired constructor(
                 )
             )
         }
+        // 不得切换代码库
+        if (GitUtils.diffRepoUrl(record.url, repository.url)) {
+            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
+        val sourceUrl = repositoryDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            repositoryId = repositoryId
+        ).url
+        var gitProjectId: Long? = null
+        if (sourceUrl != repository.url) {
+            logger.info("repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +
+                            "targetUrl=[${repository.url}]")
+            // Git项目ID
+            gitProjectId = getProjectId(repository, userId)
+        }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             repositoryDao.edit(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
                 aliasName = repository.aliasName,
-                url = repository.getFormatURL()
+                url = repository.getFormatURL(),
+                updateUser = userId
             )
-            repositoryGithubDao.edit(dslContext, repositoryId, repository.projectName, repository.userName)
+            repositoryGithubDao.edit(
+                dslContext,
+                repositoryId,
+                repository.projectName,
+                repository.userName,
+                gitProjectId = gitProjectId
+            )
         }
     }
 
@@ -104,14 +150,64 @@ class CodeGithubRepositoryService @Autowired constructor(
         return GithubRepository(
             aliasName = repository.aliasName,
             url = repository.url,
-            userName = repository.userId,
+            userName = record.userName,
             projectName = record.projectName,
             projectId = repository.projectId,
-            repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId)
+            repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
+            gitProjectId = record.gitProjectId.toLong(),
+            enablePac = repository.enablePac,
+            yamlSyncStatus = repository.yamlSyncStatus
         )
     }
 
-    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
-        return repositoryIds.associateWith { RepoAuthInfo(authType = RepoAuthType.OAUTH.name, credentialId = "") }
+    override fun getRepoDetailMap(repositoryIds: List<Long>): Map<Long, RepositoryDetailInfo> {
+        return repositoryIds.associateWith {
+            RepositoryDetailInfo(authType = RepoAuthType.OAUTH.name, credentialId = "")
+        }
     }
+
+    private fun getProjectId(repository: GithubRepository, userId: String): Long {
+        val accessToken = githubTokenService.getAccessToken(userId)
+        // github仓库基本信息
+        val githubRepo = if (accessToken == null) {
+            logger.warn("The user[$userId] token invalid")
+            null
+        } else {
+            try {
+                githubRepositoryService.getRepository(
+                    request = GetRepositoryRequest(
+                        repoName = repository.projectName
+                    ),
+                    token = accessToken.accessToken
+                )
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "get github project info failed,projectName=[${repository.projectName}] | $ignored"
+                )
+                null
+            }
+        }
+        return githubRepo?.id ?: 0L
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(CodeGithubRepositoryService::class.java)
+    }
+
+    override fun getPacProjectId(userId: String, repoUrl: String): String? = null
+
+    override fun pacCheckEnabled(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord,
+        retry: Boolean
+    ) = Unit
+
+    override fun getGitFileTree(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord
+    ) = emptyList<GitFileInfo>()
+
+    override fun getPacRepository(externalId: String): TRepositoryRecord? = null
 }

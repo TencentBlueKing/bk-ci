@@ -47,8 +47,9 @@ object BuildTimeCostUtils {
 
     fun BuildRecordModel.generateBuildTimeCost(stageRecords: List<BuildRecordStage>): BuildRecordTimeCost {
         val startTime = startTime ?: return BuildRecordTimeCost()
+        // 构建级别的总耗时从触发入队列算起
         val endTime = endTime ?: LocalDateTime.now()
-        val totalCost = Duration.between(startTime, endTime).toMillis()
+        val totalCost = Duration.between(queueTime, endTime).toMillis()
         var executeCost = 0L
         var waitCost = 0L
         var queueCost = 0L
@@ -66,7 +67,9 @@ object BuildTimeCostUtils {
             totalCost = totalCost,
             executeCost = executeCost,
             waitCost = waitCost,
-            queueCost = queueCost,
+            // 给前端展示的构建排队时间为触发-开始,
+            // 上面的queueCost用于systemCost的差值
+            queueCost = Duration.between(queueTime, startTime).toMillis(),
             systemCost = systemCost.notNegative()
         )
     }
@@ -169,7 +172,7 @@ object BuildTimeCostUtils {
         taskRecords: List<BuildRecordTask>
     ): Pair<BuildRecordTimeCost?, BuildRecordTimeLine> {
         val containerTimeLine = BuildRecordTimeLine()
-        val startTime = startTime ?: return Pair(null, containerTimeLine)
+        val startTime = startTime ?: taskRecords.first().startTime ?: return Pair(null, containerTimeLine)
         val endTime = endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
         var executeCost = 0L

@@ -13,9 +13,12 @@
                     <bk-radio
                         :class="['bkdevops-radio', { mr15: lineNumber <= 0 }]"
                         :value="item.value"
-                        :disabled="disabled || item.disabled"
+                        :disabled="disabled || item.disabled || readOnly"
                     >
-                        <span class="overflow" v-bk-overflow-tips>
+                        <span :class="{
+                            'overflow': true,
+                            'tip-style': item.tips
+                        }" v-bk-overflow-tips>
                             {{ item.label }}
                         </span>
                     </bk-radio>
@@ -74,7 +77,6 @@
 .bkdevops-radio {
   width: 100%;
   ::v-deep .bk-radio-text {
-    width: calc(100% - 21px);
     height: 20px;
     line-height: 20px;
   }
@@ -84,6 +86,9 @@
     text-overflow: ellipsis;
     width: 100%;
     display: inline-block;
+  }
+  .tip-style {
+    border-bottom: 1px dashed;
   }
 }
 .mr15 {

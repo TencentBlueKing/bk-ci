@@ -25,23 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.resources.thirdPartyAgent
+package com.tencent.devops.environment.resources.thirdpartyagent
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.thirdPartyAgent.OpThirdPartyAgentResource
-import com.tencent.devops.environment.pojo.thirdPartyAgent.UpdateAgentRequest
-import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
-import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
-import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
+import com.tencent.devops.environment.api.thirdpartyagent.OpThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.slave.SlaveGateway
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentShared
+import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentRequest
+import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineCreate
+import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineSeqId
+import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.environment.service.thirdpartyagent.AgentShareService
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentMgrService
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentPipelineService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
-    private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService
+    private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
+    private val slaveGatewayService: SlaveGatewayService,
+    private val agentShareProjectService: AgentShareService
 ) : OpThirdPartyAgentResource {
 
     override fun listEnableProjects(): Result<List<String>> {
@@ -69,5 +75,29 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
     override fun updateAgentGateway(updateAgentRequest: UpdateAgentRequest): Result<Boolean> {
         thirdPartyAgentService.updateAgentGateway(updateAgentRequest)
         return Result(true)
+    }
+
+    override fun getGateways(): Result<List<SlaveGateway>> {
+        return Result(slaveGatewayService.getGatewayNoCache())
+    }
+
+    override fun addGateway(gateway: SlaveGateway): Result<Boolean> {
+        return Result(slaveGatewayService.addGateway(gateway))
+    }
+
+    override fun updateGateway(gateway: SlaveGateway): Result<Boolean> {
+        return Result(slaveGatewayService.updateGateway(gateway))
+    }
+
+    override fun deleteGateway(zoneName: String): Result<Boolean> {
+        return Result(slaveGatewayService.deleteGateway(zoneName))
+    }
+
+    override fun addAgentShared(shares: AgentShared): Result<Boolean> {
+        return Result(agentShareProjectService.addShared(shares))
+    }
+
+    override fun deleteAgentShared(shares: AgentShared): Result<Boolean> {
+        return Result(agentShareProjectService.deleteSharedAgent(shares))
     }
 }

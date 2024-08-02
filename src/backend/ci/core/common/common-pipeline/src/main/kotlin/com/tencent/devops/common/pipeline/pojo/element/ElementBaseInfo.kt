@@ -27,19 +27,18 @@
 
 package com.tencent.devops.common.pipeline.pojo.element
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("元素基本信息")
+@Schema(title = "元素基本信息")
 data class ElementBaseInfo(
-    @ApiModelProperty("元素ID", required = true)
+    @get:Schema(title = "元素ID", required = true)
     val elementId: String,
-    @ApiModelProperty("元素名称", required = true)
+    @get:Schema(title = "元素名称", required = true)
     val elementName: String,
-    @ApiModelProperty("插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @ApiModelProperty("插件版本号", required = true)
+    @get:Schema(title = "插件版本号", required = true)
     val version: String,
-    @ApiModelProperty("元素在job中的位置")
+    @get:Schema(title = "元素在job中的位置")
     val elementJobIndex: Int
 )

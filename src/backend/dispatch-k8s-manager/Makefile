@@ -1,5 +1,5 @@
 LOCAL_REGISTRY=bkci
-LOCAL_IMAGE=kubernetes-manager:0.0.32
+LOCAL_IMAGE=bkci-kubernetes-manager:0.0.32
 
 CONFIG_DIR=/data/workspace/kubernetes-manager/config
 OUT_DIR=/data/workspace/kubernetes-manager/out
@@ -13,7 +13,7 @@ GOFLAGS    :=
 # gin
 export GIN_MODE=release
 
-format: 
+format:
 	find ./ -name "*.go" | xargs gofmt -w
 
 test: test-unit

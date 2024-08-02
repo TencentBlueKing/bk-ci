@@ -16,6 +16,11 @@
         </div>
         <ul v-if="config.length > 0" class="dot-menu-list" slot="content">
             <li
+                v-perm="item.permissionData ? {
+                    hasPermission: item.hasPermission,
+                    disablePermissionApi: item.disablePermissionApi,
+                    permissionData: item.permissionData
+                } : {}"
                 :class="[{ 'is-disable': item.disable }, 'dot-menu-item']"
                 v-for="(item, index) of config"
                 v-bk-tooltips="getTooltips(item)"
@@ -48,17 +53,12 @@
             getTooltips (item) {
                 return {
                     content: item?.tooltips,
-                    disabled: !item?.tooltips
+                    disabled: !item?.tooltips,
+                    allowHTML: false
                 }
             },
             clickMenuItem (item) {
                 if (item.disable) return
-
-                if (item.isJumpToTem) {
-                    this.$refs.dotMenuRef.hideHandler()
-                    item.handler(this.config.templateId)
-                    return
-                }
 
                 this.$refs.dotMenuRef.hideHandler()
                 console.log(this.data)
@@ -113,7 +113,7 @@
     }
 
     .tippy-tooltip.dot-menu-theme {
-        padding: 0;
+        padding: 0 !important;
     }
     .dot-menu-trigger {
         display: flex;

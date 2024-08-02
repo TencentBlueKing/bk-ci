@@ -47,9 +47,11 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.GET_PIPELINE_ATOM_INFO_NO_PERMISSION
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -380,7 +382,7 @@ class PipelineAtomService @Autowired constructor(
             )
         } else if (validateResult.isOk() && validateResult.data == false) {
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                errorCode = GET_PIPELINE_ATOM_INFO_NO_PERMISSION,
                 params = arrayOf(atomCode)
             )
         }
@@ -390,6 +392,7 @@ class PipelineAtomService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        version: Int?,
         checkPermission: Boolean = true
     ): Result<Map<String, AtomProp>?> {
         if (checkPermission) {
@@ -411,20 +414,13 @@ class PipelineAtomService @Autowired constructor(
                 )
             )
         }
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
+        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version, true)?.model
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
         // 获取流水线下插件标识集合
-        val atomCodes = mutableSetOf<String>()
-        model.stages.forEach { stage ->
-            stage.containers.forEach { container ->
-                container.elements.forEach { element ->
-                    atomCodes.add(element.getAtomCode())
-                }
-            }
-        }
+        val atomCodes = ModelUtils.getModelAtoms(model)
         return client.get(ServiceAtomResource::class).getAtomProps(atomCodes)
     }
 }

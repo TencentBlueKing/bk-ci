@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.api.archive
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
@@ -42,11 +43,10 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTO
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_PIPELINE_FILE_FAILED
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.utils.TaskUtil
-import java.io.File
-import java.net.URLEncoder
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import java.io.File
+import java.net.URLEncoder
 
 @Suppress("UNUSED")
 class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
@@ -103,11 +103,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             .addFormDataPart("file", URLEncoder.encode(file.name, "utf-8"), fileBody)
             .build()
 
-        val request = buildPost(
-            path = url,
-            requestBody = requestBody,
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
-        )
+        val request = buildPost(path = url, requestBody = requestBody)
         val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_FILE_FAILED, AgentEnv.getLocaleLanguage())
         val response = request(request, message)
         try {
@@ -130,11 +126,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             .addFormDataPart("file", URLEncoder.encode(file.name, "utf-8"), fileBody)
             .build()
 
-        val request = buildPost(
-            path = url,
-            requestBody = requestBody,
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
-        )
+        val request = buildPost(path = url, requestBody = requestBody)
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_PIPELINE_FILE_FAILED,
             AgentEnv.getLocaleLanguage()
@@ -166,7 +158,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             "/ms/artifactory/api/build/artifactories/file/archive/download" +
                     "?fileType=${FileTypeEnum.BK_CUSTOM}&customFilePath=$uri"
         }
-        val request = buildGet(url, useFileDevnetGateway = isVmBuildEnv)
+        val request = buildGet(url)
         download(request, destPath)
     }
 
@@ -186,7 +178,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             "/ms/artifactory/api/build/artifactories/file/archive/download" +
                     "?fileType=${FileTypeEnum.BK_ARCHIVE}&customFilePath=$uri"
         }
-        val request = buildGet(url, useFileDevnetGateway = isVmBuildEnv)
+        val request = buildGet(url)
         download(request, destPath)
     }
 
@@ -215,5 +207,16 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
         val responseContent = request(request, "upload file:$fileName fail")
         return objectMapper.readValue(responseContent)
+    }
+
+    override fun getRepoToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        type: TokenType,
+        expireSeconds: Long
+    ): String? {
+        return null
     }
 }

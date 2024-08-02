@@ -30,6 +30,7 @@ dependencies {
     api(project(":core:common:common-web"))
     api(project(":core:common:common-archive"))
     api("com.tencent.bk.repo:api-webhook")
+    api(project(":core:store:api-store"))
 }
 
 plugins {

@@ -22,8 +22,6 @@
     import BaseInfo from '@/components/pipelineSetting/BaseInfo'
     import RunningLock from '@/components/pipelineSetting/RunningLock'
     import CodeRecordTable from '@/components/codeRecord/CodeRecordTable'
-    import thirdPartyReport from '@/components/outputOption/thirdParty_report'
-    import IframeReport from '@/components/outputOption/IframeReport'
 
     export default {
         name: 'vertical-tab',
@@ -31,9 +29,7 @@
             NotifySetting,
             BaseInfo,
             RunningLock,
-            CodeRecordTable,
-            thirdPartyReport,
-            IframeReport
+            CodeRecordTable
         },
         props: {
             tabs: {

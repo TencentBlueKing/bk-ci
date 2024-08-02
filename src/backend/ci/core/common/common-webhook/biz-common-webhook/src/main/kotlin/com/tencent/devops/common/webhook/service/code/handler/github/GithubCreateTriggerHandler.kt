@@ -27,11 +27,17 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
@@ -70,7 +76,24 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
     }
 
     override fun getMessage(event: GithubCreateEvent): String? {
-        return ""
+        return event.ref
+    }
+
+    override fun getEventDesc(event: GithubCreateEvent): String {
+        val (i18Code, linkUrl) = event.getI18nCodeAndLinkUrl()
+        // 事件重放
+        return I18Variable(
+            code = i18Code,
+            params = listOf(
+                linkUrl,
+                getBranchName(event),
+                getUsername(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: GithubCreateEvent): String {
+        return event.repository.id.toString()
     }
 
     override fun retrieveParams(
@@ -82,6 +105,10 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
         startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME] = event.ref
         startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE] = event.ref_type
         startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME] = event.sender.login
+        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = getBranchName(event)
+        startParams[PIPELINE_GIT_ACTION] = "create"
+        startParams[PIPELINE_GIT_REPO_URL] = event.repository.getRepoUrl()
+        startParams[PIPELINE_GIT_EVENT_URL] = event.getI18nCodeAndLinkUrl().second
         return startParams
     }
 
@@ -93,5 +120,13 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         return emptyList()
+    }
+
+    private fun GithubCreateEvent.getI18nCodeAndLinkUrl() = if (ref_type == "tag") {
+        WebhookI18nConstants.GITHUB_CREATE_TAG_EVENT_DESC to
+                "${repository.getRepoUrl()}/releases/tag/$ref"
+    } else {
+        WebhookI18nConstants.GITHUB_CREATE_BRANCH_EVENT_DESC to
+                "${repository.getRepoUrl()}/tree/$ref"
     }
 }

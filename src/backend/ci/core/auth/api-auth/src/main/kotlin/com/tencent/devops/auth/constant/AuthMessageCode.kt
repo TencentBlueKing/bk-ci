@@ -37,8 +37,8 @@ package com.tencent.devops.auth.constant
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev）
- * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）remotedev
+ *    32: remotedev 35：misc-杂项）
+ * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
  * @since: 2023-3-20
@@ -57,7 +57,7 @@ object AuthMessageCode {
     const val LOGIN_TOKEN_VERIFY_FAILED = "2121009" // 权限系统: token验证失败
     const val LOGIN_USER_FREEZE = "2121010" // 账号冻结中
     const val LOGIN_USER_INFO_EXIST = "2121011" // 权限系统： 用户已存在，无需重复创建
-    const val LOGIN_THIRD_CODE_INVALID = "2121012" // 权限系统： 第三方登陆code校验失败
+    const val LOGIN_THIRD_CODE_INVALID = "2121012" // 权限系统： 第三方登录code校验失败
     const val MANAGER_PERMISSION_EXPIRE = "2121013" // 管理员权限过期
     const val APPROVAL_RECORD_NOT_EXIST = "2121014" // 审批记录不存在
     const val RELATED_RESOURCE_EMPTY = "2121015" // 权限系统：绑定系统资源为空
@@ -89,7 +89,7 @@ object AuthMessageCode {
     const val RESOURCE_TYPE_NOT_FOUND = "2121040" // 权限系统：资源类型{0}不存在
     const val RESOURCE_TYPE_NOT_EMPTY = "2121041" // 权限系统：资源类型不能为空
     const val APPLY_TO_JOIN_GROUP_FAIL = "2121042" // 权限系统: 申请加入用户组失败
-    const val GET_GROUP_PERMISSION_DETAIL_FAIL = "2121043" // 权限系统: 获取用户组权限信息失败
+    const val GET_GROUP_PERMISSION_DETAIL_FAIL = "2121043" // 权限系统: 获取用户组{0}权限信息失败
     const val GET_IAM_GROUP_FAIL = "2121044" // 权限系统: 获取用户组失败
     const val GET_REDIRECT_INFORMATION_FAIL = "2121045" // 权限系统: 获取跳转链接失败
     const val ERROR_AUTH_NO_MANAGE_PERMISSION = "2121046" // 用户没有管理员权限
@@ -108,5 +108,29 @@ object AuthMessageCode {
     const val ERROR_PROJECT_NOT_UPGRADE = "2121059" // 权限系统: 项目尚未升级到新版权限系统
     const val MIGRATION_GROUP_DESCRIPTION = "2121060" // 用户组:{0},迁移于{1}
     const val ERROR_MIGRATE_AUTH_COMPARE_FAIL = "2121061" // 迁移项目{0}失败,权限策略对比失败
-    const val ERROR_CREATOR_NOT_EXIST = "2121062" // 创建人已离职
+    const val ERROR_CREATOR_NOT_EXIST = "2121062" // 创建人离职
+    const val ERROR_RESOURCE_CREATE_FAIL = "2121063" // 资源创建失败
+    const val ERROR_CLIENT_NOT_EXIST = "2121064" // 客户端{0}不存在
+    const val INVALID_AUTHORIZATION_TYPE = "2121065" // 授权类型{0}不合法
+    const val INVALID_REDIRECT_URI = "2121066" // 跳转链接{0}不合法
+    const val INVALID_CLIENT_SECRET = "2121067" // 客户端{0}密钥不合法
+    const val INVALID_AUTHORIZATION_CODE = "2121068" // 授权码不合法
+    const val INVALID_AUTHORIZATION_EXPIRED = "2121069" // 授权码已过期
+    const val ERROR_REFRESH_TOKEN_NOT_FOUND = "2121070" // refresh_token不能为空
+    const val INVALID_REFRESH_TOKEN = "2121071" // refresh_token不合法
+    const val ERROR_REFRESH_TOKEN_EXPIRED = "2121072" // refresh token已过期
+    const val ERROR_ACCESS_TOKEN_NOT_FOUND = "2121073" // access token不能为空
+    const val INVALID_ACCESS_TOKEN = "2121074" // access token不合法
+    const val ERROR_ACCESS_TOKEN_EXPIRED = "2121075" // access token已过期
+    const val INVALID_SCOPE = "2121076" // scope不合法
+
+    const val ERROR_MONITOR_SPACE_NOT_EXIST = "2121077" // 监控空间不存在
+    const val ERROR_MONITOR_READ_ONLY_ACTIONS_NOT_EXIST = "2121078" // 业务只读组不存在
+    const val ERROR_MONITOR_OPS_ACTIONS_NOT_EXIST = "2121079" // 业务运维组不存在
+
+    const val ERROR_WATER_MARK_NOT_EXIST = "2121080" // 水印信息不存在
+    const val ERROR_USER_NOT_EXIST = "2121081" // 用户不存在
+
+    const val ERROR_MOA_CREDENTIAL_KEY_VERIFY_FAIL = "2121082" // MOA票据校验失败
+    const val ERROR_USER_NOT_BELONG_TO_THE_PROJECT = "2121083" // 用户不属于项目
 }

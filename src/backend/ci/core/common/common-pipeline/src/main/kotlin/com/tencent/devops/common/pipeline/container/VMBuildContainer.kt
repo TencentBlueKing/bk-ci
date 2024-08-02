@@ -27,106 +27,114 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.type.DispatchType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ReturnCount")
-@ApiModel("流水线模型-虚拟机构建容器")
+@Schema(title = "流水线模型-虚拟机构建容器")
 data class VMBuildContainer(
-    @ApiModelProperty("构建容器序号id", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "构建容器序号id", required = false, readOnly = true)
     override var id: String? = null,
-    @ApiModelProperty("容器名称", required = true)
+    @get:Schema(title = "容器名称", required = true)
     override var name: String = "构建环境",
-    @ApiModelProperty("任务集合", required = true)
+    @get:Schema(title = "任务集合", required = true)
     override var elements: List<Element> = listOf(),
-    @ApiModelProperty("容器状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "容器状态", required = false, readOnly = true)
     override var status: String? = null,
-    @ApiModelProperty("系统运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "系统运行时间", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var startEpoch: Long? = null,
-    @ApiModelProperty("系统耗时（开机时间）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "系统耗时（开机时间）", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var systemElapsed: Long? = null,
-    @ApiModelProperty("插件执行耗时", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "插件执行耗时", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var elementElapsed: Long? = null,
-    @ApiModelProperty("VM基础操作系统", required = true)
+    @get:Schema(title = "VM基础操作系统", required = true)
     val baseOS: VMBaseOS,
-    @ApiModelProperty("预指定VM名称列表", required = true)
+    @get:Schema(title = "预指定VM名称列表", required = true)
     val vmNames: Set<String> = setOf(),
-    @ApiModelProperty("排队最长时间(分钟)", required = true)
+    @get:Schema(title = "排队最长时间(分钟)", required = true)
     @Deprecated(message = "do not use")
     val maxQueueMinutes: Int? = 60,
-    @ApiModelProperty("运行最长时间(分钟)", required = true)
+    @get:Schema(title = "运行最长时间(分钟)", required = true)
     @Deprecated(message = "@see JobControlOption.timeout")
     val maxRunningMinutes: Int = 480,
-    @ApiModelProperty("构建机环境变量", required = false)
+    @get:Schema(title = "构建机环境变量（容器启动时写入环境）", required = false)
     val buildEnv: Map<String, String>? = null,
-    @ApiModelProperty("用户自定义环境变量", required = false)
+    @get:Schema(title = "用户自定义环境变量（Agent启动时写入环境）", required = false)
+    @Deprecated("使用新字段customEnv代替，数据结构有变化")
     val customBuildEnv: Map<String, String>? = null,
-    @ApiModelProperty("第三方构建Hash ID", required = false)
+    @get:Schema(title = "用户自定义环境变量（Agent启动时写入环境）", required = false)
+    val customEnv: List<NameAndValue>? = null,
+    @get:Schema(title = "第三方构建Hash ID", required = false)
     val thirdPartyAgentId: String? = null,
-    @ApiModelProperty("第三方构建环境ID", required = false)
+    @get:Schema(title = "第三方构建环境ID", required = false)
     val thirdPartyAgentEnvId: String? = null,
-    @ApiModelProperty("第三方构建环境工作空间", required = false)
+    @get:Schema(title = "第三方构建环境工作空间", required = false)
     val thirdPartyWorkspace: String? = null,
-    @ApiModelProperty("Docker构建机", required = false)
+    @get:Schema(title = "Docker构建机", required = false)
     val dockerBuildVersion: String? = null,
-    @ApiModelProperty("TStack Hash Id", required = false)
+    @get:Schema(title = "TStack Hash Id", required = false)
     @Deprecated("do not used")
     val tstackAgentId: String? = null,
-    @ApiModelProperty("新的选择构建机环境", required = false)
+    @get:Schema(title = "新的选择构建机环境", required = false)
     val dispatchType: DispatchType? = null,
-    @ApiModelProperty("是否显示构建资源信息", required = false)
+    @get:Schema(title = "是否显示构建资源信息", required = false)
     var showBuildResource: Boolean? = false,
-    @ApiModelProperty(
+    @get:Schema(title =
         "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,
-        accessMode = ApiModelProperty.AccessMode.READ_ONLY
+        readOnly = true
     )
     override var canRetry: Boolean? = null,
-    @ApiModelProperty("是否访问外网", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "是否访问外网", required = false, readOnly = true)
     var enableExternal: Boolean? = false,
-    @ApiModelProperty("构建容器顺序ID（同id值）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "构建容器顺序ID（同id值）", required = false, readOnly = true)
     override var containerId: String? = null,
-    @ApiModelProperty("容器唯一ID", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "容器唯一ID", required = false, readOnly = true)
     override var containerHashId: String? = null,
-    @ApiModelProperty("流程控制选项", required = true)
+    @get:Schema(title = "流程控制选项", required = true)
     var jobControlOption: JobControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
-    @ApiModelProperty("互斥组", required = false)
+    @get:Schema(title = "互斥组", required = false)
     var mutexGroup: MutexGroup? = null, // 为了兼容旧数据，所以定义为可空以及var
-    @ApiModelProperty("构建环境启动状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "构建环境启动状态", required = false, readOnly = true)
     override var startVMStatus: String? = null,
-    @ApiModelProperty("容器运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "容器运行次数", required = false, readOnly = true)
     override var executeCount: Int? = null,
-    @ApiModelProperty("用户自定义ID", required = false, hidden = false)
-    override val jobId: String? = null,
-    @ApiModelProperty("是否包含post任务标识", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "用户自定义ID", required = false, hidden = false)
+    override var jobId: String? = null,
+    @get:Schema(title = "是否包含post任务标识", required = false, readOnly = true)
     override var containPostTaskFlag: Boolean? = null,
-    @ApiModelProperty("是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "是否为构建矩阵", required = false, readOnly = true)
     override var matrixGroupFlag: Boolean? = false,
-    @ApiModelProperty("各项耗时", required = true)
+    @get:Schema(title = "各项耗时", required = true)
     override var timeCost: BuildRecordTimeCost? = null,
-    @ApiModelProperty("构建矩阵配置项", required = false)
+    @get:Schema(title = "开机任务序号", required = false, readOnly = true)
+    override var startVMTaskSeq: Int? = null,
+    @get:Schema(title = "构建矩阵配置项", required = false)
     var matrixControlOption: MatrixControlOption? = null,
-    @ApiModelProperty("所在构建矩阵组的containerHashId（分裂后的子容器特有字段）", required = false)
+    @get:Schema(title = "所在构建矩阵组的containerHashId（分裂后的子容器特有字段）", required = false)
     var matrixGroupId: String? = null,
-    @ApiModelProperty("当前矩阵子容器的上下文组合（分裂后的子容器特有字段）", required = false)
+    @get:Schema(title = "当前矩阵子容器的上下文组合（分裂后的子容器特有字段）", required = false)
     var matrixContext: Map<String, String>? = null,
-    @ApiModelProperty("分裂后的容器集合（分裂后的父容器特有字段）", required = false)
-    var groupContainers: MutableList<VMBuildContainer>? = null
+    @get:Schema(title = "分裂后的容器集合（分裂后的父容器特有字段）", required = false)
+    var groupContainers: MutableList<VMBuildContainer>? = null,
+    override var template: String? = null,
+    override var ref: String? = null,
+    override var variables: Map<String, String>? = null
 ) : Container {
     companion object {
         const val classType = "vmBuild"
     }
 
-    @ApiModelProperty("nfs挂载开关", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "nfs挂载开关", required = false, readOnly = true)
     var nfsSwitch: Boolean? = null
         get() {
             return if (null == field) true else field
@@ -154,6 +162,10 @@ data class VMBuildContainer(
 
     override fun fetchMatrixContext(): Map<String, String>? {
         return matrixContext
+    }
+
+    override fun isContainerEnable(): Boolean {
+        return jobControlOption?.enable ?: true
     }
 
     override fun transformCompatibility() {

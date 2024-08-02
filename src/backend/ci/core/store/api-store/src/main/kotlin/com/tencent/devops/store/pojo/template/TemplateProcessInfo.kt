@@ -27,12 +27,11 @@
 
 package com.tencent.devops.store.pojo.template
 
-import com.tencent.devops.store.pojo.common.ReleaseProcessItem
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("模版发布进度信息")
+@Schema(title = "模版发布进度信息")
 data class TemplateProcessInfo(
-    @ApiModelProperty("发布进度信息", required = true)
+    @get:Schema(title = "发布进度信息", required = true)
     val processInfos: List<ReleaseProcessItem>
 )

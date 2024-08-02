@@ -78,9 +78,12 @@
       "other": "等待容器 {{.name}} 结束状态码为 {{.code}} 不为0 \n {{.msg}}"
    },
    "ReadDockerMountsError": {
-     "other": "准备Docker挂载目录失败: {{.err}}"
+      "other": "准备Docker挂载目录失败: {{.err}}"
    },
-   "DockerContainerLog":{
+   "DockerContainerLog": {
       "other": "Docker容器日志为: \n"
+   },
+   "DockerImageDebugError": {
+      "other": "启动docker登录调试失败: {{.err}}"
    }
 }

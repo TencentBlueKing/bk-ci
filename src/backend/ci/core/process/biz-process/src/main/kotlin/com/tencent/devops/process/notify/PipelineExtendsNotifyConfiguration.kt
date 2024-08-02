@@ -90,4 +90,39 @@ class PipelineExtendsNotifyConfiguration {
             maxConcurrency = 10
         )
     }
+
+    @Bean
+    fun pipelineBuildNotifyReminderQueue(): Queue {
+        return Queue(MQ.QUEUE_PIPELINE_BUILD_REVIEW_REMINDER)
+    }
+
+    @Bean
+    fun pipelineBuildNotifyReminderQueueBind(
+        @Autowired pipelineBuildNotifyReminderQueue: Queue,
+        @Autowired pipelineMonitorExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(pipelineBuildNotifyReminderQueue).to(pipelineMonitorExchange)
+            .with(MQ.ROUTE_PIPELINE_BUILD_REVIEW_REMINDER)
+    }
+
+    @Bean
+    fun pipelineBuildNotifyReminderListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired pipelineBuildNotifyReminderQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired pipelineAtomTaskReminderListener: PipelineAtomTaskReminderListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = pipelineBuildNotifyReminderQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = pipelineAtomTaskReminderListener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 1,
+            maxConcurrency = 10
+        )
+    }
 }

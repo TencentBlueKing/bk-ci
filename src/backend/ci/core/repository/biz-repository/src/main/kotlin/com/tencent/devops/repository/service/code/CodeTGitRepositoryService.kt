@@ -31,22 +31,26 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
 import com.tencent.devops.repository.constant.RepositoryMessageCode.TGIT_INVALID
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeTGitRepository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
+import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.repository.service.tgit.TGitOAuthService
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -60,7 +64,9 @@ class CodeTGitRepositoryService @Autowired constructor(
     private val repositoryCodeGitDao: RepositoryCodeGitDao,
     private val dslContext: DSLContext,
     private val scmService: IScmService,
-    private val credentialService: CredentialService
+    private val tGitOAuthService: TGitOAuthService,
+    private val credentialService: CredentialService,
+    private val scmOauthService: IScmOauthService
 ) : CodeRepositoryService<CodeTGitRepository> {
     override fun repositoryType(): String {
         return CodeTGitRepository::class.java.name
@@ -77,7 +83,8 @@ class CodeTGitRepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.CODE_TGIT
+                type = ScmType.CODE_TGIT,
+                enablePac = repository.enablePac
             )
             // Git项目ID
             val gitProjectId = getGitProjectId(repo = repository, token = credentialInfo.token)
@@ -105,10 +112,20 @@ class CodeTGitRepositoryService @Autowired constructor(
         if (!StringUtils.equals(record.type, ScmType.CODE_TGIT.name)) {
             throw OperationException(I18nUtil.getCodeLanMessage(TGIT_INVALID))
         }
+        // 不得切换代码库
+        if (GitUtils.diffRepoUrl(record.url, repository.url)) {
+            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         // 凭证信息
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
-        var gitProjectId = 0L
+        var gitProjectId: Long? = null
         // 需要更新gitProjectId
         if (record.url != repository.url) {
             logger.info(
@@ -127,7 +144,8 @@ class CodeTGitRepositoryService @Autowired constructor(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
                 aliasName = repository.aliasName,
-                url = repository.getFormatURL()
+                url = repository.getFormatURL(),
+                updateUser = userId
             )
             repositoryCodeGitDao.edit(
                 dslContext = transactionContext,
@@ -152,7 +170,9 @@ class CodeTGitRepositoryService @Autowired constructor(
             authType = RepoAuthType.parse(record.authType),
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
-            gitProjectId = record.gitProjectId
+            gitProjectId = record.gitProjectId,
+            enablePac = repository.enablePac,
+            yamlSyncStatus = repository.yamlSyncStatus
         )
     }
 
@@ -184,10 +204,6 @@ class CodeTGitRepositoryService @Autowired constructor(
                 )
             }
             RepoAuthType.HTTP -> {
-                if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
-                    logger.info("TGit check type is username+password,don't check, return")
-                    return TokenCheckResult(result = true, message = "")
-                }
                 scmService.checkUsernameAndPassword(
                     projectName = GitUtils.getProjectName(repository.getFormatURL()),
                     url = repository.getFormatURL(),
@@ -200,10 +216,6 @@ class CodeTGitRepositoryService @Autowired constructor(
                 )
             }
             RepoAuthType.HTTPS -> {
-                if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
-                    logger.info("TGit check type is username+password,don't check, return")
-                    return TokenCheckResult(result = true, message = "")
-                }
                 scmService.checkUsernameAndPassword(
                     projectName = GitUtils.getProjectName(repository.getFormatURL()),
                     url = repository.getFormatURL(),
@@ -233,13 +245,15 @@ class CodeTGitRepositoryService @Autowired constructor(
             projectId = projectId,
             repository = repository
         )
-        val checkResult = checkToken(
-            repoCredentialInfo = repoCredentialInfo,
-            repository = repository
-        )
-        if (!checkResult.result) {
-            logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
-            throw OperationException(checkResult.message)
+        if (repository.authType != RepoAuthType.OAUTH) {
+            val checkResult = checkToken(
+                repoCredentialInfo = repoCredentialInfo,
+                repository = repository
+            )
+            if (!checkResult.result) {
+                logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
+                throw OperationException(checkResult.message)
+            }
         }
         return repoCredentialInfo
     }
@@ -248,23 +262,33 @@ class CodeTGitRepositoryService @Autowired constructor(
      * 获取Git项目ID
      */
     fun getGitProjectId(repo: CodeTGitRepository, token: String): Long {
-        logger.info("the repo is:$repo")
-        val repositoryProjectInfo = scmService.getProjectInfo(
-            projectName = GitUtils.getProjectName(repo.getFormatURL()),
-            url = repo.getFormatURL(),
-            type = ScmType.CODE_TGIT,
-            token = token
-        )
+        val isOauth = repo.authType == RepoAuthType.OAUTH
+        logger.info("the repo is:$repo,token length:${StringUtils.length(token)},isOauth:$isOauth")
+        val repositoryProjectInfo = if (isOauth) {
+            scmOauthService.getProjectInfo(
+                projectName = repo.projectName,
+                url = repo.getFormatURL(),
+                type = ScmType.CODE_TGIT,
+                token = token
+            )
+        } else {
+            scmService.getProjectInfo(
+                projectName = GitUtils.getProjectName(repo.getFormatURL()),
+                url = repo.getFormatURL(),
+                type = ScmType.CODE_TGIT,
+                token = token
+            )
+        }
         logger.info("the gitProjectInfo is:$repositoryProjectInfo")
         return repositoryProjectInfo?.id ?: 0L
     }
 
-    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
+    override fun getRepoDetailMap(repositoryIds: List<Long>): Map<Long, RepositoryDetailInfo> {
         return repositoryCodeGitDao.list(
             dslContext = dslContext,
             repositoryIds = repositoryIds.toSet()
-        )?.associateBy({ it -> it.repositoryId }, {
-            RepoAuthInfo(it.authType ?: RepoAuthType.SSH.name, it.credentialId)
+        )?.associateBy({ it.repositoryId }, {
+            RepositoryDetailInfo(it.authType ?: RepoAuthType.SSH.name, it.credentialId)
         }) ?: mapOf()
     }
 
@@ -273,11 +297,35 @@ class CodeTGitRepositoryService @Autowired constructor(
      */
     fun getCredentialInfo(projectId: String, repository: CodeTGitRepository): RepoCredentialInfo {
         // 凭证信息
-        return credentialService.getCredentialInfo(
-            projectId = projectId,
-            repository = repository
-        )
+        return if (repository.authType == RepoAuthType.OAUTH) {
+            RepoCredentialInfo(
+                token = tGitOAuthService.getAccessToken(repository.userName)?.accessToken ?: ""
+            )
+        } else {
+            credentialService.getCredentialInfo(
+                projectId = projectId,
+                repository = repository,
+                tryGetSession = true
+            )
+        }
     }
+
+    override fun getPacProjectId(userId: String, repoUrl: String): String? = null
+
+    override fun pacCheckEnabled(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord,
+        retry: Boolean
+    ) = Unit
+
+    override fun getGitFileTree(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord
+    ) = emptyList<GitFileInfo>()
+
+    override fun getPacRepository(externalId: String): TRepositoryRecord? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeTGitRepositoryService::class.java)

@@ -221,12 +221,13 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             readTimeoutInSec = readTimeoutInSec,
             writeTimeoutInSec = writeTimeoutInSec
         ).use { response ->
-            if (response.code == HTTP_404) {
-                throw RemoteServiceException("file does not exist")
+            val httpStatus = response.code
+            if (httpStatus == HTTP_404) {
+                throw RemoteServiceException(errorMessage = "file does not exist", httpStatus = httpStatus)
             }
             if (!response.isSuccessful) {
                 LoggerService.addNormalLine(response.body!!.string())
-                throw RemoteServiceException("Failed to get file")
+                throw RemoteServiceException(errorMessage = "Failed to get file", httpStatus = httpStatus)
             }
             val dest = destPath.toPath()
             if (Files.notExists(dest.parent)) Files.createDirectories(dest.parent)
@@ -284,24 +285,13 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         private fun initBuildArgs(): Map<String, String> {
             val buildType = BuildEnv.getBuildType()
             val map = mutableMapOf<String, String>()
-
             map[AUTH_HEADER_DEVOPS_BUILD_TYPE] = buildType.name
             when (buildType) {
-                BuildType.AGENT -> {
-                    map[AUTH_HEADER_DEVOPS_PROJECT_ID] = AgentEnv.getProjectId()
-                    map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
-                    map[AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
-                    map[AUTH_HEADER_DEVOPS_PROJECT_ID] = AgentEnv.getProjectId()
-                    map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
-//                    map[AUTH_HEADER_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
-                }
-
-                BuildType.DOCKER -> {
+                BuildType.DOCKER, BuildType.AGENT, BuildType.MACOS, BuildType.MACOS_NEW -> {
                     map[AUTH_HEADER_DEVOPS_PROJECT_ID] = AgentEnv.getProjectId()
                     map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
                     map[AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
                 }
-
                 else -> Unit
             }
             logger.info("Get the request header - $map")
@@ -406,7 +396,9 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         return if (path.startsWith("http://") || path.startsWith("https://")) {
             path
         } else if (useFileDevnetGateway != null) {
-            if (useFileDevnetGateway) {
+            if (!AgentEnv.getFileGateway().isNullOrBlank()) {
+                fixUrl(AgentEnv.getFileGateway()!!, path)
+            } else if (useFileDevnetGateway) {
                 val fileDevnetGateway = CommonEnv.fileDevnetGateway
                 fixUrl(if (fileDevnetGateway.isNullOrBlank()) gateway else fileDevnetGateway, path)
             } else {

@@ -29,51 +29,50 @@ package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("APP-构建详情-构建信息")
+@Schema(title = "APP-构建详情-构建信息")
 data class AppModelDetail(
-    @ApiModelProperty("ID", required = true)
+    @get:Schema(title = "ID", required = true)
     val buildId: String,
-    @ApiModelProperty("启动用户", required = true)
+    @get:Schema(title = "启动用户", required = true)
     val userId: String,
-    @ApiModelProperty("触发条件", required = true)
+    @get:Schema(title = "触发条件", required = true)
     val trigger: String,
-    @ApiModelProperty("Start time", required = true)
+    @get:Schema(title = "Start time", required = true)
     val startTime: Long,
-    @ApiModelProperty("End time", required = false)
+    @get:Schema(title = "End time", required = false)
     val endTime: Long?,
-    @ApiModelProperty("Build status", required = true)
+    @get:Schema(title = "Build status", required = true)
     val status: String,
-    @ApiModelProperty("服务器当前时间戳", required = true)
+    @get:Schema(title = "服务器当前时间戳", required = true)
     val currentTimestamp: Long,
-    @ApiModelProperty("构建号", required = true)
+    @get:Schema(title = "构建号", required = true)
     val buildNum: Int,
-    @ApiModelProperty("取消构建的用户", required = false)
+    @get:Schema(title = "取消构建的用户", required = false)
     val cancelUserId: String?,
-    @ApiModelProperty("归档文件个数", required = false)
+    @get:Schema(title = "归档文件个数", required = false)
     val fileCount: Int,
-    @ApiModelProperty("包的版本(多个分号分隔)", required = false)
+    @get:Schema(title = "包的版本(多个分号分隔)", required = false)
     val packageVersion: String,
-    @ApiModelProperty("流水线Id", required = false)
+    @get:Schema(title = "流水线Id", required = false)
     val pipelineId: String,
-    @ApiModelProperty("流水线版本", required = false)
+    @get:Schema(title = "流水线版本", required = false)
     val pipelineVersion: Int,
-    @ApiModelProperty("流水线名字", required = false)
+    @get:Schema(title = "流水线名字", required = false)
     var pipelineName: String,
-    @ApiModelProperty("项目Id", required = false)
+    @get:Schema(title = "项目Id", required = false)
     val projectId: String,
-    @ApiModelProperty("是否收藏", required = false)
+    @get:Schema(title = "是否收藏", required = false)
     val hasCollect: Boolean,
-    @ApiModelProperty("编排文件", required = true)
+    @get:Schema(title = "编排文件", required = true)
     val model: Model,
-    @ApiModelProperty("原材料", required = false)
+    @get:Schema(title = "原材料", required = false)
     val material: List<PipelineBuildMaterial>? = null,
-    @ApiModelProperty("备注", required = false)
+    @get:Schema(title = "备注", required = false)
     val remark: String? = null,
-    @ApiModelProperty("运行耗时(毫秒，不包括人工审核时间)", required = false)
+    @get:Schema(title = "运行耗时(毫秒，不包括人工审核时间)", required = false)
     val executeTime: Long? = null,
-    @ApiModelProperty("构建信息", required = false)
+    @get:Schema(title = "构建信息", required = false)
     var buildMsg: String? = null
 )

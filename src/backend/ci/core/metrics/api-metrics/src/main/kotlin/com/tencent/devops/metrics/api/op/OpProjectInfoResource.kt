@@ -29,9 +29,9 @@ package com.tencent.devops.metrics.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -39,27 +39,36 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PROJECT_INFO"], description = "OP-项目信息")
+@Tag(name = "USER_PROJECT_INFO", description = "OP-项目信息")
 @Path("/op/project/info")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpProjectInfoResource {
 
-    @ApiOperation("同步流水线标签历史数据")
+    @Operation(summary = "同步流水线标签历史数据")
     @Path("/pipeline/label/sync")
     @GET
     fun syncPipelineLabelData(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
 
-    @ApiOperation("同步插件错误信息关联数据")
+    @Operation(summary = "同步插件错误信息关联数据")
     @Path("/atom/error/sync")
     @GET
     fun syncAtomErrorCodeRel(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
+
+    @Operation(summary = "同步项目插件关联信息")
+    @Path("/atom/relevancy/sync")
+    @GET
+    fun syncProjectAtomData(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Boolean
 }

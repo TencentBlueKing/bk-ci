@@ -29,11 +29,11 @@ package com.tencent.devops.process.dao.label
 
 import com.tencent.devops.model.process.tables.TPipelineGroup
 import com.tencent.devops.model.process.tables.records.TPipelineGroupRecord
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 /**
  * 用户分组管理
@@ -125,6 +125,19 @@ class PipelineGroupDao {
         with(TPipelineGroup.T_PIPELINE_GROUP) {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun countByName(
+        dslContext: DSLContext,
+        projectId: String,
+        name: String
+    ): Long {
+        with(TPipelineGroup.T_PIPELINE_GROUP) {
+            return dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NAME.eq(name))
                 .fetchOne(0, Long::class.java)!!
         }
     }

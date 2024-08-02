@@ -25,26 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.resources.thirdPartyAgent
+package com.tencent.devops.environment.resources.thirdpartyagent
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.UserThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentAction
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentLink
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStatusWithInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentLink
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStatusWithInfo
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
-import com.tencent.devops.environment.service.thirdPartyAgent.ImportService
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
+import com.tencent.devops.environment.service.thirdpartyagent.AgentMetricService
+import com.tencent.devops.environment.service.thirdpartyagent.ImportService
+import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentMgrService
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("TooManyFunctions")
@@ -52,7 +56,9 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val slaveGatewayService: SlaveGatewayService,
-    private val importService: ImportService
+    private val importService: ImportService,
+    private val agentMetricService: AgentMetricService,
+    private val batchInstallAgentService: BatchInstallAgentService
 ) : UserThirdPartyAgentResource {
     override fun isProjectEnable(userId: String, projectId: String): Result<Boolean> {
         return Result(true)
@@ -69,10 +75,33 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentService.generateAgent(userId, projectId, os, zoneName))
     }
 
-    override fun getGateway(userId: String, projectId: String, os: OS): Result<List<SlaveGateway>> {
+    override fun generateBatchInstallLink(
+        userId: String,
+        projectId: String,
+        os: OS,
+        zoneName: String?
+    ): Result<String> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(slaveGatewayService.getGateway())
+        return Result(
+            batchInstallAgentService.genInstallLink(
+                projectId = projectId,
+                userId = userId,
+                os = os,
+                zoneName = zoneName
+            )
+        )
+    }
+
+    override fun getGateway(
+        userId: String,
+        projectId: String,
+        os: OS,
+        visibility: Boolean?
+    ): Result<List<SlaveGateway>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        return Result(slaveGatewayService.getGateway().filter { it.visibility == (visibility ?: true) })
     }
 
     override fun getLink(userId: String, projectId: String, nodeId: String): Result<ThirdPartyAgentLink> {
@@ -105,13 +134,20 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentService.getAgentStatusWithInfo(userId, projectId, agentId))
     }
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_CREATE)
     override fun importAgent(userId: String, projectId: String, agentId: String): Result<Boolean> {
-        importService.importAgent(userId, projectId, agentId)
+        importService.importAgent(userId, projectId, agentId, masterVersion = null)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_DELETE)
     override fun deleteAgent(userId: String, projectId: String, nodeHashId: String): Result<Boolean> {
-        thirdPartyAgentService.deleteAgent(userId, projectId, nodeHashId)
+        thirdPartyAgentService.deleteAgent(userId, projectId, setOf(nodeHashId))
+        return Result(true)
+    }
+
+    override fun batchDeleteAgent(userId: String, projectId: String, nodeHashIds: Set<String>): Result<Boolean> {
+        thirdPartyAgentService.deleteAgent(userId, projectId, nodeHashIds)
         return Result(true)
     }
 
@@ -173,6 +209,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_VIEW)
     override fun getThirdPartyAgentDetail(
         userId: String,
         projectId: String,
@@ -200,7 +237,17 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        return Result(thirdPartyAgentService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
+        return Result(
+            thirdPartyAgentService.listAgentBuilds(
+                userId = userId,
+                projectId = projectId,
+                nodeHashId = nodeHashId,
+                status = null,
+                pipelineId = null,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun listAgentActions(
@@ -224,7 +271,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<Map<String, List<Map<String, Any>>>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentService.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange))
+        return Result(agentMetricService.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange))
     }
 
     override fun queryMemoryUsageMetrix(
@@ -235,7 +282,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<Map<String, List<Map<String, Any>>>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentService.queryMemoryUsageMetrix(userId, projectId, nodeHashId, timeRange))
+        return Result(agentMetricService.queryMemoryUsageMetrix(userId, projectId, nodeHashId, timeRange))
     }
 
     override fun queryDiskioMetrix(
@@ -246,7 +293,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<Map<String, List<Map<String, Any>>>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentService.queryDiskioMetrix(userId, projectId, nodeHashId, timeRange))
+        return Result(agentMetricService.queryDiskioMetrix(userId, projectId, nodeHashId, timeRange))
     }
 
     override fun queryNetMetrix(
@@ -257,7 +304,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<Map<String, List<Map<String, Any>>>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentService.queryNetMetrix(userId, projectId, nodeHashId, timeRange))
+        return Result(agentMetricService.queryNetMetrix(userId, projectId, nodeHashId, timeRange))
     }
 
     private fun checkUserId(userId: String) {

@@ -27,16 +27,20 @@
 
 package com.tencent.devops.worker.common
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
@@ -50,6 +54,8 @@ import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.env.DockerEnv
+import com.tencent.devops.worker.common.exception.TaskExecuteExceptionDecorator
+import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
@@ -175,8 +181,10 @@ object Runner {
         val retryCount = variables[PIPELINE_RETRY_COUNT] ?: "0"
         val executeCount = retryCount.toInt() + 1
         LoggerService.executeCount = executeCount
-        LoggerService.jobId = buildVariables.containerHashId
+        LoggerService.containerHashId = buildVariables.containerHashId
+        LoggerService.jobId = buildVariables.jobId ?: ""
         LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
+        LoggerService.stepId = VMUtils.genStartVMTaskId(buildVariables.containerId)
         LoggerService.buildVariables = buildVariables
 
         showBuildStartupLog(buildVariables.buildId, buildVariables.vmSeqId)
@@ -216,11 +224,13 @@ object Runner {
                         obj = buildTask.taskId,
                         exception = RemoteServiceException("Not valid build elementId")
                     )
-
+                    // 处理task和job级别的上下文
+                    combineVariables(buildTask, buildVariables)
                     val task = TaskFactory.create(buildTask.type ?: "empty")
                     val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspacePathFile)
                     try {
                         LoggerService.elementId = buildTask.taskId!!
+                        LoggerService.stepId = buildTask.stepId ?: ""
                         LoggerService.elementName = buildTask.elementName ?: LoggerService.elementId
                         CredentialUtils.signToken = buildTask.signToken ?: ""
 
@@ -243,6 +253,7 @@ object Runner {
                         LoggerService.finishTask()
                         LoggerService.elementId = ""
                         LoggerService.elementName = ""
+                        LoggerService.stepId = ""
                         waitCount = 0
                     }
                 }
@@ -301,45 +312,14 @@ object Runner {
     }
 
     private fun dealException(exception: Throwable, buildTask: BuildTask, taskDaemon: TaskDaemon) {
-
-        val message: String
-        val errorType: String
-        val errorCode: Int
-
-        val trueException = when {
-            exception is TaskExecuteException -> exception
-            exception.cause is TaskExecuteException -> exception.cause as TaskExecuteException
-            else -> null
-        }
-        if (trueException != null) {
-            // Worker内插件执行出错处理
-            logger.warn("[Task Error] Fail to execute the task($buildTask) with task error", exception)
-            message = trueException.errorMsg
-            errorType = trueException.errorType.name
-            errorCode = trueException.errorCode
-        } else {
-            // Worker执行的错误处理
-            logger.warn("[Worker Error] Fail to execute the task($buildTask)", exception)
-            val defaultMessage =
-                StringBuilder("Unknown system error has occurred with StackTrace:\n")
-            defaultMessage.append(exception.toString())
-            exception.stackTrace.forEach {
-                with(it) {
-                    defaultMessage.append(
-                        "\n    at $className.$methodName($fileName:$lineNumber)"
-                    )
-                }
-            }
-            message = exception.message ?: defaultMessage.toString()
-            errorType = ErrorType.SYSTEM.name
-            errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
-        }
+        logger.warn("[Task Error] Fail to execute the task($buildTask) with task error", exception)
+        val trueException = TaskExecuteExceptionDecorator.decorate(exception)
 
         val buildResult = taskDaemon.getBuildResult(
             isSuccess = false,
-            errorMessage = message,
-            errorType = errorType,
-            errorCode = errorCode
+            errorMessage = trueException.errorMsg,
+            errorType = trueException.errorType.name,
+            errorCode = trueException.errorCode
         )
 
         EngineService.completeTask(buildResult)
@@ -423,5 +403,56 @@ object Runner {
         }
         LoggerService.addFoldEndLine("-----")
         LoggerService.addNormalLine("")
+    }
+
+    /**
+     *  为插件级变量填充Job前序产生的流水线变量，以及插件级的ENV
+     */
+    private fun combineVariables(
+        buildTask: BuildTask,
+        jobBuildVariables: BuildVariables
+    ) {
+        // 如果之前的插件不是在构建机执行, 会缺少环境变量
+        val taskBuildVariable = buildTask.buildVariable?.toMutableMap() ?: mutableMapOf()
+        val variablesWithType = jobBuildVariables.variablesWithType
+            .associateBy { it.key }
+        // job 变量能取到真实readonly，保证task 变量readOnly属性不会改变
+        val taskBuildParameters = taskBuildVariable.map { (key, value) ->
+            BuildParameters(key = key, value = value, readOnly = variablesWithType[key]?.readOnly)
+        }.associateBy { it.key }
+        jobBuildVariables.variables = jobBuildVariables.variables.plus(taskBuildVariable)
+        // 以key去重, 并以buildTask中的为准
+        jobBuildVariables.variablesWithType = variablesWithType
+            .plus(taskBuildParameters)
+            .values.toList()
+
+        // 填充插件级的ENV参数
+        val customEnvStr = buildTask.params?.get(Element::customEnv.name)
+        if (customEnvStr != null) {
+            val customEnv = try {
+                JsonUtil.toOrNull(customEnvStr, object : TypeReference<List<NameAndValue>>() {})
+            } catch (ignore: Throwable) {
+                logger.warn("Parse customEnv with error: ", ignore)
+                null
+            }
+            if (customEnv.isNullOrEmpty()) return
+            val jobVariables = jobBuildVariables.variables.toMutableMap()
+            customEnv.forEach {
+                if (!it.key.isNullOrBlank()) {
+                    // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
+                    val value = EnvReplacementParser.parse(
+                        value = it.value ?: "",
+                        contextMap = jobVariables,
+                        onlyExpression = jobBuildVariables.pipelineAsCodeSettings?.enable,
+                        functions = SpecialFunctions.functions,
+                        output = SpecialFunctions.output
+                    )
+                    jobVariables["envs.${it.key}"] = value
+                    taskBuildVariable[it.key!!] = value
+                }
+            }
+            buildTask.buildVariable = taskBuildVariable
+            jobBuildVariables.variables = jobVariables
+        }
     }
 }

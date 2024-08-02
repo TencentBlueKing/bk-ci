@@ -1,0 +1,25 @@
+{
+  "@type" : "windowsScript",
+  "additionalOptions" : {
+    "continueWhenFailed" : false,
+    "enable" : true,
+    "enableCustomEnv" : true,
+    "manualRetry" : true,
+    "pauseBeforeExec" : false,
+    "retryCount" : 0,
+    "retryWhenFailed" : false,
+    "runCondition" : "PRE_TASK_SUCCESS",
+    "subscriptionPauseUser" : "",
+    "timeout" : 100
+  },
+  "atomCode" : "windowsScript",
+  "classType" : "windowsScript",
+  "elementEnable" : true,
+  "executeCount" : 1,
+  "id" : "e-326ce1c320204980a3d2a0f241bccd63",
+  "name" : "batch script",
+  "script" : "unity build",
+  "scriptType" : "BAT",
+  "taskAtom" : "",
+  "version" : "1.*"
+}

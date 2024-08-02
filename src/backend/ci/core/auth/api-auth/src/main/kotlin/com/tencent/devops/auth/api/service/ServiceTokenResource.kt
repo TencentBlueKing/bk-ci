@@ -30,9 +30,9 @@ package com.tencent.devops.auth.api.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.auth.pojo.TokenInfo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -42,7 +42,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_SERVICE_TOKEN"], description = "权限校验--token相关")
+@Tag(name = "AUTH_SERVICE_TOKEN", description = "权限校验--token相关")
 @Path("/service/token")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -50,18 +50,18 @@ interface ServiceTokenResource {
 
     @POST
     @Path("/validate")
-    @ApiOperation("校验用户是否有action的权限")
+    @Operation(summary = "校验用户是否有action的权限")
     fun validateToken(
-        @ApiParam("权限Token", required = false)
+        @Parameter(description = "权限Token", required = false)
         @QueryParam("access_token")
         accessToken: String
     ): Result<TokenInfo>
 
-    @ApiOperation("获取用户访问openapi的accessToken")
+    @Operation(summary = "获取用户访问openapi的accessToken")
     @GET
     @Path("/get")
     fun getAccessToken(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<TokenInfo>

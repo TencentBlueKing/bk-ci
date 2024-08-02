@@ -1,15 +1,18 @@
 <template>
-    <div id="app" class="biz-app">
+    <div
+        id="app"
+        class="biz-app"
+    >
         <main class="app-container">
             <router-view></router-view>
         </main>
         <portal-target name="atom-selector-popup"></portal-target>
+        <portal-target name="yaml-preview-popup"></portal-target>
     </div>
 </template>
 
 <script>
-    import { mapState, mapMutations } from 'vuex'
-    import { getCacheViewId } from '@/utils/util'
+    import { mapMutations, mapState } from 'vuex'
 
     export default {
         name: 'App',
@@ -25,6 +28,7 @@
         },
         watch: {
             '$route.fullPath' (val) { // 同步地址到蓝盾
+                console.log(val, 'fullPath')
                 this.$syncUrl(val.replace(/^\/pipeline\//, '/'))
             },
             fetchError (error) {
@@ -57,13 +61,8 @@
                 this.goHome()
             })
 
-            window.globalVue.$on('change::$projectList', data => { // 获取项目列表
-                // this.$store.dispatch('setProjectList', this.$projectList)
-                // this.$store.dispatch('getProjectList')
-            })
-
             window.globalVue.$on('order::syncLocale', locale => {
-                this.$setLocale(locale)
+                this.$setLocale(locale, false)
             })
         },
         methods: {
@@ -72,7 +71,6 @@
             ]),
             goHome (projectId) {
                 const params = projectId ? { projectId } : {}
-                const viewId = getCacheViewId(projectId)
                 this.updatePipelineActionState({
                     activePipeline: null,
                     isConfirmShow: false,
@@ -80,13 +78,14 @@
                     activePipelineList: [],
                     isSaveAsTemplateShow: false,
                     isCopyDialogShow: false,
-                    addToDialogShow: false
+                    addToDialogShow: false,
+                    isDisableDialogShow: false
                 })
                 this.$router.replace({
                     name: 'PipelineManageList',
                     params: {
-                        ...params,
-                        viewId
+                        ...this.$route.params,
+                        ...params
                     }
                 })
             },
@@ -144,11 +143,6 @@
     .app-content {
         flex: 1;
         background: #fafbfd;
-    }
-    .text-link {
-        font-size: 14px;
-        cursor: pointer;
-        color: $primaryColor;
     }
 
     .bkdevops-radio {

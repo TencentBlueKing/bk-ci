@@ -37,8 +37,8 @@ package com.tencent.devops.project.constant
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev）
- * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）remotedev
+ *    32: remotedev 35：misc-杂项）
+ * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
  * @since: 2023-3-20
@@ -50,7 +50,7 @@ object ProjectMessageCode {
     const val PROJECT_NAME_EXIST = "2119002" // 项目名或英文名重复
     const val NAME_EMPTY = "2119003" // 名称不能为空
     const val NAME_TOO_LONG = "2119004" // 项目名至多1-64个字符
-    const val EN_NAME_INTERVAL_ERROR = "2119005" // 英文名长度在3-64个字符
+    const val EN_NAME_INTERVAL_ERROR = "2119005" // 英文名长度在3-32个字符
     const val EN_NAME_COMBINATION_ERROR = "2119006" // 英文名是字符+数字组成，并以小写字母开头
     const val EN_NAME_EXIST = "2119007" // 英文名已经存在
     const val PEM_CREATE_FAIL = "2119008" // 权限中心创建项目失败
@@ -91,11 +91,15 @@ object ProjectMessageCode {
     const val FAILED_USER_INFORMATION = "2119043" // 获取用户{0} 信息失败
     const val BOUND_IAM_GRADIENT_ADMIN = "2119044" // 已绑定IAM分级管理员
     const val RELATED_RESOURCE_EMPTY = "2119045" // 权限系统：绑定系统资源为空
-    const val ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT = "2119046" // iam回调方法${0}不支持
+    const val ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT = "2119046" // iam回调方法{0}不支持
     const val PROJECT_UPDATE_FAIL = "2119047" // 修改项目错误
     const val CANCEL_CREATION_PROJECT_FAIL = "2119048" // 取消创建中的项目失败
-    const val APPROVAL_PROJECT_CANT_UPDATE = "2119049" // 审批下的下项目不能修改
+    const val APPROVAL_PROJECT_CANT_UPDATE = "2119049" // 审批下的下项目{0}不能修改
     const val UNDER_APPROVAL_PROJECT = "2119050" // 项目{0}审批中，请耐心等待，或联系审批人处理
+    const val ERROR_GROUP_NOT_BELONG_TO_PROJECT = "2119051" // 用户组不属于该项目
+    const val ERROR_PROJECT_NOT_RELATED_PRODUCT = "2119052" // 项目未关联产品ID
+    const val ERROR_PRODUCT_NOT_EXIST = "2119053" // 运营产品不存在
+    const val ERROR_ORGANIZATION_CAN_NOT_TO_BE_EMPTY = "2119054" // 组织架构不允许为空
 
     const val BK_CONTAINER_SERVICE = "bkContainerService" // 容器服务
     const val BK_FAILED_BSC_CREATE_PROJECT = "bkFailedBscCreateProject" // 调用BSC接口创建项目失败

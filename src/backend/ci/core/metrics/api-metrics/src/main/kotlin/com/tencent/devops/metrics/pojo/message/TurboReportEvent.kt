@@ -27,15 +27,14 @@
 
 package com.tencent.devops.metrics.pojo.message
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Turbo上报消息")
+@Schema(title = "Turbo上报消息")
 data class TurboReportEvent(
-    @ApiModelProperty("统计日期")
+    @get:Schema(title = "统计日期")
     val statisticsTime: String,
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @ApiModelProperty("编译加速节省时间，单位：秒")
+    @get:Schema(title = "编译加速节省时间，单位：秒")
     val turboSaveTime: Double
 )

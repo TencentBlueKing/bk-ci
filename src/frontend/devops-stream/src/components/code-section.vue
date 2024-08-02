@@ -106,6 +106,7 @@
 
             changeValue (instance) {
                 const value = instance.getValue()
+                this.$emit('change')
                 this.$emit('update:code', value)
             },
 

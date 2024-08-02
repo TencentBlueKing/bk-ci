@@ -58,26 +58,31 @@ import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubRepoBranch
 import com.tencent.devops.repository.pojo.github.GithubRepoTag
 import com.tencent.devops.repository.pojo.github.GithubTag
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryContentRequest
+import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
+import com.tencent.devops.repository.sdk.github.service.GithubUserService
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
 import com.tencent.devops.scm.pojo.Project
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
 class GithubService @Autowired constructor(
     private val githubTokenService: GithubTokenService,
     private val githubOAuthService: GithubOAuthService,
+    private val githubRepositoryService: GithubRepositoryService,
+    private val githubUserService: GithubUserService,
     private val objectMapper: ObjectMapper,
     private val gitConfig: GitConfig,
     private val client: Client
@@ -234,17 +239,33 @@ class GithubService @Autowired constructor(
         )
     }
 
-    override fun getFileContent(projectName: String, ref: String, filePath: String): String {
-        val url = "https://raw.githubusercontent.com/$projectName/$ref/$filePath"
-        OkhttpUtils.doGet(url).use {
-            logger.info("github content url: $url")
-            if (!it.isSuccessful) {
-                throw CustomException(
-                    status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
-                    message = it.body!!.toString()
-                )
+    override fun getFileContent(
+        projectName: String,
+        ref: String,
+        filePath: String,
+        token: String
+    ): String {
+        return if (token.isBlank()) {
+            val url = "https://raw.githubusercontent.com/$projectName/$ref/$filePath"
+            OkhttpUtils.doGet(url).use {
+                logger.info("github content url: $url")
+                if (!it.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                        message = it.body!!.toString()
+                    )
+                }
+                return it.body!!.string()
             }
-            return it.body!!.string()
+        } else {
+            githubRepositoryService.getRepositoryContent(
+                request = GetRepositoryContentRequest(
+                    repoName = projectName,
+                    ref = ref,
+                    path = filePath
+                ),
+                token = token
+            )?.getDecodedContentAsString() ?: ""
         }
     }
 
@@ -357,8 +378,8 @@ class GithubService @Autowired constructor(
             else -> "GitHub platform $operation fail"
         }
         throw GithubApiException(
-            code,
-            I18nUtil.getCodeLanMessage(messageCode = msg, params = arrayOf(operation))
+            code = code,
+            message = msg
         )
     }
 
@@ -367,6 +388,46 @@ class GithubService @Autowired constructor(
             messageCode = messageCode,
             params = params
         )
+    }
+
+    override fun isOAuth(
+        userId: String,
+        projectId: String,
+        refreshToken: Boolean?,
+        resetType: String?
+    ): AuthorizeResult {
+        logger.info("isOAuth userId is: $userId,refreshToken is: $refreshToken")
+        val accessToken = if (refreshToken == true) {
+            null
+        } else {
+            githubTokenService.getAccessToken(userId)
+        } ?: return AuthorizeResult(
+            status = HTTP_403,
+            url = githubOAuthService.getGithubOauth(
+                projectId = projectId,
+                userId = userId,
+                repoHashId = null,
+                popupTag = "",
+                resetType = resetType
+            ).redirectUrl
+        )
+        // 校验token是否有效
+        try {
+            githubUserService.getUser(accessToken.accessToken)
+        } catch (e: Exception) {
+            return AuthorizeResult(
+                status = HTTP_403,
+                url = githubOAuthService.getGithubOauth(
+                    projectId = projectId,
+                    userId = userId,
+                    repoHashId = null,
+                    popupTag = "",
+                    resetType = resetType
+                ).redirectUrl
+            )
+        }
+        logger.info("github isOAuth accessToken is: $accessToken")
+        return AuthorizeResult(200, "")
     }
 
     companion object {

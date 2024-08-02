@@ -50,7 +50,8 @@ import java.io.InputStreamReader
     "ComplexCondition",
     "ComplexMethod",
     "NestedBlockDepth",
-    "ReturnCount"
+    "ReturnCount",
+    "LongParameterList"
 )
 object EnvReplacementParser {
 
@@ -188,7 +189,7 @@ object EnvReplacementParser {
             blocksInLevel.forEachIndexed nextBlock@{ blockI, block ->
                 // 表达式因为含有 ${{ }} 所以起始向后推3位，末尾往前推两位
                 val expression = chars.joinToString("").substring(block.startIndex + 3, block.endIndex - 1)
-
+                if (expression.isBlank()) return@nextBlock
                 var result = try {
                     ExpressionParser.createTree(expression, null, nameValues, functions)!!
                         .evaluate(null, context, null, output).value.let {

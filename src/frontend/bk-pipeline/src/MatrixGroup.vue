@@ -1,7 +1,9 @@
 <template>
-    <div class="bk-pipeline-matrix-group">
+    <div :class="['bk-pipeline-matrix-group', {
+        'un-exec-this-time': reactiveData.isExecDetail && isUnExecThisTime
+    }]">
         <header class="bk-pipeline-matrix-group-header" @click="showMatrixPanel">
-            <div class="matrix-name" @click.stop="toggleMatrixOpen">
+            <div class="matrix-name" @click.stop="toggleMatrixOpen()">
                 <Logo name="angle-down" size="12" :class="matrixToggleCls"></Logo>
                 <span :class="matrixTitleCls">
                     {{matrix.name || t('jobMatrix')}}
@@ -20,24 +22,24 @@
         <section class="matrix-body" v-if="isMatrixOpen && hasMatrixJob">
             <Job
                 v-for="(job, jobIndex) in computedJobs"
-                :key="job.containerId"
+                :key="job.id"
                 :container="job"
                 :container-group-index="jobIndex"
                 v-bind="restProps"
+                :ref="job.id"
             >
             </Job>
         </section>
     </div>
-    
 </template>
 
 <script>
-    import StatusIcon from './StatusIcon'
     import Job from './Job'
     import Logo from './Logo'
-    import { STATUS_MAP, CLICK_EVENT_NAME } from './constants'
-    import { getDependOnDesc, eventBus, isTriggerContainer } from './util'
+    import StatusIcon from './StatusIcon'
+    import { CLICK_EVENT_NAME, STATUS_MAP } from './constants'
     import { localeMixins } from './locale'
+    import { eventBus, getDependOnDesc, isTriggerContainer } from './util'
     
     export default {
         components: {
@@ -49,7 +51,7 @@
         props: {
             stage: {
                 type: Object,
-                requiured: true
+                required: true
             },
             matrix: {
                 type: Object,
@@ -60,45 +62,16 @@
             containerIndex: Number,
             containerLength: Number,
             stageDisabled: Boolean,
-            editable: {
-                type: Boolean,
-                default: true
-            },
-            isExecDetail: {
-                type: Boolean,
-                default: false
-            },
-            isPreview: {
-                type: Boolean,
-                default: false
-            },
-            isLatestBuild: {
-                type: Boolean,
-                default: false
-            },
-            canSkipElement: {
-                type: Boolean,
-                default: false
-            },
             handleChange: {
                 type: Function,
                 required: true
             },
-            cancelUserId: {
-                type: String,
-                default: 'unknow'
-            },
-            userName: {
-                type: String,
-                default: 'unknow'
-            },
             stageLength: Number,
-            updateCruveConnectHeight: Function,
-            matchRules: {
-                type: Array,
-                default: () => []
-            }
+            updateCruveConnectHeight: Function
         },
+        inject: [
+            'reactiveData'
+        ],
         data () {
             return {
                 isMatrixOpen: false
@@ -116,6 +89,9 @@
                 return {
                     'skip-name': this.disabled || this.matrix.status === STATUS_MAP.SKIP
                 }
+            },
+            isUnExecThisTime () {
+                return this.matrix?.executeCount < this.reactiveData.currentExecCount
             },
             matrixStatusDescCls () {
                 return {
@@ -138,17 +114,19 @@
             },
             computedJobs () {
                 return this.matrix.groupContainers.map(container => {
-                    container.elements = container.elements.map((element, index) => {
-                        const eleItem = this.matrix.elements[index] || {}
-                        return {
-                            ...eleItem,
-                            ...element,
-                            '@type': eleItem['@type'],
-                            classType: eleItem.classType,
-                            atomCode: eleItem.atomCode
-                        }
-                    })
-                    return container
+                    return {
+                        ...container,
+                        elements: container.elements.map((element, index) => {
+                            const eleItem = this.matrix.elements[index] || {}
+                            return Object.assign(element, {
+                                ...eleItem,
+                                ...element,
+                                '@type': eleItem['@type'],
+                                classType: eleItem.classType,
+                                atomCode: eleItem.atomCode
+                            })
+                        })
+                    }
                 })
             },
             hasMatrixJob () {
@@ -161,8 +139,8 @@
             }
         },
         methods: {
-            toggleMatrixOpen () {
-                this.isMatrixOpen = !this.isMatrixOpen
+            toggleMatrixOpen (open) {
+                this.isMatrixOpen = open ?? !this.isMatrixOpen
                 this.updateCruveConnectHeight()
             },
             showMatrixPanel () {
@@ -219,6 +197,9 @@
     }
     .matrix-body {
       margin-top: 12px;
+      > div {
+        margin-bottom: 34px;
+      }
     }
   }
 </style>

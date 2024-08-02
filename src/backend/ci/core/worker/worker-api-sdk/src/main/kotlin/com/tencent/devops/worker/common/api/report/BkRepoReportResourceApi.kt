@@ -28,10 +28,12 @@
 package com.tencent.devops.worker.common.api.report
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
@@ -45,12 +47,11 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTO
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.logger.LoggerService.elementId
-import com.tencent.devops.worker.common.utils.TaskUtil
-import java.io.File
-import java.nio.file.Files
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
+import java.nio.file.Files
 
 @ApiPriority(priority = 9)
 class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
@@ -171,8 +172,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
                 buildVariables = buildVariables,
                 parseAppMetadata = false,
                 parsePipelineMetadata = false
-            ),
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+            )
         )
         val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, AgentEnv.getLocaleLanguage())
         val responseContent = request(request, message)
@@ -198,5 +198,29 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             uploadBkRepoReport(file, relativePath, buildVariables)
         }
         bkrepoResourceApi.setPipelineMetadata("report", buildVariables)
+    }
+
+    override fun getRepoToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        type: TokenType,
+        expireSeconds: Long
+    ): String? {
+        return if (bkrepoResourceApi.tokenAccess()) {
+            HttpRetryUtils.retry(retryTime = 3, retryPeriodMills = 1000) {
+                bkrepoResourceApi.createBkRepoTemporaryToken(
+                    userId = userId,
+                    projectId = projectId,
+                    repoName = repoName,
+                    path = path,
+                    type = type,
+                    expireSeconds = expireSeconds
+                )
+            }
+        } else {
+            null
+        }
     }
 }

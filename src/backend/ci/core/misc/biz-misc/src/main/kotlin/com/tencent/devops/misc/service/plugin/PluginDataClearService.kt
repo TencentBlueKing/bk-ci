@@ -27,14 +27,12 @@
 
 package com.tencent.devops.misc.service.plugin
 
-import com.tencent.devops.misc.dao.plugin.PluginDataClearDao
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 
 abstract class PluginDataClearService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val pluginDataClearDao: PluginDataClearDao
+    private val dslContext: DSLContext
 ) {
 
     /**
@@ -44,7 +42,6 @@ abstract class PluginDataClearService @Autowired constructor(
     fun clearBuildData(buildId: String) {
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            pluginDataClearDao.deletePluginCodeccByBuildId(context, buildId)
             deleteTableData(context, buildId)
         }
     }

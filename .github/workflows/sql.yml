@@ -33,5 +33,26 @@ jobs:
     - name: init mysql
       run: |
         export MYSQL_PWD=root
-        for i in *.sql;do echo $i;mysql -h 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot < $i;done
+        runsql() {
+          sql_file=$1
+          if [[ -f $sql_file ]] && [[ "${sql_file##*.}"x = "sql"x ]] ;
+          then
+            echo "import $sql_file"
+            mysql -h 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot < $sql_file
+          elif [[ -d $sql_file ]];
+          then
+            echo "loop dir $sql_file"
+            for file in $sql_file/*;
+            do
+              runsql $file
+            done
+          else
+            echo "$sql_file is nothing"
+          fi
+        }
+        pwd
+        for sql_file in *;
+        do 
+          runsql $sql_file;
+        done
       working-directory: support-files/sql

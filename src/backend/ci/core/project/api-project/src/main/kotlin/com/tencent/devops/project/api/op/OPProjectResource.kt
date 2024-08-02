@@ -32,16 +32,19 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.OpProjectGraySetRequest
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.servlet.http.HttpServletRequest
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -50,7 +53,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PROJECT"], description = "项目列表接口")
+@Tag(name = "OP_PROJECT", description = "项目列表接口")
 @Path("/op/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -59,118 +62,173 @@ interface OPProjectResource {
 
     @GET
     @Path("/")
-    @ApiOperation("查询所有项目")
+    @Operation(summary = "查询所有项目")
     fun list(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<ProjectVO>>
 
-    @ApiOperation("更新项目信息")
+    @Operation(summary = "更新项目信息")
     @PUT
     @Path("/")
     fun updateProject(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("PAAS_CC Token", required = true)
+        @Parameter(description = "PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
-        @ApiParam(value = "项目信息请求实体", required = true)
+        @Parameter(description = "项目信息请求实体", required = true)
         projectInfoRequest: OpProjectUpdateInfoRequest
     ): Result<Int>
 
-    @ApiOperation("获取项目信息列表，支持筛选仓库灰度")
+    @POST
+    @Path("/updateProjectCreator")
+    @Operation(summary = "修改项目创建人")
+    fun updateProjectCreator(
+        projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>
+    ): Result<Boolean>
+
+    @Operation(summary = "获取项目信息列表，支持筛选仓库灰度")
     @GET
     @Path("/list/project")
     fun getProjectList(
-        @ApiParam(value = "项目名称", required = false)
+        @Parameter(description = "项目名称", required = false)
         @QueryParam(value = "project_name")
         projectName: String?,
-        @ApiParam(value = "项目简称", required = false)
+        @Parameter(description = "项目简称", required = false)
         @QueryParam(value = "english_name")
         englishName: String?,
-        @ApiParam(value = "项目类型", required = false)
+        @Parameter(description = "项目类型", required = false)
         @QueryParam(value = "project_type")
         projectType: Int?,
-        @ApiParam(value = "是否保密", required = false)
+        @Parameter(description = "是否保密", required = false)
         @QueryParam(value = "is_secrecy")
         isSecrecy: Boolean?,
-        @ApiParam(value = "注册人", required = false)
+        @Parameter(description = "注册人", required = false)
         @QueryParam(value = "creator")
         creator: String?,
-        @ApiParam(value = "审批人", required = false)
+        @Parameter(description = "审批人", required = false)
         @QueryParam(value = "approver")
         approver: String?,
-        @ApiParam(value = "审核状态", required = false)
+        @Parameter(description = "审核状态", required = false)
         @QueryParam(value = "approval_status")
         approvalStatus: Int?,
-        @ApiParam(value = "偏移量", required = true)
+        @Parameter(description = "偏移量", required = true)
         @QueryParam(value = "offset")
         offset: Int,
-        @ApiParam(value = "查询数量", required = true)
+        @Parameter(description = "查询数量", required = true)
         @QueryParam(value = "limit")
         limit: Int,
-        @ApiParam(value = "是否灰度 true：是 false：否", required = true)
+        @Parameter(description = "是否灰度 true：是 false：否", required = true)
         @QueryParam(value = "is_gray")
         grayFlag: Boolean,
-        @ApiParam(value = "是否灰度 true：是 false：否", required = false)
+        @Parameter(description = "是否灰度 true：是 false：否", required = false)
         @QueryParam(value = "is_codecc_gray")
         codeCCGrayFlag: Boolean = false,
-        @ApiParam(value = "是否仓库灰度 true：是 false：否", required = true)
+        @Parameter(description = "是否仓库灰度 true：是 false：否", required = true)
         @QueryParam(value = "is_repo_gray")
         repoGrayFlag: Boolean = false,
+        @Parameter(description = "是否是云研发项目 true：是 false：否", required = true)
+        @QueryParam(value = "is_remotedev")
+        remoteDevFlag: Boolean = false,
+        @Parameter(description = "运营产品ID", required = true)
+        @QueryParam(value = "product_id")
+        productId: Int?,
+        @Parameter(description = "渠道", required = true)
+        @QueryParam(value = "channelCode")
+        channelCode: String?,
         @Context request: HttpServletRequest
     ): Result<Map<String, Any?>?>
 
-    @ApiOperation("灰度项目设置")
+    @Operation(summary = "灰度项目设置")
     @PUT
     @Path("/setGrayProject")
     fun setGrayProject(
-        @ApiParam(value = "灰度项目设置请求实体", required = true)
+        @Parameter(description = "灰度项目设置请求实体", required = true)
         projectGraySetRequest: OpProjectGraySetRequest
     ): Result<Boolean>
 
-    @ApiOperation("灰度项目设置")
+    @Operation(summary = "灰度项目设置")
     @PUT
     @Path("/codecc/setGrayProject")
     fun setCodeCCGrayProject(
-        @ApiParam(value = "灰度项目设置请求实体", required = true)
+        @Parameter(description = "灰度项目设置请求实体", required = true)
         projectGraySetRequest: OpProjectGraySetRequest
     ): Result<Boolean>
 
-    @ApiOperation("同步项目")
+    @Operation(summary = "同步项目")
     @PUT
     @Path("/{projectId}/syn")
     fun synProject(
-        @ApiParam(value = "项目code", required = true)
+        @Parameter(description = "项目code", required = true)
         @PathParam("projectId")
         projectCode: String,
-        @ApiParam(value = "是否触发刷数据 true：是 false：否", defaultValue = false.toString())
+        @Parameter(description = "是否触发刷数据 true：是 false：否", example = false.toString())
         @QueryParam(value = "isRefresh")
         isRefresh: Boolean
     ): Result<Boolean>
 
-    @ApiOperation("同步项目初始化")
+    @Operation(summary = "同步项目初始化")
     @PUT
     @Path("/init/syn")
     fun synProjectInit(
-        @ApiParam(value = "是否触发刷数据 true：是 false：否", defaultValue = false.toString())
+        @Parameter(description = "是否触发刷数据 true：是 false：否", example = false.toString())
         @QueryParam(value = "isRefresh")
         isRefresh: Boolean
     ): Result<List<String>>
 
-    @ApiOperation("修改项目配置")
+    @Operation(summary = "修改项目配置")
     @PUT
     @Path("/{projectId}/setProjectProperties")
     fun setProjectProperties(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "项目code", required = true)
+        @Parameter(description = "项目code", required = true)
         @PathParam("projectId")
         projectCode: String,
-        @ApiParam(value = "项目其他配置", required = true)
+        @Parameter(description = "项目其他配置", required = true)
         properties: ProjectProperties
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/enable")
+    @Operation(summary = "启用或停用项目")
+    fun enable(
+        @Parameter(description = "待变更的新状态", required = true)
+        @QueryParam("enabled")
+        enabled: Boolean,
+        @Parameter(description = "项目ID列表", required = true)
+        englishNames: List<String>
+    ): Result<Boolean>
+
+    @PUT
+    @Path("{projectId}/updateProjectProductId")
+    @Operation(summary = "修改项目关联产品")
+    fun updateProjectProductId(
+        @Parameter(description = "项目code", required = true)
+        @PathParam("projectId")
+        projectCode: String,
+        @Parameter(description = "产品名称", required = true)
+        @QueryParam("productName")
+        productName: String
+    ): Result<Boolean>
+
+    @GET
+    @Path("/product/getOperationalProducts")
+    @Operation(summary = "查询运营产品")
+    fun getOperationalProducts(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<List<OperationalProductVO>>
+
+    @PUT
+    @Path("/setDisableWhenInactiveFlag")
+    fun setDisableWhenInactiveFlag(
+        @Parameter(description = "项目ID列表", required = true)
+        projectCodes: List<String>
     ): Result<Boolean>
 }

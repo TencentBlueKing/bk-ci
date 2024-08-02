@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordTaskRecord
@@ -39,7 +40,7 @@ import com.tencent.devops.process.pojo.KEY_TASK_ID
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record17
+import org.jooq.Record19
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
 import org.jooq.util.mysql.MySQLDSL
@@ -69,7 +70,10 @@ class BuildRecordTaskDao {
                 STATUS,
                 TASK_SEQ,
                 ATOM_CODE,
-                TIMESTAMPS
+                TIMESTAMPS,
+                POST_INFO,
+                START_TIME,
+                END_TIME
             ).also { insert ->
                 records.forEach { record ->
                     insert.values(
@@ -87,7 +91,10 @@ class BuildRecordTaskDao {
                         record.status,
                         record.taskSeq,
                         record.atomCode,
-                        JsonUtil.toJson(record.timestamps, false)
+                        JsonUtil.toJson(record.timestamps, false),
+                        record.elementPostInfo?.let { JsonUtil.toJson(it, false) },
+                        record.startTime,
+                        record.endTime
                     )
                 }
             }.onDuplicateKeyUpdate()
@@ -182,7 +189,8 @@ class BuildRecordTaskDao {
         projectId: String,
         buildId: String,
         executeCount: Int,
-        matrixContainerIds: List<String>
+        matrixContainerIds: List<String>,
+        stageId: String? = null
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val conditions = mutableListOf<Condition>()
@@ -192,6 +200,9 @@ class BuildRecordTaskDao {
             if (matrixContainerIds.isNotEmpty()) {
                 conditions.add(CONTAINER_ID.notIn(matrixContainerIds))
             }
+            if (stageId != null) {
+                conditions.add(STAGE_ID.eq(stageId))
+            }
             // 获取每个最大执行次数
             val max = DSL.select(
                 TASK_ID.`as`(KEY_TASK_ID),
@@ -200,7 +211,7 @@ class BuildRecordTaskDao {
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, TASK_ID,
                 TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE,
-                START_TIME, END_TIME, TIMESTAMPS
+                START_TIME, END_TIME, TIMESTAMPS, POST_INFO, ASYNC_STATUS
             ).from(this).join(max).on(
                 TASK_ID.eq(max.field(KEY_TASK_ID, String::class.java))
                     .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
@@ -227,7 +238,7 @@ class BuildRecordTaskDao {
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, TASK_ID,
                 TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE,
-                START_TIME, END_TIME, TIMESTAMPS
+                START_TIME, END_TIME, TIMESTAMPS, POST_INFO, ASYNC_STATUS
             ).from(this).where(conditions).orderBy(TASK_SEQ.asc()).fetch()
             return result.map { record ->
                 generateBuildRecordTask(record)
@@ -236,8 +247,9 @@ class BuildRecordTaskDao {
     }
 
     private fun TPipelineBuildRecordTask.generateBuildRecordTask(
-        record: Record17<String, String, String, Int, String,
-            String, String, Int, Int, String, String, String, String, String, LocalDateTime, LocalDateTime, String>
+        record: Record19<String, String, String, Int, String,
+                String, String, Int, Int, String, String, String,
+                String, String, LocalDateTime, LocalDateTime, String, String, String>
     ) =
         BuildRecordTask(
             buildId = record[BUILD_ID],
@@ -260,7 +272,11 @@ class BuildRecordTaskDao {
             endTime = record[END_TIME],
             timestamps = record[TIMESTAMPS]?.let {
                 JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
-            } ?: mapOf()
+            } ?: mapOf(),
+            elementPostInfo = record[POST_INFO]?.let {
+                JsonUtil.to(it, object : TypeReference<ElementPostInfo>() {})
+            },
+            asyncStatus = record[ASYNC_STATUS]
         )
 
     fun getRecord(
@@ -280,6 +296,28 @@ class BuildRecordTaskDao {
                         .and(TASK_ID.eq(taskId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 ).fetchOne(mapper)
+        }
+    }
+
+    fun updateAsyncStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int,
+        asyncStatus: String
+    ) {
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            dslContext.update(this)
+                .set(ASYNC_STATUS, asyncStatus)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(TASK_ID.eq(taskId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                ).execute()
         }
     }
 
@@ -305,7 +343,10 @@ class BuildRecordTaskDao {
                     endTime = endTime,
                     timestamps = timestamps?.let {
                         JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
-                    } ?: mapOf()
+                    } ?: mapOf(),
+                    elementPostInfo = postInfo?.let {
+                        JsonUtil.to(it, object : TypeReference<ElementPostInfo>() {})
+                    }
                 )
             }
         }

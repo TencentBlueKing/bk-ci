@@ -30,49 +30,48 @@ import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("email电子邮件消息类型")
+@Schema(title = "email电子邮件消息类型")
 open class EmailNotifyMessage : BaseMessage() {
 
-    @ApiModelProperty("邮件格式", allowableValues = "0,1", dataType = "int")
+    @get:Schema(title = "邮件格式", allowableValues = ["0", "1"], type = "int")
     var format: EnumEmailFormat = EnumEmailFormat.PLAIN_TEXT
 
-    @ApiModelProperty("邮件类型", allowableValues = "0,1", dataType = "int")
+    @get:Schema(title = "邮件类型", allowableValues = ["0", "1"], type = "int")
     var type: EnumEmailType = EnumEmailType.OUTER_MAIL
 
-    @ApiModelProperty("通知接收者")
-    private val receivers: MutableSet<String> = mutableSetOf()
+    @get:Schema(title = "通知接收者")
+    private val receivers: LinkedHashSet<String> = LinkedHashSet()
 
-    @ApiModelProperty("邮件抄送接收者")
-    private val cc: MutableSet<String> = mutableSetOf()
+    @get:Schema(title = "邮件抄送接收者")
+    private val cc: LinkedHashSet<String> = LinkedHashSet()
 
-    @ApiModelProperty("邮件密送接收者")
-    private val bcc: MutableSet<String> = mutableSetOf()
+    @get:Schema(title = "邮件密送接收者")
+    private val bcc: LinkedHashSet<String> = LinkedHashSet()
 
-    @ApiModelProperty("邮件内容")
+    @get:Schema(title = "邮件内容")
     var body: String = ""
 
-    @ApiModelProperty("邮件发送者")
+    @get:Schema(title = "邮件发送者")
     var sender: String = "DevOps"
 
-    @ApiModelProperty("邮件标题")
+    @get:Schema(title = "邮件标题")
     var title: String = ""
 
-    @ApiModelProperty("优先级", allowableValues = "-1,1,1", dataType = "int")
+    @get:Schema(title = "优先级", allowableValues = ["-1", "0", "1"], type = "int")
     var priority: EnumNotifyPriority = EnumNotifyPriority.HIGH
 
-    @ApiModelProperty("通知来源", allowableValues = "0,1", dataType = "int")
+    @get:Schema(title = "通知来源", allowableValues = ["0", "1"], type = "int")
     var source: EnumNotifySource = EnumNotifySource.BUSINESS_LOGIC
 
-    @ApiModelProperty("codecc邮件附件内容")
+    @get:Schema(title = "codecc邮件附件内容")
     var codeccAttachFileContent: Map<String, String>? = mapOf()
 
-    @ApiModelProperty("邮件内容，可替代的上下文集合[腾讯云邮件服务只支持传模板参数形式]")
+    @get:Schema(title = "邮件内容，可替代的上下文集合[腾讯云邮件服务只支持传模板参数形式]")
     var variables: Map<String, String>? = mapOf()
 
-    @ApiModelProperty("腾讯云邮件模板id")
+    @get:Schema(title = "腾讯云邮件模板id")
     var tencentCloudTemplateId: Int? = null
 
     fun addReceiver(receiver: String) {
@@ -104,10 +103,10 @@ open class EmailNotifyMessage : BaseMessage() {
     }
 
     fun getReceivers(): Set<String> {
-        return receivers.toSet()
+        return receivers
     }
 
-    @ApiModelProperty(hidden = true)
+    @Schema(hidden = true)
     fun isReceiversEmpty(): Boolean {
         if (receivers.size == 0) return true
         return false
@@ -118,7 +117,7 @@ open class EmailNotifyMessage : BaseMessage() {
     }
 
     fun getBcc(): Set<String> {
-        return bcc.toSet()
+        return bcc
     }
 
     fun clearCc() {
@@ -126,7 +125,7 @@ open class EmailNotifyMessage : BaseMessage() {
     }
 
     fun getCc(): Set<String> {
-        return cc.toSet()
+        return cc
     }
 
     override fun toString(): String {

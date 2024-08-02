@@ -65,9 +65,9 @@ class CheckMutexContainerCmd(
         val event = commandContext.event
         val container = commandContext.container
         // 到了真正进入互斥环节时，修正互斥组中引用的变量或排队耗时
-        if (container.controlOption.mutexGroup?.inited != true) { // 未初始化
+        if (container.controlOption.mutexGroup?.runtimeMutexGroup.isNullOrBlank()) { // 未初始化
             val mg = mutexControl.decorateMutexGroup(container.controlOption.mutexGroup, commandContext.variables)
-            if (mg?.inited != container.controlOption.mutexGroup?.inited) {
+            if (mg?.runtimeMutexGroup != container.controlOption.mutexGroup?.runtimeMutexGroup) {
                 // 对于互斥组Job的锁定优化，防止重复锁定以及锁名称因变量的变化带来的锁变化，造成前锁无法被清理等，做变化替换
                 container.controlOption.mutexGroup = mg
                 if (commandContext.needUpdateControlOption == null) {
@@ -94,7 +94,7 @@ class CheckMutexContainerCmd(
                         commandContext.cmdFlowState = CmdFlowState.LOOP // 循环消息命令 延时10秒钟
                     }
 
-                    ContainerMutexStatus.FIRST_LOG -> { // #5454 增加可视化的互斥状态打印
+                    ContainerMutexStatus.FIRST_LOG -> { // #5454 增加可视化的互斥状态打印，注：这里进行了Job状态流转！
                         commandContext.latestSummary = "mutex_print"
                         commandContext.cmdFlowState = CmdFlowState.LOOP
                     }

@@ -48,16 +48,18 @@ import com.tencent.devops.buildless.utils.ENV_BK_CI_DOCKER_HOST_IP
 import com.tencent.devops.buildless.utils.ENV_BK_CI_DOCKER_HOST_WORKSPACE
 import com.tencent.devops.buildless.utils.ENV_CONTAINER_NAME
 import com.tencent.devops.buildless.utils.ENV_DEFAULT_LOCALE_LANGUAGE
+import com.tencent.devops.buildless.utils.ENV_DEVOPS_FILE_GATEWAY
+import com.tencent.devops.buildless.utils.ENV_DEVOPS_GATEWAY
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_IP
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_PORT
 import com.tencent.devops.buildless.utils.ENV_JOB_BUILD_TYPE
+import com.tencent.devops.buildless.utils.ENV_KEY_BK_TAG
 import com.tencent.devops.buildless.utils.ENV_KEY_GATEWAY
-import com.tencent.devops.buildless.utils.ENV_KEY_PROJECT_ID
 import com.tencent.devops.buildless.utils.RandomUtil
 import com.tencent.devops.buildless.utils.RedisUtils
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.gray.Gray
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
@@ -73,7 +75,7 @@ import kotlin.streams.toList
 
 @Service
 class BuildLessContainerService(
-    private val gray: Gray,
+    private val bkTag: BkTag,
     private val redisUtils: RedisUtils,
     private val commonConfig: CommonConfig,
     private val buildLessConfig: BuildLessConfig
@@ -122,27 +124,7 @@ class BuildLessContainerService(
                 .withName(containerName)
                 .withLabels(mapOf(BUILDLESS_POOL_PREFIX to ""))
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
-                .withEnv(
-                    listOf(
-                        "$ENV_KEY_GATEWAY=${buildLessConfig.gateway}",
-                        "TERM=xterm-256color",
-                        "$ENV_KEY_PROJECT_ID=${
-                            if (gray.isGray()) {
-                                "grayproject"
-                            } else {
-                                ""
-                            }
-                        }",
-                        "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
-                        "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
-                        "$BK_DISTCC_LOCAL_IP=${CommonUtils.getHostIp()}",
-                        "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
-                        "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
-                        "$ENV_CONTAINER_NAME=$containerName",
-                        "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath",
-                        "$ENV_DEFAULT_LOCALE_LANGUAGE=${commonConfig.devopsDefaultLocaleLanguage}"
-                    )
-                )
+                .withEnv(generateEnv(containerName, linkPath))
                 .withHostConfig(
                     // CPU and memory Limit
                     HostConfig()
@@ -175,6 +157,9 @@ class BuildLessContainerService(
             return
         }
 
+        // 删除缓存信息
+        redisUtils.deleteBuildLessPoolContainer(containerId)
+
         try {
             // docker stop
             val containerInfo = httpDockerCli.inspectContainerCmd(containerId).exec()
@@ -199,6 +184,7 @@ class BuildLessContainerService(
                 ignored
             )
         } finally {
+            // 最终确认缓存已被清理
             redisUtils.deleteBuildLessPoolContainer(containerId)
         }
     }
@@ -259,7 +245,33 @@ class BuildLessContainerService(
         return timeoutContainerList
     }
 
-    fun createSymbolicLink(hostWorkspace: String): String {
+    private fun generateEnv(containerName: String, linkPath: String): List<String> {
+        val envList = mutableListOf<String>()
+        envList.addAll(listOf(
+            "$ENV_KEY_GATEWAY=${buildLessConfig.gateway}",
+            "TERM=xterm-256color",
+            "$ENV_KEY_BK_TAG=${bkTag.getFinalTag()}",
+            "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
+            "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
+            "$BK_DISTCC_LOCAL_IP=${CommonUtils.getHostIp()}",
+            "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
+            "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
+            "$ENV_CONTAINER_NAME=$containerName",
+            "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath",
+            "$ENV_DEFAULT_LOCALE_LANGUAGE=${commonConfig.devopsDefaultLocaleLanguage}"
+        ))
+
+        buildLessConfig.idcGateway?.let {
+            envList.add("$ENV_DEVOPS_GATEWAY=$it")
+        }
+        buildLessConfig.fileIdcGateway?.let {
+            envList.add("$ENV_DEVOPS_FILE_GATEWAY=$it")
+        }
+
+        return envList
+    }
+
+    private fun createSymbolicLink(hostWorkspace: String): String {
         val hostWorkspaceFile = File(hostWorkspace)
         if (!hostWorkspaceFile.exists()) {
             hostWorkspaceFile.mkdirs() // 新建的流水线的工作空间路径为空则新建目录

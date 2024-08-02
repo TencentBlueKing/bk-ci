@@ -32,13 +32,14 @@ $fontBoldColor: #333948;
 $fontLighterColor: #c4cdd6;
 
 
+$unexecColor: #c4cdd6;
 // 主体 icon 颜色
 $iconPrimaryColor: #3c96ff;
 $primaryColor: #3c96ff;
 
 // 成功 icon 颜色
-$iconSuccessColor: #34d97b;
-$successColor: #34d97b;
+$iconSuccessColor: #5AC882;
+$successColor: #5AC882;
 
 // 暂停颜色
 $iconPauseColor: #ff9801;
@@ -93,8 +94,6 @@ $addIconLeftMargin: $StageMargin * 0.5 - $reviewIconSize * 0.5;
 $addIconRightMargin: $reviewIconSize * 0.5 + $StageMargin * 0.5;
 $addIconLeft: -$addIconRightMargin;
 $appendIconRight: -$addIconLeftMargin - $addBtnSize;
-
-
 
 @mixin ellipsis ($max-width: auto) {
     display: inline-block;

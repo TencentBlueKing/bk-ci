@@ -65,16 +65,17 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_FILE_
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.utils.IosUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
-import java.io.File
-import java.net.URLEncoder
-import java.util.Locale
-import java.util.Base64
 import net.dongliu.apk.parser.ApkFile
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
+import java.io.File
+import java.net.HttpRetryException
+import java.net.URLEncoder
+import java.util.Base64
+import java.util.Locale
 
 class BkRepoResourceApi : AbstractBuildResourceApi() {
 
@@ -95,6 +96,9 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
     }
 
     fun tokenAccess(): Boolean {
+        if (!AgentEnv.getFileGateway().isNullOrBlank()) {
+            return true
+        }
         var fileDevnetGateway = CommonEnv.fileDevnetGateway
         var fileIdcGateway = CommonEnv.fileIdcGateway
         if (fileDevnetGateway == null || fileIdcGateway == null) {
@@ -166,12 +170,21 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             UPLOAD_FILE_FAILED,
             AgentEnv.getLocaleLanguage()
         )
-        val response = request(request, message)
+        val response = try {
+            request(request, message)
+        } catch (e: RemoteServiceException) {
+            val obj = objectMapper.readTree(e.responseContent)
+            if (obj.has("code") && obj["code"].asInt() == CODE_CREATE_NODE_TIMEOUT) {
+                throw HttpRetryException(obj["message"].asText(), CODE_CREATE_NODE_TIMEOUT)
+            }
+            throw e
+        }
         try {
             val obj = objectMapper.readTree(response)
             if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException(message)
         } catch (e: Exception) {
             logger.error(e.message ?: "")
+            throw e
         }
     }
 
@@ -201,7 +214,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName/${urlEncode(fullPath)}"
         val header = HashMap<String, String>()
         header[BKREPO_UID] = user
-        val request = buildGet(url, header, true)
+        val request = buildGet(url, header)
         download(request, destPath)
     }
 
@@ -271,8 +284,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val request = buildPut(
             path = url,
             requestBody = file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
-            headers = getUploadHeader(file, buildVariables, parseAppMetadata),
-            useFileDevnetGateway = true
+            headers = getUploadHeader(file, buildVariables, parseAppMetadata)
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_FILE_FAILED,
@@ -512,5 +524,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         private const val BK_CI_PIPELINE_NAME = "BK_CI_PIPELINE_NAME"
         private const val BK_CI_BUILD_NUM = "BK_CI_BUILD_NUM"
         private const val METADATA_DISPLAY_NAME = "displayName"
+
+        private const val CODE_CREATE_NODE_TIMEOUT = 251030
     }
 }

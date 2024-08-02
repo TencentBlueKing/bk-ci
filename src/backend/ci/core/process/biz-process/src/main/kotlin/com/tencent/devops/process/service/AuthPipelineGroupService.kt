@@ -71,6 +71,7 @@ class AuthPipelineGroupService @Autowired constructor(
         val pipelineGroupList = pipelineViewDao.listByPage(
             dslContext = dslContext,
             projectId = projectId,
+            isProject = true,
             limit = limit,
             offset = offset
         )
@@ -128,6 +129,7 @@ class AuthPipelineGroupService @Autowired constructor(
         val pipelineGroupInfo = pipelineViewDao.listByPage(
             dslContext = dslContext,
             projectId = projectId,
+            isProject = true,
             viewName = keyword,
             limit = limit,
             offset = offset

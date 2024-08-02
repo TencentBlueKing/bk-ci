@@ -27,7 +27,12 @@
 
 package com.tencent.devops.repository.service
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -39,22 +44,34 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.process.api.service.ServicePipelineYamlResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.constant.RepositoryMessageCode.PAC_REPO_CAN_NOT_DELETE
+import com.tencent.devops.repository.constant.RepositoryMessageCode.PAC_REPO_CAN_NOT_RENAME
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_PEM_ERROR
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.RepoRename
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -63,6 +80,7 @@ import com.tencent.devops.repository.service.loader.CodeRepositoryServiceRegistr
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.repository.service.tgit.TGitOAuthService
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
@@ -87,8 +105,10 @@ class RepositoryService @Autowired constructor(
     private val gitOauthService: IGitOauthService,
     private val gitService: IGitService,
     private val scmService: IScmService,
+    private val tGitOAuthService: TGitOAuthService,
     private val dslContext: DSLContext,
-    private val repositoryPermissionService: RepositoryPermissionService
+    private val repositoryPermissionService: RepositoryPermissionService,
+    private val client: Client
 ) {
 
     @Value("\${repository.git.devopsPrivateToken}")
@@ -163,7 +183,8 @@ class RepositoryService @Autowired constructor(
                 authType = RepoAuthType.OAUTH,
                 projectId = projectCode,
                 repoHashId = null,
-                gitProjectId = 0L
+                gitProjectId = 0L,
+                atom = true
             )
 
             // 关联代码库
@@ -422,7 +443,8 @@ class RepositoryService @Autowired constructor(
                         dslContext = context,
                         repositoryId = repositoryId,
                         aliasName = gitProjectInfo.namespaceName,
-                        url = gitProjectInfo.repositoryUrl
+                        url = gitProjectInfo.repositoryUrl,
+                        updateUser = userId
                     )
                     repositoryCodeGitDao.edit(
                         dslContext = context,
@@ -451,13 +473,22 @@ class RepositoryService @Autowired constructor(
         // 兼容历史插件的代码库不在公共group下的情况，历史插件的代码库信息更新要用用户的token更新
         var finalTokenType = tokenType
         if (!repoProjectName.startsWith(devopsGroupName) && !repoProjectName
-                        .contains("bkdevops-extension-service", true)
+                .contains("bkdevops-extension-service", true)
         ) {
             finalTokenType = TokenTypeEnum.OAUTH
         }
         return finalTokenType
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_CREATE_CONTENT
+    )
     fun userCreate(userId: String, projectId: String, repository: Repository): String {
         // 指定oauth的用户名字只能是登录用户。
         repository.userName = userId
@@ -502,10 +533,42 @@ class RepositoryService @Autowired constructor(
         val repositoryService = CodeRepositoryServiceRegistrar.getService(repository = repository)
         val repositoryId =
             repositoryService.create(projectId = projectId, userId = userId, repository = repository)
+        ActionAuditContext.current()
+            .setInstanceId(repositoryId.toString())
+            .setInstanceName(repository.aliasName)
+            .setInstance(repository)
         createResource(userId, projectId, repositoryId, repository.aliasName)
+        try {
+            if (repository.enablePac == true) {
+                client.get(ServicePipelineYamlResource::class).enable(
+                    userId = userId,
+                    projectId = projectId,
+                    repoHashId = HashUtil.encodeOtherLongId(repositoryId),
+                    scmType = repository.getScmType()
+                )
+            }
+        } catch (exception: Exception) {
+            logger.error("failed to enable pac when create repository,rollback|$projectId|$repositoryId")
+            userDelete(
+                userId = userId,
+                projectId = projectId,
+                repositoryHashId = HashUtil.encodeOtherLongId(repositoryId),
+                checkPac = false
+            )
+            throw exception
+        }
         return repositoryId
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_VIEW_CONTENT
+    )
     fun userGet(userId: String, projectId: String, repositoryConfig: RepositoryConfig): Repository {
         val repository = getRepository(projectId, repositoryConfig)
         val repositoryId = repository.repositoryId
@@ -520,11 +583,27 @@ class RepositoryService @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         )
+        ActionAuditContext.current()
+            .setInstanceId(repository.repositoryId.toString())
+            .setInstanceName(repository.aliasName)
         return compose(repository)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_VIEW_CONTENT
+    )
     fun serviceGet(projectId: String, repositoryConfig: RepositoryConfig): Repository {
-        return compose(getRepository(projectId, repositoryConfig))
+        val repository = getRepository(projectId, repositoryConfig)
+        ActionAuditContext.current()
+            .setInstanceId(repository.repositoryId.toString())
+            .setInstanceName(repository.aliasName)
+        return compose(repository)
     }
 
     private fun getRepository(projectId: String, repositoryConfig: RepositoryConfig): TRepositoryRecord {
@@ -545,6 +624,15 @@ class RepositoryService @Autowired constructor(
         return codeRepositoryService.compose(repository = repository)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_EDIT_CONTENT
+    )
     fun userEdit(userId: String, projectId: String, repositoryHashId: String, repository: Repository) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -588,7 +676,6 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
-
         if (hasAliasName(projectId, repositoryHashId, repository.aliasName)) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
@@ -598,6 +685,19 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
+        val repositoryInfo = serviceGet(
+            projectId = projectId,
+            RepositoryConfig(
+                repositoryHashId = repositoryHashId,
+                repositoryName = null,
+                repositoryType = RepositoryType.ID
+            )
+        )
+        ActionAuditContext.current()
+            .setInstanceId(repositoryId.toString())
+            .setInstanceName(repository.aliasName)
+            .setOriginInstance(repositoryInfo)
+            .setInstance(repository)
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getService(repository)
         codeRepositoryService.edit(
             userId = userId,
@@ -627,7 +727,10 @@ class RepositoryService @Autowired constructor(
                 updatedTime = repository.updatedTime.timestamp(),
                 canEdit = true,
                 canDelete = true,
-                authType = authType
+                authType = authType,
+                createUser = repository.userId,
+                createTime = repository.createdTime.timestamp(),
+                updatedUser = repository.updatedUser
             )
         }.toList()
     }
@@ -658,12 +761,19 @@ class RepositoryService @Autowired constructor(
         val permissionToListMap = repositoryPermissionService.filterRepositories(
             userId = userId,
             projectId = projectId,
-            authPermissions = setOf(AuthPermission.LIST, AuthPermission.EDIT, AuthPermission.DELETE, AuthPermission.USE)
+            authPermissions = setOf(
+                AuthPermission.LIST,
+                AuthPermission.EDIT,
+                AuthPermission.DELETE,
+                AuthPermission.USE,
+                AuthPermission.VIEW
+            )
         )
         val hasListPermissionRepoList = permissionToListMap[AuthPermission.LIST]!!
         val hasEditPermissionRepoList = permissionToListMap[AuthPermission.EDIT]!!
         val hasDeletePermissionRepoList = permissionToListMap[AuthPermission.DELETE]!!
         val hasUsePermissionRepoList = permissionToListMap[AuthPermission.USE]!!
+        val hasViewPermissionRepoList = permissionToListMap[AuthPermission.VIEW]!!
         val count =
             repositoryDao.countByProject(
                 dslContext = dslContext,
@@ -684,20 +794,21 @@ class RepositoryService @Autowired constructor(
             sortType = sortType
         )
         val repoGroup = repositoryRecordList.groupBy { it.type }.mapValues { it.value.map { a -> a.repositoryId } }
-        val repoAuthInfoMap = mutableMapOf<Long, RepoAuthInfo>()
+        val repoDetailInfoMap = mutableMapOf<Long, RepositoryDetailInfo>()
         repoGroup.forEach { (type, repositoryIds) ->
             run {
                 // 1. 获取处理类
                 val codeGitRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(scmType = type)
                 // 2. 得到授权身份<repoId, authInfo>
-                repoAuthInfoMap.putAll(codeGitRepositoryService.getAuthInfo(repositoryIds))
+                repoDetailInfoMap.putAll(codeGitRepositoryService.getRepoDetailMap(repositoryIds))
             }
         }
         val repositoryList = repositoryRecordList.map {
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
             val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId)
             val hasUsePermission = hasUsePermissionRepoList.contains(it.repositoryId)
-            val authInfo = repoAuthInfoMap[it.repositoryId]
+            val hasViewPermission = hasViewPermissionRepoList.contains(it.repositoryId)
+            val repoDetailInfo = repoDetailInfoMap[it.repositoryId]
             RepositoryInfoWithPermission(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
@@ -707,9 +818,15 @@ class RepositoryService @Autowired constructor(
                 canEdit = hasEditPermission,
                 canDelete = hasDeletePermission,
                 canUse = hasUsePermission,
-                authType = authInfo?.authType ?: RepoAuthType.HTTP.name,
-                svnType = authInfo?.svnType,
-                authIdentity = authInfo?.credentialId?.ifBlank { it.userId }
+                canView = hasViewPermission,
+                authType = repoDetailInfo?.authType ?: RepoAuthType.HTTP.name,
+                svnType = repoDetailInfo?.svnType,
+                authIdentity = repoDetailInfo?.credentialId?.ifBlank { it.userId },
+                createTime = it.createdTime.timestamp(),
+                createUser = it.userId,
+                updatedUser = it.updatedUser ?: it.userId,
+                atom = it.atom ?: false,
+                enablePac = it.enablePac
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)
@@ -722,7 +839,8 @@ class RepositoryService @Autowired constructor(
         authPermission: AuthPermission,
         offset: Int,
         limit: Int,
-        aliasName: String? = null
+        aliasName: String? = null,
+        enablePac: Boolean? = null
     ): SQLPage<RepositoryInfo> {
         val hasPermissionList = repositoryPermissionService.filterRepository(userId, projectId, authPermission)
         val repositoryTypes = repositoryType?.split(",")?.map { ScmType.valueOf(it) }
@@ -732,7 +850,8 @@ class RepositoryService @Autowired constructor(
             projectIds = setOf(projectId),
             repositoryTypes = repositoryTypes,
             aliasName = aliasName,
-            repositoryIds = hasPermissionList.toSet()
+            repositoryIds = hasPermissionList.toSet(),
+            enablePac = enablePac
         )
         val repositoryRecordList =
             repositoryDao.listByProject(
@@ -741,6 +860,7 @@ class RepositoryService @Autowired constructor(
                 repositoryTypes = repositoryTypes,
                 aliasName = aliasName,
                 repositoryIds = hasPermissionList.toSet(),
+                enablePac = enablePac,
                 offset = offset,
                 limit = limit
             )
@@ -830,7 +950,22 @@ class RepositoryService @Autowired constructor(
         return SQLPage(count, repositoryList)
     }
 
-    fun userDelete(userId: String, projectId: String, repositoryHashId: String) {
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_DELETE_CONTENT
+    )
+    fun userDelete(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String,
+        checkAtom: Boolean = true,
+        checkPac: Boolean = true
+    ) {
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         validatePermission(
             user = userId,
@@ -848,9 +983,29 @@ class RepositoryService @Autowired constructor(
         if (record.projectId != projectId) {
             throw NotFoundException("Repository is not part of the project")
         }
-
+        if (checkAtom && record.atom == true) {
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.ATOM_REPO_CAN_NOT_DELETE,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
+        if (checkPac && record.enablePac == true) {
+            throw ErrorCodeException(errorCode = PAC_REPO_CAN_NOT_DELETE)
+        }
+        ActionAuditContext.current()
+            .setInstanceId(repositoryId.toString())
+            .setInstanceName(record.aliasName)
         deleteResource(projectId, repositoryId)
-        repositoryDao.delete(dslContext, repositoryId)
+        val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
+        val deleteAliasName = "${record.aliasName}[$deleteTime]"
+        repositoryDao.delete(
+            dslContext = dslContext,
+            repositoryId = repositoryId,
+            deleteAliasName = deleteAliasName.coerceAtMaxLength(MAX_ALIAS_LENGTH),
+            updateUser = userId
+        )
     }
 
     fun validatePermission(user: String, projectId: String, authPermission: AuthPermission, message: String) {
@@ -875,6 +1030,15 @@ class RepositoryService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_EDIT_LOCK_CONTENT
+    )
     fun userLock(userId: String, projectId: String, repositoryHashId: String) {
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         validatePermission(
@@ -901,7 +1065,9 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
-
+        ActionAuditContext.current()
+            .setInstanceId(record.repositoryId.toString())
+            .setInstanceName(record.aliasName)
         scmService.lock(
             projectName = record.projectId,
             url = record.url,
@@ -911,6 +1077,15 @@ class RepositoryService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_EDIT_LOCK_CONTENT
+    )
     fun userUnLock(userId: String, projectId: String, repositoryHashId: String) {
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         validatePermission(
@@ -937,6 +1112,9 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
+        ActionAuditContext.current()
+            .setInstanceId(record.repositoryId.toString())
+            .setInstanceName(record.aliasName)
         scmService.unlock(
             projectName = record.projectId,
             url = record.url,
@@ -1088,7 +1266,127 @@ class RepositoryService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_EDIT_RENAME_CONTENT
+    )
+    fun rename(userId: String, projectId: String, repositoryHashId: String, repoRename: RepoRename) {
+        val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
+        // 权限校验
+        validatePermission(
+            user = userId,
+            projectId = projectId,
+            repositoryId = repositoryId,
+            authPermission = AuthPermission.EDIT,
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_EDIT_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryHashId),
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
+        if (hasAliasName(projectId, repositoryHashId, repoRename.name)) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.REPO_NAME_EXIST,
+                params = arrayOf(repoRename.name)
+            )
+        }
+        val record = repositoryDao.get(dslContext, repositoryId, projectId)
+        if (record.projectId != projectId) {
+            throw NotFoundException("Repository is not part of the project")
+        }
+        if (record.enablePac == true) {
+            throw ErrorCodeException(errorCode = PAC_REPO_CAN_NOT_RENAME)
+        }
+        ActionAuditContext.current()
+            .setInstanceId(repositoryId.toString())
+            .setInstanceName(repoRename.name)
+            .setOriginInstance(record.aliasName)
+            .setInstance(repoRename.name)
+        repositoryDao.rename(
+            dslContext = dslContext,
+            projectId = projectId,
+            updateUser = userId,
+            hashId = repositoryHashId,
+            newName = repoRename.name
+        )
+        // 同步权限中心
+        editResource(projectId, repositoryId, repoRename.name)
+    }
+
+    fun updateAtomRepoFlag(
+        userId: String,
+        atomRefRepositoryInfo: List<AtomRefRepositoryInfo>
+    ) {
+        logger.info("start update atom repo flag, userId: $userId, atomRefRepositoryInfo: $atomRefRepositoryInfo")
+        if (atomRefRepositoryInfo.isEmpty()) {
+            return
+        }
+        val repoInfos = mutableListOf <TRepositoryRecord>()
+        // 过滤无效数据
+        atomRefRepositoryInfo.forEach {
+            val repositoryRecord = repositoryDao.getById(
+                dslContext = dslContext,
+                repositoryId = HashUtil.decodeOtherIdToLong(it.repositoryHashId)
+            ) ?: return@forEach
+            repoInfos.add(repositoryRecord)
+        }
+        repoInfos.forEach {
+            logger.info("update atom repo flag|${it.projectId}|${it.repositoryHashId}")
+            repositoryDao.updateAtomRepoFlag(
+                dslContext = dslContext,
+                projectId = it.projectId,
+                repositoryId = it.repositoryId,
+                atom = true
+            )
+        }
+    }
+
+    fun updateStoreRepoProject(userId: String, projectId: String, repositoryId: Long): Result<Boolean> {
+        repositoryDao.updateStoreRepoProject(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            repositoryId = repositoryId
+        )
+        return Result(true)
+    }
+
+    fun getGitProjectIdByRepositoryHashId(userId: String, repositoryHashIdList: List<String>): List<String> {
+        return repositoryDao.getGitProjectIdByRepositoryHashId(dslContext, repositoryHashIdList)
+    }
+
+    fun isOAuth(
+        userId: String,
+        projectId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        repositoryType: ScmType?
+    ): AuthorizeResult {
+        return when (repositoryType) {
+            ScmType.CODE_GIT -> gitOauthService.isOAuth(
+                userId = userId,
+                redirectUrlType = redirectUrlType,
+                redirectUrl = redirectUrl
+            )
+
+            ScmType.CODE_TGIT -> tGitOAuthService.isOAuth(
+                userId = userId,
+                redirectUrlType = redirectUrlType,
+                redirectUrl = redirectUrl
+            )
+
+            else ->
+                AuthorizeResult(200, "")
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryService::class.java)
+        const val MAX_ALIAS_LENGTH = 255
     }
 }

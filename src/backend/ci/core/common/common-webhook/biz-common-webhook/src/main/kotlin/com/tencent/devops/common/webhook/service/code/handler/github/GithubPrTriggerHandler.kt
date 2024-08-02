@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
@@ -45,6 +46,8 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ACTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
@@ -57,6 +60,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
@@ -78,9 +82,12 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_REPO_
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
+import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
+import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -123,7 +130,27 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
     }
 
     override fun getMessage(event: GithubPullRequestEvent): String? {
-        return ""
+        return event.pullRequest.title
+    }
+
+    override fun getAction(event: GithubPullRequestEvent): String? {
+        return event.getRealAction()
+    }
+
+    override fun getEventDesc(event: GithubPullRequestEvent): String {
+        return I18Variable(
+            code = WebhookI18nConstants.GITHUB_PR_EVENT_DESC,
+            params = listOf(
+                event.pullRequest.htmlUrl,
+                event.pullRequest.number.toString(),
+                getUsername(event),
+                if (event.isMerged()) "merge" else event.action
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: GithubPullRequestEvent): String {
+        return event.repository.id.toString()
     }
 
     override fun getEnv(event: GithubPullRequestEvent): Map<String, Any> {
@@ -138,12 +165,13 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         return event.pullRequest.base.repo.cloneUrl
     }
 
-    override fun preMatch(event: GithubPullRequestEvent): ScmWebhookMatcher.MatchResult {
-        if (!(event.action == "opened" || event.action == "reopened" || event.action == "synchronize")) {
-            logger.info("Github pull request no open or update")
-            return ScmWebhookMatcher.MatchResult(false)
+    @SuppressWarnings("ComplexCondition")
+    override fun preMatch(event: GithubPullRequestEvent): WebhookMatchResult {
+        if (getAction(event) == null) {
+            logger.info("The github pull request does not meet the triggering conditions $event")
+            return WebhookMatchResult(false)
         }
-        return ScmWebhookMatcher.MatchResult(true)
+        return WebhookMatchResult(true)
     }
 
     override fun getEventFilters(
@@ -153,7 +181,49 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         repository: Repository,
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
-        return emptyList()
+        with(webHookParams) {
+            val userId = getUsername(event)
+            val actionFilter = ContainsFilter(
+                pipelineId = pipelineId,
+                included = WebhookUtils.convert(includeMrAction),
+                triggerOn = getAction(event) ?: "",
+                filterName = "prActionFilter",
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.PR_ACTION_NOT_MATCH,
+                    params = listOf(getAction(event) ?: "")
+                ).toJsonStr()
+            )
+            val userFilter = UserFilter(
+                pipelineId = pipelineId,
+                triggerOnUser = userId,
+                includedUsers = WebhookUtils.convert(includeUsers),
+                excludedUsers = WebhookUtils.convert(excludeUsers),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(getUsername(event))
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(getUsername(event))
+                ).toJsonStr()
+            )
+            val targetBranch = getBranchName(event)
+            val targetBranchFilter = BranchFilter(
+                pipelineId = pipelineId,
+                triggerOnBranchName = targetBranch,
+                includedBranches = WebhookUtils.convert(branchName),
+                excludedBranches = WebhookUtils.convert(excludeBranchName),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_NOT_MATCH,
+                    params = listOf(targetBranch)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_IGNORED,
+                    params = listOf(targetBranch)
+                ).toJsonStr()
+            )
+            return listOf(actionFilter, userFilter, targetBranchFilter)
+        }
     }
 
     override fun retrieveParams(
@@ -164,6 +234,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         val startParams = mutableMapOf<String, Any>()
         startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = event.sender.login
         startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = event.number
+        startParams[BK_REPO_GIT_WEBHOOK_MR_ACTION] = getAction(event) ?: ""
         pullRequestStartParam(event = event, startParams = startParams)
 
         startParams.putAll(
@@ -193,6 +264,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
             startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] =
                 pullRequest.requestedReviewers.joinToString(",") { it.login ?: "" }
             startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = pullRequest.milestone?.title ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID] = pullRequest.milestone?.id ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] =
                 pullRequest.milestone?.dueOn ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] =

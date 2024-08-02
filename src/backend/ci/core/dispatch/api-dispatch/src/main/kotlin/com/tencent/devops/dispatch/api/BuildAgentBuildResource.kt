@@ -34,12 +34,16 @@ import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskResp
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildWithStatus
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyDockerDebugDoneInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyDockerDebugInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentUpgradeByVersionInfo
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -50,102 +54,169 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_AGENT_BUILD"], description = "第三方接入agent资源")
+@Tag(name = "BUILD_AGENT_BUILD", description = "第三方接入agent资源")
 @Path("/buildAgent/agent/thirdPartyAgent")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildAgentBuildResource {
 
-    @ApiOperation("尝试启动构建")
+    @Operation(summary = "尝试启动构建")
     @GET
     @Path("/startup")
     fun startBuild(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("尝试启动构建的类型", required = false)
+        @Parameter(description = "尝试启动构建的类型", required = false)
         @QueryParam("buildType")
         buildType: String?
     ): AgentResult<ThirdPartyBuildInfo?>
 
-    @ApiOperation("是否更新")
+    @Operation(summary = "是否更新")
     @GET
     @Path("/upgrade")
     fun upgrade(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("Agent 版本号", required = false)
+        @Parameter(description = "Agent 版本号", required = false)
         @QueryParam("version")
         version: String?,
-        @ApiParam("masterAgent 版本号", required = false)
+        @Parameter(description = "masterAgent 版本号", required = false)
         @QueryParam("masterVersion")
         masterVersion: String?
     ): AgentResult<Boolean>
 
-    @ApiOperation("是否更新NEW")
+    @Operation(summary = "是否更新NEW")
     @POST
     @Path("/upgradeNew")
     fun upgradeNew(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("检查版本升级上报的信息", required = false)
+        @Parameter(description = "检查版本升级上报的信息", required = false)
         info: ThirdPartyAgentUpgradeByVersionInfo
     ): AgentResult<UpgradeItem>
 
-    @ApiOperation("更新完成")
+    @Operation(summary = "更新完成")
     @DELETE
     @Path("/upgrade")
     fun finishUpgrade(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("升级是否成功", required = true)
+        @Parameter(description = "升级是否成功", required = true)
         @QueryParam("success")
         success: Boolean
     ): AgentResult<Boolean>
 
-    @ApiOperation("worker构建结束")
+    @Operation(summary = "worker构建结束")
     @POST
     @Path("/workerBuildFinish")
     fun workerBuildFinish(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("构建信息", required = true)
+        @Parameter(description = "构建信息", required = true)
         buildInfo: ThirdPartyBuildWithStatus
     ): Result<Boolean>
+
+    @Operation(summary = "尝试启动Docker登录调试")
+    @GET
+    @Path("/docker/startupDebug")
+    fun dockerStartDebug(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        agentId: String,
+        @Parameter(description = "秘钥", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
+        secretKey: String
+    ): AgentResult<ThirdPartyDockerDebugInfo?>
+
+    @Operation(summary = "启动Docker登录完成")
+    @POST
+    @Path("/docker/startupDebug")
+    fun dockerStartDebugDone(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        agentId: String,
+        @Parameter(description = "秘钥", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
+        secretKey: String,
+        @Parameter(description = "构建信息", required = true)
+        debugInfo: ThirdPartyDockerDebugDoneInfo
+    ): Result<Boolean>
+
+    @Operation(summary = "获取登录调试任务状态")
+    @GET
+    @Path("/docker/debug/status")
+    fun dockerDebugStatus(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        agentId: String,
+        @Parameter(description = "秘钥", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
+        secretKey: String,
+        @Parameter(description = "debugId", required = true)
+        @QueryParam("debugId")
+        debugId: Long
+    ): Result<String?>
+
+    @Operation(summary = "第三方构建机请求")
+    @POST
+    @Path("/ask")
+    fun thirdPartyAgentAsk(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        agentId: String,
+        @Parameter(description = "秘钥", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
+        secretKey: String,
+        @Parameter(description = "ask信息", required = true)
+        data: ThirdPartyAskInfo
+    ): AgentResult<ThirdPartyAskResp>
 }

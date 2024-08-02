@@ -36,22 +36,20 @@ class ThirdPartyAgentEnvLock(
     redisOperation: RedisOperation,
     projectId: String,
     envId: String
+) : RedisLock(
+    redisOperation = redisOperation,
+    lockKey = "DISPATCH_REDIS_LOCK_ENV_${projectId}_$envId",
+    expiredTimeInSeconds = 60L
 ) {
 
-    private val redisLock = RedisLock(redisOperation, "DISPATCH_REDIS_LOCK_ENV_${projectId}_$envId", 60L)
-
     fun tryLock(timeout: Long = 1000, interval: Long = 100): Boolean {
-        val sleep = min(interval, timeout) // 不允许sleep过长时间，最大1000ms
+        val sleepTime = min(interval, timeout) // sleep时间不超过timeout
         val start = System.currentTimeMillis()
-        var tryLock = redisLock.tryLock()
+        var tryLock = tryLock()
         while (timeout > 0 && !tryLock && timeout > (System.currentTimeMillis() - start)) {
-            Thread.sleep(sleep)
-            tryLock = redisLock.tryLock()
+            Thread.sleep(sleepTime)
+            tryLock = tryLock()
         }
         return tryLock
     }
-
-    fun lock() = redisLock.lock()
-
-    fun unlock() = redisLock.unlock()
 }

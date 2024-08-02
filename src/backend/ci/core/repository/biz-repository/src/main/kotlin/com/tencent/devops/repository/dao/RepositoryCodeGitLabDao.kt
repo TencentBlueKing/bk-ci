@@ -93,7 +93,8 @@ class RepositoryCodeGitLabDao {
         projectName: String,
         userName: String,
         credentialId: String,
-        gitProjectId: Long
+        gitProjectId: Long?,
+        authType: String
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
@@ -104,7 +105,8 @@ class RepositoryCodeGitLabDao {
                     .set(USER_NAME, userName)
                     .set(CREDENTIAL_ID, credentialId)
                     .set(UPDATED_TIME, now)
-                if (gitProjectId >= 0) {
+                    .set(AUTH_TYPE, authType)
+                if (gitProjectId != null) {
                     updateSetStep.set(GIT_PROJECT_ID, gitProjectId)
                 }
                 updateSetStep.where(REPOSITORY_ID.eq(repositoryId))

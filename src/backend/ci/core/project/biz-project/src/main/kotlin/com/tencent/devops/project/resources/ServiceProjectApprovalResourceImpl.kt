@@ -53,9 +53,15 @@ class ServiceProjectApprovalResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun createReject(projectId: String, applicant: String, approver: String): Result<Boolean> {
-        projectApprovalService.createReject(
+    override fun createRejectOrRevoke(
+        projectId: String,
+        itsmTicketStatus: String,
+        applicant: String,
+        approver: String
+    ): Result<Boolean> {
+        projectApprovalService.createRejectOrRevoke(
             projectId = projectId,
+            itsmTicketStatus = itsmTicketStatus,
             applicant = applicant,
             approver = approver
         )
@@ -71,9 +77,15 @@ class ServiceProjectApprovalResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun updateReject(projectId: String, applicant: String, approver: String): Result<Boolean> {
-        projectApprovalService.updateReject(
+    override fun updateRejectOrRevoke(
+        projectId: String,
+        itsmTicketStatus: String,
+        applicant: String,
+        approver: String
+    ): Result<Boolean> {
+        projectApprovalService.updateRejectOrRevoke(
             projectId = projectId,
+            itsmTicketStatus = itsmTicketStatus,
             applicant = applicant,
             approver = approver
         )

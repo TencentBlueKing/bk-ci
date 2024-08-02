@@ -32,9 +32,9 @@
                                     <span class="bk-form-content">
                                         <bk-input
                                             ref="labelInput"
-                                            style="width: 95%; margin-right: 10px;"
+                                            style="width: 94%; margin-right: 10px;"
                                             :placeholder="$t('group.groupInputTips')"
-                                            v-model="labelValue"
+                                            v-model.trim="labelValue"
                                             v-validate="'required|max:20'"
                                             name="groupName"
                                             @blur="labelInputBlur(groupIndex, group.name)"
@@ -60,7 +60,7 @@
                                 <input
                                     ref="tagInput"
                                     class="tag-input"
-                                    v-model="tagValue"
+                                    v-model.trim="tagValue"
                                     v-focus="isFocus(groupIndex, tagIndex)"
                                     maxlength="20"
                                     @blur="tagInputBlur($event, groupIndex, tagIndex)"
@@ -69,7 +69,7 @@
                                 />
                             </div>
                             <div class="group-card-tools">
-                                <i class="devops-icon icon-edit2 group-card-icon" v-bk-tooltips="toolTips.rename" @click="tagEdit($event, groupIndex, tagIndex)"></i>
+                                <i class="devops-icon icon-edit group-card-icon" v-bk-tooltips="toolTips.rename" @click="tagEdit($event, groupIndex, tagIndex)"></i>
                                 <i class="group-card-icon devops-icon icon-delete" v-bk-tooltips="toolTips.delete" @click="deleteTag(groupIndex, tagIndex)"></i>
                             </div>
                             <div v-show="active.isGroupEdit" class="group-card-edit-tools">
@@ -119,6 +119,7 @@
                     v-model="groupSetting.isShow"
                     :title="groupSetting.title"
                     :close-icon="false"
+                    :cancel-text="$t('cancel')"
                     header-position="left"
                     width="480"
                     @confirm="dialogCommit">
@@ -128,7 +129,7 @@
                             <div class="bk-form-content">
                                 <bk-input
                                     :placeholder="$t('group.groupInputTips')"
-                                    v-model="groupSetting.value"
+                                    v-model.trim="groupSetting.value"
                                     name="groupName"
                                     v-validate="'required|max:20'"
                                     maxlength="20"
@@ -145,9 +146,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import Logo from '@/components/Logo'
     import imgemptyTips from '@/components/pipelineList/imgEmptyTips'
+    import { mapGetters } from 'vuex'
 
     export default {
         directives: {
@@ -271,7 +272,7 @@
             },
             async handleSave (groupIndex) {
                 this.btnIsdisable = false
-
+                debugger
                 const params = {
                     projectId: this.projectId,
                     name: this.labelValue
@@ -354,7 +355,7 @@
                     title: this.$t('labelGroupDeleteConfirm'),
                     confirmFn: async () => {
                         try {
-                            const res = await this.$store.dispatch('pipelines/deleteGroup', {
+                            const res = await this.$store.dispatch('pipelines/deleteLabelGroup', {
                                 projectId: this.projectId,
                                 groupId: this.tagList[groupIndex].id
                             })
@@ -573,7 +574,7 @@
                         this.requestGrouptLists()
                         done?.()
                         this.$showTips({
-                            message: messageMap[method],
+                            message: this.$t(messageMap[method]),
                             theme: 'success'
                         })
                     }
@@ -664,7 +665,6 @@
             color: #979BA5;
         }
         &-content {
-            width: 1700px;
             // display: flex;
             // flex-wrap: wrap;
             margin: 0 auto;

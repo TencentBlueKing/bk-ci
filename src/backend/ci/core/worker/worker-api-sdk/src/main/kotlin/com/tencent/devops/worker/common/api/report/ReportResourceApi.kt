@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.api.report
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -43,12 +44,11 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTO
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_PIPELINE_FILE_FAILED
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.utils.TaskUtil
-import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import java.io.File
 
 @Suppress("ALL")
 class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
@@ -75,11 +75,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             .addFormDataPart("file", file.name, fileBody)
             .build()
 
-        val request = buildPost(
-            path = url,
-            requestBody = requestBody,
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
-        )
+        val request = buildPost(path = url, requestBody = requestBody)
 
         val response = request(
             request,
@@ -137,6 +133,17 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val responseContent = request(request,
             MessageUtil.getMessageByLocale(CREATE_REPORT_FAIL, AgentEnv.getLocaleLanguage()))
         return objectMapper.readValue(responseContent)
+    }
+
+    override fun getRepoToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        type: TokenType,
+        expireSeconds: Long
+    ): String? {
+        return null
     }
 
     companion object {

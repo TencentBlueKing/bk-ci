@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
@@ -70,8 +71,8 @@ open class BaseBuildDetailService constructor(
         const val TRIGGER_STAGE = "stage-1"
     }
 
-    fun getBuildModel(projectId: String, buildId: String): Model? {
-        val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
+    fun getBuildModel(projectId: String, buildId: String, queryDslContext: DSLContext? = null): Model? {
+        val record = buildDetailDao.get(queryDslContext ?: dslContext, projectId, buildId) ?: return null
         return JsonUtil.to(record.model, Model::class.java)
     }
 
@@ -243,17 +244,19 @@ open class BaseBuildDetailService constructor(
         }
     }
 
-    protected fun pipelineDetailChangeEvent(projectId: String, buildId: String) {
-        val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId) ?: return
-        // 异步转发，解耦核心
-        pipelineEventDispatcher.dispatch(
+    private fun pipelineDetailChangeEvent(projectId: String, buildId: String) {
+        val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
+        if (pipelineBuildInfo?.channelCode == ChannelCode.GIT) pipelineEventDispatcher.dispatch(
+            // 异步转发，解耦核心
+            // TODO stream内部和开源前端未更新前，保持推送
             PipelineBuildWebSocketPushEvent(
-                source = "pauseTask",
+                source = "recordDetail",
                 projectId = pipelineBuildInfo.projectId,
                 pipelineId = pipelineBuildInfo.pipelineId,
                 userId = pipelineBuildInfo.startUser,
                 buildId = buildId,
-                refreshTypes = RefreshType.DETAIL.binary
+                refreshTypes = RefreshType.DETAIL.binary or RefreshType.RECORD.binary,
+                executeCount = pipelineBuildInfo.executeCount
             )
         )
     }

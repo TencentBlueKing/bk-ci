@@ -74,21 +74,29 @@ class PipelinePauseValueDao {
                 .set(DEFAULT_VALUE, pipelinePauseValue.defaultValue)
                 .set(NEW_VALUE, pipelinePauseValue.newValue)
                 .set(CREATE_TIME, LocalDateTime.now())
-                .onDuplicateKeyUpdate()
-                .set(BUILD_ID, pipelinePauseValue.buildId)
-                .set(TASK_ID, pipelinePauseValue.taskId)
-                .set(DEFAULT_VALUE, pipelinePauseValue.defaultValue)
-                .set(NEW_VALUE, pipelinePauseValue.newValue)
-                .set(CREATE_TIME, LocalDateTime.now()).execute()
+                .set(EXECUTE_COUNT, pipelinePauseValue.executeCount)
+                .set(CREATE_TIME, LocalDateTime.now())
+                .execute()
         }
     }
 
-    fun get(dslContext: DSLContext, projectId: String, buildId: String, taskId: String): TPipelinePauseValueRecord? {
+    fun get(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int?
+    ): TPipelinePauseValueRecord? {
         return with(Tables.T_PIPELINE_PAUSE_VALUE) {
             val query = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(TASK_ID.eq(taskId))
                 .and(PROJECT_ID.eq(projectId))
+            if (executeCount != null) {
+                query.and(EXECUTE_COUNT.eq(executeCount))
+            } else {
+                query.and(EXECUTE_COUNT.eq(1).or(EXECUTE_COUNT.isNull))
+            }
             query.fetchAny()
         }
     }
@@ -100,7 +108,8 @@ class PipelinePauseValueDao {
                 buildId = t.buildId,
                 taskId = t.taskId,
                 defaultValue = t.defaultValue,
-                newValue = t.newValue
+                newValue = t.newValue,
+                executeCount = t.executeCount
             )
         } else {
             null

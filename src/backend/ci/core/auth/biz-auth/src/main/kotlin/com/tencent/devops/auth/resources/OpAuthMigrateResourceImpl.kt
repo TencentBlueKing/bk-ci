@@ -29,9 +29,11 @@
 package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.migrate.OpAuthMigrateResource
-import com.tencent.devops.auth.pojo.dto.MigrateProjectDTO
+import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
+import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -40,15 +42,60 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
     private val permissionMigrateService: PermissionMigrateService
 ) : OpAuthMigrateResource {
 
-    override fun v3ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Result<Boolean> {
-        return Result(permissionMigrateService.v3ToRbacAuth(migrateProjects = migrateProjects))
+    override fun v3ToRbacAuth(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.v3ToRbacAuth(projectCodes = projectCodes))
     }
 
-    override fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Result<Boolean> {
-        return Result(permissionMigrateService.v0ToRbacAuth(migrateProjects = migrateProjects))
+    override fun v0ToRbacAuth(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.v0ToRbacAuth(projectCodes = projectCodes))
     }
 
     override fun allToRbacAuth(): Result<Boolean> {
         return Result(permissionMigrateService.allToRbacAuth())
+    }
+
+    override fun toRbacAuthByCondition(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
+        return Result(
+            permissionMigrateService.toRbacAuthByCondition(
+                projectConditionDTO = projectConditionDTO
+            )
+        )
+    }
+
+    override fun compareResult(projectCode: String): Result<Boolean> {
+        return Result(permissionMigrateService.compareResult(projectCode = projectCode))
+    }
+
+    override fun migrateSpecificResource(migrateResourceDTO: MigrateResourceDTO): Result<Boolean> {
+        return Result(
+            permissionMigrateService.migrateSpecificResource(migrateResourceDTO = migrateResourceDTO)
+        )
+    }
+
+    override fun migrateSpecificResourceOfAllProject(migrateResourceDTO: MigrateResourceDTO): Result<Boolean> {
+        return Result(
+            permissionMigrateService.migrateSpecificResourceOfAllProject(migrateResourceDTO = migrateResourceDTO)
+        )
+    }
+
+    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.grantGroupAdditionalAuthorization(projectCodes = projectCodes))
+    }
+
+    override fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO): Result<Boolean> {
+        return Result(permissionMigrateService.handoverAllPermissions(permissionHandoverDTO = permissionHandoverDTO))
+    }
+
+    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Result<Boolean> {
+        return Result(permissionMigrateService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO))
+    }
+
+    override fun migrateMonitorResource(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.migrateMonitorResource(projectCodes = projectCodes))
+    }
+
+    override fun autoRenewal(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
+        permissionMigrateService.autoRenewal(projectConditionDTO)
+        return Result(true)
     }
 }

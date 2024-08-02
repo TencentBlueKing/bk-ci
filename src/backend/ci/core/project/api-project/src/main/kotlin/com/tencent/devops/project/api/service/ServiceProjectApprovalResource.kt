@@ -30,9 +30,9 @@ package com.tencent.devops.project.api.service
 
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.PUT
@@ -42,7 +42,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PROJECT_APPROVAL"], description = "项目审批接口")
+@Tag(name = "SERVICE_PROJECT_APPROVAL", description = "项目审批接口")
 @Path("/service/projects/approval")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -50,69 +50,75 @@ interface ServiceProjectApprovalResource {
 
     @GET
     @Path("/{projectId}")
-    @ApiOperation("查询指定项目审批信息")
+    @Operation(summary = "查询指定项目审批信息")
     fun get(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<ProjectApprovalInfo?>
 
     @PUT
     @Path("/{projectId}/createApproved")
-    @ApiOperation("创建审批通过")
+    @Operation(summary = "创建审批通过")
     fun createApproved(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("审批人", required = true)
+        @Parameter(description = "审批人", required = true)
         @QueryParam("applicant")
         applicant: String,
-        @ApiParam("审批人", required = true)
+        @Parameter(description = "审批人", required = true)
         @QueryParam("approver")
         approver: String
     ): Result<Boolean>
 
     @PUT
-    @Path("/{projectId}/createReject")
-    @ApiOperation("创建审批拒绝")
-    fun createReject(
-        @ApiParam("项目ID", required = true)
+    @Path("/{projectId}/createRejectOrRevoke")
+    @Operation(summary = "创建审批拒绝/驳回")
+    fun createRejectOrRevoke(
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("审批人", required = true)
+        @Parameter(description = "审批单状态", required = true)
+        @QueryParam("itsmTicketStatus")
+        itsmTicketStatus: String,
+        @Parameter(description = "审批人", required = true)
         @QueryParam("applicant")
         applicant: String,
-        @ApiParam("审批人", required = true)
+        @Parameter(description = "审批人", required = true)
         @QueryParam("approver")
         approver: String
     ): Result<Boolean>
 
     @PUT
     @Path("/{projectId}/updateApproved")
-    @ApiOperation("更新审批通过")
+    @Operation(summary = "更新审批通过")
     fun updateApproved(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("审批人", required = true)
+        @Parameter(description = "审批人", required = true)
         @QueryParam("applicant")
         applicant: String,
-        @ApiParam("审批人", required = true)
+        @Parameter(description = "审批人", required = true)
         @QueryParam("approver")
         approver: String
     ): Result<Boolean>
 
     @PUT
-    @Path("/{projectId}/updateReject")
-    @ApiOperation("更新审批拒绝")
-    fun updateReject(
-        @ApiParam("项目ID", required = true)
+    @Path("/{projectId}/updateRejectOrRevoke")
+    @Operation(summary = "更新审批拒绝/撤销")
+    fun updateRejectOrRevoke(
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("审批人", required = true)
+        @Parameter(description = "审批单状态", required = true)
+        @QueryParam("itsmTicketStatus")
+        itsmTicketStatus: String,
+        @Parameter(description = "审批人", required = true)
         @QueryParam("applicant")
         applicant: String,
-        @ApiParam("审批人", required = true)
+        @Parameter(description = "审批人", required = true)
         @QueryParam("approver")
         approver: String
     ): Result<Boolean>
@@ -120,7 +126,7 @@ interface ServiceProjectApprovalResource {
     @PUT
     @Path("/{projectId}/createMigration")
     fun createMigration(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>

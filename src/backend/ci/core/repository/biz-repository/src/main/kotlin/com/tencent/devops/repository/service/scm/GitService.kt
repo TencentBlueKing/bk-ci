@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
@@ -52,6 +53,8 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitCreateBranch
+import com.tencent.devops.scm.pojo.GitCreateMergeRequest
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.git.GitUserInfo
@@ -74,10 +77,12 @@ import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
+import com.tencent.devops.scm.pojo.DownloadGitRepoFileRequest
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitListMergeRequest
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -119,6 +124,7 @@ class GitService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(GitService::class.java)
         private const val MAX_FILE_SIZE = 1 * 1024 * 1024
+        private const val SLEEP_MILLS_FOR_RETRY = 2000L
     }
 
     @Value("\${scm.git.public.account}")
@@ -452,9 +458,15 @@ class GitService @Autowired constructor(
         val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
         val type = authParams["redirectUrlType"] as? String
         val specRedirectUrl = authParams["redirectUrl"] as? String
+        val resetType = (authParams["resetType"] as? String) ?: ""
+        val queryParam = if (resetType.isNotBlank()) {
+            "resetType=$resetType"
+        } else {
+            ""
+        }
         return when (RedirectUrlTypeEnum.getRedirectUrlType(type ?: "")) {
             RedirectUrlTypeEnum.SPEC -> specRedirectUrl!!
-            RedirectUrlTypeEnum.DEFAULT -> redirectUrl
+            RedirectUrlTypeEnum.DEFAULT -> "$redirectUrl?$queryParam"
             else -> {
                 val projectId = authParams["projectId"] as String
                 val repoId = authParams["repoId"] as String
@@ -1168,20 +1180,32 @@ class GitService @Autowired constructor(
 
     @BkTimed(extraTags = ["operation", "download_git_repo_file"], value = "bk_tgit_api_time")
     override fun downloadGitRepoFile(
-        repoName: String,
-        sha: String?,
         token: String,
         tokenType: TokenTypeEnum,
+        request: DownloadGitRepoFileRequest,
         response: HttpServletResponse
     ) {
-        logger.info("downloadGitRepoFile  repoName is:$repoName,sha is:$sha,tokenType is:$tokenType")
-        val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
+        logger.info(
+            "downloadGitRepoFile  repoName is:${request.repoName},sha is:${request.sha},tokenType is:$tokenType"
+        )
+        val encodeProjectName = URLEncoder.encode(request.repoName, "utf-8")
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/archive")
         setToken(tokenType, url, token)
-        if (!sha.isNullOrBlank()) {
-            url.append("&sha=$sha")
+        if (!request.sha.isNullOrBlank()) {
+            url.append("&sha=${request.sha}")
         }
-        OkhttpUtils.downloadFile(url.toString(), response)
+        if (!request.filePath.isNullOrBlank()) {
+            url.append("&file_paths=${request.filePath}")
+        }
+        if (!request.format.isNullOrBlank()) {
+            url.append("&format=${request.format}")
+        }
+        url.append("&is_project_path_wrapped=${request.isProjectPathWrapped}")
+        RetryUtils.execute(action = object : RetryUtils.Action<Unit> {
+            override fun execute() {
+                OkhttpUtils.downloadFile(url.toString(), response)
+            }
+        }, retryTime = 3, retryPeriodMills = SLEEP_MILLS_FOR_RETRY)
     }
 
     @BkTimed(extraTags = ["operation", "add_commit_check"], value = "bk_tgit_api_time")
@@ -1823,11 +1847,40 @@ class GitService @Autowired constructor(
         gitOperationFile: GitOperationFile,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
-        val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/files")
+        val encodeGitProjectId = URLEncoder.encode(gitProjectId, "utf-8")
+        val url = StringBuilder("$gitCIUrl/api/v3/projects/$encodeGitProjectId/repository/files")
         setToken(tokenType, url, token)
         val request = Request.Builder()
             .url(url.toString())
             .post(
+                RequestBody.create(
+                    "application/json;charset=utf-8".toMediaTypeOrNull(),
+                    JsonUtil.toJson(gitOperationFile)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            logger.info("request: $request Start to create file resp: $it")
+            if (!it.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(it)
+            }
+            return Result(true)
+        }
+    }
+
+    @BkTimed(extraTags = ["operation", "gitUpdateFile"], value = "bk_tgit_api_time")
+    override fun gitUpdateFile(
+        gitProjectId: String,
+        token: String,
+        gitOperationFile: GitOperationFile,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        val encodeGitProjectId = URLEncoder.encode(gitProjectId, "utf-8")
+        val url = StringBuilder("$gitCIUrl/api/v3/projects/$encodeGitProjectId/repository/files")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .put(
                 RequestBody.create(
                     "application/json;charset=utf-8".toMediaTypeOrNull(),
                     JsonUtil.toJson(gitOperationFile)
@@ -1943,5 +1996,89 @@ class GitService @Autowired constructor(
                 projectName = gitProjectId
             )
         )
+    }
+
+    override fun listMergeRequest(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitListMergeRequest: GitListMergeRequest
+    ): Result<List<GitMrInfo>> {
+        val mrInfoList = with(gitListMergeRequest) {
+            if (tokenType == TokenTypeEnum.OAUTH) {
+                GitOauthApi().listMergeRequest(
+                    host = gitConfig.gitApiUrl,
+                    token = token,
+                    projectName = gitProjectId,
+                    sourceBranch = sourceBranch,
+                    targetBranch = targetBranch,
+                    state = state,
+                    page = page,
+                    perPage = perPage
+                )
+            } else {
+                GitApi().listMergeRequest(
+                    host = gitConfig.gitApiUrl,
+                    token = token,
+                    projectName = gitProjectId,
+                    sourceBranch = sourceBranch,
+                    targetBranch = targetBranch,
+                    state = state,
+                    page = page,
+                    perPage = perPage
+                )
+            }
+        }
+        return Result(mrInfoList)
+    }
+
+    override fun createBranch(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitCreateBranch: GitCreateBranch
+    ): Result<Boolean> {
+        if (tokenType == TokenTypeEnum.OAUTH) {
+            GitOauthApi().createBranch(
+                host = gitConfig.gitApiUrl,
+                token = token,
+                projectName = gitProjectId,
+                branch = gitCreateBranch.branchName,
+                ref = gitCreateBranch.ref
+            )
+        } else {
+            GitApi().createBranch(
+                host = gitConfig.gitApiUrl,
+                token = token,
+                projectName = gitProjectId,
+                branch = gitCreateBranch.branchName,
+                ref = gitCreateBranch.ref
+            )
+        }
+        return Result(true)
+    }
+
+    override fun createMergeRequest(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitCreateMergeRequest: GitCreateMergeRequest
+    ): Result<GitMrInfo> {
+        val mrInfo = if (tokenType == TokenTypeEnum.OAUTH) {
+            GitOauthApi().createMergeRequest(
+                host = gitConfig.gitApiUrl,
+                token = token,
+                projectName = gitProjectId,
+                gitCreateMergeRequest = gitCreateMergeRequest
+            )
+        } else {
+            GitApi().createMergeRequest(
+                host = gitConfig.gitApiUrl,
+                token = token,
+                projectName = gitProjectId,
+                gitCreateMergeRequest = gitCreateMergeRequest
+            )
+        }
+        return Result(mrInfo)
     }
 }

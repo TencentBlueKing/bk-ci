@@ -11,6 +11,7 @@
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
     export default {
         name: 'app',
 
@@ -21,6 +22,14 @@
             title () {
                 return this.$t(`codelib.${this.$route.meta.title}`)
             }
+        },
+        created () {
+            this.fetchCodeTypeList()
+        },
+        methods: {
+            ...mapActions('codelib', [
+                'fetchCodeTypeList'
+            ])
         }
     }
 </script>
@@ -30,6 +39,8 @@
         flex: 1;
         display: flex;
         flex-direction: column;
+        min-width: 1380px;
+        color: #63656E;
         &-header {
             display: flex;
             width: 100%;

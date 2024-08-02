@@ -28,11 +28,13 @@
 
 package com.tencent.devops.ticket.service.permission
 
+import com.tencent.bk.sdk.iam.util.AuthCacheUtil
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
+import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.ticket.dao.CertDao
@@ -64,15 +66,24 @@ class RbacCertPermissionService constructor(
         authPermission: AuthPermission,
         message: String
     ) {
-        val checkResult = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            projectCode = projectId,
-            relationResourceType = null,
             resourceType = AuthResourceType.TICKET_CERT.value,
-            resourceCode = resourceCode,
-            action = buildCertAction(authPermission)
-        ).data ?: false
+            action = buildCertAction(authPermission),
+            projectCode = projectId,
+            resourceCode = resourceCode
+        )
+        val checkResult = AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                relationResourceType = null,
+                resourceType = AuthResourceType.TICKET_CERT.value,
+                resourceCode = resourceCode,
+                action = buildCertAction(authPermission)
+            ).data ?: false
+        }
         if (!checkResult) {
             throw PermissionForbiddenException(message)
         }
@@ -83,15 +94,24 @@ class RbacCertPermissionService constructor(
         projectId: String,
         authPermission: AuthPermission
     ): Boolean {
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            projectCode = projectId,
-            relationResourceType = null,
             resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectId,
-            action = buildCertAction(authPermission)
-        ).data ?: false
+            action = buildCertAction(authPermission),
+            projectCode = projectId,
+            resourceCode = projectId
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                relationResourceType = null,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectId,
+                action = buildCertAction(authPermission)
+            ).data ?: false
+        }
     }
 
     override fun validatePermission(
@@ -100,15 +120,24 @@ class RbacCertPermissionService constructor(
         resourceCode: String,
         authPermission: AuthPermission
     ): Boolean {
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            projectCode = projectId,
-            relationResourceType = null,
             resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = resourceCode,
-            action = buildCertAction(authPermission)
-        ).data ?: false
+            action = buildCertAction(authPermission),
+            projectCode = projectId,
+            resourceCode = resourceCode
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                relationResourceType = null,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = resourceCode,
+                action = buildCertAction(authPermission)
+            ).data ?: false
+        }
     }
 
     override fun filterCert(
@@ -117,7 +146,7 @@ class RbacCertPermissionService constructor(
         authPermission: AuthPermission
     ): List<String> {
         return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             action = buildCertAction(authPermission),
             resourceType = AuthResourceType.TICKET_CERT.value,
@@ -131,7 +160,7 @@ class RbacCertPermissionService constructor(
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             action = RbacAuthUtils.buildActionList(authPermissions, AuthResourceType.TICKET_CERT),
             resourceType = AuthResourceType.TICKET_CERT.value,
@@ -146,7 +175,7 @@ class RbacCertPermissionService constructor(
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = AuthResourceType.TICKET_CERT.value,
             resourceCode = certId,
@@ -159,7 +188,7 @@ class RbacCertPermissionService constructor(
         certId: String
     ) {
         client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = AuthResourceType.TICKET_CERT.value,
             resourceCode = certId

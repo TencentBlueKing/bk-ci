@@ -66,8 +66,10 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         buildId: String,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
@@ -76,14 +78,16 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         // #7168 通过一次获取创建记录以及缓存
         val index = indexService.getIndexName(buildId)
         logger.info("Start to print log to index[$index]")
-        buildLogPrintService.dispatchEvent(
+        buildLogPrintService.asyncDispatchEvent(
             LogStatusEvent(
                 buildId = buildId,
                 finished = false,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
+                jobId = containerHashId,
+                executeCount = executeCount,
+                userJobId = jobId,
+                stepId = stepId
             )
         )
         return Result(true)
@@ -94,23 +98,27 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         finished: Boolean,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        logStorageMode: LogStorageMode?
+        logStorageMode: LogStorageMode?,
+        jobId: String?,
+        stepId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.dispatchEvent(
+        buildLogPrintService.asyncDispatchEvent(
             LogStatusEvent(
                 buildId = buildId,
                 finished = finished,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                jobId = containerHashId,
                 executeCount = executeCount,
-                logStorageMode = logStorageMode
+                logStorageMode = logStorageMode,
+                userJobId = jobId,
+                stepId = stepId
             )
         )
         return Result(true)

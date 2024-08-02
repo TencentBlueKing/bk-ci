@@ -3,34 +3,34 @@
         ref="stageContainer"
         :class="{
             'devops-stage-container': true,
-            'first-stage-container': stageIndex === 0,
             'last-stage-container': stageIndex === stageLength - 1,
-            'readonly': !editable || containerDisabled,
-            'editing': editable
+            'readonly': !reactiveData.editable || containerDisabled,
+            'editing': reactiveData.editable
         }"
     >
-        <Logo v-if="stageIndex !== 0" size="12" name="right-shape" class="container-connect-triangle" />
+        <Logo v-if="reactiveData.editable && !isTriggerStage" size="12" name="right-shape" class="container-connect-triangle" />
         <template v-if="containerIndex === 0">
-            <cruve-line v-if="stageIndex !== 0" class="first-connect-line connect-line left" :width="58" :height="60" />
+            <cruve-line v-if="showLeftCruveLine" class="first-connect-line connect-line left" :width="58" :height="60" />
             <cruve-line v-if="showLastCruveLine" class="first-connect-line connect-line right" style="margin-left: 2px" :width="58" :direction="false" :height="60" />
         </template>
         <template v-if="containerIndex !== containerLength - 1">
-            <cruve-line v-if="stageIndex !== 0" :straight="true" :width="58" :height="cruveHeight" class="connect-line left" />
+            <cruve-line v-if="showLeftCruveLine" :straight="true" :width="58" :height="cruveHeight" class="connect-line left" />
             <cruve-line v-if="showLastCruveLine" :straight="true" :width="58" :height="cruveHeight" :direction="false" class="connect-line right" />
         </template>
         <Component
             :is="jobComponentName"
             v-bind="jobComponentProps"
             v-on="$listeners"
+            ref="jobBox"
         />
     </div>
 </template>
 
 <script>
-    import MatrixGroup from './MatrixGroup'
+    import CruveLine from './CruveLine'
     import Job from './Job'
     import Logo from './Logo'
-    import CruveLine from './CruveLine'
+    import MatrixGroup from './MatrixGroup'
     import {
         getOuterHeight
     } from './util'
@@ -45,26 +45,18 @@
         props: {
             stage: {
                 type: Object,
-                requiured: true
+                required: true
             },
             container: {
                 type: Object,
-                requiured: true
+                required: true
             },
             stageIndex: Number,
             containerIndex: Number,
             stageLength: Number,
             containerLength: Number,
             stageDisabled: Boolean,
-            editable: {
-                type: Boolean,
-                default: true
-            },
-            isExecDetail: {
-                type: Boolean,
-                default: false
-            },
-            isLatestBuild: {
+            isTriggerStage: {
                 type: Boolean,
                 default: false
             },
@@ -72,31 +64,14 @@
                 type: Boolean,
                 default: false
             },
-            isPreview: {
-                type: Boolean,
-                default: false
-            },
-            canSkipElement: {
-                type: Boolean,
-                default: false
-            },
             handleChange: {
                 type: Function,
                 required: true
-            },
-            cancelUserId: {
-                type: String,
-                default: 'unknow'
-            },
-            userName: {
-                type: String,
-                default: 'unknow'
-            },
-            matchRules: {
-                type: Array,
-                default: () => []
             }
         },
+        inject: [
+            'reactiveData'
+        ],
         data () {
             return {
                 cruveHeight: 0
@@ -107,10 +82,13 @@
                 return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false) || this.stageDisabled
             },
             isMatrix () {
-                return this.isExecDetail && this.container.matrixGroupFlag && this.container.groupContainers
+                return this.reactiveData.isExecDetail && this.container.matrixGroupFlag && this.container.groupContainers
             },
             showLastCruveLine () {
-                return (this.stageIndex !== this.stageLength - 1 || this.editable) && !this.isFinallyStage
+                return (this.stageIndex !== this.stageLength - 1 || this.reactiveData.editable) && !this.isFinallyStage
+            },
+            showLeftCruveLine () {
+                return (this.reactiveData.editable && !this.isTriggerStage) || this.stageIndex > 0
             },
             jobComponentName () {
                 return this.isMatrix ? MatrixGroup : Job
@@ -130,21 +108,15 @@
                 }
             }
         },
-        watch: {
-            'container.elements.length': function (newVal, oldVal) {
-                if (newVal !== oldVal) {
-                    this.updateCruveConnectHeight()
-                }
-            }
-        },
         mounted () {
-            this.updateCruveConnectHeight()
-            if (this.containerDisabled) {
-                this.handleChange(this.container, { runContainer: false })
-            }
+            this.resizeObserver = new ResizeObserver((entries) => {
+                this.updateCruveConnectHeight()
+            })
+            this.resizeObserver.observe(this.$el)
         },
-        updated () {
-            this.updateCruveConnectHeight()
+
+        beforeDestroy () {
+            this.resizeObserver?.unobserve?.(this.$el)
         },
         methods: {
             updateCruveConnectHeight () {
@@ -163,7 +135,7 @@
     @import "./conf";
     .devops-stage-container {
         text-align: left;
-        margin: 16px 20px 0 20px;
+        margin: 16px 20px 24px 20px;
         position: relative;
 
         // 实心圆点
@@ -191,7 +163,7 @@
 
         .connect-line {
             position: absolute;
-            top: math.div($itemHeight, 2) - 4;
+            top: 1px;
             stroke: $primaryColor;
             stroke-width: 1;
             fill: none;

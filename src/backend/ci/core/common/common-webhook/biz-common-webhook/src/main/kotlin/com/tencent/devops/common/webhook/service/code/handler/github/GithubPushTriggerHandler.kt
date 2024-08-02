@@ -27,16 +27,20 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.code.github.GithubPushOperationKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
@@ -52,10 +56,13 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommitAuthor
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubBaseInfo
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
+import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
+import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -101,12 +108,39 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
         return event.headCommit?.message ?: ""
     }
 
-    override fun preMatch(event: GithubPushEvent): ScmWebhookMatcher.MatchResult {
+    override fun getEventDesc(event: GithubPushEvent): String {
+        val linkUrl = if (event.headCommit != null) {
+            "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${event.repository.fullName}/commit/${event.headCommit?.id}"
+        } else {
+            "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${event.repository.fullName}/commit/${getBranchName(event)}"
+        }
+        val revision = getRevision(event)
+        val commitId = if (revision.isNotBlank()) {
+            revision.substring(0, GitPushEvent.SHORT_COMMIT_ID_LENGTH)
+        } else {
+            revision
+        }
+        return I18Variable(
+            code = WebhookI18nConstants.GITHUB_PUSH_EVENT_DESC,
+            params = listOf(
+                getBranchName(event),
+                linkUrl,
+                commitId,
+                getUsername(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: GithubPushEvent): String {
+        return event.repository.id.toString()
+    }
+
+    override fun preMatch(event: GithubPushEvent): WebhookMatchResult {
         if (event.commits.isEmpty()) {
             logger.info("Github web hook no commit")
-            return ScmWebhookMatcher.MatchResult(false)
+            return WebhookMatchResult(false)
         }
-        return ScmWebhookMatcher.MatchResult(true)
+        return WebhookMatchResult(true)
     }
 
     override fun getEventFilters(
@@ -116,7 +150,39 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
         repository: Repository,
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
-        return emptyList()
+        with(webHookParams) {
+            val userId = getUsername(event)
+            val userFilter = UserFilter(
+                pipelineId = pipelineId,
+                triggerOnUser = userId,
+                includedUsers = WebhookUtils.convert(includeUsers),
+                excludedUsers = WebhookUtils.convert(excludeUsers),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(userId)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(userId)
+                ).toJsonStr()
+            )
+            val triggerOnBranchName = getBranchName(event)
+            val branchFilter = BranchFilter(
+                pipelineId = pipelineId,
+                triggerOnBranchName = triggerOnBranchName,
+                includedBranches = WebhookUtils.convert(branchName),
+                excludedBranches = WebhookUtils.convert(excludeBranchName),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_NOT_MATCH,
+                    params = listOf(triggerOnBranchName)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_IGNORED,
+                    params = listOf(triggerOnBranchName)
+                ).toJsonStr()
+            )
+            return listOf(userFilter, branchFilter)
+        }
     }
 
     override fun retrieveParams(
@@ -148,7 +214,7 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
             )
         )
         // 兼容stream变量
-        startParams[PIPELINE_GIT_REPO_URL] = event.repository.url
+        startParams[PIPELINE_GIT_REPO_URL] = event.repository.getRepoUrl()
         startParams[PIPELINE_GIT_REF] = event.ref
         startParams[CI_BRANCH] = getBranchName(event)
         startParams[PIPELINE_GIT_EVENT] = if (event.deleted) {
@@ -166,7 +232,8 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
             else -> TGitPushActionType.PUSH_FILE.value
         }
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.url}/commit/${event.commits.firstOrNull()?.id}"
-
+        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = event.commits.firstOrNull()?.message ?: ""
+        startParams[PIPELINE_GIT_SHA_SHORT] = GitUtils.getShortSha(event.after)
         return startParams
     }
 }

@@ -41,9 +41,9 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -55,289 +55,298 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["APP_PIPELINE_BUILD"], description = "app流水线相关接口")
+@Tag(name = "APP_PIPELINE_BUILD", description = "app流水线相关接口")
 @Path("/app/pipelineBuild")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface AppPipelineBuildResource {
 
-    @ApiOperation("获取流水线手动启动参数")
+    @Operation(summary = "获取流水线手动启动参数")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartupInfo")
     @Path("/{projectId}/{pipelineId}/manualStartupInfo")
     fun manualStartupInfo(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int?
     ): Result<BuildManualStartupInfo>
 
-    @ApiOperation("手动启动流水线")
+    @Operation(summary = "手动启动流水线")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartup")
     @Path("/{projectId}/{pipelineId}/")
     fun manualStartup(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("启动参数", required = true)
-        values: Map<String, String>
+        @Parameter(description = "启动参数", required = true)
+        values: Map<String, String>,
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int?
     ): Result<BuildId>
 
-    @ApiOperation("手动停止流水线")
+    @Operation(summary = "手动停止流水线")
     @DELETE
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stop")
     @Path("/{projectId}/{pipelineId}/{buildId}/")
     fun manualShutdown(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<Boolean>
 
-    @ApiOperation("重试流水线-重试或者跳过失败插件")
+    @Operation(summary = "重试流水线-重试或者跳过失败插件")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/retry")
     @Path("/{projectId}/{pipelineId}/{buildId}/retry")
     fun retry(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("要重试的原子任务ID", required = false)
+        @Parameter(description = "要重试的原子任务ID", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
-        @ApiParam("仅重试所有失败Job", required = false)
+        @Parameter(description = "仅重试所有失败Job", required = false)
         @QueryParam("failedContainer")
         failedContainer: Boolean? = false,
-        @ApiParam("跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
+        @Parameter(description = "跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
         @QueryParam("skip")
         skipFailedTask: Boolean? = false
     ): Result<BuildId>
 
-    @ApiOperation("质量红线人工审核")
+    @Operation(summary = "质量红线人工审核")
     @POST
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/qualityGateReview/{action}")
     fun manualQualityGateReview(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("步骤Id", required = true)
+        @Parameter(description = "步骤Id", required = true)
         @PathParam("elementId")
         elementId: String,
-        @ApiParam("动作", required = true)
+        @Parameter(description = "动作", required = true)
         @PathParam("action")
         action: ManualReviewAction,
-        @ApiParam("红线ID", required = false)
+        @Parameter(description = "红线ID", required = false)
         request: QualityReviewRequest? = null
     ): Result<Boolean>
 
-    @ApiOperation("人工审核")
+    @Operation(summary = "人工审核")
     @POST
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/review")
     fun manualReview(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("原子ID", required = true)
+        @Parameter(description = "原子ID", required = true)
         @PathParam("elementId")
         elementId: String,
-        @ApiParam("审核信息", required = true)
+        @Parameter(description = "审核信息", required = true)
         params: ReviewParam
     ): Result<Boolean>
 
-    @ApiOperation("人工审核(new)")
+    @Operation(summary = "人工审核(new)")
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/toReview")
     fun goToReview(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("步骤Id", required = true)
+        @Parameter(description = "步骤Id", required = true)
         @PathParam("elementId")
         elementId: String
     ): Result<ReviewParam>
 
-    @ApiOperation("触发审核")
+    @Operation(summary = "触发审核")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/review")
     fun buildTriggerReview(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("是否通过审核", required = true)
+        @Parameter(description = "是否通过审核", required = true)
         @QueryParam("approve")
         approve: Boolean,
-        @ApiParam("渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
 
-    @ApiOperation("手动触发启动阶段")
+    @Operation(summary = "手动触发启动阶段")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stages/{stageId}/manualStart")
     fun manualStartStage(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("阶段ID", required = true)
+        @Parameter(description = "阶段ID", required = true)
         @PathParam("stageId")
         stageId: String,
-        @ApiParam("取消执行", required = false)
+        @Parameter(description = "取消执行", required = false)
         @QueryParam("cancel")
         cancel: Boolean?,
-        @ApiParam("审核请求体", required = false)
+        @Parameter(description = "审核请求体", required = false)
         reviewRequest: StageReviewRequest? = null
     ): Result<Boolean>
 
-    @ApiOperation("获取流水线构建历史-new")
+    @Operation(summary = "获取流水线构建历史-new")
     @GET
     @Path("/{projectId}/{pipelineId}/history/new")
     fun getHistoryBuildNew(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("代码库别名", required = false)
+        @Parameter(description = "代码库别名", required = false)
         @QueryParam("materialAlias")
         materialAlias: List<String>?,
-        @ApiParam("代码库URL", required = false)
+        @Parameter(description = "代码库URL", required = false)
         @QueryParam("materialUrl")
         materialUrl: String?,
-        @ApiParam("分支", required = false)
+        @Parameter(description = "分支", required = false)
         @QueryParam("materialBranch")
         materialBranch: List<String>?,
-        @ApiParam("commitId", required = false)
+        @Parameter(description = "commitId", required = false)
         @QueryParam("materialCommitId")
         materialCommitId: String?,
-        @ApiParam("commitMessage", required = false)
+        @Parameter(description = "commitMessage", required = false)
         @QueryParam("materialCommitMessage")
         materialCommitMessage: String?,
-        @ApiParam("状态", required = false)
+        @Parameter(description = "状态", required = false)
         @QueryParam("status")
         status: List<BuildStatus>?,
-        @ApiParam("触发方式", required = false)
+        @Parameter(description = "触发方式", required = false)
         @QueryParam("trigger")
         trigger: List<StartType>?,
-        @ApiParam("排队于-开始时间(时间戳形式)", required = false)
+        @Parameter(description = "排队于-开始时间(时间戳形式)", required = false)
         @QueryParam("queueTimeStartTime")
         queueTimeStartTime: Long?,
-        @ApiParam("排队于-结束时间(时间戳形式)", required = false)
+        @Parameter(description = "排队于-结束时间(时间戳形式)", required = false)
         @QueryParam("queueTimeEndTime")
         queueTimeEndTime: Long?,
-        @ApiParam("开始于-开始时间(时间戳形式)", required = false)
+        @Parameter(description = "开始于-开始时间(时间戳形式)", required = false)
         @QueryParam("startTimeStartTime")
         startTimeStartTime: Long?,
-        @ApiParam("开始于-结束时间(时间戳形式)", required = false)
+        @Parameter(description = "开始于-结束时间(时间戳形式)", required = false)
         @QueryParam("startTimeEndTime")
         startTimeEndTime: Long?,
-        @ApiParam("结束于-开始时间(时间戳形式)", required = false)
+        @Parameter(description = "结束于-开始时间(时间戳形式)", required = false)
         @QueryParam("endTimeStartTime")
         endTimeStartTime: Long?,
-        @ApiParam("结束于-结束时间(时间戳形式)", required = false)
+        @Parameter(description = "结束于-结束时间(时间戳形式)", required = false)
         @QueryParam("endTimeEndTime")
         endTimeEndTime: Long?,
-        @ApiParam("耗时最小值", required = false)
+        @Parameter(description = "耗时最小值", required = false)
         @QueryParam("totalTimeMin")
         totalTimeMin: Long?,
-        @ApiParam("耗时最大值", required = false)
+        @Parameter(description = "耗时最大值", required = false)
         @QueryParam("totalTimeMax")
         totalTimeMax: Long?,
-        @ApiParam("备注", required = false)
+        @Parameter(description = "备注", required = false)
         @QueryParam("remark")
         remark: String?,
-        @ApiParam("构件号起始", required = false)
+        @Parameter(description = "构件号起始", required = false)
         @QueryParam("buildNoStart")
         buildNoStart: Int?,
-        @ApiParam("构件号结束", required = false)
+        @Parameter(description = "构件号结束", required = false)
         @QueryParam("buildNoEnd")
         buildNoEnd: Int?,
-        @ApiParam("构建信息", required = false)
+        @Parameter(description = "构建信息", required = false)
         @QueryParam("buildMsg")
-        buildMsg: String?
+        buildMsg: String?,
+        @Parameter(description = "查看指定版本调试数据", required = false, example = "false")
+        @QueryParam("version")
+        customVersion: Int? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 }

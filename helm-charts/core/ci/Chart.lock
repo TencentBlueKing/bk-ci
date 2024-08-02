@@ -7,16 +7,16 @@ dependencies:
   version: 8.8.3
 - name: redis
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-  version: 14.8.8
+  version: 15.3.3
 - name: elasticsearch
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-  version: 17.5.2
+  version: 17.5.4
 - name: rabbitmq
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 8.20.1
 - name: influxdb
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-  version: 2.3.7
+  version: 5.3.1
 - name: nginx-ingress-controller
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 7.6.21
@@ -25,6 +25,6 @@ dependencies:
   version: 10.30.6
 - name: kubernetes-manager
   repository: file://./local_chart/kubernetes-management
-  version: 0.0.36
-digest: sha256:521a93d5e92e46288b16ef26391656c9a7041dd880a01cf5c04389f1bb4f4186
-generated: "2023-03-14T17:35:25.523011238+08:00"
+  version: 0.0.45
+digest: sha256:bb11b7ac0e3487504f5563cd2b170d04038fc8971aaecbaca3dc5ecdcb792a43
+generated: "2024-06-21T18:05:57.191350067+08:00"

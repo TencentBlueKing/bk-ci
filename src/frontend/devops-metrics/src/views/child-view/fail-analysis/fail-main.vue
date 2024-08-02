@@ -27,6 +27,10 @@ const handleFilterChange = (newStatus) => {
     ...newStatus,
   };
 };
+
+const handleClear = (payload) => {
+  handleFilterChange(payload);
+}
 const resetBtnDisabled = ref(false)
 
 const handleChangeResetBtnDisabled = (val) => {
@@ -56,6 +60,7 @@ if (route.query.errorType) {
       :reset-btn-disabled="resetBtnDisabled"
       :status="status"
       @change="handleChangeResetBtnDisabled"
+      @clear="handleClear"
     />
   </main>
 </template>

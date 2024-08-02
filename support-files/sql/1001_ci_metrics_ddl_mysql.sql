@@ -248,4 +248,73 @@ CREATE TABLE IF NOT EXISTS `T_ATOM_INDEX_STATISTICS_DAILY` (
   UNIQUE KEY `UNI_TAISD_ATOM_TIME` (`ATOM_CODE`,`STATISTICS_TIME`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='插件每日指标数据统计表';
 
+CREATE TABLE IF NOT EXISTS `T_ATOM_MONITOR_DATA_DAILY` (
+  `ID` bigint(32) NOT NULL COMMENT '主键ID',
+  `ATOM_CODE` varchar(64) NOT NULL COMMENT '插件代码',
+  `EXECUTE_COUNT` bigint(20) DEFAULT '0' COMMENT '执行次数',
+  `STATISTICS_TIME` datetime(3) NOT NULL COMMENT '统计时间',
+  `ERROR_TYPE` int(11) DEFAULT NULL COMMENT '错误类型',
+  `CREATOR` varchar(50) NOT NULL DEFAULT 'system' COMMENT '创建者',
+  `MODIFIER` varchar(50) NOT NULL DEFAULT 'system' COMMENT '修改者',
+  `UPDATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '修改时间',
+  `CREATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  PRIMARY KEY (`ID`,`STATISTICS_TIME`),
+  UNIQUE KEY `UNI_TAMDD_ATOM_TIME_TYPE` (`ATOM_CODE`,`STATISTICS_TIME`,`ERROR_TYPE`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='插件监控数据每日统计表';
+
+CREATE TABLE IF NOT EXISTS `T_PROJECT_ATOM` (
+  `ID` bigint(32) NOT NULL COMMENT '主键ID',
+  `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+  `ATOM_CODE` varchar(64) NOT NULL COMMENT '插件代码',
+  `ATOM_NAME` varchar(64) NOT NULL COMMENT '插件名称',
+  `CREATOR` varchar(50) NOT NULL DEFAULT 'system' COMMENT '创建者',
+  `MODIFIER` varchar(50) NOT NULL DEFAULT 'system' COMMENT '修改者',
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `UNI_TPA_PROJECT_CODE` (`PROJECT_ID`,`ATOM_CODE`),
+  KEY `T_PROJECT_ATOM_PROJECT_ID_IDX` (`PROJECT_ID`,`ATOM_NAME`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目下插件关联关系表';
+
+CREATE TABLE IF NOT EXISTS `T_DISPATCH_JOB_DAILY_METRICS` (
+  `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `THE_DATE` varchar(64) NOT NULL DEFAULT '' COMMENT '日期，格式：2023-12-09',
+  `PROJECT_ID` varchar(128) NOT NULL DEFAULT '' COMMENT '项目ID',
+  `PRODUCT_ID` varchar(128) NOT NULL DEFAULT '' COMMENT '运营ID',
+  `JOB_TYPE` varchar(128) NOT NULL DEFAULT '' COMMENT 'job构建类型',
+  `CHANNEL_CODE` varchar(128) NOT NULL DEFAULT 'BS' COMMENT '构建来源，包含：BS,CODECC,AM,GIT等',
+  `MAX_JOB_CONCURRENCY` int(11) NOT NULL DEFAULT 0 COMMENT 'job最大并发构建次数',
+  `SUM_JOB_COST` int(11) NOT NULL DEFAULT 0 COMMENT '当天累计JOB耗时',
+  `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `UNI_KEY`(`THE_DATE`, `PROJECT_ID`, `JOB_TYPE`),
+  INDEX `IDX_PRODUCT_ID`(`PRODUCT_ID`,`JOB_TYPE`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '流水线JOB度量数据按天统计表';
+
+CREATE TABLE IF NOT EXISTS `T_PROJECT_USER_DAILY`
+(
+    `PROJECT_ID` VARCHAR(64) not null comment '项目ID',
+    `USER_ID`    VARCHAR(64) not null comment '用户ID',
+    `THE_DATE`   DATE        not null comment '日期',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`PROJECT_ID`, `USER_ID`, `THE_DATE`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='项目每日用户';
+
+CREATE TABLE IF NOT EXISTS `T_PROJECT_BUILD_SUMMARY_DAILY`
+(
+    `PROJECT_ID`           VARCHAR(64)  not null comment '项目ID',
+    `PRODUCT_ID`           int              null comment '产品ID',
+    `USER_COUNT`           int          not null default 0 comment '用户数',
+    `BUILD_COUNT`          int          not null default 0 comment '总构建数',
+    `MANUAL_BUILD_COUNT`   int          not null default 0 comment '手动触发构建数',
+    `OPENAPI_BUILD_COUNT`  int          not null default 0 comment 'openapi构建数',
+    `WEBHOOK_BUILD_COUNT`  int          not null default 0 comment '代码库构建数',
+    `REMOTE_BUILD_COUNT`   int          not null default 0 comment '远程触发构建数',
+    `TIME_BUILD_COUNT`     int          not null default 0 comment '定时触发构建数',
+    `SUB_PIPELINE_BUILD_COUNT` int          not null default 0 comment '子流水线触发构建数',
+    `THE_DATE`             DATE         not null comment '日期',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`PROJECT_ID`, `THE_DATE`),
+    INDEX `IDX_PRODUCT_ID`(`PRODUCT_ID`,`THE_DATE`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='项目每日构建汇总表';
+
 SET FOREIGN_KEY_CHECKS = 1;

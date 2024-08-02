@@ -27,30 +27,35 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.agent
 
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.utils.TransferUtil
+import io.swagger.v3.oas.annotations.media.Schema
 import java.net.URLEncoder
+import org.json.JSONObject
 
-@ApiModel("脚本任务（windows环境）", description = WindowsScriptElement.classType)
+@Schema(title = "脚本任务（windows环境）", description = WindowsScriptElement.classType)
 data class WindowsScriptElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "执行Windows的bat脚本",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("用户自定义ID", required = false)
+    @get:Schema(title = "用户自定义ID", required = false)
     override var stepId: String? = null,
-    @ApiModelProperty("FAQ url链接", required = false)
+    @get:Schema(title = "用户自定义环境变量（插件运行时写入环境）", required = false)
+    override var customEnv: List<NameAndValue>? = null,
+    @get:Schema(title = "FAQ url链接", required = false)
     val errorFAQUrl: String? = null,
-    @ApiModelProperty("脚本内容", required = true)
+    @get:Schema(title = "脚本内容", required = true)
     val script: String,
-    @ApiModelProperty("脚本类型", required = true)
+    @get:Schema(title = "脚本类型", required = true)
     val scriptType: BuildScriptType,
-    @ApiModelProperty("字符集类型", required = false)
+    @get:Schema(title = "字符集类型", required = false)
     val charsetType: CharsetType? = null
 ) : Element(name, id, status) {
 
@@ -63,6 +68,23 @@ data class WindowsScriptElement(
         // 帮助转化
         mutableMap["script"] = URLEncoder.encode(script, "UTF-8")
         return mutableMap
+    }
+
+    override fun transferYaml(defaultValue: JSONObject?): PreStep = PreStep(
+        name = name,
+        id = stepId,
+        // bat插件上的
+        ifFiled = TransferUtil.parseStepIfFiled(this),
+        uses = "${getAtomCode()}@$version",
+        with = batchParams()
+    )
+
+    private fun batchParams(): Map<String, Any> {
+        val res = mutableMapOf<String, Any>(WindowsScriptElement::script.name to script)
+        if (charsetType != null && charsetType != CharsetType.DEFAULT) {
+            res[WindowsScriptElement::charsetType.name] = charsetType.name
+        }
+        return res
     }
 
     override fun getClassType() = classType

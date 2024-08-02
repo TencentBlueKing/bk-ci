@@ -28,15 +28,16 @@
 
 package com.tencent.devops.auth.pojo.vo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("组策略")
+@Schema(title = "组策略")
 data class IamGroupPoliciesVo(
-    @ApiModelProperty("操作")
+    @get:Schema(title = "操作")
     val action: String,
-    @ApiModelProperty("操作名")
+    @get:Schema(title = "操作名")
+    @BkFieldI18n
     val actionName: String,
-    @ApiModelProperty("是否该action操作权限")
+    @get:Schema(title = "是否该action操作权限")
     val permission: Boolean
 )

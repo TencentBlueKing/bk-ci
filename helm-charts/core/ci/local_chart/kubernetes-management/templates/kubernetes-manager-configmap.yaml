@@ -92,6 +92,32 @@ data:
       # 只给特定用户使用的专机
       privateMachine:
         label: bkci.dispatch.kubenetes/private-builder
+    buildless:
+      # 是否开启无编译构建集群(默认不开启)
+      enabled: false
+      # 无编译构建集群启动deployments数量（建议>=2）
+      deploymentReplicas: 2
+      # deployment配置
+      buildlessDeployment:
+        image: bkci/ci:latest
+        replicas: 2
+        volume:
+          # 构建机脚本
+          builderConfigMap:
+            name: buildless-builder
+            items:
+              # 初始化脚本
+              - key: initsh.properties
+                path: init.sh
+          hostPath:
+            # 数据盘
+            dataHostDir: /data/devops/workspace
+            # 日志盘
+            logsHostDir: /data/devops/logs
+        volumeMount:
+          dataPath: /data/devops/workspace
+          logPath: /data/devops/logs
+          builderConfigMapPath: /data/devops/config
     buildAndPushImage:
       image: {{ .Values.kubernetesManager.buildAndPushImage.image }}
       # 拉取kaniko需要的凭据，如果不填视为没有
@@ -110,9 +136,9 @@ data:
           {{- .Values.kubernetesManager.apiserver.auth.rsaPrivateKey | nindent 10 }}
 
     docker:
-      enable: {{ .Values.kubernetesManager.docker.enable }}      
+      enable: {{ .Values.kubernetesManager.docker.enable }}
 
-  {{ if .Values.kubeConfig.useKubeConfig -}}
+    {{ if .Values.kubeConfig.useKubeConfig -}}
   kubeConfig.yaml: |
     {{- .Values.kubeConfig.content | nindent 4 }}
   {{- end -}}

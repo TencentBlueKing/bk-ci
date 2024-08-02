@@ -72,11 +72,13 @@ enum class StartType {
                 "" -> ""
                 else -> type
             }
-            return MessageUtil.getMessageByLocale(
-                messageCode = "START_TYPE_$name",
-                language = language,
-                params = params
-            )
+            return if (name.isBlank()) name else {
+                MessageUtil.getMessageByLocale(
+                    messageCode = "START_TYPE_$name",
+                    language = language,
+                    params = params
+                )
+            }
         }
 
         fun toStartType(type: String): StartType {

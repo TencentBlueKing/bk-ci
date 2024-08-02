@@ -105,12 +105,10 @@ class PipelineBuildDetailService @Autowired constructor(
 
         val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
 
-        val buildInfo = pipelineBuildDao.convert(
-            pipelineBuildDao.getBuildInfo(
-                dslContext = dslContext,
-                projectId = projectId,
-                buildId = buildId
-            )
+        val buildInfo = pipelineBuildDao.getBuildInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId
         ) ?: return null
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, buildInfo.pipelineId) ?: return null
@@ -180,7 +178,8 @@ class PipelineBuildDetailService @Autowired constructor(
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
             lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime,
-            triggerReviewers = triggerReviewers
+            triggerReviewers = triggerReviewers,
+            debug = buildInfo.debug
         )
     }
 
@@ -192,7 +191,7 @@ class PipelineBuildDetailService @Autowired constructor(
             model = JsonUtil.toJson(model, formatted = false),
             buildStatus = BuildStatus.RUNNING
         )
-        pipelineDetailChangeEvent(projectId, buildId)
+//        pipelineDetailChangeEvent(projectId, buildId)
     }
 
     fun buildCancel(projectId: String, buildId: String, buildStatus: BuildStatus, cancelUser: String) {

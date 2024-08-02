@@ -85,7 +85,9 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                     collected = favoriteDao.countFavorite(dslContext, userId, tServiceRecord.id) > 0,
                     weigHt = tServiceRecord.weight ?: 0,
                     logoUrl = tServiceRecord.logoUrl,
-                    webSocket = tServiceRecord.webSocket
+                    webSocket = tServiceRecord.webSocket,
+                    clusterType = tServiceRecord.clusterType,
+                    docUrl = tServiceRecord.docUrl ?: ""
                 )
             )
         } else {
@@ -144,10 +146,12 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             projectIdType = tServiceRecord.projectIdType,
             logoUrl = tServiceRecord.logoUrl,
             webSocket = tServiceRecord.webSocket,
+            weight = tServiceRecord.weight,
             createdUser = tServiceRecord.createdUser ?: "",
             createdTime = DateTimeUtil.toDateTime(tServiceRecord.createdTime),
             updatedUser = tServiceRecord.updatedUser ?: "",
-            updatedTime = DateTimeUtil.toDateTime(tServiceRecord.updatedTime)
+            updatedTime = DateTimeUtil.toDateTime(tServiceRecord.updatedTime),
+            clusterType = tServiceRecord.clusterType
         )
     }
 
@@ -247,7 +251,9 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                             logoUrl = it.logoUrl,
                             webSocket = it.webSocket,
                             newWindow = it.newWindow,
-                            newWindowUrl = it.newWindowurl
+                            newWindowUrl = it.newWindowurl,
+                            clusterType = it.clusterType,
+                            docUrl = it.docUrl ?: ""
                         )
                     )
                 }

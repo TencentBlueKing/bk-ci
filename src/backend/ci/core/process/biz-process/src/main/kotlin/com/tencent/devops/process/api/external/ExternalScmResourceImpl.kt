@@ -58,10 +58,15 @@ class ExternalScmResourceImpl @Autowired constructor(
     override fun webHookCodeGitCommit(
         event: String,
         secret: String?,
+        sourceType: String?,
         traceId: String,
         body: String
-    ) =
-        Result(
+    ): Result<Boolean> {
+        // 工蜂的测试请求,应该忽略
+        if (sourceType == "Test") {
+            return Result(true)
+        }
+        return Result(
             CodeWebhookEventDispatcher.dispatchEvent(
                 rabbitTemplate = rabbitTemplate,
                 event = GitWebhookEvent(
@@ -71,6 +76,7 @@ class ExternalScmResourceImpl @Autowired constructor(
                 )
             )
         )
+    }
 
     override fun webHookGitlabCommit(event: String) =
         Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, GitlabWebhookEvent(requestContent = event)))

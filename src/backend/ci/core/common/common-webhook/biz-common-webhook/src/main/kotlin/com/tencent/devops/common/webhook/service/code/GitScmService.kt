@@ -31,21 +31,30 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.github.ServiceGithubPRResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
+import com.tencent.devops.repository.api.scm.ServiceTGitResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.sdk.github.request.GetPullRequestRequest
+import com.tencent.devops.repository.sdk.github.response.PullRequestResponse
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.LoginSession
+import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -75,7 +84,9 @@ class GitScmService @Autowired constructor(
                 projectId = projectId,
                 credentialId = repo.credentialId,
                 userName = repo.userName,
-                authType = tokenType
+                authType = tokenType,
+                scmType = repo.getScmType(),
+                repoUrl = repo.url
             )
             if (type.first == RepoAuthType.OAUTH) {
                 client.get(ServiceScmOauthResource::class).getMrReviewInfo(
@@ -114,7 +125,9 @@ class GitScmService @Autowired constructor(
                 projectId = projectId,
                 credentialId = repo.credentialId,
                 userName = repo.userName,
-                authType = tokenType
+                authType = tokenType,
+                scmType = repo.getScmType(),
+                repoUrl = repo.url
             )
             if (type.first == RepoAuthType.OAUTH) {
                 client.get(ServiceScmOauthResource::class).getMrInfo(
@@ -153,7 +166,9 @@ class GitScmService @Autowired constructor(
                 projectId = projectId,
                 credentialId = repo.credentialId,
                 userName = repo.userName,
-                authType = tokenType
+                authType = tokenType,
+                scmType = repo.getScmType(),
+                repoUrl = repo.url
             )
             if (type.first == RepoAuthType.OAUTH) {
                 client.get(ServiceScmOauthResource::class).getMergeRequestChangeInfo(
@@ -192,20 +207,36 @@ class GitScmService @Autowired constructor(
                 projectId = projectId,
                 credentialId = repo.credentialId,
                 userName = repo.userName,
-                authType = tokenType
+                authType = tokenType,
+                scmType = repo.getScmType(),
+                repoUrl = repo.url
             )
             for (i in 1..10) {
                 // 反向进行三点比较可以比较出rebase的真实提交
-                val result = client.get(ServiceGitResource::class).getChangeFileList(
-                    token = token,
-                    tokenType = tokenType,
-                    gitProjectId = repo.projectName,
-                    from = from,
-                    to = to,
-                    straight = false,
-                    page = i,
-                    pageSize = 100
-                ).data ?: emptyList()
+                val result = if (repo.getScmType() == ScmType.CODE_TGIT) {
+                    client.get(ServiceTGitResource::class).getChangeFileList(
+                        token = token,
+                        tokenType = tokenType,
+                        gitProjectId = repo.projectName,
+                        from = from,
+                        to = to,
+                        straight = false,
+                        page = i,
+                        pageSize = 100,
+                        url = repo.url
+                    ).data
+                } else {
+                    client.get(ServiceGitResource::class).getChangeFileList(
+                        token = token,
+                        tokenType = tokenType,
+                        gitProjectId = repo.projectName,
+                        from = from,
+                        to = to,
+                        straight = false,
+                        page = i,
+                        pageSize = 100
+                    ).data
+                } ?: emptyList()
                 changeSet.addAll(
                     result.map {
                         if (it.deletedFile) {
@@ -236,7 +267,9 @@ class GitScmService @Autowired constructor(
                 projectId = projectId,
                 credentialId = repo.credentialId,
                 userName = repo.userName,
-                authType = tokenType
+                authType = tokenType,
+                scmType = repo.getScmType(),
+                repoUrl = repo.url
             )
             val serviceGitResource = client.get(ServiceGitResource::class)
             val defaultBranch = serviceGitResource.getProjectInfo(
@@ -271,7 +304,9 @@ class GitScmService @Autowired constructor(
             projectId = projectId,
             credentialId = repo.credentialId,
             userName = repo.userName,
-            authType = tokenType
+            authType = tokenType,
+            scmType = repo.getScmType(),
+            repoUrl = repo.url
         )
         if (type.first == RepoAuthType.OAUTH) {
             return client.get(ServiceScmOauthResource::class).getMrCommitList(
@@ -307,7 +342,9 @@ class GitScmService @Autowired constructor(
                 projectId = projectId,
                 credentialId = repo.credentialId,
                 userName = repo.userName,
-                authType = tokenType
+                authType = tokenType,
+                scmType = repo.getScmType(),
+                repoUrl = repo.url
             )
             client.get(ServiceGitResource::class).getUserInfoByToken(
                 token = token,
@@ -319,15 +356,27 @@ class GitScmService @Autowired constructor(
         }
     }
 
-    private fun getToken(projectId: String, credentialId: String, userName: String, authType: TokenTypeEnum): String {
+    private fun getToken(
+        projectId: String,
+        credentialId: String,
+        userName: String,
+        authType: TokenTypeEnum,
+        scmType: ScmType,
+        repoUrl: String = ""
+    ): String {
         return if (authType == TokenTypeEnum.OAUTH) {
             client.get(ServiceOauthResource::class).gitGet(userName).data?.accessToken ?: ""
         } else {
-            getCredential(projectId, credentialId)
+            getCredential(projectId, credentialId, scmType = scmType, repoUrl = repoUrl)
         }
     }
 
-    fun getCredential(projectId: String, credentialId: String): String {
+    fun getCredential(
+        projectId: String,
+        credentialId: String,
+        scmType: ScmType? = null,
+        repoUrl: String = ""
+    ): String {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
@@ -344,13 +393,31 @@ class GitScmService @Autowired constructor(
 
         val credential = credentialResult.data!!
 
-        return String(
+        val privateKey = String(
             DHUtil.decrypt(
                 data = decoder.decode(credential.v1),
                 partBPublicKey = decoder.decode(credential.publicKey),
                 partAPrivateKey = pair.privateKey
             )
         )
+        if (credential.credentialType == CredentialType.USERNAME_PASSWORD &&
+            (scmType == ScmType.CODE_GIT || scmType == ScmType.CODE_TGIT)
+        ) {
+            val password = String(
+                DHUtil.decrypt(
+                    data = decoder.decode(credential.v2),
+                    partBPublicKey = decoder.decode(credential.publicKey),
+                    partAPrivateKey = pair.privateKey
+                )
+            )
+            return getSession(
+                scmType = scmType,
+                username = privateKey,
+                password = password,
+                url = repoUrl
+            )?.privateToken ?: ""
+        }
+        return privateKey
     }
 
     private fun getType(repo: Repository): Pair<RepoAuthType?, ScmType>? {
@@ -364,5 +431,89 @@ class GitScmService @Autowired constructor(
             else ->
                 return null
         }
+    }
+
+    /**
+     * 获取Commit 评审信息
+     */
+    fun getCommitReviewInfo(
+        projectId: String,
+        commitReviewId: Long?,
+        repo: Repository
+    ): GitCommitReviewInfo? {
+        val type = getType(repo)
+        if (commitReviewId == null || type == null) return null
+
+        return try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType,
+                scmType = repo.getScmType(),
+                repoUrl = repo.url
+            )
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getCommitReviewInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    crId = commitReviewId
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getCommitReviewInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    crId = commitReviewId
+                ).data
+            }
+        } catch (e: Exception) {
+            logger.warn("fail to get cr info", e)
+            null
+        }
+    }
+
+    fun getPrInfo(
+        githubRepoName: String,
+        pullNumber: String,
+        repo: Repository
+    ): PullRequestResponse? {
+        return try {
+            val accessToken = client.get(ServiceGithubResource::class).getAccessToken(
+                userId = repo.userName
+            ).data?.accessToken ?: ""
+            val prInfo = client.get(ServiceGithubPRResource::class).getPullRequest(
+                request = GetPullRequestRequest(
+                    repoName = githubRepoName,
+                    pullNumber = pullNumber
+                ),
+                token = accessToken
+            ).data
+            logger.info("get github pull info|repoName[$githubRepoName]|prNumber[$pullNumber]|[$prInfo]")
+            prInfo
+        } catch (ignored: Exception) {
+            logger.warn("fail to get github pull request", ignored)
+            null
+        }
+    }
+
+    fun getSession(
+        scmType: ScmType,
+        username: String,
+        password: String,
+        url: String
+    ): LoginSession? {
+        return client.get(ServiceScmResource::class).getLoginSession(
+            RepoSessionRequest(
+                type = scmType,
+                username = username,
+                password = password,
+                url = url
+            )
+        ).data
     }
 }

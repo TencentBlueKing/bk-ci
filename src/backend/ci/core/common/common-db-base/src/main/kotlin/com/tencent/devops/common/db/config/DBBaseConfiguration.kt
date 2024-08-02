@@ -28,15 +28,26 @@
 package com.tencent.devops.common.db.config
 
 import com.tencent.devops.common.db.listener.BkJooqExecuteListener
+import com.tencent.devops.common.db.listener.SQLCheckListener
 import org.jooq.impl.DefaultExecuteListenerProvider
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.annotation.Order
 
 @Configuration
 class DBBaseConfiguration {
 
     @Bean
+    @Order(0)
     fun bkJooqExecuteListenerProvider(): DefaultExecuteListenerProvider {
         return DefaultExecuteListenerProvider(BkJooqExecuteListener())
+    }
+
+    @Bean
+    @Order(0)
+    @ConditionalOnProperty(prefix = "jooq", value = ["sqlCheck"], havingValue = "true")
+    fun sqlCheckExecuteListenerProvider(): DefaultExecuteListenerProvider {
+        return DefaultExecuteListenerProvider(SQLCheckListener())
     }
 }

@@ -2,34 +2,36 @@
 
 import Vue from 'vue'
 
+import AsideNav from '@/components/AsideNav/index.vue'
+import ContentHeader from '@/components/ContentHeader/index.vue'
+import DevopsFormItem from '@/components/DevopsFormItem/index.vue'
+import EmptyTips from '@/components/EmptyTips/index.vue'
+import Icon from '@/components/Icon/index.vue'
+import Logo from '@/components/Logo/index.vue'
+import BigSelect from '@/components/Select/index.vue'
+import ShowTooltip from '@/components/ShowTooltip/index.vue'
 import createRouter from '@/router'
 import store from '@/store'
 import eventBus from '@/utils/eventBus'
-import Logo from '@/components/Logo/index.vue'
 import iframeUtil from '@/utils/iframeUtil'
-import Icon from '@/components/Icon/index.vue'
-import EmptyTips from '@/components/EmptyTips/index.vue'
-import ShowTooltip from '@/components/ShowTooltip/index.vue'
-import DevopsFormItem from '@/components/DevopsFormItem/index.vue'
-import AsideNav from '@/components/AsideNav/index.vue'
-import ContentHeader from '@/components/ContentHeader/index.vue'
-import BigSelect from '@/components/Select/index.vue'
 import App from '@/views/App.vue'
-import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
 import { BkciDocs } from '../../common-lib/docs'
 
 import createLocale from '../../locale'
 
+import '@/assets/scss/index.scss'
+import Undeploy from '@/components/Undeploy/index.vue'
+import bsWebSocket from '@/utils/bsWebSocket.js'
+import { BkPermission, PermissionDirective, handleNoPermission } from 'bk-permission'
+import 'bk-permission/dist/main.css'
 import VeeValidate from 'vee-validate'
 import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
+import './assets/scss/icon/iconcool'
 import ExtendsCustomRules from './utils/customRules'
-import validDictionary from './utils/validDictionary'
-import showAskPermissionDialog from './components/AskPermissionDialog'
-import bsWebSocket from '@/utils/bsWebSocket.js'
-import '@/assets/scss/index.scss'
+import { handleProjectNoPermission } from './utils/permission'
 import { judgementLsVersion } from './utils/util'
-import '@icon-cool/bk-icon-devops/src/index'
+import validDictionary from './utils/validDictionary'
 
 // 全量引入 bk-magic-vue
 import bkMagic from 'bk-magic-vue'
@@ -40,12 +42,15 @@ declare module 'vue/types/vue' {
     interface Vue {
         $bkMessage: any
         $bkInfo: any
-        $showAskPermissionDialog: any
+        $showTips: any
         iframeUtil: any
+        handleNoPermission: any
     }
 }
 
 Vue.use(bkMagic)
+Vue.use(PermissionDirective(handleProjectNoPermission))
+
 Vue.component('AsideNav', AsideNav)
 Vue.component('ContentHeader', ContentHeader)
 Vue.component('Logo', Logo)
@@ -54,6 +59,7 @@ Vue.component('EmptyTips', EmptyTips)
 Vue.component('ShowTooltip', ShowTooltip)
 Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
+Vue.component('undeploy', Undeploy)
 
 const { i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
 
@@ -66,6 +72,10 @@ Vue.use(VeeValidate, {
         'en-US': validationENMessages,
         'zh-CN': validationCNMessages
     }
+})
+
+Vue.use(BkPermission, {
+    i18n
 })
 
 VeeValidate.Validator.localize(validDictionary)
@@ -82,12 +92,8 @@ router.beforeEach((to, from, next) => {
 window.eventBus = eventBus
 window.vuexStore = store
 Vue.prototype.iframeUtil = iframeUtil(router)
-Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
 Vue.prototype.$setLocale = setLocale
 Vue.prototype.$localeList = localeList
-Vue.prototype.$permissionActionMap = actionMap
-Vue.prototype.$permissionResourceMap = resourceMap
-Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
 Vue.prototype.BKCI_DOCS = BkciDocs
 Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
@@ -99,6 +105,26 @@ judgementLsVersion()
 
 Vue.mixin({
     methods: {
+        showUndeployDialog ({
+            title,
+            desc,
+            link
+        }) {
+            this.$bkInfo({
+                subHeader: this.$createElement('undeploy', {
+                    props: {
+                        isInPopup: true,
+                        serviceName: title,
+                        serviceDesc: desc
+                    }
+                }, ''),
+                okText: this.$t('learnMore'),
+                cancelText: this.$t('close'),
+                confirmFn: () => {
+                    window.open(link, '_blank')
+                }
+            })
+        },
         async applyPermission (actionId, resourceId, instanceId = []) {
             try {
                 const redirectUrl = await this.$store.dispatch('getPermRedirectUrl', [{
@@ -119,6 +145,23 @@ Vue.mixin({
             } catch (e) {
                 console.error(e)
             }
+        },
+        handleError (e, data) {
+            if (e.code === 403) { // 没有权限编辑
+                this.handleNoPermission(data)
+            } else {
+                this.$bkMessage({
+                    message: e.message || e,
+                    theme: 'error'
+                })
+            }
+        },
+        handleNoPermission (query: any) {
+            return handleNoPermission(
+                bkMagic,
+                query,
+                (window.devops as any).$createElement
+            )
         }
     }
 })

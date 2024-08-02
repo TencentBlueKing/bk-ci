@@ -30,7 +30,7 @@ package com.tencent.devops.process.api.template
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
-import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
+import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.TemplateDetailInfo
 import com.tencent.devops.process.pojo.template.TemplateListModel
@@ -49,16 +49,18 @@ class ServicePTemplateResourceImpl @Autowired constructor(
 
     override fun addMarketTemplate(
         userId: String,
-        addMarketTemplateRequest: AddMarketTemplateRequest
+        projectId: String,
+        addMarketTemplateRequest: MarketTemplateRequest
     ): Result<Map<String, String>> {
-        return templateFacadeService.addMarketTemplate(userId, addMarketTemplateRequest)
+        return templateFacadeService.addMarketTemplate(userId, projectId, addMarketTemplateRequest)
     }
 
     override fun updateMarketTemplateReference(
         userId: String,
-        updateMarketTemplateRequest: AddMarketTemplateRequest
+        projectId: String,
+        updateMarketTemplateRequest: MarketTemplateRequest
     ): Result<Boolean> {
-        return templateFacadeService.updateMarketTemplateReference(userId, updateMarketTemplateRequest)
+        return templateFacadeService.updateMarketTemplateReference(userId, projectId, updateMarketTemplateRequest)
     }
 
     override fun getTemplateDetailInfo(templateCode: String): Result<TemplateDetailInfo?> {
@@ -127,6 +129,7 @@ class ServicePTemplateResourceImpl @Autowired constructor(
     ): Result<OptionalTemplateList> {
         return Result(
             templateFacadeService.listAllTemplate(
+                userId = userId,
                 projectId = projectId,
                 templateType = templateType,
                 templateIds = null,
@@ -136,9 +139,15 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         )
     }
 
-    override fun updateStoreFlag(userId: String, templateId: String, storeFlag: Boolean): Result<Boolean> {
+    override fun updateStoreFlag(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        storeFlag: Boolean
+    ): Result<Boolean> {
         return templateFacadeService.updateTemplateStoreFlag(
             userId = userId,
+            projectId = projectId,
             templateId = templateId,
             storeFlag = storeFlag
         )
@@ -153,12 +162,13 @@ class ServicePTemplateResourceImpl @Autowired constructor(
             templateFacadeService.listAllTemplate(
                 projectId = projectId,
                 templateType = templateType,
-                templateIds = templateIds
+                templateIds = templateIds,
+                checkPermission = false
             )
         )
     }
 
     override fun checkTemplate(userId: String, projectId: String, templateId: String): Result<Boolean> {
-        return Result(templateFacadeService.checkTemplate(templateId, projectId))
+        return Result(templateFacadeService.checkTemplate(templateId, projectId, userId))
     }
 }

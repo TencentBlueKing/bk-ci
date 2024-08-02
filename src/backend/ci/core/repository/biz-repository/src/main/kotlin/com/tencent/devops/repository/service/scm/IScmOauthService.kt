@@ -28,9 +28,11 @@
 package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -61,7 +63,9 @@ interface IScmOauthService {
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String? = null
+        search: String? = null,
+        page: Int = 1,
+        pageSize: Int = 20
     ): List<String>
 
     fun listTags(
@@ -94,6 +98,27 @@ interface IScmOauthService {
         region: CodeSvnRegion?,
         userName: String,
         event: String?
+    )
+
+    fun getWebHooks(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?
+    ): List<GitHook>
+
+    fun updateWebHook(
+        hookId: Long,
+        projectName: String,
+        url: String,
+        type: ScmType,
+        privateKey: String?,
+        passPhrase: String?,
+        token: String?,
+        region: CodeSvnRegion?,
+        userName: String,
+        event: String?,
+        hookUrl: String?
     )
 
     fun addCommitCheck(
@@ -143,4 +168,15 @@ interface IScmOauthService {
         type: ScmType,
         token: String?
     ): GitProjectInfo?
+
+    /**
+     * 获取日常评审信息
+     */
+    fun getCommitReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        crId: Long
+    ): GitCommitReviewInfo?
 }

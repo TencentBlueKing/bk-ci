@@ -4,9 +4,9 @@ import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
-import com.tencent.devops.stream.util.RetryUtils
 import org.slf4j.Logger
 
 object StreamApiUtil {

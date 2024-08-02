@@ -37,8 +37,8 @@ package com.tencent.devops.common.api.constant
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev）
- * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）remotedev
+ *    32: remotedev 35：misc-杂项）
+ * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
  * @since: 2023-3-20
@@ -101,8 +101,6 @@ object CommonMessageCode {
     const val USERS_EXCEEDS_THE_LIMIT = "2100048" // 授权用户数越界:{0}
     const val FAILED_TO_QUERY_GSE_AGENT_STATUS = "2100049" // 查询 Gse Agent 状态失败
     const val FAILED_TO_GET_AGENT_STATUS = "2100050" // 获取agent状态失败
-    const val FAILED_TO_GET_CMDB_NODE = "2100051" // 获取 CMDB 节点失败
-    const val FAILED_TO_GET_CMDB_LIST = "2100052" // 获取CMDB列表失败
     const val STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE = "2100053" // stages和steps不能并列存在!
 
     const val USER_NOT_PERMISSIONS_OPERATE_PIPELINE = "2100054" // 用户({0})无权限在工程({1})下{2}流水线{3}
@@ -131,7 +129,7 @@ object CommonMessageCode {
     const val GIT_TOKEN_EMPTY = "2100076" // Git Token为空
     const val GIT_HOOK_URL_EMPTY = "2100077" // Git hook url为空
     const val TGIT_LOGIN_FAIL = "2100078" // TGit 用户名或者密码不对
-    const val TGIT_TOKEN_EMPTY = "2100079" // TGit Token 不正确
+    const val TGIT_TOKEN_FAIL = "2100079" // TGit Token 不正确
     const val TGIT_SECRET_WRONG = "2100080" // TGit 私钥不对
     const val SVN_SECRET_OR_PATH_ERROR = "2100081" // SVN 私钥不正确 或者 SVN 路径没有权限
     const val SVN_CREATE_HOOK_FAIL = "2100082" // 添加SVN WEB hook 失败
@@ -155,13 +153,38 @@ object CommonMessageCode {
     const val ENGINEERING_REPO_NOT_EXIST = "2100100" // 工程仓库不存在
     const val ENGINEERING_REPO_CALL_ERROR = "2100101" // 工程仓库访问异常
     const val NOT_MEMBER_AND_NOT_OPEN_SOURCE = "2100102" // 非项目成员且项目为非开源项目
-    // 2100108
     const val USER_NO_PIPELINE_PERMISSION = "2100108" // 流水线: 用户无{0}权限
     const val SERVICE_COULD_NOT_BE_ANALYZED = "2100109" // 无法根据接口"{0}"分析所属的服务
     const val RETURNED_RESULT_COULD_NOT_BE_PARSED = "2100110" // 内部服务返回结果无法解析 status:{0} body:{1}
     const val SERVICE_PROVIDER_NOT_FOUND = "2100111" // 找不到任何有效的{0}【{1}】服务提供者
     const val ILLEGAL_JOB_TYPE = "2100112" // 非法的job类型!
+    const val ERROR_YAML_FORMAT_EXCEPTION = "2100113" // {0} 中 {1} 格式有误,应为 {2}, error message:{3}
+    const val ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL = "2100114" // 请核对Stage标签是否正确
+    const val ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED = "2100115" // "{0} job.id 超过长度限制64 {1}}"
+    const val ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM = "2100116" // {0} 中的step必须包含uses或run或checkout!
+    const val ERROR_YAML_FORMAT_EXCEPTION_SERVICE_IMAGE_FORMAT_ILLEGAL = "2100117" // STREAM Service镜像格式非法
+    const val ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS = "2100118" // 请确保step.id唯一性!({0})
+    const val BUILD_RESOURCE_NOT_EXIST = "2100119" // {0}构建资源不存在，请检查yml配置.
+    const val ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED = "2100120" // {0}配置Env数量超过100限制!
+    // {0}Env单变量{1}长度超过{2}字符!({3})
+    const val ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED = "2100121"
+    const val ERROR_PROJECT_API_ACCESS_NO_PERMISSION = "2100122" // 项目[{0}]没有接口[{1}]的访问权限
+    const val ERROR_INTERFACE_RETRY_NUM_EXCEEDED = "2100123" // 接口连续重试次数超过{0}次，请稍后再试
+    const val ERROR_PIPELINE_API_ACCESS_NO_PERMISSION = "2100124" // 流水线[{0}]没有接口[{1}]的访问权限
+    const val TEMPLATE_PLUGIN_NOT_ALLOWED_USE = "2100125" // 模板中插件【{0}】的【{1}】版本的状态是【{2}】，不允许使用
+    const val ADD_MR_FAIL = "2100126" // 添加MR失败
 
+    // 互转使用
+    const val ELEMENT_UPDATE_WRONG_PATH = "2100127" // 更新插件的标注位置有误
+    const val ELEMENT_NOT_SUPPORT_TRANSFER = "2100128" // 如下插件在 Code 方式下已不支持，请修改后再切换: \n[{0}]
+    const val DISPATCH_NOT_SUPPORT_TRANSFER = "2100129" // 如下构建环境在 Code 方式下不支持转换，请修改后再切换: \n[{0}]
+    const val YAML_NOT_VALID = "2100130" // yaml不合法 {0}
+    const val GIT_INVALID_PRIVATE_KEY = "2100131" // 不支持的SSH私钥格式，仅支持rsa格式私钥
+    const val GIT_INVALID_PRIVATE_KEY_OR_PASSWORD = "2100132" // 第三方服务[{0}]操作失败，失败详情：{1}
+    const val MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER = "2100133" // mr accept事件类型不支持code转换
+
+    const val SVN_TOKEN_FAIL = "2100135" // SVN Token 不正确
+    const val SVN_TOKEN_EMPTY = "2100136" // SVN Token 为空, 请检查代码库的凭证类型
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
 
@@ -183,7 +206,7 @@ object CommonMessageCode {
     const val BK_CREATE_SERVICE = "bkCreateService" // 创建{0}服务
     const val BK_SESSION_ID = "bkSessionId" // 会话ID
     const val BK_GROUP_ID = "bkGroupId" // 群ID
-    const val BK_THIS_GROUP_ID = "bkThisGroupId" // 本群ID='{0}'。PS:群ID可用于蓝盾平台上任意企业微信群通知。
+    const val BK_THIS_GROUP_ID = "bkThisGroupId" // 本群ID={0}。PS:群ID可用于蓝盾平台上任意企业微信群通知。
     const val BK_MISSING_RESOURCE_DEPENDENCY = "bkMissingResourceDependency" // 依赖的资源不存在
 
     const val BK_REQUEST_TIMED_OUT = "bkRequestTimedOut" // 请求超时
@@ -196,7 +219,7 @@ object CommonMessageCode {
     const val BK_QUERY_PARAM_REQUEST_EMPTY = "bkQueryParamRequestEmpty" // 请求的参数内容为空
     const val BK_QUERY_PARAM_TYPE_ERROR = "bkQueryParamTypeError" // 查询参数类型错误
     // 你没有权限进行该操作
-    const val BK_NOT_HAVE_PERMISSION_PERFORM_THIS_OPERATION = "BK_NOT_HAVE_PERMISSION_PERFORM_THIS_OPERATION"
+    const val BK_NOT_HAVE_PERMISSION_PERFORM_THIS_OPERATION = "bkNotHavePermissionPerformThisOperation"
     // 访问后台数据失败，已通知产品、开发，请稍后重试
     const val BK_FAILED_ACCESS_BACKGROUND_DATA = "bkFailedAccessBackgroundData"
     // 未授权访问的资源
@@ -208,6 +231,8 @@ object CommonMessageCode {
     const val DELETE_BRANCH = "bkDeleteBranch" // 删除分支
 
     const val GET_PROJECT_INFO = "bkGetProjectInfo" // 获取项目详情
+    const val GET_COMMIT_REVIEW_INFO = "bkGetCommitReviewInfo" // 获取Commit Review详情
+    const val GET_SESSION_INFO = "bkGetSessionInfo" // 获取会话详情
 
     const val OPERATION_BRANCH = "bkOperationBranch" // 拉分支
     const val OPERATION_TAG = "bkOperationTag" // 拉标签
@@ -216,6 +241,8 @@ object CommonMessageCode {
     const val OPERATION_LIST_WEBHOOK = "bkOperationListWebhook" // 查询WEBHOOK
     const val OPERATION_ADD_COMMIT_CHECK = "bkOperationAddCommitCheck" // 添加COMMIT CHECK
     const val OPERATION_ADD_MR_COMMENT = "bkOperationAddMrComment" // 添加MR COMMENT
+    const val OPERATION_LIST_MR = "bkOperationListMr" // 添加MR
+    const val OPERATION_ADD_MR = "bkOperationAddMr" // 添加MR
     const val OPERATION_COMMIT = "bkOperationCommit" // 拉提交记录
     const val OPERATION_COMMIT_DIFF = "bkOperationCommitDiff" // 查询commit变化
     const val OPERATION_UNLOCK_HOOK_LOCK = "bkOperationUnlockHookLock" // 解锁hook锁
@@ -231,4 +258,9 @@ object CommonMessageCode {
     const val BK_SECOND_LEVEL_ADMIN_REVISE = "bkSecondLevelAdminRevise" // {0} 二级管理员, 由{1} 修改于
     // 用户 {0} 申请{1}蓝盾项目 {2} ,请审批！
     const val BK_USER_REQUESTS_THE_PROJECT = "bkUserRequestsTheProject"
+    const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported" // 尚未支持 {0} {1}，请联系 管理员 添加对应版本
+
+    const val BK_BUILD_ENV_TYPE = "BUILD_ENV_TYPE_" // 构建环境-
+    const val BK_BUILD_ENV_TYPE_BUILDLESS = "BUILD_ENV_TYPE_BUILDLESS" // 无编译环境
+    const val BK_BUILD_ENV_TYPE_BUILD_TRIGGERS = "BUILD_ENV_TYPE_BUILD_TRIGGER" // 构建触发
 }

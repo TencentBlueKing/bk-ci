@@ -28,8 +28,10 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.dao.ShardingRoutingRuleDao
+import com.tencent.devops.project.dispatch.ShardingRoutingRuleDispatcher
 import com.tencent.devops.project.pojo.TableShardingConfig
 import com.tencent.devops.project.service.impl.AbsShardingRoutingRuleServiceImpl
 import org.jooq.DSLContext
@@ -39,23 +41,27 @@ import org.springframework.stereotype.Service
 class SampleShardingRoutingRuleServiceImpl(
     dslContext: DSLContext,
     redisOperation: RedisOperation,
-    shardingRoutingRuleDao: ShardingRoutingRuleDao
+    shardingRoutingRuleDao: ShardingRoutingRuleDao,
+    shardingRoutingRuleDispatcher: ShardingRoutingRuleDispatcher
 ) : AbsShardingRoutingRuleServiceImpl(
     dslContext,
     redisOperation,
-    shardingRoutingRuleDao
+    shardingRoutingRuleDao,
+    shardingRoutingRuleDispatcher
 ) {
 
     /**
      * 获取可用数据源名称
      * @param clusterName db集群名称
      * @param moduleCode 模块代码
+     * @param ruleType 规则类型
      * @param dataSourceNames 数据源名称集合
      * @return 可用数据源名称
      */
     override fun getValidDataSourceName(
         clusterName: String,
         moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum,
         dataSourceNames: List<String>
     ): String {
         // 从可用的数据源中随机选择一个分配给该项目
@@ -66,19 +72,25 @@ class SampleShardingRoutingRuleServiceImpl(
 
     /**
      * 获取可用数据库表名称
+     * @param ruleType 规则类型
      * @param dataSourceName 数据源名称
      * @param tableShardingConfig 分表配置
      * @return 可用数据库表名称
      */
     override fun getValidTableName(
+        ruleType: ShardingRuleTypeEnum,
         dataSourceName: String,
         tableShardingConfig: TableShardingConfig
     ): String {
         // 从可用的数据库表中随机选择一个分配给该项目
         val tableName = tableShardingConfig.tableName
         val shardingNum = tableShardingConfig.shardingNum
-        val maxSizeIndex = shardingNum - 1
-        val randomIndex = (0..maxSizeIndex).random()
-        return "${tableName}_$randomIndex"
+        return if (shardingNum > 1) {
+            val maxSizeIndex = shardingNum - 1
+            val randomIndex = (0..maxSizeIndex).random()
+            "${tableName}_$randomIndex"
+        } else {
+            tableName
+        }
     }
 }

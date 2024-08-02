@@ -24,6 +24,7 @@
  @import './devops-common';
  @import './bk-patch';
  @import './markdown-body.scss';
+ @import './store-item-detail';
 
  .devops-atomstore {
      font-family: -apple-system, "Helvetica Neue", "Helvetica", "Arial", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif !important;
@@ -74,3 +75,8 @@
          }
      }
  }
+ 
+.tippy-tooltip.bk-overflow-tips-theme {
+    font-size: 12px !important;
+    padding: 7px 14px !important;
+}

@@ -188,18 +188,72 @@ class AuthResourceDao {
         dslContext: DSLContext,
         projectCode: String,
         resourceName: String?,
-        resourceType: String,
+        resourceType: String?,
         offset: Int,
         limit: Int
     ): Result<TAuthResourceRecord> {
         with(TAuthResource.T_AUTH_RESOURCE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
-                .and(RESOURCE_TYPE.eq(resourceType))
+                .let { if (resourceType == null) it else it.and(RESOURCE_TYPE.eq(resourceType)) }
                 .let { if (resourceName == null) it else it.and(RESOURCE_NAME.like("%$resourceName%")) }
                 .limit(limit)
                 .offset(offset)
                 .fetch()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        resourceType: String,
+        startTime: LocalDateTime? = null,
+        endTime: LocalDateTime? = null,
+        offset: Int,
+        limit: Int
+    ): Result<TAuthResourceRecord> {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .let {
+                    if (startTime != null && endTime != null)
+                        it.and(UPDATE_TIME.between(startTime, endTime)) else it
+                }
+                .orderBy(UPDATE_TIME)
+                .limit(limit)
+                .offset(offset)
+                .fetch()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        createUser: String
+    ): List<String> {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.select(RESOURCE_CODE).from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(CREATE_USER.eq(createUser))
+                .and(CREATE_TIME.ge(LocalDateTime.now().minusMinutes(1)))
+                .fetch(0, String::class.java)
+        }
+    }
+
+    fun count(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceName: String?,
+        resourceType: String
+    ): Long {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .let { if (resourceName == null) it else it.and(RESOURCE_NAME.like("%$resourceName%")) }
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -223,13 +277,14 @@ class AuthResourceDao {
         projectCode: String,
         resourceType: String,
         resourceCodes: List<String>
-    ): List<String> {
+    ): Map<String, String> {
         return with(TAuthResource.T_AUTH_RESOURCE) {
-            dslContext.select(RESOURCE_CODE).from(this)
+            dslContext.select(RESOURCE_CODE, IAM_RESOURCE_CODE)
+                .from(this)
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .and(RESOURCE_CODE.`in`(resourceCodes))
-                .fetch(0, String::class.java)
+                .fetchMap(RESOURCE_CODE, IAM_RESOURCE_CODE)
         }
     }
 
@@ -284,6 +339,60 @@ class AuthResourceDao {
         }
     }
 
+    fun countResourceByUpdateTime(
+        dslContext: DSLContext,
+        resourceType: String,
+        startTime: LocalDateTime? = null,
+        endTime: LocalDateTime? = null
+    ): Long {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .let {
+                    if (startTime != null && endTime != null)
+                        it.and(UPDATE_TIME.between(startTime, endTime)) else it
+                }
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun updateCreator(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        creator: String
+    ): Int {
+        val now = LocalDateTime.now()
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.update(this)
+                .set(CREATE_USER, creator)
+                .set(UPDATE_TIME, now)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .execute()
+        }
+    }
+
+    fun listByCreator(
+        dslContext: DSLContext,
+        resourceType: String,
+        projectCode: String?,
+        creator: String
+    ): Result<TAuthResourceRecord> {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where()
+                .let { if (projectCode == null) it else it.and(PROJECT_CODE.eq(projectCode)) }
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(CREATE_USER.eq(creator))
+                .orderBy(CREATE_TIME)
+                .fetch()
+        }
+    }
+
     fun convert(recode: TAuthResourceRecord): AuthResourceInfo {
         with(recode) {
             return AuthResourceInfo(
@@ -294,7 +403,11 @@ class AuthResourceDao {
                 resourceName = resourceName,
                 iamResourceCode = iamResourceCode,
                 enable = enable,
-                relationId = relationId
+                relationId = relationId,
+                createUser = createUser,
+                updateUser = updateUser,
+                createTime = createTime,
+                updateTime = updateTime
             )
         }
     }

@@ -28,6 +28,7 @@
 package com.tencent.devops.quality.dao.v2
 
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.quality.tables.TQualityIndicator
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
@@ -99,6 +100,7 @@ class QualityIndicatorDao {
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
+                .skipCheck() // 小表不加索引
                 .fetch()
         }
     }
@@ -162,7 +164,7 @@ class QualityIndicatorDao {
                 indicatorUpdate.defaultOperation,
                 indicatorUpdate.operationAvailable,
                 indicatorUpdate.threshold,
-                indicatorUpdate.thresholdType?.toUpperCase(),
+                indicatorUpdate.thresholdType?.uppercase(),
                 indicatorUpdate.desc,
                 indicatorUpdate.readOnly,
                 indicatorUpdate.stage,
@@ -240,6 +242,7 @@ class QualityIndicatorDao {
                         .onDuplicateKeyUpdate()
                         .set(ELEMENT_NAME, qualityIndicatorPO.elementName)
                         .set(DESC, qualityIndicatorPO.desc)
+                        .set(STAGE, qualityIndicatorPO.stage)
                         .set(UPDATE_TIME, LocalDateTime.now())
                 }
             ).execute()

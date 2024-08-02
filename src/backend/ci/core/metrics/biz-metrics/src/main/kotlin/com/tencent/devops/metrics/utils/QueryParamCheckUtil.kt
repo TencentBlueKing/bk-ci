@@ -58,6 +58,7 @@ object QueryParamCheckUtil {
     }
 
     fun toMinutes(millisecond: Long): Double {
+        if (millisecond == 0L) return 0.0
         val min = TimeUnit.MILLISECONDS.toMinutes(millisecond)
         val seconds = TimeUnit.MILLISECONDS.toSeconds(millisecond - min * 60000).toDouble()
         return String.format("%.2f", min.toDouble() + seconds / 60).toDouble()

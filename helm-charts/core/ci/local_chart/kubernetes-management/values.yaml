@@ -21,7 +21,7 @@ backendImage:
 mysql:
   enabled: true
   image:
-    tag: 5.7.35
+    tag: 5.7.26
   auth:
     # 修改此选项必须删除mysql的pvc , 否则会创建mysql失败
     rootPassword: blueking
@@ -121,7 +121,7 @@ kubernetesManager:
     targetCPU: 80
     targetMemory: 80
   # 使用的镜像
-  image: bkci/kubernetes-manager:0.0.31
+  image: bkci/bkci-kubernetes-manager:0.0.32
   # 决定每次helm部署时的构建机所在的命名空间，同时dockerInitSh也在那里，为空时默认为 {{ .Release.Namespace }}
   builderNamespace:
   redis:

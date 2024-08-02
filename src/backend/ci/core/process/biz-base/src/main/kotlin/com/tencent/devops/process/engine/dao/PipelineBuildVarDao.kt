@@ -46,7 +46,8 @@ class PipelineBuildVarDao @Autowired constructor() {
         pipelineId: String,
         buildId: String,
         name: String,
-        value: Any
+        value: Any,
+        readOnly: Boolean?
     ) {
 
         with(T_PIPELINE_BUILD_VAR) {
@@ -56,9 +57,10 @@ class PipelineBuildVarDao @Autowired constructor() {
                 PIPELINE_ID,
                 BUILD_ID,
                 KEY,
-                VALUE
+                VALUE,
+                READ_ONLY
             )
-                .values(projectId, pipelineId, buildId, name, value.toString())
+                .values(projectId, pipelineId, buildId, name, value.toString(), readOnly)
                 .onDuplicateKeyUpdate()
                 .set(PIPELINE_ID, pipelineId)
                 .set(VALUE, value.toString())
@@ -72,19 +74,21 @@ class PipelineBuildVarDao @Autowired constructor() {
         buildId: String,
         name: String,
         value: Any,
-        valueType: String? = null
+        valueType: String? = null,
+        rewriteReadOnly: Boolean? = null
     ): Int {
         with(T_PIPELINE_BUILD_VAR) {
             val baseStep = dslContext.update(this)
             if (valueType != null) {
                 baseStep.set(VAR_TYPE, valueType)
             }
-            return baseStep.set(VALUE, value.toString())
-                .where(
-                    BUILD_ID.eq(buildId).and(KEY.eq(name)).and(READ_ONLY.isNull.or(READ_ONLY.eq(false)))
-                        .and(PROJECT_ID.eq(projectId))
-                )
-                .execute()
+            val whereStep = baseStep.set(VALUE, value.toString())
+                .where(BUILD_ID.eq(buildId).and(KEY.eq(name)))
+            if (rewriteReadOnly != true) {
+                whereStep.and(READ_ONLY.isNull.or(READ_ONLY.eq(false)))
+            }
+            whereStep.and(PROJECT_ID.eq(projectId))
+            return whereStep.execute()
         }
     }
 
@@ -92,14 +96,14 @@ class PipelineBuildVarDao @Autowired constructor() {
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
-        key: String? = null
+        keys: Set<String>? = null
     ): MutableMap<String, String> {
 
         with(T_PIPELINE_BUILD_VAR) {
             val where = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
-            if (key != null) {
-                where.and(KEY.eq(key))
+            if (!keys.isNullOrEmpty()) {
+                where.and(KEY.`in`(keys))
             }
             val result = where.fetch()
             val map = mutableMapOf<String, String>()
@@ -107,6 +111,36 @@ class PipelineBuildVarDao @Autowired constructor() {
                 map[it[KEY]] = it[VALUE]
             }
             return map
+        }
+    }
+
+    fun getBuildVarMap(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        keys: Set<String>? = null
+    ): Map<String, BuildParameters> {
+        with(T_PIPELINE_BUILD_VAR) {
+            val where = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
+            if (!keys.isNullOrEmpty()) {
+                where.and(KEY.`in`(keys))
+            }
+            return where.fetch().associateBy(
+                { it.key },
+                {
+                    if (it.varType != null) {
+                        BuildParameters(
+                            key = it.key,
+                            value = it.value,
+                            valueType = BuildFormPropertyType.valueOf(it.varType),
+                            readOnly = it.readOnly
+                        )
+                    } else {
+                        BuildParameters(key = it.key, value = it.value, readOnly = it.readOnly)
+                    }
+                }
+            )
         }
     }
 
@@ -128,9 +162,14 @@ class PipelineBuildVarDao @Autowired constructor() {
             val list = mutableListOf<BuildParameters>()
             result.forEach {
                 if (it.varType != null) {
-                    list.add(BuildParameters(it.key, it.value, BuildFormPropertyType.valueOf(it.varType)))
+                    list.add(BuildParameters(
+                        key = it.key,
+                        value = it.value,
+                        valueType = BuildFormPropertyType.valueOf(it.varType),
+                        readOnly = it.readOnly
+                    ))
                 } else {
-                    list.add(BuildParameters(it.key, it.value))
+                    list.add(BuildParameters(key = it.key, value = it.value, readOnly = it.readOnly))
                 }
             }
             return list
@@ -224,6 +263,23 @@ class PipelineBuildVarDao @Autowired constructor() {
         return with(T_PIPELINE_BUILD_VAR) {
             dslContext.delete(this).where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId)).execute()
+        }
+    }
+
+    fun fetchVarByLikeKey(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        readOnly: Boolean?,
+        likeStr: String
+    ): Set<String> {
+        with(T_PIPELINE_BUILD_VAR) {
+            val dsl = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(PROJECT_ID.eq(projectId))
+                .and(KEY.like(likeStr))
+            if (readOnly != null) {
+                dsl.and(READ_ONLY.eq(readOnly))
+            }
+            return dsl.fetch().map { it.value }.toSet()
         }
     }
 

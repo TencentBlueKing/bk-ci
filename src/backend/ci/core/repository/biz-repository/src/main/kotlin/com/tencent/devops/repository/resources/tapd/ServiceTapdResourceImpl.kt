@@ -28,10 +28,10 @@
 package com.tencent.devops.repository.resources.tapd
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.tapd.request.StatusMapRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.tapd.ServiceTapdResource
-import com.tencent.devops.repository.tapd.service.ITapdWorkflowService
+import com.tencent.devops.repository.sdk.tapd.request.StatusMapRequest
+import com.tencent.devops.repository.sdk.tapd.service.ITapdWorkflowService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

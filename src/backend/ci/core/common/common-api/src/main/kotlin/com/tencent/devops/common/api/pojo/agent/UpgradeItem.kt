@@ -1,16 +1,15 @@
 package com.tencent.devops.common.api.pojo.agent
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("需要升级的项")
+@Schema(title = "需要升级的项")
 data class UpgradeItem(
-    @ApiModelProperty("升级go agent")
+    @get:Schema(title = "升级go agent")
     val agent: Boolean,
-    @ApiModelProperty("升级worker")
+    @get:Schema(title = "升级worker")
     val worker: Boolean,
-    @ApiModelProperty("升级jdk")
+    @get:Schema(title = "升级jdk")
     val jdk: Boolean,
-    @ApiModelProperty("升级docker init 脚本")
+    @get:Schema(title = "升级docker init 脚本")
     val dockerInitFile: Boolean
 )
