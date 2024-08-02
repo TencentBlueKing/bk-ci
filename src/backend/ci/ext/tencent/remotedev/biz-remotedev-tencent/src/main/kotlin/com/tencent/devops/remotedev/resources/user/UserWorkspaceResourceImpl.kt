@@ -90,7 +90,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         bkTicket: String,
         workspaceName: String
     ): Result<WorkspaceResponse> {
-        return Result(startControl.startWorkspace(userId, bkTicket, workspaceName))
+        return Result(startControl.startWorkspace(userId, workspaceName))
     }
 
     @AuditEntry(actionId = ActionId.CGS_STOP)
@@ -243,11 +243,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
 
     override fun checkUserCreate(userId: String): Result<Boolean> {
         return Result(permissionService.checkUserCreate(userId))
-    }
-
-    @Deprecated("LINUX 待删除")
-    override fun updateAllBkTicket(userId: String, bkTicket: String): Result<Boolean> {
-        return Result(true)
     }
 
     @AuditEntry(actionId = ActionId.CGS_VIEW)

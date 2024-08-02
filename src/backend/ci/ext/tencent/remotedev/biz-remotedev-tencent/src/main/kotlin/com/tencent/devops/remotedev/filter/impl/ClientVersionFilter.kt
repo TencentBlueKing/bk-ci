@@ -103,7 +103,7 @@ class ClientVersionFilter constructor(
             )
         }.onFailure { logger.warn("recordClientVersion error ${it.message}", it) }
 
-        if (checkClientVersionWarning(split = split, user = user, version = version)) {
+        if (checkClientVersionWarning(split = split)) {
             notifyControl.notify4User(
                 userIds = mutableSetOf(user),
                 notifyTemplateCode = CLIENT_VERSION_WARNING_NOTIFY,
@@ -137,7 +137,7 @@ class ClientVersionFilter constructor(
     * true： 告警
     * false： 不告警
     * */
-    private fun checkClientVersionWarning(split: List<String>, user: String, version: String): Boolean {
+    private fun checkClientVersionWarning(split: List<String>): Boolean {
         if (!this::clientVersionWarningList.isInitialized) {
             clientVersionWarningList = clientVersionWarning.split(".").map { it.toInt() }
         }

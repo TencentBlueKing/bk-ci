@@ -40,27 +40,9 @@ data class WorkspaceCreateEvent(
     override val userId: String,
     override val traceId: String,
     override val workspaceName: String,
-    @get:Schema(title = "代码库地址。格式https:://xxx.git")
-    @Deprecated("LINUX 待删除")
-    val repositoryUrl: String = "",
-    @get:Schema(title = "代码库分支")
-    @Deprecated("LINUX 待删除")
-    val branch: String = "",
-    @get:Schema(title = "代码库devfile 完整路径。格式 .preci/xxx.yaml(or yml)")
-    @Deprecated("LINUX 待删除")
-    val devFilePath: String?,
-    @get:Schema(title = "创建者的oauth token")
-    @Deprecated("LINUX 待删除")
-    val gitOAuth: String? = "",
     @get:Schema(title = "dev file 详情")
     val devFile: Devfile,
-    @get:Schema(title = "用户设置里云开发的环境变量")
-    @Deprecated("LINUX 待删除")
-    val settingEnvs: Map<String, String>,
-    @get:Schema(title = "bkTicket")
-    @Deprecated("LINUX 待删除")
-    val bkTicket: String? = null,
-    val mountType: WorkspaceMountType? = WorkspaceMountType.DEVCLOUD,
+    val mountType: WorkspaceMountType = WorkspaceMountType.START,
     @get:Schema(title = "工作空间归属")
     val ownerType: WorkspaceOwnerType? = WorkspaceOwnerType.PERSONAL,
     @get:Schema(title = "projectId")

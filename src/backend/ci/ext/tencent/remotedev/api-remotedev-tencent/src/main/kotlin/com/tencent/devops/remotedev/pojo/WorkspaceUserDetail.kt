@@ -45,15 +45,6 @@ data class WorkspaceUserDetail(
     val sleepingTime: Long,
     @get:Schema(title = "免费时间（秒）")
     val discountTime: Long,
-    @get:Schema(title = "CPU 核心数")
-    @Deprecated("LINUX 待删除")
-    val cpu: Int = 0,
-    @get:Schema(title = "内存大小（MB）")
-    @Deprecated("LINUX 待删除")
-    val memory: Int = 0,
-    @get:Schema(title = "存储空间大小（GB）")
-    @Deprecated("LINUX 待删除")
-    val disk: Int = 0,
     @get:Schema(title = "windows-gpu体验剩余时长(秒)")
     val winUsageTimeLeft: Int
 )

@@ -87,14 +87,12 @@ class BKCCService @Autowired constructor(
         logger.debug("updateHost|hostIds|{}|props|{}", hostIds, props)
         val url = "${bkConfig.ccHost}/update_host/"
         val body = UpdateHostReqBody(
-            bkAppCode = bkConfig.appCode,
-            bkAppSecret = bkConfig.appSecret,
-            bkUserName = bkConfig.ccUserName,
             bkHostId = hostIds.joinToString(separator = ","),
             data = props
         )
         val request = Request.Builder()
             .url(url)
+            .addHeader("x-bkapi-authorization", headerStr())
             .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
@@ -128,9 +126,6 @@ class BKCCService @Autowired constructor(
         }
         val url = "${bkConfig.ccHost}/list_biz_hosts/"
         val body = ListBizHostsReqBody(
-            bkAppCode = bkConfig.appCode,
-            bkAppSecret = bkConfig.appSecret,
-            bkUserName = bkConfig.ccUserName,
             page = page,
             bkBizId = bkConfig.ccBizId!!,
             fields = fields,
@@ -138,6 +133,7 @@ class BKCCService @Autowired constructor(
         )
         val request = Request.Builder()
             .url(url)
+            .addHeader("x-bkapi-authorization", headerStr())
             .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
@@ -164,6 +160,15 @@ class BKCCService @Autowired constructor(
 
         return null
     }
+    private fun headerStr(): String {
+        return objectMapper.writeValueAsString(
+            mapOf(
+                "bk_app_code" to bkConfig.appCode,
+                "bk_app_secret" to bkConfig.appSecret,
+                "bk_username" to bkConfig.ccUserName
+            )
+        ).replace("\\s".toRegex(), "")
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(BKCCService::class.java)
@@ -171,12 +176,6 @@ class BKCCService @Autowired constructor(
 }
 
 data class UpdateHostReqBody(
-    @JsonProperty("bk_app_code")
-    val bkAppCode: String,
-    @JsonProperty("bk_app_secret")
-    val bkAppSecret: String,
-    @JsonProperty("bk_username")
-    val bkUserName: String,
     @JsonProperty("bk_host_id")
     val bkHostId: String,
     val data: Map<String, Any>
@@ -192,12 +191,6 @@ data class UpdateHostResp<T>(
 )
 
 data class ListBizHostsReqBody(
-    @JsonProperty("bk_app_code")
-    val bkAppCode: String,
-    @JsonProperty("bk_app_secret")
-    val bkAppSecret: String,
-    @JsonProperty("bk_username")
-    val bkUserName: String,
     val page: ListBizHostsReqPage,
     @JsonProperty("bk_biz_id")
     val bkBizId: Int,
