@@ -11,5 +11,7 @@ data class ResetAllResourceAuthorizationReq(
     @get:Schema(title = "交接人")
     val handoverTo: String?,
     @get:Schema(title = "是否为预检查，若为true,不做权限交接")
-    val preCheck: Boolean = true
+    val preCheck: Boolean = true,
+    @get:Schema(title = "是否校验操作人权限")
+    val checkPermission: Boolean = true
 )

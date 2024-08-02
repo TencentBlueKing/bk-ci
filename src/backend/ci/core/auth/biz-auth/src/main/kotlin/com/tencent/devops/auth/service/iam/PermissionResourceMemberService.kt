@@ -99,7 +99,7 @@ interface PermissionResourceMemberService {
         userId: String,
         projectCode: String,
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
-    ): Boolean
+    ): List<ResourceMemberInfo>
 
     fun roleCodeToIamGroupId(
         projectCode: String,

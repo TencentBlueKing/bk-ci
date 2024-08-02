@@ -127,7 +127,7 @@ class UserAuthResourceMemberResourceImpl(
         userId: String,
         projectId: String,
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
-    ): Result<Boolean> {
+    ): Result<List<ResourceMemberInfo>> {
         return Result(
             permissionResourceMemberService.removeMemberFromProject(
                 userId = userId,

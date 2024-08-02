@@ -48,6 +48,7 @@ import com.tencent.devops.auth.entity.SearchProfileDeptEntity
 import com.tencent.devops.auth.entity.SearchRetrieveDeptEntity
 import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
 import com.tencent.devops.auth.entity.UserDeptTreeInfo
+import com.tencent.devops.auth.pojo.BkUserDeptInfo
 import com.tencent.devops.auth.pojo.BkUserInfo
 import com.tencent.devops.auth.pojo.DeptInfo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
@@ -335,12 +336,23 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     private fun BkUserInfo.toUserAndDeptInfoVo(): UserAndDeptInfoVo {
+        val department = this.departments?.firstOrNull()
         return UserAndDeptInfoVo(
             id = this.id,
             name = this.userName,
             displayName = this.displayName,
             type = ManagerScopesEnum.USER,
-            deptInfo = this.departments,
+            deptInfo = if (department == null) {
+                emptyList()
+            } else {
+                department.fullName?.split("/")?.map {
+                    BkUserDeptInfo(
+                        id = null,
+                        name = it,
+                        fullName = it
+                    )
+                } ?: emptyList()
+            },
             extras = this.extras
         )
     }

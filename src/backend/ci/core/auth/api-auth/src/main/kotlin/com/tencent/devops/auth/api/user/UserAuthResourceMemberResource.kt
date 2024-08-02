@@ -149,7 +149,7 @@ interface UserAuthResourceMemberResource {
         projectId: String,
         @Parameter(description = "一键移出用户出项目")
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
-    ): Result<Boolean>
+    ): Result<List<ResourceMemberInfo>>
 
     @GET
     @Path("/getMemberGroupCount")

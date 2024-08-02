@@ -230,6 +230,29 @@ class AuthResourceGroupMemberDao {
         }
     }
 
+    fun isMembersInProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        memberNames: List<String>,
+        memberType: String
+    ): List<ResourceMemberInfo> {
+        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            dslContext.select(MEMBER_ID, MEMBER_NAME, MEMBER_TYPE)
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(MEMBER_NAME.`in`(memberNames))
+                .and(MEMBER_TYPE.eq(memberType))
+                .groupBy(MEMBER_NAME, MEMBER_ID, MEMBER_TYPE)
+                .fetch().map {
+                    ResourceMemberInfo(
+                        id = it.value1(),
+                        name = it.value2(),
+                        type = it.value3()
+                    )
+                }
+        }
+    }
+
     fun handoverGroupMembers(
         dslContext: DSLContext,
         projectCode: String,

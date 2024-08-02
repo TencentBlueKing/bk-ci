@@ -888,9 +888,9 @@ class RbacPermissionResourceMemberService constructor(
         userId: String,
         projectCode: String,
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
-    ): Boolean {
+    ): List<ResourceMemberInfo> {
         logger.info("remove member from project $userId|$projectCode|$removeMemberFromProjectReq")
-        with(removeMemberFromProjectReq) {
+        return with(removeMemberFromProjectReq) {
             val memberType = targetMember.type
             if (memberType == ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
                 removeMemberFromProjectReq.checkHandoverTo()
@@ -911,9 +911,25 @@ class RbacPermissionResourceMemberService constructor(
                         projectCode = projectCode,
                         handoverFrom = removeMemberFromProjectReq.targetMember.id,
                         handoverTo = removeMemberFromProjectReq.handoverTo!!.id,
-                        preCheck = false
+                        preCheck = false,
+                        checkPermission = false
                     )
                 )
+                // 查询用户还存在那些组织中
+                val userDeptInfos = deptService.getUserInfo(
+                    userId = "admin",
+                    name = targetMember.id
+                )?.deptInfo?.map { it.name!! }
+                if (userDeptInfos != null) {
+                    authResourceGroupMemberDao.isMembersInProject(
+                        dslContext = dslContext,
+                        projectCode = projectCode,
+                        memberNames = userDeptInfos,
+                        memberType = ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)
+                    )
+                } else {
+                    emptyList()
+                }
             } else {
                 val removeMemberDTO = GroupMemberCommonConditionReq(
                     allSelection = true,
@@ -924,9 +940,9 @@ class RbacPermissionResourceMemberService constructor(
                     conditionReq = removeMemberDTO,
                     operateGroupMemberTask = ::deleteTask
                 )
+                emptyList()
             }
         }
-        return true
     }
 
     private fun handoverTask(
