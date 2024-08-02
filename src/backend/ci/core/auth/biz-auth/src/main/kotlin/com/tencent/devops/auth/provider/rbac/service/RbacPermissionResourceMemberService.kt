@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
@@ -1181,10 +1182,6 @@ class RbacPermissionResourceMemberService constructor(
         resourceGroupMembers.forEach {
             val resourceGroup = resourceGroupMap[it.iamGroupId.toString()]!!
             val groupMemberDetail = groupMemberDetailMap["${it.iamGroupId}_${it.memberId}"]
-            if (groupMemberDetail == null) {
-                logger.warn("group member detail not exist|${it.iamGroupId}_${it.memberId}")
-                return@forEach
-            }
             records.add(
                 convertGroupDetailsInfoVo(
                     resourceGroup = resourceGroup,
@@ -1258,6 +1255,10 @@ class RbacPermissionResourceMemberService constructor(
         memberId: String,
         resourceGroupMembers: List<AuthResourceGroupMember>
     ): Map<String, MemberGroupDetailsResponse> {
+        // 如果用户离职，查询权限中心接口会报错
+        if (deptService.isUserDeparted(memberId)) {
+            return emptyMap()
+        }
         // 用户组成员详情
         val groupMemberDetailMap = mutableMapOf<String, MemberGroupDetailsResponse>()
         // 直接加入的用户
@@ -1304,13 +1305,23 @@ class RbacPermissionResourceMemberService constructor(
 
     private fun convertGroupDetailsInfoVo(
         resourceGroup: TAuthResourceGroupRecord,
-        groupMemberDetail: MemberGroupDetailsResponse,
+        groupMemberDetail: MemberGroupDetailsResponse?,
         uniqueManagerGroups: List<Int>,
         authResourceGroupMember: AuthResourceGroupMember
     ): GroupDetailsInfoVo {
-        val expiredAt = TimeUnit.SECONDS.toMillis(groupMemberDetail.expiredAt)
+        // 如果用户离职，查询权限中心接口会报错，因此从数据库直接取数据，而不去调用权限中心接口。
+        val (expiredAt, joinedTime) = if (groupMemberDetail != null) {
+            Pair(
+                TimeUnit.SECONDS.toMillis(groupMemberDetail.expiredAt),
+                TimeUnit.SECONDS.toMillis(groupMemberDetail.createdAt)
+            )
+        } else {
+            Pair(
+                authResourceGroupMember.expiredTime.timestampmilli(),
+                0L
+            )
+        }
         val between = expiredAt - System.currentTimeMillis()
-
         return GroupDetailsInfoVo(
             resourceCode = resourceGroup.resourceCode,
             resourceName = resourceGroup.resourceName,
@@ -1332,7 +1343,7 @@ class RbacPermissionResourceMemberService constructor(
                 )
             },
             expiredAt = expiredAt,
-            joinedTime = TimeUnit.SECONDS.toMillis(groupMemberDetail.createdAt),
+            joinedTime = joinedTime,
             removeMemberButtonControl = when {
                 authResourceGroupMember.memberType == ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE) ->
                     RemoveMemberButtonControl.TEMPLATE
