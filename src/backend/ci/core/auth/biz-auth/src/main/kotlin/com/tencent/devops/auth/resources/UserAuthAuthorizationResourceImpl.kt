@@ -46,7 +46,6 @@ class UserAuthAuthorizationResourceImpl(
         )
     }
 
-    @BkManagerCheck
     override fun resetResourceAuthorization(
         userId: String,
         projectId: String,
