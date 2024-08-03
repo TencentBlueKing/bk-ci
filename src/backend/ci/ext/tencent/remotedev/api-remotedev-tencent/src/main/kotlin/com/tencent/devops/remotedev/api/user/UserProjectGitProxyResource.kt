@@ -7,7 +7,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
 import com.tencent.devops.remotedev.pojo.gitproxy.LinktgitData
 import com.tencent.devops.remotedev.pojo.gitproxy.ReBindingLinkData
-import com.tencent.devops.remotedev.pojo.gitproxy.ReBindingLinkResp
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import io.swagger.v3.oas.annotations.Operation
@@ -116,5 +115,5 @@ interface UserProjectGitProxyResource {
         userId: String,
         @Parameter(description = "绑定信息", required = true)
         data: ReBindingLinkData
-    ): Result<List<ReBindingLinkResp>>
+    ): Result<Boolean>
 }

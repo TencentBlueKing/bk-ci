@@ -236,8 +236,15 @@ enum class ErrorCodeEnum(
     NO_CRED_ID_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2132045",
-        formatErrorMessage = "project {0} cred id {1} token  not found"
-    ), ;
+        formatErrorMessage = "project {0} cred id {1} token not found"
+    ),
+    REBINDING_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132046",
+        formatErrorMessage = "Binding failed! Insufficient permissions or the repository has been deleted. " +
+                "Please make sure the credential owner has administrator permissions: " +
+                "Git requires Master and above, SVN requires root directory approver"
+    );
 
     fun getErrorMessage(): String {
         return I18nUtil.getCodeLanMessage(this.errorCode)

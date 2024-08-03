@@ -15,9 +15,7 @@ data class ReBindingLinkData(
 @Schema(title = "重新绑定工蜂项目信息返回")
 data class ReBindingLinkResp(
     @get:Schema(title = "工蜂项目ID")
-    val id: Long,
-    @get:Schema(title = "是否绑定成功")
-    val result: Boolean,
+    val errorIds: Set<Long>,
     @get:Schema(title = "未成功时错误信息")
     val errMsg: String?
 )

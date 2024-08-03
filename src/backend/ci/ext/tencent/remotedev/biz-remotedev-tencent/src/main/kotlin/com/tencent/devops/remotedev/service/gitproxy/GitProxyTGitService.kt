@@ -94,6 +94,8 @@ class GitProxyTGitService @Autowired constructor(
 
         val result = mutableMapOf<Long, Pair<String, Boolean>>()
 
+        val tokenBox = TokenBox(true, true, false)
+
         // 过滤 svn 项目，目前 SVN项目只能从根组创建项目，所以项目组的分割后俩，项目的分割后三
         val svnProjectUrls = urls.filter {
             it.startsWith(tGitConfig.tSvnUrl.removeHttpPrefix())
@@ -102,8 +104,8 @@ class GitProxyTGitService @Autowired constructor(
         if (svnProjectUrls.isNotEmpty()) {
             val rProjectUrls = svnProjectUrls.map { it.removeHttpPrefix() }.toSet()
             filterRecordWithTGitProjectsData(
-                data = mutableMapOf(credType.name to mutableMapOf((data.credId ?: userId) to mutableSetOf())),
-                tokenBox = TokenBox(false),
+                data = mutableMapOf(credType to mutableMapOf((data.credId ?: userId) to mutableSetOf())),
+                tokenBox = tokenBox,
                 projectId = projectId,
                 type = TGitProjectType.SVN
             ) { project, _ ->
@@ -120,8 +122,8 @@ class GitProxyTGitService @Autowired constructor(
         if (gitProjectUrls.isNotEmpty()) {
             val rProjectUrls = gitProjectUrls.map { it.removeHttpPrefix() }.toSet()
             filterRecordWithTGitProjectsData(
-                data = mutableMapOf(credType.name to mutableMapOf((data.credId ?: userId) to mutableSetOf())),
-                tokenBox = TokenBox(false),
+                data = mutableMapOf(credType to mutableMapOf((data.credId ?: userId) to mutableSetOf())),
+                tokenBox = tokenBox,
                 projectId = projectId,
                 type = TGitProjectType.GIT
             ) { project, _ ->
@@ -236,9 +238,9 @@ class GitProxyTGitService @Autowired constructor(
         content = ActionAuditContent.TGIT_LINK_CALLBACK_CREATE_CONTENT
     )
     fun linkTGit(
-        userId: String,
         projectId: String,
-        repoIds: Map<Long, String>
+        repoIds: Set<Long>,
+        innerToken: TGitToken? = null
     ): Map<Long, Boolean> {
         val result = mutableMapOf<Long, Boolean>()
 
@@ -257,7 +259,7 @@ class GitProxyTGitService @Autowired constructor(
         val users = fetchProjectSpecAclUsers(setOf(projectId))
 
         // 获取关联的工蜂仓库
-        val repoRecord = projectTGitLinkDao.fetch(dslContext, projectId, repoIds.keys).associateBy { it.tgitId }
+        val repoRecord = projectTGitLinkDao.fetch(dslContext, projectId, repoIds).associateBy { it.tgitId }
 
         // 审计
         ActionAuditContext.current()
@@ -266,7 +268,7 @@ class GitProxyTGitService @Autowired constructor(
             .scopeId = projectId
 
         val tokenBox = TokenBox(true)
-        repoIds.forEach { (repoId, _) ->
+        repoIds.forEach { repoId ->
             val record = repoRecord[repoId] ?: return@forEach
             if (record.status == TGitRepoStatus.AVAILABLE.name) {
                 return@forEach
@@ -274,7 +276,7 @@ class GitProxyTGitService @Autowired constructor(
 
             // 当前场景下目前是单一 token，拿不到肯定没了
             val tokenType = TGitCredType.fromStringDefault(record.credType)
-            val token = tokenBox.get(
+            val token = innerToken ?: tokenBox.get(
                 projectId = projectId,
                 credType = tokenType,
                 cred = when (tokenType) {
@@ -354,10 +356,10 @@ class GitProxyTGitService @Autowired constructor(
             return
         }
 
-        val svnData = mutableMapOf<String, MutableMap<String, MutableSet<Long>>>()
-        val gitData = mutableMapOf<String, MutableMap<String, MutableSet<Long>>>()
+        val svnData = mutableMapOf<TGitCredType, MutableMap<String, MutableSet<Long>>>()
+        val gitData = mutableMapOf<TGitCredType, MutableMap<String, MutableSet<Long>>>()
         records.filter { it.gitType == TGitProjectType.SVN.name }.forEach {
-            val credType = it.credType ?: TGitCredType.OAUTH_USER.name
+            val credType = TGitCredType.fromStringDefault(it.credType)
             val cred = it.cred ?: it.oauthUser
             if (it.gitType == TGitProjectType.SVN.name) {
                 if (svnData[credType] == null) {
@@ -386,17 +388,17 @@ class GitProxyTGitService @Autowired constructor(
     }
 
     private fun filterRecordWithTGitProjectsData(
-        data: MutableMap<String, MutableMap<String, MutableSet<Long>>>,
+        data: MutableMap<TGitCredType, MutableMap<String, MutableSet<Long>>>,
         tokenBox: TokenBox,
         projectId: String,
         type: TGitProjectType,
         run: (project: TGitProjectInfo, tGitIds: MutableSet<Long>) -> Boolean
     ) {
-        data.forEach { (credTypeStr, credAndRepos) ->
+        data.forEach { (credType, credAndRepos) ->
             credAndRepos.forEach credAndRepos@{ (cred, repoIds) ->
                 val token = tokenBox.get(
                     projectId = projectId,
-                    credType = TGitCredType.fromStringDefault(credTypeStr),
+                    credType = credType,
                     cred = cred
                 ) ?: return@credAndRepos
 
@@ -779,42 +781,58 @@ class GitProxyTGitService @Autowired constructor(
         return ok
     }
 
-    fun reBinding(data: ReBindingLinkData): List<ReBindingLinkResp> {
+    fun reBinding(userId: String, data: ReBindingLinkData) {
+        val tokenBox = TokenBox(true, true, false)
+        val credType = if (data.credId == null) {
+            TGitCredType.OAUTH_USER
+        } else {
+            TGitCredType.CRED_ACCESS_TOKEN_ID
+        }
+
+        // 检查当前ID是否有权限
+        val checkedId = mutableSetOf<Long>()
         val svnRepoIds = data.idMap.filter { it.value == TGitProjectType.SVN.name }.keys.toSet()
-        val gitRepoIds = data.idMap.filter { it.value == TGitProjectType.GIT.name }.keys.toSet()
-        val tokenBox = TokenBox(true)
-        val token = tokenBox.get(data.projectId)
         if (svnRepoIds.isNotEmpty()) {
             if (svnRepoIds.size == 1) {
-                val svnRs = offshoreTGitApiClient.getSvnProjectAuth(
-                    token = token,
-                    projectId = repoId.toString()
-                )
-                if (svnRs?.approverUsers?.any { it.username == userId } != true) {
-                    throw ErrorCodeException(
-                        errorCode = ErrorCodeEnum.NO_TGIT_PREMISSION.errorCode,
-                        params = arrayOf(userId)
-                    )
+                filterRecordWithTGitProjectsData(
+                    data = mutableMapOf(credType to mutableMapOf((data.credId ?: userId) to mutableSetOf())),
+                    tokenBox = tokenBox,
+                    projectId = data.projectId,
+                    type = TGitProjectType.SVN
+                ) { project, _ ->
+                    if (project.id in svnRepoIds) {
+                        checkedId.add(project.id)
+                    }
+                    return@filterRecordWithTGitProjectsData true
                 }
             }
         }
+        val gitRepoIds = data.idMap.filter { it.value == TGitProjectType.GIT.name }.keys.toSet()
         if (gitRepoIds.isNotEmpty()) {
-            if (gitRepoIds.size == 1) {
-                val gitRs = offshoreTGitApiClient.getProjectMemberAll(
-                    token = token,
-                    projectId = repoId.toString(),
-                    userId = userId
-                )
-                if (gitRs?.any {
-                        it.username == userId && (it.accessLevel ?: 0) >= GitAccessLevelEnum.MASTER.level
-                    } != true
-                ) {
-                    throw ErrorCodeException(
-                        errorCode = ErrorCodeEnum.NO_TGIT_PREMISSION.errorCode,
-                        params = arrayOf(userId)
-                    )
+            filterRecordWithTGitProjectsData(
+                data = mutableMapOf(credType to mutableMapOf((data.credId ?: userId) to mutableSetOf())),
+                tokenBox = tokenBox,
+                projectId = data.projectId,
+                type = TGitProjectType.GIT
+            ) { project, _ ->
+                if (project.id in gitRepoIds) {
+                    checkedId.add(project.id)
                 }
+                return@filterRecordWithTGitProjectsData true
             }
+        }
+        val noCheckedIds = data.idMap.keys.toMutableSet().let {
+            it.removeAll(checkedId)
+            it
+        }
+
+        linkTGit(data.projectId, checkedId, tokenBox.get(data.projectId, credType, (data.credId ?: userId)))
+
+        if (noCheckedIds.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.REBINDING_ERROR.errorCode,
+                errorType = ErrorCodeEnum.REBINDING_ERROR.errorType,
+            )
         }
     }
 
@@ -1099,7 +1117,9 @@ class GitProxyTGitService @Autowired constructor(
      * @param save 是否缓存 token
      */
     inner class TokenBox(
-        private val save: Boolean
+        private val save: Boolean,
+        private val bThrowE: Boolean? = null,
+        private val bLogE: Boolean? = null
     ) {
         private var oauthUserTokens: MutableMap<String, TGitToken>? = null
         private var credIdTokens: MutableMap<String, TGitToken>? = null
@@ -1120,9 +1140,21 @@ class GitProxyTGitService @Autowired constructor(
             log: Boolean? = null
         ): TGitToken? {
             if (save) {
-                return getTokenAndSave(projectId, credType, cred, throwE ?: false, log ?: true)
+                return getTokenAndSave(
+                    projectId = projectId,
+                    credType = credType,
+                    cred = cred,
+                    throwE = throwE ?: bThrowE ?: false,
+                    log = log ?: bLogE ?: true
+                )
             }
-            return getToken(projectId, credType, cred, throwE ?: true, log ?: false)
+            return getToken(
+                projectId = projectId,
+                credType = credType,
+                cred = cred,
+                throwE = throwE ?: bThrowE ?: true,
+                log = log ?: bLogE ?: false
+            )
         }
 
         private fun getToken(

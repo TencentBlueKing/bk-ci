@@ -18,13 +18,13 @@ class OpCodeProxyResourceImpl @Autowired constructor(
 
     @AuditEntry(actionId = ActionId.TGIT_LINK_CREATE)
     override fun tgitlink(data: CallbackLinktgitData): Result<Map<Long, Boolean>> {
+        // repoId;url\nrepoId;url
+        val repoIdAndUrls = data.repoIds.split("\n").filter { it.isNotBlank() }
+            .associate { it.split(";").first().trim().toLong() to it.split(";").last() }
         return Result(
             gitProxyTGitService.linkTGit(
-                userId = data.userId,
                 projectId = data.projectId,
-                // repoId;url\nrepoId;url
-                repoIds = data.repoIds.split("\n").filter { it.isNotBlank() }
-                    .associate { it.split(";").first().trim().toLong() to it.split(";").last() }
+                repoIds = repoIdAndUrls.keys
             )
         )
     }
