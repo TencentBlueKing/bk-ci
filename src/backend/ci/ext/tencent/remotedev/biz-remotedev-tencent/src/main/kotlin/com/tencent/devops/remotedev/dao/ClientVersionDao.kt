@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TClientVersion
+import com.tencent.devops.model.remotedev.tables.records.TClientVersionRecord
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -24,6 +25,12 @@ class ClientVersionDao {
     fun fetch(dslContext: DSLContext, ip: String, userId: String): String? {
         return with(TClientVersion.T_CLIENT_VERSION) {
             dslContext.selectFrom(this).where(IP.eq(ip).and(USER.eq(userId))).fetchAny()?.version
+        }
+    }
+
+    fun fetchByMacAddress(dslContext: DSLContext, macAddress: String): TClientVersionRecord? {
+        return with(TClientVersion.T_CLIENT_VERSION) {
+            return dslContext.selectFrom(this).where(MAC_ADDRESS.eq(macAddress)).fetchAny()
         }
     }
 

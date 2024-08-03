@@ -57,7 +57,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val permissionService: PermissionService,
     private val expertSupportService: ExpertSupportService,
     private val txcService: TxcService,
-    private val redisCache: RedisCacheService
+    private val redisCache: RedisCacheService,
+    private val clientUpgradeService: ClientUpgradeService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -98,12 +99,14 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         userId: String,
         searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>> {
-        return Result(windowsResourceConfigService.allWindowsQuota(
-            userId = userId,
-            searchCustom = searchCustom,
-            quotaType = QuotaType.OFFSHORE,
-            withProjectLimit = projectId
-        ))
+        return Result(
+            windowsResourceConfigService.allWindowsQuota(
+                userId = userId,
+                searchCustom = searchCustom,
+                quotaType = QuotaType.OFFSHORE,
+                withProjectLimit = projectId
+            )
+        )
     }
 
     override fun onePassword(userId: String, workspaceName: String): Result<String> {
@@ -133,6 +136,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         } else {
             Result(message, res)
         }
+    }
+
+    override fun clientUpgrade(userId: String, data: ClientUpgradeData): Result<ClientUpgradeResp> {
+        return Result(clientUpgradeService.checkUpgrade(userId, data))
     }
 
     override fun getTxcToken(userId: String, openId: String, nickName: String, avatar: String): Result<String> {

@@ -176,4 +176,13 @@ interface UserRemoteDevResource {
         @QueryParam("cgsId")
         cgsId: String
     ): Result<Boolean>
+
+    @Operation(summary = "客户端查询是否可以升级")
+    @POST
+    @Path("/client/upgrade")
+    fun clientUpgrade(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ClientUpgradeData
+    ): Result<ClientUpgradeResp>
 }
