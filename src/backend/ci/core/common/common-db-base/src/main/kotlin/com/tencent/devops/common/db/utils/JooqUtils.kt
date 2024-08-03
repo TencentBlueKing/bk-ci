@@ -28,8 +28,6 @@
 package com.tencent.devops.common.db.utils
 
 import com.mysql.cj.jdbc.exceptions.MySQLTransactionRollbackException
-import java.math.BigDecimal
-import java.sql.Timestamp
 import org.jooq.DatePart
 import org.jooq.Field
 import org.jooq.Record
@@ -37,6 +35,9 @@ import org.jooq.SelectOptionStep
 import org.jooq.SelectUnionStep
 import org.jooq.exception.DataAccessException
 import org.jooq.impl.DSL
+import org.springframework.dao.DeadlockLoserDataAccessException
+import java.math.BigDecimal
+import java.sql.Timestamp
 
 object JooqUtils {
 
@@ -47,6 +48,8 @@ object JooqUtils {
             action()
         } catch (dae: DataAccessException) {
             if (dae.isDeadLock()) action() else throw dae
+        } catch (dae: DeadlockLoserDataAccessException) {
+            action()
         }
     }
 
