@@ -2583,6 +2583,43 @@ class TemplateFacadeService @Autowired constructor(
         return pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId)
     }
 
+    /**
+     * 复制流水线实例
+     *
+     * 复制流水线参数
+     */
+    fun copyTemplateInstance(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): TemplateModelDetail {
+        val templatePipelineRecord = templatePipelineDao.get(dslContext, projectId, pipelineId)
+            ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_TEMPLATE_NOT_EXISTS,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        val templateModelDetail =
+            getTemplate(projectId, userId, templatePipelineRecord.templateId, templatePipelineRecord.version)
+
+        val templateParams = (templateModelDetail.template.stages[0].containers[0] as TriggerContainer).templateParams
+        val templateParamIdMap = templateParams?.map { it.id } ?: emptyList()
+
+        val instanceModel: Model = objectMapper.readValue(
+            pipelineResourceDao.getVersionModelString(dslContext, projectId, pipelineId, null)
+                ?: throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+                )
+        )
+        val instanceParams = (instanceModel.stages[0].containers[0] as TriggerContainer).params
+        return templateModelDetail.copy(
+            // 流水线参数排除模板常量
+            params = instanceParams.filterNot { templateParamIdMap.contains(it.id) }
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TemplateFacadeService::class.java)
         private const val INIT_TEMPLATE_NAME = "init"
