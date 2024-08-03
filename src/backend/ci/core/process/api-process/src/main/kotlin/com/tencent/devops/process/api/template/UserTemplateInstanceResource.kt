@@ -207,11 +207,11 @@ interface UserTemplateInstanceResource {
         desc: Boolean?
     ): Result<TemplateInstancePage>
 
-    @Operation(summary = "复制流水线实例")
+    @Operation(summary = "获取流水线实例")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/copy")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
-    fun copyTemplateInstance(
+    fun getTemplateInstance(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

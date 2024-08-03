@@ -167,13 +167,13 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun copyTemplateInstance(
+    override fun getTemplateInstance(
         userId: String,
         projectId: String,
         pipelineId: String
     ): Result<TemplateModelDetail> {
         return Result(
-            templateFacadeService.copyTemplateInstance(
+            templateFacadeService.getTemplateInstance(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId

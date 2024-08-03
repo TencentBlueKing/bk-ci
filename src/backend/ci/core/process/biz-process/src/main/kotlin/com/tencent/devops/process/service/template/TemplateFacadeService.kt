@@ -2584,11 +2584,10 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     /**
-     * 复制流水线实例
+     * 获取流水线实例
      *
-     * 复制流水线参数
      */
-    fun copyTemplateInstance(
+    fun getTemplateInstance(
         userId: String,
         projectId: String,
         pipelineId: String
