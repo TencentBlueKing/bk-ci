@@ -29,8 +29,17 @@ class ClientVersionDao {
     }
 
     fun fetchByMacAddress(dslContext: DSLContext, macAddress: String): TClientVersionRecord? {
-        return with(TClientVersion.T_CLIENT_VERSION) {
+        with(TClientVersion.T_CLIENT_VERSION) {
             return dslContext.selectFrom(this).where(MAC_ADDRESS.eq(macAddress)).fetchAny()
+        }
+    }
+
+    fun fetchUpgrade(
+        dslContext: DSLContext,
+        limit: Int
+    ): List<TClientVersionRecord> {
+        with(TClientVersion.T_CLIENT_VERSION) {
+            return dslContext.selectFrom(this).limit(limit).fetch()
         }
     }
 
