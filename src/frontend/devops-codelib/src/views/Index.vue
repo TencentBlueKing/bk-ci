@@ -73,7 +73,9 @@
             <bk-button
                 v-for="item in codelibTypes"
                 :key="item.scmType"
-                :disabled="item.status !== 'OK'"
+                :ext-cls="{
+                    'is-disabled': item.status !== 'OK'
+                }"
                 @click="createCodelib(item.scmType)"
             >
                 {{ $t('codelib.linkCodelibLabel', [item.name]) }}
@@ -321,7 +323,7 @@
                 const codelibType = this.codelibTypes.find(type => type.scmType === typeLabel)
                 if (codelibType?.status === 'DEPLOYING') {
                     this.showUndeployDialog({
-                        title: this.$t('codelib.codelibUndeployTitle', [typeLabel]),
+                        title: this.$t('codelib.codelibUndeployTitle', [codelibType.name]),
                         desc: this.$t(`codelib.${typeLabel.toLowerCase()}UndeployDesc`),
                         link: `${DOCS_URL_PREFIX}${codelibType.docUrl}`
                     })
