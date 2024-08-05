@@ -848,38 +848,35 @@ class CreateControl @Autowired constructor(
 
     private fun checkOrInitPersonalProject(userId: String): String {
         val userProjectId = "_$userId"
-        val projectInfo = kotlin.runCatching {
-            client.get(ServiceProjectResource::class).get(userProjectId)
-        }.onFailure { logger.warn("get project $userProjectId info error|${it.message}") }
-            .getOrThrow().data
-        if (projectInfo == null) {
-            /*初始化项目*/
-            kotlin.runCatching {
-                client.get(ServiceTxProjectResource::class).getRemoteDevUserProject(userId)
-            }.getOrElse {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.USERINFO_ERROR.errorCode,
-                    params = arrayOf("load user project fail.")
-                )
-            }
-            /*初始化bkrepo*/
-            val ok = client.get(ServiceTxProjectResource::class).updateRemotedev(
-                userId = userId,
-                projectCode = userProjectId,
-                addcloudDesktopNum = null,
-                enable = true
-            ).data
+        val projectInfo = getProjectInfo(userProjectId)
 
-            if (ok != true) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.USERINFO_ERROR.errorCode,
-                    params = arrayOf("init user project fail.")
-                )
-            }
-            /*初始化setting*/
-            remoteDevSettingDao.fetchOneSetting(dslContext, userId)
+        if (projectInfo == null || projectInfo.properties?.remotedev != true) {
+            initPersonalProject(userId, userProjectId)
         }
+
+        remoteDevSettingDao.fetchOneSetting(dslContext, userId)
         return userProjectId
+    }
+
+    private fun getProjectInfo(userProjectId: String) = kotlin.runCatching {
+        client.get(ServiceProjectResource::class).get(userProjectId)
+    }.onFailure { logger.warn("get project $userProjectId info error|${it.message}") }
+        .getOrThrow().data
+
+    private fun initPersonalProject(userId: String, userProjectId: String) {
+        val ok = client.get(ServiceTxProjectResource::class).updateRemotedev(
+            userId = userId,
+            projectCode = userProjectId,
+            addcloudDesktopNum = null,
+            enable = true
+        ).data
+
+        if (ok != true) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.USERINFO_ERROR.errorCode,
+                params = arrayOf("init user project fail.")
+            )
+        }
     }
 
     private fun startCloudResourceCountCheck(type: String, quotaType: QuotaType) =
