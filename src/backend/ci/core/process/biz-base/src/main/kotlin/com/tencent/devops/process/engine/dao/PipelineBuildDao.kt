@@ -73,7 +73,7 @@ class PipelineBuildDao {
     companion object {
         private val mapper = PipelineBuildInfoJooqMapper()
         private val debugMapper = PipelineDebugBuildInfoJooqMapper()
-        private const val DEFAULT_PAGE_SIZE = 100
+        private const val DEFAULT_PAGE_SIZE = 50
     }
 
     fun create(dslContext: DSLContext, startBuildContext: StartBuildContext) {
@@ -1290,126 +1290,6 @@ class PipelineBuildDao {
         }
     }
 
-    private fun TPipelineBuildHistory.makeSearchOptionsCondition(
-        where: SelectConditionStep<*>,
-        type: HistorySearchType,
-        materialAlias: List<String>? = null,
-        materialBranch: String? = null,
-        triggerAlias: List<String>? = null,
-        triggerBranch: String? = null
-    ) {
-        when (type) {
-            HistorySearchType.MATERIAL ->
-                where.and(MATERIAL.isNotNull)
-
-            HistorySearchType.TRIGGER ->
-                where.and(WEBHOOK_INFO.isNotNull)
-        }
-        if (!materialAlias.isNullOrEmpty() && materialAlias.first().isNotBlank()) {
-            var conditionsOr: Condition
-
-            conditionsOr = JooqUtils.jsonExtract(t1 = MATERIAL, t2 = "\$[*].aliasName", lower = true)
-                .like("%${materialAlias.first().lowercase()}%")
-
-            materialAlias.forEachIndexed { index, s ->
-                if (index == 0) return@forEachIndexed
-                conditionsOr = conditionsOr.or(
-                    JooqUtils.jsonExtract(MATERIAL, "\$[*].aliasName", lower = true)
-                        .like("%${s.lowercase()}%")
-                )
-            }
-            where.and(conditionsOr)
-        }
-        if (!materialBranch.isNullOrBlank()) {
-            where.and(
-                JooqUtils.jsonExtract(MATERIAL, "\$[*].branchName", lower = true)
-                    .like("%${materialBranch.lowercase()}%")
-            )
-        }
-        if (!triggerAlias.isNullOrEmpty() && triggerAlias.first().isNotBlank()) {
-            var conditionsOr: Condition
-
-            conditionsOr = JooqUtils.jsonExtract(t1 = WEBHOOK_INFO, t2 = "\$.webhookAliasName", lower = true)
-                .like("%${triggerAlias.first().lowercase()}%")
-
-            triggerAlias.forEachIndexed { index, s ->
-                if (index == 0) return@forEachIndexed
-                conditionsOr = conditionsOr.or(
-                    JooqUtils.jsonExtract(WEBHOOK_INFO, "\$.webhookAliasName", lower = true)
-                        .like("%${s.lowercase()}%")
-                )
-            }
-            where.and(conditionsOr)
-        }
-
-        if (!triggerBranch.isNullOrBlank()) {
-            where.and(
-                JooqUtils.jsonExtract(WEBHOOK_INFO, "\$.webhookBranch", lower = true)
-                    .like("%${triggerBranch.lowercase()}%")
-            )
-        }
-    }
-
-    private fun TPipelineBuildHistoryDebug.makeSearchOptionsDebugCondition(
-        where: SelectConditionStep<*>,
-        type: HistorySearchType,
-        materialAlias: List<String>? = null,
-        materialBranch: String? = null,
-        triggerAlias: List<String>? = null,
-        triggerBranch: String? = null
-    ) {
-        when (type) {
-            HistorySearchType.MATERIAL ->
-                where.and(MATERIAL.isNotNull)
-
-            HistorySearchType.TRIGGER ->
-                where.and(WEBHOOK_INFO.isNotNull)
-        }
-        if (!materialAlias.isNullOrEmpty() && materialAlias.first().isNotBlank()) {
-            var conditionsOr: Condition
-
-            conditionsOr = JooqUtils.jsonExtract(t1 = MATERIAL, t2 = "\$[*].aliasName", lower = true)
-                .like("%${materialAlias.first().lowercase()}%")
-
-            materialAlias.forEachIndexed { index, s ->
-                if (index == 0) return@forEachIndexed
-                conditionsOr = conditionsOr.or(
-                    JooqUtils.jsonExtract(MATERIAL, "\$[*].aliasName", lower = true)
-                        .like("%${s.lowercase()}%")
-                )
-            }
-            where.and(conditionsOr)
-        }
-        if (!materialBranch.isNullOrBlank()) {
-            where.and(
-                JooqUtils.jsonExtract(MATERIAL, "\$[*].branchName", lower = true)
-                    .like("%${materialBranch.lowercase()}%")
-            )
-        }
-        if (!triggerAlias.isNullOrEmpty() && triggerAlias.first().isNotBlank()) {
-            var conditionsOr: Condition
-
-            conditionsOr = JooqUtils.jsonExtract(t1 = WEBHOOK_INFO, t2 = "\$.webhookAliasName", lower = true)
-                .like("%${triggerAlias.first().lowercase()}%")
-
-            triggerAlias.forEachIndexed { index, s ->
-                if (index == 0) return@forEachIndexed
-                conditionsOr = conditionsOr.or(
-                    JooqUtils.jsonExtract(WEBHOOK_INFO, "\$.webhookAliasName", lower = true)
-                        .like("%${s.lowercase()}%")
-                )
-            }
-            where.and(conditionsOr)
-        }
-
-        if (!triggerBranch.isNullOrBlank()) {
-            where.and(
-                JooqUtils.jsonExtract(WEBHOOK_INFO, "\$.webhookBranch", lower = true)
-                    .like("%${triggerBranch.lowercase()}%")
-            )
-        }
-    }
-
     private fun TPipelineBuildHistoryDebug.makeDebugCondition(
         where: SelectConditionStep<*>,
         materialAlias: List<String>?,
@@ -1615,24 +1495,19 @@ class PipelineBuildDao {
         projectId: String,
         pipelineId: String,
         debugVersion: Int?,
-        type: HistorySearchType,
-        materialAlias: List<String>? = null,
-        materialBranch: String? = null,
-        triggerAlias: List<String>? = null,
-        triggerBranch: String? = null
+        type: HistorySearchType
     ): Collection<BuildInfo> {
         return if (debugVersion == null) {
             with(T_PIPELINE_BUILD_HISTORY) {
                 val where = dslContext.selectFrom(this)
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                makeSearchOptionsCondition(
-                    where = where,
-                    type = type,
-                    materialAlias = materialAlias,
-                    materialBranch = materialBranch,
-                    triggerAlias = triggerAlias,
-                    triggerBranch = triggerBranch
-                )
+                when (type) {
+                    HistorySearchType.MATERIAL ->
+                        where.and(MATERIAL.isNotNull)
+
+                    HistorySearchType.TRIGGER ->
+                        where.and(WEBHOOK_INFO.isNotNull)
+                }
                 where.orderBy(BUILD_NUM.desc()).limit(DEFAULT_PAGE_SIZE)
                     .fetch(mapper)
             }
@@ -1641,14 +1516,13 @@ class PipelineBuildDao {
                 val where = dslContext.selectFrom(this)
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                     .and(VERSION.eq(debugVersion))
-                makeSearchOptionsDebugCondition(
-                    where = where,
-                    type = type,
-                    materialAlias = materialAlias,
-                    materialBranch = materialBranch,
-                    triggerAlias = triggerAlias,
-                    triggerBranch = triggerBranch
-                )
+                when (type) {
+                    HistorySearchType.MATERIAL ->
+                        where.and(MATERIAL.isNotNull)
+
+                    HistorySearchType.TRIGGER ->
+                        where.and(WEBHOOK_INFO.isNotNull)
+                }
                 where.orderBy(BUILD_NUM.desc()).limit(DEFAULT_PAGE_SIZE)
                     .fetch(debugMapper)
             }

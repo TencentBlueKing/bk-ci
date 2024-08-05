@@ -436,8 +436,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     debugVersion = debugVersion,
-                    type = type,
-                    materialAlias = search?.let { listOf(it) }
+                    type = type
                 )
                 val materialObjList = mutableListOf<PipelineBuildMaterial>()
                 history.forEach {
@@ -456,8 +455,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     debugVersion = debugVersion,
-                    type = type,
-                    triggerAlias = search?.let { listOf(it) }
+                    type = type
                 )
                 history.filter { it.webhookInfo != null && !it.webhookInfo!!.webhookAliasName.isNullOrBlank() }
                     .map { it.webhookInfo!!.webhookAliasName!! }
@@ -488,9 +486,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     debugVersion = debugVersion,
-                    type = type,
-                    materialAlias = aliasList,
-                    materialBranch = search
+                    type = type
                 )
                 val materialObjList = mutableListOf<PipelineBuildMaterial>()
                 history.forEach {
@@ -520,9 +516,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     debugVersion = debugVersion,
-                    type = type,
-                    triggerAlias = aliasList,
-                    triggerBranch = search
+                    type = type
                 )
                 history.filter { it.webhookInfo != null && !it.webhookInfo!!.webhookBranch.isNullOrBlank() }
                     .map { it.webhookInfo!!.webhookBranch!! }.distinct()
