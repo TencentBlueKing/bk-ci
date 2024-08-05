@@ -85,6 +85,7 @@ import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
@@ -198,7 +199,8 @@ class RbacAuthConfiguration {
         dslContext: DSLContext,
         deptService: DeptService,
         rbacCacheService: RbacCacheService,
-        permissionAuthorizationService: PermissionAuthorizationService
+        permissionAuthorizationService: PermissionAuthorizationService,
+        syncIamGroupMemberService: PermissionResourceGroupSyncService
     ) = RbacPermissionResourceMemberService(
         authResourceService = authResourceService,
         iamV2ManagerService = iamV2ManagerService,
@@ -207,7 +209,8 @@ class RbacAuthConfiguration {
         dslContext = dslContext,
         deptService = deptService,
         rbacCacheService = rbacCacheService,
-        permissionAuthorizationService = permissionAuthorizationService
+        permissionAuthorizationService = permissionAuthorizationService,
+        syncIamGroupMemberService = syncIamGroupMemberService
     )
 
     @Bean

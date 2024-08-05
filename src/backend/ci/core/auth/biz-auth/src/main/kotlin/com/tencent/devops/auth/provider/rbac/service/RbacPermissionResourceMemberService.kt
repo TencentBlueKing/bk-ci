@@ -31,6 +31,7 @@ import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionAuthorizationService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
@@ -53,7 +54,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-@Suppress("SpreadOperator")
+@Suppress("SpreadOperator", "LongParameterList")
 class RbacPermissionResourceMemberService constructor(
     private val authResourceService: AuthResourceService,
     private val iamV2ManagerService: V2ManagerService,
@@ -62,7 +63,8 @@ class RbacPermissionResourceMemberService constructor(
     private val dslContext: DSLContext,
     private val deptService: DeptService,
     private val rbacCacheService: RbacCacheService,
-    private val permissionAuthorizationService: PermissionAuthorizationService
+    private val permissionAuthorizationService: PermissionAuthorizationService,
+    private val syncIamGroupMemberService: PermissionResourceGroupSyncService
 ) : PermissionResourceMemberService {
     override fun getResourceGroupMembers(
         projectCode: String,
@@ -1034,15 +1036,19 @@ class RbacPermissionResourceMemberService constructor(
             memberType = targetMember.type,
             groupIds = groupIds
         )
+        val outOfSyncGroupIds = mutableListOf<Int>()
         val futures = groupIds.map { groupId ->
             CompletableFuture.supplyAsync(
                 {
-                    val expiredAt = memberGroupsDetailsList.firstOrNull { it.id == groupId }?.expiredAt
-                        ?: throw ErrorCodeException(
-                            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
-                            params = arrayOf(groupId.toString()),
-                            defaultMessage = "group $groupId not exist"
+                    val memberGroupsDetails = memberGroupsDetailsList.firstOrNull { it.id == groupId }
+                    if (memberGroupsDetails == null) {
+                        logger.warn(
+                            "The data is out of sync, and the record no longer exists in the iam.$groupId"
                         )
+                        outOfSyncGroupIds.add(groupId)
+                        return@supplyAsync
+                    }
+                    val expiredAt = memberGroupsDetails.expiredAt
                     RetryUtils.retry(3) {
                         operateGroupMemberTask.invoke(
                             projectCode,
@@ -1054,13 +1060,28 @@ class RbacPermissionResourceMemberService constructor(
                 }, executorService
             )
         }
-        handleFutures(futures)
+        handleFutures(
+            projectCode = projectCode,
+            outOfSyncGroupIds = outOfSyncGroupIds,
+            futures = futures
+        )
         return true
     }
 
-    private fun handleFutures(futures: List<CompletableFuture<Unit>>) {
+    private fun handleFutures(
+        projectCode: String,
+        outOfSyncGroupIds: List<Int>,
+        futures: List<CompletableFuture<Unit>>
+    ) {
         try {
             CompletableFuture.allOf(*futures.toTypedArray()).join()
+            // 存在iam那边已经把用户组下成员删除，但蓝盾数据库未同步问题
+            outOfSyncGroupIds.forEach {
+                syncIamGroupMemberService.syncIamGroupMember(
+                    projectCode = projectCode,
+                    iamGroupId = it
+                )
+            }
         } catch (ignore: Exception) {
             logger.warn("batch operate group members failed", ignore)
             throw ErrorCodeException(
