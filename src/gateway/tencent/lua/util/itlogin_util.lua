@@ -174,7 +174,7 @@ function _M:get_staff_info_new(credentialKey)
     local result = json.decode(responseBody)
     if result.ReturnFlag ~= 0 then
         ngx.log(ngx.STDERR, "failed to get info, responseBody: ", responseBody)
-        ngx.exit(500)
+        ngx.exit(401)
     end
     if result.Domain:sub(- #"-odc") == "-odc" then
         result.IsOuter = true
