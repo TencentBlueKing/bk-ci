@@ -490,10 +490,10 @@ class PipelineRuntimeService @Autowired constructor(
                         materialObjList.addAll(it.material!!)
                     }
                 }
-                val aliasNames = if (aliasList.isNullOrEmpty()) {
-                    materialObjList.map { it.aliasName }
-                } else {
+                val aliasNames = if (!aliasList.isNullOrEmpty() && aliasList.first().isNotBlank()) {
                     aliasList
+                } else {
+                    materialObjList.map { it.aliasName }
                 }
 
                 val result = mutableListOf<String>()
