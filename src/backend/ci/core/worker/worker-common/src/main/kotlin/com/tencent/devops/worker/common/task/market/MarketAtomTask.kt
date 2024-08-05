@@ -808,7 +808,7 @@ open class MarketAtomTask : ITask() {
                     // 原变量名输出只在未开启 pipeline as code 的逻辑中保留
                     if (
                         // TODO 暂时只对stream进行拦截原key
-                        buildVariables.variables["BK_CI_RUN"] == "true" &&
+                        buildVariables.variables[BK_CI_RUN] == "true" &&
                         buildVariables.pipelineAsCodeSettings?.enable == true
                     ) env.remove(key)
                 }
