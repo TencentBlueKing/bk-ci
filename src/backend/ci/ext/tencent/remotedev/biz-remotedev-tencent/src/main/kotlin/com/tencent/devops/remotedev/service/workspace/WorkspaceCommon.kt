@@ -71,7 +71,6 @@ import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.BKCCService
-import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -99,7 +98,6 @@ class WorkspaceCommon @Autowired constructor(
     private val sharedDao: WorkspaceSharedDao,
     private val client: Client,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val remoteDevSettingService: RemoteDevSettingService,
     private val redisCache: RedisCacheService,
     private val profile: Profile,
     @Lazy
