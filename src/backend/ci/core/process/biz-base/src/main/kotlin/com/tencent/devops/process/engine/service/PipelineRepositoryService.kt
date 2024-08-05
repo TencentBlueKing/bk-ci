@@ -287,7 +287,7 @@ class PipelineRepositoryService constructor(
             )
             result
         } else {
-            val result = JooqUtils.retryWhenDeadLock {
+            val result = JooqUtils.retryWhenDeadLock(3) {
                 create(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -1707,7 +1707,7 @@ class PipelineRepositoryService constructor(
             )
         }
 
-        return JooqUtils.retryWhenDeadLock {
+        return JooqUtils.retryWhenDeadLock(3) {
             transactionSaveSetting(
                 context = context,
                 setting = setting,

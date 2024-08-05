@@ -43,13 +43,19 @@ object JooqUtils {
 
     const val JooqDeadLockMessage = "Deadlock found when trying to get lock; try restarting transaction"
 
-    fun <T> retryWhenDeadLock(action: () -> T): T {
+    fun <T> retryWhenDeadLock(retryTime: Int = 1, action: () -> T): T {
         return try {
             action()
         } catch (dae: DataAccessException) {
-            if (dae.isDeadLock()) action() else throw dae
+            if (retryTime - 1 < 0) {
+                throw dae
+            }
+            if (dae.isDeadLock()) retryWhenDeadLock(retryTime - 1, action) else throw dae
         } catch (dae: DeadlockLoserDataAccessException) {
-            action()
+            if (retryTime - 1 < 0) {
+                throw dae
+            }
+            retryWhenDeadLock(retryTime - 1, action)
         }
     }
 
