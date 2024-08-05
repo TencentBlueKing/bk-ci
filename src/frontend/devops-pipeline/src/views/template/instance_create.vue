@@ -258,6 +258,8 @@
                     const hashVal = this.$route.hash.substr(1, this.$route.hash.length)
                     const pipeline = hashVal.split('&')
                     return pipeline
+                } else if (this.$route.query.pipelineId) {
+                    return [this.$route.query.pipelineId]
                 }
                 return ''
             }
@@ -309,13 +311,6 @@
             },
             async requestPipelineParams (pipeline, versionId) {
                 const { $store, loading } = this
-                const params = []
-
-                pipeline.forEach(item => {
-                    params.push({
-                        id: item
-                    })
-                })
 
                 loading.isLoading = true
 
@@ -324,7 +319,9 @@
                         projectId: this.projectId,
                         templateId: this.templateId,
                         versionId: versionId,
-                        params
+                        params: pipeline.map(id => ({
+                            id
+                        }))
                     })
                     this.handlePipelineParams(res)
                 } catch (err) {
