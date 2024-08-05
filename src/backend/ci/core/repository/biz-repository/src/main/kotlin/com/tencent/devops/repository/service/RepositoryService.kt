@@ -94,6 +94,7 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -1451,7 +1452,7 @@ class RepositoryService @Autowired constructor(
     ) {
         val projectName = repository.projectName
         val language = I18nUtil.getLanguage(userId)
-        val havePermission = when (repository) {
+        val (havePermission, repoLink) = when (repository) {
             is CodeGitRepository -> {
                 val token = gitOauthService.getAccessToken(userId = userId)?.accessToken ?: throw OperationException(
                     MessageUtil.getMessageByLocale(
@@ -1473,7 +1474,8 @@ class RepositoryService @Autowired constructor(
                     logger.warn("get git repository members failed: $ignored")
                     null
                 } ?: emptyList()
-                members.find { it.username == userId && it.accessLevel >= GitAccessLevelEnum.REPORTER.level } != null
+                (members.find {it.username == userId && it.accessLevel >= GitAccessLevelEnum.REPORTER.level} != null) to
+                        GitUtils.getHttpUrl(repository.url)
             }
 
             is GithubRepository -> {
@@ -1498,7 +1500,9 @@ class RepositoryService @Autowired constructor(
                     userId = user.login,
                     token = token.accessToken
                 )?.permission
-                GithubAccessLevelEnum.getGithubAccessLevel(permission).level >= GithubAccessLevelEnum.READ.level
+                // Github只有oauth
+                (GithubAccessLevelEnum.getGithubAccessLevel(permission).level >= GithubAccessLevelEnum.READ.level) to
+                        repository.url
             }
 
             else -> {
@@ -1516,7 +1520,7 @@ class RepositoryService @Autowired constructor(
                 MessageUtil.getMessageByLocale(
                     ERROR_USER_HAVE_NOT_DOWNLOAD_PEM,
                     language,
-                    arrayOf(userId, repository.aliasName)
+                    arrayOf(userId, repoLink, repository.aliasName)
                 )
             )
         }
