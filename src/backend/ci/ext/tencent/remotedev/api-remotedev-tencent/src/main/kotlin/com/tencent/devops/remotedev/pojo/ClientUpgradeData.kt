@@ -5,12 +5,12 @@ data class ClientUpgradeData(
 )
 
 data class ClientUpgradeResp(
-    val clientUp: Boolean,
-    val startUp: Boolean
+    val clientVersion: String?,
+    val startVersion: String?
 ) {
     companion object {
         fun noUpgrade(): ClientUpgradeResp {
-            return ClientUpgradeResp(false, false)
+            return ClientUpgradeResp(null, null)
         }
     }
 }

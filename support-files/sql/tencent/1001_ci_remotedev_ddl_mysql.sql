@@ -431,6 +431,17 @@ CREATE TABLE IF NOT EXISTS `T_CLIENT_VERSION` (
     KEY `idx_version` (`VERSION`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端版本控制';
 
+CREATE TABLE devops_remotedev.T_CLIENT (
+	`MAC_ADDRESS` varchar(64)  NOT NULL COMMENT 'MAC地址',
+	`CURRENT_USER` varchar(128)  NOT NULL COMMENT '当前使用用户',
+	`VERSION` varchar(16)  NOT NULL COMMENT '客户端版本',
+	`START_VERSION` varchar(64)  NOT NULL COMMENT 'START 版本',
+	`PROJECT_ID` varchar(64)  NOT NULL COMMENT '蓝盾项目ID',
+    `CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NULL COMMENT '创建时间',
+	`UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NULL COMMENT '最近更新时间',
+    PRIMARY KEY (`MAC_ADDRESS`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端信息';
+
 -- ----------------------------
 -- Table structure for T_REMOTEDEV_CVM 云研发CVM
 -- ----------------------------

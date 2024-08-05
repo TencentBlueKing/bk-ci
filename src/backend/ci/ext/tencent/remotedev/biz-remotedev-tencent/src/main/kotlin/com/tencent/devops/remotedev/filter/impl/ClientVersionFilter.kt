@@ -2,10 +2,12 @@ package com.tencent.devops.remotedev.filter.impl
 
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.ClientDao
 import com.tencent.devops.remotedev.dao.ClientVersionDao
 import com.tencent.devops.remotedev.filter.ApiFilter
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
@@ -30,13 +32,15 @@ class ClientVersionFilter constructor(
     private val cacheService: RedisCacheService,
     private val clientVersionDao: ClientVersionDao,
     private val dslContext: DSLContext,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val clientDao: ClientDao
 ) : ApiFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(ClientVersionFilter::class.java)
         private const val BK_CI_CLIENT_VERSION = "BK-CI-CLIENT-VERSION"
         private const val HEADER_IP = "x-client-ip"
         private const val HEADER_MAC_ADDRESS = "BK-CI-CLIENT-MAC"
+        private const val BK_CI_CLIENT_START_VERSION = "BK-CI-CLIENT-START-VERSION"
     }
 
     @Value("\${remoteDev.clientVersionLimit:0.3.0}")
@@ -96,10 +100,12 @@ class ClientVersionFilter constructor(
         val user = requestContext.headers[AUTH_HEADER_USER_ID]?.get(0).toString()
         kotlin.runCatching {
             recordClientVersion(
-                requestContext.headers[HEADER_IP]?.get(0).toString(),
-                user,
-                version.toString(),
-                requestContext.headers[HEADER_MAC_ADDRESS]?.get(0).toString()
+                ip = requestContext.headers[HEADER_IP]?.get(0).toString(),
+                user = user,
+                version = version.toString(),
+                macAddress = requestContext.headers[HEADER_MAC_ADDRESS]?.get(0).toString(),
+                startVersion = requestContext.headers[BK_CI_CLIENT_START_VERSION]?.get(0).toString(),
+                projectId = requestContext.headers[AUTH_HEADER_PROJECT_ID]?.get(0).toString()
             )
         }.onFailure { logger.warn("recordClientVersion error ${it.message}", it) }
 
@@ -158,13 +164,32 @@ class ClientVersionFilter constructor(
         return false
     }
 
-    private fun recordClientVersion(ip: String, user: String, version: String, macAddress: String) {
+    private fun recordClientVersion(
+        ip: String,
+        user: String,
+        version: String,
+        macAddress: String,
+        startVersion: String,
+        projectId: String
+    ) {
         if (!this::clientVersion.isInitialized) {
             clientVersion = clientVersionDao.fetchAll(dslContext)
                 .associateByTo(mutableMapOf(), { "${it.first}-${it.second}" }, { it.third })
         }
         val recordVersion = clientVersion["$ip-$user"]
-        logger.info("recordClientVersion|$ip|$user|$version|$recordVersion|macAddress|$macAddress")
+        logger.info("recordClientVersion|$ip|$user|$version|$recordVersion|$macAddress|$startVersion|$projectId")
+        if (macAddress.isNotBlank()) {
+            clientDao.createOrUpdate(
+                dslContext = dslContext,
+                macAddress = macAddress,
+                currentUserId = user,
+                version = version,
+                startVersion = startVersion,
+                projectId = projectId
+            )
+        } else {
+            logger.warn("recordClientVersion macAddress is null")
+        }
         when {
             recordVersion == null -> {
                 val count = clientVersionDao.create(

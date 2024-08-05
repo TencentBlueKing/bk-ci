@@ -53,8 +53,32 @@ class UpgradeProps @Autowired constructor(
     }
 
     fun getClientVersion() = loadCache(CURRENT_CLIENT_VERSION, isDistinguishCluster = true)
-
     fun getStartVersion() = loadCache(CURRENT_START_VERSION, isDistinguishCluster = true)
+
+    fun getClientMaxNumb() = loadCache(CLIENT_UPGRADE_VERSION_MAX_NUMB, isDistinguishCluster = true).toIntOrNull()
+    fun getStartMaxNumb() = loadCache(START_UPGRADE_VERSION_MAX_NUMB, isDistinguishCluster = true).toIntOrNull()
+
+    fun getClientUserVersion() = loadHashCache(CLIENT_UPGRADE_CURRENT_USER_VERSION, true)
+    fun getStartUserVersion() = loadHashCache(START_UPGRADE_CURRENT_USER_VERSION, true)
+
+    fun getClientProjectVersion() = loadHashCache(CLIENT_UPGRADE_CURRENT_PROJECT_VERSION, true)
+    fun getStartProjectVersion() = loadHashCache(START_UPGRADE_CURRENT_PROJECT_VERSION, true)
+
+    private val distinguishCache: LoadingCache<String, String> = Caffeine.newBuilder()
+        .maximumSize(CACHE_SIZE)
+        .expireAfterWrite(Duration.ofMinutes(CACHE_EXPIRE_MIN))
+        .build { key -> redisOperation.get(key, isDistinguishCluster = true) ?: "" }
+
+    private val singleCache: LoadingCache<String, String> = Caffeine.newBuilder()
+        .maximumSize(CACHE_SIZE)
+        .expireAfterWrite(Duration.ofMinutes(CACHE_EXPIRE_MIN))
+        .build { key -> redisOperation.get(key, isDistinguishCluster = false) ?: "" }
+
+    private fun loadCache(redisKey: String, isDistinguishCluster: Boolean = true): String = if (isDistinguishCluster) {
+        distinguishCache.get(redisKey)
+    } else {
+        singleCache.get(redisKey)
+    } ?: ""
 
     private val idCache: Cache<String, Set<String>> = Caffeine.newBuilder()
         .maximumSize(CACHE_SIZE)
@@ -73,18 +97,17 @@ class UpgradeProps @Autowired constructor(
         idCache.invalidate(cacheKey)
     }
 
-    private val distinguishCache: LoadingCache<String, String> = Caffeine.newBuilder()
-        .maximumSize(CACHE_SIZE)
-        .expireAfterWrite(Duration.ofMinutes(CACHE_EXPIRE_MIN))
-        .build { key -> redisOperation.get(key, isDistinguishCluster = true) ?: "" }
+    private val hashCache: Cache<String, Map<String, String>> = Caffeine.newBuilder()
+        .maximumSize(CACHE_SIZE).expireAfterWrite(Duration.ofMinutes(CACHE_EXPIRE_MIN))
+        .build()
 
-    private val singleCache: LoadingCache<String, String> = Caffeine.newBuilder()
-        .maximumSize(CACHE_SIZE)
-        .expireAfterWrite(Duration.ofMinutes(CACHE_EXPIRE_MIN))
-        .build { key -> redisOperation.get(key, isDistinguishCluster = false) ?: "" }
-
-    private fun loadCache(redisKey: String, isDistinguishCluster: Boolean = true): String =
-        (if (isDistinguishCluster) distinguishCache.get(redisKey) else singleCache.get(redisKey)) ?: ""
+    private fun loadHashCache(cacheKey: String, isDistinguishCluster: Boolean = true): Map<String, String> {
+        return hashCache.get(cacheKey) {
+            redisOperation.hentries(
+                cacheKey, isDistinguishCluster
+            )?.filter { it.key.isNotBlank() && it.value.isNotBlank() } ?: mapOf()
+        } ?: mapOf()
+    }
 
     companion object {
         private const val CACHE_EXPIRE_MIN = 1L
@@ -97,6 +120,18 @@ class UpgradeProps @Autowired constructor(
 
         private const val CURRENT_CLIENT_VERSION = "remotedev:clientupgrade:client.verison"
         private const val CURRENT_START_VERSION = "remotedev:clientupgrade:start.verison"
+
+        // 升级指定数量的版本
+        private const val CLIENT_UPGRADE_VERSION_MAX_NUMB = "remotedev:clientupgrade:client.version.maxnumb"
+        private const val START_UPGRADE_VERSION_MAX_NUMB = "remotedev:clientupgrade:start.version.maxnumb"
+
+        // 升级指定用户和版本
+        private const val CLIENT_UPGRADE_CURRENT_USER_VERSION = "remotedev:clientupgrade:client.currentuser.version"
+        private const val START_UPGRADE_CURRENT_USER_VERSION = "remotedev:clientupgrade:start.currentuser.version"
+
+        // 升级指定的项目和版本
+        private const val CLIENT_UPGRADE_CURRENT_PROJECT_VERSION = "remotedev:clientupgrade:client.project.version"
+        private const val START_UPGRADE_CURRENT_PROJECT_VERSION = "remotedev:clientupgrade:start.project.version"
 
         private val logger = LoggerFactory.getLogger(UpgradeProps::class.java)
     }

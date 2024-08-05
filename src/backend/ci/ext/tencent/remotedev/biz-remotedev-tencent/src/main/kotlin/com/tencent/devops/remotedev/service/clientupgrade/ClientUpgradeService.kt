@@ -3,8 +3,8 @@ package com.tencent.devops.remotedev.service.clientupgrade
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.model.remotedev.tables.records.TClientVersionRecord
-import com.tencent.devops.remotedev.dao.ClientVersionDao
+import com.tencent.devops.model.remotedev.tables.records.TClientRecord
+import com.tencent.devops.remotedev.dao.ClientDao
 import com.tencent.devops.remotedev.pojo.ClientUpgradeData
 import com.tencent.devops.remotedev.pojo.ClientUpgradeResp
 import org.jooq.DSLContext
@@ -17,18 +17,22 @@ import org.springframework.stereotype.Service
 class ClientUpgradeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
-    private val clientVersionDao: ClientVersionDao,
+    private val clientDao: ClientDao,
     private val upgradeProps: UpgradeProps
 ) {
     fun checkUpgrade(userId: String, data: ClientUpgradeData): ClientUpgradeResp {
         val record =
-            clientVersionDao.fetchByMacAddress(dslContext, data.macAddress) ?: return ClientUpgradeResp.noUpgrade()
-        if (upgradeProps.checkCanUpgrade(record.macAddress)) {
-            // 即使在列表中时还要校验下，保证实时性
-            val (clientCan, startCan) = checkCanUpgrade(record)
-            return ClientUpgradeResp(clientCan, startCan)
+            clientDao.fetchAny(dslContext, data.macAddress) ?: return ClientUpgradeResp.noUpgrade()
+        if (!upgradeProps.checkCanUpgrade(record.macAddress)) {
+            return ClientUpgradeResp.noUpgrade()
         }
-        return ClientUpgradeResp.noUpgrade()
+        // 即使在列表中时还要校验下，保证实时性
+        val currentClientVersion = upgradeProps.getClientVersion()
+        val currentStartVersion = upgradeProps.getStartVersion()
+        val dynamicProps = initUpgradeDynamicProps(currentClientVersion, currentStartVersion)
+        val clientVersion = checkVersion(false, currentClientVersion, record, dynamicProps)
+        val startVersion = checkVersion(true, currentStartVersion, record, dynamicProps)
+        return ClientUpgradeResp(clientVersion, startVersion)
     }
 
     @Scheduled(initialDelay = 10 * 1000L, fixedDelay = 30 * 1000L)
@@ -42,6 +46,7 @@ class ClientUpgradeService @Autowired constructor(
                 logger.debug("get lock failed, skip")
                 return
             }
+
             watcher.start("get maxParallelCount")
             val maxParallelCount = upgradeProps.getMaxParallelUpgradeCount()
             if (maxParallelCount < 1) {
@@ -52,6 +57,7 @@ class ClientUpgradeService @Autowired constructor(
 
             watcher.start("listCanUpdateClients")
             val canUpgradeClients = listCanUpgradeClients(maxParallelCount)?.ifEmpty { return } ?: return
+
             watcher.start("setCanUpgradeClients")
             upgradeProps.setCanUpgradeClients(canUpgradeClients)
         } catch (ignore: Throwable) {
@@ -62,46 +68,130 @@ class ClientUpgradeService @Autowired constructor(
         }
     }
 
-    fun listCanUpgradeClients(maxParallelCount: Int): Set<String>? {
+    private fun listCanUpgradeClients(maxParallelCount: Int): Set<String>? {
         val currentClientVersion = upgradeProps.getClientVersion()
         val currentStartVersion = upgradeProps.getStartVersion()
         if (currentClientVersion.isBlank() && currentStartVersion.isBlank()) {
             return null
         }
 
+        val dynamicProps = initUpgradeDynamicProps(currentClientVersion, currentStartVersion)
+
         val canUpgradeMacAddressSet = mutableSetOf<String>()
         // TODO: 是否有可用和不可用的概念
-        // TODO: 项目，start版本和当前使用用户也需要加到表中，看能不能从表中直接查出来
-        val records = clientVersionDao.fetchUpgrade(dslContext, maxParallelCount)
+        // 暂时先全量查询，后续看性能有没有用影响
+        val records = clientDao.fetchAll(dslContext)
         records.forEach {
-            val (clientCan, startCan) = checkCanUpgrade(it, currentClientVersion, currentStartVersion)
-            if (clientCan || startCan) {
+            val clientCan = checkVersion(false, currentClientVersion, it, dynamicProps)
+            val startCan = checkVersion(true, currentStartVersion, it, dynamicProps)
+            if (!clientCan.isNullOrBlank() || !startCan.isNullOrBlank()) {
                 canUpgradeMacAddressSet.add(it.macAddress)
+            }
+            if (canUpgradeMacAddressSet.size >= maxParallelCount) {
+                return canUpgradeMacAddressSet
             }
         }
 
         return canUpgradeMacAddressSet
     }
 
-    fun checkCanUpgrade(
-        record: TClientVersionRecord,
-        inCurrentClientVersion: String? = null,
-        inCurrentStartVersion: String? = null
-    ): Pair<Boolean, Boolean> {
-        // 只有前面的限制条件都符合才能进入
-        // TODO: 项目，start版本和当前使用用户对比
+    // 初始化一些动态的参数
+    private fun initUpgradeDynamicProps(
+        clientCurrentVersion: String,
+        startCurrentVersion: String
+    ): UpgradeDynamicProps {
+        // 设置当前符合版本的个数
+        val clientMaxNumber = upgradeProps.getClientMaxNumb()
+        var clientCanUpgradeNumb: Int? = null
+        if (clientMaxNumber != null && clientCurrentVersion.isNotBlank()) {
+            val count = clientDao.fetchVersionCount(dslContext, clientCurrentVersion)
+            clientCanUpgradeNumb = (clientMaxNumber - count).let { if (it < 0) 0 else it }
+        }
 
-        val currentClientVersion = inCurrentClientVersion ?: upgradeProps.getClientVersion()
-        val currentStartVersion = inCurrentStartVersion ?: upgradeProps.getStartVersion()
-        return Pair(
-            currentClientVersion.isNotBlank() && record.version != currentClientVersion,
-            // TODO start的
-            false
+        val startMaxNumber = upgradeProps.getStartMaxNumb()
+        var startCanUpgradeNumb: Int? = null
+        if (startMaxNumber != null && startCurrentVersion.isNotBlank()) {
+            val count = clientDao.fetchStartVersionCount(dslContext, startCurrentVersion)
+            startCanUpgradeNumb = (startMaxNumber - count).let { if (it < 0) 0 else it }
+        }
+
+        return UpgradeDynamicProps(
+            clientCanUpgradeNumb = clientCanUpgradeNumb,
+            startCanUpgradeNumb = startCanUpgradeNumb,
+            clientUserVersion = upgradeProps.getClientUserVersion(),
+            clientProjectVersion = upgradeProps.getClientProjectVersion(),
+            startUserVersion = upgradeProps.getStartUserVersion(),
+            startProjectVersion = upgradeProps.getStartProjectVersion()
         )
+    }
+
+    private fun checkVersion(
+        isStart: Boolean,
+        inCurrentVersion: String?,
+        record: TClientRecord,
+        props: UpgradeDynamicProps
+    ): String? {
+        // 为空的上报版本不参与比较
+        val version = if (isStart) {
+            record.version
+        } else {
+            record.startVersion
+        }.ifBlank { return null }
+
+        // 根据用户升级版本
+        val currentUser = record.currentUser
+        val userVersion = props.userVersion(isStart)
+        if (currentUser.isNotBlank() && userVersion.containsKey(currentUser) && version != userVersion[currentUser]) {
+            return userVersion[currentUser]
+        }
+
+        // 根据项目升级版本
+        val projectId = record.projectId
+        val projectVersion = props.projectVersion(isStart)
+        if (projectId.isNotBlank() && projectVersion.containsKey(projectId) && version != projectVersion[projectId]) {
+            return projectVersion[projectId]
+        }
+
+        // 正常升级
+        val currentVersion = (inCurrentVersion ?: if (isStart) {
+            upgradeProps.getStartVersion()
+        } else {
+            upgradeProps.getClientVersion()
+        }).ifBlank { return null }
+        if (version == currentVersion) {
+            return null
+        }
+        val canUpgradeNumb = props.canUpgradeNumb(isStart) ?: return null
+        if (canUpgradeNumb - 1 < 0) {
+            return null
+        }
+        props.setCanUpgradeNumb(isStart, canUpgradeNumb - 1)
+        return currentVersion
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(ClientUpgradeService::class.java)
         private const val LOCK_KEY = "remotedev_cron_updateCanUpgradeClients"
     }
+}
+
+data class UpgradeDynamicProps(
+    var clientCanUpgradeNumb: Int?,
+    var startCanUpgradeNumb: Int?,
+    val clientUserVersion: Map<String, String>,
+    val clientProjectVersion: Map<String, String>,
+    val startUserVersion: Map<String, String>,
+    val startProjectVersion: Map<String, String>
+) {
+    fun canUpgradeNumb(isStart: Boolean) = if (isStart) startCanUpgradeNumb else clientCanUpgradeNumb
+    fun setCanUpgradeNumb(isStart: Boolean, numb: Int) {
+        if (isStart) {
+            startCanUpgradeNumb = numb
+        } else {
+            clientCanUpgradeNumb = numb
+        }
+    }
+
+    fun userVersion(isStart: Boolean) = if (isStart) startUserVersion else clientUserVersion
+    fun projectVersion(isStart: Boolean) = if (isStart) startProjectVersion else clientProjectVersion
 }
