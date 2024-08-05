@@ -429,7 +429,7 @@ class PipelineRuntimeService @Autowired constructor(
         search: String?,
         type: HistorySearchType? = HistorySearchType.MATERIAL
     ): List<String> {
-        return when (type) {
+        val aliasNames = when (type) {
             HistorySearchType.MATERIAL -> {
                 val history = pipelineBuildDao.listHistorySearchOptions(
                     dslContext = dslContext,
@@ -445,7 +445,9 @@ class PipelineRuntimeService @Autowired constructor(
                         materialObjList.addAll(it.material!!)
                     }
                 }
-                materialObjList.filter { !it.aliasName.isNullOrBlank() }.map { it.aliasName!! }.distinct()
+                materialObjList.filter { !it.aliasName.isNullOrBlank() }
+                    .map { it.aliasName!! }
+                    .distinct()
             }
 
             HistorySearchType.TRIGGER -> {
@@ -458,10 +460,16 @@ class PipelineRuntimeService @Autowired constructor(
                     triggerAlias = search?.let { listOf(it) }
                 )
                 history.filter { it.webhookInfo != null && !it.webhookInfo!!.webhookAliasName.isNullOrBlank() }
-                    .map { it.webhookInfo!!.webhookAliasName!! }.distinct()
+                    .map { it.webhookInfo!!.webhookAliasName!! }
+                    .distinct()
             }
 
             else -> emptyList()
+        }
+        return if (search.isNullOrBlank()) {
+            aliasNames
+        } else {
+            aliasNames.filter { it.contains(search) }
         }
     }
 
@@ -473,7 +481,7 @@ class PipelineRuntimeService @Autowired constructor(
         search: String?,
         type: HistorySearchType? = HistorySearchType.MATERIAL
     ): List<String> {
-        return when (type) {
+        val branchNames = when (type) {
             HistorySearchType.MATERIAL -> {
                 val history = pipelineBuildDao.listHistorySearchOptions(
                     dslContext = dslContext,
@@ -503,7 +511,7 @@ class PipelineRuntimeService @Autowired constructor(
                     }.map { it.branchName!! }.distinct()
                     result.addAll(branchNames)
                 }
-                result
+                result.distinct()
             }
 
             HistorySearchType.TRIGGER -> {
@@ -520,6 +528,11 @@ class PipelineRuntimeService @Autowired constructor(
                     .map { it.webhookInfo!!.webhookBranch!! }.distinct()
             }
             else -> emptyList()
+        }
+        return if (search.isNullOrBlank()) {
+            branchNames
+        } else {
+            branchNames.filter { it.contains(search) }
         }
     }
 
