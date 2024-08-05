@@ -26,6 +26,7 @@ const emits = defineEmits(['change', 'removeAll']);
 const userList = ref([]);
 const projectId = computed(() => route.params?.projectCode);
 const searchKeyArr = computed(() => ['id', 'name']);
+const searchValue = ref();
 
 async function fetchProjectMembers (query) {
   const res = await http.getProjectMembers(projectId.value, query)
@@ -39,6 +40,9 @@ async function fetchProjectMembers (query) {
 }
  function handleInputUserName (val) {
   userList.value = []
+  searchValue.value = null;
+  emits('change', { list: searchValue.value, userList: userList.value })
+
   if (!val) return
   const query = {
     memberType: 'user',
@@ -50,7 +54,8 @@ async function fetchProjectMembers (query) {
 }
 
 function handleChange (list) {
-  emits('change', { list, userList: userList.value })
+  searchValue.value = list;
+  emits('change', { list: searchValue.value, userList: userList.value })
 }
 
 function removeAll (val) {

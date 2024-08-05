@@ -349,6 +349,10 @@ function handOverInputClear(){
   isHandOverfail.value = false;
 }
 async function handleChangeOverFormName ({list, userList}){
+  if(!list){
+    handOverInputClear();
+    return;
+  }
   userListData.value = userList;
   handOverForm.value = userList.find(i => i.id === list[0]);
   if(removeUser.value.id === handOverForm.value?.id){
@@ -428,7 +432,8 @@ function handlePersonClose(){
 
 <style lang="scss" scoped>
 .aside {
-  height: calc(100% - 60px);
+  position: relative;
+  height: 100%;
   overflow-y: scroll;
   overflow: hidden;
 }
@@ -462,7 +467,7 @@ function handlePersonClose(){
 .group-wrapper {
   overflow: hidden;
   overflow-y: scroll;
-  height: 100%;
+  height: calc(100% - 100px);
   &::-webkit-scrollbar-thumb {
     background-color: #c4c6cc !important;
     border-radius: 5px !important;
