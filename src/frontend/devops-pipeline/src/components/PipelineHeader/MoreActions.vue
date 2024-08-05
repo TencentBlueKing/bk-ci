@@ -166,11 +166,15 @@
                                 {
                                     label: 'copyAsTemplateInstance',
                                     handler: () => this.copyAsTemplateInstance(pipeline),
-                                    permissionData: {
-                                        projectId,
-                                        resourceType: 'project',
-                                        resourceCode: projectId,
-                                        action: RESOURCE_ACTION.CREATE
+                                    vPerm: {
+                                        hasPermission: pipeline.permissions?.canCreate,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId,
+                                            resourceType: 'project',
+                                            resourceCode: projectId,
+                                            action: RESOURCE_ACTION.CREATE
+                                        }
                                     }
                                 }
                             ]
@@ -192,11 +196,13 @@
                         {
                             label: 'newlist.saveAsTemp',
                             handler: () => this.saveAsTempHandler(pipeline),
-                            permissionData: {
-                                projectId,
-                                resourceType: 'project',
-                                resourceCode: projectId,
-                                action: TEMPLATE_RESOURCE_ACTION.CREATE
+                            vPerm: {
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'project',
+                                    resourceCode: projectId,
+                                    action: TEMPLATE_RESOURCE_ACTION.CREATE
+                                }
                             }
                         },
                         {

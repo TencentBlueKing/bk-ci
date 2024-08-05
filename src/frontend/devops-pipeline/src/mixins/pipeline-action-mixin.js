@@ -187,6 +187,7 @@ export default {
                 }
                 : {}
             const isDynamicGroup = this.currentGroup?.viewType === 1
+
             return [
                 {
                     text: this.$t(pipeline.lock ? 'enable' : 'disable'),
@@ -208,7 +209,7 @@ export default {
                     ? [{
                         text: this.$t('copyAsTemplateInstance'),
                         handler: () => this.copyAsTemplateInstance(pipeline),
-                        hasPermission: pipeline.permissions.canCreate,
+                        hasPermission: pipeline.permissions.canManage,
                         disablePermissionApi: true,
                         permissionData: {
                             projectId: pipeline.projectId,
