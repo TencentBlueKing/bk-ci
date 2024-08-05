@@ -167,7 +167,7 @@
                                     label: 'copyAsTemplateInstance',
                                     handler: () => this.copyAsTemplateInstance(pipeline),
                                     vPerm: {
-                                        hasPermission: pipeline.permissions?.canCreate,
+                                        hasPermission: pipeline.permissions?.canManage,
                                         disablePermissionApi: true,
                                         permissionData: {
                                             projectId,
