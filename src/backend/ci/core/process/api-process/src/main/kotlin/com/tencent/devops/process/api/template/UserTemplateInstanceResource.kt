@@ -38,14 +38,13 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateCompareModelResult
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
-import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
-import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
+import com.tencent.devops.process.pojo.template.TemplateInstancePage
+import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -206,20 +205,4 @@ interface UserTemplateInstanceResource {
         @QueryParam("desc")
         desc: Boolean?
     ): Result<TemplateInstancePage>
-
-    @Operation(summary = "复制流水线实例")
-    @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/copy")
-    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
-    fun copyTemplateInstance(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String
-    ): Result<TemplateModelDetail>
 }

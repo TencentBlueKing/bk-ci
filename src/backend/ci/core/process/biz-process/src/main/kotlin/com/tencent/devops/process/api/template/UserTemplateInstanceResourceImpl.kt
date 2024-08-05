@@ -38,7 +38,6 @@ import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
-import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import org.springframework.beans.factory.annotation.Autowired
@@ -163,20 +162,6 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
                 templateId = templateId,
                 pipelineId = pipelineId,
                 version = version
-            )
-        )
-    }
-
-    override fun copyTemplateInstance(
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ): Result<TemplateModelDetail> {
-        return Result(
-            templateFacadeService.copyTemplateInstance(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId
             )
         )
     }
