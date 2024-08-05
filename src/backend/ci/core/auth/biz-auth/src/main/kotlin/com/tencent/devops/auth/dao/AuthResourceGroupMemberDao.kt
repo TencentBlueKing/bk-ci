@@ -476,10 +476,10 @@ class AuthResourceGroupMemberDao {
         projectCode: String,
         memberId: String,
         iamTemplateIds: List<String>,
-        resourceType: String?,
+        resourceType: String? = null,
         iamGroupIds: List<Int>? = null,
-        offset: Int?,
-        limit: Int?
+        offset: Int? = null,
+        limit: Int? = null
     ): List<AuthResourceGroupMember> {
         val conditions = buildMemberGroupCondition(
             projectCode = projectCode,

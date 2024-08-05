@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -862,6 +863,7 @@ class RbacPermissionResourceMemberService constructor(
                 } else {
                     // 永久期限 不允许再续期
                     val groupCountOfPermanentExpiredTime = listMemberGroupsDetails(
+                        projectCode = projectCode,
                         memberId = conditionReq.targetMember.id,
                         memberType = conditionReq.targetMember.type,
                         groupIds = groupIdsOfDirectJoined
@@ -1027,6 +1029,7 @@ class RbacPermissionResourceMemberService constructor(
         ).first
         val targetMember = conditionReq.targetMember
         val memberGroupsDetailsList = listMemberGroupsDetails(
+            projectCode = projectCode,
             memberId = targetMember.id,
             memberType = targetMember.type,
             groupIds = groupIds
@@ -1131,6 +1134,7 @@ class RbacPermissionResourceMemberService constructor(
     }
 
     private fun listMemberGroupsDetails(
+        projectCode: String,
         memberId: String,
         memberType: String,
         groupIds: List<Int>
@@ -1141,11 +1145,30 @@ class RbacPermissionResourceMemberService constructor(
             CompletableFuture.supplyAsync(
                 {
                     memberGroupsDetailsList.addAll(
-                        iamV2ManagerService.listMemberGroupsDetails(
-                            memberType,
-                            memberId,
-                            it.joinToString(",")
-                        )
+                        // 若离职，则从数据库获取用户加入组的过期时间，调用iam接口会报错。
+                        // 虽然数据库的过期时间可能不是最新的。
+                        if (memberType == ManagerScopesEnum.getType(ManagerScopesEnum.USER) &&
+                            deptService.isUserDeparted(userId = memberId)) {
+                            val records = authResourceGroupMemberDao.listMemberGroupDetail(
+                                dslContext = dslContext,
+                                projectCode = projectCode,
+                                memberId = memberId,
+                                iamTemplateIds = emptyList(),
+                                iamGroupIds = it
+                            )
+                            records.map { record ->
+                                MemberGroupDetailsResponse().apply {
+                                    id = record.iamGroupId
+                                    expiredAt = record.expiredTime.timestamp()
+                                }
+                            }
+                        } else {
+                            iamV2ManagerService.listMemberGroupsDetails(
+                                memberType,
+                                memberId,
+                                it.joinToString(",")
+                            )
+                        }
                     )
                 }, executorService
             )
