@@ -491,7 +491,7 @@ class AuthResourceGroupMemberDao {
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             dslContext.selectFrom(this)
                 .where(conditions)
-                .orderBy(IAM_GROUP_ID)
+                .orderBy(IAM_GROUP_ID.desc())
                 .let { if (offset != null && limit != null) it.offset(offset).limit(limit) else it }
                 .fetch()
                 .map { convert(it) }
