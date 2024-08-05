@@ -115,7 +115,6 @@ class NotifyControl @Autowired constructor(
 
         /*云桌面通知-您的云桌面已被强制批量销毁*/
         const val WORKSPACE_BATCH_FORCE_DELETE = "WORKSPACE_BATCH_FORCE_DELETE"
-
     }
 
     fun notifyWorkspaceInfo(

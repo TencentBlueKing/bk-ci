@@ -120,7 +120,6 @@ class CreateControl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(CreateControl::class.java)
         private const val WORKSPACE_PREFIX = "ins-"
-
     }
 
     // 用于控制台上创建
