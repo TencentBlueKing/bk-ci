@@ -518,8 +518,20 @@ class PipelineRuntimeService @Autowired constructor(
                     debugVersion = debugVersion,
                     type = type
                 )
-                history.filter { it.webhookInfo != null && !it.webhookInfo!!.webhookBranch.isNullOrBlank() }
-                    .map { it.webhookInfo!!.webhookBranch!! }.distinct()
+                val webhookInfoList = history.filter { it.webhookInfo != null }.map { it.webhookInfo!! }
+                val aliasNames = if (!aliasList.isNullOrEmpty() && aliasList.first().isNotBlank()) {
+                    aliasList
+                } else {
+                    webhookInfoList.map { it.webhookAliasName }
+                }
+                val result = mutableListOf<String>()
+                aliasNames.distinct().forEach { alias ->
+                    val branchNames = webhookInfoList.filter {
+                        it.webhookAliasName == alias && !it.webhookBranch.isNullOrBlank()
+                    }.map { it.webhookBranch!! }.distinct()
+                    result.addAll(branchNames)
+                }
+                result.distinct()
             }
             else -> emptyList()
         }
