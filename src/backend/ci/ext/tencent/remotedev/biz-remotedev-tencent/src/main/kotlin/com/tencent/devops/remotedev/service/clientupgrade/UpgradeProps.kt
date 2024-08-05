@@ -17,7 +17,18 @@ class UpgradeProps @Autowired constructor(
     private val redisOperation: RedisOperation
 ) {
     fun getMaxParallelUpgradeCount(): Int =
-        loadCache(PARALLEL_UPGRADE_COUNT, isDistinguishCluster = false).toIntOrNull() ?: DEFAULT_PARALLEL_UPGRADE_COUNT
+        loadCache(PARALLEL_UPGRADE_COUNT, isDistinguishCluster = true).toIntOrNull() ?: DEFAULT_PARALLEL_UPGRADE_COUNT
+
+    fun setMaxParallelUpgradeCount(count: Int) {
+        redisOperation.set(
+            key = PARALLEL_UPGRADE_COUNT,
+            value = count.toString(),
+            expiredInSecond = null,
+            expired = false,
+            isDistinguishCluster = true
+        )
+        invalidateCache(PARALLEL_UPGRADE_COUNT, true)
+    }
 
     fun setCanUpgradeClients(newIds: Set<String>) {
         logger.debug("setCanUpgradeClients, ids: $newIds")
@@ -53,10 +64,52 @@ class UpgradeProps @Autowired constructor(
     }
 
     fun getClientVersion() = loadCache(CURRENT_CLIENT_VERSION, isDistinguishCluster = true)
+    fun setClientVersion(version: String) {
+        redisOperation.set(
+            key = CURRENT_CLIENT_VERSION,
+            value = version,
+            expiredInSecond = null,
+            expired = false,
+            isDistinguishCluster = true
+        )
+        invalidateCache(CURRENT_CLIENT_VERSION, true)
+    }
+
     fun getStartVersion() = loadCache(CURRENT_START_VERSION, isDistinguishCluster = true)
+    fun setStartVersion(version: String) {
+        redisOperation.set(
+            key = CURRENT_START_VERSION,
+            value = version,
+            expiredInSecond = null,
+            expired = false,
+            isDistinguishCluster = true
+        )
+        invalidateCache(CURRENT_START_VERSION, true)
+    }
 
     fun getClientMaxNumb() = loadCache(CLIENT_UPGRADE_VERSION_MAX_NUMB, isDistinguishCluster = true).toIntOrNull()
+    fun setClientMaxNumb(numb: Int) {
+        redisOperation.set(
+            key = CLIENT_UPGRADE_VERSION_MAX_NUMB,
+            value = numb.toString(),
+            expiredInSecond = null,
+            expired = false,
+            isDistinguishCluster = true
+        )
+        invalidateCache(CLIENT_UPGRADE_VERSION_MAX_NUMB, true)
+    }
+
     fun getStartMaxNumb() = loadCache(START_UPGRADE_VERSION_MAX_NUMB, isDistinguishCluster = true).toIntOrNull()
+    fun setStartMaxNumb(numb: Int) {
+        redisOperation.set(
+            key = START_UPGRADE_VERSION_MAX_NUMB,
+            value = numb.toString(),
+            expiredInSecond = null,
+            expired = false,
+            isDistinguishCluster = true
+        )
+        invalidateCache(START_UPGRADE_VERSION_MAX_NUMB, true)
+    }
 
     fun getClientUserVersion() = loadHashCache(CLIENT_UPGRADE_CURRENT_USER_VERSION, true)
     fun getStartUserVersion() = loadHashCache(START_UPGRADE_CURRENT_USER_VERSION, true)
@@ -79,6 +132,14 @@ class UpgradeProps @Autowired constructor(
     } else {
         singleCache.get(redisKey)
     } ?: ""
+
+    private fun invalidateCache(redisKey: String, isDistinguishCluster: Boolean) {
+        if (isDistinguishCluster) {
+            distinguishCache.invalidate(redisKey)
+        } else {
+            singleCache.invalidate(redisKey)
+        }
+    }
 
     private val idCache: Cache<String, Set<String>> = Caffeine.newBuilder()
         .maximumSize(CACHE_SIZE)
