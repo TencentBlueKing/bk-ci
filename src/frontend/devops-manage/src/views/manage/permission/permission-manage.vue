@@ -56,6 +56,22 @@
           >
             <!-- :scroll-loading="isScrollLoading"
             @scroll-bottom="getTableList" -->
+            <template #empty>
+              <bk-exception
+                class="exception-part"
+                :description="t('没有数据')"
+                scene="part"
+                :type="!isEmpty ? 'search-empty' : 'empty'"
+              >
+                <i18n-t
+                  v-if="!isEmpty"
+                  tag="div"
+                  keypath="可以尝试 调整关键词 或 清空筛选条件"
+                >
+                  <button class="text-blue" @click='clearSearchValue'>{{t('清空筛选条件')}}</button>
+                </i18n-t>
+              </bk-exception>
+            </template>
             <template #prepend>
               <div v-if="isSelectAll" class="prepend">
                 {{ t('已选择全量数据X条', [pagination.count]) }}
@@ -124,19 +140,7 @@
           <div class="failed-tips">
             <div class="manage-icon manage-icon-warning-circle-fill warning-icon"></div>
             <i18n-t keypath="检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权" tag="div">
-              <span class="tips-count">{{ failedCount }}</span>
-              <template #op1>
-                <span class="tips-text">{{ t('前往处理') }}</span>
-              </template>
-              <template #op2>
-                <span class="tips-text">{{ t('继续重置其余') }}</span>
-              </template>
-              <template #op3>
-                <span class="tips-text">{{ searchName }}</span>
-              </template>
-              <template #op4>
-                <span class="tips-text">{{ t('授权') }}</span>
-              </template>
+              <span class="tips-count">{{ failedCount }}</span><span class="tips-text">{{ t('前往处理') }}</span><span class="tips-text">{{ t('继续重置其余') }}</span><span class="tips-text">{{ searchName }}</span><span class="tips-text">{{ t('授权') }}</span>
             </i18n-t>
           </div>
           <bk-table
@@ -145,7 +149,7 @@
             :border="['outer', 'row']"
             show-overflow-tooltip
           >
-            <bk-table-column :label="t('代码库')" prop="resourceName" />
+            <bk-table-column :label="searchName" prop="resourceName" />
             <bk-table-column :label="t('失败原因')" prop="handoverFailedMessage" />
           </bk-table>
         </div>
@@ -178,14 +182,13 @@
 import { ref, onMounted, computed, h, watch } from 'vue';
 import http from '@/http/api';
 import { useI18n } from 'vue-i18n';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { convertTime } from '@/utils/util'
 import { Message } from 'bkui-vue';
 import { Success, Spinner } from 'bkui-vue/lib/icon';
 import ProjectUserSelector from '@/components/project-user-selector'
 const { t } = useI18n();
 const route = useRoute();
-const router = useRouter();
 const tableData = ref([]);
 const resetTableData = ref([]);
 const activeIndex = ref(0);
@@ -340,6 +343,7 @@ const searchData = computed(() => {
     return !searchValue.value.find(val => val.id === data.id)
   })
 });
+const isEmpty = computed(() => !(searchValue.value.length || dateTimeRange.value.length));
 watch(() => searchValue.value, (val, oldVal) => {
   pagination.value.current = 1;
   isSelectAll.value = false;
@@ -365,6 +369,10 @@ function init () {
   selectList.value = [];
   dateTimeRange.value = [];
 };
+function clearSearchValue(){
+  searchValue.value = [];
+  dateTimeRange.value = [];
+}
 /**
  * 获取列表数据
  */
@@ -437,8 +445,6 @@ function handleSelectAllData() {
     refTable.value.toggleAllSelection();
   }
   isSelectAll.value = true;
-
-  selectList.value = tableData.value.map((item) => item.id);
 }
 /**
  * 清除选择
@@ -492,7 +498,8 @@ async function handleCheckReset () {
     isResetSuccess.value = !failedCount.value;
     isChecking.value = false;
     canLoading.value = false;
-    disabledResetBtn.value = failedCount.value === selectList.value.length;
+    const selectFlag = isSelectAll.value ? pagination.value.count : selectList.value.length
+    disabledResetBtn.value = failedCount.value === selectFlag;
   } catch (e) {
     console.error(e)
   }
@@ -575,8 +582,8 @@ async function getMenuList (item, keyword) {
   return res.records.map(i => {
     return {
       ...i,
-      name: i.name || i.id,
-      displayName: i.type === 'user' ? (!i.name ? i.id : `${i.id} (${i.name})`) : i.id,
+      displayName: i.name || i.id,
+      name: i.type === 'user' ? (!i.name ? i.id : `${i.id} (${i.name})`) : i.name,
     }
   })
 }
@@ -729,6 +736,14 @@ function handleChangeName ({ list }) {
 .reset-form {
   .bk-form-item {
     margin-bottom: 15px !important;
+  }
+}
+.exception-part{
+  // ::v-deep .bk-exception-img {
+  //   height: 200px !important;
+  // }
+  .text-blue{
+    color: #699DF4;
   }
 }
 </style>

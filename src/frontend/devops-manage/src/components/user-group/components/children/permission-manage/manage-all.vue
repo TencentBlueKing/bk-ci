@@ -247,10 +247,7 @@
             <span class="desc-primary">{{ totalCount }}</span>
           </i18n-t>
           <i18n-t v-if="inoperableCount" keypath="；其中X个用户组X，本次操作将忽略" tag="div">
-            <span class="desc-warn">{{ inoperableCount }}</span>
-            <template #op>
-              <span class="desc-warn">{{ unableText[batchFlag] }}</span>
-            </template>
+            <span class="desc-warn">{{ inoperableCount }}</span><span class="desc-warn">{{ unableText[batchFlag] }}</span>
           </i18n-t>
         </p>
         <div>
@@ -303,8 +300,7 @@
             <div class="main-line main-line-remove">
               <p class="main-label-remove">
                 <i18n-t keypath="确认从以上X个用户组中移出X吗？" tag="div">
-                  <span class="remove-num">{{ totalCount - inoperableCount }}</span>
-                  <span class="remove-person">{{ userName }}</span>
+                  <span class="remove-num">{{ totalCount - inoperableCount }}</span><span class="remove-person">{{ userName }}</span>
                 </i18n-t>
               </p>
             </div>
@@ -517,6 +513,10 @@ async function handleHandoverConfirm() {
 
   const param = formatSelectParams(selectedRow.value.groupId);
   delete param.renewalDuration;
+  if(asideItem.value.id === handOverForm.value.id){
+    showMessage('error', t('目标对象和交接人不允许相同。'));
+    return
+  }
   try {
     operatorLoading.value = true;
     const res = await http.batchHandover(projectId.value, param);
@@ -660,6 +660,11 @@ async function batchConfirm(batchFlag) {
     } else if (batchFlag === 'handover') {
       const flag = await formRef.value.validate();
       if (!flag) return;
+      if(asideItem.value.id === handOverForm.value.id){
+        showMessage('error', t('目标对象和交接人不允许相同。'));
+        batchBtnLoading.value = false;
+        return
+      }
       res = await http.batchHandover(projectId.value, params);
     } else if (batchFlag === 'remove') {
       res = await http.batchRemove(projectId.value, params);
@@ -694,14 +699,14 @@ async function getMenuList (item, keyword) {
   if (item.id === 'user' && keyword) {
     query.userName = keyword
   } else if (item.id === 'department' && keyword) {
-    query.departName = keyword
+    query.deptName = keyword
   }
   const res = await http.getProjectMembers(projectId.value, query)
   return res.records.map(i => {
     return {
       ...i,
       displayName: i.name || i.id,
-      name: i.type === 'user' ? (!i.name ? i.id : `${i.id} (${i.name})`) : i.id,
+      name: i.type === 'user' ? (!i.name ? i.id : `${i.id} (${i.name})`) : i.name,
     }
   })
 }

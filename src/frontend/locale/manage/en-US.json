@@ -139,7 +139,7 @@
     "项目类型": "Project Type",
     "创建项目申请单已撤回": "Creation of project application has been withdrawn",
     "全员": "EveryOne",
-    "检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权": "The following {0} authorizations cannot be reset. Please {op1} or {op2} {op3} {op4}",
+    "检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权": "The following {0} authorizations cannot be reset. Please {1} or {2} {3} {4}",
     "前往处理": "navigate to handle them",
     "继续重置其余": "continue to reset the remaining",
     "授权": "authorizations",
@@ -182,13 +182,13 @@
     "待移出用户": "Users to be removed",
     "所在用户组": "User Group",
     "已选择X个用户组": "Selected {0} user groups",
-    "；其中X个用户组X，本次操作将忽略": "; Among them, {0} user groups {op}, will be ignored in this operation",
+    "；其中X个用户组X，本次操作将忽略": "; Among them, {0} user groups {1}, will be ignored in this operation",
     "无法移出": "cannot be removed",
     "续期对象": "Renewal Object",
     "用户": "User",
     "组织架构": "Organization Structure",
     "续期时长": "Renewal Duration",
-    "确认从以上X个用户组中移出X吗？": "Confirm to remove {2} from the above {0} user groups?",
+    "确认从以上X个用户组中移出X吗？": "Confirm to remove {1} from the above {0} user groups?",
     "确定续期": "Confirm Renewal",
     "确定移交": "Confirm Transfer",
     "确定移出": "Confirm Removal",
@@ -244,5 +244,7 @@
     "可以尝试 调整关键词 或 清空筛选条件": "You can try adjusting the keywords or {0}",
     "清空筛选条件": "Clear filter conditions",
     "输入授权人，选中回车进行校验": "Enter the authorizer, select and press Enter to verify",
-    "已离职": "Resigned"
+    "已离职": "Resigned",
+    "授权校验中": "Authorization verification in progress",
+    "目标对象和交接人不允许相同。": "The target and the transferee cannot be the same person."
 }

@@ -233,6 +233,7 @@
 
 <script setup name="ManageAside">
 import http from '@/http/api';
+import { Message } from 'bkui-vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { useRoute } from 'vue-router';
@@ -350,6 +351,13 @@ function handOverInputClear(){
 async function handleChangeOverFormName ({list, userList}){
   userListData.value = userList;
   handOverForm.value = userList.find(i => i.id === list[0]);
+  if(removeUser.value.id === handOverForm.value?.id){
+    Message({
+      theme: 'error',
+      message: t('目标对象和交接人不允许相同。')
+    });
+    return
+  }
   if(!handOverForm.value){
     handOverInputClear();
     return;
@@ -611,6 +619,7 @@ function handlePersonClose(){
 
       .deal {
         display: flex;
+        align-items: center;
         line-height: 14px;
       }
     }
@@ -635,6 +644,8 @@ function handlePersonClose(){
     }
 
     .blue-text {
+      display: flex;
+      align-items: center;
       cursor: pointer;
       color: #3A84FF;
       font-size: 12px;
