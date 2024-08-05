@@ -151,7 +151,7 @@ class ProjectCronService constructor(
     /**
      * 每个月15号凌晨0点进行上报货币化数据
      * */
-    // @Scheduled(cron = "0 0 0 15 * ?")
+    @Scheduled(cron = "0 0 0 15 * ?")
     fun reportBillDataRegularly() {
         if (!enable) {
             return

@@ -112,4 +112,19 @@ interface OpPipelineSettingResource {
         @Parameter(description = "YAML流水线设置", required = true)
         pipelineAsCodeSettings: PipelineAsCodeSettings
     ): Result<Int>
+
+    @Operation(summary = "更新构建指标配置")
+    @POST
+    @Path("/updateBuildMetricsSettings")
+    fun updateBuildMetricsSettings(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "是否开启", required = true)
+        @QueryParam("enabled")
+        enabled: Boolean
+    ): Result<Boolean>
 }

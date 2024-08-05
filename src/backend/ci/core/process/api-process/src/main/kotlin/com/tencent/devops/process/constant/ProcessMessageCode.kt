@@ -541,7 +541,6 @@ object ProcessMessageCode {
     const val BK_PIPELINE_RUN_CONDITION_NOT_MATCH = "bkPipelineRunConditionNotMatch" // 执行条件为满足，将跳过
     const val BK_PIPELINE_RUN_CONDITION_WITH_ERROR = "bkPipelineRunConditionWithError" // 执行条件计算报错
 
-    // TODO: AgentReuseMutex
     const val BK_AGENT_REUSE_MUTEX = "bkAgentReuseMutex"
     const val BK_AGENT_REUSE_MUTEX_AGENT_ID_NULL = "bkAgentReuseMutexAgentIdNull"
     const val BK_MERGE_YAML_CREATE_FILE_TITLE = "bkMergeYamlCreateFileTitle" // 新增流水线发布mr标题

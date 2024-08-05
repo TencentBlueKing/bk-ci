@@ -30,6 +30,8 @@ package com.tencent.devops.environment.pojo.job
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class AgentVersion(
+    @get:Schema(title = "主机id")
+    val serverId: Long?,
     @get:Schema(title = "IP地址")
     val ip: String?,
     @get:Schema(title = "host id")
@@ -41,11 +43,15 @@ data class AgentVersion(
     @get:Schema(title = "agent状态", description = "0-异常，1-正常")
     val status: Int?
 ) {
-    constructor(ip: String?, bkHostId: Long?, installedTag: Boolean?) : this(
-        ip, bkHostId, installedTag, version = null, status = null
+    constructor(serverId: Long?, ip: String?, bkHostId: Long?, installedTag: Boolean?) : this(
+        serverId, ip, bkHostId, installedTag, version = null, status = null
+    )
+
+    constructor(serverId: Long?, ip: String?, bkHostId: Long?) : this(
+        serverId, ip, bkHostId, installedTag = null, version = null, status = null
     )
 
     constructor(ip: String?, bkHostId: Long?) : this(
-        ip, bkHostId, installedTag = null, version = null, status = null
+        serverId = null, ip, bkHostId, installedTag = null, version = null, status = null
     )
 }

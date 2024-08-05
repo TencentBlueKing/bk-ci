@@ -142,7 +142,7 @@
                                 {{ temp.desc || '--' }}
                             </p>
                         </div>
-                        <div v-if="tIndex > 0" class="pipeline-template-status">
+                        <div v-if="tIndex > 0 || activePanel === 'store'" class="pipeline-template-status">
                             <bk-button
                                 v-if="temp.hasPermission"
                                 text

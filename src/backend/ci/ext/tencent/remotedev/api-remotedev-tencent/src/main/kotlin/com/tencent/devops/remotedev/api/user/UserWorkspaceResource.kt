@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.BkTicketInfo
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
@@ -46,11 +45,15 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.DefaultValue
@@ -317,18 +320,6 @@ interface UserWorkspaceResource {
         gitType: RemoteDevGitType = RemoteDevGitType.GIT
     ): Result<AuthorizeResult>
 
-    @Operation(summary = "工作空间心跳请求")
-    @POST
-    @Path("/heartbeat")
-    fun workspaceHeartbeat(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "执行次数", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<Boolean>
-
     @Operation(summary = "校验用户操作工作空间权限")
     @GET
     @Path("/checkPermission")
@@ -348,29 +339,6 @@ interface UserWorkspaceResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
-    ): Result<Boolean>
-
-    @Operation(summary = "更新容器的BKticket")
-    @POST
-    @Path("/updateBkTicket")
-    fun updateBkTicket(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "bkTicket信息", required = true)
-        bkTicketInfo: BkTicketInfo
-    ): Result<Boolean>
-
-    @Operation(summary = "更新容器的BKticket")
-    @POST
-    @Path("/updateAllBkTicket")
-    fun updateAllBkTicket(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "bkTicket", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
-        bkTicket: String
     ): Result<Boolean>
 
     @Operation(summary = "获取指定工作空间详情")
@@ -396,4 +364,26 @@ interface UserWorkspaceResource {
         @QueryParam("macAddress")
         macAddress: String
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>>
+
+    @Operation(summary = "发起moa 2fa二次验证")
+    @POST
+    @Path("/2fa/request")
+    fun createMoa2faRequest(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "发起的验证数据", required = true)
+        moa2faReqData: Moa2faReqData
+    ): Result<Moa2faRespData>
+
+    @Operation(summary = "验证moa 2fa结果")
+    @POST
+    @Path("/2fa/verify")
+    fun verifyMoa2faResult(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "", required = true)
+        moa2faVerifyReqData: Moa2faVerifyReqData
+    ): Result<Moa2faVerifyRespData>
 }

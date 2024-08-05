@@ -101,8 +101,6 @@ object CommonMessageCode {
     const val USERS_EXCEEDS_THE_LIMIT = "2100048" // 授权用户数越界:{0}
     const val FAILED_TO_QUERY_GSE_AGENT_STATUS = "2100049" // 查询 Gse Agent 状态失败
     const val FAILED_TO_GET_AGENT_STATUS = "2100050" // 获取agent状态失败
-    const val FAILED_TO_GET_CMDB_NODE = "2100051" // 获取 CMDB 节点失败
-    const val FAILED_TO_GET_CMDB_LIST = "2100052" // 获取CMDB列表失败
     const val STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE = "2100053" // stages和steps不能并列存在!
 
     const val USER_NOT_PERMISSIONS_OPERATE_PIPELINE = "2100054" // 用户({0})无权限在工程({1})下{2}流水线{3}

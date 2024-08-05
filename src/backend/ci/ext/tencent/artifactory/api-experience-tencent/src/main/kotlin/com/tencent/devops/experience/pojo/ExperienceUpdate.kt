@@ -56,5 +56,7 @@ data class ExperienceUpdate(
     @get:Schema(title = "产品类别", required = false)
     val categoryId: Int?,
     @get:Schema(title = "产品负责人", required = false)
-    val productOwner: List<String>?
+    val productOwner: List<String>?,
+    @get:Schema(title = "分类", required = false)
+    val classify: String? = null
 )

@@ -89,7 +89,7 @@
                 //     if (typeof value === 'undefined') isErrorParam = true
                 //     return value
                 // })
-                
+
                 let [url] = this.generateReqUrl(this.param.url, this.paramValues)
 
                 if (!url) return
@@ -126,8 +126,8 @@
                         }
                     }) || {}
                     const defaultValue = defaultValues.find(x => x.key === key) || {}
-                    param.value = value.value || defaultValue.value || param.value
-                    param.key = value.key || defaultValue.key || param.key
+                    param.value = value.value ?? defaultValue.value ?? param.value
+                    param.key = value.key ?? defaultValue.key ?? param.key
                     param.enable = value.enable === undefined ? true : value.enable
                     if (Array.isArray(param.value)) { // 去掉空字符串, 空字符串无意义
                         param.value = param.value.filter(v => v !== '')

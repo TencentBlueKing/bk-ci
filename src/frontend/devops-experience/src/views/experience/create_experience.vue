@@ -53,6 +53,20 @@
                         <bk-form-item label="版本号" label-width="190">
                             <span class="version-number-info">{{ createReleaseForm.version_no || '--' }}</span>
                         </bk-form-item>
+                        <bk-form-item
+                            style="margin-top: 20px"
+                            label="分组标识"
+                            label-width="190"
+                            desc-type="icon"
+                            desc-icon="icon-info-circle"
+                            desc="指定后，体验列表将根据 BundleID和分组标识汇聚展示"
+                            property="classify">
+                            <bk-input
+                                v-model="createReleaseForm.classify"
+                                placeholder="请输入分组标识"
+                                maxlength="20"
+                            />
+                        </bk-form-item>
                         <bk-form-item label="版本描述" property="desc" label-width="190" :required="true">
                             <bk-input
                                 type="textarea"
@@ -94,7 +108,7 @@
                                 <bk-radio value="internals">内部体验组</bk-radio>
                             </bk-radio-group>
                         </bk-form-item>
-                        <bk-form-item v-show="showExperienceGroup" label="体验组" :required="true" label-width="190" property="experienceGroups">
+                        <bk-form-item v-show="isInerExp" label="体验组" required label-width="190" property="experienceGroups">
                             <div class="bkdevop-checkbox-group">
                                 <bk-checkbox
                                     class="exp-group-item"
@@ -127,7 +141,7 @@
                             </span>
                         </bk-form-item>
                         <bk-form-item
-                            v-show="showExperienceGroup"
+                            v-show="isInerExp"
                             label="临时体验人员（内部）"
                             desc-type="icon"
                             desc-icon="icon-info-circle"
@@ -136,7 +150,7 @@
                             property="internal_list">
                             <bk-member-selector placeholder="请输入英文名，多个体验人员以英文逗号分隔" name="internalList" v-model="createReleaseForm.internal_list"></bk-member-selector>
                         </bk-form-item>
-                        <bk-form-item v-show="showExperienceGroup" label="临时体验人员（外部）" label-width="190" property="external_list">
+                        <bk-form-item v-show="isInerExp" label="临时体验人员（外部）" label-width="190" property="external_list">
                             <bk-select :disabled="false" v-model="createReleaseForm.external_list"
                                 ext-cls="select-custom"
                                 ext-popover-cls="select-popover-custom"
@@ -149,9 +163,20 @@
                                 </bk-option>
                             </bk-select>
                         </bk-form-item>
-                        <bk-form-item label="通知方式" label-width="190" desc="三种通知方式均不会对公开体验生效" desc-type="icon" desc-icon="icon-info-circle">
-                            <div class="bkdevop-checkbox-group notify-group">
-                                <bk-checkbox v-for="(col, index) in noticeTypeList" :key="index" v-model="col.isChecked">{{ col.name }}</bk-checkbox>
+                        <bk-form-item
+                            label="通知方式"
+                            label-width="190"
+                            v-bind="notifyDesc"
+                        >
+                            <div v-if="isInerExp" class="bkdevop-checkbox-group notify-group">
+                                <bk-checkbox
+                                    v-for="(col, index) in noticeTypeList"
+                                    :key="index"
+                                    v-model="col.isChecked"
+                                >
+                                    {{ col.name }}
+                                    <i v-if="col.placeholder" v-bk-tooltips="col.placeholder" class="bk-icon icon-info-circle" />
+                                </bk-checkbox>
                             </div>
                             <bk-checkbox
                                 class="enable-wechat-group"
@@ -160,7 +185,7 @@
                             >
                                 启用企业微信群通知
                                 <span v-bk-tooltips="groupIdDesc" class="top-start">
-                                    <i class="devops-icon icon-info-circle" />
+                                    <i class="bk-icon icon-info-circle" />
                                 </span>
                             </bk-checkbox>
                         </bk-form-item>
@@ -257,6 +282,12 @@
                     { id: 4, name: '社交' }
                 ],
                 noticeTypeList: [
+                    // {
+                    //     name: '蓝盾App Push消息',
+                    //     value: 'PUSH',
+                    //     isChecked: true,
+                    //     placeholder: '只有安装了蓝盾App的用户，Push消息才能触达。'
+                    // },
                     { name: '企业微信', value: 'RTX', isChecked: false },
                     { name: '邮件', value: 'EMAIL', isChecked: false }
                 ],
@@ -282,7 +313,8 @@
                     notice_list: '',
                     wechatGroups: '',
                     enableWechatGroups: false,
-                    experienceGroups: []
+                    experienceGroups: [],
+                    classify: ''
                 },
                 packageLoading: {
                     isLoading: false,
@@ -346,8 +378,11 @@
             submitText () {
                 return this.isEdit ? '更新体验' : '转体验'
             },
-            showExperienceGroup () {
+            isInerExp () {
                 return this.experienceRange === 'internals'
+            },
+            isPublicExp () {
+                return this.experienceRange === 'public'
             },
             expGroupPopupConf () {
                 return [{
@@ -361,15 +396,21 @@
                     key: 'outerUsers'
                 }]
             },
-            isPublicExp () {
-                return this.experienceRange === 'public'
-            },
             isAlphaApk () {
                 return !!this.metaList.find(item => item.key === 'BK-CI-APP-STAGE' && item.value === 'Alpha')
             },
             
             createInnerApkExpTips () {
                 return `${this.createReleaseForm.name}${this.isPublicExp ? '为开发测试版本，确定发起公开体验吗' : '为开发测试版本，准备体验包过程需要一段时间，请耐心等待'}`
+            },
+            notifyDesc () {
+                return this.isPublicExp
+                    ? {}
+                    : {
+                        desc: '若选择的体验组人数去重后仍然超过了2000人，通知将会发送失败。',
+                        descType: 'icon',
+                        descIcon: 'icon-info-circle'
+                    }
             }
         },
         watch: {
@@ -377,6 +418,7 @@
                 if (!this.isEdit) {
                     this.requestGroupList()
                     this.noticeTypeList.forEach(item => {
+                        // item.isChecked = item.value === 'PUSH'
                         item.isChecked = false
                     })
                     this.metaList = []
@@ -400,7 +442,6 @@
             projectId (val) {
                 this.toExperienceList()
             }
-            
         },
         async created () {
             await this.requestGroupList()
@@ -482,6 +523,7 @@
                     this.createReleaseForm.internal_list = res.innerUsers
                     this.createReleaseForm.enableWechatGroups = res.enableWechatGroups
                     this.createReleaseForm.experienceGroups = res.experienceGroups
+                    this.createReleaseForm.classify = res.classify
                     // 体验组如果为kygplomw,选中公开体验
                     const publicGroup = this.createReleaseForm.experienceGroups.find(item => item.groupHashId === 'kygplomw')
                     this.experienceRange = publicGroup ? 'public' : 'internals'
@@ -743,7 +785,7 @@
                         theme
                     })
                 } else {
-                    if (this.experienceRange === 'internals') {
+                    if (this.isInerExp) {
                         // 如果为内部体验组，取选中体验组id
                         const newExperienceGroups = []
     
@@ -769,7 +811,8 @@
                         experienceName: this.createReleaseForm.experienceName,
                         versionTitle: this.createReleaseForm.versionTitle,
                         categoryId: this.createReleaseForm.categoryId,
-                        productOwner: this.createReleaseForm.productOwner
+                        productOwner: this.createReleaseForm.productOwner,
+                        classify: this.createReleaseForm.classify
                     }
                     if (this.createReleaseForm.enableWechatGroups) {
                         params.wechatGroups = this.wechatGroupCompletion()
@@ -871,7 +914,9 @@
                     display: grid;
                     grid-gap: 20px;
                     grid-auto-flow: column;
-                    grid-template-columns: max-content;
+                    height: 32px;
+                    align-items: center;
+                    grid-template-columns: repeat(3, 1fr);
                     margin-bottom: 10px;
                 }
                 

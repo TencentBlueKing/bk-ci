@@ -267,7 +267,7 @@ class BuildStartControl @Autowired constructor(
                         debug = buildInfo.debug
                     )
                 )
-                broadcastStartEvent(buildInfo)
+                broadcastStartEvent(buildInfo, executeCount)
             } else {
                 pipelineRuntimeService.updateExecuteCount(
                     projectId = projectId,
@@ -472,7 +472,7 @@ class BuildStartControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildStartEvent.broadcastStartEvent(buildInfo: BuildInfo) {
+    private fun PipelineBuildStartEvent.broadcastStartEvent(buildInfo: BuildInfo, executeCount: Int) {
         pipelineEventDispatcher.dispatch(
             // 广播构建即将启动消息给订阅者
             PipelineBuildStartBroadCastEvent(
@@ -484,14 +484,16 @@ class BuildStartControl @Autowired constructor(
                 startTime = buildInfo.startTime,
                 triggerType = buildInfo.trigger
             ),
-            // 根据状态做响应的扩展广播消息给订阅者
+            // build 启动，根据状态做响应的扩展广播消息给订阅者
             PipelineBuildStatusBroadCastEvent(
                 source = source,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
                 buildId = buildId,
-                actionType = ActionType.START
+                actionType = ActionType.START,
+                executeCount = executeCount,
+                buildStatus = BuildStatus.RUNNING.name
             )
         )
     }

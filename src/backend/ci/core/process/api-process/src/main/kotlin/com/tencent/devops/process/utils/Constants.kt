@@ -34,6 +34,7 @@ const val PIPELINE_START_PARENT_PIPELINE_NAME = "BK_CI_PARENT_PIPELINE_NAME"
 const val PIPELINE_START_PARENT_BUILD_ID = "BK_CI_PARENT_BUILD_ID" // "pipeline.start.parent.build.id"
 const val PIPELINE_START_PARENT_BUILD_NUM = "BK_CI_PARENT_BUILD_NUM"
 const val PIPELINE_START_PARENT_BUILD_TASK_ID = "BK_CI_PARENT_BUILD_TASK_ID" // "pipeline.start.parent.build.task.id"
+const val PIPELINE_START_PARENT_EXECUTE_COUNT = "BK_CI_PARENT_EXECUTE_COUNT"
 const val PIPELINE_START_USER_ID = "BK_CI_START_USER_ID" // "pipeline.start.user.id"
 const val PIPELINE_START_USER_NAME = "BK_CI_START_USER_NAME" // "pipeline.start.user.name"
 const val PIPELINE_START_WEBHOOK_USER_ID = "BK_CI_START_WEBHOOK_USER_ID" // "pipeline.start.webhook.user.id"
@@ -52,6 +53,8 @@ const val PIPELINE_BUILD_NUM_ALIAS = "BK_CI_BUILD_NUM_ALIAS"
 const val PIPELINE_BUILD_URL = "BK_CI_BUILD_URL"
 // 禁用定时触发器参数,当流水线配置这个参数，并且值为true,则禁用定时触发器
 const val PIPELINE_TIMER_DISABLE = "BK_CI_TIMER_DISABLE"
+// 子流水线运行方式
+const val PIPELINE_START_SUB_RUN_MODE = "BK_CI_SUB_PIPELINE_RUN_MODE"
 
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER" // git_mr_number
 const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER" // github_pr_number

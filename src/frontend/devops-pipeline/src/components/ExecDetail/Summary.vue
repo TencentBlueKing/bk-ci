@@ -198,12 +198,14 @@
         },
         watch: {
             execDetail: {
-                handler: function (val) {
+                handler: function (val, oldVal) {
                     if (val.remark !== this.tempRemark) {
                         this.tempRemark = val.remark
                         this.remark = val.remark
                     }
-                    this.updateCurVersionDesc()
+                    if (val?.curVersion !== oldVal?.curVersion) {
+                        this.updateCurVersionDesc()
+                    }
                 },
                 immediate: true
             }

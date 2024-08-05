@@ -17,6 +17,8 @@ const ProjectManage = () => import('../views/ProjectManage.vue')
 
 const Maintaining = () => import('../views/503.vue')
 
+const UnDeploy = () => import('../views/UnDeploy.vue')
+
 Vue.use(Router)
 
 let mod: Route[] = []
@@ -63,6 +65,11 @@ const routes = [
                 path: 'maintaining',
                 name: '503',
                 component: Maintaining
+            },
+            {
+                path: 'undeploy/:id',
+                name: 'undeploy',
+                component: UnDeploy
             }
         ]
     }

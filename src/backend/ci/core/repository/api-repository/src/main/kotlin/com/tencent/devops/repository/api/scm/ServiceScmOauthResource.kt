@@ -122,7 +122,13 @@ interface ServiceScmOauthResource {
         userName: String?,
         @Parameter(description = "搜索条件", required = false)
         @QueryParam("search")
-        search: String? = null
+        search: String? = null,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
     ): Result<List<String>>
 
     @Operation(summary = "List all the branches of repo")

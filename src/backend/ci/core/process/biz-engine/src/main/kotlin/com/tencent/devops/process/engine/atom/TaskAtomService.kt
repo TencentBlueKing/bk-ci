@@ -45,11 +45,10 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_RUNNING_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_TASK_EXECUTION
-import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
@@ -88,9 +87,7 @@ class TaskAtomService @Autowired(required = false) constructor(
         jmxElements.execute(task.taskType)
         var atomResponse = AtomResponse(BuildStatus.FAILED)
         try {
-            if (!VmOperateTaskGenerator.isVmAtom(task)) {
-                dispatchBroadCastEvent(task, ActionType.START)
-            }
+            dispatchBroadCastEvent(task, ActionType.START)
             // 更新状态
             pipelineTaskService.updateTaskStatus(
                 task = task,
@@ -149,6 +146,7 @@ class TaskAtomService @Autowired(required = false) constructor(
 
     private fun dispatchBroadCastEvent(task: PipelineBuildTask, actionType: ActionType) {
         pipelineEventDispatcher.dispatch(
+            // 内置task启动/结束，包含 startVM、stopVM
             PipelineBuildStatusBroadCastEvent(
                 source = "task-${task.taskId}",
                 projectId = task.projectId,
@@ -156,7 +154,13 @@ class TaskAtomService @Autowired(required = false) constructor(
                 userId = task.starter,
                 taskId = task.taskId,
                 buildId = task.buildId,
-                actionType = actionType
+                actionType = actionType,
+                containerHashId = task.containerHashId,
+                jobId = task.jobId,
+                stepId = task.stepId,
+                atomCode = task.atomCode,
+                executeCount = task.executeCount,
+                buildStatus = task.status.name
             )
         )
     }
@@ -270,9 +274,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             logger.warn("Fail to post the task($task): ${ignored.message}")
         }
 
-        if (!VmOperateTaskGenerator.isVmAtom(task)) {
-            dispatchBroadCastEvent(task, ActionType.END)
-        }
+        dispatchBroadCastEvent(task, ActionType.END)
 
         buildLogPrinter.stopLog(
             buildId = task.buildId,

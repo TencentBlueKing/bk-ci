@@ -13,7 +13,8 @@ abstract class NotifySendCmd(val client: Client) : NotifyCmd {
         receivers: Set<String>,
         notifyType: Set<String>,
         titleParams: Map<String, String>,
-        bodyParams: Map<String, String>
+        bodyParams: Map<String, String>,
+        markdownContent: Boolean
     ) {
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
@@ -23,7 +24,8 @@ abstract class NotifySendCmd(val client: Client) : NotifyCmd {
                 titleParams = titleParams,
                 bodyParams = bodyParams,
                 cc = null,
-                bcc = null
+                bcc = null,
+                markdownContent = markdownContent
             )
         )
     }

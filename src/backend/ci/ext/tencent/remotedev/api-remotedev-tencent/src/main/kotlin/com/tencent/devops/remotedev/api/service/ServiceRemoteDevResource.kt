@@ -1,12 +1,16 @@
 package com.tencent.devops.remotedev.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.DesktopTokenSign
+import com.tencent.devops.remotedev.pojo.OperateCvmData
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
@@ -18,6 +22,7 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
@@ -54,7 +59,19 @@ interface ServiceRemoteDevResource {
         ticket: String
     ): Result<Boolean>
 
-    @Operation(summary = "提供给wesec获取项目下云桌面信息")
+    @Operation(summary = "校验token")
+    @GET
+    @Path("/desktop_token_check")
+    fun desktopTokenCheck(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @Parameter(description = "认证token", required = true)
+        token: String,
+        @QueryParam("dToken")
+        @Parameter(description = "dToken", required = false)
+        dToken: String
+    ): Result<UserOnePassword>
+
+    @Operation(summary = "提供给wesec获取项目下批量云桌面信息")
     @GET
     @Path("/project/workspace")
     fun getProjectWorkspace(
@@ -145,6 +162,9 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "拥有者，为空则表示不分配，只交付项目", required = false)
         @QueryParam("owner")
         owner: String?,
+        @Parameter(description = "zoneType", required = false)
+        @QueryParam("zoneType")
+        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
@@ -183,6 +203,9 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "用户", required = true)
         @QueryParam("userId")
         userId: String,
+        @Parameter(description = "zoneType", required = false)
+        @QueryParam("zoneType")
+        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "创建内容", required = true)
         data: WindowsWorkspaceCreate
     ): Result<Boolean>
@@ -221,6 +244,9 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "项目id", required = true)
         @QueryParam("projectId")
         projectId: String,
+        @Parameter(description = "zoneType", required = false)
+        @QueryParam("zoneType")
+        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "创建内容", required = true)
         data: WindowsWorkspaceCreate
     ): Result<Boolean>
@@ -303,7 +329,7 @@ interface ServiceRemoteDevResource {
         available: Boolean?
     ): Result<QuotaInApiRes>
 
-    @Operation(summary = "DevcloudCvm列表")
+    @Operation(summary = "获取DevcloudCvm列表")
     @GET
     @Path("/devcloud/cvmList")
     fun fetchCvmList(
@@ -347,9 +373,10 @@ interface ServiceRemoteDevResource {
         projectId: String?
     ): Result<Map<String, Any>>
 
-    @Operation(summary = "修改工作空间")
+    @Operation(summary = "修改工作空间别名")
     @POST
     @Path("/modify/display_name")
+    @Deprecated("不要新增功能，希望废弃该接口")
     fun modifyWorkspaceDisplayName(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -435,4 +462,55 @@ interface ServiceRemoteDevResource {
         desktopIP: String,
         sign: DesktopTokenSign
     ): Result<String>
+
+    @Operation(summary = "修改工作空间属性")
+    @POST
+    @Path("/modify_property")
+    fun modifyWorkspaceProperty(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "实例IP", required = true)
+        @QueryParam("ip")
+        ip: String?,
+        @Parameter(description = "备注名称", required = true)
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean>
+
+    @Operation(summary = "工作空间扩展硬盘回调")
+    @POST
+    @Path("/workspace_expand_disk_callback")
+    fun workspaceExpandDiskCallback(
+        @QueryParam("taskId")
+        taskId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @QueryParam("operator")
+        operator: String
+    )
+
+    @Operation(summary = "删除工作空间镜像")
+    @DELETE
+    @Path("/delete/image")
+    fun deleteProjectImage(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "镜像ID", required = true)
+        @QueryParam("imageId")
+        imageId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "增删cvm回调")
+    @POST
+    @Path("/op_cvm_callback")
+    fun opCvm(
+        data: OperateCvmData
+    ): Result<Boolean>
 }

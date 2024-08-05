@@ -454,7 +454,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                         params = arrayOf(KEY_TARGET)
                     )
                 }
-                atomBusHandleService.checkTarget(target)
                 val osArch = osExecutionInfoMap[KEY_OS_ARCH] as? String
                 val defaultFlag = osExecutionInfoMap[KEY_DEFAULT_FLAG] as? Boolean ?: false
                 // 统计每种操作系统默认环境配置数量
@@ -501,7 +500,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     params = arrayOf(KEY_TARGET)
                 )
             }
-            atomBusHandleService.checkTarget(target)
             val pkgLocalPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: ""
             val atomEnvRequest = AtomEnvRequest(
                 userId = userId,

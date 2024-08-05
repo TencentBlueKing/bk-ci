@@ -11,10 +11,10 @@ enum class ErrorCodeEnum(
     val formatErrorMessage: String
 ) {
 
-    USER_NOT_EXISTS(
+    BASE_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2132001",
-        formatErrorMessage = "Account [{0}] does not exist, please contact DevOps-helper to register"
+        formatErrorMessage = "error: {0}"
     ),
     OAUTH_ILLEGAL(
         errorType = ErrorType.USER,
@@ -79,7 +79,7 @@ enum class ErrorCodeEnum(
     WORKSPACE_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2132014",
-        formatErrorMessage = "The workspace has error , please  try again later or contact O2000."
+        formatErrorMessage = "The workspace has error , please try again later or contact 8000 helper."
     ),
     WORKSPACE_ERROR_FIX(
         errorType = ErrorType.USER,
@@ -89,7 +89,8 @@ enum class ErrorCodeEnum(
     WORKSPACE_NOT_RUNNING(
         errorType = ErrorType.USER,
         errorCode = "2132016",
-        formatErrorMessage = "Workspace [{0}] is not currently running,please try again later or contact O2000."
+        formatErrorMessage = "Workspace [{0}] is not currently running," +
+            "please try again later or contact 8000 helper."
     ),
     CHECK_USER_TICKET_FAIL(
         errorType = ErrorType.USER,
@@ -149,7 +150,7 @@ enum class ErrorCodeEnum(
     CLIENT_NEED_UPDATED(
         errorType = ErrorType.USER,
         errorCode = "2132028",
-        formatErrorMessage = "Please install the latest version of the client: \n {0}"
+        formatErrorMessage = "Please install the latest version of the client."
     ),
     DELIVERING_FAILED(
         errorType = ErrorType.THIRD_PARTY,

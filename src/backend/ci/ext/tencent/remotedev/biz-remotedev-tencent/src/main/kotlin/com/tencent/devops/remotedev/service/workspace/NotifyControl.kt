@@ -38,16 +38,16 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.common.websocket.enum.NotityLevel
 import com.tencent.devops.common.websocket.pojo.NotifyPost
+import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
-import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ProjectNotifyDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
-import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -55,6 +55,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -65,22 +66,21 @@ import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
+import java.nio.charset.StandardCharsets
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.util.Base64
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.nio.charset.StandardCharsets
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.util.Base64
 
 @Service
 @Suppress("LongMethod")
 class NotifyControl @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val workspaceDao: WorkspaceDao,
     private val redisOperation: RedisOperation,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
@@ -88,7 +88,8 @@ class NotifyControl @Autowired constructor(
     private val notifyDao: ProjectNotifyDao,
     private val sharedDao: WorkspaceSharedDao,
     private val startWorkspaceService: StartWorkspaceService,
-    private val workspaceSharedDao: WorkspaceSharedDao
+    private val workspaceSharedDao: WorkspaceSharedDao,
+    private val workspaceJoinDao: WorkspaceJoinDao
 ) {
 
     @Value("\${notice.wework:#{null}}")
@@ -145,15 +146,13 @@ class NotifyControl @Autowired constructor(
         notifyData: WorkspaceNotifyData,
         enableSendDesktop: Boolean
     ) {
-        val workspace = workspaceDao.fetchNotifyWorkspaces(
+        val workspace = workspaceJoinDao.fetchWindowsWorkspaces(
             dslContext = dslContext,
-            mountType = WorkspaceMountType.START,
-            ips = notifyData.ip?.toSet(),
+            sips = notifyData.ip?.toSet(),
             owners = notifyData.owner?.toSet(),
-            projectIds = notifyData.projectId?.toSet()
-        ) ?: throw ErrorCodeException(
-            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-            params = arrayOf(notifyData.ip?.joinToString(";") ?: "")
+            projectIds = notifyData.projectId?.toSet(),
+            notStatus = setOf(WorkspaceStatus.DELETED, WorkspaceStatus.PREPARING, WorkspaceStatus.DELIVERING_FAILED),
+            checkField = listOf(TWorkspace.T_WORKSPACE.NAME, TWorkspace.T_WORKSPACE.PROJECT_ID)
         )
 
         val messageContent = "${notifyData.title}: ${notifyData.desc}"
@@ -162,7 +161,7 @@ class NotifyControl @Autowired constructor(
         workspace.forEach { ws ->
             dispatchWebsocketPushEvent(
                 userId = ADMIN_NAME,
-                workspaceName = ws["NAME"] as String,
+                workspaceName = ws.workspaceName,
                 workspaceHost = null,
                 errorMsg = messageContent,
                 type = WebSocketActionType.WORKSPACE_NOTIFY,
@@ -171,7 +170,7 @@ class NotifyControl @Autowired constructor(
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = null,
                 ownerType = null,
-                projectId = ws["PROJECT_ID"] as String
+                projectId = ws.projectId
             )
         }
         notifyDao.add(dslContext, userId, notifyData)
@@ -186,8 +185,8 @@ class NotifyControl @Autowired constructor(
         } else {
             workspaceSharedDao.fetchWorkspaceOwner(
                 dslContext = dslContext,
-                workspaceNames = workspace.map { it["NAME"] as String }.toSet().ifEmpty { return }
-            )
+                workspaceNames = workspace.map { it.workspaceName }.toSet().ifEmpty { return }
+            ).values.toSet()
         }
 
         val now = LocalDateTime.now()
@@ -311,9 +310,9 @@ class NotifyControl @Autowired constructor(
                 TaiUserInfoRequest(usernames = taiUserNames)
             ).associateBy({
                 it.username
-                }, { user ->
+            }, { user ->
                 user.accountEmail
-                })
+            })
             val receivers = userIds.map { taiInfos[it] ?: it }
             logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams")
             sendNotifyMessageTemplateRequest(
@@ -415,7 +414,8 @@ class NotifyControl @Autowired constructor(
                     errorMsg = errorMsg,
                     systemType = systemType,
                     workspaceMountType = workspaceMountType,
-                    ownerType = ownerType
+                    ownerType = ownerType,
+                    projectId = projectId
                 ),
                 projectId = projectId,
                 userIds = getWebSocketUsers(userId, workspaceName),
@@ -436,12 +436,12 @@ class NotifyControl @Autowired constructor(
 
     private fun getWebSocketUsers(operator: String, workspaceName: String): Set<String> {
         return if (operator == ADMIN_NAME) {
-            val result = workspaceDao.fetchWorkspaceWithOwner(
+            val result = workspaceSharedDao.fetchWorkspaceSharedInfo(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
                 assignType = WorkspaceShared.AssignType.OWNER
-            ) ?: emptyList()
-            result.map { it["SHARED_USER"] as String }.toSet()
+            )
+            result.map { it.sharedUser }.toSet()
         } else {
             setOf(operator)
         }

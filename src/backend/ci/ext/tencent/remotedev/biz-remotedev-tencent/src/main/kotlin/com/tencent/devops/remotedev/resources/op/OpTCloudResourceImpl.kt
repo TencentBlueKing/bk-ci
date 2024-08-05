@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpTCloudResource
 import com.tencent.devops.remotedev.pojo.tcloud.ProjectCfsData
+import com.tencent.devops.remotedev.pojo.tcloud.UpdateCfsData
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import com.tencentcloudapi.common.profile.Region
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,5 +39,10 @@ class OpTCloudResourceImpl @Autowired constructor(
 
     override fun deleteProjectCfs(userId: String, projectId: String, cfsId: String) {
         tCloudCfsService.deleteProjectCfs(projectId, cfsId)
+    }
+
+    override fun updateProjectCfs(userId: String, data: UpdateCfsData): Result<Boolean> {
+        tCloudCfsService.updateCfsRules4Op(data)
+        return Result(true)
     }
 }

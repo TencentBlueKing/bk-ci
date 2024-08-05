@@ -35,12 +35,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL
 import com.tencent.devops.process.constant.ProcessMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.process.dao.PipelineSettingDao
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
@@ -132,6 +132,24 @@ class OpPipelineSettingResourceImpl @Autowired constructor(
                 pipelineAsCodeSettings = pipelineAsCodeSettings
             )
         )
+    }
+
+    override fun updateBuildMetricsSettings(userId: String, projectId: String, enabled: Boolean): Result<Boolean> {
+        logger.info(
+            "[$projectId]|updateBuildMetricsSettings|userId=$userId|$enabled"
+        )
+        val projectVO = client.get(ServiceProjectResource::class).get(projectId).data
+            ?: throw ExecuteException(
+                MessageUtil.getMessageByLocale(PROJECT_NOT_EXIST, I18nUtil.getLanguage(userId))
+            )
+        val success = client.get(OPProjectResource::class).setProjectProperties(
+            userId = userId,
+            projectCode = projectId,
+            properties = projectVO.properties?.copy(
+                buildMetrics = enabled
+            ) ?: ProjectProperties(buildMetrics = enabled)
+        ).data == true
+        return Result(success)
     }
 
     private fun checkMaxConRunningQueueSize(maxConRunningQueueSize: Int) {

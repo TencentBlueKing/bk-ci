@@ -50,7 +50,12 @@ if x_ckey ~= nil then
     ngx.header["X-DEVOPS-UID"] = staff_info.EnglishName
 elseif x_credentialKey ~= nil then
     local staff_info_new = itloginUtil:get_staff_info_new(x_credentialKey)
-    ngx.header["X-DEVOPS-UID"] = staff_info_new.EnglishName
+    if staff_info_new.IsOuter then
+        ngx.header["X-DEVOPS-UID"] = staff_info_new.EnglishName .. "@bkci"
+        ngx.header["X-DEVOPS-ORGANIZATION-NAME"] = "outer"
+    else
+        ngx.header["X-DEVOPS-UID"] = staff_info_new.EnglishName
+    end
 else
     local outer_profile = outerloginUtil:getProfile(x_otoken)
     ngx.header["X-DEVOPS-UID"] = outer_profile.data.username

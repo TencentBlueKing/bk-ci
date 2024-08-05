@@ -86,6 +86,14 @@
                 return this.stage[this.stageReviewType] || {}
             }
         },
+        mounted () {
+            this.preZIndex = window.__bk_zIndex_manager.zIndex
+            console.log(this.preZIndex)
+            window.__bk_zIndex_manager.zIndex = 2020
+        },
+        beforeDestroy () {
+            window.__bk_zIndex_manager.zIndex = this.preZIndex
+        },
         methods: {
             ...mapActions('atom', [
                 'toggleStageReviewPanel'

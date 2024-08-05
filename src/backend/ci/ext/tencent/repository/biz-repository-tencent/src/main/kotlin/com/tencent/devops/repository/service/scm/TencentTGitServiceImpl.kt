@@ -41,6 +41,7 @@ import com.tencent.devops.scm.api.ServiceTGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
 import javax.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
@@ -163,6 +164,30 @@ class TencentTGitServiceImpl @Autowired constructor(val client: Client) : ITGitS
             sort = sort,
             owned = owned,
             minAccessLevel = minAccessLevel
+        ).data!!
+    }
+
+    override fun getChangeFileList(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        from: String,
+        to: String,
+        straight: Boolean?,
+        page: Int,
+        pageSize: Int,
+        url: String
+    ): List<ChangeFileInfo> {
+        return client.getScm(ServiceTGitResource::class).getChangeFileList(
+            token = token,
+            tokenType = tokenType,
+            gitProjectId = gitProjectId,
+            from = from,
+            to = to,
+            straight = straight,
+            page = page,
+            pageSize = pageSize,
+            url = url
         ).data!!
     }
 }

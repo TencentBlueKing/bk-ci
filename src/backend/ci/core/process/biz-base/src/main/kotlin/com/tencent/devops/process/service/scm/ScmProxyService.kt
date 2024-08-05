@@ -289,7 +289,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.first,
                         region = null,
                         userName = repo.userName,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 } else {
                     val credInfo = getCredential(
@@ -306,7 +308,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.privateKey,
                         region = null,
                         userName = credInfo.username,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 }
             }
@@ -342,7 +346,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = getTGitAccessToken(repo.userName),
                         region = null,
                         userName = repo.userName,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 } else {
                     val credInfo = getCredential(
@@ -359,7 +365,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.privateKey,
                         region = null,
                         userName = credInfo.username,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 }
             }
@@ -466,7 +474,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitRepository
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.GIT_INVALID)
-        val isOauth = repo.credentialId.isEmpty()
+        val isOauth = repo.authType == RepoAuthType.OAUTH
         val token = if (isOauth) {
             getAccessToken(repo.userName).first
         } else {

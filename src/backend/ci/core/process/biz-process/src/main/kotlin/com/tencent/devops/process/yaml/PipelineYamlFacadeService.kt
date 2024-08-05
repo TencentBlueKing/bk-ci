@@ -290,6 +290,44 @@ class PipelineYamlFacadeService @Autowired constructor(
         )[pipelineId] ?: false
     }
 
+    fun checkPushParam(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        versionName: String?,
+        repoHashId: String,
+        scmType: ScmType,
+        filePath: String,
+        content: String,
+        targetAction: CodeTargetAction
+    ) {
+        logger.info("check push yaml file|$userId|$projectId|$pipelineId|$repoHashId|$scmType|$version|$versionName")
+        val repository = client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryId = repoHashId,
+            repositoryType = RepositoryType.ID
+        ).data ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.GIT_NOT_FOUND,
+            params = arrayOf(repoHashId)
+        )
+        checkPushParam(content, repoHashId, filePath, targetAction, versionName, projectId, pipelineId)
+        val setting = PacRepoSetting(repository = repository)
+        val event = PipelineYamlManualEvent(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            scmType = scmType
+        )
+        val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
+        if (!action.checkPushPermission()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_PUSH_NO_REPO_PERMISSION,
+                params = arrayOf(userId, repository.url)
+            )
+        }
+    }
+
     fun pushYamlFile(
         userId: String,
         projectId: String,

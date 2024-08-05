@@ -307,7 +307,8 @@ class ExperienceService @Autowired constructor(
             experienceName = experienceRecord.experienceName,
             versionTitle = experienceRecord.versionTitle,
             categoryId = experienceRecord.category,
-            productOwner = objectMapper.readValue(experienceRecord.productOwner)
+            productOwner = objectMapper.readValue(experienceRecord.productOwner),
+            classify = experienceRecord.classify
         )
     }
 
@@ -516,7 +517,8 @@ class ExperienceService @Autowired constructor(
             size = fileSize,
             scheme = scheme,
             buildId = propertyMap[ARCHIVE_PROPS_BUILD_ID] ?: "",
-            pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID] ?: ""
+            pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID] ?: "",
+            classify = experience.classify ?: ""
         )
         // IAM权限
         experiencePermissionService.createTaskResource(
@@ -647,7 +649,8 @@ class ExperienceService @Autowired constructor(
             experienceName = experience.experienceName ?: projectId,
             versionTitle = experience.versionTitle ?: experienceRecord.versionTitle,
             category = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
-            productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>())
+            productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>()),
+            classify = experience.classify ?: ""
         )
 
         // 更新组
@@ -866,7 +869,8 @@ class ExperienceService @Autowired constructor(
             versionTitle = experience.versionTitle,
             categoryId = experience.categoryId,
             productOwner = experience.productOwner,
-            sendNotification = experience.sendNotification
+            sendNotification = experience.sendNotification,
+            classify = experience.classify
         )
 
         val experienceId = createExperience(
@@ -1009,15 +1013,17 @@ class ExperienceService @Autowired constructor(
                     client.get(ServiceNotifyResource::class).sendEmailNotify(message)
                 }
                 // 内部 push
-                innerReceivers.forEach {
-                    val appMessage = AppNotifyUtil.makeMessage(
-                        experienceHashId = HashUtil.encodeLongId(e.id),
-                        experienceName = e.experienceName,
-                        appVersion = e.version,
-                        receiver = it,
-                        platform = e.platform
-                    )
-                    experiencePushService.pushMessage(appMessage)
+                if (notifyTypeList.contains(NotifyType.PUSH)) {
+                    innerReceivers.forEach {
+                        val appMessage = AppNotifyUtil.makeMessage(
+                            experienceHashId = HashUtil.encodeLongId(e.id),
+                            experienceName = e.experienceName,
+                            appVersion = e.version,
+                            receiver = it,
+                            platform = e.platform
+                        )
+                        experiencePushService.pushMessage(appMessage)
+                    }
                 }
                 // 外部用户
                 val outerReceivers = experienceBaseService.getOuterReceivers(experienceId = e.id, groupIds = groupIds)
@@ -1033,9 +1039,9 @@ class ExperienceService @Autowired constructor(
                 // 内部架构
                 val deptUsers = experienceBaseService.getDeptUserReceivers(groupIds)
                     .subtract(innerReceivers).subtract(outerReceivers).subtract(subscribeUsers)
-                sendMessageToOuterReceivers(outerReceivers, e)
-                sendMessageToSubscriber(subscribeUsers, e)
-                sendMessageToDeptUsers(deptUsers, e)
+                sendMessageToOuterReceivers(outerReceivers, e, notifyTypeList)
+                sendMessageToSubscriber(subscribeUsers, e, notifyTypeList)
+                sendMessageToDeptUsers(deptUsers, e, notifyTypeList)
             }
             // 内部企业微信群
             if (enableWechatGroups && !wechatGroups.isNullOrBlank()) {
@@ -1116,9 +1122,9 @@ class ExperienceService @Autowired constructor(
                 pcUrl = getPcUrl(experienceRecord.projectId, experienceId),
                 appUrl = getShortExternalUrl(experienceId)
             )
-            sendMessageToOuterReceivers(outerReceivers, experienceRecord)
-            sendMessageToSubscriber(subscribeUsers, experienceRecord)
-            sendMessageToDeptUsers(deptUsers, experienceRecord)
+            sendMessageToOuterReceivers(outerReceivers, experienceRecord, notifyTypeList)
+            sendMessageToSubscriber(subscribeUsers, experienceRecord, notifyTypeList)
+            sendMessageToDeptUsers(deptUsers, experienceRecord, notifyTypeList)
         }
     }
 
@@ -1127,44 +1133,22 @@ class ExperienceService @Autowired constructor(
      */
     fun sendMessageToOuterReceivers(
         outerReceivers: MutableSet<String>,
-        experienceRecord: TExperienceRecord
+        experienceRecord: TExperienceRecord,
+        notifyTypeList: Set<NotifyType>
     ) {
-        if (outerReceivers.size > BATCH_SEND_LIMIT) {
-            logger.warn("sendMessageToOuterReceivers over limit , experienceId:${experienceRecord.id}")
-            client.get(ServiceNotifyResource::class).sendRtxNotify(
-                batchSendLimitMessage(
-                    experienceRecord.experienceName,
-                    "外部人员",
-                    experienceRecord.creator
+        if (notifyTypeList.contains(NotifyType.PUSH)) {
+            if (outerReceivers.size > BATCH_SEND_LIMIT) {
+                logger.warn("sendMessageToOuterReceivers over limit , experienceId:${experienceRecord.id}")
+                client.get(ServiceNotifyResource::class).sendRtxNotify(
+                    batchSendLimitMessage(
+                        experienceRecord.experienceName,
+                        "外部人员",
+                        experienceRecord.creator
+                    )
                 )
-            )
-            return
-        }
-        outerReceivers.forEach {
-            val appMessage = AppNotifyUtil.makeMessage(
-                experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
-                experienceName = experienceRecord.experienceName,
-                appVersion = experienceRecord.version,
-                receiver = it,
-                platform = experienceRecord.platform
-            )
-            experiencePushService.pushMessage(appMessage)
-        }
-    }
-
-    /**
-     * 发给订阅人员
-     */
-    private fun sendMessageToSubscriber(
-        subscribeUsers: Set<String>,
-        experienceRecord: TExperienceRecord
-    ) {
-        val isPublicExperience = experiencePublicDao.getByRecordId(
-            dslContext = dslContext,
-            recordId = experienceRecord.id
-        ) != null
-        if (isPublicExperience) {
-            subscribeUsers.forEach {
+                return
+            }
+            outerReceivers.forEach {
                 val appMessage = AppNotifyUtil.makeMessage(
                     experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
                     experienceName = experienceRecord.experienceName,
@@ -1177,30 +1161,61 @@ class ExperienceService @Autowired constructor(
         }
     }
 
+    /**
+     * 发给订阅人员
+     */
+    private fun sendMessageToSubscriber(
+        subscribeUsers: Set<String>,
+        experienceRecord: TExperienceRecord,
+        notifyTypeList: Set<NotifyType>
+    ) {
+        if (notifyTypeList.contains(NotifyType.PUSH)) {
+            val isPublicExperience = experiencePublicDao.getByRecordId(
+                dslContext = dslContext,
+                recordId = experienceRecord.id
+            ) != null
+            if (isPublicExperience) {
+                subscribeUsers.forEach {
+                    val appMessage = AppNotifyUtil.makeMessage(
+                        experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
+                        experienceName = experienceRecord.experienceName,
+                        appVersion = experienceRecord.version,
+                        receiver = it,
+                        platform = experienceRecord.platform
+                    )
+                    experiencePushService.pushMessage(appMessage)
+                }
+            }
+        }
+    }
+
     private fun sendMessageToDeptUsers(
         deptUsers: Set<String>,
-        experienceRecord: TExperienceRecord
+        experienceRecord: TExperienceRecord,
+        notifyTypeList: Set<NotifyType>
     ) {
-        if (deptUsers.size > BATCH_SEND_LIMIT) {
-            logger.warn("sendMessageToDeptUsers over limit , experienceId:${experienceRecord.id}")
-            client.get(ServiceNotifyResource::class).sendRtxNotify(
-                batchSendLimitMessage(
-                    experienceRecord.experienceName,
-                    "组织架构人员",
-                    experienceRecord.creator
+        if (notifyTypeList.contains(NotifyType.PUSH)) {
+            if (deptUsers.size > BATCH_SEND_LIMIT) {
+                logger.warn("sendMessageToDeptUsers over limit , experienceId:${experienceRecord.id}")
+                client.get(ServiceNotifyResource::class).sendRtxNotify(
+                    batchSendLimitMessage(
+                        experienceRecord.experienceName,
+                        "组织架构人员",
+                        experienceRecord.creator
+                    )
                 )
-            )
-            return
-        }
-        deptUsers.forEach {
-            val appMessage = AppNotifyUtil.makeMessage(
-                experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
-                experienceName = experienceRecord.experienceName,
-                appVersion = experienceRecord.version,
-                receiver = it,
-                platform = experienceRecord.platform
-            )
-            experiencePushService.pushMessage(appMessage)
+                return
+            }
+            deptUsers.forEach {
+                val appMessage = AppNotifyUtil.makeMessage(
+                    experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
+                    experienceName = experienceRecord.experienceName,
+                    appVersion = experienceRecord.version,
+                    receiver = it,
+                    platform = experienceRecord.platform
+                )
+                experiencePushService.pushMessage(appMessage)
+            }
         }
     }
 
@@ -1251,8 +1266,8 @@ class ExperienceService @Autowired constructor(
             }
         }
 
-        // 企业微信
         innerReceivers.forEach {
+            // 企业微信
             if (notifyTypeList.contains(NotifyType.RTX)) {
                 val message = RtxUtil.makeMessage(
                     projectName = projectName,
@@ -1264,14 +1279,16 @@ class ExperienceService @Autowired constructor(
                 client.get(ServiceNotifyResource::class).sendRtxNotify(message)
             }
             // 发送APP通知
-            val appMessage = AppNotifyUtil.makeMessage(
-                experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
-                experienceName = experienceRecord.experienceName,
-                appVersion = experienceRecord.version,
-                receiver = it,
-                platform = experienceRecord.platform
-            )
-            experiencePushService.pushMessage(appMessage)
+            if (notifyTypeList.contains(NotifyType.PUSH)) {
+                val appMessage = AppNotifyUtil.makeMessage(
+                    experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
+                    experienceName = experienceRecord.experienceName,
+                    appVersion = experienceRecord.version,
+                    receiver = it,
+                    platform = experienceRecord.platform
+                )
+                experiencePushService.pushMessage(appMessage)
+            }
         }
     }
 
@@ -1422,36 +1439,40 @@ class ExperienceService @Autowired constructor(
         experienceId: Long,
         fullPath: String
     ) {
-        val userIdsForDefend = mutableSetOf<String>()
-        // 临时内部
-        experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).forEach { userIdsForDefend.add(it.value1()) }
-        // 临时外部
-        experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).forEach { userIdsForDefend.add(it.value1()) }
-        // 体验组
-        val groupIds = experienceBaseService.getGroupIdsByRecordId(experienceId)
-        userIdsForDefend.addAll(experienceBaseService.getDeptUserReceivers(groupIds))
-        userIdsForDefend.addAll(experienceBaseService.getGroupIdToInnerUserIds(groupIds).values.flatten())
-        userIdsForDefend.addAll(experienceBaseService.getGroupIdToOuters(groupIds).values.flatten())
+        threadPool.submit {
+            val userIdsForDefend = mutableSetOf<String>()
+            // 临时内部
+            experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId)
+                .forEach { userIdsForDefend.add(it.value1()) }
+            // 临时外部
+            experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId)
+                .forEach { userIdsForDefend.add(it.value1()) }
+            // 体验组
+            val groupIds = experienceBaseService.getGroupIdsByRecordId(experienceId)
+            userIdsForDefend.addAll(experienceBaseService.getDeptUserReceivers(groupIds))
+            userIdsForDefend.addAll(experienceBaseService.getGroupIdToInnerUserIds(groupIds).values.flatten())
+            userIdsForDefend.addAll(experienceBaseService.getGroupIdToOuters(groupIds).values.flatten())
 
-        // 保存加固任务
-        val taskNum = 100.0
-        val tasksResult = client.get(ServiceArtifactoryDownLoadResource::class).apkDefender(
-            userId = userId,
-            request = ApkDefenderRequest(
-                projectId = projectId,
-                artifactoryType = artifactoryType,
-                fullPath = fullPath,
-                userIds = userIdsForDefend,
-                batchSize = ceil(userIdsForDefend.size / taskNum).toInt()
+            // 保存加固任务
+            val taskNum = 100.0
+            val tasksResult = client.get(ServiceArtifactoryDownLoadResource::class).apkDefender(
+                userId = userId,
+                request = ApkDefenderRequest(
+                    projectId = projectId,
+                    artifactoryType = artifactoryType,
+                    fullPath = fullPath,
+                    userIds = userIdsForDefend,
+                    batchSize = ceil(userIdsForDefend.size / taskNum).toInt()
+                )
             )
-        )
-        val taskIds = tasksResult.data!!.tasks.map { it.id }
-        logger.info("apkDefend , experienceId: $experienceId , taskIds: $taskIds")
+            val taskIds = tasksResult.data!!.tasks.map { it.id }
+            logger.info("apkDefend , experienceId: $experienceId , taskIds: $taskIds")
 
-        redisOperation.leftPush(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, "$experienceId")
-        val apkDefendersKey = ExperienceConstant.apkDefendersKey(experienceId)
-        redisOperation.sadd(apkDefendersKey, *taskIds.toTypedArray())
-        redisOperation.expire(apkDefendersKey, 3700) // 多100秒缓冲
+            redisOperation.leftPush(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, "$experienceId")
+            val apkDefendersKey = ExperienceConstant.apkDefendersKey(experienceId)
+            redisOperation.sadd(apkDefendersKey, *taskIds.toTypedArray())
+            redisOperation.expire(apkDefendersKey, 3700) // 多100秒缓冲
+        }
     }
 
     companion object {

@@ -1,0 +1,2124 @@
+{
+  "model" : {
+    "name" : "xxx",
+    "desc" : "",
+    "stages" : [ {
+      "containers" : [ {
+        "@type" : "trigger",
+        "id" : "0",
+        "name" : "构建触发",
+        "elements" : [ {
+          "@type" : "manualTrigger",
+          "name" : "手动触发",
+          "id" : "T-1-1-1",
+          "canElementSkip" : true,
+          "useLatestParameters" : true,
+          "executeCount" : 1,
+          "version" : "1.*",
+          "classType" : "manualTrigger",
+          "taskAtom" : "",
+          "atomCode" : "manualTrigger",
+          "elementEnable" : true
+        } ],
+        "params" : [ {
+          "id" : "apigw_cookie",
+          "name" : "apigw_cookie",
+          "required" : false,
+          "constant" : false,
+          "type" : "STRING",
+          "defaultValue" : "",
+          "desc" : "",
+          "readOnly" : false,
+          "valueNotEmpty" : false
+        }, {
+          "id" : "apigw_csrfToken",
+          "name" : "apigw_csrfToken",
+          "required" : false,
+          "constant" : false,
+          "type" : "STRING",
+          "defaultValue" : "xxx",
+          "desc" : "",
+          "readOnly" : false,
+          "valueNotEmpty" : false
+        }, {
+          "id" : "ids",
+          "name" : "ids",
+          "required" : true,
+          "constant" : false,
+          "type" : "STRING",
+          "defaultValue" : "",
+          "desc" : "需要更新的文档ids 逗号分开",
+          "readOnly" : false,
+          "valueNotEmpty" : false
+        }, {
+          "id" : "query",
+          "name" : "query",
+          "required" : true,
+          "constant" : false,
+          "type" : "STRING",
+          "defaultValue" : "v3,v4",
+          "desc" : "文档范围",
+          "readOnly" : false,
+          "valueNotEmpty" : false
+        }, {
+          "id" : "mode",
+          "name" : "mode",
+          "required" : true,
+          "constant" : false,
+          "type" : "ENUM",
+          "defaultValue" : "更新API文档",
+          "options" : [ {
+            "key" : "更新API文档",
+            "value" : "更新API文档"
+          }, {
+            "key" : "上传网关配置",
+            "value" : "上传网关配置"
+          }, {
+            "key" : "检查网关配置",
+            "value" : "检查网关配置"
+          }, {
+            "key" : "更新开源文档",
+            "value" : "更新开源文档"
+          } ],
+          "desc" : "",
+          "readOnly" : false,
+          "valueNotEmpty" : false
+        }, {
+          "id" : "blackList",
+          "name" : "blackList",
+          "required" : true,
+          "constant" : false,
+          "type" : "TEXTAREA",
+          "defaultValue" : "v4_app_build_list,v4_user_build_list,v4_stream_user_pipelines_startup,v4_stream_app_pipelines_startup,v3_app_project_list,v3_user_template_list,v3_app_template_list",
+          "desc" : "",
+          "readOnly" : false,
+          "valueNotEmpty" : false
+        }, {
+          "id" : "branch",
+          "name" : "branch",
+          "required" : true,
+          "constant" : false,
+          "type" : "ENUM",
+          "defaultValue" : "integration",
+          "options" : [ {
+            "key" : "integration",
+            "value" : "integration"
+          }, {
+            "key" : "test",
+            "value" : "test"
+          }, {
+            "key" : "develop",
+            "value" : "develop"
+          }, {
+            "key" : "wendang",
+            "value" : "wendang"
+          }, {
+            "key" : "issue-swagger-javax-ext-5994",
+            "value" : "issue-swagger-javax-ext-5994"
+          } ],
+          "desc" : "",
+          "readOnly" : false,
+          "valueNotEmpty" : false
+        } ],
+        "templateParams" : [ ],
+        "containerId" : "0",
+        "containerHashId" : "c-b8d7b6dde8664aeabfc25629f01d44c6",
+        "executeCount" : 0,
+        "matrixGroupFlag" : false,
+        "classType" : "trigger",
+        "containerEnable" : true
+      } ],
+      "id" : "stage-1",
+      "name" : "stage-1",
+      "tag" : [ "28ee946a59f64949a74f3dee40a1bda4" ],
+      "fastKill" : false,
+      "finally" : false,
+      "stageEnable" : true
+    }, {
+      "containers" : [ {
+        "@type" : "vmBuild",
+        "id" : "1",
+        "name" : "生成内部文档",
+        "elements" : [ {
+          "@type" : "marketBuild",
+          "name" : "拉代码",
+          "id" : "e-78146d1853b34bb8bed4bfc0d7cb6373",
+          "atomCode" : "checkout",
+          "version" : "1.*",
+          "data" : {
+            "input" : {
+              "repositoryType" : "ID",
+              "repositoryHashId" : "lyZj",
+              "repositoryName" : "",
+              "repositoryUrl" : "",
+              "authType" : "TICKET",
+              "persistCredentials" : true,
+              "pullType" : "BRANCH",
+              "refName" : "${{branch}}",
+              "localPath" : "",
+              "strategy" : "REVERT_UPDATE",
+              "fetchDepth" : "",
+              "fetchOnlyCurrentRef" : false,
+              "enableFetchRefSpec" : false,
+              "fetchRefSpec" : "",
+              "enablePartialClone" : false,
+              "includePath" : "",
+              "excludePath" : "",
+              "cachePath" : "",
+              "enableGitLfs" : false,
+              "enableGitLfsClean" : false,
+              "lfsConcurrentTransfers" : "",
+              "enableSubmodule" : true,
+              "submodulePath" : "",
+              "enableSubmoduleRemote" : false,
+              "enableSubmoduleRecursive" : true,
+              "submoduleJobs" : "",
+              "submoduleDepth" : "",
+              "enableVirtualMergeBranch" : true,
+              "enableGitClean" : true,
+              "enableGitCleanIgnore" : true,
+              "enableGitCleanNested" : false,
+              "autoCrlf" : "false",
+              "enableTrace" : false
+            },
+            "output" : {
+              "BK_CI_GIT_REPO_URL" : "string",
+              "BK_CI_GIT_REPO_ALIAS_NAME" : "string",
+              "BK_CI_GIT_REPO_NAME" : "string",
+              "BK_CI_GIT_REPO_REF" : "string",
+              "BK_CI_GIT_REPO_CODE_PATH" : "string",
+              "BK_CI_GIT_REPO_LAST_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_MR_TARGET_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_COMMENT" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_AUTHOR" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_COMMITTER" : "string",
+              "BK_CI_GIT_REPO_COMMITS" : "string",
+              "BK_CI_GIT_REPO_MR_SOURCE_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_MR_SOURCE_HEAD_COMMIT_COMMENT" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "linuxScript",
+          "name" : "生成文档原材料",
+          "id" : "e-512c1c07c0a14e11b6a84b7fd2f53f57",
+          "scriptType" : "SHELL",
+          "script" : "",
+          "continueNoneZero" : false,
+          "enableArchiveFile" : false,
+          "archiveFile" : "",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "version" : "1.*",
+          "classType" : "linuxScript",
+          "taskAtom" : "",
+          "atomCode" : "linuxScript",
+          "elementEnable" : true
+        }, {
+          "@type" : "marketBuild",
+          "name" : "归档All JSON",
+          "id" : "e-07e3f6d0c141453eab76ebe79d0a51c0",
+          "atomCode" : "UploadArtifactory",
+          "version" : "6.*",
+          "data" : {
+            "input" : {
+              "filePath" : "${WORKSPACE}/src/backend/ci/ext/tencent/openapi/biz-openapi-tencent/build/swaggerDoc/all.json",
+              "repoName" : "pipeline",
+              "isParentPipeline" : false,
+              "destPath" : "./",
+              "downloadFiles" : "[{\"path\":\"${WORKSPACE}/src/backend/ci/ext/tencent/openapi/biz-openapi-tencent/build/swaggerDoc/all.json\",\"param\":\"ALL_JSON\"}]",
+              "metadata" : "[{\"key\":\"\",\"value\":\"\"}]",
+              "enableIncrementalUpload" : false,
+              "enableMD5Checksum" : false,
+              "enableScan" : false,
+              "scanTaskType" : "SYNC"
+            },
+            "output" : { },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "buildEnv" : { },
+        "dispatchType" : {
+          "buildType" : "THIRD_PARTY_AGENT_ENV",
+          "value" : "qpalgybm",
+          "workspace" : "/data/devops/workspace/doc",
+          "agentType" : "ID"
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "containerId" : "1",
+        "containerHashId" : "c-84d273f7784649cb8ec4d6b0ea409cef",
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "CUSTOM_VARIABLE_MATCH_NOT_RUN",
+          "customVariables" : [ {
+            "key" : "mode",
+            "value" : "更新开源文档"
+          } ],
+          "customCondition" : "",
+          "dependOnType" : "ID",
+          "dependOnId" : [ ],
+          "dependOnName" : "",
+          "continueWhenFailed" : false
+        },
+        "mutexGroup" : {
+          "enable" : false,
+          "mutexGroupName" : "",
+          "queueEnable" : false,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "queue" : 5
+        },
+        "executeCount" : 0,
+        "jobId" : "job_jtT",
+        "matrixGroupFlag" : false,
+        "matrixControlOption" : {
+          "strategyStr" : "",
+          "includeCaseStr" : "",
+          "excludeCaseStr" : "",
+          "fastKill" : true,
+          "maxConcurrency" : 5
+        },
+        "nfsSwitch" : false,
+        "classType" : "vmBuild",
+        "containerEnable" : true
+      }, {
+        "@type" : "vmBuild",
+        "id" : "2",
+        "name" : "生成开源文档",
+        "elements" : [ {
+          "@type" : "marketBuild",
+          "name" : "拉代码",
+          "id" : "e-1dcca3ede82b4979bc21f390a665751a",
+          "atomCode" : "checkout",
+          "version" : "1.*",
+          "data" : {
+            "input" : {
+              "repositoryType" : "ID",
+              "repositoryHashId" : "lyZj",
+              "repositoryName" : "",
+              "repositoryUrl" : "",
+              "authType" : "TICKET",
+              "persistCredentials" : true,
+              "pullType" : "BRANCH",
+              "refName" : "integration",
+              "localPath" : "",
+              "strategy" : "REVERT_UPDATE",
+              "fetchDepth" : "",
+              "fetchOnlyCurrentRef" : false,
+              "enableFetchRefSpec" : false,
+              "fetchRefSpec" : "",
+              "enablePartialClone" : false,
+              "includePath" : "",
+              "excludePath" : "",
+              "cachePath" : "",
+              "enableGitLfs" : false,
+              "lfsConcurrentTransfers" : "",
+              "enableSubmodule" : true,
+              "submodulePath" : "",
+              "enableSubmoduleRemote" : false,
+              "enableSubmoduleRecursive" : true,
+              "enableVirtualMergeBranch" : true,
+              "enableGitClean" : true,
+              "enableGitCleanIgnore" : true,
+              "enableGitCleanNested" : false,
+              "autoCrlf" : "false",
+              "enableTrace" : false
+            },
+            "output" : {
+              "BK_CI_GIT_REPO_URL" : "string",
+              "BK_CI_GIT_REPO_ALIAS_NAME" : "string",
+              "BK_CI_GIT_REPO_NAME" : "string",
+              "BK_CI_GIT_REPO_REF" : "string",
+              "BK_CI_GIT_REPO_CODE_PATH" : "string",
+              "BK_CI_GIT_REPO_LAST_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_MR_TARGET_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_COMMENT" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_AUTHOR" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_COMMITTER" : "string",
+              "BK_CI_GIT_REPO_COMMITS" : "string",
+              "BK_CI_GIT_REPO_MR_SOURCE_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_MR_SOURCE_HEAD_COMMIT_COMMENT" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "linuxScript",
+          "name" : "生成文档原材料",
+          "id" : "e-e501faacc5fb4c63afdfb6a267b42617",
+          "scriptType" : "SHELL",
+          "script" : "SHELL",
+          "continueNoneZero" : false,
+          "enableArchiveFile" : false,
+          "archiveFile" : "",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "version" : "1.*",
+          "classType" : "linuxScript",
+          "taskAtom" : "",
+          "atomCode" : "linuxScript",
+          "elementEnable" : true
+        }, {
+          "@type" : "marketBuild",
+          "name" : "归档All JSON",
+          "id" : "e-ac5323955ea442a6a1809266e747f918",
+          "atomCode" : "UploadArtifactory",
+          "version" : "6.*",
+          "data" : {
+            "input" : {
+              "filePath" : "${WORKSPACE}/src/backend/ci/core/openapi/biz-openapi/build/swaggerDoc/all.json",
+              "repoName" : "pipeline",
+              "isParentPipeline" : false,
+              "destPath" : "./",
+              "downloadFiles" : "[{\"path\":\"${WORKSPACE}/src/backend/ci/core/openapi/biz-openapi/build/swaggerDoc/all.json\",\"param\":\"ALL_JSON_CORE\"}]",
+              "metadata" : "[{\"key\":\"\",\"value\":\"\"}]",
+              "enableIncrementalUpload" : false,
+              "enableMD5Checksum" : false,
+              "enableScan" : false,
+              "scanTaskType" : "SYNC"
+            },
+            "output" : { },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "buildEnv" : { },
+        "dispatchType" : {
+          "buildType" : "THIRD_PARTY_AGENT_ENV",
+          "value" : "qpalgybm",
+          "workspace" : "/data/devops/workspace/doc",
+          "agentType" : "ID"
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "containerId" : "2",
+        "containerHashId" : "c-ed35cab117bb435cad12ed9bb7a17333",
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "CUSTOM_VARIABLE_MATCH",
+          "customVariables" : [ {
+            "key" : "mode",
+            "value" : "更新开源文档"
+          } ],
+          "customCondition" : "",
+          "dependOnType" : "ID",
+          "dependOnId" : [ ],
+          "dependOnName" : "",
+          "continueWhenFailed" : false
+        },
+        "mutexGroup" : {
+          "enable" : false,
+          "mutexGroupName" : "",
+          "queueEnable" : false,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "queue" : 5
+        },
+        "executeCount" : 0,
+        "jobId" : "job_x53",
+        "matrixGroupFlag" : false,
+        "matrixControlOption" : {
+          "strategyStr" : "",
+          "includeCaseStr" : "",
+          "excludeCaseStr" : "",
+          "fastKill" : true,
+          "maxConcurrency" : 5
+        },
+        "nfsSwitch" : false,
+        "classType" : "vmBuild",
+        "containerEnable" : true
+      } ],
+      "id" : "stage-2",
+      "name" : "stage-2",
+      "tag" : [ "28ee946a59f64949a74f3dee40a1bda4" ],
+      "fastKill" : false,
+      "finally" : false,
+      "checkIn" : {
+        "manualTrigger" : false,
+        "timeout" : 24,
+        "markdownContent" : false,
+        "notifyType" : [ "RTX" ]
+      },
+      "checkOut" : {
+        "manualTrigger" : false,
+        "timeout" : 24,
+        "markdownContent" : false,
+        "notifyType" : [ "RTX" ]
+      },
+      "stageEnable" : true
+    }, {
+      "containers" : [ {
+        "@type" : "vmBuild",
+        "id" : "3",
+        "name" : "内部用-出版本对比报告",
+        "elements" : [ {
+          "@type" : "marketBuild",
+          "name" : "拉取all json",
+          "id" : "e-74a4c738ea80494da764dfda2a71600e",
+          "atomCode" : "BuildArchiveGetTask",
+          "version" : "4.*",
+          "data" : {
+            "input" : {
+              "pipelineType" : "ID",
+              "pipeLineId" : "p-xxx",
+              "pipeLineName" : "",
+              "buildNo" : false,
+              "isContinue" : false,
+              "buildNoSelector" : "${{all_json_number}}",
+              "srcPaths" : "all.json",
+              "destPath" : "",
+              "rangeDownload" : false
+            },
+            "output" : {
+              "FILE_FULL_PATH_LIST" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "marketBuild",
+          "name" : "出版本对比报告",
+          "id" : "e-6baff1ea7ea641d583a8e571e6569fe0",
+          "atomCode" : "devops_openapi",
+          "version" : "1.*",
+          "data" : {
+            "input" : {
+              "allJsonPath" : "${WORKSPACE}/all.json",
+              "whatToDo" : "mode4",
+              "cookie" : "${{apigw_cookie}}",
+              "csrfToken" : "${{apigw_csrfToken}}",
+              "query" : "v3,v4",
+              "ids" : "${{ids}}",
+              "ignoreId" : "${{blackList}}"
+            },
+            "output" : {
+              "testResult" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "buildEnv" : { },
+        "dispatchType" : {
+          "buildType" : "PUBLIC_DEVCLOUD",
+          "value" : "tlinux3_ci",
+          "performanceConfigId" : "1",
+          "persistence" : false,
+          "imageType" : "BKSTORE",
+          "credentialId" : "",
+          "credentialProject" : "",
+          "imageCode" : "tlinux3_ci",
+          "imageVersion" : "2.*",
+          "imageName" : "tlinux3-CI镜像",
+          "dockerBuildVersion" : "tlinux3_ci",
+          "imagePublicFlag" : false,
+          "imageRDType" : "",
+          "recommendFlag" : true
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "containerId" : "3",
+        "containerHashId" : "c-af7fb0e77edd42c8b5f241371f131f90",
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "CUSTOM_VARIABLE_MATCH",
+          "customVariables" : [ {
+            "key" : "mode",
+            "value" : "更新API文档"
+          } ],
+          "customCondition" : "",
+          "dependOnType" : "ID",
+          "dependOnId" : [ ],
+          "dependOnName" : "",
+          "continueWhenFailed" : false
+        },
+        "mutexGroup" : {
+          "enable" : false,
+          "mutexGroupName" : "",
+          "queueEnable" : false,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "queue" : 5
+        },
+        "executeCount" : 0,
+        "jobId" : "job_hLm",
+        "matrixGroupFlag" : false,
+        "matrixControlOption" : {
+          "strategyStr" : "",
+          "includeCaseStr" : "",
+          "excludeCaseStr" : "",
+          "fastKill" : true,
+          "maxConcurrency" : 5
+        },
+        "nfsSwitch" : false,
+        "classType" : "vmBuild",
+        "containerEnable" : true
+      }, {
+        "@type" : "vmBuild",
+        "id" : "4",
+        "name" : "内部用-上传网关配置",
+        "elements" : [ {
+          "@type" : "marketBuild",
+          "name" : "拉取all json",
+          "id" : "e-bde0effdabad4c00a5dc3fa84c0c21ca",
+          "atomCode" : "BuildArchiveGetTask",
+          "version" : "4.*",
+          "data" : {
+            "input" : {
+              "pipelineType" : "ID",
+              "pipeLineId" : "p-xxx",
+              "pipeLineName" : "",
+              "buildNo" : false,
+              "isContinue" : false,
+              "buildNoSelector" : "${{all_json_number}}",
+              "srcPaths" : "all.json",
+              "destPath" : "",
+              "rangeDownload" : false
+            },
+            "output" : {
+              "FILE_FULL_PATH_LIST" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "marketBuild",
+          "name" : "上传网关配置",
+          "id" : "e-cc0d84b74d914f6b857779faf435cfe9",
+          "atomCode" : "devops_openapi",
+          "version" : "1.*",
+          "data" : {
+            "input" : {
+              "allJsonPath" : "${WORKSPACE}/all.json",
+              "whatToDo" : "mode1",
+              "cookie" : "${{apigw_cookie}}",
+              "csrfToken" : "${{apigw_csrfToken}}",
+              "query" : "v3,v4",
+              "ids" : "${{ids}}",
+              "ignoreId" : "v4_app_build_list,v4_user_build_list,v4_stream_user_pipelines_startup,v4_stream_app_pipelines_startup"
+            },
+            "output" : {
+              "testResult" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "buildEnv" : { },
+        "dispatchType" : {
+          "buildType" : "PUBLIC_DEVCLOUD",
+          "value" : "tlinux3_ci",
+          "performanceConfigId" : "1",
+          "persistence" : false,
+          "imageType" : "BKSTORE",
+          "credentialId" : "",
+          "credentialProject" : "",
+          "imageCode" : "tlinux3_ci",
+          "imageVersion" : "2.*",
+          "imageName" : "tlinux3-CI镜像",
+          "dockerBuildVersion" : "tlinux3_ci",
+          "imagePublicFlag" : false,
+          "imageRDType" : "",
+          "recommendFlag" : true
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "containerId" : "4",
+        "containerHashId" : "c-88ab89bafa224aa68aa52f33443834bf",
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "CUSTOM_VARIABLE_MATCH",
+          "customVariables" : [ {
+            "key" : "mode",
+            "value" : "上传网关配置"
+          } ],
+          "customCondition" : "",
+          "dependOnType" : "ID",
+          "dependOnId" : [ ],
+          "dependOnName" : "",
+          "continueWhenFailed" : false
+        },
+        "mutexGroup" : {
+          "enable" : false,
+          "mutexGroupName" : "",
+          "queueEnable" : false,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "queue" : 5
+        },
+        "executeCount" : 0,
+        "jobId" : "job_Yna",
+        "matrixGroupFlag" : false,
+        "matrixControlOption" : {
+          "strategyStr" : "",
+          "includeCaseStr" : "",
+          "excludeCaseStr" : "",
+          "fastKill" : true,
+          "maxConcurrency" : 5
+        },
+        "nfsSwitch" : false,
+        "classType" : "vmBuild",
+        "containerEnable" : true
+      }, {
+        "@type" : "vmBuild",
+        "id" : "5",
+        "name" : "内部用-检查网关",
+        "elements" : [ {
+          "@type" : "marketBuild",
+          "name" : "拉取all json",
+          "id" : "e-3e251877ad074e2ab1deef9d8a4eb9c5",
+          "atomCode" : "BuildArchiveGetTask",
+          "version" : "4.*",
+          "data" : {
+            "input" : {
+              "pipelineType" : "ID",
+              "pipeLineId" : "p-xxx",
+              "pipeLineName" : "",
+              "buildNo" : false,
+              "isContinue" : false,
+              "buildNoSelector" : "${{all_json_number}}",
+              "srcPaths" : "all.json",
+              "destPath" : "",
+              "rangeDownload" : false
+            },
+            "output" : {
+              "FILE_FULL_PATH_LIST" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "marketBuild",
+          "name" : "检查网关",
+          "id" : "e-533ab6c8846d4fb18e8665a8bdf867cb",
+          "atomCode" : "devops_openapi",
+          "version" : "1.*",
+          "data" : {
+            "input" : {
+              "allJsonPath" : "${WORKSPACE}/all.json",
+              "whatToDo" : "mode3",
+              "cookie" : "${{apigw_cookie}}",
+              "csrfToken" : "${{apigw_csrfToken}}",
+              "query" : "v3,v4",
+              "ids" : "${{ids}}",
+              "ignoreId" : "${{blackList}}"
+            },
+            "output" : {
+              "testResult" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "buildEnv" : { },
+        "dispatchType" : {
+          "buildType" : "PUBLIC_DEVCLOUD",
+          "value" : "tlinux3_ci",
+          "performanceConfigId" : "1",
+          "persistence" : false,
+          "imageType" : "BKSTORE",
+          "credentialId" : "",
+          "credentialProject" : "",
+          "imageCode" : "tlinux3_ci",
+          "imageVersion" : "2.*",
+          "imageName" : "tlinux3-CI镜像",
+          "dockerBuildVersion" : "tlinux3_ci",
+          "imagePublicFlag" : false,
+          "imageRDType" : "",
+          "recommendFlag" : true
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "containerId" : "5",
+        "containerHashId" : "c-6c94ecf112654c98880a4086ed48e8ed",
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "CUSTOM_VARIABLE_MATCH",
+          "customVariables" : [ {
+            "key" : "mode",
+            "value" : "检查网关配置"
+          } ],
+          "customCondition" : "",
+          "dependOnType" : "ID",
+          "dependOnId" : [ ],
+          "dependOnName" : "",
+          "continueWhenFailed" : false
+        },
+        "mutexGroup" : {
+          "enable" : false,
+          "mutexGroupName" : "",
+          "queueEnable" : false,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "queue" : 5
+        },
+        "executeCount" : 0,
+        "jobId" : "job_YMD",
+        "matrixGroupFlag" : false,
+        "matrixControlOption" : {
+          "strategyStr" : "",
+          "includeCaseStr" : "",
+          "excludeCaseStr" : "",
+          "fastKill" : true,
+          "maxConcurrency" : 5
+        },
+        "nfsSwitch" : false,
+        "classType" : "vmBuild",
+        "containerEnable" : true
+      }, {
+        "@type" : "vmBuild",
+        "id" : "6",
+        "name" : "外部用-检查开源文档",
+        "elements" : [ {
+          "@type" : "marketBuild",
+          "name" : "拉取内部分支",
+          "id" : "e-1fe8625c9fe7448b9b064b90e2b84c74",
+          "atomCode" : "checkout",
+          "version" : "1.*",
+          "data" : {
+            "input" : {
+              "repositoryType" : "ID",
+              "repositoryHashId" : "L3Q1E",
+              "repositoryName" : "",
+              "repositoryUrl" : "",
+              "authType" : "TICKET",
+              "persistCredentials" : true,
+              "pullType" : "BRANCH",
+              "refName" : "zh-cn",
+              "localPath" : "ci-document",
+              "strategy" : "REVERT_UPDATE",
+              "fetchDepth" : "",
+              "fetchOnlyCurrentRef" : false,
+              "enableFetchRefSpec" : false,
+              "fetchRefSpec" : "",
+              "enablePartialClone" : false,
+              "includePath" : "",
+              "excludePath" : "",
+              "cachePath" : "",
+              "enableGitLfs" : true,
+              "lfsConcurrentTransfers" : "",
+              "enableSubmodule" : true,
+              "submodulePath" : "",
+              "enableSubmoduleRemote" : false,
+              "enableSubmoduleRecursive" : true,
+              "enableVirtualMergeBranch" : true,
+              "enableGitClean" : true,
+              "enableGitCleanIgnore" : true,
+              "enableGitCleanNested" : false,
+              "autoCrlf" : "false",
+              "enableTrace" : false
+            },
+            "output" : {
+              "BK_CI_GIT_REPO_URL" : "string",
+              "BK_CI_GIT_REPO_ALIAS_NAME" : "string",
+              "BK_CI_GIT_REPO_NAME" : "string",
+              "BK_CI_GIT_REPO_REF" : "string",
+              "BK_CI_GIT_REPO_CODE_PATH" : "string",
+              "BK_CI_GIT_REPO_LAST_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_MR_TARGET_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_COMMENT" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_AUTHOR" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_COMMITTER" : "string",
+              "BK_CI_GIT_REPO_COMMITS" : "string",
+              "BK_CI_GIT_REPO_MR_SOURCE_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_MR_SOURCE_HEAD_COMMIT_COMMENT" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "marketBuild",
+          "name" : "拉取all json",
+          "id" : "e-976d51a8594647fb91cfa0070c15659b",
+          "atomCode" : "BuildArchiveGetTask",
+          "version" : "4.*",
+          "data" : {
+            "input" : {
+              "pipelineType" : "ID",
+              "pipeLineId" : "p-xxx",
+              "pipeLineName" : "",
+              "buildNo" : false,
+              "isContinue" : false,
+              "buildNoSelector" : "${{all_json_number}}",
+              "srcPaths" : "all.json",
+              "destPath" : "",
+              "rangeDownload" : false
+            },
+            "output" : {
+              "FILE_FULL_PATH_LIST" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "marketBuild",
+          "name" : "映射到开源项目的文档目录",
+          "id" : "e-10e91efa9c2c4c588fbd03ebdf142139",
+          "atomCode" : "run",
+          "version" : "1.*",
+          "data" : {
+            "input" : {
+              "shell" : "python",
+              "script" : "import json\r\nimport os\r\n\r\nconfig = {\r\n    \"/{apigwType}/v3/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/repositoryCommit/\": \"code-submission-resources\",\r\n    \"/{apigwType}/v3/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/logs/\": \"build-log-resources\",\r\n    \"/{apigwType}/v3/projects/{projectId}/pipelines/{pipelineId}/builds/\": \"build-resources\",\r\n    \"/{apigwType}/v3/projects/{projectId}/pipelines/\": \"pipeline-resources\",\r\n    \"/{apigwType}/v3/projects/{projectId}/environment/\": \"build-machine-management\",\r\n    \"/{apigwType}/v3/projects/{projectId}/artifactories/\": \"build-product-resources\",\r\n    \"/{apigwType}/v3/projects/{projectId}/callbacks/\": \"callback-resource\",\r\n    \"/{apigwType}/v3/projects/{projectId}/credentials/\": \"certificate-resources\",\r\n    \"/{apigwType}/v3/projects/{projectId}/pipelineGroups/\": \"pipeline-grouping\",\r\n    \"/{apigwType}/v3/projects/{projectId}/quality/\": \"quality-red-line-related\",\r\n    \"/{apigwType}/v3/projects/{projectId}/templates/{templateId}/templateInstances/\": \"project-template-resources/\",\r\n    \"/{apigwType}/v3/projects/{projectId}/templates/\": \"project-template-resources\",\r\n    \"/{apigwType}/v3/projects/\": \"project-resources\",\r\n    \"/{apigwType}/v3/environment/\": \"build-env-management\",\r\n    \"/{apigwType}/v3/artifactory/fileTask/\": \"build-product-hosting-task-resources\",\r\n    \"/{apigwType}/v3/atoms/\": \"plugin-resources\",\r\n    \"/{apigwType}/v3/auth/projects/\": \"auth-projects\",\r\n    \"/{apigwType}/v3/auth/validate/\": \"auth-validate\",\r\n    \"/{apigwType}/v3/market/\": \"r-and-d-market-resources\",\r\n    \"/{apigwType}/v3/permission/move/\": \"migrate\",\r\n    \"/{apigwType}/v3/{projectId}/{pipelineId}/webhook/\": \"code-event-trigger\",\r\n    \"/{apigwType}/v3/repositories/\": \"code-warehouse-resources\"\r\n}\r\n\r\nSUMMARY = \"${WORKSPACE}/ci-document/SUMMARY.md\"\r\nALL_JSON = \"${WORKSPACE}/all.json\"\r\nBASE_PATH = \"reference/rest-api\"\r\n\r\nwith open(ALL_JSON, 'r', encoding='utf-8') as f:\r\n    data = json.load(f)\r\n\r\nwith open(SUMMARY, 'r', encoding='utf-8') as f:\r\n    summary_lines = f.readlines()\r\n\r\n\r\ndef replace_summary(group, api_key, api_name):\r\n    idx = -1\r\n    for index, summary_line in enumerate(summary_lines):\r\n        if api_key in summary_line:\r\n            return\r\n        if BASE_PATH + \"/\" + group in summary_line and idx == -1 and summary_line.startswith(\"  *\"):\r\n            idx = index + 1\r\n    summary_lines.insert(idx, \"    * [{}]({}/{}/{})\\n\".format(api_name, BASE_PATH, group, api_key))\r\n\r\n\r\nfor key in data:\r\n    print(key)\r\n    if 'v3_app_' not in key:\r\n        continue\r\n    value = data[key]\r\n    path = str(value['path'])\r\n    for match in config:\r\n        if path.startswith(match) or path + \"/\" == match:\r\n            print(\"{} is match {}\".format(path, match))\r\n            output = open(\"${WORKSPACE}/ci-document/\" + BASE_PATH + \"/\" + config[match] + \"/\" + key + \".md\", 'w+',\r\n                          encoding='utf-8')\r\n            output.write(value['markdown'])\r\n            output.close()\r\n            replace_summary(config[match], key + \".md\", value['metaData'][3]['body'])\r\n            break\r\n\r\nwith open(SUMMARY, 'w+', encoding='utf-8') as f:\r\n    f.writelines(summary_lines)\r\n    f.close()\r\n",
+              "charsetType" : "DEFAULT"
+            },
+            "output" : { },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "linuxScript",
+          "name" : "上传内部分支",
+          "id" : "e-c8caf561275a4614a8bb15af7ffb015a",
+          "scriptType" : "SHELL",
+          "script" : "set +e\ncd ${WORKSPACE}/ci-document\ngit checkout -b new_document_${{BK_CI_BUILD_NUM}}\ngit add .\ngit commit -m \"更新开源文档\"\ngit push origin new_document_${{BK_CI_BUILD_NUM}}:new_document_${{BK_CI_BUILD_NUM}}\n",
+          "continueNoneZero" : false,
+          "enableArchiveFile" : false,
+          "archiveFile" : "",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "version" : "1.*",
+          "classType" : "linuxScript",
+          "taskAtom" : "",
+          "atomCode" : "linuxScript",
+          "elementEnable" : true
+        }, {
+          "@type" : "marketBuild",
+          "name" : "提mr进行review",
+          "id" : "e-32a1a57247a64bc8a3b52fb563d544e1",
+          "atomCode" : "gitbranchop",
+          "version" : "3.*",
+          "data" : {
+            "input" : {
+              "git_type" : "git_woa",
+              "code_auth_type" : "GIT_REPO",
+              "git_private_token" : "",
+              "repositoryUrl" : "",
+              "repositoryType" : "ID",
+              "repositoryHashId" : "L3Q1E",
+              "repositoryName" : "",
+              "ld_selectop" : "create_one_mr",
+              "ld_input_branch" : "release",
+              "ld_input_userid" : "userId",
+              "ld_input_mrid" : "0",
+              "ld_input_note" : "0",
+              "ld_input_src_branch" : "new_document_${{BK_CI_BUILD_NUM}}",
+              "ld_input_dst_branch" : "zh-cn",
+              "ld_input_reviewers" : "userId",
+              "ld_input_necessary_reviewers" : "userId",
+              "ld_input_rule_reviewers" : "-1",
+              "ld_input_rule_necessary_reviewers" : "1",
+              "ld_input_lables" : "",
+              "ld_input_desc" : "",
+              "ld_input_upload_file_name" : "",
+              "ld_input_commit_state" : "success",
+              "ld_input_commit_block" : "false",
+              "ld_input_merge_type" : "merge",
+              "ld_input_target_project_id" : "",
+              "ld_input_tapd_id" : "",
+              "ld_input_tapd_type" : "",
+              "ld_input_tapd_info" : "",
+              "ld_debug" : "false",
+              "local_auth_token" : "",
+              "ld_input_push_access_level" : "40",
+              "ld_input_merge_access_level" : "40",
+              "ld_input_mr_state" : ""
+            },
+            "output" : {
+              "BranchLife" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "marketBuild",
+          "name" : "review 链接",
+          "id" : "e-44757db02365450bbb1c45ef2f4af941",
+          "atomCode" : "run",
+          "version" : "1.*",
+          "data" : {
+            "input" : {
+              "shell" : "python",
+              "script" : "",
+              "charsetType" : "DEFAULT"
+            },
+            "output" : { },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "buildEnv" : { },
+        "dispatchType" : {
+          "buildType" : "PUBLIC_DEVCLOUD",
+          "value" : "tlinux3_ci",
+          "performanceConfigId" : "1",
+          "persistence" : false,
+          "imageType" : "BKSTORE",
+          "credentialId" : "",
+          "credentialProject" : "",
+          "imageCode" : "tlinux3_ci",
+          "imageVersion" : "2.*",
+          "imageName" : "tlinux3-CI镜像",
+          "dockerBuildVersion" : "tlinux3_ci",
+          "imagePublicFlag" : false,
+          "imageRDType" : "",
+          "recommendFlag" : true
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "containerId" : "6",
+        "containerHashId" : "c-ed7b07d4fb2d46418c6bc4ff253df0d9",
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "CUSTOM_VARIABLE_MATCH",
+          "customVariables" : [ {
+            "key" : "mode",
+            "value" : "更新开源文档"
+          } ],
+          "customCondition" : "",
+          "dependOnType" : "ID",
+          "dependOnId" : [ ],
+          "dependOnName" : "",
+          "continueWhenFailed" : false
+        },
+        "mutexGroup" : {
+          "enable" : false,
+          "mutexGroupName" : "",
+          "queueEnable" : false,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "queue" : 5
+        },
+        "executeCount" : 0,
+        "jobId" : "job_PQh",
+        "matrixGroupFlag" : false,
+        "matrixControlOption" : {
+          "strategyStr" : "",
+          "includeCaseStr" : "",
+          "excludeCaseStr" : "",
+          "fastKill" : true,
+          "maxConcurrency" : 5
+        },
+        "nfsSwitch" : false,
+        "classType" : "vmBuild",
+        "containerEnable" : true
+      } ],
+      "id" : "stage-3",
+      "name" : "stage-3",
+      "tag" : [ "28ee946a59f64949a74f3dee40a1bda4" ],
+      "fastKill" : false,
+      "finally" : false,
+      "checkIn" : {
+        "manualTrigger" : true,
+        "reviewGroups" : [ {
+          "id" : "faa32672618f41f2b4f7820d4bd953d7",
+          "name" : "必要信息",
+          "reviewers" : [ "userId", "irwinsun" ]
+        } ],
+        "reviewParams" : [ {
+          "key" : "apigw_cookie",
+          "value" : "",
+          "valueType" : "STRING",
+          "required" : false,
+          "desc" : "",
+          "options" : [ ]
+        }, {
+          "key" : "apigw_csrfToken",
+          "value" : "",
+          "valueType" : "STRING",
+          "required" : false,
+          "desc" : "",
+          "options" : [ ]
+        }, {
+          "key" : "all_json_number",
+          "value" : "${{BK_CI_BUILD_NUM}}",
+          "valueType" : "STRING",
+          "required" : false,
+          "desc" : "",
+          "options" : [ ]
+        } ],
+        "timeout" : 240,
+        "markdownContent" : false,
+        "notifyType" : [ "RTX" ]
+      },
+      "checkOut" : {
+        "manualTrigger" : false,
+        "timeout" : 24,
+        "markdownContent" : false,
+        "notifyType" : [ "RTX" ]
+      },
+      "stageEnable" : true
+    }, {
+      "containers" : [ {
+        "@type" : "vmBuild",
+        "id" : "7",
+        "name" : "构建环境-LINUX",
+        "elements" : [ {
+          "@type" : "marketBuild",
+          "name" : "拉取all json",
+          "id" : "e-5983490a627a4bbdb4f4b210f64410bf",
+          "atomCode" : "BuildArchiveGetTask",
+          "version" : "4.*",
+          "data" : {
+            "input" : {
+              "pipelineType" : "ID",
+              "pipeLineId" : "p-xxx",
+              "pipeLineName" : "",
+              "buildNo" : false,
+              "isContinue" : false,
+              "buildNoSelector" : "${{all_json_number}}",
+              "srcPaths" : "all.json",
+              "destPath" : "",
+              "rangeDownload" : false
+            },
+            "output" : {
+              "FILE_FULL_PATH_LIST" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "marketBuild",
+          "name" : "蓝盾openapi工具",
+          "id" : "e-94d196de683c4cfead6b2efe520f836e",
+          "atomCode" : "devops_openapi",
+          "version" : "1.*",
+          "data" : {
+            "input" : {
+              "allJsonPath" : "${WORKSPACE}/all.json",
+              "whatToDo" : "mode2",
+              "cookie" : "${{apigw_cookie}}",
+              "csrfToken" : "${{apigw_csrfToken}}",
+              "query" : "v3,v4",
+              "ids" : "${{ids}}",
+              "ignoreId" : "${{blackList}}"
+            },
+            "output" : {
+              "testResult" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "buildEnv" : { },
+        "dispatchType" : {
+          "buildType" : "PUBLIC_DEVCLOUD",
+          "value" : "tlinux3_ci",
+          "performanceConfigId" : "1",
+          "persistence" : false,
+          "imageType" : "BKSTORE",
+          "credentialId" : "",
+          "credentialProject" : "",
+          "imageCode" : "tlinux3_ci",
+          "imageVersion" : "2.*",
+          "imageName" : "tlinux3-CI镜像",
+          "dockerBuildVersion" : "tlinux3_ci",
+          "imagePublicFlag" : false,
+          "imageRDType" : "",
+          "recommendFlag" : true
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "containerId" : "7",
+        "containerHashId" : "c-5e07c2bbb99e493886b9ae31cc0fc810",
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "CUSTOM_VARIABLE_MATCH",
+          "customVariables" : [ {
+            "key" : "mode",
+            "value" : "更新API文档"
+          } ],
+          "customCondition" : "",
+          "dependOnType" : "ID",
+          "dependOnId" : [ ],
+          "dependOnName" : "",
+          "continueWhenFailed" : false
+        },
+        "mutexGroup" : {
+          "enable" : false,
+          "mutexGroupName" : "",
+          "queueEnable" : false,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "queue" : 5
+        },
+        "executeCount" : 0,
+        "jobId" : "job_c3d",
+        "matrixGroupFlag" : false,
+        "matrixControlOption" : {
+          "strategyStr" : "",
+          "includeCaseStr" : "",
+          "excludeCaseStr" : "",
+          "fastKill" : true,
+          "maxConcurrency" : 5
+        },
+        "nfsSwitch" : false,
+        "classType" : "vmBuild",
+        "containerEnable" : true
+      }, {
+        "@type" : "vmBuild",
+        "id" : "8",
+        "name" : "构建环境-LINUX",
+        "elements" : [ {
+          "@type" : "marketBuild",
+          "name" : "合并内部mr",
+          "id" : "e-1f292dd34e12485eba471de08f5c7f7d",
+          "atomCode" : "gitbranchop",
+          "version" : "3.*",
+          "data" : {
+            "input" : {
+              "git_type" : "git_woa",
+              "code_auth_type" : "GIT_REPO",
+              "git_private_token" : "",
+              "repositoryUrl" : "",
+              "repositoryType" : "ID",
+              "repositoryHashId" : "L3Q1E",
+              "repositoryName" : "",
+              "ld_selectop" : "merge_one_mr",
+              "ld_input_branch" : "release",
+              "ld_input_userid" : "",
+              "ld_input_mrid" : "${{ldout_iid}}",
+              "ld_input_note" : "0",
+              "ld_input_src_branch" : "",
+              "ld_input_dst_branch" : "",
+              "ld_input_reviewers" : "",
+              "ld_input_necessary_reviewers" : "",
+              "ld_input_rule_reviewers" : "-1",
+              "ld_input_rule_necessary_reviewers" : "1",
+              "ld_input_lables" : "",
+              "ld_input_desc" : "",
+              "ld_input_upload_file_name" : "",
+              "ld_input_commit_state" : "success",
+              "ld_input_commit_block" : "false",
+              "ld_input_merge_type" : "merge",
+              "ld_input_target_project_id" : "",
+              "ld_input_tapd_id" : "",
+              "ld_input_tapd_type" : "",
+              "ld_input_tapd_info" : "",
+              "ld_debug" : "false",
+              "local_auth_token" : "",
+              "ld_input_push_access_level" : "40",
+              "ld_input_merge_access_level" : "40",
+              "ld_input_mr_state" : ""
+            },
+            "output" : {
+              "BranchLife" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "marketBuild",
+          "name" : "拉取内部分支",
+          "id" : "e-71ca9c6f270f408bbb01c1308406a56f",
+          "atomCode" : "checkout",
+          "version" : "1.*",
+          "stepId" : "DQB",
+          "data" : {
+            "input" : {
+              "repositoryType" : "ID",
+              "repositoryHashId" : "L3Q1E",
+              "repositoryName" : "",
+              "repositoryUrl" : "",
+              "authType" : "TICKET",
+              "persistCredentials" : false,
+              "pullType" : "BRANCH",
+              "refName" : "zh-cn",
+              "localPath" : "ci-document",
+              "strategy" : "REVERT_UPDATE",
+              "fetchDepth" : "",
+              "fetchOnlyCurrentRef" : false,
+              "enableFetchRefSpec" : false,
+              "fetchRefSpec" : "",
+              "enablePartialClone" : false,
+              "includePath" : "",
+              "excludePath" : "",
+              "cachePath" : "",
+              "enableGitLfs" : true,
+              "lfsConcurrentTransfers" : "",
+              "enableSubmodule" : true,
+              "submodulePath" : "",
+              "enableSubmoduleRemote" : false,
+              "enableSubmoduleRecursive" : true,
+              "enableVirtualMergeBranch" : true,
+              "enableGitClean" : true,
+              "enableGitCleanIgnore" : true,
+              "enableGitCleanNested" : false,
+              "autoCrlf" : "false",
+              "enableTrace" : false
+            },
+            "output" : {
+              "BK_CI_GIT_REPO_URL" : "string",
+              "BK_CI_GIT_REPO_ALIAS_NAME" : "string",
+              "BK_CI_GIT_REPO_NAME" : "string",
+              "BK_CI_GIT_REPO_REF" : "string",
+              "BK_CI_GIT_REPO_CODE_PATH" : "string",
+              "BK_CI_GIT_REPO_LAST_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_MR_TARGET_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_COMMENT" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_AUTHOR" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_COMMITTER" : "string",
+              "BK_CI_GIT_REPO_COMMITS" : "string",
+              "BK_CI_GIT_REPO_MR_SOURCE_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_MR_SOURCE_HEAD_COMMIT_COMMENT" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "marketBuild",
+          "name" : "拉取github分支",
+          "id" : "e-ed24a836994a42abaada6ed66d13adea",
+          "atomCode" : "checkout",
+          "version" : "1.*",
+          "stepId" : "P8W",
+          "data" : {
+            "input" : {
+              "repositoryType" : "ID",
+              "repositoryHashId" : "Jqwo6",
+              "repositoryName" : "",
+              "repositoryUrl" : "",
+              "authType" : "TICKET",
+              "persistCredentials" : true,
+              "pullType" : "BRANCH",
+              "refName" : "zh-cn",
+              "localPath" : "github-document",
+              "strategy" : "REVERT_UPDATE",
+              "fetchDepth" : "",
+              "fetchOnlyCurrentRef" : false,
+              "enableFetchRefSpec" : false,
+              "fetchRefSpec" : "",
+              "enablePartialClone" : false,
+              "includePath" : "",
+              "excludePath" : "",
+              "cachePath" : "",
+              "enableGitLfs" : true,
+              "lfsConcurrentTransfers" : "",
+              "enableSubmodule" : true,
+              "submodulePath" : "",
+              "enableSubmoduleRemote" : false,
+              "enableSubmoduleRecursive" : true,
+              "enableVirtualMergeBranch" : true,
+              "enableGitClean" : true,
+              "enableGitCleanIgnore" : true,
+              "enableGitCleanNested" : false,
+              "autoCrlf" : "false",
+              "enableTrace" : false
+            },
+            "output" : {
+              "BK_CI_GIT_REPO_URL" : "string",
+              "BK_CI_GIT_REPO_ALIAS_NAME" : "string",
+              "BK_CI_GIT_REPO_NAME" : "string",
+              "BK_CI_GIT_REPO_REF" : "string",
+              "BK_CI_GIT_REPO_CODE_PATH" : "string",
+              "BK_CI_GIT_REPO_LAST_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_MR_TARGET_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_COMMENT" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_AUTHOR" : "string",
+              "BK_CI_GIT_REPO_HEAD_COMMIT_COMMITTER" : "string",
+              "BK_CI_GIT_REPO_COMMITS" : "string",
+              "BK_CI_GIT_REPO_MR_SOURCE_HEAD_COMMIT_ID" : "string",
+              "BK_CI_GIT_REPO_MR_SOURCE_HEAD_COMMIT_COMMENT" : "string"
+            },
+            "namespace" : ""
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "linuxScript",
+          "name" : "上传外部文档到github",
+          "id" : "e-3702ed08a86e4ff89c6232f45510f521",
+          "scriptType" : "SHELL",
+          "script" : "set -x\nset +e\ncd ${WORKSPACE}/ci-document\ngit remote remove github_document\ngit remote add github_document https://github.com/userId/document-1.git\ngit push github_document zh-cn:new_document_${{BK_CI_BUILD_NUM}}",
+          "continueNoneZero" : false,
+          "enableArchiveFile" : false,
+          "archiveFile" : "",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 1,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "userId",
+            "otherTask" : "",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "executeCount" : 1,
+          "version" : "1.*",
+          "classType" : "linuxScript",
+          "taskAtom" : "",
+          "atomCode" : "linuxScript",
+          "elementEnable" : true
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "buildEnv" : { },
+        "dispatchType" : {
+          "buildType" : "PUBLIC_DEVCLOUD",
+          "value" : "tlinux3_ci",
+          "performanceConfigId" : "1",
+          "persistence" : false,
+          "imageType" : "BKSTORE",
+          "credentialId" : "",
+          "credentialProject" : "",
+          "imageCode" : "tlinux3_ci",
+          "imageVersion" : "2.*",
+          "imageName" : "tlinux3-CI镜像",
+          "dockerBuildVersion" : "tlinux3_ci",
+          "imagePublicFlag" : false,
+          "imageRDType" : "",
+          "recommendFlag" : true
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "containerId" : "8",
+        "containerHashId" : "c-700be53008f5461d827579e22197438f",
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "CUSTOM_VARIABLE_MATCH",
+          "customVariables" : [ {
+            "key" : "mode",
+            "value" : "更新开源文档"
+          } ],
+          "customCondition" : "",
+          "dependOnType" : "ID",
+          "dependOnId" : [ ],
+          "dependOnName" : "",
+          "continueWhenFailed" : false
+        },
+        "mutexGroup" : {
+          "enable" : false,
+          "mutexGroupName" : "",
+          "queueEnable" : false,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "queue" : 5
+        },
+        "executeCount" : 0,
+        "jobId" : "job_ZsS",
+        "matrixGroupFlag" : false,
+        "matrixControlOption" : {
+          "strategyStr" : "",
+          "includeCaseStr" : "",
+          "excludeCaseStr" : "",
+          "fastKill" : true,
+          "maxConcurrency" : 5
+        },
+        "nfsSwitch" : false,
+        "classType" : "vmBuild",
+        "containerEnable" : true
+      } ],
+      "id" : "stage-4",
+      "name" : "stage-3",
+      "tag" : [ "28ee946a59f64949a74f3dee40a1bda4" ],
+      "fastKill" : false,
+      "finally" : false,
+      "stageControlOption" : {
+        "enable" : true,
+        "runCondition" : "AFTER_LAST_FINISHED",
+        "customVariables" : [ {
+          "key" : "param1",
+          "value" : ""
+        } ],
+        "manualTrigger" : false,
+        "triggerUsers" : [ ],
+        "timeout" : 24
+      },
+      "checkIn" : {
+        "manualTrigger" : true,
+        "reviewGroups" : [ {
+          "id" : "faa32672618f41f2b4f7820d4bd953d7",
+          "name" : "必要信息",
+          "reviewers" : [ "userId", "irwinsun" ]
+        } ],
+        "reviewParams" : [ {
+          "key" : "apigw_cookie",
+          "value" : "",
+          "valueType" : "STRING",
+          "required" : false,
+          "desc" : "",
+          "options" : [ ]
+        }, {
+          "key" : "apigw_csrfToken",
+          "value" : "",
+          "valueType" : "STRING",
+          "required" : false,
+          "desc" : "",
+          "options" : [ ]
+        }, {
+          "key" : "all_json_number",
+          "value" : "",
+          "valueType" : "STRING",
+          "required" : false,
+          "desc" : "",
+          "options" : [ ]
+        }, {
+          "key" : "ids",
+          "value" : "",
+          "valueType" : "STRING",
+          "required" : false,
+          "desc" : "",
+          "options" : [ ]
+        }, {
+          "key" : "blackList",
+          "value" : "",
+          "valueType" : "TEXTAREA",
+          "required" : false,
+          "desc" : "",
+          "options" : [ ]
+        } ],
+        "timeout" : 240,
+        "markdownContent" : false,
+        "notifyType" : [ "RTX" ]
+      },
+      "checkOut" : {
+        "manualTrigger" : false,
+        "timeout" : 24,
+        "markdownContent" : false,
+        "notifyType" : [ "RTX" ]
+      },
+      "stageEnable" : true
+    } ],
+    "labels" : [ ],
+    "instanceFromTemplate" : false,
+    "pipelineCreator" : "userId",
+    "events" : { },
+    "staticViews" : [ ],
+    "latestVersion" : 91
+  },
+  "setting" : {
+    "projectId" : "xxx",
+    "pipelineId" : "p-xxx",
+    "pipelineName" : "【线网】OPENAPI文档自动生成",
+    "version" : 1,
+    "desc" : "",
+    "labels" : [ ],
+    "labelNames" : [ ],
+    "successSubscription" : {
+      "types" : [ ],
+      "groups" : [ ],
+      "users" : "",
+      "wechatGroupFlag" : false,
+      "wechatGroup" : "",
+      "wechatGroupMarkdownFlag" : false,
+      "detailFlag" : false,
+      "content" : ""
+    },
+    "failSubscription" : {
+      "types" : [ "RTX" ],
+      "groups" : [ "" ],
+      "users" : "${BK_CI_START_USER_NAME}",
+      "wechatGroupFlag" : false,
+      "wechatGroup" : "",
+      "wechatGroupMarkdownFlag" : false,
+      "detailFlag" : false,
+      "content" : "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行失败，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人：${BK_CI_START_USER_NAME}。 "
+    },
+    "failSubscriptionList" : [ {
+      "types" : [ "RTX" ],
+      "groups" : [ "" ],
+      "users" : "${BK_CI_START_USER_NAME}",
+      "wechatGroupFlag" : false,
+      "wechatGroup" : "",
+      "wechatGroupMarkdownFlag" : false,
+      "detailFlag" : false,
+      "content" : "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行失败，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人：${BK_CI_START_USER_NAME}。 "
+    } ],
+    "runLockType" : "MULTIPLE",
+    "waitQueueTimeMinute" : 10,
+    "maxQueueSize" : 10,
+    "concurrencyGroup" : "${{ci.pipeline_id}}",
+    "concurrencyCancelInProgress" : false,
+    "maxConRunningQueueSize" : 50,
+    "maxPipelineResNum" : 50,
+    "cleanVariablesWhenRetry" : false
+  }
+}

@@ -98,6 +98,12 @@ import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.store.api.template.ServiceTemplateResource
+import java.net.URLEncoder
+import java.util.LinkedList
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -105,12 +111,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
-import java.util.LinkedList
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
 
 @Suppress("ALL")
 @Service
@@ -206,7 +206,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             exportStringToFile(targetVersion.yaml ?: "", "${settingInfo.pipelineName}$suffix")
         } else {
             val suffix = PipelineStorageType.MODEL.fileSuffix
-            exportStringToFile(JsonUtil.toJson(modelAndSetting), "${settingInfo.pipelineName}$suffix")
+            exportStringToFile(JsonUtil.toSortJson(modelAndSetting), "${settingInfo.pipelineName}$suffix")
         }
     }
 
@@ -430,6 +430,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     channelCode = channelCode,
                     create = true,
                     useSubscriptionSettings = useSubscriptionSettings,
+                    useLabelSettings = useLabelSettings,
                     useConcurrencyGroup = useConcurrencyGroup,
                     versionStatus = versionStatus,
                     branchName = branchName,
@@ -1468,6 +1469,34 @@ class PipelineInfoFacadeService @Autowired constructor(
             }
         }
         return failUpdateModels
+    }
+
+    fun locked(userId: String, projectId: String, pipelineId: String, locked: Boolean): PipelineInfo {
+        val language = I18nUtil.getLanguage(userId)
+        val permission = AuthPermission.EDIT
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                messageCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                language = language,
+                params = arrayOf(userId, projectId, permission.getI18n(language), pipelineId)
+            )
+        )
+
+        val info = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+            )
+
+        if (!pipelineRepositoryService.updateLocked(userId, projectId, pipelineId, locked)) { // 可能重复操作，不打扰用户
+            logger.warn("Locked Pipeline|$userId|$projectId|$pipelineId|locked=$locked, may be duplicated")
+        }
+
+        return info
     }
 
     companion object {

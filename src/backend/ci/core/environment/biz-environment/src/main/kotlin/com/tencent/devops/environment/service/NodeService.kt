@@ -296,7 +296,8 @@ class NodeService @Autowired constructor(
                 } else {
                     it.osType
                 },
-                bkHostId = it.hostId
+                bkHostId = it.hostId,
+                serverId = it.serverId
             )
         }
     }
@@ -387,7 +388,8 @@ class NodeService @Autowired constructor(
                 agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L),
                 cloudAreaId = it.cloudAreaId,
                 taskId = null,
-                osType = it.osType
+                osType = it.osType,
+                serverId = it.serverId
             )
         }
     }
@@ -443,7 +445,8 @@ class NodeService @Autowired constructor(
                 lastModifyUser = it.lastModifyUser ?: "",
                 cloudAreaId = it.cloudAreaId,
                 taskId = null,
-                osType = it.osType
+                osType = it.osType,
+                serverId = it.serverId
             )
         }
     }
@@ -634,7 +637,8 @@ class NodeService @Autowired constructor(
                 },
                 cloudAreaId = it.cloudAreaId,
                 taskId = null,
-                osType = it.osType
+                osType = it.osType,
+                serverId = it.serverId
             )
         }
     }

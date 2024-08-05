@@ -84,5 +84,7 @@ data class IpaSignInfo(
     @get:Schema(title = "更换的bundle名", required = false)
     var bundleName: String? = null,
     @get:Schema(title = "更换的bundle版本号", required = false)
-    var bundleVersion: String? = null
+    var bundleVersion: String? = null,
+    @get:Schema(title = "keystore应用APP ID", required = false)
+    var appId: String? = null
 )

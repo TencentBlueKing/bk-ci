@@ -25,11 +25,12 @@ class MonacoEditor {
             /* webpackChunkName: "monaco-editor" */
             'monaco-yaml'
         )
-        monacoYaml.configureMonacoYaml(monaco, {
+
+        const yamlConfig = monacoYaml.configureMonacoYaml(monaco, {
             enableSchemaRequest: true,
             schemas: [
                 {
-                    fileMatch: ['*'],
+                    fileMatch: ['*.yml'],
                     uri: window.BKCI_YAML_SCHEMA_URI
                 }
             ]
@@ -38,6 +39,7 @@ class MonacoEditor {
         monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
         monaco.editor.setTheme('ciYamlTheme')
 
+        monaco.yamlValidatConfig = yamlConfig
         return monaco
     }
 }

@@ -60,7 +60,7 @@ enum class PoolType {
         }
 
         override fun validatePool(pool: Pool) {
-            if (null == pool.container) {
+            if (null == pool.container && pool.image == null) {
                 throw OperationException("当pool.type=$this, container参数不能为空")
             }
         }

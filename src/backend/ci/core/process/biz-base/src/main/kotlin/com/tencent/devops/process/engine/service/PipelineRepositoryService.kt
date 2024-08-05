@@ -106,6 +106,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
@@ -160,7 +161,8 @@ class PipelineRepositoryService constructor(
     private val client: Client,
     private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation,
-    private val pipelineYamlInfoDao: PipelineYamlInfoDao
+    private val pipelineYamlInfoDao: PipelineYamlInfoDao,
+    private val pipelineGroupService: PipelineGroupService
 ) {
 
     companion object {
@@ -667,6 +669,7 @@ class PipelineRepositoryService constructor(
                     pipelineName = model.name,
                     desc = model.desc ?: ""
                 ) ?: run {
+                    // 空白流水线设置初始化
                     val maxPipelineResNum = if (
                         channelCode.name in versionConfigure.specChannels.split(",")
                     ) {
@@ -694,9 +697,15 @@ class PipelineRepositoryService constructor(
 
                 if (model.instanceFromTemplate != true) {
                     if (null == pipelineSettingDao.getSetting(transactionContext, projectId, pipelineId)) {
-                        if (templateId != null && (useSubscriptionSettings == true || useConcurrencyGroup == true)) {
+                        if (useTemplateSettings(
+                                templateId = templateId,
+                                useSubscriptionSettings = useSubscriptionSettings,
+                                useLabelSettings = useLabelSettings,
+                                useConcurrencyGroup = useConcurrencyGroup
+                            )
+                        ) {
                             // 沿用模板的配置
-                            val setting = getSetting(projectId, templateId)
+                            val setting = getSetting(projectId, templateId!!)
                                 ?: throw ErrorCodeException(errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)
                             setting.pipelineId = pipelineId
                             setting.pipelineName = model.name
@@ -714,6 +723,13 @@ class PipelineRepositoryService constructor(
                             }
                             if (useLabelSettings != true) {
                                 setting.labels = listOf()
+                            } else {
+                                val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
+                                val labels = ArrayList<String>()
+                                groups.forEach {
+                                    labels.addAll(it.labels)
+                                }
+                                setting.labels = labels
                             }
                             setting.pipelineAsCodeSettings = PipelineAsCodeSettings()
                             newSetting = setting
@@ -831,6 +847,16 @@ class PipelineRepositoryService constructor(
             versionNum = versionNum,
             versionName = versionName
         )
+    }
+
+    private fun useTemplateSettings(
+        templateId: String? = null,
+        useSubscriptionSettings: Boolean? = false,
+        useLabelSettings: Boolean? = false,
+        useConcurrencyGroup: Boolean? = false
+    ): Boolean {
+        return templateId != null &&
+                (useSubscriptionSettings == true || useConcurrencyGroup == true || useLabelSettings == true)
     }
 
     private fun update(
@@ -1182,12 +1208,11 @@ class PipelineRepositoryService constructor(
                 yamlVersion = releaseResource.yamlVersion,
                 yamlStr = releaseResource.yaml,
                 baseVersion = baseVersion,
-                versionName = releaseResource.versionName ?: PipelineVersionUtils.getVersionName(
-                    releaseResource.version, releaseResource.version, 0, 0
-                ) ?: "",
+                versionName = releaseResource.versionName ?: "init",
                 versionNum = releaseResource.versionNum,
-                pipelineVersion = null,
+                pipelineVersion = releaseResource.version,
                 triggerVersion = null,
+                // 不写入版本状态和关联的setting版本，标识是兼容非常老的数据补全
                 settingVersion = null,
                 versionStatus = null,
                 branchAction = null,
@@ -1983,11 +2008,8 @@ class PipelineRepositoryService constructor(
                         )
                     ).yamlWithVersion
                 } catch (ignore: Throwable) {
-                    if (ignore is ErrorCodeException) throw ignore
                     logger.warn("TRANSFER_YAML_SETTING|$projectId|$userId|$pipelineId", ignore)
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
-                    )
+                    null
                 }
                 watcher.start("updatePipelineInfo")
                 pipelineInfoDao.update(
@@ -2072,6 +2094,22 @@ class PipelineRepositoryService constructor(
             pipelineId = pipelineId,
             branchName = branchName,
             branchVersionAction = branchVersionAction
+        )
+    }
+
+    fun updateLocked(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        locked: Boolean,
+        transactionContext: DSLContext? = null
+    ): Boolean {
+        return pipelineInfoDao.update(
+            dslContext = transactionContext ?: dslContext,
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            locked = locked
         )
     }
 }

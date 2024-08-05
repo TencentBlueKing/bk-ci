@@ -27,44 +27,24 @@
 
 package com.tencent.devops.process.service.notify
 
-import com.tencent.bkrepo.common.api.util.toJsonString
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.common.pipeline.pojo.setting.Subscription
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.wechatwork.WechatWorkRobotService
-import com.tencent.devops.common.wechatwork.WechatWorkService
-import com.tencent.devops.common.wechatwork.model.enums.ReceiverType
-import com.tencent.devops.common.wechatwork.model.robot.MsgInfo
-import com.tencent.devops.common.wechatwork.model.robot.RobotMarkdownSendMsg
-import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
-import com.tencent.devops.common.wechatwork.model.sendmessage.Receiver
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextContent
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextMessage
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextText
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
+import com.tencent.devops.common.notify.utils.NotifyUtils
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.notify.command.impl.BluekingNotifySendCmd
 import com.tencent.devops.process.notify.command.impl.NotifySendCmd
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.regex.Pattern
 
 @Suppress("ComplexMethod", "NestedBlockDepth")
 class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
     client: Client,
     val authProjectApi: AuthProjectApi,
-    val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    val wechatWorkService: WechatWorkService,
-    val wechatWorkRobotService: WechatWorkRobotService
+    val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : NotifySendCmd(client) {
     override fun canExecute(commandContext: BuildNotifyContext): Boolean {
         return true
@@ -86,8 +66,14 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                     val successContent = EnvUtils.parseEnv(
                         successSubscription.content, commandContext.variables, replaceWithEmpty
                     )
+                    val group = EnvUtils.parseEnv(
+                        command = successSubscription.wechatGroup,
+                        data = commandContext.variables,
+                        replaceWithEmpty = true
+                    )
                     commandContext.notifyValue["successContent"] = successContent
                     commandContext.notifyValue["emailSuccessContent"] = successContent
+                    commandContext.notifyValue[NotifyUtils.WEWORK_GROUP_KEY] = group
                     val receivers = successSubscription.users.split(",").map {
                         EnvUtils.parseEnv(
                             command = it,
@@ -106,16 +92,27 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                             }
                         }
                     }
-                    sendNotify(
-                        shutdownType = shutdownType,
-                        subscription = successSubscription,
+                    sendNotifyByTemplate(
+                        templateCode = getNotifyTemplateCode(shutdownType, successSubscription.detailFlag),
                         receivers = receivers,
-                        params = commandContext.notifyValue,
-                        setting = setting,
-                        buildStatus = buildStatus,
-                        variables = commandContext.variables,
-                        content = "✔️ $successContent"
+                        notifyType = successSubscription.types.filter {
+                            it != PipelineSubscriptionType.WEWORK_GROUP
+                        }.map { it.name }.toMutableSet(),
+                        titleParams = commandContext.notifyValue,
+                        bodyParams = commandContext.notifyValue,
+                        markdownContent = false
                     )
+                    // 企业微信通知组的模板和企业微信通知用的是同一个模板,但是企业微信通知没有markdown选项,所以需要单独发送
+                    if (successSubscription.types.contains(PipelineSubscriptionType.WEWORK_GROUP)) {
+                        sendNotifyByTemplate(
+                            templateCode = getNotifyTemplateCode(shutdownType, successSubscription.detailFlag),
+                            receivers = receivers,
+                            notifyType = setOf(PipelineSubscriptionType.WEWORK_GROUP.name),
+                            titleParams = commandContext.notifyValue,
+                            bodyParams = commandContext.notifyValue,
+                            markdownContent = successSubscription.wechatGroupMarkdownFlag
+                        )
+                    }
                 }
             }
             buildStatus.isFailure() -> {
@@ -124,8 +121,14 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                     val failContent = EnvUtils.parseEnv(
                         failSubscription.content, commandContext.variables, replaceWithEmpty
                     )
+                    val group = EnvUtils.parseEnv(
+                        command = failSubscription.wechatGroup,
+                        data = commandContext.variables,
+                        replaceWithEmpty = true
+                    )
                     commandContext.notifyValue["failContent"] = failContent
                     commandContext.notifyValue["emailFailContent"] = failContent
+                    commandContext.notifyValue[NotifyUtils.WEWORK_GROUP_KEY] = group
                     val receivers = failSubscription.users.split(",").map {
                         EnvUtils.parseEnv(
                             command = it,
@@ -144,55 +147,30 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                             }
                         }
                     }
-                    sendNotify(
-                        shutdownType = shutdownType,
-                        subscription = failSubscription,
+                    sendNotifyByTemplate(
+                        templateCode = getNotifyTemplateCode(shutdownType, failSubscription.detailFlag),
                         receivers = receivers,
-                        params = commandContext.notifyValue,
-                        setting = setting,
-                        buildStatus = buildStatus,
-                        variables = commandContext.variables,
-                        content = "❌ $failContent"
+                        notifyType = failSubscription.types.filter {
+                            it != PipelineSubscriptionType.WEWORK_GROUP
+                        }.map { it.name }.toMutableSet(),
+                        titleParams = commandContext.notifyValue,
+                        bodyParams = commandContext.notifyValue,
+                        markdownContent = false
                     )
+                    // 企业微信通知组的模板和企业微信通知用的是同一个模板,但是企业微信通知没有markdown选项,所以需要单独发送
+                    if (failSubscription.types.contains(PipelineSubscriptionType.WEWORK_GROUP)) {
+                        sendNotifyByTemplate(
+                            templateCode = getNotifyTemplateCode(shutdownType, failSubscription.detailFlag),
+                            receivers = receivers,
+                            notifyType = setOf(PipelineSubscriptionType.WEWORK_GROUP.name),
+                            titleParams = commandContext.notifyValue,
+                            bodyParams = commandContext.notifyValue,
+                            markdownContent = failSubscription.wechatGroupMarkdownFlag
+                        )
+                    }
                 }
             }
             else -> Result<Any>(0)
-        }
-    }
-
-    private fun sendNotify(
-        shutdownType: Int,
-        subscription: Subscription,
-        receivers: MutableSet<String>,
-        params: Map<String, String>,
-        setting: PipelineSetting,
-        buildStatus: BuildStatus,
-        variables: Map<String, String>,
-        content: String
-    ) {
-        sendNotifyByTemplate(
-            templateCode = getNotifyTemplateCode(shutdownType, subscription.detailFlag),
-            receivers = receivers,
-            notifyType = subscription.types.map { it.name }.toMutableSet(),
-            titleParams = params,
-            bodyParams = params
-        )
-        // 如果群通知不需要发送，则直接结束返回
-        if (!subscription.wechatGroupFlag) return
-        logger.info("send weworkGroup msg: ${setting.pipelineId}|$buildStatus")
-        val group = EnvUtils.parseEnv(
-            command = subscription.wechatGroup,
-            data = variables,
-            replaceWithEmpty = true
-        )
-        val groups = group.split("[,;]".toRegex())
-        val markDownFlag = subscription.wechatGroupMarkdownFlag
-        val detailFlag = subscription.detailFlag
-        logger.info("send weworkGroup msg: ${setting.pipelineId}|$groups|$markDownFlag|$content")
-        try {
-            sendWeworkGroup(groups, markDownFlag, content, params, detailFlag)
-        } catch (e: Exception) {
-            logger.warn("send weworkGroup msg fail: ${e.message}")
         }
     }
 
@@ -207,103 +185,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
         return false
     }
 
-    private fun sendWeworkGroup(
-        weworkGroup: List<String>,
-        markDownFlag: Boolean,
-        content: String,
-        vars: Map<String, String>,
-        detailFlag: Boolean
-    ) {
-        val detailUrl = vars["detailUrl"]
-        weworkGroup.forEach {
-            if (it.startsWith("ww")) { // 应用号逻辑
-                sendByApp(it, content, markDownFlag, detailFlag, detailUrl!!)
-            } else if (Pattern.matches(chatPatten, it)) { // 机器人逻辑
-                sendByRobot(it, content, markDownFlag, detailFlag, detailUrl!!)
-            }
-        }
-    }
-
-    private fun sendByApp(
-        chatId: String,
-        content: String,
-        markDownFlag: Boolean,
-        detailFlag: Boolean,
-        detailUrl: String
-    ) {
-        logger.info("send group msg by app: $chatId")
-        if (markDownFlag) {
-            wechatWorkService.sendMarkdownGroup(content!!.replace("\\n", "\n"), chatId)
-        } else {
-            val receiver = Receiver(ReceiverType.group, chatId)
-            val richtextContentList = mutableListOf<RichtextContent>()
-            richtextContentList.add(
-                RichtextText(RichtextTextText(content))
-            )
-            if (detailFlag) {
-                richtextContentList.add(
-                    RichtextView(
-                        RichtextViewLink(
-                            text = I18nUtil.getCodeLanMessage(
-                                messageCode = BK_VIEW_DETAILS
-                            ),
-                            key = detailUrl, browser = 1
-                        )
-                    )
-                )
-            }
-            val richtextMessage = RichtextMessage(receiver, richtextContentList)
-            wechatWorkService.sendRichText(richtextMessage)
-        }
-    }
-
-    private fun sendByRobot(
-        chatId: String,
-        content: String,
-        markerDownFlag: Boolean,
-        detailFlag: Boolean,
-        detailUrl: String
-    ) {
-        logger.info("send group msg by robot: $chatId, $content")
-        if (markerDownFlag) {
-            val textContent = if (detailFlag) {
-                "$content\n[" + I18nUtil.getCodeLanMessage(
-                    messageCode = BK_VIEW_DETAILS
-                ) + "]($detailUrl)"
-            } else content
-            val msg = RobotMarkdownSendMsg(
-                chatId = chatId,
-                markdown = MsgInfo(
-                    content = textContent
-                )
-            )
-            wechatWorkRobotService.send(msg.toJsonString())
-        } else {
-            val textContent = if (detailFlag) {
-                "$content\n\n" + I18nUtil.getCodeLanMessage(
-                    messageCode = BK_VIEW_DETAILS
-                ) + ": $detailUrl"
-            } else content
-            val msg = RobotTextSendMsg(
-                chatId = chatId,
-                text = MsgInfo(
-                    content = textContent
-                )
-            )
-            wechatWorkRobotService.send(msg.toJsonString())
-        }
-    }
-
-    fun emptyGroup(groups: String): Boolean {
-        if (groups.isNullOrBlank()) {
-            return true
-        }
-        return false
-    }
-
     companion object {
         val logger = LoggerFactory.getLogger(TxNotifySendGroupMsgCmdImpl::class.java)
-        private const val roomPatten = "ww\\w" // ww 开头且接数字的正则表达式, 适用于应用号获取的roomid
-        private const val chatPatten = "^[A-Za-z0-9_-]+\$" // 数字和字母组成的群chatId正则表达式
     }
 }
