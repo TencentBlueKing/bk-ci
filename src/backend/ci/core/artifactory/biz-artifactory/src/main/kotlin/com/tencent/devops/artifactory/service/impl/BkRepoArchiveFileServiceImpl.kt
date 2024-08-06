@@ -88,8 +88,7 @@ import javax.ws.rs.NotFoundException
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = "bkrepo")
 class BkRepoArchiveFileServiceImpl @Autowired constructor(
     private val bkRepoClientConfig: BkRepoClientConfig,
-    private val bkRepoClient: BkRepoClient,
-    private val servicePipelineResource: ServicePipelineResource
+    private val bkRepoClient: BkRepoClient
 ) : ArchiveFileServiceImpl() {
 
     @Value("\${bkrepo.dockerRegistry:#{null}}")
@@ -356,7 +355,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         if (pipelineIds.size == 0) {
             return emptyMap()
         }
-        return servicePipelineResource.getPipelineNameByIds(nodeList.first().projectId, pipelineIds).data.orEmpty()
+        return client.get(ServicePipelineResource::class)
+            .getPipelineNameByIds(nodeList.first().projectId, pipelineIds).data.orEmpty()
     }
 
     private fun getBuildNums(nodeList: List<QueryNodeInfo>): Map<String, String> {
@@ -372,7 +372,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         if (buildIds.size == 0) {
             return emptyMap()
         }
-        return servicePipelineResource.getBuildNoByBuildIds(buildIds, nodeList.first().projectId).data.orEmpty()
+        return client.get(ServicePipelineResource::class)
+            .getBuildNoByBuildIds(buildIds, nodeList.first().projectId).data.orEmpty()
     }
 
     private fun getFullName(
