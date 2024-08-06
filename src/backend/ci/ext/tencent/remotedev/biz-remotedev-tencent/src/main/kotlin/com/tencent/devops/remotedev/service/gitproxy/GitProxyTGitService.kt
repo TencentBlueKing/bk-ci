@@ -358,7 +358,7 @@ class GitProxyTGitService @Autowired constructor(
 
         val svnData = mutableMapOf<TGitCredType, MutableMap<String, MutableSet<Long>>>()
         val gitData = mutableMapOf<TGitCredType, MutableMap<String, MutableSet<Long>>>()
-        records.filter { it.gitType == TGitProjectType.SVN.name }.forEach {
+        records.forEach {
             val credType = TGitCredType.fromStringDefault(it.credType)
             val cred = it.cred ?: it.oauthUser
             if (it.gitType == TGitProjectType.SVN.name) {
@@ -452,7 +452,7 @@ class GitProxyTGitService @Autowired constructor(
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
             .scopeId = projectId
 
-        // TODO: 删除时用什么权限，还是这次先不做
+        // TODO: 删除需要一个新单子评审下
         val tokenR = client.get(ServiceOauthResource::class).tGitGet(userId).data ?: throw ErrorCodeException(
             errorCode = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorCode,
             errorType = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorType,
@@ -1024,7 +1024,7 @@ class GitProxyTGitService @Autowired constructor(
 
         val canAvailableRecords = mutableSetOf<Long>()
 
-        filterRecordWithTGitProjects(projectId, records) { project, _ ->
+        filterRecordWithTGitProjects(projectId, records) { project, tgitIds ->
             val record = recordsMap[project.id] ?: return@filterRecordWithTGitProjects true
 
             // url发生变化时更新url
@@ -1044,6 +1044,8 @@ class GitProxyTGitService @Autowired constructor(
             }
 
             recordsMap.remove(project.id)
+            tgitIds.remove(project.id)
+
             return@filterRecordWithTGitProjects true
         }
 
