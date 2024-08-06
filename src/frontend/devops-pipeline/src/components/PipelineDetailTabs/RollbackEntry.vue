@@ -125,6 +125,9 @@
             },
             draftHintTitle () {
                 return this.hasDraftPipeline ? this.$t('hasDraftTips', [this.draftBaseVersionName]) : this.$t('createDraftTips', [this.versionName])
+            },
+            isTemplatePipeline () {
+                return this.pipelineInfo?.instanceFromTemplate ?? false
             }
         },
         methods: {
@@ -132,7 +135,22 @@
                 'rollbackPipelineVersion'
             ]),
             handleClick () {
-                if (this.isRollback) {
+                if (this.isTemplatePipeline) {
+                    this.$bkInfo({
+                        subTitle: this.$t('templateRollbackBackTips'),
+                        confirmFn: () => {
+                            this.$router.push({
+                                name: 'createInstance',
+                                params: {
+                                    projectId: this.projectId,
+                                    templateId: this.pipelineInfo?.templateId,
+                                    curVersionId: this.pipelineInfo?.templateVersion
+                                },
+                                hash: `#${this.pipelineId}`
+                            })
+                        }
+                    })
+                } else if (this.isRollback) {
                     this.showDraftConfirmDialog()
                 } else {
                     this.goEdit(this.draftVersion ?? this.version)

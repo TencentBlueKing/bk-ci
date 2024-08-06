@@ -1549,5 +1549,6 @@
   "runningSteps": "Running steps: ",
   "completeness": "Completeness: ",
   "pacDesc": "Pipeline as Code mode, referred to as PAC mode. After enabling and submitting the pipeline file to the code base, you can maintain the pipeline by maintaining the code base file.",
-  "debugHint": "Debugging and execution do not share build numbers, but they share concurrency control. Debug records are only valid during the draft version debugging period and will be automatically cleared after the version is released."
+  "debugHint": "Debugging and execution do not share build numbers, but they share concurrency control. Debug records are only valid during the draft version debugging period and will be automatically cleared after the version is released.",
+  "templateRollbackBackTips": "The current pipeline is in constraint mode (template instance). You need to jump to the template to roll back the version."
 }

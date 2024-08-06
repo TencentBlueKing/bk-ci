@@ -37,7 +37,7 @@
         </div>
         <aside v-show="!(isSwitchPipeline || switchingVersion)" class="pipeline-history-right-aside">
             <VersionDiffEntry
-                v-if="!isReleaseVersion"
+                v-if="!isTemplatePipeline && !isReleaseVersion"
                 :text="false"
                 outline
                 :version="currentVersion"
@@ -165,6 +165,9 @@
             },
             currentVersion () {
                 return this.$route.params.version ? parseInt(this.$route.params.version) : this.releaseVersion
+            },
+            isTemplatePipeline () {
+                return this.pipelineInfo?.instanceFromTemplate ?? false
             },
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion

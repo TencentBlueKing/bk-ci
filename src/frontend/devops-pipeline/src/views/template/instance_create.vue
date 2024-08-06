@@ -404,7 +404,16 @@
                 this.$router.push(route)
             },
             changeVersion (newVal) {
-                newVal && this.requestTemplateDatail(newVal)
+                if (newVal && newVal !== this.curVersionId) {
+                    this.$router.push({
+                        ...this.$route,
+                        params: {
+                            ...this.$route.params,
+                            curVersionId: newVal
+                        }
+                    })
+                    this.requestTemplateDatail(newVal)
+                }
             },
             addPipelineName () {
                 this.pipelineNameList.forEach(pipeline => {
