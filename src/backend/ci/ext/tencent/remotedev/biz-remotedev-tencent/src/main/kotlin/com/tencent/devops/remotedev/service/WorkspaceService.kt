@@ -1145,7 +1145,7 @@ class WorkspaceService @Autowired constructor(
             return apiGwService.checkMoa2fa(
                 project = ws.projectId,
                 ip = ws.innerIp ?: "",
-            ) ?: false
+            ) ?: false.also { logger.warn("MOA 2FA check failed for workspace $workspaceName") }
         }
         return false
     }
