@@ -50,7 +50,6 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.cron.HolidayHelper
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -100,7 +99,6 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
 import com.tencent.devops.remotedev.service.tai.TaiService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
-import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon.Companion.DEFAULT_WAIT_TIME
 import java.time.Duration
@@ -136,10 +134,7 @@ class WorkspaceService @Autowired constructor(
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val expertSupportDao: ExpertSupportDao,
     private val apiGwService: ApiGwService,
-    private val notifyControl: NotifyControl,
     private val startWorkspaceService: StartWorkspaceService,
-    private val bkBaseService: BKBaseService,
-    private val holidayHelper: HolidayHelper,
     private val taiClient: TaiClient,
     private val taiService: TaiService
 ) {
@@ -1131,6 +1126,40 @@ class WorkspaceService @Autowired constructor(
             displayName = displayName,
             checkPermission = false
         )
+    }
+
+    // 校验是否需要moa 2fa验证，true:需要 ；false：不需要
+    fun checkMoa2fa (userId: String, workspaceName: String): Boolean {
+        /*1. 个人云桌面 + 内部员工拥有者 --直接返回true
+         *2.团队云桌面 + 内部员工拥有者，则调用wesec接口判断
+          */
+        logger.info("$userId check moa 2fa workspace $workspaceName")
+
+        val ws = workspaceJoinDao.fetchAnyWindowsWorkspace(
+            dslContext = dslContext,
+            workspaceName = workspaceName
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(workspaceName)
+        )
+
+        if(ws.ownerType == WorkspaceOwnerType.PERSONAL && !ws.createUserId.endsWith("@tai")) {
+            return true
+        }
+
+        if(ws.ownerType == WorkspaceOwnerType.PROJECT) {
+            val owners = workspaceSharedDao.fetchWorkspaceOwner(dslContext, setOf(ws.workspaceName)).values
+            if (owners.isEmpty()) return false
+            val owner = owners.first()
+            if (!owner.endsWith("@tai")) {
+              // TODO 拥有者是内部员工，需要调用wesec接口获取管控结果
+                return apiGwService.checkMoa2fa(
+                    project = ws.projectId,
+                    ip = ws.hostIp?.substringAfter(".") ?: "",
+                ) ?: false
+            }
+        }
+        return true
     }
 
     fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Moa2faRespData {

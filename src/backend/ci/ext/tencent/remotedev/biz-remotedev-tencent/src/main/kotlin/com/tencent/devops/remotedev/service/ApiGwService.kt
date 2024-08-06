@@ -62,6 +62,47 @@ class ApiGwService @Autowired constructor(
         }
     }
 
+    // 调用wesec接口判断该项目+云桌面是否开启moa 2fa管控
+    fun checkMoa2fa(
+        project: String,
+        ip: String
+    ): Boolean? {
+        val url = "${bkConfig.remoteDevUrl}/apigw/v1/remote_dev/project_access_device_permissions/" +
+            "?project_codes=$project&ip=$ip"
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .header(
+                name = "X-Bkapi-Authorization",
+                value = JsonUtil.toJson(
+                    mapOf("bk_app_code" to bkConfig.appCode, "bk_app_secret" to bkConfig.appSecret),
+                    false
+                )
+            )
+            .build()
+         OkhttpUtils.doHttp(request).use { response ->
+            val data = response.body!!.string()
+            logger.debug("projectAccessDevicePermissions|{}|{}|{}", request.url, response.code, data)
+            if (!response.isSuccessful) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.PROJECT_ACCESS_DEVICE_PERMISSION.errorCode,
+                    defaultMessage = "request fail code ${response.code}"
+                )
+            }
+
+            val resp = objectMapper.readValue<AccessDevicePermissionsResp>(data)
+            if (!resp.result) {
+                logger.error("projectAccessDevicePermissions|{}|{}|{}", request.url, response.code, data)
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.PROJECT_ACCESS_DEVICE_PERMISSION.errorCode,
+                    defaultMessage = "code ${resp.code} msg ${resp.message}"
+                )
+            }
+            resp.data.result
+        }
+        return true
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ApiGwService::class.java)
     }

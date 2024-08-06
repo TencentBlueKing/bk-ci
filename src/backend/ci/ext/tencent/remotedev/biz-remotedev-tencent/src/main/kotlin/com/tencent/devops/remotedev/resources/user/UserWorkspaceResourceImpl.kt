@@ -257,6 +257,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress))
     }
 
+    override fun checkMoa2fa(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(workspaceService.checkMoa2fa(userId, workspaceName))
+    }
+
     override fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Result<Moa2faRespData> {
         return Result(workspaceService.createMoa2faRequest(userId = userId, moa2faReqData = moa2faReqData))
     }
