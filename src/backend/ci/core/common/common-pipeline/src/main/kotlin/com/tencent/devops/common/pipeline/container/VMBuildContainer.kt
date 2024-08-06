@@ -169,7 +169,7 @@ data class VMBuildContainer(
     }
 
     override fun setContainerEnable(enable: Boolean) {
-        jobControlOption = jobControlOption?.copy(enable = enable) ?: JobControlOption(enable)
+        jobControlOption = jobControlOption?.copy(enable = false) ?: JobControlOption(false)
     }
 
     override fun transformCompatibility() {
