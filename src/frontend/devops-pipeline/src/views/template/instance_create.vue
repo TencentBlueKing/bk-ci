@@ -92,13 +92,13 @@
                                     />
                                     <i
                                         class="delete-btn"
-                                        v-if="!hashVal"
+                                        v-if="!hashVal && !isCopyInstance"
                                         @click="deletePipelineName(index)"
                                         v-bk-tooltips="$t('delete')"
                                     />
                                 </div>
                             </div>
-                            <div class="pipeline-item add-item" @click="addPipelineName" v-if="!hashVal">
+                            <div class="pipeline-item add-item" @click="addPipelineName" v-if="!hashVal && !isCopyInstance">
                                 <i class="plus-icon"></i>
                                 <span>{{ $t('template.addPipelineInstance') }}</span>
                             </div>
@@ -247,9 +247,6 @@
             curVersionId () {
                 return this.$route.params.curVersionId
             },
-            pipelineName () {
-                return this.$route.params.pipelineName
-            },
             type () {
                 return this.$route.params.type
             },
@@ -258,18 +255,21 @@
                     const hashVal = this.$route.hash.substr(1, this.$route.hash.length)
                     const pipeline = hashVal.split('&')
                     return pipeline
-                } else if (this.$route.query.pipelineId) {
-                    return [this.$route.query.pipelineId]
                 }
                 return ''
+            },
+            copyPipelineName () {
+                return this.$route.params.pipelineName
+            },
+            queryPipelineId () {
+                return this.$route.query?.pipelineId ?? ''
+            },
+            isCopyInstance () {
+                return !!(this.copyPipelineName && this.queryPipelineId)
             }
         },
         async mounted () {
             this.requestTemplateDatail(this.curVersionId)
-            this.handlePipeLineName()
-            if (this.hashVal) {
-                this.requestPipelineParams(this.hashVal, this.curVersionId)
-            }
             if (this.$route.query.useTemplateSettings === 'true') {
                 this.isTemplateSetting = true
             }
@@ -298,7 +298,11 @@
                     this.template.creator = res.creator
                     this.template.description = res.description
                     this.versionList = res.versions
-                    this.handleParams(res.template.stages)
+                    if (this.hashVal || this.isCopyInstance) {
+                        await this.requestPipelineParams(versionId)
+                    } else {
+                        this.handleParams(res.template.stages)
+                    }
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -309,9 +313,9 @@
                     this.showContent = true
                 }
             },
-            async requestPipelineParams (pipeline, versionId) {
+            async requestPipelineParams (versionId) {
                 const { $store, loading } = this
-
+                const pipelines = this.isCopyInstance ? [this.queryPipelineId] : this.hashVal
                 loading.isLoading = true
 
                 try {
@@ -319,11 +323,11 @@
                         projectId: this.projectId,
                         templateId: this.templateId,
                         versionId: versionId,
-                        params: pipeline.map(id => ({
+                        params: pipelines.map(id => ({
                             id
                         }))
                     })
-                    this.handlePipelineParams(res)
+                    this.handlePipelineParams(pipelines, res)
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -350,7 +354,7 @@
                     this.buildParams = {}
                 }
 
-                if (!this.hashVal) {
+                if (!this.hashVal && !this.isCopyInstance) {
                     this.pipelineNameList.forEach(item => {
                         item.params = this.deepCopyParams(this.paramList)
                         item.pipelineParams = item.params.filter(item => this.buildNoParams.indexOf(item.id) === -1)
@@ -361,37 +365,28 @@
                 }
             },
 
-            /**
-             * 初次进来的时候，如果有需要实例化流水线的名字，就带上
-             */
-            handlePipeLineName () {
-                const params = this.$route.params || {}
-                const name = params.pipelineName
-                if (name) this.confirmHandler(name)
-            },
-
-            handlePipelineParams (data) {
-                this.pipelineNameList.splice(0, this.pipelineNameList.length)
-                this.hashVal.forEach((item, index) => {
+            handlePipelineParams (pipelines, data) {
+                this.pipelineNameList = pipelines.map((id, index) => {
+                    const item = data[id]
                     const pipelineItem = {
-                        pipelineId: data[item].pipelineId,
-                        pipelineName: data[item].pipelineName,
+                        pipelineId: id,
+                        pipelineName: id === this.queryPipelineId ? this.copyPipelineName : item.pipelineName,
                         selected: index === 0
                     }
-                    if (data[item].buildNo) {
-                        pipelineItem.buildParams = data[item].buildNo
+                    if (item.buildNo) {
+                        pipelineItem.buildParams = item.buildNo
                     }
-                    if (data[item].param.length) {
-                        const paramValues = data[item].param.reduce((values, param) => {
+                    if (item.param.length) {
+                        const paramValues = item.param.reduce((values, param) => {
                             values[param.id] = param.defaultValue
                             return values
                         }, {})
-                        pipelineItem.params = this.deepCopyParams(data[item].param)
-                        pipelineItem.pipelineParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) === -1)
-                        pipelineItem.versionParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) > -1)
+                        pipelineItem.params = this.deepCopyParams(item.param)
+                        pipelineItem.pipelineParams = pipelineItem.params.filter(sub => this.buildNoParams.indexOf(sub.id) === -1)
+                        pipelineItem.versionParams = pipelineItem.params.filter(sub => this.buildNoParams.indexOf(sub.id) > -1)
                         pipelineItem.paramValues = paramValues
                     }
-                    this.pipelineNameList.push(pipelineItem)
+                    return pipelineItem
                 })
                 this.currentPipelineParams = this.pipelineNameList[0]
             },
@@ -409,8 +404,7 @@
                 this.$router.push(route)
             },
             changeVersion (newVal) {
-                this.requestTemplateDatail(newVal)
-                if (this.hashVal && newVal) this.requestPipelineParams(this.hashVal, newVal)
+                newVal && this.requestTemplateDatail(newVal)
             },
             addPipelineName () {
                 this.pipelineNameList.forEach(pipeline => {
