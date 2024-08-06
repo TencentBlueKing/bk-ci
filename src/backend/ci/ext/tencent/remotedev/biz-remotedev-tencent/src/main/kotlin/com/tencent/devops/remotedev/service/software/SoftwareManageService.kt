@@ -376,6 +376,13 @@ class SoftwareManageService @Autowired constructor(
                 }
                 val createSoftwareRes: InstallSoftwareRes = jacksonObjectMapper().readValue(responseContent)
                 logger.info("installSoftwareFromXingyun|createSoftwareRes|$createSoftwareRes")
+                if (response.code == Response.Status.OK.statusCode && !createSoftwareRes.result) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.OK.statusCode,
+                        errorCode = ErrorCodeEnum.INSTALL_SOFTWARE_FAIL.errorCode,
+                        defaultMessage = createSoftwareRes.message
+                    )
+                }
                 createSoftwareRes
             }
         }.onFailure {
