@@ -138,8 +138,8 @@ class SoftwareManageService @Autowired constructor(
                     // todo job接口执行
                     logger.info("safeInitialization|$userId|$userId")
                     installSystemSoftwares(
-                        projectId,
-                        userId,
+                        projectId = projectId,
+                        creator = userId,
                         regionId = workspace.regionId.toString(),
                         ip = workspace.hostIp ?: "",
                         workspaceName = workspaceName
@@ -387,7 +387,7 @@ class SoftwareManageService @Autowired constructor(
             }
         }.onFailure {
             logger.error("install software from xingyun failed.", it)
-        }.getOrNull()
+        }.getOrThrow()
     }
 
     // 添加系统软件安装记录
