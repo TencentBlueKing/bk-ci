@@ -75,9 +75,6 @@ class StartCloudRemoteDevService @Autowired constructor(
     @Value("\${startCloud.appName}")
     val contentProviderName: String = "IEG_BKCI"
 
-//    @Value("\${startCloud.curLaunchId}")
-//    val curLaunchId: Int = 980007
-
     override fun createWorkspace(
         userId: String,
         event: WorkspaceCreateEvent
@@ -316,7 +313,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 )
                 return DispatchBuildTaskStatus(
                     DispatchBuildTaskStatusEnum.FAILED,
-                    "DevCloud任务超时（10min）"
+                    "任务超时($timeout)"
                 )
             }
 
@@ -340,16 +337,6 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     override fun expandDisk(workspaceName: String, userId: String, size: String): ExpandDiskValidateResp {
         return startAndBcsCommonService.expandDisk(userId, workspaceName, size)
-    }
-
-    fun refreshStartCloudOrderId(userId: String): Boolean {
-        logger.info("$userId refresh startCloud orderId.")
-        val startCloudWorkspaceList = dispatchWorkspaceDao.getStartCloudWorkspaceInfo(dslContext)
-        startCloudWorkspaceList.forEach {
-            startCloudRedisUtils.setStartCloudOrder(userId, it.workspaceName, it.taskId)
-        }
-
-        return true
     }
 
     private fun getEnvironmentUid(workspaceName: String): String {

@@ -456,574 +456,554 @@
 </template>
 
 <script>
-import Accordion from '@/components/atomFormField/Accordion'
-import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
-import EnumInput from '@/components/atomFormField/EnumInput'
-import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
-import RequestSelector from '@/components/atomFormField/RequestSelector'
-import Selector from '@/components/atomFormField/Selector'
-import VuexInput from '@/components/atomFormField/VuexInput'
-import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-import FileParamInput from '@/components/FileParamInput'
-import FileUpload from '@/components/FileUpload'
-import {
-    PROCESS_API_URL_PREFIX,
-    REPOSITORY_API_URL_PREFIX,
-    STORE_API_URL_PREFIX
-} from '@/store/constants'
-import {
-    CODE_LIB_OPTION,
-    CODE_LIB_TYPE,
-    DEFAULT_PARAM,
-    getParamsDefaultValueLabel,
-    getParamsDefaultValueLabelTips,
-    getRepoOption,
-    isArtifactoryParam,
-    isBooleanParam,
-    isBuildResourceParam,
-    isCodelibParam,
-    isEnumParam,
-    isFileParam,
-    isGitParam,
-    isMultipleParam,
-    isStringParam,
-    isSubPipelineParam,
-    isSvnParam,
-    isTextareaParam,
-    PARAM_LIST,
-    STRING,
-    SUB_PIPELINE_OPTION
-} from '@/store/modules/atom/paramsConfig'
-import { allVersionKeyList } from '@/utils/pipelineConst'
-import { deepCopy } from '@/utils/util'
-import draggable from 'vuedraggable'
-import { mapGetters } from 'vuex'
-import validMixins from '../validMixins'
-
-const BOOLEAN = [
-    {
-        value: true,
-        label: true
-    },
-    {
-        value: false,
-        label: false
-    }
-]
-
-export default {
-    name: 'build-params',
-    components: {
-        Accordion,
-        VuexInput,
-        EnumInput,
-        AtomCheckbox,
-        Selector,
-        draggable,
-        VuexTextarea,
-        RequestSelector,
-        KeyValueNormal,
-        FileUpload,
-        FileParamInput
-    },
-    mixins: [validMixins],
-    props: {
-        settingKey: {
-            type: String,
-            default: 'params'
-        },
-        params: {
-            type: Array,
-            default: () => []
-        },
-        // 用于校验模板常量和流水线变量不能重名
-        additionParams: {
-            type: Array,
-            default: () => []
-        },
-        disabled: {
-            type: Boolean,
-            default: false
-        },
-        updateContainerParams: {
-            type: Function,
-            required: true
-        },
-        title: {
-            type: String,
-            default: '--'
-        }
-    },
-    data() {
-        return {
-            paramIdCount: 0,
-            renderParams: [],
-            uploadFileName: ''
-        }
-    },
-
-    computed: {
-        ...mapGetters('atom', ['osList', 'getBuildResourceTypeList']),
-        isTemplateParams() {
-            return this.settingKey === 'templateParams'
-        },
-        baseOSList() {
-            return this.osList
-                .filter((os) => os.value !== 'NONE')
-                .map((os) => ({
-                    id: os.value,
-                    name: os.label
-                }))
-        },
-        validateParams() {
-            return this.params.concat(this.additionParams)
-        },
-        paramsList() {
-            return PARAM_LIST.map((item) => {
-                return {
-                    id: item.id,
-                    name: this.$t(`storeMap.${item.name}`)
-                }
-            })
-        },
-        boolList() {
-            return BOOLEAN
-        },
-        codelibOption() {
-            return CODE_LIB_OPTION
-        },
-        codeTypeList() {
-            return CODE_LIB_TYPE
-        },
-        subPipelineOption() {
-            return SUB_PIPELINE_OPTION
-        },
-        globalParams: {
-            get() {
-                return this.renderParams.filter(
-                    (p) => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG'
-                )
-            },
-            set(params) {
-                this.updateContainerParams(this.settingKey, [...params, ...this.versions])
-            }
-        },
-        versions() {
-            return this.params.filter((p) => allVersionKeyList.includes(p.id))
-        },
-        hasGlobalParams() {
-            return this.globalParams.length !== 0
-        },
-        paramsDragOptions() {
-            return {
-                ghostClass: 'sortable-ghost-atom',
-                chosenClass: 'sortable-chosen-atom',
-                handle: '.icon-move',
-                animation: 200,
-                disabled: this.disabled
-            }
-        }
-    },
-
-    watch: {
-        params(newVal) {
-            this.renderParams = this.getParams(newVal)
-        }
-    },
-
-    mounted() {
-        this.renderParams = this.getParams(this.params)
-    },
-
-    methods: {
-        isTextareaParam,
-        isStringParam,
-        isBooleanParam,
-        isMultipleParam,
-        isSvnParam,
-        isGitParam,
-        isCodelibParam,
-        isArtifactoryParam,
-        isBuildResourceParam,
-        isSubPipelineParam,
-        isFileParam,
+    import Accordion from '@/components/atomFormField/Accordion'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+    import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import Selector from '@/components/atomFormField/Selector'
+    import VuexInput from '@/components/atomFormField/VuexInput'
+    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
+    import FileParamInput from '@/components/FileParamInput'
+    import FileUpload from '@/components/FileUpload'
+    import {
+        PROCESS_API_URL_PREFIX,
+        REPOSITORY_API_URL_PREFIX,
+        STORE_API_URL_PREFIX
+    } from '@/store/constants'
+    import {
+        CODE_LIB_OPTION,
+        CODE_LIB_TYPE,
+        DEFAULT_PARAM,
         getParamsDefaultValueLabel,
         getParamsDefaultValueLabelTips,
-        isSelectorParam(type) {
-            return isMultipleParam(type) || isEnumParam(type)
-        },
-        getRepoOption(type) {
-            return getRepoOption(type)
-        },
-        getBuildTypeList(os) {
-            return this.getBuildResourceTypeList(os)
-        },
-        getSelectorDefaultVal({type, defaultValue = ''}) {
-            if (isMultipleParam(type)) {
-                return defaultValue && typeof defaultValue === 'string'
-                    ? defaultValue.split(',')
-                    : []
-            }
+        getRepoOption,
+        isArtifactoryParam,
+        isBooleanParam,
+        isBuildResourceParam,
+        isCodelibParam,
+        isEnumParam,
+        isFileParam,
+        isGitParam,
+        isMultipleParam,
+        isStringParam,
+        isSubPipelineParam,
+        isSvnParam,
+        isTextareaParam,
+        PARAM_LIST,
+        STRING,
+        SUB_PIPELINE_OPTION
+    } from '@/store/modules/atom/paramsConfig'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { deepCopy } from '@/utils/util'
+    import draggable from 'vuedraggable'
+    import { mapGetters } from 'vuex'
+    import validMixins from '../validMixins'
 
-            return defaultValue
+    const BOOLEAN = [
+        {
+            value: true,
+            label: true
         },
-        handleParamTypeChange(key, value, paramIndex) {
-            const newGlobalParams = [
-                ...this.globalParams.slice(0, paramIndex),
-                {
-                    ...deepCopy(DEFAULT_PARAM[value]),
-                    id: this.globalParams[paramIndex].id,
-                    paramIdKey: this.globalParams[paramIndex].paramIdKey,
-                    required: !this.isTemplateParams
-                },
-                ...this.globalParams.slice(paramIndex + 1)
-            ]
+        {
+            value: false,
+            label: false
+        }
+    ]
 
-            this.handleChange([...newGlobalParams, ...this.versions])
+    export default {
+        name: 'build-params',
+        components: {
+            Accordion,
+            VuexInput,
+            EnumInput,
+            AtomCheckbox,
+            Selector,
+            draggable,
+            VuexTextarea,
+            RequestSelector,
+            KeyValueNormal,
+            FileUpload,
+            FileParamInput
         },
-
-        handleUpdateParamId(key, value, paramIndex) {
-            try {
-                const param = this.globalParams[paramIndex]
-                const preValue = param[key]
-
-                if (preValue !== value) {
-                    Object.assign(param, {
-                        [key]: value
-                    })
-
-                    this.handleChange([...this.renderParams])
-                    this.$nextTick(() => {
-                        if (
-                            this.$refs[`paramId${paramIndex}Input`]
-                            && this.$refs[`paramId${paramIndex}Input`][0]
-                        ) {
-                            this.$refs[`paramId${paramIndex}Input`][0].$el.focus()
-                        }
-                        setTimeout(() => {
-                            // hack remove error
-                            this.errors.clear(`param-${preValue}`)
-                        }, 0)
-                    })
-                }
-            } catch (e) {
-                console.log('update error', e)
-            }
-        },
-
-        handleUpdateParam(key, value, paramIndex) {
-            try {
-                const param = this.globalParams[paramIndex]
-                if (isMultipleParam(param.type) && key === 'defaultValue') {
-                    Object.assign(param, {
-                        [key]: value.join(',')
-                    })
-                } else if (param) {
-                    Object.assign(param, {
-                        [key]: value
-                    })
-                }
-                this.handleChange([...this.renderParams])
-            } catch (e) {
-                console.log('update error', e)
+        mixins: [validMixins],
+        props: {
+            settingKey: {
+                type: String,
+                default: 'params'
+            },
+            params: {
+                type: Array,
+                default: () => []
+            },
+            // 用于校验模板常量和流水线变量不能重名
+            additionParams: {
+                type: Array,
+                default: () => []
+            },
+            disabled: {
+                type: Boolean,
+                default: false
+            },
+            updateContainerParams: {
+                type: Function,
+                required: true
+            },
+            title: {
+                type: String,
+                default: '--'
             }
         },
-
-        editParam(index, isAdd) {
-            const {globalParams, versions} = this
-            if (isAdd) {
-                const param = {
-                    ...deepCopy(DEFAULT_PARAM[STRING]),
-                    id: `param${Math.floor(Math.random() * 100)}`,
-                    paramIdKey: `paramIdKey-${this.paramIdCount++}`,
-                    required: !this.isTemplateParams
-                }
-                globalParams.splice(index + 1, 0, param)
-            } else {
-                globalParams.splice(index, 1)
-            }
-            this.handleChange([...globalParams, ...versions])
-        },
-
-        editParamShow(paramIndex) {
-            let isShow = false
-            const param = this.globalParams[paramIndex]
-            if (param) {
-                isShow = param.required
-            }
-            this.handleUpdateParam('required', !isShow, paramIndex)
-        },
-
-        editOption(name, value, index) {
-            try {
-                let opts = []
-                if (value && typeof value === 'string') {
-                    opts = value.split('\n').map((opt) => {
-                        const v = opt.trim()
-                        const res = v.match(/^([\w\.\-\\\/]+)=([\S\s]+)$/) || [v, v, v]
-                        const [, key, value] = res
-                        console.log(key, value)
-                        return {
-                            key,
-                            value
-                        }
-                    })
-                }
-
-                this.handleUpdateParam(name, opts, index)
-                const param = this.renderParams[index]
-                if (
-                    typeof param.defaultValue === 'string'
-                    && (isMultipleParam(param.type) || isEnumParam(param.type))
-                ) {
-                    // 选项清除时，修改对应的默认值
-                    const dv = param.defaultValue
-                        .split(',')
-                        .filter((v) => param.options.map((k) => k.key).includes(v))
-                    if (isMultipleParam(param.type)) {
-                        this.handleUpdateParam('defaultValue', dv, index)
-                    } else {
-                        this.handleUpdateParam('defaultValue', dv.join(','), index)
-                    }
-                }
-            } catch (e) {
-                this.$showTips({
-                    message: e.message,
-                    theme: 'error'
-                })
-                return []
+        data () {
+            return {
+                paramIdCount: 0,
+                renderParams: [],
+                uploadFileName: ''
             }
         },
 
-        handleBuildResourceChange(name, value, index, param) {
-            const resetBuildType
-                = name === 'os' ? {buildType: this.getBuildTypeList(value)[0].type} : {}
-
-            this.handleUpdateParam(
-                'containerType',
-                Object.assign(
-                    {
-                        ...param.containerType,
-                        [name]: value
-                    },
-                    resetBuildType
-                ),
-                index
-            )
-            this.handleUpdateParam('defaultValue', '', index)
-        },
-
-        handleProperties(key, value, index) {
-            const properties = {}
-            value.forEach((val) => {
-                properties[val.key] = val.value
-            })
-            this.handleUpdateParam(key, properties, index)
-        },
-
-        getBuildResourceUrl({os, buildType}) {
-            return `/${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${this.$route.params.projectId}/oss/${os}?buildType=${buildType}`
-        },
-
-        handleCodeTypeChange(name, value, index) {
-            this.handleUpdateParam(name, value, index)
-            this.handleUpdateParam('defaultValue', '', index)
-        },
-
-        getCodeUrl(type) {
-            type = type || 'CODE_GIT'
-            return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
-        },
-
-        getSearchUrl() {
-            return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
-        },
-
-        handleChange(params) {
-            this.updateContainerParams(this.settingKey, params)
-        },
-
-        getOptions(param) {
-            try {
-                return param.options
-                    .map((opt) => (opt.key === opt.value ? opt.key : `${opt.key}=${opt.value}`))
-                    .join('\n')
-            } catch (e) {
-                return ''
-            }
-        },
-
-        getProperties(param) {
-            try {
-                return Object.keys(param.properties).map((item) => {
+        computed: {
+            ...mapGetters('atom', ['osList', 'getBuildResourceTypeList']),
+            isTemplateParams () {
+                return this.settingKey === 'templateParams'
+            },
+            baseOSList () {
+                return this.osList
+                    .filter((os) => os.value !== 'NONE')
+                    .map((os) => ({
+                        id: os.value,
+                        name: os.label
+                    }))
+            },
+            validateParams () {
+                return this.params.concat(this.additionParams)
+            },
+            paramsList () {
+                return PARAM_LIST.map((item) => {
                     return {
-                        key: item,
-                        value: param.properties[item]
+                        id: item.id,
+                        name: this.$t(`storeMap.${item.name}`)
                     }
                 })
-            } catch (e) {
-                return []
+            },
+            boolList () {
+                return BOOLEAN
+            },
+            codelibOption () {
+                return CODE_LIB_OPTION
+            },
+            codeTypeList () {
+                return CODE_LIB_TYPE
+            },
+            subPipelineOption () {
+                return SUB_PIPELINE_OPTION
+            },
+            globalParams: {
+                get () {
+                    return this.renderParams.filter(
+                        (p) => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG'
+                    )
+                },
+                set (params) {
+                    this.updateContainerParams(this.settingKey, [...params, ...this.versions])
+                }
+            },
+            versions () {
+                return this.params.filter((p) => allVersionKeyList.includes(p.id))
+            },
+            hasGlobalParams () {
+                return this.globalParams.length !== 0
+            },
+            paramsDragOptions () {
+                return {
+                    ghostClass: 'sortable-ghost-atom',
+                    chosenClass: 'sortable-chosen-atom',
+                    handle: '.icon-move',
+                    animation: 200,
+                    disabled: this.disabled
+                }
             }
         },
-        // 全局参数添加遍历的key值
-        getParams(params) {
-            const result = params.map((item) => {
-                const temp = {...item}
-                if (!allVersionKeyList.includes(item.id)) {
-                    temp.paramIdKey
-                        = typeof item.paramIdKey !== 'undefined'
-                        ? item.paramIdKey
-                        : `paramIdKey-${this.paramIdCount++}`
+
+        watch: {
+            params (newVal) {
+                this.renderParams = this.getParams(newVal)
+            }
+        },
+
+        mounted () {
+            this.renderParams = this.getParams(this.params)
+        },
+
+        methods: {
+            isTextareaParam,
+            isStringParam,
+            isBooleanParam,
+            isMultipleParam,
+            isSvnParam,
+            isGitParam,
+            isCodelibParam,
+            isArtifactoryParam,
+            isBuildResourceParam,
+            isSubPipelineParam,
+            isFileParam,
+            getParamsDefaultValueLabel,
+            getParamsDefaultValueLabelTips,
+            isSelectorParam (type) {
+                return isMultipleParam(type) || isEnumParam(type)
+            },
+            getRepoOption (type) {
+                return getRepoOption(type)
+            },
+            getBuildTypeList (os) {
+                return this.getBuildResourceTypeList(os)
+            },
+            getSelectorDefaultVal ({ type, defaultValue = '' }) {
+                if (isMultipleParam(type)) {
+                    return defaultValue && typeof defaultValue === 'string'
+                        ? defaultValue.split(',')
+                        : []
                 }
-                return temp
-            })
-            return result
-        },
 
-        transformOpt(opts) {
-            const uniqueMap = {}
-            opts = opts.filter((opt) => opt.key.length)
-            return Array.isArray(opts)
-                ? opts
-                    .filter((opt) => {
-                        if (!uniqueMap[opt.key]) {
-                            uniqueMap[opt.key] = 1
-                            return true
+                return defaultValue
+            },
+            handleParamTypeChange (key, value, paramIndex) {
+                const newGlobalParams = [
+                    ...this.globalParams.slice(0, paramIndex),
+                    {
+                        ...deepCopy(DEFAULT_PARAM[value]),
+                        id: this.globalParams[paramIndex].id,
+                        paramIdKey: this.globalParams[paramIndex].paramIdKey,
+                        required: !this.isTemplateParams
+                    },
+                    ...this.globalParams.slice(paramIndex + 1)
+                ]
+
+                this.handleChange([...newGlobalParams, ...this.versions])
+            },
+
+            handleUpdateParamId (key, value, paramIndex) {
+                try {
+                    const param = this.globalParams[paramIndex]
+                    const preValue = param[key]
+
+                    if (preValue !== value) {
+                        Object.assign(param, {
+                            [key]: value
+                        })
+
+                        this.handleChange([...this.renderParams])
+                        this.$nextTick(() => {
+                            if (
+                                this.$refs[`paramId${paramIndex}Input`]
+                                && this.$refs[`paramId${paramIndex}Input`][0]
+                            ) {
+                                this.$refs[`paramId${paramIndex}Input`][0].$el.focus()
+                            }
+                            setTimeout(() => {
+                                // hack remove error
+                                this.errors.clear(`param-${preValue}`)
+                            }, 0)
+                        })
+                    }
+                } catch (e) {
+                    console.log('update error', e)
+                }
+            },
+
+            handleUpdateParam (key, value, paramIndex) {
+                try {
+                    const param = this.globalParams[paramIndex]
+                    if (isMultipleParam(param.type) && key === 'defaultValue') {
+                        Object.assign(param, {
+                            [key]: value.join(',')
+                        })
+                    } else if (param) {
+                        Object.assign(param, {
+                            [key]: value
+                        })
+                    }
+                    this.handleChange([...this.renderParams])
+                } catch (e) {
+                    console.log('update error', e)
+                }
+            },
+
+            editParam (index, isAdd) {
+                const { globalParams, versions } = this
+                if (isAdd) {
+                    const param = {
+                        ...deepCopy(DEFAULT_PARAM[STRING]),
+                        id: `param${Math.floor(Math.random() * 100)}`,
+                        paramIdKey: `paramIdKey-${this.paramIdCount++}`,
+                        required: !this.isTemplateParams
+                    }
+                    globalParams.splice(index + 1, 0, param)
+                } else {
+                    globalParams.splice(index, 1)
+                }
+                this.handleChange([...globalParams, ...versions])
+            },
+
+            editParamShow (paramIndex) {
+                let isShow = false
+                const param = this.globalParams[paramIndex]
+                if (param) {
+                    isShow = param.required
+                }
+                this.handleUpdateParam('required', !isShow, paramIndex)
+            },
+
+            editOption (name, value, index) {
+                try {
+                    let opts = []
+                    if (value && typeof value === 'string') {
+                        opts = value.split('\n').map((opt) => {
+                            const v = opt.trim()
+                            const res = v.match(/^([\w\.\-\\\/]+)=([\S\s]+)$/) || [v, v, v]
+                            const [, key, value] = res
+                            console.log(key, value)
+                            return {
+                                key,
+                                value
+                            }
+                        })
+                    }
+
+                    this.handleUpdateParam(name, opts, index)
+                    const param = this.renderParams[index]
+                    if (
+                        typeof param.defaultValue === 'string'
+                        && (isMultipleParam(param.type) || isEnumParam(param.type))
+                    ) {
+                        // 选项清除时，修改对应的默认值
+                        const dv = param.defaultValue
+                            .split(',')
+                            .filter((v) => param.options.map((k) => k.key).includes(v))
+                        if (isMultipleParam(param.type)) {
+                            this.handleUpdateParam('defaultValue', dv, index)
+                        } else {
+                            this.handleUpdateParam('defaultValue', dv.join(','), index)
                         }
-                        return false
+                    }
+                } catch (e) {
+                    this.$showTips({
+                        message: e.message,
+                        theme: 'error'
                     })
-                    .map((opt) => ({id: opt.key, name: opt.value}))
-                : []
-        },
+                    return []
+                }
+            },
 
-        uploadPathFromFileName(value) {
-            this.uploadFileName = value
+            handleBuildResourceChange (name, value, index, param) {
+                const resetBuildType
+                    = name === 'os' ? { buildType: this.getBuildTypeList(value)[0].type } : {}
+
+                this.handleUpdateParam(
+                    'containerType',
+                    Object.assign(
+                        {
+                            ...param.containerType,
+                            [name]: value
+                        },
+                        resetBuildType
+                    ),
+                    index
+                )
+                this.handleUpdateParam('defaultValue', '', index)
+            },
+
+            handleProperties (key, value, index) {
+                const properties = {}
+                value.forEach((val) => {
+                    properties[val.key] = val.value
+                })
+                this.handleUpdateParam(key, properties, index)
+            },
+
+            getBuildResourceUrl ({ os, buildType }) {
+                return `/${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${this.$route.params.projectId}/oss/${os}?buildType=${buildType}`
+            },
+
+            handleCodeTypeChange (name, value, index) {
+                this.handleUpdateParam(name, value, index)
+                this.handleUpdateParam('defaultValue', '', index)
+            },
+
+            getCodeUrl (type) {
+                type = type || 'CODE_GIT'
+                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
+            },
+
+            getSearchUrl () {
+                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
+            },
+
+            handleChange (params) {
+                this.updateContainerParams(this.settingKey, params)
+            },
+
+            getOptions (param) {
+                try {
+                    return param.options
+                        .map((opt) => (opt.key === opt.value ? opt.key : `${opt.key}=${opt.value}`))
+                        .join('\n')
+                } catch (e) {
+                    return ''
+                }
+            },
+
+            getProperties (param) {
+                try {
+                    return Object.keys(param.properties).map((item) => {
+                        return {
+                            key: item,
+                            value: param.properties[item]
+                        }
+                    })
+                } catch (e) {
+                    return []
+                }
+            },
+            // 全局参数添加遍历的key值
+            getParams (params) {
+                const result = params.map((item) => {
+                    const temp = { ...item }
+                    if (!allVersionKeyList.includes(item.id)) {
+                        temp.paramIdKey
+                            = typeof item.paramIdKey !== 'undefined'
+                                ? item.paramIdKey
+                                : `paramIdKey-${this.paramIdCount++}`
+                    }
+                    return temp
+                })
+                return result
+            },
+
+            transformOpt (opts) {
+                const uniqueMap = {}
+                opts = opts.filter((opt) => opt.key.length)
+                return Array.isArray(opts)
+                    ? opts
+                        .filter((opt) => {
+                            if (!uniqueMap[opt.key]) {
+                                uniqueMap[opt.key] = 1
+                                return true
+                            }
+                            return false
+                        })
+                        .map((opt) => ({ id: opt.key, name: opt.value }))
+                    : []
+            },
+
+            uploadPathFromFileName (value) {
+                this.uploadFileName = value
+            }
         }
     }
-}
 </script>
 
 <style lang="scss">
 @import "../../scss/conf";
-
 .build-params-comp {
-    margin: 20px 0;
-
-    .params-flex-col {
-        display: flex;
-
-        .bk-form-item {
-            flex: 1;
-            padding-right: 8px;
-            margin-top: 0;
-            line-height: 30px;
-
-            &:last-child {
-                padding-right: 0;
-            }
-
-            & + .bk-form-item {
-                margin-top: 0 !important;
-            }
-
-            span.bk-form-help {
-                display: block;
-            }
-        }
-
-        .flex-col-span-1 {
-            flex: 1;
-        }
-    }
-
-    .content .text-link {
-        font-size: 14px;
-        cursor: pointer;
-    }
-}
-
-.no-prop {
-    height: 100%;
+  margin: 20px 0;
+  .params-flex-col {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    .bk-form-item {
+      flex: 1;
+      padding-right: 8px;
+      margin-top: 0;
+      line-height: 30px;
+      &:last-child {
+        padding-right: 0;
+      }
+      & + .bk-form-item {
+        margin-top: 0 !important;
+      }
+      span.bk-form-help {
+        display: block;
+      }
+    }
+    .flex-col-span-1 {
+      flex: 1;
+    }
+  }
+  .content .text-link {
+    font-size: 14px;
+    cursor: pointer;
+  }
+}
+.no-prop {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .param-option {
-    display: flex;
-    align-items: flex-start;
-    margin: 0 0 10px 0;
-
-    .option-input {
-        flex: 1;
-
-        &:first-child {
-            margin-right: 10px;
-        }
+  display: flex;
+  align-items: flex-start;
+  margin: 0 0 10px 0;
+  .option-input {
+    flex: 1;
+    &:first-child {
+      margin-right: 10px;
     }
-
-    .devops-icon {
-        font-size: 14px;
-        padding: 10px 0 0 10px;
-        cursor: pointer;
-
-        &:disabled {
-            cursor: auto;
-            opacity: 0.5;
-        }
+  }
+  .devops-icon {
+    font-size: 14px;
+    padding: 10px 0 0 10px;
+    cursor: pointer;
+    &:disabled {
+      cursor: auto;
+      opacity: 0.5;
     }
+  }
 }
 
 .param-header {
-    display: flex;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  word-wrap: break-word;
+  word-break: break-all;
+  > span {
     flex: 1;
-    align-items: center;
-    word-wrap: break-word;
-    word-break: break-all;
-
-    > span {
-        flex: 1;
+  }
+  > .devops-icon {
+    width: 24px;
+    text-align: center;
+    &.icon-plus {
+      &:hover {
+        color: $primaryColor;
+      }
     }
-
-    > .devops-icon {
-        width: 24px;
-        text-align: center;
-
-        &.icon-plus {
-            &:hover {
-                color: $primaryColor;
-            }
-        }
-
-        &.icon-delete {
-            &:hover {
-                color: $dangerColor;
-            }
-        }
+    &.icon-delete {
+      &:hover {
+        color: $dangerColor;
+      }
     }
+  }
 }
 
 .params-help {
-    color: $fontColor;
-    font-size: 12px;
+  color: $fontColor;
+  font-size: 12px;
 }
-
 .sortable-ghost-atom {
-    opacity: 0.5;
+  opacity: 0.5;
 }
-
 .sortable-chosen-atom {
-    transform: scale(1);
+  transform: scale(1);
 }
 
 .param-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-
-    > span {
-        margin: 0 10px;
-    }
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  > span {
+    margin: 0 10px;
+  }
 }
 </style>

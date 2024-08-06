@@ -27,12 +27,16 @@
 
 package com.tencent.devops.stream.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -52,4 +56,16 @@ interface BuildStreamResource {
         @PathParam("projectId")
         projectId: String
     ): Result<String?>
+
+    @Operation(summary = "获取项目的超级token （stream使用）")
+    @GET
+    @Path("/getToken")
+    fun getToken(
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "buildId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String
+    ): Result<GitToken?>
 }

@@ -25,34 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.api.user
+package com.tencent.devops.repository.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
-import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "USER_WORKSPACE_TEMPLATE", description = "用户-工作空间模板")
-@Path("/{apiType:user|desktop}/wstemplate")
+@Tag(name = "build_SCM_GIT_CI", description = "Service Code GIT CI resource")
+@Path("/service/gitci/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserWsTemplateResource {
+interface ServiceStreamResource {
 
-    @Operation(summary = "获取工作空间模板")
+    @Operation(summary = "获取项目的token")
     @GET
-    @Path("/list")
-    fun getWorkspaceTemplateList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<List<WorkspaceTemplate>>
+    @Path("/getToken")
+    fun getToken(
+        @Parameter(description = "gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String
+    ): Result<GitToken?>
 }

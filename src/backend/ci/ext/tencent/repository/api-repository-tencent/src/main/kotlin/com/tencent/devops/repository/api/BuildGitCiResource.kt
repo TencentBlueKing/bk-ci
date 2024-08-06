@@ -49,6 +49,9 @@ interface BuildGitCiResource {
     @Operation(summary = "获取项目的token")
     @GET
     @Path("/getToken")
+    @Deprecated(
+        message = "not safe, use BuildStreamResource.getToken"
+    )
     fun getToken(
         @Parameter(description = "gitProjectId", required = true)
         @QueryParam("gitProjectId")

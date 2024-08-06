@@ -25,24 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.resources.user
+package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.remotedev.api.user.UserWsTemplateResource
-import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
-import org.slf4j.LoggerFactory
+import com.tencent.devops.repository.api.ServiceStreamResource
+import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.service.scm.TencentGitCiService
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-@Suppress("ALL")
-@Deprecated("LINUX 待删除")
-class UserWsTemplateResourceImpl : UserWsTemplateResource {
-    companion object {
-        val logger = LoggerFactory.getLogger(UserWsTemplateResourceImpl::class.java)!!
-    }
-
-    override fun getWorkspaceTemplateList(userId: String): Result<List<WorkspaceTemplate>> {
-        logger.info("WorkspaceTemplateService|getWorkspaceTemplateList|userId|$userId")
-        return Result(emptyList())
+class ServiceStreamResourceImpl @Autowired constructor(
+    private val gitciService: TencentGitCiService
+) : ServiceStreamResource {
+    override fun getToken(gitProjectId: String): Result<GitToken?> {
+        return Result(gitciService.getToken(gitProjectId))
     }
 }
