@@ -32,9 +32,15 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.json.JsonReadFeature
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.Module
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.introspect.AnnotatedMember
+import com.fasterxml.jackson.databind.introspect.AnnotatedMethod
+import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair
+import com.fasterxml.jackson.databind.introspect.NopAnnotationIntrospector
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.ser.FilterProvider
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
@@ -54,6 +60,8 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter.ISO_DATE
 import java.time.format.DateTimeFormatter.ISO_DATE_TIME
 import java.time.format.DateTimeFormatter.ISO_TIME
+import java.util.Locale
+import kotlin.collections.HashSet
 
 /**
  *
@@ -119,20 +127,55 @@ object JsonUtil {
 
     private val objectMapper = objectMapper()
 
+    private val jsonMapper = jsonMapper()
+
     private fun objectMapper(): ObjectMapper {
         return ObjectMapper().apply {
-            registerModule(javaTimeModule())
-            registerModule(KotlinModule.Builder().build())
-            enable(SerializationFeature.INDENT_OUTPUT)
-            enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
-            enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-            jsonModules.forEach { jsonModule ->
-                registerModule(jsonModule)
+            objectMapperInit()
+        }
+    }
+
+    private fun ObjectMapper.objectMapperInit() {
+
+        registerModule(javaTimeModule())
+        registerModule(KotlinModule.Builder().build())
+
+        // 兼容老版本is开头的方法
+        val oldAnnotationIntrospectorPair = object : NopAnnotationIntrospector() {
+            override fun findImplicitPropertyName(member: AnnotatedMember?): String? {
+                if (member == null) return null
+                if (member is AnnotatedMethod && member.name.startsWith("is")) {
+                    return member.name.substringAfter("is")
+                        .replaceFirstChar { it.lowercase(Locale.getDefault()) }
+                }
+                return null
             }
         }
+        val annotationIntrospectorPair =
+            AnnotationIntrospectorPair(oldAnnotationIntrospectorPair, serializationConfig.annotationIntrospector)
+
+        enable(SerializationFeature.INDENT_OUTPUT)
+        enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
+        enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
+        setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+        setAnnotationIntrospector(annotationIntrospectorPair)
+        jsonModules.forEach { jsonModule ->
+            registerModule(jsonModule)
+        }
+    }
+
+    private fun jsonMapper(): JsonMapper {
+        return JsonMapper.builder()
+            /* 使得POJO反序列化有序，对性能会有略微影响
+            *  https://github.com/FasterXML/jackson-databind/issues/3900
+            * */
+            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+            .disable(MapperFeature.SORT_CREATOR_PROPERTIES_FIRST).build().apply {
+                objectMapperInit()
+            }
     }
 
     private val skipEmptyObjectMapper = ObjectMapper().apply {
@@ -178,6 +221,7 @@ object JsonUtil {
         }
         subModules.forEach { subModule ->
             objectMapper.registerModule(subModule)
+            jsonMapper.registerModule(subModule)
             skipEmptyObjectMapper.registerModule(subModule)
             unformattedObjectMapper.registerModule(subModule)
         }
@@ -191,6 +235,13 @@ object JsonUtil {
             return bean.toString()
         }
         return getObjectMapper(formatted).writeValueAsString(bean)!!
+    }
+
+    fun toSortJson(bean: Any): String {
+        if (ReflectUtil.isNativeType(bean) || bean is String) {
+            return bean.toString()
+        }
+        return jsonMapper.writeValueAsString(bean)!!
     }
 
     /**

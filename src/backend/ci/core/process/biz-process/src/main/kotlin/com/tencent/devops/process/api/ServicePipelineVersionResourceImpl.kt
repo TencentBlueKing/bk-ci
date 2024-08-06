@@ -162,7 +162,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             AuthPermission.CREATE
         )
         return Result(
-            pipelineVersionFacadeService.createPipelineFromTemplate(
+            pipelineVersionFacadeService.createPipelineFromFreedom(
                 userId = userId,
                 projectId = projectId,
                 request = request

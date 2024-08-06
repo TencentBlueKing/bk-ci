@@ -118,14 +118,6 @@ class ModelElement @Autowired(required = false) constructor(
                 element.canRetry = false
                 element.customEnv = ModelCommon.getCustomEnv(step.env)
                 elementList.add(element)
-                if (element is MarketBuildAtomElement) {
-                    ModelCommon.installMarketAtom(
-                        client = client,
-                        projectCode = event.projectCode,
-                        userId = event.elementInstallUserId,
-                        atomCode = element.getAtomCode()
-                    )
-                }
             }
         }
 
@@ -177,6 +169,7 @@ class ModelElement @Autowired(required = false) constructor(
                         scriptType = BuildScriptType.BAT,
                         script = step.run
                     )
+
                     else -> linux
                 }
             }

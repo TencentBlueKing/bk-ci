@@ -507,13 +507,16 @@ class PipelineVersionFacadeService @Autowired constructor(
         }
     }
 
-    fun createPipelineFromTemplate(
+    /**
+     * 从自由模式下创建流水线
+     */
+    fun createPipelineFromFreedom(
         userId: String,
         projectId: String,
         request: TemplateInstanceCreateRequest
     ): DeployPipelineResult {
-        val (templateModel, instanceFromTemplate) = if (request.emptyTemplate == true) {
-            val model = Model(
+        val templateModel = if (request.emptyTemplate == true) {
+            Model(
                 name = request.pipelineName,
                 desc = "",
                 stages = listOf(
@@ -539,15 +542,13 @@ class PipelineVersionFacadeService @Autowired constructor(
                 ),
                 pipelineCreator = userId
             )
-            Pair(model, true)
         } else {
-            val template = templateFacadeService.getTemplate(
+            templateFacadeService.getTemplate(
                 userId = userId,
                 projectId = projectId,
                 templateId = request.templateId,
                 version = request.templateVersion
-            )
-            Pair(template.template, true)
+            ).template
         }
         return pipelineInfoFacadeService.createPipeline(
             userId = userId,
@@ -555,8 +556,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             model = templateModel.copy(
                 name = request.pipelineName,
                 templateId = request.templateId,
-                instanceFromTemplate = instanceFromTemplate,
-                labels = request.labels,
+                instanceFromTemplate = false,
                 staticViews = request.staticViews
             ),
             channelCode = ChannelCode.BS,
