@@ -394,4 +394,15 @@ CREATE TABLE IF NOT EXISTS T_AUTH_RESOURCE_AUTHORIZATION (
     UNIQUE KEY `UNIQ_PROJECT_RESOURCE` (`PROJECT_CODE`, `RESOURCE_TYPE`, `RESOURCE_CODE`)
 ) ENGINE = InnoDB CHARSET = utf8mb4 COMMENT '资源授权管理表';
 
+CREATE TABLE IF NOT EXISTS `T_AUTH_RESOURCE_SYNC`
+(
+    `PROJECT_CODE` varchar(64) not null comment '项目ID',
+    `STATUS`             int(10)  default 0                 null comment '迁移状态, 0-同步中,1-同步成功,2-同步失败',
+    `ERROR_MESSAGE`      text                               null comment '错误信息',
+    `TOTAL_TIME`         bigint                             null comment '总耗时',
+    `CREATE_TIME`   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`   datetime default CURRENT_TIMESTAMP not null comment '更新时间',
+    PRIMARY KEY (`PROJECT_CODE`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='同步IAM资源';
+
 SET FOREIGN_KEY_CHECKS = 1;

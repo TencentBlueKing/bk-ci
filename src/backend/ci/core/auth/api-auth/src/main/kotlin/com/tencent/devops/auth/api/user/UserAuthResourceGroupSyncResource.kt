@@ -27,12 +27,14 @@
 
 package com.tencent.devops.auth.api.user
 
+import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -72,4 +74,16 @@ interface UserAuthResourceGroupSyncResource {
         @PathParam("groupId")
         groupId: Int
     ): Result<Boolean>
+
+    @GET
+    @Path("/getStatusOfSync")
+    @Operation(summary = "获取同步状态")
+    fun getStatusOfSync(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<AuthMigrateStatus>
 }

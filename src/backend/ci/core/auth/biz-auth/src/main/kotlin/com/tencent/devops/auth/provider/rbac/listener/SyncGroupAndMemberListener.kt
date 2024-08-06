@@ -26,15 +26,26 @@
  *
  */
 
-package com.tencent.devops.auth.pojo.enum
+package com.tencent.devops.auth.provider.rbac.listener
 
-enum class AuthMigrateStatus(val value: Int) {
-    // 迁移中
-    PENDING(0),
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-    // 迁移成功
-    SUCCEED(1),
+class SyncGroupAndMemberListener @Autowired constructor(
+    private val permissionResourceGroupSyncService: PermissionResourceGroupSyncService
+) : Listener<ProjectEnableStatusBroadCastEvent> {
 
-    // 迁移失败
-    FAILED(2);
+    override fun execute(event: ProjectEnableStatusBroadCastEvent) {
+        logger.info("sync group and member when enabled project $event")
+        if (event.enabled) {
+            permissionResourceGroupSyncService.syncGroupAndMember(projectCode = event.projectId)
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(SyncGroupAndMemberListener::class.java)
+    }
 }

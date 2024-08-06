@@ -855,27 +855,48 @@ class RbacPermissionResourceMemberService constructor(
                 )
             }
             BatchOperateType.RENEWAL -> {
-                val isUserDeparted = deptService.isUserDeparted(conditionReq.targetMember.id)
-                // 离职不允许续期
-                if (isUserDeparted) {
-                    BatchOperateGroupMemberCheckVo(
-                        totalCount = totalCount,
-                        inoperableCount = totalCount
-                    )
-                } else {
-                    // 永久期限 不允许再续期
-                    val groupCountOfPermanentExpiredTime = listMemberGroupsDetails(
+                with(conditionReq) {
+                    val isUserDeparted = targetMember.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER) &&
+                        deptService.isUserDeparted(targetMember.id)
+                    // 离职用户不允许续期
+                    if (isUserDeparted) {
+                        BatchOperateGroupMemberCheckVo(
+                            totalCount = totalCount,
+                            inoperableCount = totalCount
+                        )
+                    } else {
+                        // 永久期限 不允许再续期
+                        val groupCountOfPermanentExpiredTime = listMemberGroupsDetails(
+                            projectCode = projectCode,
+                            memberId = targetMember.id,
+                            memberType = targetMember.type,
+                            groupIds = groupIdsOfDirectJoined
+                        ).filter {
+                            // iam用的是秒级时间戳
+                            it.expiredAt == PERMANENT_EXPIRED_TIME / 1000
+                        }.size
+                        BatchOperateGroupMemberCheckVo(
+                            totalCount = totalCount,
+                            inoperableCount = groupCountOfPermanentExpiredTime + groupCountOfTemplateJoined
+                        )
+                    }
+                }
+            }
+            BatchOperateType.HANDOVER -> {
+                // 已过期和通过模板获取的权限不允许交接
+                with(conditionReq) {
+                    val groupCountOfExpired = listMemberGroupsDetails(
                         projectCode = projectCode,
-                        memberId = conditionReq.targetMember.id,
-                        memberType = conditionReq.targetMember.type,
+                        memberId = targetMember.id,
+                        memberType = targetMember.type,
                         groupIds = groupIdsOfDirectJoined
                     ).filter {
                         // iam用的是秒级时间戳
-                        it.expiredAt == PERMANENT_EXPIRED_TIME / 1000
+                        it.expiredAt < System.currentTimeMillis() / 1000
                     }.size
                     BatchOperateGroupMemberCheckVo(
                         totalCount = totalCount,
-                        inoperableCount = groupCountOfPermanentExpiredTime + groupCountOfTemplateJoined
+                        inoperableCount = groupCountOfTemplateJoined + groupCountOfExpired
                     )
                 }
             }

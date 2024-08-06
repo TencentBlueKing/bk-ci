@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 
 /**
@@ -47,6 +48,11 @@ interface PermissionResourceGroupSyncService {
      * 同步项目下组和成员
      */
     fun syncGroupAndMember(projectCode: String)
+
+    /**
+     * 获取项目的同步状态
+     */
+    fun getStatusOfSync(projectCode: String): AuthMigrateStatus
 
     /**
      * 同步项目下用户组

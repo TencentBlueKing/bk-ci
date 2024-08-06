@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.provider.sample.service
 
+import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 
@@ -37,6 +38,8 @@ class SamplePermissionResourceGroupSyncService : PermissionResourceGroupSyncServ
     override fun batchSyncGroupAndMember(projectCodes: List<String>) = Unit
 
     override fun syncGroupAndMember(projectCode: String) = Unit
+
+    override fun getStatusOfSync(projectCode: String): AuthMigrateStatus = AuthMigrateStatus.SUCCEED
 
     override fun batchSyncProjectGroup(projectCodes: List<String>) = Unit
 

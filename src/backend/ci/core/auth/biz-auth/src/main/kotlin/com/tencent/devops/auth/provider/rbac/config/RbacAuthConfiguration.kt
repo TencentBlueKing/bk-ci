@@ -47,6 +47,7 @@ import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
+import com.tencent.devops.auth.dao.AuthResourceSyncDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
 import com.tencent.devops.auth.provider.rbac.service.ItsmService
@@ -558,7 +559,8 @@ class RbacAuthConfiguration {
         iamV2ManagerService: V2ManagerService,
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
         rbacCacheService: RbacCacheService,
-        redisOperation: RedisOperation
+        redisOperation: RedisOperation,
+        authResourceSyncDao: AuthResourceSyncDao
     ) = RbacPermissionResourceGroupSyncService(
         client = client,
         dslContext = dslContext,
@@ -567,6 +569,7 @@ class RbacAuthConfiguration {
         iamV2ManagerService = iamV2ManagerService,
         authResourceGroupMemberDao = authResourceGroupMemberDao,
         rbacCacheService = rbacCacheService,
-        redisOperation = redisOperation
+        redisOperation = redisOperation,
+        authResourceSyncDao = authResourceSyncDao
     )
 }

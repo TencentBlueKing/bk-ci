@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.user.UserAuthResourceGroupSyncResource
+import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -46,5 +47,11 @@ class UserAuthResourceGroupSyncResourceImpl @Autowired constructor(
     override fun syncGroupMember(userId: String, projectId: String, groupId: Int): Result<Boolean> {
         permissionResourceGroupSyncService.syncIamGroupMember(projectCode = projectId, iamGroupId = groupId)
         return Result(true)
+    }
+
+    override fun getStatusOfSync(userId: String, projectId: String): Result<AuthMigrateStatus> {
+        return Result(
+            permissionResourceGroupSyncService.getStatusOfSync(projectCode = projectId)
+        )
     }
 }

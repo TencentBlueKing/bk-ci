@@ -30,13 +30,17 @@ package com.tencent.devops.auth.provider.rbac.service
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
+import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
+import com.tencent.devops.auth.dao.AuthResourceSyncDao
 import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
+import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.lock.SyncGroupAndMemberLock
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -52,6 +56,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionException
 import java.util.concurrent.Executors
 
 @Suppress("LongParameterList")
@@ -63,7 +68,8 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
     private val rbacCacheService: RbacCacheService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val authResourceSyncDao: AuthResourceSyncDao
 ) : PermissionResourceGroupSyncService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupSyncService::class.java)
@@ -167,18 +173,83 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     logger.info("sync group and member|running:$projectCode")
                     return@use
                 }
-                logger.info("sync group and member|start:$projectCode")
                 val startEpoch = System.currentTimeMillis()
-                // 同步项目下的组信息
-                syncProjectGroup(projectCode = projectCode)
-                // 同步组成员
-                syncResourceGroupMember(projectCode = projectCode)
-                logger.info(
-                    "It take(${System.currentTimeMillis() - startEpoch})ms to sync " +
-                        "project group and members $projectCode"
-                )
+                try {
+                    logger.info("sync group and member|start:$projectCode")
+                    // 查询同步状态，若在运行中则直接结束
+                    val syncRecord = authResourceSyncDao.get(
+                        dslContext = dslContext,
+                        projectCode = projectCode
+                    )
+                    if (syncRecord != null && syncRecord.status == AuthMigrateStatus.PENDING.value) {
+                        return@use
+                    }
+                    authResourceSyncDao.create(
+                        dslContext = dslContext,
+                        projectCode = projectCode,
+                        status = AuthMigrateStatus.PENDING.value
+                    )
+                    // 同步项目下的组信息
+                    syncProjectGroup(projectCode = projectCode)
+                    // 同步组成员
+                    syncResourceGroupMember(projectCode = projectCode)
+                    // 记录完成状态
+                    authResourceSyncDao.updateStatus(
+                        dslContext = dslContext,
+                        projectCode = projectCode,
+                        status = AuthMigrateStatus.SUCCEED.value,
+                        totalTime = System.currentTimeMillis() - startEpoch
+                    )
+                    logger.info(
+                        "It take(${System.currentTimeMillis() - startEpoch})ms to sync " +
+                            "project group and members $projectCode"
+                    )
+                } catch (ex: Exception) {
+                    handleException(
+                        exception = ex,
+                        projectCode = projectCode,
+                        totalTime = System.currentTimeMillis() - startEpoch
+                    )
+                }
             }
         }
+    }
+
+    override fun getStatusOfSync(projectCode: String): AuthMigrateStatus {
+        val syncRecord = authResourceSyncDao.get(
+            dslContext = dslContext,
+            projectCode = projectCode
+        ) ?: return AuthMigrateStatus.SUCCEED
+        return AuthMigrateStatus.values().first { it.value == syncRecord.status }
+    }
+
+    private fun handleException(
+        totalTime: Long,
+        exception: Exception,
+        projectCode: String
+    ) {
+        val errorMessage = when (exception) {
+            is IamException -> {
+                exception.errorMsg
+            }
+            is ErrorCodeException -> {
+                exception.defaultMessage
+            }
+            is CompletionException -> {
+                exception.cause?.message ?: exception.message
+            }
+            else -> {
+                exception.toString()
+            }
+        }
+        logger.warn("sync group and member error! $projectCode", errorMessage)
+        authResourceSyncDao.updateStatus(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            status = AuthMigrateStatus.FAILED.value,
+            errorMessage = errorMessage,
+            totalTime = totalTime
+        )
     }
 
     @Suppress("NestedBlockDepth")
