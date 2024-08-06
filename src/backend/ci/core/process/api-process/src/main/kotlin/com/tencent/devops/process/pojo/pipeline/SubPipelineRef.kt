@@ -59,4 +59,21 @@ data class SubPipelineRef(
     val elementEnable: Boolean = true,
     @get:Schema(title = "是否为模板流水线", required = true)
     val isTemplate: Boolean = false
-)
+) {
+    constructor(projectId: String, pipelineId: String, subPipelineId: String, subProjectId: String) : this(
+        pipelineId = pipelineId,
+        pipelineName = "",
+        projectId = projectId,
+        channel = "",
+        taskId = "",
+        taskName = "",
+        stageName = "",
+        containerName = "",
+        subPipelineId = subPipelineId,
+        subProjectId = subProjectId,
+        subPipelineName = "",
+        userId = "",
+        elementEnable = true,
+        isTemplate = false
+    )
+}

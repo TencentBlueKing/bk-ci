@@ -402,7 +402,7 @@ class SubPipelineRefService @Autowired constructor(
                 val parentPipelineRef = existsPipeline[pipelineRefKey]!!
                 val (msgCode, params) = when {
                     // [当前流水线] -> [当前流水线]
-                     "${projectId}_$pipelineId" == rootPipelineKey-> {
+                     "${projectId}_$pipelineId" == rootPipelineKey -> {
                         BK_CURRENT_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to emptyArray<String>()
                     }
                     // [其他流水线] -> [当前流水线]

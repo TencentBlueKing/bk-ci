@@ -56,10 +56,12 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
+import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.pipeline.SubPipelineRefService
 import com.tencent.devops.process.utils.PIPELINE_START_SUB_RUN_MODE
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
@@ -91,7 +93,8 @@ class SubPipelineStartUpService @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineUrlBean: PipelineUrlBean
+    private val pipelineUrlBean: PipelineUrlBean,
+    private val subPipelineRefService: SubPipelineRefService
 ) {
 
     companion object {
@@ -154,11 +157,22 @@ class SubPipelineStartUpService @Autowired constructor(
         values.forEach {
             startParams[it.key] = parseVariable(it.value, runVariables)
         }
-
         val existPipelines = HashSet<String>()
         existPipelines.add(parentPipelineId)
         try {
-            checkSub(atomCode, projectId = fixProjectId, pipelineId = callPipelineId, existPipelines = existPipelines)
+            // 检查循环调用
+            val rootPipelineKey = "${projectId}_$parentPipelineId"
+            val subPipelineRef = SubPipelineRef(
+                projectId = projectId,
+                pipelineId = parentPipelineId,
+                subPipelineId = callPipelineId,
+                subProjectId = callProjectId
+            )
+            subPipelineRefService.checkCircularDependency(
+                subPipelineRef = subPipelineRef,
+                rootPipelineKey = rootPipelineKey,
+                existsPipeline = HashMap(mapOf(rootPipelineKey to subPipelineRef))
+            )
         } catch (e: OperationException) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL,

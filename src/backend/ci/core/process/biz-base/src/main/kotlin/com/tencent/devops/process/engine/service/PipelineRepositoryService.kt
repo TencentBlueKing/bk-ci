@@ -55,7 +55,6 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -546,14 +545,6 @@ class PipelineRepositoryService constructor(
                 }
                 e.timeCost = null
                 distIds.add(e.id!!)
-                when (e) {
-                    is SubPipelineCallElement -> { // 子流水线循环依赖检查
-                        val existPipelines = HashSet<String>()
-                        existPipelines.add(pipelineId)
-                        checkSubpipeline(projectId, e.subPipelineId, existPipelines)
-                    }
-                }
-
                 // 补偿动作--未来拆分出来，针对复杂的东西异步处理
                 if (versionStatus?.isReleasing() == true) {
                     ElementBizRegistrar.getPlugin(e)?.afterCreate(
@@ -1587,57 +1578,6 @@ class PipelineRepositoryService constructor(
         return listInfoByPipelineName.map {
             it.pipelineName to it.pipelineId
         }.toMap()
-    }
-
-    private fun checkSubpipeline(projectId: String, pipelineId: String, existPipelines: HashSet<String>) {
-
-        if (existPipelines.contains(pipelineId)) {
-            logger.info("[$projectId|$pipelineId] Sub pipeline call [$existPipelines|$pipelineId]")
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL
-            )
-        }
-        existPipelines.add(pipelineId)
-        val pipeline = getPipelineInfo(projectId, pipelineId)
-        if (pipeline == null) {
-            logger.warn("The sub pipeline($pipelineId) is not exist")
-            return
-        }
-
-        val existModel = getPipelineResourceVersion(projectId, pipelineId, pipeline.version)?.model
-
-        if (existModel == null) {
-            logger.warn("The pipeline($pipelineId) is not exist")
-            return
-        }
-
-        val currentExistPipelines = HashSet<String>(existPipelines)
-        existModel.stages.forEachIndexed stage@{ index, stage ->
-            if (index == 0) {
-                // Ignore the trigger container
-                return@stage
-            }
-            stage.containers.forEach container@{ container ->
-                if (container !is NormalContainer) {
-                    // 只在无构建环境中
-                    return@container
-                }
-
-                container.elements.forEach element@{ element ->
-                    if (element !is SubPipelineCallElement) {
-                        return@element
-                    }
-                    val subpipelineId = element.subPipelineId
-                    if (subpipelineId.isBlank()) {
-                        logger.warn("The sub pipeline id of pipeline($pipeline) is blank")
-                        return@element
-                    }
-                    val exist = HashSet<String>(currentExistPipelines)
-                    checkSubpipeline(projectId = projectId, pipelineId = subpipelineId, existPipelines = exist)
-                    existPipelines.addAll(exist)
-                }
-            }
-        }
     }
 
     fun getBuildNo(projectId: String, pipelineId: String): Int? {
