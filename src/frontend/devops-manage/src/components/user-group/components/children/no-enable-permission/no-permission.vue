@@ -15,18 +15,20 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
-import { ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { defineProps, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
-
 const router = useRouter();
+const route = useRoute();
+const projectId = computed(() => route.params?.projectCode);
+const props = defineProps({
+  userId: String,
+});
 
 function goPermission() {
-  router.push({
-    name: 'permission'
-  });
+  window.open(`${location.origin}/console/manage/${projectId.value}/permission?userId=${props.userId}`)
 }
 </script>
 

@@ -10,6 +10,8 @@
       :border="border"
       remote-pagination
       empty-cell-text="--"
+      selection-key="resourceCode"
+      :checked="selectedResourceCode"
       :scroll-loading="scrollLoading"
       @select-all="handleSelectAll"
       @selection-change="handleSelectionChange"
@@ -112,9 +114,9 @@
           </div>
         </template>
       </bk-table-column>
-      <template #appendLastRow v-if="remainingCount && !pagination && data.length">
+      <template #appendLastRow v-if="remainingCount > 0 && !pagination && data.length">
         <div class="prepend appendLastRow">
-          {{ t("剩余X条数据",[remainingCount]) }}
+          {{ t("剩余X条数据", [remainingCount]) }}
           <span @click="handleLoadMore"> {{t("加载更多")}} </span>
         </div>
       </template>
@@ -162,7 +164,9 @@ const emit = defineEmits([
 const route = useRoute();
 const { t } = useI18n();
 const refTable = ref(null);
+const curSelectedData = ref([]);
 const isCurrentAll = ref(false);
+const selectedResourceCode = computed(() => isCurrentAll.value ? tableList.value.map(i => i.resourceCode) : curSelectedData.value.map(i => i.resourceCode));
 const resourceType = computed(() => props.resourceType);
 const groupTotal = computed(() => props.groupTotal);
 const remainingCount = computed(()=> props.groupTotal - props.data.length);
@@ -216,8 +220,9 @@ function getUnableMessage(row){
  * 当前页全选事件
  */
 function handleSelectAll({checked}) {
-  if(checked){
-    emit('getSelectList', refTable.value.getSelection(), resourceType.value);
+  if (checked) {
+    emit('getSelectList', tableList.value, resourceType.value);
+    curSelectedData.value = tableList.value;
     isCurrentAll.value = false;
   } else {
     handleClear()
@@ -275,7 +280,7 @@ function handleRemove(row, index) {
  * 加载更多
  */
 function handleLoadMore() {
-  emit('handleLoadMore',resourceType.value);
+  emit('handleLoadMore', resourceType.value);
 }
 
 function pageLimitChange(limit) {
@@ -289,13 +294,13 @@ function handleToResourcePage (row) {
   if (!(['codecc_task', 'pipeline', 'pipeline_group'].includes(row.resourceType))) return
   switch (row.resourceType) {
     case 'pipeline':
-      window.open(`${location.origin}/console/pipeline/${projectId.value}/${row.resourceCode}/history/permission`)
+      window.open(`${location.origin}/console/pipeline/${projectId.value}/${row.resourceCode}/history/permission/?groupId=${row.groupId}`)
       return
     case 'pipeline_group':
-      window.open(`${location.origin}/console/pipeline/${projectId.value}/list/listAuth/${row.resourceCode}/${row.resourceName}`)
+      window.open(`${location.origin}/console/pipeline/${projectId.value}/list/listAuth/${row.resourceCode}/${row.resourceName}?groupId=${row.groupId}`)
       return
     case 'codecc_task':
-      window.open(`${location.origin}/console/codecc/${projectId.value}/task/${row.resourceCode}/settings/authority`)
+      window.open(`${location.origin}/console/codecc/${projectId.value}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`)
       return
   }
 }
