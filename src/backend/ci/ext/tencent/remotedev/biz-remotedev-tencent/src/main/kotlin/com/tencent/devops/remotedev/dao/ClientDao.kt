@@ -37,6 +37,7 @@ class ClientDao {
                 .set(VERSION, version)
                 .set(START_VERSION, startVersion)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .execute()
         }
     }
 
