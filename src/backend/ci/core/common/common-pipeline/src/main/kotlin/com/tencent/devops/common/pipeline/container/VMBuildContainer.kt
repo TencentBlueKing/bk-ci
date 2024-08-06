@@ -168,6 +168,10 @@ data class VMBuildContainer(
         return jobControlOption?.enable ?: true
     }
 
+    override fun setContainerEnable(enable: Boolean) {
+        jobControlOption = jobControlOption?.copy(enable = enable) ?: JobControlOption(enable)
+    }
+
     override fun transformCompatibility() {
         if (jobControlOption?.timeoutVar.isNullOrBlank()) {
             jobControlOption?.timeoutVar = jobControlOption?.timeout.toString()
