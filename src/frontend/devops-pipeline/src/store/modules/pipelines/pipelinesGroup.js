@@ -67,7 +67,8 @@ const state = {
             icon: 'user-shape',
             hideMore: true
         }
-    ]
+    ],
+    tableHeight: null
 }
 
 const getters = {
@@ -118,7 +119,8 @@ const getters = {
             item.labelValue = []
             return item
         })
-    }
+    },
+    tableHeight: (state) => state.tableHeight
 }
 
 const mutations = {
@@ -173,6 +175,9 @@ const mutations = {
         if (group) {
             Object.assign(group, body)
         }
+    },
+    setTableHeightAuto (state, height) {
+        state.tableHeight = height
     }
 }
 
@@ -372,6 +377,12 @@ const actions = {
         } catch (error) {
             console.error(error)
             return []
+        }
+    },
+    updateTableHeight ({ commit }) {
+        const tableBox = document.querySelector('.table-box')
+        if (tableBox) {
+            commit('setTableHeightAuto', tableBox.offsetHeight)
         }
     }
 }

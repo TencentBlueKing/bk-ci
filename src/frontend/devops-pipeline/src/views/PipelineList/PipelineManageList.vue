@@ -112,11 +112,11 @@
                 </div>
             </header>
         </template>
-        <div class="pipeline-list-box" ref="tableBox">
+        <div class="pipeline-list-box table-box" ref="tableBox">
             <pipeline-table-view
                 v-if="isTableLayout"
                 :filter-params="filters"
-                :max-height="$refs.tableBox?.offsetHeight"
+                :max-height="tableHeight"
                 ref="pipelineBox"
             />
             <pipelines-card-view
@@ -243,7 +243,8 @@
             ...mapState('pipelines', [
                 'allPipelineGroup',
                 'pipelineActionState',
-                'isManage'
+                'isManage',
+                'tableHeight'
             ]),
             projectId () {
                 return this.$route.params.projectId
@@ -342,16 +343,20 @@
             webSocketMessage.installWsMessage(this.$refs.pipelineBox?.updatePipelineStatus)
             bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
             bus.$on(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
+            setTimeout(this.updateTableHeight)
+            window.addEventListener('resize', this.updateTableHeight)
         },
 
         beforeDestroy () {
             webSocketMessage.unInstallWsMessage()
             bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
+            window.removeEventListener('resize', this.updateTableHeight)
         },
 
         methods: {
             ...mapActions('pipelines', [
-                'requestHasCreatePermission'
+                'requestHasCreatePermission',
+                'updateTableHeight'
             ]),
             isActiveSort (sortType) {
                 return this.$route.query.sortType === sortType

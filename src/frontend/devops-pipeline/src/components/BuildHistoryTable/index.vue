@@ -67,8 +67,9 @@
             </div>
         </bk-exception>
         <div
-            class="bkdevops-build-history-table-wrapper"
+            class="table-box bkdevops-build-history-table-wrapper"
             ref="tableBox"
+            :style="{ height: `${tableHeight}px` }"
             v-else
         >
             <bk-table
@@ -594,7 +595,8 @@
             ...mapGetters({
                 historyPageStatus: 'pipelines/getHistoryPageStatus',
                 isReleasePipeline: 'atom/isReleasePipeline',
-                isCurPipelineLocked: 'atom/isCurPipelineLocked'
+                isCurPipelineLocked: 'atom/isCurPipelineLocked',
+                tableHeight: 'pipelines/tableHeight'
             }),
             ...mapState('atom', [
                 'pipelineInfo',
@@ -790,10 +792,13 @@
         },
         mounted () {
             webSocketMessage.installWsMessage(this.requestHistory)
+            setTimeout(this.updateTableHeight, 100)
+            window.addEventListener('resize', this.updateTableHeight)
         },
 
         beforeDestroy () {
             webSocketMessage.unInstallWsMessage()
+            window.removeEventListener('resize', this.updateTableHeight)
         },
 
         methods: {
@@ -801,7 +806,8 @@
                 'updateBuildRemark',
                 'requestPipelinesHistory',
                 'setHistoryPageStatus',
-                'resetHistoryFilterCondition'
+                'resetHistoryFilterCondition',
+                'updateTableHeight'
             ]),
             handleColumnChange (columns) {
                 this.tableColumnKeys = columns

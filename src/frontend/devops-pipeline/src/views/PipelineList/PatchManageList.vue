@@ -26,12 +26,12 @@
                 />
             </div>
         </header>
-        <div class="pipeline-list-box" ref="tableBox">
+        <div class="pipeline-list-box table-box" ref="tableBox">
             <pipeline-table-view
                 ref="pipelineTable"
                 :fetch-pipelines="getPipelines"
                 :filter-params="filters"
-                :max-height="$refs.tableBox?.offsetHeight"
+                :max-height="tableHeight"
                 @selection-change="handleSelectChange"
                 is-patch-view
             />
@@ -79,7 +79,8 @@
         },
         computed: {
             ...mapGetters('pipelines', [
-                'groupMap'
+                'groupMap',
+                'tableHeight'
             ]),
             currentViewName () {
                 return this.$t(this.groupMap?.[this.$route.params.viewId]?.name ?? '')
@@ -102,9 +103,17 @@
         created () {
             moment.locale(this.$i18n.locale)
         },
+        mounted () {
+            setTimeout(this.updateTableHeight)
+            window.addEventListener('resize', this.updateTableHeight)
+        },
+        beforeDestroy () {
+            window.removeEventListener('resize', this.updateTableHeight)
+        },
         methods: {
             ...mapActions('pipelines', [
-                'requestAllPipelinesListByFilter'
+                'requestAllPipelinesListByFilter',
+                'updateTableHeight'
             ]),
             exitPatch () {
                 this.$router.push({
