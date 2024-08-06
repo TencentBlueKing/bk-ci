@@ -135,23 +135,25 @@
                 'rollbackPipelineVersion'
             ]),
             handleClick () {
-                if (this.isTemplatePipeline) {
-                    this.$bkInfo({
-                        subTitle: this.$t('templateRollbackBackTips'),
-                        confirmFn: () => {
-                            this.$router.push({
-                                name: 'createInstance',
-                                params: {
-                                    projectId: this.projectId,
-                                    templateId: this.pipelineInfo?.templateId,
-                                    curVersionId: this.pipelineInfo?.templateVersion
-                                },
-                                hash: `#${this.pipelineId}`
-                            })
-                        }
-                    })
-                } else if (this.isRollback) {
-                    this.showDraftConfirmDialog()
+                if (this.isRollback) {
+                    if (this.isTemplatePipeline) {
+                        this.$bkInfo({
+                            subTitle: this.$t('templateRollbackBackTips'),
+                            confirmFn: () => {
+                                this.$router.push({
+                                    name: 'createInstance',
+                                    params: {
+                                        projectId: this.projectId,
+                                        templateId: this.pipelineInfo?.templateId,
+                                        curVersionId: this.pipelineInfo?.templateVersion
+                                    },
+                                    hash: `#${this.pipelineId}`
+                                })
+                            }
+                        })
+                    } else {
+                        this.showDraftConfirmDialog()
+                    }
                 } else {
                     this.goEdit(this.draftVersion ?? this.version)
                 }
