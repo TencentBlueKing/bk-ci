@@ -1474,8 +1474,8 @@ class RepositoryService @Autowired constructor(
                     logger.warn("get git repository members failed: $ignored")
                     null
                 } ?: emptyList()
-                (members.find {it.username == userId && it.accessLevel >= GitAccessLevelEnum.REPORTER.level} != null) to
-                        GitUtils.getHttpUrl(repository.url)
+                (members.find { it.username == userId && it.accessLevel >= GitAccessLevelEnum.REPORTER.level } != null) to
+                    GitUtils.getHttpUrl(repository.url)
             }
 
             is GithubRepository -> {
@@ -1502,7 +1502,7 @@ class RepositoryService @Autowired constructor(
                 )?.permission
                 // Github只有oauth
                 (GithubAccessLevelEnum.getGithubAccessLevel(permission).level >= GithubAccessLevelEnum.READ.level) to
-                        repository.url
+                    repository.url
             }
 
             else -> {
