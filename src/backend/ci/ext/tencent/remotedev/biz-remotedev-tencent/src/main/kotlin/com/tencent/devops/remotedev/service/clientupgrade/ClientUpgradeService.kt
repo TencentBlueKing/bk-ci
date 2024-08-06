@@ -78,9 +78,8 @@ class ClientUpgradeService @Autowired constructor(
         val dynamicProps = initUpgradeDynamicProps(currentClientVersion, currentStartVersion)
 
         val canUpgradeMacAddressSet = mutableSetOf<String>()
-        // TODO: 是否有可用和不可用的概念
         // 暂时先全量查询，后续看性能有没有用影响
-        val records = clientDao.fetchAll(dslContext)
+        val records = clientDao.fetchAll(dslContext, LAST_REQUEST_BEFORE_DAYS)
         records.forEach {
             val clientCan = checkVersion(false, currentClientVersion, it, dynamicProps)
             val startCan = checkVersion(true, currentStartVersion, it, dynamicProps)
@@ -172,6 +171,9 @@ class ClientUpgradeService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ClientUpgradeService::class.java)
         private const val LOCK_KEY = "remotedev_cron_updateCanUpgradeClients"
+
+        // 客户端最后一次请求的时间
+        private const val LAST_REQUEST_BEFORE_DAYS = 14
     }
 }
 

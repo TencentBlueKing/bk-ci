@@ -68,10 +68,15 @@ class ClientDao {
     }
 
     fun fetchAll(
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        lastUpdateBeforeDays: Int?
     ): List<TClientRecord> {
         with(TClient.T_CLIENT) {
-            return dslContext.selectFrom(this).orderBy(UPDATE_TIME.desc()).skipCheck().fetch()
+            val dsl = dslContext.selectFrom(this)
+            if (lastUpdateBeforeDays != null) {
+                dsl.where(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(14)))
+            }
+            return dsl.orderBy(UPDATE_TIME.desc()).skipCheck().fetch()
         }
     }
 }
