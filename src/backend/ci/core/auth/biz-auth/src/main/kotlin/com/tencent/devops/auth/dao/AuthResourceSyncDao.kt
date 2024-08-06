@@ -55,7 +55,7 @@ class AuthResourceSyncDao {
                 status,
                 now,
                 now
-            )
+            ).execute()
         }
     }
 
