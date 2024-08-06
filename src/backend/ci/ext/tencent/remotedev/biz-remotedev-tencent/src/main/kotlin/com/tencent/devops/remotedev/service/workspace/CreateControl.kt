@@ -48,7 +48,6 @@ import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -80,7 +79,6 @@ import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.Devfile
-import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
@@ -108,7 +106,6 @@ class CreateControl @Autowired constructor(
     private val client: Client,
     private val dispatcher: SampleEventDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
     private val whiteListService: WhiteListService,
@@ -122,19 +119,7 @@ class CreateControl @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CreateControl::class.java)
-        private const val BLANK_TEMPLATE_YAML_NAME = "BLANK"
-        private const val BLANK_TEMPLATE_ID = 1
-
-        fun sumResourceVmFree(res: List<ResourceVmRespData>?, zoneShortName: String, size: String): Int? {
-            return res?.filter {
-                it.zoneId.startsWith(zoneShortName) &&
-                    it.machineResources?.any { ma -> ma.machineType == size } == true
-            }?.sumOf {
-                it.machineResources
-                    ?.filter { res -> res.machineType == size }
-                    ?.sumOf { ma -> ma.free ?: 0 } ?: 0
-            }
-        }
+        private const val WORKSPACE_PREFIX = "ins-"
     }
 
     // 用于控制台上创建
@@ -414,7 +399,6 @@ class CreateControl @Autowired constructor(
                 userId = creator,
                 traceId = bizId,
                 workspaceName = ws.workspaceName,
-                devFilePath = null,
                 devFile = Devfile(
                     zoneId = zoneId,
                     machineType = windowsConfig.size,
@@ -422,7 +406,6 @@ class CreateControl @Autowired constructor(
                     imageCosFile = workspaceCreate.imageCosFile,
                     quotaType = QuotaType.parse(ws.ownerType)
                 ),
-                settingEnvs = emptyMap(),
                 projectId = projectId,
                 mountType = mountType,
                 ownerType = ws.ownerType,
@@ -741,12 +724,10 @@ class CreateControl @Autowired constructor(
                 userId = userId,
                 traceId = bizId,
                 workspaceName = ws.workspaceName,
-                devFilePath = null,
                 devFile = Devfile(
                     uid = uid,
                     environmentUid = envId
                 ),
-                settingEnvs = emptyMap(),
                 projectId = projectId,
                 mountType = mountType,
                 ownerType = ws.ownerType,
@@ -832,7 +813,6 @@ class CreateControl @Autowired constructor(
         }
 
         whiteListService.windowsGpuCheck(userId, workspaceNames.size)
-        workspaceCommon.checkWorkspaceAvailability(userId, WorkspaceMountType.START, WorkspaceOwnerType.PERSONAL)
         prepareWindowsCreate(
             creator = userId,
             projectId = projectId,
@@ -855,50 +835,44 @@ class CreateControl @Autowired constructor(
 
     private fun checkOrInitPersonalProject(userId: String): String {
         val userProjectId = "_$userId"
-        val projectInfo = kotlin.runCatching {
-            client.get(ServiceProjectResource::class).get(userProjectId)
-        }.onFailure { logger.warn("get project $userProjectId info error|${it.message}") }
-            .getOrThrow().data
-        if (projectInfo == null) {
-            /*初始化项目*/
-            kotlin.runCatching {
-                client.get(ServiceTxProjectResource::class).getRemoteDevUserProject(userId)
-            }.getOrElse {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.USERINFO_ERROR.errorCode,
-                    params = arrayOf("load user project fail.")
-                )
-            }
-            /*初始化bkrepo*/
-            val ok = client.get(ServiceTxProjectResource::class).updateRemotedev(
-                userId = userId,
-                projectCode = userProjectId,
-                addcloudDesktopNum = null,
-                enable = true
-            ).data
+        val projectInfo = getProjectInfo(userProjectId)
 
-            if (ok != true) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.USERINFO_ERROR.errorCode,
-                    params = arrayOf("init user project fail.")
-                )
-            }
-            /*初始化setting*/
-            remoteDevSettingDao.fetchOneSetting(dslContext, userId)
+        if (projectInfo == null || projectInfo.properties?.remotedev != true) {
+            initPersonalProject(userId, userProjectId)
         }
+
+        remoteDevSettingDao.fetchOneSetting(dslContext, userId)
         return userProjectId
+    }
+
+    private fun getProjectInfo(userProjectId: String) = kotlin.runCatching {
+        client.get(ServiceProjectResource::class).get(userProjectId)
+    }.onFailure { logger.warn("get project $userProjectId info error|${it.message}") }
+        .getOrThrow().data
+
+    private fun initPersonalProject(userId: String, userProjectId: String) {
+        val ok = client.get(ServiceTxProjectResource::class).updateRemotedev(
+            userId = userId,
+            projectCode = userProjectId,
+            addcloudDesktopNum = null,
+            enable = true
+        ).data
+
+        if (ok != true) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.USERINFO_ERROR.errorCode,
+                params = arrayOf("init user project fail.")
+            )
+        }
     }
 
     private fun startCloudResourceCountCheck(type: String, quotaType: QuotaType) =
         workspaceCommon.syncStartCloudResourceList().filter {
             it.status == 11 &&
                 it.machineType == type
-//                it.zoneId.replace(Regex("\\d+"), "") == zone &&
-//                it.locked != true &&
-//                it.internal == quotaType.getInternal()
         }
 
     private fun generateWorkspaceName(): String {
-        return "ins-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+        return "${WORKSPACE_PREFIX}${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 }

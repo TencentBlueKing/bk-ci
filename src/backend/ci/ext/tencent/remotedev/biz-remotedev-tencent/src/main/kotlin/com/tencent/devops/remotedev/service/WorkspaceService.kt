@@ -51,7 +51,6 @@ import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -101,6 +100,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_
 import com.tencent.devops.remotedev.service.tai.TaiService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon.Companion.DEFAULT_WAIT_TIME
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -128,7 +128,6 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
     private val workspaceCommon: WorkspaceCommon,
@@ -819,10 +818,6 @@ class WorkspaceService @Autowired constructor(
             }
         }
 
-        val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
-            Duration.between(it, now).seconds
-        }
-
         val endBilling = remoteDevSettingDao.fetchSingleUserBilling(dslContext, userId)
 
         val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toLong() ?: 10000
@@ -831,7 +826,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                (endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -884,11 +879,6 @@ class WorkspaceService @Autowired constructor(
             0
         }
 
-        val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
-            Duration.between(it, now).seconds
-        }
-
-        val endBilling = remoteDevSettingDao.fetchSingleUserBilling(dslContext, userId)
         return with(workspace) {
             WorkspaceDetail(
                 workspaceId = workspaceId,
@@ -896,8 +886,7 @@ class WorkspaceService @Autowired constructor(
                 displayName = displayName,
                 status = workspace.status,
                 lastUpdateTime = updateTime.timestamp(),
-                chargeableTime = endBilling.second +
-                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                chargeableTime = 0,
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 systemType = workspaceSystemType,
@@ -928,7 +917,6 @@ class WorkspaceService @Autowired constructor(
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
         permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
-        workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType, workspace.ownerType)
         ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
         if (!workspace.status.checkRunning()) {
             throw ErrorCodeException(
@@ -1152,7 +1140,6 @@ class WorkspaceService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val defaultPageSize = 20
-        private const val DEFAULT_WAIT_TIME = 60
         private const val DISCOUNT_TIME = 10000
     }
 }

@@ -39,8 +39,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
-import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -77,8 +75,6 @@ class StartControl @Autowired constructor(
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val permissionService: PermissionService,
     private val dispatcher: SampleEventDispatcher,
-    private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val workspaceCommon: WorkspaceCommon,
     private val notifyControl: NotifyControl
 ) {
@@ -97,7 +93,7 @@ class StartControl @Autowired constructor(
         ),
         content = ActionAuditContent.CGS_START_CONTENT
     )
-    fun startWorkspace(userId: String, bkTicket: String, workspaceName: String): WorkspaceResponse {
+    fun startWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId start workspace $workspaceName")
 
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -168,11 +164,7 @@ class StartControl @Autowired constructor(
                         workspaceName = workspaceName,
                         mountType = workspace.workspaceMountType
                     )
-                    workspaceCommon.checkWorkspaceAvailability(
-                        userId = userId,
-                        type = workspace.workspaceMountType,
-                        ownerType = workspace.ownerType
-                    )
+
                     createWorkspaceHistoryForStart(userId, workspaceName)
                     updateWorkspaceStatus(workspace.workspaceName, workspace.status, userId)
                     val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
@@ -183,8 +175,6 @@ class StartControl @Autowired constructor(
                             traceId = bizId,
                             type = UpdateEventType.START,
                             workspaceName = workspace.workspaceName,
-                            settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
-                            bkTicket = bkTicket,
                             mountType = workspace.workspaceMountType,
                             gameId = gameId.first
                         )

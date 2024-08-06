@@ -158,8 +158,6 @@ class StopWorkspaceHandler @Autowired constructor(
                     traceId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz(),
                     type = UpdateEventType.STOP,
                     workspaceName = workspaceName,
-                    settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
-                    bkTicket = "",
                     mountType = WorkspaceMountType.START,
                     gameId = gameId.first
                 )

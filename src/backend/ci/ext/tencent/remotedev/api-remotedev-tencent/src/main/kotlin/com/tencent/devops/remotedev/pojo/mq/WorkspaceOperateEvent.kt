@@ -33,20 +33,12 @@ import com.tencent.devops.common.remotedev.WorkspaceEvent
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import io.swagger.v3.oas.annotations.media.Schema
 
 @Event(RemoteDevMQ.WORKSPACE_OPERATE_STARTUP)
 data class WorkspaceOperateEvent(
     override val userId: String,
     override val traceId: String = TraceTag.buildBiz(),
     val type: UpdateEventType,
-    @get:Schema(title = "用户设置里云开发的环境变量")
-    @Deprecated("LINUX 待删除")
-    val settingEnvs: Map<String, String> = emptyMap(),
-    @get:Schema(title = "包含了创建者 ssh key 的字符串")
-    val sshKeys: String = "",
-    @Deprecated("LINUX 待删除")
-    val bkTicket: String? = null,
     val cgsId: String? = null,
     val imageId: String? = null,
     val imageCosFile: String? = null,
