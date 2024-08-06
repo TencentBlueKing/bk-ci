@@ -132,23 +132,31 @@ class ClientUpgradeService @Autowired constructor(
     ): String? {
         // 为空的上报版本不参与比较
         val version = if (isStart) {
-            record.version
-        } else {
             record.startVersion
+        } else {
+            record.version
         }.ifBlank { return null }
 
         // 根据用户升级版本
         val currentUser = record.currentUser
         val userVersion = props.userVersion(isStart)
-        if (currentUser.isNotBlank() && userVersion.containsKey(currentUser) && version != userVersion[currentUser]) {
-            return userVersion[currentUser]
+        if (currentUser.isNotBlank() && userVersion.containsKey(currentUser)) {
+            return if (version != userVersion[currentUser]) {
+                userVersion[currentUser]
+            } else {
+                null
+            }
         }
 
         // 根据项目升级版本
         val projectId = record.projectId
         val projectVersion = props.projectVersion(isStart)
-        if (projectId.isNotBlank() && projectVersion.containsKey(projectId) && version != projectVersion[projectId]) {
-            return projectVersion[projectId]
+        if (projectId.isNotBlank() && projectVersion.containsKey(projectId)) {
+            return if (version != projectVersion[projectId]) {
+                projectVersion[projectId]
+            } else {
+                null
+            }
         }
 
         // 正常升级
