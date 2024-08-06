@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.pojo.ClientUpgradeOpType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -33,7 +34,7 @@ class UpgradeProps @Autowired constructor(
     fun setCanUpgradeClients(newIds: Set<String>) {
         logger.debug("setCanUpgradeClients, ids: $newIds")
         var change = false
-        val existingClientsMacAddress = loadIdCache(CAN_UPGRADE_CLIENT_SET_KEY, isDistinguishCluster = true)
+        val existingClientsMacAddress = loadSetCache(CAN_UPGRADE_CLIENT_SET_KEY, isDistinguishCluster = true)
         val toAddClientsMacAddress = newIds.filterNot { existingClientsMacAddress.contains(it) }
         if (toAddClientsMacAddress.isNotEmpty()) {
             toAddClientsMacAddress.forEach {
@@ -55,12 +56,12 @@ class UpgradeProps @Autowired constructor(
         )
 
         if (change) {
-            invalidateIdCache(CAN_UPGRADE_CLIENT_SET_KEY)
+            invalidateSetCache(CAN_UPGRADE_CLIENT_SET_KEY)
         }
     }
 
     fun checkCanUpgrade(macAddress: String): Boolean {
-        return loadIdCache(CAN_UPGRADE_CLIENT_SET_KEY, isDistinguishCluster = true).contains(macAddress)
+        return loadSetCache(CAN_UPGRADE_CLIENT_SET_KEY, isDistinguishCluster = true).contains(macAddress)
     }
 
     fun getClientVersion() = loadCache(CURRENT_CLIENT_VERSION, isDistinguishCluster = true)
@@ -112,10 +113,45 @@ class UpgradeProps @Autowired constructor(
     }
 
     fun getClientUserVersion() = loadHashCache(CLIENT_UPGRADE_CURRENT_USER_VERSION, true)
+    fun setClientUserVersion(version: Map<String, String>, opType: ClientUpgradeOpType) =
+        opHashCache(CLIENT_UPGRADE_CURRENT_USER_VERSION, version, opType, true)
+
     fun getStartUserVersion() = loadHashCache(START_UPGRADE_CURRENT_USER_VERSION, true)
+    fun setStartUserVersion(version: Map<String, String>, opType: ClientUpgradeOpType) =
+        opHashCache(START_UPGRADE_CURRENT_USER_VERSION, version, opType, true)
 
     fun getClientProjectVersion() = loadHashCache(CLIENT_UPGRADE_CURRENT_PROJECT_VERSION, true)
+    fun setClientProjectVersion(version: Map<String, String>, opType: ClientUpgradeOpType) =
+        opHashCache(CLIENT_UPGRADE_CURRENT_PROJECT_VERSION, version, opType, true)
+
     fun getStartProjectVersion() = loadHashCache(START_UPGRADE_CURRENT_PROJECT_VERSION, true)
+    fun setStartProjectVersion(version: Map<String, String>, opType: ClientUpgradeOpType) =
+        opHashCache(START_UPGRADE_CURRENT_PROJECT_VERSION, version, opType, true)
+
+    private fun opHashCache(
+        redisKey: String,
+        values: Map<String, String>,
+        opType: ClientUpgradeOpType,
+        isDistinguishCluster: Boolean
+    ) {
+        when (opType) {
+            ClientUpgradeOpType.ADD -> {
+                redisOperation.hmset(redisKey, values, isDistinguishCluster)
+                invalidateHashCache(redisKey)
+            }
+
+            ClientUpgradeOpType.REMOVE -> {
+                redisOperation.hdelete(redisKey, values.keys.toTypedArray(), isDistinguishCluster)
+                invalidateHashCache(redisKey)
+            }
+
+            ClientUpgradeOpType.REWRITE -> {
+                redisOperation.delete(redisKey, isDistinguishCluster)
+                redisOperation.hmset(redisKey, values, isDistinguishCluster)
+                invalidateHashCache(redisKey)
+            }
+        }
+    }
 
     private val distinguishCache: LoadingCache<String, String> = Caffeine.newBuilder()
         .maximumSize(CACHE_SIZE)
@@ -141,21 +177,21 @@ class UpgradeProps @Autowired constructor(
         }
     }
 
-    private val idCache: Cache<String, Set<String>> = Caffeine.newBuilder()
+    private val setCache: Cache<String, Set<String>> = Caffeine.newBuilder()
         .maximumSize(CACHE_SIZE)
         .expireAfterWrite(Duration.ofMinutes(CACHE_EXPIRE_MIN))
         .build()
 
-    private fun loadIdCache(cacheKey: String, isDistinguishCluster: Boolean = false): Set<String> {
-        return idCache.get(cacheKey) {
+    private fun loadSetCache(cacheKey: String, isDistinguishCluster: Boolean = false): Set<String> {
+        return setCache.get(cacheKey) {
             redisOperation.getSetMembers(
                 cacheKey, isDistinguishCluster
             )?.filter { it.isNotBlank() }?.map { it }?.toSet() ?: setOf()
         } ?: setOf()
     }
 
-    private fun invalidateIdCache(cacheKey: String) {
-        idCache.invalidate(cacheKey)
+    private fun invalidateSetCache(cacheKey: String) {
+        setCache.invalidate(cacheKey)
     }
 
     private val hashCache: Cache<String, Map<String, String>> = Caffeine.newBuilder()
@@ -168,6 +204,10 @@ class UpgradeProps @Autowired constructor(
                 cacheKey, isDistinguishCluster
             )?.filter { it.key.isNotBlank() && it.value.isNotBlank() } ?: mapOf()
         } ?: mapOf()
+    }
+
+    private fun invalidateHashCache(cacheKey: String) {
+        hashCache.invalidate(cacheKey)
     }
 
     companion object {

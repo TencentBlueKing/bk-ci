@@ -13,15 +13,24 @@ class OpClientUpgradeImpl @Autowired constructor(
     private val upgradeProps: UpgradeProps
 ) : OpClientUpgrade {
     override fun setParallelUpgradeCount(parallelUpgradeCount: Int): Result<Boolean> {
-        TODO("Not yet implemented")
+        upgradeProps.setMaxParallelUpgradeCount(parallelUpgradeCount)
+        return Result(true)
     }
 
     override fun setCurrentVersion(type: ClientUpgradeType, version: String): Result<Boolean> {
-        TODO("Not yet implemented")
+        when (type) {
+            ClientUpgradeType.CLIENT -> upgradeProps.setClientVersion(version)
+            ClientUpgradeType.START -> upgradeProps.setStartVersion(version)
+        }
+        return Result(true)
     }
 
     override fun setMaxNumber(type: ClientUpgradeType, maxNumber: Int): Result<Boolean> {
-        TODO("Not yet implemented")
+        when (type) {
+            ClientUpgradeType.CLIENT -> upgradeProps.setClientMaxNumb(maxNumber)
+            ClientUpgradeType.START -> upgradeProps.setStartMaxNumb(maxNumber)
+        }
+        return Result(true)
     }
 
     override fun setUserVersion(
@@ -29,7 +38,11 @@ class OpClientUpgradeImpl @Autowired constructor(
         opType: ClientUpgradeOpType,
         data: Map<String, String>
     ): Result<Boolean> {
-        TODO("Not yet implemented")
+        when (type) {
+            ClientUpgradeType.CLIENT -> upgradeProps.setClientUserVersion(data, opType)
+            ClientUpgradeType.START -> upgradeProps.setStartUserVersion(data, opType)
+        }
+        return Result(true)
     }
 
     override fun setProjectVersion(
@@ -37,6 +50,10 @@ class OpClientUpgradeImpl @Autowired constructor(
         opType: ClientUpgradeOpType,
         data: Map<String, String>
     ): Result<Boolean> {
-        TODO("Not yet implemented")
+        when (type) {
+            ClientUpgradeType.CLIENT -> upgradeProps.setClientProjectVersion(data, opType)
+            ClientUpgradeType.START -> upgradeProps.setStartProjectVersion(data, opType)
+        }
+        return Result(true)
     }
 }
