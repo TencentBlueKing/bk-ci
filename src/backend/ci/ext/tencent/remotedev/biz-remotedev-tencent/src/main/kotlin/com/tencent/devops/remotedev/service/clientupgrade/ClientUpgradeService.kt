@@ -135,13 +135,13 @@ class ClientUpgradeService @Autowired constructor(
             record.startVersion
         } else {
             record.version
-        }.ifBlank { return null }
+        }.trim().ifBlank { return null }
 
         // 根据用户升级版本
         val currentUser = record.currentUser
         val userVersion = props.userVersion(isStart)
         if (currentUser.isNotBlank() && userVersion.containsKey(currentUser)) {
-            return if (version != userVersion[currentUser]) {
+            return if (version != userVersion[currentUser]?.trim()) {
                 userVersion[currentUser]
             } else {
                 null
@@ -152,7 +152,7 @@ class ClientUpgradeService @Autowired constructor(
         val projectId = record.projectId
         val projectVersion = props.projectVersion(isStart)
         if (projectId.isNotBlank() && projectVersion.containsKey(projectId)) {
-            return if (version != projectVersion[projectId]) {
+            return if (version != projectVersion[projectId]?.trim()) {
                 projectVersion[projectId]
             } else {
                 null
@@ -164,7 +164,7 @@ class ClientUpgradeService @Autowired constructor(
             upgradeProps.getStartVersion()
         } else {
             upgradeProps.getClientVersion()
-        }).ifBlank { return null }
+        }).trim().ifBlank { return null }
         if (version == currentVersion) {
             return null
         }
