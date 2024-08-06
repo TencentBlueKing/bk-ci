@@ -69,6 +69,7 @@ class AuthResourceSyncDao {
         with(TAuthResourceSync.T_AUTH_RESOURCE_SYNC) {
             val update = dslContext.update(this)
                 .set(STATUS, status)
+                .set(UPDATE_TIME, LocalDateTime.now())
             if (totalTime != null) {
                 update.set(TOTAL_TIME, totalTime)
             }
