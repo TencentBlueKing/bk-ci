@@ -176,14 +176,6 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 val startEpoch = System.currentTimeMillis()
                 try {
                     logger.info("sync group and member|start:$projectCode")
-                    // 查询同步状态，若在运行中则直接结束
-                    val syncRecord = authResourceSyncDao.get(
-                        dslContext = dslContext,
-                        projectCode = projectCode
-                    )
-                    if (syncRecord != null && syncRecord.status == AuthMigrateStatus.PENDING.value) {
-                        return@use
-                    }
                     authResourceSyncDao.create(
                         dslContext = dslContext,
                         projectCode = projectCode,
