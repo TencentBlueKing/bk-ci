@@ -540,7 +540,7 @@
                             param: pipeline.params
                         })
                     })
-                    const isRequired = params.some(item => item.buildNo && !item.buildNo.buildNo)
+                    const isRequired = params.some(item => item.buildNo && (typeof item.buildNo.buildNo === 'undefined' || item.buildNo.buildNo === ''))
                     if (isRequired) {
                         this.$showTips({
                             message: this.$t('template.buildNumErrTips'),
