@@ -180,7 +180,7 @@ enum class ErrorCodeEnum(
     ),
     MOA_VERIRY(
         errorType = ErrorType.THIRD_PARTY,
-        errorCode = "2132045",
+        errorCode = "2132047",
         formatErrorMessage = "req wesec moa_verify error {0}"
     );
 
