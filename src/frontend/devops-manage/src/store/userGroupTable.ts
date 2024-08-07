@@ -292,7 +292,7 @@ export default defineStore('userGroupTable', () => {
       item.scrollLoading = true;
       const res = await getGroupList(resourceType);
       item.scrollLoading = false;
-      item.tableData.push(...res.records);
+      item.tableData = [...item.tableData, ...res.records];
       if(pagination[2]){
         pagination.pop();
       }

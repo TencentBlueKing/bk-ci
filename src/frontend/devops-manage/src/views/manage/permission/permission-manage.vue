@@ -150,7 +150,11 @@
             show-overflow-tooltip
           >
             <bk-table-column :label="searchName" prop="resourceName" />
-            <bk-table-column :label="t('失败原因')" prop="handoverFailedMessage" />
+            <bk-table-column :label="t('失败原因')" prop="handoverFailedMessage">
+              <template v-slot="{ row }">
+                <span class="failed-msg" v-html="row.handoverFailedMessage"></span>
+              </template>
+            </bk-table-column>
           </bk-table>
         </div>
 
@@ -204,6 +208,7 @@ const isResetSuccess = ref(false);
 const isChecking = ref(false);
 const canLoading = ref(true);
 const projectId = computed(() => route.params?.projectCode);
+const userId = computed(() => route.query?.userId);
 const resourceType = ref('repertory');
 const isSelectAll = ref(false);  // 选择全量数据
 const dateTimeRange = ref(['', '']);
@@ -364,10 +369,22 @@ onMounted(() => {
 function init () {
   pagination.value.current = 1;
   tableData.value = [];
-  searchValue.value = [];
   isSelectAll.value = false;
   selectList.value = [];
   dateTimeRange.value = [];
+  if (userId.value) {
+    searchValue.value = [
+      {
+        id: 'handoverFrom',
+        name: t('授权人'),
+        values: [
+          { id: userId.value, name: userId.value }
+        ]
+      },
+    ]
+  } else {
+    searchValue.value = [];
+  }
 };
 function clearSearchValue(){
   searchValue.value = [];
@@ -766,6 +783,16 @@ function handleChangeName ({ list }) {
     width: 100%;
     .bk-tag-input-trigger {
       width: 100%;
+    }
+  }
+  .content-btn-search {
+    .bk-search-select-container {
+      background: #fff;
+    }
+  }
+  .failed-msg {
+    a {
+      color: #3A84FF;
     }
   }
 </style>

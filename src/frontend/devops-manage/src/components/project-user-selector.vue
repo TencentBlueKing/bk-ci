@@ -1,5 +1,6 @@
 <template>
   <bk-tag-input
+    ref="tagInputRef"
     class="manage-user-selector"
     clearable
     :placeholder="t('输入授权人，选中回车进行校验')"
@@ -7,7 +8,10 @@
     save-key="id"
     display-key="displayName"
     is-async-list
+    allow-create
+    allow-auto-match
     :list="userList"
+    :pasteFn="pasteFn"
     @input="handleInputUserName"
     @change="handleChange"
     @removeAll="removeAll">
@@ -15,7 +19,7 @@
 </template>
 
 <script setup name="ProjectUserSelector">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import http from '@/http/api';
@@ -24,6 +28,7 @@ const { t } = useI18n();
 const route = useRoute();
 const emits = defineEmits(['change', 'removeAll']);
 const userList = ref([]);
+const tagInputRef = ref(null);
 const projectId = computed(() => route.params?.projectCode);
 const searchKeyArr = computed(() => ['id', 'name']);
 const searchValue = ref();
@@ -56,6 +61,12 @@ async function fetchProjectMembers (query) {
 function handleChange (list) {
   searchValue.value = list;
   emits('change', { list: searchValue.value, userList: userList.value })
+}
+
+function pasteFn (val) {
+  tagInputRef.value?.handleInput();
+  tagInputRef.value.curInputValue = val;
+  return []
 }
 
 function removeAll (val) {

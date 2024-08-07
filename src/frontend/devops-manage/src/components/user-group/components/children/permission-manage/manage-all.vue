@@ -73,7 +73,9 @@
           />
         </div>
         <div v-else class="no-permission">
-          <no-permission />
+          <no-permission
+            :user-id="asideItem.id"
+          />
         </div>
       </div>
     </div>
