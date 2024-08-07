@@ -37,7 +37,7 @@ class ClientUpgradeService @Autowired constructor(
         return ClientUpgradeResp(clientVersion, startVersion)
     }
 
-    @Scheduled(initialDelay = 10 * 1000L, fixedDelay = 30 * 1000L)
+    @Scheduled(initialDelay = 60 * 1000L, fixedDelay = 5 * 60 * 1000L)
     fun updateCanUpgradeClients() {
         val watcher = Watcher("updateCanUpgradeClients")
         logger.debug("updateCanUpgradeClients start")
