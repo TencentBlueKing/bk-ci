@@ -84,6 +84,7 @@ class ApiGwService @Autowired constructor(
             val data = response.body!!.string()
             logger.debug("checkMoa2fa|{}|{}|{}", request.url, response.code, data)
             if (!response.isSuccessful) {
+                logger.error("checkMoa2fa|{}|{}|{}", request.url, response.code, data)
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.MOA_VERIRY.errorCode,
                     defaultMessage = "request fail code ${response.code}"
