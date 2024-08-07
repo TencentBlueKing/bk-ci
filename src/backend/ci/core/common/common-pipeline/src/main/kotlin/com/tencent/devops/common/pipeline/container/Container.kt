@@ -108,6 +108,4 @@ interface Container : IModelTemplate {
     fun fetchMatrixContext(): Map<String, String>?
 
     fun isContainerEnable(): Boolean
-
-    fun setContainerEnable(enable: Boolean)
 }

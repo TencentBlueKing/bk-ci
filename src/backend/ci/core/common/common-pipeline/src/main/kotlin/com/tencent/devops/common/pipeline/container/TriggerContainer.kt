@@ -106,8 +106,6 @@ data class TriggerContainer(
         return true
     }
 
-    override fun setContainerEnable(enable: Boolean) = Unit
-
     override fun transformCompatibility() {
         super.transformCompatibility()
     }
