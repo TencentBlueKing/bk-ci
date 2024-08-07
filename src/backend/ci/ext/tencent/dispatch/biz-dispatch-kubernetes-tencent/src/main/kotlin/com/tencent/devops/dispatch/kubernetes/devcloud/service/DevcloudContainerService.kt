@@ -206,6 +206,10 @@ class DevcloudContainerService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
+    override fun inspectDockerImage(userId: String, pool: Pool): String {
+        TODO("Not yet implemented")
+    }
+
     private fun getOnlyName(userId: String): String {
         val subUserId = if (userId.length > 14) {
             userId.substring(0 until 14)
