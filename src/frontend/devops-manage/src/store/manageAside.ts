@@ -37,7 +37,8 @@ export default defineStore('manageAside', () => {
   const memberPagination = ref<Pagination>({ limit: 20, current: 1, count: 0 });
   const activeTab = ref();
   const btnLoading = ref(false);
-
+  const removeUserDeptListMap = ref({});
+  const showDeptListPermissionDialog = ref(false);
   /**
    * 人员组织侧边栏点击事件
    */
@@ -50,8 +51,8 @@ export default defineStore('manageAside', () => {
    * 人员组织侧边栏页码切换
    */
   async function handleAsidePageChange(current: number, projectId: string) {
+    asideItem.value = undefined;
     if (memberPagination.value.current !== current) {
-      asideItem.value = undefined;
       memberPagination.value.current = current;
       getProjectMembers(projectId, true);
     }
@@ -69,18 +70,29 @@ export default defineStore('manageAside', () => {
    * 组织移出项目
    */
   async function handleAsideRemoveConfirm(removeUser: ManageAsideType, handOverMember: ManageAsideType, projectId: string, manageAsideRef: any) {
+    showDeptListPermissionDialog.value = false
+    console.log(handOverMember, 'handOverMember')
     const params = {
       targetMember: removeUser,
-      ...(handOverMember && {handoverTo: handOverMember})
+      ...(Object.keys(handOverMember).length && {handoverTo: handOverMember})
     }
     try {
       btnLoading.value = true;
-      await http.removeMemberFromProject(projectId, params);
+      const res = await http.removeMemberFromProject(projectId, params);
+      
       asideItem.value = undefined;
-      Message({
-        theme: 'success',
-        message: `${removeUser!.name} 已成功移出本项目。`,
-      });
+      if (!res.length) {
+        Message({
+          theme: 'success',
+          message: `${removeUser.id}(${removeUser.name}) 已成功移出本项目。`,
+        });
+      } else {
+        removeUserDeptListMap.value = {
+          list: res,
+          removeUser
+        }
+        showDeptListPermissionDialog.value = true
+      }
       btnLoading.value = false;
       manageAsideRef.handOverClose();
       getProjectMembers(projectId, true);
@@ -132,6 +144,8 @@ export default defineStore('manageAside', () => {
     memberPagination,
     activeTab,
     btnLoading,
+    removeUserDeptListMap,
+    showDeptListPermissionDialog,
     handleAsideClick,
     handleAsidePageChange,
     handleShowPerson,

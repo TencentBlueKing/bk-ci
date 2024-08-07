@@ -292,6 +292,7 @@ function collapseClick(resourceType) {
       color: #979BA5;
       letter-spacing: 0;
       text-align: center;
+      margin-left: 5px;
     }
   
     .operation-btn {

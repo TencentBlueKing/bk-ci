@@ -74,7 +74,7 @@
         </div>
         <div v-else class="no-permission">
           <no-permission
-            :user-id="asideItem.id"
+            :user-id="asideItem?.id"
           />
         </div>
       </div>
@@ -199,6 +199,37 @@
     </template>
   </bk-dialog>
   <bk-dialog
+    :width="500"
+    dialogType="show"
+    header-align="center"
+    :show-footer="false"
+    class="remove-dialog"
+    :is-show="showDeptListPermissionDialog"
+    @closed="handleRemoveClosed"
+  >
+    <template #header>
+      <img src="@/css/svg/warninfo.svg" class="manage-icon-tips">
+      <h2 class="dialog-header"> {{t('成功移除XX', [`${removeUserDeptListMap.removeUser.id}(${removeUserDeptListMap.removeUser.name})`])}}</h2>
+    </template>
+    <template #default>
+      <p>{{ $t('用户XXX已从项目下移除，但其所属的如下组织架构在项目下拥有权限，此用户依然可以进入项目进行操作：', [`${removeUserDeptListMap.removeUser.id}(${removeUserDeptListMap.removeUser.name})`]) }}</p>
+      <p v-for="dept in removeUserDeptListMap.list" :key="dept.id">
+        - {{ dept.name }}
+      </p>
+      <p class="mt30">
+        {{ $t('请评估按照组织架构开通的权限是否合理。') }}
+      </p>
+      <div class="option-btn">
+        <bk-button
+          class="btn"
+          @click="closeDeptListPermissionDialog"
+        >
+          {{ t('确定') }}
+        </bk-button>
+      </div>
+    </template>
+  </bk-dialog>
+  <bk-dialog
     :width="450"
     header-align="center"
     footer-align="center"
@@ -207,7 +238,7 @@
     @closed="handleRemoveClosed"
   >
     <template #header>
-      <img src="@/css/svg/warninfo.svg" class="manage-icon-tishi">
+      <img src="@/css/svg/warninfo.svg" class="manage-icon-tips">
       <h2 class="dialog-header"> {{t("确认从用户组中移出用户吗")}}？ </h2>
     </template>
     <template #default>
@@ -234,6 +265,7 @@
       </bk-button>
     </template>
   </bk-dialog>
+
   <bk-sideslider
     v-model:isShow="isShowSlider"
     :title="sliderTitle"
@@ -445,6 +477,8 @@ const {
   isLoading,
   activeTab,
   memberPagination,
+  removeUserDeptListMap,
+  showDeptListPermissionDialog,
 } = storeToRefs(manageAsideStore);
 const {
   handleAsideClick,
@@ -461,39 +495,38 @@ onMounted(() => {
 watch(searchValue, (newSearchValue) => {
   init(undefined, newSearchValue);
 });
-function handleSearch(value){
+function handleSearch (value) {
   if(!value.length) return;
   init(undefined, value);
 }
-function init(flag, searchValue){
+function init (flag, searchValue) {
   memberPagination.value.current = 1;
   asideItem.value = undefined;
   getProjectMembers(projectId.value, flag, searchValue);
 }
-function asideClick(item){
+function asideClick (item) {
   handleAsideClick(item, projectId.value);
 }
-async function refresh(){
-  asideItem.value = undefined;
-  searchValue.value = [];
+async function refresh () {
+  getProjectMembers(projectId.value, true, searchValue.value)
 }
 /**
  * 移交弹窗打开时
  */
-function handOverDialog(row, resourceType, index){
+function handOverDialog (row, resourceType, index) {
   formRef.value?.clearValidate();
   handleHandOver(row, resourceType, index);
 }
 /**
  * 续期弹窗提交事件
  */
-async function handleRenewalConfirm() {
+async function handleRenewalConfirm () {
   try {
     operatorLoading.value = true;
     await handleUpDateRow(expiredAt.value);
     operatorLoading.value = false;
     showMessage('success', t('用户组权限已续期。'));
-    cancleClear('renewal');
+    cancelClear('renewal');
     isShowRenewal.value = false;
   } catch (error) {
     operatorLoading.value = false;
@@ -502,14 +535,14 @@ async function handleRenewalConfirm() {
 /**
  * 续期弹窗关闭
  */
-function handleRenewalClosed() {
-  cancleClear('renewal');
+function handleRenewalClosed () {
+  cancelClear('renewal');
   isShowRenewal.value = false;
 }
 /**
  * 移交弹窗提交事件
  */
-async function handleHandoverConfirm() {
+async function handleHandoverConfirm () {
   const isValidate = await formRef.value.validate();
   if(!isValidate) return;
 
@@ -527,7 +560,7 @@ async function handleHandoverConfirm() {
       showMessage('success', t('用户组权限已移交给X。',[`${handOverForm.value.id}(${handOverForm.value.name})`]));
       isShowHandover.value = false;
       handleRemoveRow();
-      cancleClear('handover');
+      cancelClear('handover');
     }
   } catch (error) {
     operatorLoading.value = false;
@@ -536,14 +569,14 @@ async function handleHandoverConfirm() {
 /**
  * 移交弹窗关闭
  */
- function handleHandoverClosed() {
-  cancleClear('handover');
+ function handleHandoverClosed () {
+  cancelClear('handover');
   isShowHandover.value = false;
 }
 /**
  * 移出弹窗提交事件
  */
-async function handleRemoveConfirm() {
+async function handleRemoveConfirm () {
   try {
     operatorLoading.value = true;
     const param = formatSelectParams(selectedRow.value.groupId);
@@ -563,7 +596,7 @@ function handleRemoveClosed(){
 /**
  * 授权期限选择
  */
-function handleChangeTime(value) {
+function handleChangeTime (value) {
   expiredAt.value = Number(value);
 };
 function handleSelectAll(resourceType, asideItem){
@@ -573,7 +606,7 @@ function handleSelectAll(resourceType, asideItem){
  * 批量操作
  * @param flag 按钮标识
  */
-async function batchOperator(flag){
+async function batchOperator (flag) {
   getSourceList();
   if (!selectedLength.value) {
     Message({
@@ -601,14 +634,14 @@ async function batchOperator(flag){
   }
 }
 
-function batchCancel() {
-  cancleClear(batchFlag.value);
+function batchCancel () {
+  cancelClear(batchFlag.value);
 }
 /**
  * 批量操作请求参数获取
  * @param batchFlag 按钮标识
  */
-function formatSelectParams(rowGroupId){
+function formatSelectParams (rowGroupId) {
   let groupIds = [];
   let resourceTypes = [];
   if(rowGroupId) {
@@ -635,7 +668,7 @@ function formatSelectParams(rowGroupId){
  * 批量操作clear事件
  * @param batchFlag 按钮标识
  */
-function cancleClear(batchFlag) {
+function cancelClear (batchFlag) {
   isShowSlider.value = false;
 
   if (batchFlag === 'handover') {
@@ -650,7 +683,7 @@ function cancleClear(batchFlag) {
  * 侧边栏确认事件
  * @param batchFlag 按钮标识
  */
-async function batchConfirm(batchFlag) {
+async function batchConfirm (batchFlag) {
   batchBtnLoading.value = true;
 
   let res = null;
@@ -675,20 +708,20 @@ async function batchConfirm(batchFlag) {
     if (res) {
       showMessage('success', t(batchMassageText[batchFlag]));
       batchBtnLoading.value = false;
-      cancleClear(batchFlag);
+      cancelClear(batchFlag);
       getProjectMembers(projectId.value, true);
     }
   } catch (error) {
     batchBtnLoading.value = false;
   }
 }
-function showMessage(theme, message) {
+function showMessage (theme, message) {
   Message({
     theme: theme,
     message: message,
   });
 }
-function asideRemoveConfirm(removeUser, handOverForm) {
+function asideRemoveConfirm (removeUser, handOverForm) {
   handleAsideRemoveConfirm(removeUser, handOverForm, projectId.value, manageAsideRef.value);
 }
 
@@ -719,6 +752,10 @@ function handleChangeOverFormName ({list, userList}) {
 
 function handleClearOverFormName () {
   Object.assign(handOverForm.value, getHandOverForm());
+}
+
+function closeDeptListPermissionDialog () {
+  showDeptListPermissionDialog.value = false
 }
 </script>
 
@@ -891,14 +928,12 @@ function handleClearOverFormName () {
 }
 
 .remove-dialog {
-
   .dialog-header {
     font-family: MicrosoftYaHei;
     font-size: 20px;
     color: #313238;
     letter-spacing: 0;
   }
-
   .remove-text {
     display: flex;
     margin: 12px 0;
@@ -908,10 +943,20 @@ function handleClearOverFormName () {
       color: #63656E;
     }
   }
-
-  .manage-icon-tishi {
+  .manage-icon-tips {
     width: 42px;
     height: 42px;
+  }
+  .mt30 {
+    margin-top: 30px;
+  }
+  .option-btn {
+    text-align: center;
+    margin-top: 20px;
+    .btn {
+      width: 88px;
+      margin-right: 10px;
+    }
   }
 }
 

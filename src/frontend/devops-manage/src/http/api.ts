@@ -313,4 +313,14 @@ export default {
   batchOperateCheck (projectId: string, batchOperateType: string , params: any) {
     return http.post(`${IAM_PERFIX}/member/${projectId}/batch/${batchOperateType}/check`, params);
   },
+  /**
+   * 获取所以成员同步状态
+   */
+  getSyncStatusOfAllMember (projectId: string) {
+    return http.get(`${IAM_PERFIX}/group/sync/${projectId}/getStatusOfSync`);
+  },
+
+  removeMemberFromProjectCheck (projectId: string, params: any) {
+    return http.post(`${IAM_PERFIX}/member/${projectId}/removeMemberFromProjectCheck`, params);
+  }
 };

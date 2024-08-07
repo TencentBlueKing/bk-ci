@@ -72,33 +72,63 @@
       <bk-table-column :label="t('操作')" v-if="isShowOperation" :show-overflow-tooltip="false">
         <template #default="{row, index}">
           <div>
-            <bk-button
-              text
-              theme="primary"
-              @click="handleRenewal(row)"
-              :disabled="row.expiredAtDisplay == t('永久') || row.removeMemberButtonControl === 'TEMPLATE' || row.departed"
-              v-bk-tooltips="{
-                content: row.expiredAtDisplay == t('永久') || row.departed ? t('无需续期') : t('通过用户组获得权限，请到流水线里续期整个用户组'),
-                placement: 'top',
-                disabled: row.expiredAtDisplay !== t('永久') && row.removeMemberButtonControl !== 'TEMPLATE' && !row.departed
-              }"
+            <template
+              v-if="row.removeMemberButtonControl === 'TEMPLATE'"
             >
-              {{t("续期")}}
-            </bk-button>
-            <bk-button
-              text
-              theme="primary"
-              class="operation-btn"
-              @click="handleHandOver(row, index)"
-              :disabled="row.removeMemberButtonControl === 'TEMPLATE'"
-              v-bk-tooltips="{
-                content: t('通过用户组获得权限，请到用户组里移出用户'),
-                placement: 'top',
-                disabled: row.removeMemberButtonControl !== 'TEMPLATE'
-              }"
-            >
-              {{t("移交")}}
-            </bk-button>
+              <bk-button
+                text
+                theme="primary"
+                disabled
+                v-bk-tooltips="{
+                  content: t('通过用户组获得权限，请到流水线里续期整个用户组'),
+                  placement: 'top',
+                  disabled: row.removeMemberButtonControl !== 'TEMPLATE'
+                }"
+              >
+                {{t("续期")}}
+              </bk-button>
+              <bk-button
+                text
+                theme="primary"
+                class="operation-btn"
+                disabled
+                v-bk-tooltips="{
+                  content: t('通过用户组获得权限，请到用户组里移出用户'),
+                  placement: 'top'
+                }"
+              >
+                {{t("移交")}}
+              </bk-button>
+            </template>
+            <template v-else>
+              <bk-button
+                text
+                theme="primary"
+                @click="handleRenewal(row)"
+                :disabled="row.expiredAtDisplay == t('永久') || asideItem?.departed"
+                v-bk-tooltips="{
+                  content: asideItem?.departed ? t('该用户已离职，无需续期') : t('无需续期'),
+                  placement: 'top',
+                  disabled: row.expiredAtDisplay !== t('永久') && !asideItem?.departed
+                }"
+              >
+                {{t("续期")}}
+              </bk-button>
+              <bk-button
+                text
+                theme="primary"
+                class="operation-btn"
+                @click="handleHandOver(row, index)"
+                :disabled="row.isExpired && row.removeMemberButtonControl === 'OTHER'"
+                v-bk-tooltips="{
+                  content: t('已过期，无需移交'),
+                  placement: 'top',
+                  disabled: row.removeMemberButtonControl !== 'OTHER' || !row.isExpired
+                }"
+              >
+                {{t("移交")}}
+              </bk-button>
+            </template>
             <bk-button
               text
               theme="primary"
@@ -129,6 +159,8 @@ import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { ref, defineProps, defineEmits, computed } from 'vue';
 import { timeFormatter } from '@/common/util.ts'
+import useManageAside from "@/store/manageAside";
+import { storeToRefs } from 'pinia';
 
 const props = defineProps({
   isShowOperation: {
@@ -163,6 +195,10 @@ const emit = defineEmits([
 ])
 const route = useRoute();
 const { t } = useI18n();
+const manageAsideStore = useManageAside();
+const {
+  asideItem
+} = storeToRefs(manageAsideStore);
 const refTable = ref(null);
 const curSelectedData = ref([]);
 const isCurrentAll = ref(false);
@@ -179,6 +215,7 @@ const projectId = computed(() => route.params?.projectCode);
 const tableList = computed(() => props.data.map(item => ({
     ...item,
     unableMessage: getUnableMessage(item),
+    isExpired: item.expiredAt < Date.now()
   }))
 );
 const border = ['row', 'outer'];
@@ -191,7 +228,7 @@ function shouldShowOverlay(row){
     case 'renewal':
       return row.expiredAtDisplay === t('永久') || row.removeMemberButtonControl === 'TEMPLATE';
     case 'handover':
-      return row.removeMemberButtonControl === 'TEMPLATE';
+      return row.removeMemberButtonControl === 'TEMPLATE' || row.isExpired;
     case 'remove':
       return row.removeMemberButtonControl !== 'OTHER';
     default:
@@ -208,7 +245,11 @@ function getUnableMessage(row){
         return t("通过用户组获得权限，请到") + props.resourceName + t("里续期整个用户组")
       }
     case 'handover':
-      return t("通过用户组获得权限，请到用户组里移出用户");
+      if (row.removeMemberButtonControl === 'TEMPLATE') {
+        return t('通过用户组获得权限，请到用户组里移出用户');
+      } else if (row.isExpired) {
+        return t('已过期，无需移交')
+      }
     case 'remove':
       let message = TOOLTIPS_CONTENT[row.removeMemberButtonControl];
       return message;
@@ -234,6 +275,7 @@ function handleSelectAll({checked}) {
 function handleSelectionChange() {
   const selectionList = refTable.value.getSelection();
   emit('getSelectList', selectionList, resourceType.value);
+  curSelectedData.value = selectionList;
   isCurrentAll.value = props.data.length === selectionList
 };
 /**

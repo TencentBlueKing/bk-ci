@@ -211,8 +211,8 @@
     "自定义": "Custom",
     "天": "days",
     "人员列表": "User List",
-    "移出项目": "Remove from Project",
-    "移出用户": "Remove User",
+    "移出项目": "Remove",
+    "移出用户": "User",
     "将用户移出项目前，需要指定移交人，平台将自动完成所有权限/授权的移交": "Before removing the user from the project, a transferee needs to be designated, and the platform will automatically transfer all permissions/authorizations",
     "移交人": "Transferee",
     "刷新": "Refresh",
@@ -246,5 +246,13 @@
     "输入授权人，选中回车进行校验": "Enter the authorizer, select and press Enter to verify",
     "已离职": "Resigned",
     "授权校验中": "Authorization verification in progress",
-    "目标对象和交接人不允许相同。": "The target and the transferee cannot be the same person."
+    "目标对象和交接人不允许相同。": "The target and the transferee cannot be the same person.",
+    "成功移除XX": "Successfully removed {0}",
+    "用户XXX已从项目下移除，但其所属的如下组织架构在项目下拥有权限，此用户依然可以进入项目进行操作：": "User {0} has been removed from the project, but the following organizational structures they belong to still have permissions within the project. This user can still access the project and perform operations:",
+    "请评估按照组织架构开通的权限是否合理。": "Please evaluate whether the permissions granted based on the organizational structure are reasonable.",
+    "我知道了": "Got it",
+    "已过期，无需移交": "Expired, no need to transfer",
+    "该用户已离职，无需续期": "The user has left the company, no need to renew",
+    "同步成功": "Sync successfully",
+    "XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？": "All permissions of {0} have expired, no need for transfer. Are you sure you want to remove the user and clean up the expired permissions?"
 }

@@ -3,11 +3,12 @@
     <div class="aside-header">
       {{t("组织/用户")}}
       <span class="refresh" @click="refresh">
-        <i class="manage-icon manage-icon-refresh"></i>
-        {{t("刷新")}}
+        <spinner v-if="syncStatus === 'PENDING'" class="manage-icon" />
+        <i v-else class="manage-icon manage-icon-refresh"></i>
+        {{ syncStatus === 'PENDING' ? t('同步中') : t('刷新') }}
       </span>
     </div>
-    <div class="group-wrapper">
+    <div ref="groupWrapperRef" class="group-wrapper">
       <div
         :class="{'group-active': activeTab == item.id }"
         class="group-item"
@@ -92,83 +93,88 @@
       <span class="dialog-header"> {{t("移出用户")}}： {{ removeUser.id }}({{ removeUser.name }}) </span>
     </template>
     <template #default>
-      <div class="dialog">
-        <p class="text-tag">
-          <i class="manage-icon manage-icon-info-line"></i>
-          <span>
-            {{t("将用户移出项目前，需要指定移交人，平台将自动完成所有权限/授权的移交")}}。
-          </span>
-        </p>
-        <bk-form
-          ref="formRef"
-          :rules="rules"
-          :model="handOverForm"
-          form-type="vertical"
-        >
-          <bk-form-item
-            required
-            :label="t('移交人')"
-            property="name"
-            labelWidth=""
-          >
-            <project-user-selector
-              @change="handleChangeOverFormName"
-              @removeAll="handOverInputClear"
-            >
-            </project-user-selector>
-          </bk-form-item>
-        </bk-form>
-
-        <p class="verifying">
-          <span v-if="isChecking">
-            <Spinner class="check-checking-icon" />
-            {{ t("正在校验授权") }}
-          </span>
-          <span v-if="isAuthorizedSuccess">
-            <Success class="check-success-icon" />
-            {{t("授权校验通过")}}
-          </span>
-        </p>
-
-        <div v-if="isHandOverfail" class="hand-over-fail">
-          <p class="err-text">
-            <p class="deal">
-              <i class="manage-icon manage-icon-close"></i>
-              <i18n-t keypath="检测到以下授权将无法移交给X，请先前往「授权管理」单独处理" tag="div" >
-                <span> {{ handOverForm.name }} </span>
-              </i18n-t>
-            </p>
-            <p class="blue-text" @click="refreshHandOverfail">
-              <i class="manage-icon manage-icon-refresh"></i>
-              <span>{{t("刷新")}}</span>
-            </p>
+      <template v-if="removeMemberChecked">
+          <p class="remove-tips">{{ t('XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？', [`${removeUser.id}(${removeUser.name})}`]) }}</p>
+      </template>
+      <template v-else>
+        <div class="dialog">
+          <p class="text-tag">
+            <i class="manage-icon manage-icon-info-line"></i>
+            <span>
+              {{t("将用户移出项目前，需要指定移交人，平台将自动完成所有权限/授权的移交")}}。
+            </span>
           </p>
-          <div class="hand-over-table-group" v-for="item in overTable" :key="item.id">
-            <p class="hand-over-table-item">
-              {{item.name}}({{ item.resourceType }})
+          <bk-form
+            ref="formRef"
+            :rules="rules"
+            :model="handOverForm"
+            form-type="vertical"
+          >
+            <bk-form-item
+              required
+              :label="t('移交人')"
+              property="name"
+              labelWidth=""
+            >
+              <project-user-selector
+                @change="handleChangeOverFormName"
+                @removeAll="handOverInputClear"
+              >
+              </project-user-selector>
+            </bk-form-item>
+          </bk-form>
+  
+          <p class="verifying">
+            <span v-if="isChecking">
+              <Spinner class="check-checking-icon" />
+              {{ t("正在校验授权") }}
+            </span>
+            <span v-if="isAuthorizedSuccess">
+              <Success class="check-success-icon" />
+              {{t("授权校验通过")}}
+            </span>
+          </p>
+  
+          <div v-if="isHandOverfail" class="hand-over-fail">
+            <p class="err-text">
+              <p class="deal">
+                <i class="manage-icon manage-icon-close"></i>
+                <i18n-t keypath="检测到以下授权将无法移交给X，请先前往「授权管理」单独处理" tag="div" >
+                  <span> {{ handOverForm.name }} </span>
+                </i18n-t>
+              </p>
+              <p class="blue-text" @click="refreshHandOverfail">
+                <i class="manage-icon manage-icon-refresh"></i>
+                <span>{{t("刷新")}}</span>
+              </p>
             </p>
-            <p class="blue-text" @click="goAauthorization(item.resourceType)">
-              <i class="manage-icon manage-icon-jump"></i>
-              <span>{{t("前往处理")}}</span>
-            </p>
+            <div class="hand-over-table-group" v-for="item in overTable" :key="item.id">
+              <p class="hand-over-table-item">
+                {{item.name}}({{ item.resourceType }})
+              </p>
+              <p class="blue-text" @click="goAauthorization(item.resourceType)">
+                <i class="manage-icon manage-icon-jump"></i>
+                <span>{{t("前往处理")}}</span>
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
     </template>
     <template #footer>
       <bk-button
         theme="primary"
         @click="handConfirm('user')"
         :loading="manageAsideStore.btnLoading"
-        :disabled="!isAuthorizedSuccess"
+        :disabled="!isAuthorizedSuccess && !removeMemberChecked"
       >
-        {{t("移交并移出")}}
+        {{ removeMemberChecked ? t('确定') : t("移交并移出")}}
       </bk-button>
       <bk-button
         class="btn-margin"
         @click="handOverClose"
       >
-        {{t("关闭")}}
+        {{ t('取消') }}
       </bk-button>
     </template>
   </bk-dialog>
@@ -240,7 +246,7 @@ import { useRoute } from 'vue-router';
 import useManageAside from "@/store/manageAside";
 import { Success, Spinner } from 'bkui-vue/lib/icon';
 import ProjectUserSelector from '@/components/project-user-selector'
-import { ref, defineProps, defineEmits, computed, defineExpose } from 'vue';
+import { ref, defineProps, defineEmits, computed, defineExpose, onMounted, onUnmounted } from 'vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -252,6 +258,10 @@ const isHandOverfail = ref(false);
 const isShowPersonDialog = ref(false);
 const isShowRemoveDialog = ref(false);
 const isAuthorizedSuccess = ref(false);
+const syncStatus = ref('SUCCESS');
+const timer = ref(null);
+const groupWrapperRef = ref(null);
+const removeMemberChecked = ref(false);
 function getHandOverForm(){
   return {
     id: '',
@@ -309,17 +319,30 @@ function handleClick(item) {
   emit('handleClick', item);
 }
 function pageChange(current) {
+  groupWrapperRef.value?.scrollTo(0, 0)
   emit('pageChange', current, projectId.value);
 }
-function handleRemoval(item) {
-  if(item.type === "department") {
+async function handleRemoval(item) {
+  if(item.type === 'department') {
     isShowRemoveDialog.value = true;
   } else {
+    await removeMemberFromProjectCheck(item);
     handOverForm.value && (Object.assign(handOverForm.value, getHandOverForm()));
     formRef.value?.clearValidate();
     isShowHandOverDialog.value = true;
   }
   removeUser.value = item;
+}
+
+async function removeMemberFromProjectCheck (payload) {
+  try {
+    removeMemberChecked.value = await http.removeMemberFromProjectCheck(projectId.value, {
+      targetMember: payload
+    })
+  } catch (e) {
+    console.error(e)
+  }
+
 }
 /**
  *  移出项目弹窗关闭
@@ -335,9 +358,13 @@ function handOverClose() {
 async function handConfirm(flag){
   try {
     if(flag === 'user'){
-      const isValidate = await formRef.value?.validate();
-      if(!isValidate) return;
-      emit('removeConfirm', removeUser.value, handOverForm.value);
+      if (!removeMemberChecked.value) {
+        emit('removeConfirm', removeUser.value, {});
+      } else {
+        const isValidate = await formRef.value?.validate();
+        if(!isValidate) return;
+        emit('removeConfirm', removeUser.value, handOverForm.value);
+      }
     } else {
       emit('removeConfirm', removeUser.value);
     }
@@ -389,10 +416,12 @@ async function handleChangeOverFormName ({list, userList}){
     handOverInputClear();
   }
 }
-async function refresh(){
+async function refresh () {
+  if (syncStatus.value === 'PENDING') return
   try {
     await http.syncGroupAndMember(projectId.value);
-    emit('refresh');
+    await getSyncStatus();
+    
   } catch (error) {
     Message({
       theme: 'error',
@@ -400,10 +429,31 @@ async function refresh(){
     });
   }
 }
+
+async function getSyncStatus () {
+  try {
+    syncStatus.value = await http.getSyncStatusOfAllMember(projectId.value);
+    if (syncStatus.value === 'PENDING') {
+      timer.value = setTimeout(() => {
+        getSyncStatus()
+      }, 10000);
+    } else {
+      if (timer.value) {
+        emit('refresh')
+        Message({
+          theme: 'success',
+          message: t('同步成功')
+        })
+      }
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
 /**
  * 移出失败刷新数据
  */
-function refreshHandOverfail() {
+function refreshHandOverfail () {
   const param = {
     list: [handOverForm.value.id],
     userList: userListData.value,
@@ -416,14 +466,21 @@ function goAauthorization(resourceType) {
 /**
  * 获取人员列表数据
  */
-function handleShowPerson(item) {
+function handleShowPerson (item) {
   isShowPersonDialog.value = true;
   removeUser.value = item;
   emit('getPersonList',item, projectId.value)
 }
-function handlePersonClose(){
+function handlePersonClose () {
   isShowPersonDialog.value = false;
 }
+
+onMounted(() => {
+  getSyncStatus()
+})
+onUnmounted(() => {
+  clearTimeout(timer.value);
+})
 </script>
 
 <style lang="scss" scoped>
@@ -437,7 +494,7 @@ function handlePersonClose(){
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 0 18px;
+  padding: 0 10px 0 18px;
   height: 40px;
   font-family: MicrosoftYaHei-Bold;
   font-weight: 700;
@@ -455,14 +512,14 @@ function handlePersonClose(){
     cursor: pointer;
 
     .manage-icon {
-      margin-right: 6px;
+      margin-right: 5px;
     }
   }
 }
 .group-wrapper {
   overflow: hidden;
   overflow-y: scroll;
-  height: 100%;
+  height: calc(100% - 40px);
   &::-webkit-scrollbar-thumb {
     background-color: #c4c6cc !important;
     border-radius: 5px !important;
@@ -557,11 +614,14 @@ function handlePersonClose(){
   color: #63656E;
   letter-spacing: 0;
 }
-
+.remove-tips {
+  padding: 15px 0;
+}
 .dialog {
   .bk-form-item{
     margin-bottom: 6px !important;
   }
+ 
   .text-tag {
     width: 100%;
     line-height: 30px;

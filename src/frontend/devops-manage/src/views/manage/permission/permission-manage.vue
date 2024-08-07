@@ -624,6 +624,7 @@ function handleChangeName ({ list }) {
   .aside {
     width: 220px;
     height: 100%;
+    flex-shrink: 0;
     padding-top: 8px;
     background: #FAFBFD;
     box-shadow: 1px 0 0 0 #DCDEE5;

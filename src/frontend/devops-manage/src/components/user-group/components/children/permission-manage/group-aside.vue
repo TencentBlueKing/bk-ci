@@ -32,7 +32,7 @@
             <div class="group-num">{{ group[item] }}</div>
           </div>
           <bk-popover
-            v-if="resourceType === 'project'"
+            v-if="resourceType === 'project' && !group.defaultGroup"
             class="group-more-option"
             placement="bottom"
             theme="light dot-menu"
