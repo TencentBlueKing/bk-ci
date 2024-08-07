@@ -397,7 +397,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             logger.warn("illegal pipelineId or buildId: $pipelineId, $buildId")
             return nodeInfo.fullPath
         }
-        return nodeInfo.fullPath.replace("/$pipelineId/$buildId", "/$pipelineId/$buildNum")
+        return nodeInfo.fullPath.replace("/$pipelineId/$buildId", "/$pipelineName/$buildNum")
     }
 
     override fun generateDestPath(
