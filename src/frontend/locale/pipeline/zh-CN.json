@@ -1454,6 +1454,7 @@
   "oauth": "OAUTH 授权",
   "refreshOauthStatus": "刷新授权状态",
   "oauthPacTips": "尚未授权，请先点击按钮授权。<br/> 授权后，将使用你的身份提交 YAML 文件到代码库。需拥有代码库开发者及以上权限。",
+  "withoutOauthCodelib": "当前环境支持的代码库源，尚未对接 PAC 功能，请咨询",
   "reExec": "重新执行",
   "reDebug": "重新调试",
   "pipelineConf": "流水线配置",
@@ -1550,5 +1551,6 @@
   "runningSteps": "正在运行的步骤：",
   "completeness": "完成度：",
   "pacDesc": "Pipeline as Code 模式，简称 PAC 模式。开启并将流水线文件提交到代码库后，可通过维护代码库文件的方式来维护流水线。",
-  "debugHint": "调试和执行不共享构建号，但共享并发控制。调试记录仅在草稿版本调试期间有效，版本发布后将自动清理。"
+  "debugHint": "调试和执行不共享构建号，但共享并发控制。调试记录仅在草稿版本调试期间有效，版本发布后将自动清理。",
+  "templateRollbackBackTips": "当前流水线为约束模式（模板实例），需要跳转到模板进行版本回滚。"
 }
