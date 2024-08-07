@@ -524,7 +524,7 @@ onUnmounted(() => {
 .group-wrapper {
   overflow: hidden;
   overflow-y: scroll;
-  height: calc(100% - 40px);
+  height: calc(100% - 100px);
   &::-webkit-scrollbar-thumb {
     background-color: #c4c6cc !important;
     border-radius: 5px !important;
