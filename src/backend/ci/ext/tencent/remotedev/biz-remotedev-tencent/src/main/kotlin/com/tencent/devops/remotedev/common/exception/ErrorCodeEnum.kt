@@ -26,11 +26,6 @@ enum class ErrorCodeEnum(
         errorCode = "2132003",
         formatErrorMessage = "workspace {0} not find"
     ),
-    DEVFILE_ERROR(
-        errorType = ErrorType.USER,
-        errorCode = "2132004",
-        formatErrorMessage = "load devfile error: {0}"
-    ),
     USERINFO_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2132005",
@@ -50,21 +45,6 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132008",
         formatErrorMessage = "You do not have permission: {0}"
-    ),
-    WORKSPACE_MAX_RUNNING(
-        errorType = ErrorType.USER,
-        errorCode = "2132009",
-        formatErrorMessage = "The current workspace running count({0}) has reached the user limit({1})"
-    ),
-    WORKSPACE_MAX_HAVING(
-        errorType = ErrorType.USER,
-        errorCode = "2132010",
-        formatErrorMessage = "The number of created workspaces({0}) has reached the user limit({1})"
-    ),
-    UPDATE_BK_TICKET_FAIL(
-        errorType = ErrorType.USER,
-        errorCode = "2132011",
-        formatErrorMessage = "update BkTicket fail,please check hostName exists."
     ),
     DENIAL_OF_SERVICE(
         errorType = ErrorType.USER,
@@ -92,11 +72,6 @@ enum class ErrorCodeEnum(
         formatErrorMessage = "Workspace [{0}] is not currently running," +
             "please try again later or contact 8000 helper."
     ),
-    CHECK_USER_TICKET_FAIL(
-        errorType = ErrorType.USER,
-        errorCode = "2132017",
-        formatErrorMessage = "check user login ticket fail."
-    ),
     GET_WATERMARK_FAIL(
         errorType = ErrorType.USER,
         errorCode = "2132018",
@@ -106,11 +81,6 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132019",
         formatErrorMessage = "Not allowed to create in the current environment."
-    ),
-    WORKSPACE_UNAVAILABLE_WIN_GPU(
-        errorType = ErrorType.USER,
-        errorCode = "2132020",
-        formatErrorMessage = "The windows gpu cloud desktop has reached the maximum usage time, please renew."
     ),
     WINDOWS_CONFIG_NOT_FIND(
         errorType = ErrorType.USER,
@@ -122,25 +92,10 @@ enum class ErrorCodeEnum(
         errorCode = "2132022",
         formatErrorMessage = "windows resource {0} not available"
     ),
-    GET_SOFTWARE_GROUP_FAIL(
-        errorType = ErrorType.USER,
-        errorCode = "2132023",
-        formatErrorMessage = "get software group fail."
-    ),
     INSTALL_SOFTWARE_FAIL(
         errorType = ErrorType.USER,
         errorCode = "2132024",
         formatErrorMessage = "install software fail."
-    ),
-    PROJECT_WORKSPACE_ALREADY_ASSIGN_OWNER(
-        errorType = ErrorType.USER,
-        errorCode = "2132025",
-        formatErrorMessage = "The current workspace has an assigned owner"
-    ),
-    DESKTOP_RESOURCES_INSUFFICIENT(
-        errorType = ErrorType.USER,
-        errorCode = "2132026",
-        formatErrorMessage = "The cloud desktop resources are insufficient, currently {0}"
     ),
     PROJECT_DESKTOP_RESOURCES_INSUFFICIENT(
         errorType = ErrorType.USER,
@@ -157,11 +112,6 @@ enum class ErrorCodeEnum(
         errorCode = "2132029",
         formatErrorMessage = "delivering failed"
     ),
-    UPDATE_BKCC_HOST_ERROR(
-        errorType = ErrorType.THIRD_PARTY,
-        errorCode = "2132030",
-        formatErrorMessage = "update BkCC fail."
-    ),
     REAPPLY_EXPERT_SUPPORT_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2132031",
@@ -176,11 +126,6 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132033",
         formatErrorMessage = "req project_access_device_permissions error {0}"
-    ),
-    CODEPROXY_EXIST_ERROR(
-        errorType = ErrorType.THIRD_PARTY,
-        errorCode = "2132034",
-        formatErrorMessage = "project {0} code proxy {1} already exists"
     ),
     PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT(
         errorType = ErrorType.USER,
