@@ -1129,7 +1129,7 @@ class WorkspaceService @Autowired constructor(
     }
 
     // 校验是否需要moa 2fa验证，true:需要 ；false：不需要
-    fun checkMoa2fa (userId: String, workspaceName: String): Boolean {
+    fun checkMoa2fa(userId: String, workspaceName: String): Boolean {
         /*1. 个人云桌面 + 内部员工拥有者 --直接返回true
          *2.团队云桌面 + 内部员工拥有者，则调用wesec接口判断
           */
@@ -1144,7 +1144,7 @@ class WorkspaceService @Autowired constructor(
         if (!ws.realOwner.isNullOrBlank() && !ws.realOwner!!.endsWith("@tai")) {
             return apiGwService.checkMoa2fa(
                 project = ws.projectId,
-                ip = ws.innerIp ?: "",
+                ip = ws.innerIp ?: ""
             ) ?: false.also { logger.warn("MOA 2FA check failed for workspace $workspaceName") }
         }
         return false

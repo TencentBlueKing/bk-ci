@@ -80,7 +80,7 @@ class ApiGwService @Autowired constructor(
                 )
             )
             .build()
-         OkhttpUtils.doHttp(request).use { response ->
+        OkhttpUtils.doHttp(request).use { response ->
             val data = response.body!!.string()
             logger.debug("projectAccessDevicePermissions|{}|{}|{}", request.url, response.code, data)
             if (!response.isSuccessful) {
