@@ -42,6 +42,13 @@ class ClientVersionFilter constructor(
         private const val HEADER_IP = "x-client-ip"
         private const val HEADER_MAC_ADDRESS = "BK-CI-CLIENT-MAC"
         private const val BK_CI_CLIENT_START_VERSION = "BK-CI-CLIENT-START-VERSION"
+
+        private fun String.format():String{
+            if (this.trim() == "null" || this.isBlank()) {
+                return ""
+            }
+            return this
+        }
     }
 
     @Value("\${remoteDev.clientVersionLimit:0.3.0}")
@@ -105,7 +112,7 @@ class ClientVersionFilter constructor(
                 user = user,
                 version = version.toString(),
                 macAddress = requestContext.headers[HEADER_MAC_ADDRESS]?.get(0).toString(),
-                startVersion = requestContext.headers[BK_CI_CLIENT_START_VERSION]?.get(0).toString()
+                startVersion = requestContext.headers[BK_CI_CLIENT_START_VERSION]?.get(0) ?: ""
             )
         }.onFailure { logger.warn("recordClientVersion error ${it.message}", it) }
 
@@ -177,13 +184,13 @@ class ClientVersionFilter constructor(
         }
         val recordVersion = clientVersion["$ip-$user"]
         logger.info("recordClientVersion|$ip|$user|$version|$recordVersion|$macAddress|$startVersion")
-        if (macAddress.isNotBlank()) {
+        if (macAddress.format().isNotBlank()) {
             clientDao.createOrUpdate(
                 dslContext = dslContext,
                 macAddress = macAddress,
-                currentUserId = user,
-                version = version,
-                startVersion = startVersion,
+                currentUserId = user.format(),
+                version = version.format(),
+                startVersion = startVersion.format(),
                 currentProjectIds = workspaceJoinDao.fetchProjectFromUser(dslContext, user)
             )
         } else {
