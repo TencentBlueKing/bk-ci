@@ -383,13 +383,20 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     limit = limit
                 )
                 authResourceGroups.forEach { authResourceGroup ->
-                    syncResourceGroupMember(
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        resourceCode = authResourceGroup.resourceCode,
-                        groupCode = authResourceGroup.groupCode,
-                        iamGroupId = authResourceGroup.relationId
-                    )
+                    try {
+                        syncResourceGroupMember(
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            resourceCode = authResourceGroup.resourceCode,
+                            groupCode = authResourceGroup.groupCode,
+                            iamGroupId = authResourceGroup.relationId
+                        )
+                    } catch (ignore: Exception) {
+                        logger.warn(
+                            "sync resource group member failed!" +
+                                "|$projectCode|${authResourceGroup.relationId}|$ignore"
+                        )
+                    }
                 }
                 offset += limit
             } while (authResourceGroups.size == limit)

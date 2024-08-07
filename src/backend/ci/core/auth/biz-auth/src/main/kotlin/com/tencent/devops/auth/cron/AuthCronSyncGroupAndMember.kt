@@ -14,7 +14,7 @@ class AuthCronSyncGroupAndMember(
     private val redisOperation: RedisOperation,
     private val permissionResourceGroupSyncService: PermissionResourceGroupSyncService
 ) {
-    @Value("\${sync.cron.enable:#{false}}")
+    @Value("\${sync.cron.enabled:#{false}}")
     private var enable: Boolean = false
 
     private val redisLock = RedisLock(redisOperation, SYNC_CRON_KEY, 10)
