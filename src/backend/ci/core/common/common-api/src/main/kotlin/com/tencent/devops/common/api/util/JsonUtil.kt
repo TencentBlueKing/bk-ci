@@ -139,8 +139,22 @@ object JsonUtil {
 
         registerModule(javaTimeModule())
         registerModule(KotlinModule.Builder().build())
+        enable(SerializationFeature.INDENT_OUTPUT)
+        enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
+        enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
+        setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+        setAnnotationIntrospector(specialAnnotationIntrospector())
+        jsonModules.forEach { jsonModule ->
+            registerModule(jsonModule)
+        }
+    }
 
-        // 兼容老版本is开头的方法
+    /**
+     * 用于兼容老版本is开头的方法
+     */
+    private fun ObjectMapper.specialAnnotationIntrospector(): AnnotationIntrospectorPair {
         val oldAnnotationIntrospectorPair = object : NopAnnotationIntrospector() {
             override fun findImplicitPropertyName(member: AnnotatedMember?): String? {
                 if (member == null) return null
@@ -153,17 +167,7 @@ object JsonUtil {
         }
         val annotationIntrospectorPair =
             AnnotationIntrospectorPair(oldAnnotationIntrospectorPair, serializationConfig.annotationIntrospector)
-
-        enable(SerializationFeature.INDENT_OUTPUT)
-        enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
-        enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
-        setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-        setAnnotationIntrospector(annotationIntrospectorPair)
-        jsonModules.forEach { jsonModule ->
-            registerModule(jsonModule)
-        }
+        return annotationIntrospectorPair
     }
 
     private fun jsonMapper(): JsonMapper {
