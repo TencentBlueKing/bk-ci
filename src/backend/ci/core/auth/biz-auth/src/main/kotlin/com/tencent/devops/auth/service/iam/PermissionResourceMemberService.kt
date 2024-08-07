@@ -101,6 +101,12 @@ interface PermissionResourceMemberService {
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): List<ResourceMemberInfo>
 
+    fun removeMemberFromProjectCheck(
+        userId: String,
+        projectCode: String,
+        removeMemberFromProjectReq: RemoveMemberFromProjectReq
+    ): Boolean
+
     fun roleCodeToIamGroupId(
         projectCode: String,
         roleCode: String

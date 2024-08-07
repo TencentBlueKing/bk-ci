@@ -138,6 +138,21 @@ class UserAuthResourceMemberResourceImpl(
     }
 
     @BkManagerCheck
+    override fun removeMemberFromProjectCheck(
+        userId: String,
+        projectId: String,
+        removeMemberFromProjectReq: RemoveMemberFromProjectReq
+    ): Result<Boolean> {
+        return Result(
+            permissionResourceMemberService.removeMemberFromProjectCheck(
+                userId = userId,
+                projectCode = projectId,
+                removeMemberFromProjectReq = removeMemberFromProjectReq
+            )
+        )
+    }
+
+    @BkManagerCheck
     override fun getMemberGroupCount(
         userId: String,
         projectId: String,

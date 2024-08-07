@@ -151,6 +151,20 @@ interface UserAuthResourceMemberResource {
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): Result<List<ResourceMemberInfo>>
 
+    @POST
+    @Path("/removeMemberFromProjectCheck")
+    @Operation(summary = "将用户移出项目检查")
+    fun removeMemberFromProjectCheck(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "一键移出用户出项目")
+        removeMemberFromProjectReq: RemoveMemberFromProjectReq
+    ): Result<Boolean>
+
     @GET
     @Path("/getMemberGroupCount")
     @Operation(summary = "获取项目成员有权限的用户组数量--以资源类型进行分类")

@@ -43,6 +43,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.ResetAllResourceAuthorizationReq
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationConditionRequest
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
@@ -883,13 +884,23 @@ class RbacPermissionResourceMemberService constructor(
                 }
             }
             BatchOperateType.HANDOVER -> {
-                // 已过期和通过模板获取的权限不允许交接
+                // 已过期（除唯一管理员组）或通过模板加入的不允许移交
                 with(conditionReq) {
+                    val finalGroupIds = groupIdsOfDirectJoined.toMutableList()
+                    val uniqueManagerGroupIds = authResourceGroupMemberDao.listProjectUniqueManagerGroups(
+                        dslContext = dslContext,
+                        projectCode = projectCode,
+                        iamGroupIds = groupIdsOfDirectJoined
+                    )
+                    // 去除唯一管理员组
+                    if (uniqueManagerGroupIds.isNotEmpty()) {
+                        finalGroupIds.removeAll(uniqueManagerGroupIds)
+                    }
                     val groupCountOfExpired = listMemberGroupsDetails(
                         projectCode = projectCode,
                         memberId = targetMember.id,
                         memberType = targetMember.type,
-                        groupIds = groupIdsOfDirectJoined
+                        groupIds = finalGroupIds
                     ).filter {
                         // iam用的是秒级时间戳
                         it.expiredAt < System.currentTimeMillis() / 1000
@@ -970,6 +981,36 @@ class RbacPermissionResourceMemberService constructor(
         }
     }
 
+    override fun removeMemberFromProjectCheck(
+        userId: String,
+        projectCode: String,
+        removeMemberFromProjectReq: RemoveMemberFromProjectReq
+    ): Boolean {
+        val targetMember = removeMemberFromProjectReq.targetMember
+        val isMemberHasNoPermission = batchOperateGroupMembersCheck(
+            userId = userId,
+            projectCode = projectCode,
+            batchOperateType = BatchOperateType.HANDOVER,
+            conditionReq = GroupMemberCommonConditionReq(
+                allSelection = true,
+                targetMember = removeMemberFromProjectReq.targetMember
+            )
+        ).let { it.totalCount == it.inoperableCount }
+
+        val isMemberHasNoAuthorizations =
+            if (targetMember.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
+                permissionAuthorizationService.listResourceAuthorizations(
+                    condition = ResourceAuthorizationConditionRequest(
+                        projectCode = projectCode,
+                        handoverFrom = targetMember.id
+                    )
+                ).count == 0L
+            } else {
+                true
+            }
+        return isMemberHasNoPermission && isMemberHasNoAuthorizations
+    }
+
     private fun handoverTask(
         projectCode: String,
         groupId: Int,
@@ -981,27 +1022,46 @@ class RbacPermissionResourceMemberService constructor(
                 "${handoverMemberDTO.targetMember}|${handoverMemberDTO.handoverTo}"
         )
         val currentTimeSeconds = System.currentTimeMillis() / 1000
-        // 一键退出项目，即全量交接权限，若用户加入的用户组已过期或者交接人已经在用户组中，
-        // 则直接删除，不做交接
-        if ((handoverMemberDTO.allSelection && expiredAt < currentTimeSeconds) ||
+        var finalExpiredAt = expiredAt
+        when {
+            // 若权限已过期，如果是唯一管理员组，允许交接，交接人将获得半年权限；其他的直接删除。
+            expiredAt < currentTimeSeconds -> {
+                val isUniqueManagerGroup = authResourceGroupMemberDao.listProjectUniqueManagerGroups(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    iamGroupIds = listOf(groupId)
+                ).isNotEmpty()
+                if (isUniqueManagerGroup) {
+                    finalExpiredAt = currentTimeSeconds + TimeUnit.DAYS.toSeconds(180)
+                } else {
+                    deleteTask(
+                        projectCode = projectCode,
+                        groupId = groupId,
+                        removeMemberDTO = GroupMemberCommonConditionReq(
+                            targetMember = handoverMemberDTO.targetMember
+                        ),
+                        expiredAt = finalExpiredAt
+                    )
+                    return
+                }
+            }
+            // 若交接人已经在用户组内，无需交接。
             authResourceGroupMemberDao.isMemberInGroup(
                 dslContext = dslContext,
                 projectCode = projectCode,
                 iamGroupId = groupId,
                 memberId = handoverMemberDTO.handoverTo.id
-            )) {
-            deleteIamGroupMembers(
-                groupId = groupId,
-                type = handoverMemberDTO.targetMember.type,
-                memberIds = listOf(handoverMemberDTO.targetMember.id)
-            )
-            authResourceGroupMemberDao.batchDeleteGroupMembers(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                iamGroupId = groupId,
-                memberIds = listOf(handoverMemberDTO.targetMember.id)
-            )
-            return
+            ) -> {
+                deleteTask(
+                    projectCode = projectCode,
+                    groupId = groupId,
+                    removeMemberDTO = GroupMemberCommonConditionReq(
+                        targetMember = handoverMemberDTO.targetMember
+                    ),
+                    expiredAt = finalExpiredAt
+                )
+                return
+            }
         }
 
         val members = listOf(
@@ -1019,7 +1079,7 @@ class RbacPermissionResourceMemberService constructor(
         addIamGroupMember(
             groupId = groupId,
             members = members,
-            expiredAt = expiredAt
+            expiredAt = finalExpiredAt
         )
         deleteIamGroupMembers(
             groupId = groupId,
@@ -1032,7 +1092,7 @@ class RbacPermissionResourceMemberService constructor(
             iamGroupId = groupId,
             handoverFrom = handoverMemberDTO.targetMember,
             handoverTo = handoverMemberDTO.handoverTo,
-            expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(expiredAt)
+            expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(finalExpiredAt)
         )
     }
 

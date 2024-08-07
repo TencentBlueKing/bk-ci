@@ -137,6 +137,12 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): List<ResourceMemberInfo> = emptyList()
 
+    override fun removeMemberFromProjectCheck(
+        userId: String,
+        projectCode: String,
+        removeMemberFromProjectReq: RemoveMemberFromProjectReq
+    ): Boolean = true
+
     override fun addGroupMember(
         projectCode: String,
         memberId: String,

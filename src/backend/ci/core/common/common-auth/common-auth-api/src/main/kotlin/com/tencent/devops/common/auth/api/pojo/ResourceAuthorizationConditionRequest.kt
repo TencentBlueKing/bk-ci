@@ -9,7 +9,7 @@ open class ResourceAuthorizationConditionRequest(
     @get:Schema(title = "项目ID")
     open val projectCode: String,
     @get:Schema(title = "资源类型")
-    open val resourceType: String,
+    open val resourceType: String? = null,
     @get:Schema(title = "资源名称")
     open val resourceName: String? = null,
     @get:Schema(title = "授予人")

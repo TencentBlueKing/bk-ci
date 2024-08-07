@@ -137,20 +137,24 @@ class AuthAuthorizationDao {
     }
 
     fun TAuthResourceAuthorization.buildQueryCondition(
-        condition: ResourceAuthorizationConditionRequest
+        conditionReq: ResourceAuthorizationConditionRequest
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        conditions.add(PROJECT_CODE.eq(condition.projectCode))
-        conditions.add(RESOURCE_TYPE.eq(condition.resourceType))
-        if (condition.resourceName != null) {
-            conditions.add(RESOURCE_NAME.like("%${condition.resourceName}%"))
-        }
-        if (condition.handoverFrom != null) {
-            conditions.add(HANDOVER_FROM.eq(condition.handoverFrom))
-        }
-        if (condition.greaterThanHandoverTime != null && condition.lessThanHandoverTime != null) {
-            conditions.add(HANDOVER_TIME.ge(Timestamp(condition.greaterThanHandoverTime!!).toLocalDateTime()))
-            conditions.add(HANDOVER_TIME.le(Timestamp(condition.lessThanHandoverTime!!).toLocalDateTime()))
+        with(conditionReq) {
+            conditions.add(PROJECT_CODE.eq(projectCode))
+            if (resourceType != null) {
+                conditions.add(RESOURCE_TYPE.eq(resourceType))
+            }
+            if (resourceName != null) {
+                conditions.add(RESOURCE_NAME.like("%$resourceName%"))
+            }
+            if (handoverFrom != null) {
+                conditions.add(HANDOVER_FROM.eq(handoverFrom))
+            }
+            if (greaterThanHandoverTime != null && lessThanHandoverTime != null) {
+                conditions.add(HANDOVER_TIME.ge(Timestamp(greaterThanHandoverTime!!).toLocalDateTime()))
+                conditions.add(HANDOVER_TIME.le(Timestamp(lessThanHandoverTime!!).toLocalDateTime()))
+            }
         }
         return conditions
     }
