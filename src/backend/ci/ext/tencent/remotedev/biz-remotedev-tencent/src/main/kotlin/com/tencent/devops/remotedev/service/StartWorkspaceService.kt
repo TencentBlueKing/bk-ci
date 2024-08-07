@@ -9,7 +9,6 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.start.StartMessageDataType
@@ -35,7 +34,6 @@ import org.springframework.stereotype.Service
 class StartWorkspaceService @Autowired constructor(
     private val startCloudClient: StartCloudClient,
     private val dslContext: DSLContext,
-    private val workspaceDao: WorkspaceDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val client: Client,
     val checkTokenService: ClientTokenService
