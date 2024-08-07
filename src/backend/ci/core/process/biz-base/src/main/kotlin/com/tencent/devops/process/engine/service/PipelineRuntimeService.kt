@@ -429,15 +429,14 @@ class PipelineRuntimeService @Autowired constructor(
         search: String?,
         type: HistorySearchType? = HistorySearchType.MATERIAL
     ): List<String> {
-        return when (type) {
+        val aliasNames = when (type) {
             HistorySearchType.MATERIAL -> {
                 val history = pipelineBuildDao.listHistorySearchOptions(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     debugVersion = debugVersion,
-                    type = type,
-                    materialAlias = search?.let { listOf(it) }
+                    type = type
                 )
                 val materialObjList = mutableListOf<PipelineBuildMaterial>()
                 history.forEach {
@@ -445,7 +444,9 @@ class PipelineRuntimeService @Autowired constructor(
                         materialObjList.addAll(it.material!!)
                     }
                 }
-                materialObjList.filter { !it.aliasName.isNullOrBlank() }.map { it.aliasName!! }.distinct()
+                materialObjList.filter { !it.aliasName.isNullOrBlank() }
+                    .map { it.aliasName!! }
+                    .distinct()
             }
 
             HistorySearchType.TRIGGER -> {
@@ -454,14 +455,19 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     debugVersion = debugVersion,
-                    type = type,
-                    triggerAlias = search?.let { listOf(it) }
+                    type = type
                 )
                 history.filter { it.webhookInfo != null && !it.webhookInfo!!.webhookAliasName.isNullOrBlank() }
-                    .map { it.webhookInfo!!.webhookAliasName!! }.distinct()
+                    .map { it.webhookInfo!!.webhookAliasName!! }
+                    .distinct()
             }
 
             else -> emptyList()
+        }
+        return if (search.isNullOrBlank()) {
+            aliasNames
+        } else {
+            aliasNames.filter { it.contains(search) }
         }
     }
 
@@ -473,16 +479,14 @@ class PipelineRuntimeService @Autowired constructor(
         search: String?,
         type: HistorySearchType? = HistorySearchType.MATERIAL
     ): List<String> {
-        return when (type) {
+        val branchNames = when (type) {
             HistorySearchType.MATERIAL -> {
                 val history = pipelineBuildDao.listHistorySearchOptions(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     debugVersion = debugVersion,
-                    type = type,
-                    materialAlias = aliasList,
-                    materialBranch = search
+                    type = type
                 )
                 val materialObjList = mutableListOf<PipelineBuildMaterial>()
                 history.forEach {
@@ -490,10 +494,10 @@ class PipelineRuntimeService @Autowired constructor(
                         materialObjList.addAll(it.material!!)
                     }
                 }
-                val aliasNames = if (aliasList.isNullOrEmpty()) {
-                    materialObjList.map { it.aliasName }
-                } else {
+                val aliasNames = if (!aliasList.isNullOrEmpty() && aliasList.first().isNotBlank()) {
                     aliasList
+                } else {
+                    materialObjList.map { it.aliasName }
                 }
 
                 val result = mutableListOf<String>()
@@ -503,7 +507,7 @@ class PipelineRuntimeService @Autowired constructor(
                     }.map { it.branchName!! }.distinct()
                     result.addAll(branchNames)
                 }
-                result
+                result.distinct()
             }
 
             HistorySearchType.TRIGGER -> {
@@ -512,14 +516,29 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     debugVersion = debugVersion,
-                    type = type,
-                    triggerAlias = aliasList,
-                    triggerBranch = search
+                    type = type
                 )
-                history.filter { it.webhookInfo != null && !it.webhookInfo!!.webhookBranch.isNullOrBlank() }
-                    .map { it.webhookInfo!!.webhookBranch!! }.distinct()
+                val webhookInfoList = history.filter { it.webhookInfo != null }.map { it.webhookInfo!! }
+                val aliasNames = if (!aliasList.isNullOrEmpty() && aliasList.first().isNotBlank()) {
+                    aliasList
+                } else {
+                    webhookInfoList.map { it.webhookAliasName }
+                }
+                val result = mutableListOf<String>()
+                aliasNames.distinct().forEach { alias ->
+                    val branchNames = webhookInfoList.filter {
+                        it.webhookAliasName == alias && !it.webhookBranch.isNullOrBlank()
+                    }.map { it.webhookBranch!! }.distinct()
+                    result.addAll(branchNames)
+                }
+                result.distinct()
             }
             else -> emptyList()
+        }
+        return if (search.isNullOrBlank()) {
+            branchNames
+        } else {
+            branchNames.filter { it.contains(search) }
         }
     }
 

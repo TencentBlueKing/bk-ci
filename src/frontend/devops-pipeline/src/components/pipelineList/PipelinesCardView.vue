@@ -93,7 +93,7 @@
                 this.$refs.infiniteScroll?.updateList?.()
             },
             requestList ({ page }) {
-                return this.fetchList(page)
+                this.$refs.infiniteScroll?.updateList?.()
             }
         }
     }

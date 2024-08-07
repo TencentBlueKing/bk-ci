@@ -2382,6 +2382,9 @@ class TemplateFacadeService @Autowired constructor(
             stage.containers.forEach { container ->
                 if (container is TriggerContainer) {
                     container.params = PipelineUtils.cleanOptions(params = container.params)
+                    container.templateParams = container.templateParams?.let {
+                        PipelineUtils.cleanOptions(params = it)
+                    }
                 }
                 if (container.containerId.isNullOrBlank()) {
                     container.containerId = container.id
