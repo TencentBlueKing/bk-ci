@@ -554,7 +554,6 @@ async function handleHandoverConfirm () {
   }
   try {
     operatorLoading.value = true;
-    const res = await http.batchHandover(projectId.value, param);
     if (res) {
       operatorLoading.value = false;
       showMessage('success', t('用户组权限已移交给X。',[`${handOverForm.value.id}(${handOverForm.value.name})`]));
@@ -746,6 +745,10 @@ async function getMenuList (item, keyword) {
   })
 }
 function handleChangeOverFormName ({list, userList}) {
+  if(!list){
+    Object.assign(handOverForm.value, getHandOverForm());
+    return;
+  }
   const val = list.join(',')
   handOverForm.value = userList.find(i => i.id === val)
 }

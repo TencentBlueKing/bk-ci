@@ -606,12 +606,13 @@ async function getMenuList (item, keyword) {
 }
 
 function handleChangeName ({ list }) {
-  if (!list.length) {
+  if (!list) {
     handleClearName()
+  } else {
+    const val = list.join(',')
+    resetFormData.value.name = val
+    handleCheckReset()
   }
-  const val = list.join(',')
-  resetFormData.value.name = val
-  handleCheckReset()
 }
 
 </script>
@@ -650,6 +651,11 @@ function handleChangeName ({ list }) {
   .content {
     padding: 24px;
     flex: 1;
+
+    .content-btn-search {
+      background-color: #fff;
+    }
+
     .content-btn {
       display: flex;
       justify-content: space-between;

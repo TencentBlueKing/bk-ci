@@ -376,6 +376,10 @@ function handOverInputClear(){
   isHandOverfail.value = false;
 }
 async function handleChangeOverFormName ({list, userList}){
+  if(!list){
+    handOverInputClear();
+    return;
+  }
   userListData.value = userList;
   handOverForm.value = userList.find(i => i.id === list[0]);
   if(removeUser.value.id === handOverForm.value?.id){
@@ -485,7 +489,8 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .aside {
-  height: calc(100% - 60px);
+  position: relative;
+  height: 100%;
   overflow-y: scroll;
   overflow: hidden;
 }
