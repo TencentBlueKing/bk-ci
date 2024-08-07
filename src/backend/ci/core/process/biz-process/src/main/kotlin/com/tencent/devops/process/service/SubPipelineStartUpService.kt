@@ -159,25 +159,25 @@ class SubPipelineStartUpService @Autowired constructor(
         }
         val existPipelines = HashSet<String>()
         existPipelines.add(parentPipelineId)
-        try {
-            // 检查循环调用
-            val rootPipelineKey = "${projectId}_$parentPipelineId"
-            val subPipelineRef = SubPipelineRef(
-                projectId = projectId,
-                pipelineId = parentPipelineId,
-                subPipelineId = callPipelineId,
-                subProjectId = callProjectId
-            )
-            subPipelineRefService.checkCircularDependency(
-                subPipelineRef = subPipelineRef,
-                rootPipelineKey = rootPipelineKey,
-                existsPipeline = HashMap(mapOf(rootPipelineKey to subPipelineRef))
-            )
-        } catch (e: OperationException) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL,
-                language = I18nUtil.getLanguage(userId)
-            )
+        // 检查循环调用
+        val rootPipelineKey = "${projectId}_$parentPipelineId"
+        val subPipelineRef = SubPipelineRef(
+            projectId = projectId,
+            pipelineId = parentPipelineId,
+            subPipelineId = callPipelineId,
+            subProjectId = callProjectId
+        )
+        subPipelineRefService.checkCircularDependency(
+            subPipelineRef = subPipelineRef,
+            rootPipelineKey = rootPipelineKey,
+            existsPipeline = HashMap(mapOf(rootPipelineKey to subPipelineRef))
+        ).let {
+            if (!it.result) {
+                return Result(
+                    status = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL.toInt(),
+                    message = it.errorMessage ?: ""
+                )
+            }
         }
 
         val subBuildId = subPipelineStartup(
