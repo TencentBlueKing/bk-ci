@@ -177,6 +177,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132044",
         formatErrorMessage = "client ip {0} request error: ip no permission to perform the operation {1}"
+    ),
+    MOA_VERIRY(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132045",
+        formatErrorMessage = "req wesec moa_verify error {0}"
     );
 
     fun getErrorMessage(): String {

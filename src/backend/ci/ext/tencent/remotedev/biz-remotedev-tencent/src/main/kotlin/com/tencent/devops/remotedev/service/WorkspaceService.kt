@@ -1141,10 +1141,11 @@ class WorkspaceService @Autowired constructor(
             errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
             params = arrayOf(workspaceName)
         )
+        // TODO 目前阶段先对内部员工做 moa 验证，后续放开 cp 也需要验证。
         if (!ws.realOwner.isNullOrBlank() && !ws.realOwner!!.endsWith("@tai")) {
             return apiGwService.checkMoa2fa(
                 project = ws.projectId,
-                ip = ws.innerIp ?: ""
+                workspactName = workspaceName
             ) ?: false.also { logger.warn("MOA 2FA check failed for workspace $workspaceName") }
         }
         return false
