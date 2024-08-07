@@ -2,13 +2,13 @@ package com.tencent.devops.remotedev.filter.impl
 
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
-import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ClientDao
 import com.tencent.devops.remotedev.dao.ClientVersionDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.filter.ApiFilter
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -33,7 +33,8 @@ class ClientVersionFilter constructor(
     private val clientVersionDao: ClientVersionDao,
     private val dslContext: DSLContext,
     private val notifyControl: NotifyControl,
-    private val clientDao: ClientDao
+    private val clientDao: ClientDao,
+    private val workspaceJoinDao: WorkspaceJoinDao
 ) : ApiFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(ClientVersionFilter::class.java)
@@ -104,8 +105,7 @@ class ClientVersionFilter constructor(
                 user = user,
                 version = version.toString(),
                 macAddress = requestContext.headers[HEADER_MAC_ADDRESS]?.get(0).toString(),
-                startVersion = requestContext.headers[BK_CI_CLIENT_START_VERSION]?.get(0).toString(),
-                projectId = requestContext.headers[AUTH_HEADER_PROJECT_ID]?.get(0).toString()
+                startVersion = requestContext.headers[BK_CI_CLIENT_START_VERSION]?.get(0).toString()
             )
         }.onFailure { logger.warn("recordClientVersion error ${it.message}", it) }
 
@@ -169,15 +169,14 @@ class ClientVersionFilter constructor(
         user: String,
         version: String,
         macAddress: String,
-        startVersion: String,
-        projectId: String
+        startVersion: String
     ) {
         if (!this::clientVersion.isInitialized) {
             clientVersion = clientVersionDao.fetchAll(dslContext)
                 .associateByTo(mutableMapOf(), { "${it.first}-${it.second}" }, { it.third })
         }
         val recordVersion = clientVersion["$ip-$user"]
-        logger.info("recordClientVersion|$ip|$user|$version|$recordVersion|$macAddress|$startVersion|$projectId")
+        logger.info("recordClientVersion|$ip|$user|$version|$recordVersion|$macAddress|$startVersion")
         if (macAddress.isNotBlank()) {
             clientDao.createOrUpdate(
                 dslContext = dslContext,
@@ -185,7 +184,7 @@ class ClientVersionFilter constructor(
                 currentUserId = user,
                 version = version,
                 startVersion = startVersion,
-                projectId = projectId
+                currentProjectIds = workspaceJoinDao.fetchProjectFromUser(dslContext, user)
             )
         } else {
             logger.warn("recordClientVersion macAddress is null")

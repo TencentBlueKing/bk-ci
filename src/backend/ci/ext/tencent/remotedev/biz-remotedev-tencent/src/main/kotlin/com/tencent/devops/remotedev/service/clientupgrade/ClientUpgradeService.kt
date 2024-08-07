@@ -1,5 +1,7 @@
 package com.tencent.devops.remotedev.service.clientupgrade
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -149,13 +151,15 @@ class ClientUpgradeService @Autowired constructor(
         }
 
         // 根据项目升级版本
-        val projectId = record.projectId
+        val currentProjectIds = JsonUtil.to(record.currentProjectIds.data(), object : TypeReference<Set<String>>() {})
         val projectVersion = props.projectVersion(isStart)
-        if (projectId.isNotBlank() && projectVersion.containsKey(projectId)) {
-            return if (version != projectVersion[projectId]?.trim()) {
-                projectVersion[projectId]
-            } else {
-                null
+        currentProjectIds.forEach { projectId ->
+            if (projectVersion.containsKey(projectId)) {
+                return if (version != projectVersion[projectId]?.trim()) {
+                    projectVersion[projectId]
+                } else {
+                    null
+                }
             }
         }
 

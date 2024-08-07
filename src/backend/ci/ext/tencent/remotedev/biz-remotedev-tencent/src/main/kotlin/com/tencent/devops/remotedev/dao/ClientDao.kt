@@ -1,9 +1,11 @@
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TClient
 import com.tencent.devops.model.remotedev.tables.records.TClientRecord
 import org.jooq.DSLContext
+import org.jooq.JSON
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -13,7 +15,7 @@ class ClientDao {
         dslContext: DSLContext,
         macAddress: String,
         currentUserId: String,
-        projectId: String,
+        currentProjectIds: Set<String>,
         version: String,
         startVersion: String
     ) {
@@ -22,18 +24,18 @@ class ClientDao {
                 this,
                 MAC_ADDRESS,
                 CURRENT_USER,
-                PROJECT_ID,
+                CURRENT_PROJECT_IDS,
                 VERSION,
                 START_VERSION
             ).values(
                 macAddress,
                 currentUserId,
-                projectId,
+                JSON.json(JsonUtil.toJson(currentProjectIds, false)),
                 version,
                 startVersion
             ).onDuplicateKeyUpdate()
                 .set(CURRENT_USER, currentUserId)
-                .set(PROJECT_ID, projectId)
+                .set(CURRENT_PROJECT_IDS, JSON.json(JsonUtil.toJson(currentProjectIds, false)))
                 .set(VERSION, version)
                 .set(START_VERSION, startVersion)
                 .set(UPDATE_TIME, LocalDateTime.now())
