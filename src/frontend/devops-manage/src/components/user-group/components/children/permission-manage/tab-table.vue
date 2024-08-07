@@ -215,7 +215,7 @@ const projectId = computed(() => route.params?.projectCode);
 const tableList = computed(() => props.data.map(item => ({
     ...item,
     unableMessage: getUnableMessage(item),
-    isExpired: item.expiredAt < Date.now()
+    isExpired: item.expiredAt < Date.now() && item.removeMemberButtonControl === 'OTHER'
   }))
 );
 const border = ['row', 'outer'];

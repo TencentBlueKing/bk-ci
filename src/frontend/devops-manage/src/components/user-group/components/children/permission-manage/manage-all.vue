@@ -544,16 +544,16 @@ function handleRenewalClosed () {
  */
 async function handleHandoverConfirm () {
   const isValidate = await formRef.value.validate();
-  if(!isValidate) return;
-
+  if (!isValidate) return;
   const param = formatSelectParams(selectedRow.value.groupId);
   delete param.renewalDuration;
-  if(asideItem.value.id === handOverForm.value.id){
+  if (asideItem.value.id === handOverForm.value.id) {
     showMessage('error', t('目标对象和交接人不允许相同。'));
     return
   }
   try {
     operatorLoading.value = true;
+    const res = await http.batchHandover(projectId.value, param);
     if (res) {
       operatorLoading.value = false;
       showMessage('success', t('用户组权限已移交给X。',[`${handOverForm.value.id}(${handOverForm.value.name})`]));
@@ -562,6 +562,7 @@ async function handleHandoverConfirm () {
       cancelClear('handover');
     }
   } catch (error) {
+    console.error(error)
     operatorLoading.value = false;
   }
 };

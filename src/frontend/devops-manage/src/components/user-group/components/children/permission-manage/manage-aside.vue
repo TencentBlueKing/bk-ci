@@ -152,7 +152,7 @@
               <p class="hand-over-table-item">
                 {{item.name}}({{ item.resourceType }})
               </p>
-              <p class="blue-text" @click="goAauthorization(item.resourceType)">
+              <p class="blue-text" @click="goAuthorization(item.resourceType)">
                 <i class="manage-icon manage-icon-jump"></i>
                 <span>{{t("前往处理")}}</span>
               </p>
@@ -358,7 +358,7 @@ function handOverClose() {
 async function handConfirm(flag){
   try {
     if(flag === 'user'){
-      if (!removeMemberChecked.value) {
+      if (removeMemberChecked.value) {
         emit('removeConfirm', removeUser.value, {});
       } else {
         const isValidate = await formRef.value?.validate();
@@ -464,7 +464,7 @@ function refreshHandOverfail () {
   }
   handleChangeOverFormName(param);
 }
-function goAauthorization(resourceType) {
+function goAuthorization(resourceType) {
   window.open(`${location.origin}/console/manage/${projectId.value}/permission?resourceType=${resourceType}`, '_blank')
 }
 /**
