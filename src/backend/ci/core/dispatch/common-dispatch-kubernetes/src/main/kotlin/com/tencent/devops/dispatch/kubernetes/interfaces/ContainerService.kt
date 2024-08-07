@@ -157,4 +157,9 @@ interface ContainerService {
         buildId: String,
         dispatchBuildImageReq: DispatchBuildImageReq
     ): DispatchTaskResp
+
+    /**
+     * inspect镜像接口
+     */
+    fun inspectDockerImage(userId: String, pool: Pool): String
 }

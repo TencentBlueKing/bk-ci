@@ -395,4 +395,8 @@ class BcsContainerService @Autowired constructor(
             )
         )
     }
+
+    override fun inspectDockerImage(userId: String, pool: Pool): String {
+        return ""
+    }
 }

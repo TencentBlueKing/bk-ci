@@ -30,10 +30,14 @@ package com.tencent.devops.dispatch.kubernetes.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
+import com.tencent.devops.dispatch.kubernetes.pojo.Credential
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
+import com.tencent.devops.dispatch.kubernetes.pojo.InspectImageCredential
+import com.tencent.devops.dispatch.kubernetes.pojo.InspectImageReq
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
@@ -46,6 +50,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
 import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.net.SocketTimeoutException
@@ -315,6 +320,65 @@ class KubernetesBuilderClient @Autowired constructor(
                 errorCode = ErrorCodeEnum.BCS_WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                 formatErrorMessage = ErrorCodeEnum.BCS_WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
                 errorMessage = "Getting the login debug link interface timed out, url: $url, ${e.message}"
+            )
+        }
+    }
+
+    fun inspectDockerImage(
+        userId: String,
+        imageName: String,
+        credential: Credential
+    ): String {
+        val url = "/api/docker/inspect"
+        val body = InspectImageReq(
+            name = "${System.currentTimeMillis()}",
+            ref = imageName,
+            cred = InspectImageCredential(
+                username = credential.user,
+                password = credential.password
+            )
+        )
+
+        val request = clientCommon.baseRequest(
+            userId = userId,
+            url = url,
+        )
+            .post(JsonUtil.toJson(body).toRequestBody())
+            .build()
+
+        logger.info("$userId inspectImage: $imageName request url: $url, body: $body")
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        errorType = ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_ERROR.errorType,
+                        errorCode = ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_ERROR.errorCode,
+                        formatErrorMessage = ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_ERROR.getErrorMessage(),
+                        errorMessage = "Fail to inspect image, ResponseCode: ${response.code}"
+                    )
+                }
+                logger.info("$userId inspect image: $imageName response: $responseContent")
+                val responseData: KubernetesResult<TaskResp> = objectMapper.readValue(responseContent)
+                if (responseData.isOk()) {
+                    return responseData.data!!.taskId
+                } else {
+                    val msg = "${responseData.message ?: responseData.getCodeMessage()}"
+                    throw BuildFailureException(
+                        errorType = ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_FAIL.errorType,
+                        errorCode = ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_FAIL.errorCode,
+                        formatErrorMessage = ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_FAIL.getErrorMessage(),
+                        errorMessage = "Inspect image interface returns a failure：$msg"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("$userId inspect image get SocketTimeoutException.", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = ErrorCodeEnum.BCS_OPERATE_VM_INTERFACE_FAIL.getErrorMessage(),
+                errorMessage = "Inspect image interface timed out, url: $url"
             )
         }
     }
