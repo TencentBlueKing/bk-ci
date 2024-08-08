@@ -7,9 +7,9 @@ const messages = i18n.messages[locale]
 const state = () => ({
     platformInfo: {
         name: (messages && messages.bkci) || '蓝盾',
-        nameEn: 'BLUEKING CI',
+        nameEn: 'BK-CI',
         brandName: (messages && messages.tencentBlueKing) || '蓝鲸智云',
-        brandNameEn: 'BlueKing',
+        brandNameEn: 'Tencent BlueKing',
         favicon: `${window.PUBLIC_URL_PREFIX}/static/favicon.ico`,
         version: window.BK_CI_VERSION,
         i18n: {}
@@ -35,7 +35,10 @@ const actions = {
             resp = await getPlatformConfig(config)
         }
         const { i18n, name, brandName } = resp
-        document.title = `${i18n.name || name} | ${i18n.brandName || brandName}`
+        const currentPage = window.currentPage
+        document.title = currentPage
+            ? `${currentPage.name} | ${i18n.name || name} | ${i18n.brandName || brandName}`
+            : `${i18n.name || name} | ${i18n.brandName || brandName}`
         setShortcutIcon(resp.favicon)
         commit('setPlatformInfo', resp)
         return resp

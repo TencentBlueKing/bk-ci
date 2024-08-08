@@ -99,6 +99,7 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
         const serviceAlias = getServiceAliasByPath(to.path)
         const currentPage = window.serviceObject.serviceMap[serviceAlias]
         if (to.name !== from.name) {
+            console.log(platformInfo, '----from store platformInfo')
             document.title = currentPage
                 ? `${currentPage.name} | ${platformInfo.i18n.name || platformInfo.name} | ${platformInfo.i18n.brandName || platformInfo.brandName}`
                 : `${platformInfo.i18n.name || platformInfo.name} | ${platformInfo.i18n.brandName || platformInfo.brandName}`
