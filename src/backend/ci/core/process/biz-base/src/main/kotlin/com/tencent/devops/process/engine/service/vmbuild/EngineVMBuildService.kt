@@ -94,7 +94,6 @@ import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
-import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
@@ -130,7 +129,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineTaskService: PipelineTaskService,
-    private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val jmxElements: JmxElements,
     private val buildExtService: PipelineBuildExtService,
     private val client: Client,
@@ -196,7 +194,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             projectId, buildInfo.pipelineId, buildId, buildInfo
         )
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
-        var vmId = 1
 
         model!!.stages.forEachIndexed { index, s ->
             if (index == 0) {
@@ -215,9 +212,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     if (container.status.isFinish()) {
                         throw OperationException("vmName($vmName) has been shutdown")
                     }
+                    val startUpVMTask = getStartUpVMTask(projectId, buildId, vmSeqId)
                     // #3769 如果是已经启动完成并且不是网络故障重试的(retryCount>0), 都属于构建机的重复无效启动请求,要抛异常拒绝
                     Preconditions.checkTrue(
-                        condition = !BuildStatus.parse(c.startVMStatus).isFinish() || retryCount > 0,
+                        condition = startUpVMTask?.status?.isFinish() != true || retryCount > 0,
                         exception = ErrorCodeException(
                             errorCode = ProcessMessageCode.ERROR_REPEATEDLY_START_VM,
                             params = arrayOf(c.startVMStatus ?: "")
@@ -316,7 +314,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         pipelineAsCodeSettings = asCodeSettings
                     )
                 }
-                vmId++
             }
         }
         LOG.info("ENGINE|$buildId|BUILD_VM_START|j($vmSeqId)|$vmName|Not Found VMContainer")
@@ -355,16 +352,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         errorCode: Int? = null,
         errorMsg: String? = null
     ): Boolean {
-        // 针VM启动不是在第一个的情况，第一个可能是人工审核插件（避免占用VM）
-        // agent上报状态需要判断根据ID来获取真正的启动VM的任务，否则兼容处理取第一个插件的状态（正常情况）
-        var startUpVMTask = pipelineTaskService.getBuildTask(projectId, buildId, VMUtils.genStartVMTaskId(vmSeqId))
+        val startUpVMTask = getStartUpVMTask(projectId, buildId, vmSeqId)
 
-        if (startUpVMTask == null) {
-            val buildTasks = pipelineTaskService.listContainerBuildTasks(projectId, buildId, vmSeqId)
-            if (buildTasks.isNotEmpty()) {
-                startUpVMTask = buildTasks[0]
-            }
-        }
 
         LOG.info("ENGINE|$buildId|SETUP_VM_STATUS|j($vmSeqId)|${startUpVMTask?.taskId}|status=$buildStatus")
         if (startUpVMTask == null) {
@@ -448,6 +437,24 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             )
         )
         return true
+    }
+
+    private fun getStartUpVMTask(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String
+    ): PipelineBuildTask? {
+        // 针VM启动不是在第一个的情况，第一个可能是人工审核插件（避免占用VM）
+        // agent上报状态需要判断根据ID来获取真正的启动VM的任务，否则兼容处理取第一个插件的状态（正常情况）
+        var startUpVMTask = pipelineTaskService.getBuildTask(projectId, buildId, VMUtils.genStartVMTaskId(vmSeqId))
+
+        if (startUpVMTask == null) {
+            val buildTasks = pipelineTaskService.listContainerBuildTasks(projectId, buildId, vmSeqId)
+            if (buildTasks.isNotEmpty()) {
+                startUpVMTask = buildTasks[0]
+            }
+        }
+        return startUpVMTask
     }
 
     private fun getFinalBuildStatus(
