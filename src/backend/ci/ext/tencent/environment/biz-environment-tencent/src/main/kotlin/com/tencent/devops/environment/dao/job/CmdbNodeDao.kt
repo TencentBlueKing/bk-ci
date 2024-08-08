@@ -478,10 +478,10 @@ class CmdbNodeDao @Autowired constructor(
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(SERVER_ID.`in`(serverIds))
             val records = defaultDSLContext.select(
-                NODE_ID.`as`(T_NODE_NODE_ID),
-                NODE_IP.`as`(T_NODE_NODE_IP),
-                SERVER_ID.`as`(T_NODE_SERVER_ID),
-                NODE_STATUS.`as`(T_NODE_NODE_STATUS)
+                NODE_ID,
+                NODE_IP,
+                SERVER_ID,
+                NODE_STATUS
             ).from(this)
                 .where(conditions)
                 .fetch()
