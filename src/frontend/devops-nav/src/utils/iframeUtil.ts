@@ -7,11 +7,6 @@ interface UrlParam {
     refresh: boolean
 }
 
-interface titleParams {
-    title: string,
-    serverName: string
-}
-
 function iframeUtil (router: any) {
     const utilMap: ObjectMap = {}
     function init () {
@@ -32,12 +27,18 @@ function iframeUtil (router: any) {
             params
         }, '*')
     }
-    utilMap.updateTabTitle = function ({ title, serverName }: titleParams): void {
+    utilMap.updateTabTitle = function (title: string): void {
         if (title) {
             document.title = title
         }
-        if (!title && serverName) {
-            document.title = `${serverName} | ${platformInfo.i18n.name || platformInfo.name} | ${platformInfo.i18n.brandName || platformInfo.brandName}`
+        if (!platformInfo) return
+        const currentPage = window.currentPage
+        const platformName = platformInfo.i18n.name || platformInfo.name
+        const brandName = platformInfo.i18n.brandName || platformInfo.brandName
+        if (currentPage) {
+            document.title = `${currentPage.name} | ${platformName} | ${brandName}`
+        } else {
+            document.title = `${platformName} | ${brandName}`
         }
     }
 
