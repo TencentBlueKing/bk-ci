@@ -67,7 +67,7 @@ class TencentEnvironmentConfig {
         return NewCmdbClient(
             environmentProperties.newCmdb.newCmdbBaseUrl,
             environmentProperties.newCmdb.appId,
-            environmentProperties.newCmdb.appCode
+            environmentProperties.newCmdb.appKey
         )
     }
 

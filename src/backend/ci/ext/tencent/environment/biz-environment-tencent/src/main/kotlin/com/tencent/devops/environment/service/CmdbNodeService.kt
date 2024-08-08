@@ -105,10 +105,6 @@ class CmdbNodeService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(CmdbNodeService::class.java)
 
-        const val AGENT_ABNORMAL_NODE_STATUS = 0
-        const val AGENT_NORMAL_NODE_STATUS = 1
-        const val AGENT_NOT_INSTALLED_TAG = false
-
         const val INNER_IP_FIRST_INDEX = 0
         const val IEG_DEPT_ID = 3
 
@@ -118,8 +114,6 @@ class CmdbNodeService @Autowired constructor(
         const val NODE_AGENT_STATUS_ABNORMAL = 0
         const val NODE_AGENT_STATUS_NORMAL = 1
         const val NODE_AGENT_STATUS_NOT_INSTALLED = 2
-
-        const val CMDB_QUERY_OPERATION_IN = "IN"
     }
 
     fun getUserCmdbNodesNew(

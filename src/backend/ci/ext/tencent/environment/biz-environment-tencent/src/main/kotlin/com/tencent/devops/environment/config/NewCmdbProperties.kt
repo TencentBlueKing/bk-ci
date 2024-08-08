@@ -33,5 +33,5 @@ data class NewCmdbProperties(
      */
     val newCmdbBaseUrl: String,
     val appId: String,
-    val appCode: String
+    val appKey: String
 )
