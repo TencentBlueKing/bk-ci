@@ -28,8 +28,11 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.api.pojo.ProjectOrganization
+import com.tencent.devops.project.api.pojo.ProjectProductInfo
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectFreshDao
@@ -43,7 +46,8 @@ import org.springframework.stereotype.Service
 class ProjectTxInfoService @Autowired constructor(
     val projectDao: ProjectDao,
     val projectFreshDao: ProjectFreshDao,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val projectMemberService: ProjectMemberService
 ) {
 
     companion object {
@@ -54,16 +58,16 @@ class ProjectTxInfoService @Autowired constructor(
     fun getProjectOrganizations(projectCode: String): ProjectOrganization? {
         val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: return null
         return ProjectOrganization(
-                projectId = projectInfo.id.toString(),
-                projectEnglishName = projectInfo.englishName,
-                projectName = projectInfo.projectName,
-                projectType = projectInfo.projectType,
-                bgId = projectInfo.bgId,
-                bgName = projectInfo.bgName,
-                centerId = projectInfo.centerId,
-                centerName = projectInfo.centerName,
-                deptId = projectInfo.deptId,
-                deptName = projectInfo.deptName
+            projectId = projectInfo.id.toString(),
+            projectEnglishName = projectInfo.englishName,
+            projectName = projectInfo.projectName,
+            projectType = projectInfo.projectType,
+            bgId = projectInfo.bgId,
+            bgName = projectInfo.bgName,
+            centerId = projectInfo.centerId,
+            centerName = projectInfo.centerName,
+            deptId = projectInfo.deptId,
+            deptName = projectInfo.deptName
         )
     }
 
@@ -130,5 +134,30 @@ class ProjectTxInfoService @Autowired constructor(
             productId = productId
         )
         return true
+    }
+
+    fun listProjectProductInfos(page: Int, pageSize: Int): List<ProjectProductInfo> {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        return projectDao.listProjectsByCondition(
+            dslContext = dslContext,
+            projectConditionDTO = ProjectConditionDTO(
+                relatedProduct = true
+            ),
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
+        ).map {
+            val projectManagers = try {
+                projectMemberService.getProjectManagers(it.englishName)
+            } catch (ex: Exception) {
+                logger.warn("get project managers failed ${it.englishName}")
+                emptyList()
+            }
+            ProjectProductInfo(
+                projectId = it.englishName,
+                projectName = it.projectName,
+                productId = it.projectId?.toInt() ?: 0,
+                managers = projectManagers
+            )
+        }
     }
 }
