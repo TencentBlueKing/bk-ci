@@ -149,7 +149,7 @@ class ProjectTxInfoService @Autowired constructor(
             val projectManagers = try {
                 projectMemberService.getProjectManagers(it.englishName)
             } catch (ex: Exception) {
-                logger.warn("get project managers failed ${it.englishName}")
+                logger.warn("get project managers failed ${it.englishName}", ex)
                 emptyList()
             }
             ProjectProductInfo(
