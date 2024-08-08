@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.CmdbNode
+import com.tencent.devops.environment.pojo.ListUserCmdbNodesReq
 import com.tencent.devops.environment.pojo.ScrollIdPage
 import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
 import com.tencent.devops.environment.pojo.job.ImportCmdbNodeInfo
@@ -78,27 +79,15 @@ interface UserCmdbNodeResource {
         ips: List<String>?
     ): Result<Page<CmdbNode>>
 
-    @Operation(summary = "获取用户CMDB节点")
+    @Operation(summary = "获取用户名下CMDB节点")
     @POST
     @Path("/listUserCmdbNodesWithScrollId")
     fun listUserCmdbNodesWithScrollId(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @Parameter(description = "true 时为备份负责人，false 时为主负责人", required = true)
-        @QueryParam("bakOperator")
-        bakOperator: Boolean,
-        @Parameter(description = "分页游标，不传默认为0", required = false, example = "0")
-        @QueryParam("scrollId")
-        scrollId: String = "0",
-        @Parameter(description = "每页多少条，最大200", required = false, example = "100")
-        @QueryParam("pageSize")
-        pageSize: Int = 100,
-        @Parameter(description = "指定IP", required = false)
-        ips: List<String>?
+        @Parameter(description = "获取用户名下CMDB节点请求体", required = true)
+        req: ListUserCmdbNodesReq
     ): Result<ScrollIdPage<CmdbNode>>
 
     @Operation(summary = "导入CMDB节点")

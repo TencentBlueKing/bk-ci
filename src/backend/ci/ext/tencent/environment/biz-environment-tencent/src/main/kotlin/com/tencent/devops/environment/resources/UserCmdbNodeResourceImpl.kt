@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserCmdbNodeResource
 import com.tencent.devops.environment.pojo.CmdbNode
+import com.tencent.devops.environment.pojo.ListUserCmdbNodesReq
 import com.tencent.devops.environment.pojo.ScrollIdPage
 import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
 import com.tencent.devops.environment.pojo.job.ImportCmdbNodeInfo
@@ -70,20 +71,16 @@ class UserCmdbNodeResourceImpl @Autowired constructor(
 
     override fun listUserCmdbNodesWithScrollId(
         userId: String,
-        projectId: String,
-        bakOperator: Boolean,
-        scrollId: String,
-        pageSize: Int,
-        ips: List<String>?
+        req: ListUserCmdbNodesReq
     ): Result<ScrollIdPage<CmdbNode>> {
         return Result(
             importCmdbNodeService.listUserCmdbNodes(
                 userId = userId,
-                projectId = projectId,
-                bakOperator = bakOperator,
-                scrollId = scrollId,
-                pageSize = pageSize,
-                ips = ips
+                projectId = req.projectId,
+                bakOperator = req.bakOperator,
+                scrollId = req.scrollId,
+                pageSize = req.pageSize,
+                ips = req.ips
             )
         )
     }
