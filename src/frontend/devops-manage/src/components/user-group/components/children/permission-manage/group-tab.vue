@@ -270,11 +270,13 @@ function collapseClick(resourceType) {
       font-size: 12px;
       color: #313238;
       cursor: pointer;
+
       .service-icon {
         width: 14px;
         height: 14px;
         margin-right: 5px;
       }
+
       .shape-icon {
         color: #989ca7;
         margin-right: 10px;

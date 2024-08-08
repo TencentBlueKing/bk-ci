@@ -212,12 +212,12 @@
       <h2 class="dialog-header"> {{t('成功移除XX', [`${removeUserDeptListMap.removeUser.id}(${removeUserDeptListMap.removeUser.name})`])}}</h2>
     </template>
     <template #default>
-      <p>{{ $t('用户XXX已从项目下移除，但其所属的如下组织架构在项目下拥有权限，此用户依然可以进入项目进行操作：', [`${removeUserDeptListMap.removeUser.id}(${removeUserDeptListMap.removeUser.name})`]) }}</p>
+      <p>{{ t('用户XXX已从项目下移除，但其所属的如下组织架构在项目下拥有权限，此用户依然可以进入项目进行操作：', [`${removeUserDeptListMap.removeUser.id}(${removeUserDeptListMap.removeUser.name})`]) }}</p>
       <p v-for="dept in removeUserDeptListMap.list" :key="dept.id">
         - {{ dept.name }}
       </p>
       <p class="mt30">
-        {{ $t('请评估按照组织架构开通的权限是否合理。') }}
+        {{ t('请评估按照组织架构开通的权限是否合理。') }}
       </p>
       <div class="option-btn">
         <bk-button
@@ -897,9 +897,11 @@ function closeDeptListPermissionDialog () {
     .text-gray{
       color: #979BA5;
     }
+
     .text-blue{
       color: #699DF4;
     }
+
     .manage-icon-arrows-right{
       margin: 0 4px;
     }
@@ -932,12 +934,14 @@ function closeDeptListPermissionDialog () {
 }
 
 .remove-dialog {
+
   .dialog-header {
     font-family: MicrosoftYaHei;
     font-size: 20px;
     color: #313238;
     letter-spacing: 0;
   }
+
   .remove-text {
     display: flex;
     margin: 12px 0;
@@ -947,16 +951,20 @@ function closeDeptListPermissionDialog () {
       color: #63656E;
     }
   }
+
   .manage-icon-tips {
     width: 42px;
     height: 42px;
   }
+
   .mt30 {
     margin-top: 30px;
   }
+
   .option-btn {
     text-align: center;
     margin-top: 20px;
+
     .btn {
       width: 88px;
       margin-right: 10px;
@@ -989,6 +997,7 @@ function closeDeptListPermissionDialog () {
           background-color: #979ba5 !important;
         }
       }
+
       &::-webkit-scrollbar {
         width: 8px !important;
         height: 8px !important;
@@ -1031,7 +1040,7 @@ function closeDeptListPermissionDialog () {
 
     .footer-main {
 
-      .main-line{
+      .main-line {
         margin-bottom: 24px;
 
         .main-label {
@@ -1077,6 +1086,7 @@ function closeDeptListPermissionDialog () {
       .main-line-handover {
         margin-top: 26px;
       }
+
       .main-line-remove {
         margin-top: 40px;
       }
@@ -1094,7 +1104,7 @@ function closeDeptListPermissionDialog () {
   }
 }
 
-.text-blue{
+.text-blue {
   color: #699DF4;
 }
 </style>
