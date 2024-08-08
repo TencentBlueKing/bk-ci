@@ -128,7 +128,7 @@ class TencentCCService {
             bkAppSecret = bkAppSecret,
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
             bkSupplierAccount = bkSupplierAccount,
-            page = CCPage(DEFAULT_PAGE_START, DEFAULT_PAGE_LIMIT),
+            page = CCPage(start, limit),
             fields = fields,
             hostPropertyFilter = CCHostPropertyFilter(
                 condition = AND_CONDITATION,
