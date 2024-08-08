@@ -40,6 +40,7 @@ import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
 import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
 import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.dto.CmdbNodeDTO
+import com.tencent.devops.environment.pojo.dto.CmdbNodeStatusDTO
 import com.tencent.devops.environment.pojo.dto.NodeUpdateAttrDTO
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -53,7 +54,6 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record2
 import org.jooq.Record3
-import org.jooq.Record4
 import org.jooq.Record5
 import org.jooq.Record7
 import org.jooq.Result
@@ -468,22 +468,31 @@ class CmdbNodeDao @Autowired constructor(
 
     // -------------------------------get node record(s)-------------------------------
 
-    fun getCmdbNodesByServerIdAndProjectId(
-        dslContext: DSLContext,
+    fun listCmdbNodeStatusByProjectIdAndServerId(
         projectId: String,
-        nodeServerIdList: List<Long>
-    ): Result<Record4<Long, String, String, Long>> {
+        serverIds: Collection<Long>
+    ): List<CmdbNodeStatusDTO> {
         with(TNode.T_NODE) {
-            return dslContext.select(
+            val conditions = mutableListOf<Condition>()
+            conditions.add(buildCmdbNodeTypeCondition())
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(SERVER_ID.`in`(serverIds))
+            val records = defaultDSLContext.select(
                 NODE_ID.`as`(T_NODE_NODE_ID),
                 NODE_IP.`as`(T_NODE_NODE_IP),
-                NODE_STATUS.`as`(T_NODE_NODE_STATUS),
-                SERVER_ID.`as`(T_NODE_SERVER_ID)
+                SERVER_ID.`as`(T_NODE_SERVER_ID),
+                NODE_STATUS.`as`(T_NODE_NODE_STATUS)
             ).from(this)
-                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
-                .and(SERVER_ID.`in`(nodeServerIdList))
-                .and(PROJECT_ID.eq(projectId))
+                .where(conditions)
                 .fetch()
+            return records.map { record ->
+                CmdbNodeStatusDTO(
+                    record.get(NODE_ID),
+                    record.get(NODE_IP),
+                    record.get(SERVER_ID),
+                    record.get(NODE_STATUS)
+                )
+            }
         }
     }
 

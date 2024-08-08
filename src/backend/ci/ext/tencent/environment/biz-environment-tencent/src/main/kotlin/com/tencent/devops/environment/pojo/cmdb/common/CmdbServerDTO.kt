@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.pojo.cmdb.common
 
+import com.tencent.devops.environment.pojo.cmdb.resp.NewCmdbServer
 import com.tencent.devops.environment.pojo.cmdb.resp.RawCmdbNode
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -28,6 +29,22 @@ data class CmdbServerDTO(
                 deptId = rawCmdbNode.deptId,
                 hostName = rawCmdbNode.name,
                 osName = rawCmdbNode.osName
+            )
+        }
+
+        fun fromNewCmdbServer(newCmdbServer: NewCmdbServer): CmdbServerDTO {
+            val bakOperatorList = newCmdbServer.maintainerBak?.split(";")?.toList()
+            val lanIpList = newCmdbServer.innerServerIpv4?.map { it.ip }?.toList()
+            val firstIp = newCmdbServer.getFirstIp()
+            return CmdbServerDTO(
+                serverId = newCmdbServer.serverId,
+                ip = firstIp ?: "",
+                operator = newCmdbServer.maintainer ?: "",
+                bakOperatorList = bakOperatorList,
+                lanIpList = lanIpList,
+                deptId = newCmdbServer.departmentId,
+                hostName = newCmdbServer.hostName,
+                osName = newCmdbServer.osName
             )
         }
     }

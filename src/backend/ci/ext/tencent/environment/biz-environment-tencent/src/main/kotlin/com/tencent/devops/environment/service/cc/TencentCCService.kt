@@ -33,6 +33,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.environment.constant.Constants
 import com.tencent.devops.environment.pojo.job.ccreq.CCAddHostReq
 import com.tencent.devops.environment.pojo.job.ccreq.CCDeleteHostReq
 import com.tencent.devops.environment.pojo.job.ccreq.CCFindHostBizRelationsReq
@@ -41,9 +42,10 @@ import com.tencent.devops.environment.pojo.job.ccreq.CCListHostWithoutBizReq
 import com.tencent.devops.environment.pojo.job.ccreq.CCPage
 import com.tencent.devops.environment.pojo.job.ccreq.CCRules
 import com.tencent.devops.environment.pojo.job.ccres.CCBkHost
+import com.tencent.devops.environment.pojo.job.ccres.CCHost
 import com.tencent.devops.environment.pojo.job.ccres.CCResp
 import com.tencent.devops.environment.pojo.job.ccres.HostBizRelation
-import com.tencent.devops.environment.pojo.job.ccres.QueryCCListHostWithoutBizData
+import com.tencent.devops.environment.pojo.job.ccres.CCPageData
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -53,7 +55,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class TencentQueryFromCCService {
+class TencentCCService {
     @Value("\${environment.apigw.bkAppCode:}")
     private val bkAppCode = ""
 
@@ -82,7 +84,7 @@ class TencentQueryFromCCService {
     private val bkccDeleteHostFromCiBizPath = ""
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TencentQueryFromCCService::class.java)
+        private val logger = LoggerFactory.getLogger(TencentCCService::class.java)
         private val mapper = jacksonObjectMapper().apply {
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
@@ -94,11 +96,33 @@ class TencentQueryFromCCService {
         const val IN_OPERATION = "in"
     }
 
+    fun listHostByServerId(
+        serverIdSet: Set<Long>
+    ): List<CCHost> {
+        val hostList = mutableListOf<CCHost>()
+        var pageData: CCPageData<CCHost>
+        var start = 0
+        do {
+            pageData = queryCCListHostWithoutBizByInRules(
+                listOf(Constants.FIELD_BK_HOST_ID, Constants.FIELD_BK_HOST_INNERIP, Constants.FIELD_BK_SVR_ID),
+                serverIdSet,
+                Constants.FIELD_BK_SVR_ID,
+                start,
+                DEFAULT_PAGE_LIMIT
+            ).data!!
+            hostList.addAll(pageData.info)
+            start += DEFAULT_PAGE_LIMIT
+        } while (pageData.info.isNotEmpty())
+        return hostList
+    }
+
     fun <T> queryCCListHostWithoutBizByInRules(
         fields: List<String>,
         inValueList: T,
-        field: String
-    ): CCResp<QueryCCListHostWithoutBizData> {
+        field: String,
+        start: Int = DEFAULT_PAGE_START,
+        limit: Int = DEFAULT_PAGE_LIMIT
+    ): CCResp<CCPageData<CCHost>> {
         val ccListHostWithoutBizReq = CCListHostWithoutBizReq(
             bkAppCode = bkAppCode,
             bkAppSecret = bkAppSecret,

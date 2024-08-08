@@ -35,7 +35,7 @@ import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
 import com.tencent.devops.environment.service.CmdbNodeService
 import com.tencent.devops.environment.service.RedisLockService
-import com.tencent.devops.environment.service.cc.TencentQueryFromCCService
+import com.tencent.devops.environment.service.cc.TencentCCService
 import com.tencent.devops.environment.service.cmdb.TencentCmdbService
 import com.tencent.devops.environment.utils.ComputeTimeUtils
 import org.jooq.DSLContext
@@ -54,7 +54,7 @@ class TencentStockDataUpdateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val cmdbNodeDao: CmdbNodeDao,
     private val tencentCmdbService: TencentCmdbService,
-    private val tencentQueryFromCCService: TencentQueryFromCCService,
+    private val tencentQueryFromCCService: TencentCCService,
     private val cmdbNodeService: CmdbNodeService,
     private val redisLockService: RedisLockService
 ) {

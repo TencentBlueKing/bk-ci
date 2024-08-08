@@ -27,13 +27,48 @@
 
 package com.tencent.devops.environment.pojo.cmdb.resp
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.environment.pojo.CmdbNode
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class NewCmdbData(
-    @get:Schema(title = "结果主机列表", required = true)
-    var list: List<NewCmdbDataIns>,
-    @get:Schema(title = "游标值，用该值做入参请求下一页", description = "该字段不能为null或空字符串，否则会抛出异常")
-    var scrollId: String?,
-    @get:Schema(title = "是否有下一页（最后一页还是true，要再请求一次到list为空列表才为false）")
-    var hasNext: Boolean?
-)
+data class NewCmdbServer(
+    @get:Schema(title = "服务器ID")
+    val serverId: Long,
+    @get:Schema(title = "主负责人")
+    val maintainer: String?,
+    @get:Schema(title = "备份负责人(多个人用;分隔)")
+    val maintainerBak: String?,
+    @get:Schema(title = "运维部门ID")
+    @JsonProperty("maintenanceDepartmentId")
+    val departmentId: Int?,
+    @get:Schema(title = "主机名称")
+    val hostName: String?,
+    @get:Schema(title = "操作系统名称")
+    val osName: String?,
+    @get:Schema(title = "服务器的内网Ipv4地址列表")
+    val innerServerIpv4: List<NewCmdbInnerServerIpv4>?
+) {
+
+    fun getFirstIp(): String? {
+        return innerServerIpv4?.get(0)?.ip
+    }
+
+    private fun getDisplayIp(): String? {
+        if (innerServerIpv4 == null) {
+            return null
+        }
+        return innerServerIpv4.joinToString(";")
+    }
+
+    fun toCmdbNode(): CmdbNode {
+        return CmdbNode(
+            name = hostName ?: "",
+            serverId = serverId,
+            operator = maintainer ?: "",
+            bakOperator = maintainerBak ?: "",
+            ip = getFirstIp() ?: "",
+            displayIp = getDisplayIp() ?: "",
+            osName = osName ?: ""
+        )
+    }
+}

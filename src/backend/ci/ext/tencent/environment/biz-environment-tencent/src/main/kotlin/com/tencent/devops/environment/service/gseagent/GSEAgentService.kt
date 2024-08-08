@@ -60,7 +60,7 @@ import com.tencent.devops.environment.pojo.job.agentres.Step
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
 import com.tencent.devops.environment.service.job.ChooseAgentInstallChannelIdService
 import com.tencent.devops.environment.service.job.NodeManApi
-import com.tencent.devops.environment.service.cc.TencentQueryFromCCService
+import com.tencent.devops.environment.service.cc.TencentCCService
 import com.tencent.devops.environment.utils.FileUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -72,7 +72,7 @@ import javax.ws.rs.core.Response
 data class GSEAgentService @Autowired constructor(
     private val nodeManApi: NodeManApi,
     private val chooseAgentInstallChannelIdService: ChooseAgentInstallChannelIdService,
-    private val tencentQueryFromCCService: TencentQueryFromCCService,
+    private val tencentQueryFromCCService: TencentCCService,
     private val environmentProperties: EnvironmentProperties,
     private val installTaskService: InstallTaskService
 ) {

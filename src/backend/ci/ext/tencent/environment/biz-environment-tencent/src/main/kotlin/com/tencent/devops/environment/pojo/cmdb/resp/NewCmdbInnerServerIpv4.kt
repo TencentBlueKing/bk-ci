@@ -29,19 +29,7 @@ package com.tencent.devops.environment.pojo.cmdb.resp
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class InnerServerIpInfo(
+data class NewCmdbInnerServerIpv4(
     @get:Schema(title = "IP地址")
-    val ip: String,
-    @get:Schema(title = "IP地址所属的网段")
-    val segmentName: String?,
-    @get:Schema(title = "网络类型名称（内网、外网）")
-    val netType: String?,
-    @get:Schema(title = "是否管理IP（0-否，1-是）")
-    val isManagementIp: Int?,
-    @get:Schema(title = "网关地址(多个用;号分隔)")
-    val gateway: String?,
-    @get:Schema(title = "子网掩码")
-    val subnetMask: String?,
-    @get:Schema(title = "网络运营商")
-    val netOperatorName: String?
+    val ip: String
 )

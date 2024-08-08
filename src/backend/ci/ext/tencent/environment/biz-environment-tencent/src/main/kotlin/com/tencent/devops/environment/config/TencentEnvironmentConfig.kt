@@ -28,10 +28,16 @@
 package com.tencent.devops.environment.config
 
 import com.tencent.devops.environment.service.cmdb.EsbCmdbClient
+import com.tencent.devops.environment.service.cmdb.NewCmdbClient
+import com.tencent.devops.environment.service.cmdb.TencentCmdbService
+import com.tencent.devops.environment.service.cmdb.impl.TencentCmdbServiceImpl
+import com.tencent.devops.environment.service.cmdb.impl.TencentNewCmdbServiceImpl
 import com.tencent.devops.environment.service.job.NodeManApi
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 
 @Configuration
 class TencentEnvironmentConfig {
@@ -54,5 +60,31 @@ class TencentEnvironmentConfig {
             esbProperties.appCode,
             esbProperties.appSecret
         )
+    }
+
+    @Bean
+    fun newCmdbClient(environmentProperties: EnvironmentProperties): NewCmdbClient {
+        return NewCmdbClient(
+            environmentProperties.newCmdb.newCmdbBaseUrl,
+            environmentProperties.newCmdb.appId,
+            environmentProperties.newCmdb.appCode
+        )
+    }
+
+    @Bean
+    fun oldCmdbService(esbCmdbClient: EsbCmdbClient): TencentCmdbService {
+        return TencentCmdbServiceImpl(esbCmdbClient)
+    }
+
+    @Primary
+    @Bean("newCmdbService")
+    @ConditionalOnProperty(
+        prefix = "environment.newCmdb",
+        name = ["enabled"],
+        havingValue = "true",
+        matchIfMissing = true
+    )
+    fun newCmdbService(newCmdbClient: NewCmdbClient): TencentNewCmdbServiceImpl {
+        return TencentNewCmdbServiceImpl(newCmdbClient)
     }
 }

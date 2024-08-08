@@ -42,10 +42,10 @@ import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.dto.NodeUpdateAttrDTO
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.AgentVersion
-import com.tencent.devops.environment.pojo.job.ccres.CCInfo
+import com.tencent.devops.environment.pojo.job.ccres.CCHost
 import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
 import com.tencent.devops.environment.service.CmdbNodeService
-import com.tencent.devops.environment.service.cc.TencentQueryFromCCService
+import com.tencent.devops.environment.service.cc.TencentCCService
 import com.tencent.devops.environment.service.cmdb.TencentCmdbService
 import com.tencent.devops.environment.service.gseagent.GSEAgentService
 import com.tencent.devops.environment.service.job.QueryAgentStatusService
@@ -64,7 +64,7 @@ class UpdateCmdbNodeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val cmdbNodeDao: CmdbNodeDao,
     private val tencentCmdbService: TencentCmdbService,
-    private val tencentQueryFromCCService: TencentQueryFromCCService,
+    private val tencentQueryFromCCService: TencentCCService,
     private val cmdbNodeService: CmdbNodeService,
     private val queryAgentStatusService: QueryAgentStatusService
 ) {
@@ -187,7 +187,7 @@ class UpdateCmdbNodeService @Autowired constructor(
                 FIELD_BK_SVR_ID
             ).data?.info
         } else null
-        var serverIdToCCInfoMap: Map<Long?, CCInfo> = mapOf()
+        var serverIdToCCInfoMap: Map<Long?, CCHost> = mapOf()
         if (!nodeCCInfoListFromServerId.isNullOrEmpty()) {
             // serverId - cc记录 map
             serverIdToCCInfoMap = nodeCCInfoListFromServerId.associateBy { it.svrId }

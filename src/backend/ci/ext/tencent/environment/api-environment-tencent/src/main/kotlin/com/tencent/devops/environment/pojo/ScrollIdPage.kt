@@ -39,5 +39,4 @@ data class ScrollIdPage<out T>(
     @get:Schema(title = "数据", required = true)
     @BkFieldI18n
     val records: List<T>
-) {
-}
+)

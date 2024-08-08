@@ -34,4 +34,8 @@ data class NewCmdbConditionValue<T>(
     val operator: String,
     @get:Schema(title = "condition值列表")
     val value: List<T>
-)
+) {
+    object Operator {
+        const val IN = "IN"
+    }
+}

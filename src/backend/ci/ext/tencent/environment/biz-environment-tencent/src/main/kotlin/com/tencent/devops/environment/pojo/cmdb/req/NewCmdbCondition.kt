@@ -29,13 +29,13 @@ package com.tencent.devops.environment.pojo.cmdb.req
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class NewCmdbCondition<T>(
+data class NewCmdbCondition(
     @get:Schema(title = "主机ID")
-    val serverId: NewCmdbConditionValue<T>? = null,
+    val serverId: NewCmdbConditionValue<Int>? = null,
     @get:Schema(title = "IP地址")
-    val serverIp: NewCmdbConditionValue<T>? = null,
+    val serverIp: NewCmdbConditionValue<String>? = null,
     @get:Schema(title = "主负责人")
-    val maintainer: NewCmdbConditionValue<T>? = null,
+    val maintainer: NewCmdbConditionValue<String>? = null,
     @get:Schema(title = "备份负责人")
-    val maintainerBak: NewCmdbConditionValue<T>? = null
+    val maintainerBak: NewCmdbConditionValue<String>? = null
 )

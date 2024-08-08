@@ -39,11 +39,13 @@ import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
 import com.tencent.devops.environment.pojo.job.ImportCmdbNodeInfo
 import com.tencent.devops.environment.pojo.job.ReImportCmdbNodeInfo
 import com.tencent.devops.environment.service.CmdbNodeService
+import com.tencent.devops.environment.service.cmdb.impl.ImportCmdbNodeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserCmdbNodeResourceImpl @Autowired constructor(
-    private val cmdbNodeService: CmdbNodeService
+    private val cmdbNodeService: CmdbNodeService,
+    private val importCmdbNodeService: ImportCmdbNodeService
 ) : UserCmdbNodeResource {
 
     override fun listUserCmdbNodesNew(
@@ -74,12 +76,14 @@ class UserCmdbNodeResourceImpl @Autowired constructor(
         pageSize: Int,
         ips: List<String>?
     ): Result<ScrollIdPage<CmdbNode>> {
-        // TODO:逻辑待实现
         return Result(
-            ScrollIdPage(
-                scrollId = "0",
-                hasNext = true,
-                records = emptyList()
+            importCmdbNodeService.listUserCmdbNodes(
+                userId = userId,
+                projectId = projectId,
+                bakOperator = bakOperator,
+                scrollId = scrollId,
+                pageSize = pageSize,
+                ips = ips
             )
         )
     }
