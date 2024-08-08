@@ -353,14 +353,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         errorMsg: String? = null
     ): Boolean {
         val startUpVMTask = getStartUpVMTask(projectId, buildId, vmSeqId)
-
-
         LOG.info("ENGINE|$buildId|SETUP_VM_STATUS|j($vmSeqId)|${startUpVMTask?.taskId}|status=$buildStatus")
         if (startUpVMTask == null) {
             return false
         }
         val finalBuildStatus = getFinalBuildStatus(buildStatus, buildId, vmSeqId, startUpVMTask)
-
         // 如果是完成状态，则更新构建机启动插件的状态
         if (finalBuildStatus.isFinish()) {
             pipelineTaskService.updateTaskStatus(
