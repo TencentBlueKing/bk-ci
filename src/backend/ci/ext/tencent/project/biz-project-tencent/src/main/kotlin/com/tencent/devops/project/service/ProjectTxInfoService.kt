@@ -155,7 +155,7 @@ class ProjectTxInfoService @Autowired constructor(
             ProjectProductInfo(
                 projectId = it.englishName,
                 projectName = it.projectName,
-                productId = it.projectId?.toInt() ?: 0,
+                productId = it.productId?.toInt() ?: 0,
                 managers = projectManagers
             )
         }
