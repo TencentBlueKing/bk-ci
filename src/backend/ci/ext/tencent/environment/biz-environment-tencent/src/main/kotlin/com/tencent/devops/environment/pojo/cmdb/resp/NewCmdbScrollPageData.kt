@@ -34,6 +34,6 @@ data class NewCmdbScrollPageData<T>(
     var list: List<T>,
     @get:Schema(title = "游标值，用该值做入参请求下一页", description = "该字段不能为null或空字符串，否则会抛出异常")
     var scrollId: String?,
-    @get:Schema(title = "是否有下一页（最后一页还是true，要再请求一次到list为空列表才为false）")
+    @get:Schema(title = "是否有下一页")
     var hasNext: Boolean?
 )

@@ -51,7 +51,9 @@ class TencentNewCmdbServiceImpl(
         scrollId: String
     ): NewCmdbScrollPageData<NewCmdbServer> {
         val condition = buildMaintainerAndIpsCondition(maintainer, ips)
-        return newCmdbClient.queryAllServerByBusiness(condition, size, scrollId)
+        val cmdbServerPage = newCmdbClient.queryAllServerByBusiness(condition, size, scrollId)
+        setRealHasNext(cmdbServerPage, condition, size)
+        return cmdbServerPage
     }
 
     /**
@@ -68,7 +70,25 @@ class TencentNewCmdbServiceImpl(
         scrollId: String
     ): NewCmdbScrollPageData<NewCmdbServer> {
         val condition = buildBakMaintainerAndIpsCondition(bakMaintainer, ips)
-        return newCmdbClient.queryAllServerByBusiness(condition, size, scrollId)
+        val cmdbServerPage = newCmdbClient.queryAllServerByBusiness(condition, size, scrollId)
+        setRealHasNext(cmdbServerPage, condition, size)
+        return cmdbServerPage
+    }
+
+    /**
+     * 解决公司CMDB已知问题：hasNext标识可能不准（最后一页数据还是true，要再请求一次到list为空列表才为false），
+     * 因此hasNext字段无法直接使用，需要再查一次获得真正的hasNext值
+     * @param cmdbServerPage 服务器分页数据
+     * @param condition 查询条件
+     * @param size 分页大小
+     */
+    private fun setRealHasNext(
+        cmdbServerPage: NewCmdbScrollPageData<NewCmdbServer>,
+        condition: NewCmdbCondition,
+        size: Int
+    ) {
+        val nextCmdbServerPage = newCmdbClient.queryAllServerByBusiness(condition, size, cmdbServerPage.scrollId!!)
+        cmdbServerPage.hasNext = nextCmdbServerPage.list.isNotEmpty()
     }
 
     private fun buildServerIdCondition(serverIdSet: Set<Long>): NewCmdbCondition {

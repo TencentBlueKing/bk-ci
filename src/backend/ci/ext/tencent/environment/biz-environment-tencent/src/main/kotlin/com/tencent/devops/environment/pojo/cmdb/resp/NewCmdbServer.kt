@@ -57,7 +57,7 @@ data class NewCmdbServer(
         if (innerServerIpv4 == null) {
             return null
         }
-        return innerServerIpv4.joinToString(";")
+        return innerServerIpv4.joinToString(";") { it.ip }
     }
 
     fun toCmdbNode(): CmdbNode {
