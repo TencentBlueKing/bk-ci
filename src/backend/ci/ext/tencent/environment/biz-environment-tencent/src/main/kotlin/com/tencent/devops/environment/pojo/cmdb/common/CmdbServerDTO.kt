@@ -49,6 +49,10 @@ data class CmdbServerDTO(
         }
     }
 
+    private fun hasOperator(userId: String): Boolean {
+        return operator == userId
+    }
+
     private fun hasBakOperator(userId: String): Boolean {
         return bakOperatorList != null && bakOperatorList.contains(userId)
     }
@@ -57,7 +61,7 @@ data class CmdbServerDTO(
      * 当前用户是否为该机器的运维负责人或备份负责人
      */
     fun hasOperatorOrBak(userId: String): Boolean {
-        return operator == userId || hasBakOperator(userId)
+        return hasOperator(userId) || hasBakOperator(userId)
     }
 
     /**

@@ -10,9 +10,11 @@ import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.service.cc.TencentCCService
 import com.tencent.devops.environment.service.gseagent.utils.NodeStatusUtils
 import com.tencent.devops.environment.service.job.QueryAgentStatusService
+import com.tencent.devops.environment.utils.BinarySearchUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import kotlin.math.min
 
 /**
  * 导入测试机-选择CMDB节点服务
@@ -48,10 +50,10 @@ class ImportCmdbNodeService(
         ips: List<String>?
     ): ScrollIdPage<CmdbNode> {
         // 1.查出CMDB中的机器信息
-        val cmdbServerPage: NewCmdbScrollPageData<NewCmdbServer> = if (!bakOperator) {
-            newCmdbService.queryServerByMaintainer(userId, ips, pageSize, scrollId)
+        val cmdbServerPage: NewCmdbScrollPageData<NewCmdbServer> = if (ips.isNullOrEmpty()) {
+            queryServerByMaintainerOrBak(userId, bakOperator, scrollId, pageSize)
         } else {
-            newCmdbService.queryServerByBakMaintainer(userId, ips, pageSize, scrollId)
+            queryServerByIpsAndFilterByMaintainer(userId, bakOperator, scrollId, pageSize, ips)
         }
         checkCmdbServerPage(cmdbServerPage)
         // 2.转换为CmdbNode类型数据
@@ -68,6 +70,88 @@ class ImportCmdbNodeService(
             scrollId = cmdbServerPage.scrollId!!,
             hasNext = cmdbServerPage.hasNext!!,
             records = cmdbNodeList
+        )
+    }
+
+    /**
+     * 直接通过主/备负责人查询服务器
+     */
+    private fun queryServerByMaintainerOrBak(
+        userId: String,
+        bakOperator: Boolean,
+        scrollId: String,
+        pageSize: Int,
+    ): NewCmdbScrollPageData<NewCmdbServer> {
+        return if (!bakOperator) {
+            newCmdbService.queryServerByMaintainer(userId, pageSize, scrollId)
+        } else {
+            newCmdbService.queryServerByBakMaintainer(userId, pageSize, scrollId)
+        }
+    }
+
+    /**
+     * 新CMDB接口限制主/备负责人与IP无法同时作为条件查询服务器数据，
+     * 因此只能先通过IP查询服务器，再根据主/备负责人进行过滤
+     */
+    private fun queryServerByIpsAndFilterByMaintainer(
+        userId: String,
+        bakOperator: Boolean,
+        scrollId: String,
+        pageSize: Int,
+        ips: List<String>
+    ): NewCmdbScrollPageData<NewCmdbServer> {
+        val serverList = newCmdbService.queryNewServerByIp(ips).values.filter {
+            if (!bakOperator) {
+                it.hasOperator(userId)
+            } else {
+                it.hasBakOperator(userId)
+            }
+        }.toList()
+        serverList.sortedBy { it.serverId }
+        return buildScrollPageDataInMemory(serverList, scrollId, pageSize)
+    }
+
+    /**
+     * 从内存中构建CMDB节点分页数据
+     * @param serverIdSortedServerList 按serverId升序排序后的CMDB节点列表
+     * @param scrollIdStr 分页游标
+     * @param pageSize 分页大小
+     * @return 分页数据
+     */
+    private fun buildScrollPageDataInMemory(
+        serverIdSortedServerList: List<NewCmdbServer>,
+        scrollIdStr: String,
+        pageSize: Int
+    ): NewCmdbScrollPageData<NewCmdbServer> {
+        if (serverIdSortedServerList.isEmpty()) {
+            return NewCmdbScrollPageData(
+                scrollId = scrollIdStr,
+                hasNext = false,
+                list = emptyList()
+            )
+        }
+        // 1.找出scrollId对应服务器所在的下标
+        val scrollId = scrollIdStr.toLong()
+        val scrollIdIndex = BinarySearchUtils.binarySearchIndexOrCeil(
+            serverIdSortedServerList.map { it.serverId },
+            scrollId
+        )
+        if (scrollIdIndex < 0) {
+            return NewCmdbScrollPageData(
+                scrollId = scrollIdStr,
+                hasNext = false,
+                list = emptyList()
+            )
+        }
+        // 2.截取一页数据
+        val endIndex = min(scrollIdIndex + pageSize, serverIdSortedServerList.size)
+        val pageServerList = serverIdSortedServerList.subList(scrollIdIndex, endIndex)
+        // 3.构造分页数据返回
+        val newScrollId = serverIdSortedServerList[endIndex - 1].serverId
+        return NewCmdbScrollPageData(
+            scrollId = newScrollId.toString(),
+            hasNext = endIndex < serverIdSortedServerList.size,
+            list = pageServerList
         )
     }
 

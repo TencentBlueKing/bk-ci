@@ -53,6 +53,15 @@ data class NewCmdbServer(
         return innerServerIpv4?.get(0)?.ip
     }
 
+    fun hasOperator(userId: String): Boolean {
+        return maintainer == userId
+    }
+
+    fun hasBakOperator(userId: String): Boolean {
+        val bakMaintainerSet = maintainerBak?.split(";")?.toSet()
+        return bakMaintainerSet != null && bakMaintainerSet.contains(userId)
+    }
+
     private fun getDisplayIp(): String? {
         if (innerServerIpv4 == null) {
             return null

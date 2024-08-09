@@ -44,7 +44,7 @@ data class ListUserCmdbNodesReq(
     @get:Schema(title = "每页多少条，最大200，不传默认100", required = false)
     val pageSize: Int = 100,
 
-    @get:Schema(title = "指定IP", required = false)
+    @get:Schema(title = "指定IP，最多500个，不传表示不根据IP过滤", required = false)
     val ips: List<String>? = null
 
 )

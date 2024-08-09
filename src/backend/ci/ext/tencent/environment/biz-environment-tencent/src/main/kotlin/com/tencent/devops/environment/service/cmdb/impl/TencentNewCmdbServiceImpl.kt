@@ -30,28 +30,43 @@ class TencentNewCmdbServiceImpl(
     /**
      * 使用公司新CMDB接口根据serverId查询服务器列表
      * @param serverIds 服务器ID集合
-     * @return 服务器信息Map<serverId, CmdbServerDTO>
+     * @return 通用服务器信息Map<serverId, CmdbServerDTO>
      */
     override fun queryServerByServerId(serverIds: Collection<Long>): Map<Long, CmdbServerDTO> {
-        return queryNewCmdbServerByBatch(
+        val newCmdbServerMap = queryNewCmdbServerByBatch(
             queryValues = serverIds,
             buildNewCmdbConditionFunc = this::buildServerIdCondition,
             fetchNewCmdbDataFunc = newCmdbClient::queryAllServerByBaseCondition,
             keySelector = { server -> server.serverId }
         )
+        return newCmdbServerMap.mapValues { (_, newCmdbServer) ->
+            CmdbServerDTO.fromNewCmdbServer(newCmdbServer)
+        }
     }
 
     /**
      * 使用公司新CMDB接口根据IP查询服务器列表
      * @param ips IP集合
-     * @return 服务器信息Map<ip, CmdbServerDTO>
+     * @return 通用服务器信息Map<ip, CmdbServerDTO>
      */
     override fun queryServerByIp(ips: Collection<String>): Map<String, CmdbServerDTO> {
+        val newCmdbServerMap = queryNewServerByIp(ips)
+        return newCmdbServerMap.mapValues { (_, newCmdbServer) ->
+            CmdbServerDTO.fromNewCmdbServer(newCmdbServer)
+        }
+    }
+
+    /**
+     * 使用公司新CMDB接口根据IP查询服务器列表
+     * @param ips IP集合
+     * @return 新CMDB服务器信息Map<ip, NewCmdbServer>
+     */
+    fun queryNewServerByIp(ips: Collection<String>): Map<String, NewCmdbServer> {
         return queryNewCmdbServerByBatch(
             queryValues = ips,
             buildNewCmdbConditionFunc = this::buildServerIpCondition,
             fetchNewCmdbDataFunc = newCmdbClient::queryAllServerByBaseCondition,
-            keySelector = { server -> server.ip }
+            keySelector = { server -> server.getFirstIp() ?: "" }
         )
     }
 
@@ -66,10 +81,10 @@ class TencentNewCmdbServiceImpl(
         queryValues: Collection<K>,
         buildNewCmdbConditionFunc: (values: Collection<K>) -> NewCmdbCondition,
         fetchNewCmdbDataFunc: (condition: NewCmdbCondition) -> List<NewCmdbServer>,
-        keySelector: (CmdbServerDTO) -> K
-    ): Map<K, CmdbServerDTO> {
+        keySelector: (NewCmdbServer) -> K
+    ): Map<K, NewCmdbServer> {
         var start = 0
-        val serverList = mutableListOf<CmdbServerDTO>()
+        val serverList = mutableListOf<NewCmdbServer>()
         val startTime = System.currentTimeMillis()
         val queryValueList = queryValues.toList()
         do {
@@ -77,9 +92,7 @@ class TencentNewCmdbServiceImpl(
             val subValueList = queryValueList.subList(start, end)
             val condition = buildNewCmdbConditionFunc(subValueList)
             val batchServerList = fetchNewCmdbDataFunc(condition)
-            serverList.addAll(batchServerList.map {
-                CmdbServerDTO.fromNewCmdbServer(it)
-            })
+            serverList.addAll(batchServerList)
             start += QUERY_VALUE_BATCH_SIZE
         } while (start < queryValueList.size)
         val duration = System.currentTimeMillis() - startTime
@@ -105,11 +118,10 @@ class TencentNewCmdbServiceImpl(
      */
     fun queryServerByMaintainer(
         maintainer: String,
-        ips: List<String>?,
         size: Int,
         scrollId: String
     ): NewCmdbScrollPageData<NewCmdbServer> {
-        val condition = buildMaintainerAndIpsCondition(maintainer, ips)
+        val condition = buildMaintainerCondition(maintainer)
         val cmdbServerPage = newCmdbClient.queryAllServerByBusiness(condition, size, scrollId)
         setRealHasNext(cmdbServerPage, condition, size)
         return cmdbServerPage
@@ -124,11 +136,10 @@ class TencentNewCmdbServiceImpl(
      */
     fun queryServerByBakMaintainer(
         bakMaintainer: String,
-        ips: List<String>?,
         size: Int,
         scrollId: String
     ): NewCmdbScrollPageData<NewCmdbServer> {
-        val condition = buildBakMaintainerAndIpsCondition(bakMaintainer, ips)
+        val condition = buildBakMaintainerCondition(bakMaintainer)
         val cmdbServerPage = newCmdbClient.queryAllServerByBusiness(condition, size, scrollId)
         setRealHasNext(cmdbServerPage, condition, size)
         return cmdbServerPage
@@ -168,12 +179,8 @@ class TencentNewCmdbServiceImpl(
         )
     }
 
-    private fun buildMaintainerAndIpsCondition(
-        maintainer: String,
-        ips: List<String>?
-    ): NewCmdbCondition {
+    private fun buildMaintainerCondition(maintainer: String): NewCmdbCondition {
         return NewCmdbCondition(
-            serverIp = buildIpsConditionValue(ips),
             maintainer = NewCmdbConditionValue(
                 operator = NewCmdbConditionValue.Operator.IN,
                 value = listOf(maintainer)
@@ -181,12 +188,8 @@ class TencentNewCmdbServiceImpl(
         )
     }
 
-    private fun buildBakMaintainerAndIpsCondition(
-        bakMaintainer: String,
-        ips: List<String>?
-    ): NewCmdbCondition {
+    private fun buildBakMaintainerCondition(bakMaintainer: String): NewCmdbCondition {
         return NewCmdbCondition(
-            serverIp = buildIpsConditionValue(ips),
             maintainerBak = NewCmdbConditionValue(
                 operator = NewCmdbConditionValue.Operator.IN,
                 value = listOf(bakMaintainer)
