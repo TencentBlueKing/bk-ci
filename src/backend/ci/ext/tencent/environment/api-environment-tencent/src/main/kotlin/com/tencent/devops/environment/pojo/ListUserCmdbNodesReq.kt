@@ -39,12 +39,12 @@ data class ListUserCmdbNodesReq(
     val bakOperator: Boolean,
 
     @get:Schema(title = "分页游标，不传默认为0", required = false)
-    val scrollId: String,
+    val scrollId: String = "0",
 
     @get:Schema(title = "每页多少条，最大200，不传默认100", required = false)
     val pageSize: Int = 100,
 
     @get:Schema(title = "指定IP", required = false)
-    val ips: List<String>?
+    val ips: List<String>? = null
 
 )
