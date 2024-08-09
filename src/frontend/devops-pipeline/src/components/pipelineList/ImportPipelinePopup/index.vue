@@ -126,6 +126,7 @@
             async updatePipeline (result, newPipelineName) {
                 const pipeline = {
                     ...result.model,
+                    instanceFromTemplate: false,
                     name: newPipelineName
                 }
                 try {
