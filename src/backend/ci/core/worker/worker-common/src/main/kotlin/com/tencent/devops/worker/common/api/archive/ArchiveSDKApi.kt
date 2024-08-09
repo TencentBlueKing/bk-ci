@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.api.archive
 
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
@@ -134,4 +135,16 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
         headers: Map<String, String>? = emptyMap(),
         isVmBuildEnv: Boolean? = null
     ): Result<Boolean>
+
+    /**
+     * 获取仓库token
+     */
+    fun getRepoToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        type: TokenType,
+        expireSeconds: Long
+    ): String?
 }

@@ -25,21 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service
+package com.tencent.devops.process.enums
 
-import com.tencent.bkrepo.repository.pojo.token.TokenType
+/**
+ * 构建历史搜索类型
+ */
+enum class HistorySearchType {
+    // 触发器
+    TRIGGER,
 
-interface RepoService {
-
-    /**
-     * 获取仓库token
-     */
-    fun getRepoToken(
-        userId: String,
-        projectId: String,
-        repoName: String,
-        path: String,
-        type: TokenType,
-        expireSeconds: Long?
-    ): String?
+    // 源材料
+    MATERIAL
 }

@@ -25,33 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service
+package com.tencent.devops.repository.pojo
 
-import com.tencent.devops.common.api.util.PropertyUtil
-import java.util.concurrent.ConcurrentHashMap
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.repository.pojo.enums.RepositoryConfigStatusEnum
+import io.swagger.v3.oas.annotations.media.Schema
 
-object RepoServiceFactory {
-
-    private val repoServiceMap = ConcurrentHashMap<String, RepoService>()
-
-    private const val REPO_CLASS_NAME = "repo.class.name"
-
-    private const val AGENT_PROPERTIES_FILE_NAME = "/.agent.properties"
-
-    /**
-     * 根据配置文件的类名获取实现RepoService的对象
-     * @return 实现RepoService的对象
-     */
-    fun getInstance(): RepoService {
-        // 从配置文件读取类名
-        val className = PropertyUtil.getPropertyValue(REPO_CLASS_NAME, AGENT_PROPERTIES_FILE_NAME)
-        // 根据类名从缓存中获取实现RepoService的对象
-        var repoService = repoServiceMap[className]
-        if (repoService == null) {
-            // 通过反射生成对象并放入缓存中
-            repoService = Class.forName(className).newInstance() as RepoService
-            repoServiceMap[className] = repoService
-        }
-        return repoService
-    }
-}
+@Schema(title = "代码库配置")
+data class RepositoryConfig(
+    @get:Schema(title = "代码库类型", required = false)
+    val scmType: ScmType,
+    @get:Schema(title = "代码库名称", required = false)
+    val name: String,
+    @get:Schema(title = "代码库状态", required = false)
+    val status: RepositoryConfigStatusEnum,
+    @get:Schema(title = "文档连接", required = false)
+    val docUrl: String? = ""
+)

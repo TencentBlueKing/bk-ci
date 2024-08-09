@@ -25,22 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent.service
+package com.tencent.devops.repository.api
 
-import com.tencent.bkrepo.repository.pojo.token.TokenType
-import com.tencent.devops.worker.common.service.RepoService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.RepositoryConfig
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-class SampleRepoServiceImpl : RepoService {
+@Tag(name = "USER_REPOSITORY_MANAGER", description = "用户-代码库配置")
+@Path("/user/repositories/config")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserRepositoryConfigResource {
 
-    override fun getRepoToken(
-        userId: String,
-        projectId: String,
-        repoName: String,
-        path: String,
-        type: TokenType,
-        expireSeconds: Long?
-    ): String? {
-        // 开源版暂不支持用token去上传或下载
-        return null
-    }
+    @Operation(summary = "获取代码库配置列表")
+    @GET
+    @Path("/")
+    fun list(): Result<List<RepositoryConfig>>
 }

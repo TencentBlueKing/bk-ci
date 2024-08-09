@@ -96,6 +96,10 @@ class TGitPushTriggerHandler(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TGitPushTriggerHandler::class.java)
+        // 空提交点，可用于推断是新增/删除分支
+        // 新增分支 -> before为此值
+        // 删除分支 -> after为此值
+        const val EMPTY_COMMIT_ID = "0000000000000000000000000000000000000000"
     }
 
     override fun eventClass(): Class<GitPushEvent> {
@@ -135,7 +139,11 @@ class TGitPushTriggerHandler(
     }
 
     override fun getAction(event: GitPushEvent): String? {
-        return event.action_kind
+        return when {
+            event.action_kind.isNullOrBlank() -> event.action_kind
+            event.before == EMPTY_COMMIT_ID -> TGitPushActionType.NEW_BRANCH.value
+            else -> TGitPushActionType.PUSH_FILE.value
+        }
     }
 
     override fun getEventDesc(event: GitPushEvent): String {
