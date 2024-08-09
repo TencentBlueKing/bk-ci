@@ -339,13 +339,7 @@ class KubernetesBuilderClient @Autowired constructor(
             )
         )
 
-        val request = clientCommon.baseRequest(
-            userId = userId,
-            url = url,
-        )
-            .post(JsonUtil.toJson(body).toRequestBody())
-            .build()
-
+        val request = clientCommon.microBaseRequest(url).post(JsonUtil.toJson(body).toRequestBody()).build()
         logger.info("$userId inspectImage: $imageName request url: $url, body: $body")
         try {
             OkhttpUtils.doHttp(request).use { response ->

@@ -117,7 +117,8 @@ interface ContainerService {
      */
     fun waitTaskFinish(
         userId: String,
-        taskId: String
+        taskId: String,
+        needProxy: Boolean = true
     ): DispatchBuildTaskStatus
 
     /**

@@ -155,7 +155,7 @@ kubernetesManager:
       logPath: /data/devops/logs
   # manager使用docker相关配置
   docker:
-    enable: true
+    enable: false
     image: docker:24.0.1-dind
     resources:
       requests:
