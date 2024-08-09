@@ -555,7 +555,7 @@ class ExperienceService @Autowired constructor(
                 version = appVersion
             )
         } else { // 内部体验
-            if (isDefendProject(propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE], projectId)) {
+            if (experienceBaseService.isDefendProject(propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE], projectId)) {
                 apkDefend(userId, projectId, artifactoryType, experienceId, experience.path)
                 delayNotify = true
             }
@@ -568,12 +568,6 @@ class ExperienceService @Autowired constructor(
         return experienceId
     }
 
-    private fun isDefendProject(stage: String?, projectId: String): Boolean {
-        if (stage.isNullOrBlank()) {
-            return false
-        }
-        return redisOperation.isMember("apk:defend:${stage.lowercase()}", projectId)
-    }
 
     private fun onlinePublicExperience(
         projectId: String,
