@@ -88,7 +88,7 @@ class InspectImageService @Autowired constructor(
                 )
                 .build()
 
-            OkhttpUtils.doHttp(request).use { response ->
+            OkhttpUtils.doLongHttp(request).use { response ->
                 val responseContent = response.body!!.string()
                 logger.info("$userId check remoteImage: $responseContent")
                 if (!response.isSuccessful) {
@@ -121,7 +121,7 @@ class InspectImageService @Autowired constructor(
                     )
                 }.collect(Collectors.toList())
 
-            val response = client.get(ServiceDockerImageResource::class).checkDockerImage(
+            val response = client.getWithoutRetry(ServiceDockerImageResource::class).checkDockerImage(
                 userId = userId,
                 checkDockerImageRequestList = dispatchCheckDockerImageRequestList
             ).data
