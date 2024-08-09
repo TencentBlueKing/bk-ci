@@ -143,9 +143,11 @@ class ImportCmdbNodeService(
                 list = emptyList()
             )
         }
-        // 2.截取一页数据
-        val endIndex = min(scrollIdIndex + pageSize, serverIdSortedServerList.size)
-        val pageServerList = serverIdSortedServerList.subList(scrollIdIndex, endIndex)
+        // 2.截取一页数据，从scrollId对应服务器的下一台开始截取
+        val scrollIdServerId = serverIdSortedServerList[scrollIdIndex].serverId
+        val startIndex = if (scrollIdServerId == scrollId) scrollIdIndex + 1 else scrollIdIndex
+        val endIndex = min(startIndex + pageSize, serverIdSortedServerList.size)
+        val pageServerList = serverIdSortedServerList.subList(startIndex, endIndex)
         // 3.构造分页数据返回
         val newScrollId = serverIdSortedServerList[endIndex - 1].serverId
         return NewCmdbScrollPageData(
