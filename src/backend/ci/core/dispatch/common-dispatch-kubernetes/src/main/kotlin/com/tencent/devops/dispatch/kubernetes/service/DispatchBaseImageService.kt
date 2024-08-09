@@ -69,7 +69,7 @@ class DispatchBaseImageService @Autowired constructor(
             val taskResult = containerServiceFactory.load("").waitTaskFinish(userId, taskId, false)
             if (taskResult.status == DispatchBuildTaskStatusEnum.SUCCEEDED) {
                 logger.info("CheckDockerImage $userId pull ${it.imageName} success.")
-                val inspectImageResp = JsonUtil.to(taskResult.errMsg ?: "", InspectImageResp::class.java)
+                val inspectImageResp = JsonUtil.to(taskResult.msg ?: "", InspectImageResp::class.java)
                 imageInspectList.add(
                     CheckDockerImageResponse(
                         errorCode = 0,
@@ -88,7 +88,7 @@ class DispatchBaseImageService @Autowired constructor(
                 imageInspectList.add(
                     CheckDockerImageResponse(
                         errorCode = -1,
-                        errorMessage = taskResult.errMsg,
+                        errorMessage = taskResult.msg,
                         arch = "",
                         author = "",
                         created = "",
