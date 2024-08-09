@@ -92,6 +92,11 @@ func inspect(taskId string, info *DockerInspectInfo) {
 		Architecture: image.Architecture,
 		Os:           image.Os,
 		Size:         image.Size,
+		Created:      image.Created,
+		Id:           image.ID,
+		Author:       image.Author,
+		Parent:       image.Parent,
+		OsVersion:    image.OsVersion,
 	}
 
 	msgStr, err := json.Marshal(msg)
