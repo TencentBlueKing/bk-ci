@@ -474,8 +474,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         ThirdPartyAgentEnvLock(
             redisOperation,
             dispatchMessage.event.projectId,
-            dispatchType.envName,
-            null
+            dispatchType.envName
         ).use { redisLock ->
             val lock = redisLock.tryLock(timeout = 5000) // # 超时尝试锁定，防止环境过热锁定时间过长，影响其他环境构建
             if (lock) {

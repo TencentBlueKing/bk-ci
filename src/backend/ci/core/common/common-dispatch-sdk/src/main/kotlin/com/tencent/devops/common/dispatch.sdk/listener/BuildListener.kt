@@ -361,7 +361,7 @@ interface BuildListener {
 
     private fun getClient() = SpringContextUtil.getBean(Client::class.java)
 
-    // 修改此处请同步确认 ThirdPartyAgentQueueService::onFailure
+    // 修改此处请同步确认 TPAQueueService::onFailure
     private fun onFailure(
         dispatchService: DispatchService,
         event: PipelineAgentStartupEvent,

@@ -312,8 +312,4 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
             )
         )
     }
-
-    override fun getEnvByName(projectId: String, envName: String) {
-        TODO("Not yet implemented")
-    }
 }
