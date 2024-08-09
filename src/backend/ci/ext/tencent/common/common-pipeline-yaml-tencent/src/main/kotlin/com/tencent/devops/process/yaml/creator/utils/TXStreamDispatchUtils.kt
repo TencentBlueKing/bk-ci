@@ -50,6 +50,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchTy
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
+import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
 import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
@@ -180,6 +181,13 @@ object TXStreamDispatchUtils {
             return WindowsDispatchType(
                 env = "",
                 systemVersion = poolName
+            )
+        }
+
+        // pcg公共构建机
+        if (poolName.startsWith("pcg")) {
+            return PCGDispatchType(
+                image = poolName
             )
         }
 
