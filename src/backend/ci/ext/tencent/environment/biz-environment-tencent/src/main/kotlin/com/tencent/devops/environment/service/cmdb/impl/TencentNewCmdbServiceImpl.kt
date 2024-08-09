@@ -34,7 +34,7 @@ class TencentNewCmdbServiceImpl(
      */
     override fun queryServerByServerId(serverIds: Collection<Long>): Map<Long, CmdbServerDTO> {
         val newCmdbServerMap = queryNewCmdbServerByBatch(
-            queryValues = serverIds,
+            queryValues = serverIds.toSet(),
             buildNewCmdbConditionFunc = this::buildServerIdCondition,
             fetchNewCmdbDataFunc = newCmdbClient::queryAllServerByBaseCondition,
             keySelector = { server -> server.serverId }
@@ -63,7 +63,7 @@ class TencentNewCmdbServiceImpl(
      */
     fun queryNewServerByIp(ips: Collection<String>): Map<String, NewCmdbServer> {
         return queryNewCmdbServerByBatch(
-            queryValues = ips,
+            queryValues = ips.toSet(),
             buildNewCmdbConditionFunc = this::buildServerIpCondition,
             fetchNewCmdbDataFunc = newCmdbClient::queryAllServerByBaseCondition,
             keySelector = { server -> server.getFirstIp() ?: "" }
@@ -194,16 +194,6 @@ class TencentNewCmdbServiceImpl(
                 operator = NewCmdbConditionValue.Operator.IN,
                 value = listOf(bakMaintainer)
             )
-        )
-    }
-
-    private fun buildIpsConditionValue(ips: List<String>?): NewCmdbConditionValue<String>? {
-        if (ips.isNullOrEmpty()) {
-            return null
-        }
-        return NewCmdbConditionValue(
-            operator = NewCmdbConditionValue.Operator.IN,
-            value = ips
         )
     }
 }
