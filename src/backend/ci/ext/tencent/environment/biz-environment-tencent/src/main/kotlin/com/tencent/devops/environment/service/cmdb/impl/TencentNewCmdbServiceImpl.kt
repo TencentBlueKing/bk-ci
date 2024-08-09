@@ -7,6 +7,9 @@ import com.tencent.devops.environment.pojo.cmdb.resp.NewCmdbScrollPageData
 import com.tencent.devops.environment.pojo.cmdb.resp.NewCmdbServer
 import com.tencent.devops.environment.service.cmdb.NewCmdbClient
 import com.tencent.devops.environment.service.cmdb.TencentCmdbService
+import org.slf4j.LoggerFactory
+import org.slf4j.helpers.MessageFormatter
+import kotlin.math.min
 
 /**
  * 使用新CMDB接口查询机器信息的服务
@@ -15,26 +18,82 @@ class TencentNewCmdbServiceImpl(
     private val newCmdbClient: NewCmdbClient
 ) : TencentCmdbService {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(TencentNewCmdbServiceImpl::class.java)
+
+        /**
+         * 查询新CMDB服务器时单次传入的查询条件取值批量大小
+         */
+        private const val QUERY_VALUE_BATCH_SIZE = 50
+    }
+
     /**
      * 使用公司新CMDB接口根据serverId查询服务器列表
-     * @param serverIdSet 服务器ID集合
+     * @param serverIds 服务器ID集合
      * @return 服务器信息Map<serverId, CmdbServerDTO>
      */
-    override fun queryServerByServerId(serverIdSet: Set<Long>): Map<Long, CmdbServerDTO> {
-        val serverIdCondition = buildServerIdCondition(serverIdSet)
-        val serverList = newCmdbClient.queryAllServerByBaseCondition(serverIdCondition)
-        return convertServerListToIdServerMap(serverList)
+    override fun queryServerByServerId(serverIds: Collection<Long>): Map<Long, CmdbServerDTO> {
+        return queryNewCmdbServerByBatch(
+            queryValues = serverIds,
+            buildNewCmdbConditionFunc = this::buildServerIdCondition,
+            fetchNewCmdbDataFunc = newCmdbClient::queryAllServerByBaseCondition,
+            keySelector = { server -> server.serverId }
+        )
     }
 
     /**
      * 使用公司新CMDB接口根据IP查询服务器列表
-     * @param ipSet IP集合
+     * @param ips IP集合
      * @return 服务器信息Map<ip, CmdbServerDTO>
      */
-    override fun queryServerByIp(ipSet: Set<String>): Map<String, CmdbServerDTO> {
-        val serverIpCondition = buildServerIpCondition(ipSet)
-        val serverList = newCmdbClient.queryAllServerByBaseCondition(serverIpCondition)
-        return convertServerListToIpServerMap(serverList)
+    override fun queryServerByIp(ips: Collection<String>): Map<String, CmdbServerDTO> {
+        return queryNewCmdbServerByBatch(
+            queryValues = ips,
+            buildNewCmdbConditionFunc = this::buildServerIpCondition,
+            fetchNewCmdbDataFunc = newCmdbClient::queryAllServerByBaseCondition,
+            keySelector = { server -> server.ip }
+        )
+    }
+
+    /**
+     * 分批查询新CMDB服务器信息
+     * @param queryValues 查询条件取值集合
+     * @param buildNewCmdbConditionFunc 构建新CMDB查询条件函数
+     * @param fetchNewCmdbDataFunc 获取新CMDB数据函数
+     * @param keySelector 分组聚合Key选择器
+     */
+    private fun <K> queryNewCmdbServerByBatch(
+        queryValues: Collection<K>,
+        buildNewCmdbConditionFunc: (values: Collection<K>) -> NewCmdbCondition,
+        fetchNewCmdbDataFunc: (condition: NewCmdbCondition) -> List<NewCmdbServer>,
+        keySelector: (CmdbServerDTO) -> K
+    ): Map<K, CmdbServerDTO> {
+        var start = 0
+        val serverList = mutableListOf<CmdbServerDTO>()
+        val startTime = System.currentTimeMillis()
+        val queryValueList = queryValues.toList()
+        do {
+            val end = min(start + QUERY_VALUE_BATCH_SIZE, queryValueList.size)
+            val subValueList = queryValueList.subList(start, end)
+            val condition = buildNewCmdbConditionFunc(subValueList)
+            val batchServerList = fetchNewCmdbDataFunc(condition)
+            serverList.addAll(batchServerList.map {
+                CmdbServerDTO.fromNewCmdbServer(it)
+            })
+            start += QUERY_VALUE_BATCH_SIZE
+        } while (start < queryValueList.size)
+        val duration = System.currentTimeMillis() - startTime
+        val logMessage = MessageFormatter.format(
+            "queryNewCMDBServer|count={}|cost={}ms",
+            serverList.size,
+            duration
+        ).message
+        if (duration >= 5000) {
+            logger.warn(logMessage)
+        } else if (duration >= 1000) {
+            logger.info(logMessage)
+        }
+        return serverList.associateBy(keySelector)
     }
 
     /**
@@ -91,20 +150,20 @@ class TencentNewCmdbServiceImpl(
         cmdbServerPage.hasNext = nextCmdbServerPage.list.isNotEmpty()
     }
 
-    private fun buildServerIdCondition(serverIdSet: Set<Long>): NewCmdbCondition {
+    private fun buildServerIdCondition(serverIds: Collection<Long>): NewCmdbCondition {
         return NewCmdbCondition(
             serverId = NewCmdbConditionValue(
                 operator = NewCmdbConditionValue.Operator.IN,
-                value = serverIdSet.map { it.toInt() }
+                value = serverIds.map { it.toInt() }
             )
         )
     }
 
-    private fun buildServerIpCondition(ipSet: Set<String>): NewCmdbCondition {
+    private fun buildServerIpCondition(ips: Collection<String>): NewCmdbCondition {
         return NewCmdbCondition(
             serverIp = NewCmdbConditionValue(
                 operator = NewCmdbConditionValue.Operator.IN,
-                value = ipSet.toList()
+                value = ips.toList()
             )
         )
     }
@@ -143,17 +202,5 @@ class TencentNewCmdbServiceImpl(
             operator = NewCmdbConditionValue.Operator.IN,
             value = ips
         )
-    }
-
-    private fun convertServerListToIdServerMap(serverList: List<NewCmdbServer>): Map<Long, CmdbServerDTO> {
-        return serverList
-            .map { CmdbServerDTO.fromNewCmdbServer(it) }
-            .associateBy { it.serverId }
-    }
-
-    private fun convertServerListToIpServerMap(serverList: List<NewCmdbServer>): Map<String, CmdbServerDTO> {
-        return serverList
-            .map { CmdbServerDTO.fromNewCmdbServer(it) }
-            .associateBy { it.ip }
     }
 }
