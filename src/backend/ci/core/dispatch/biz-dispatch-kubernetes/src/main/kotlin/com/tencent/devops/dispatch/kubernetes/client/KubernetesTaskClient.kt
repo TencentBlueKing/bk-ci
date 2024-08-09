@@ -60,10 +60,16 @@ class KubernetesTaskClient @Autowired constructor(
     fun getTasksStatus(
         userId: String,
         taskId: String,
-        retryFlag: Int = 3
+        retryFlag: Int = 3,
+        needProxy: Boolean = true
     ): KubernetesResult<TaskStatusResp> {
         val url = "/api/tasks/$taskId/status"
-        val request = clientCommon.baseRequest(userId, url).get().build()
+        val request = if (needProxy) {
+            clientCommon.baseRequest(userId, url).get().build()
+        } else {
+            clientCommon.microBaseRequest(url).get().build()
+        }
+
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
@@ -100,7 +106,7 @@ class KubernetesTaskClient @Autowired constructor(
         }
     }
 
-    fun waitTaskFinish(userId: String, taskId: String): Pair<TaskStatusEnum, String?> {
+    fun waitTaskFinish(userId: String, taskId: String, needProxy: Boolean): Pair<TaskStatusEnum, String?> {
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
@@ -111,7 +117,7 @@ class KubernetesTaskClient @Autowired constructor(
                 )
             }
             Thread.sleep(1 * 1000)
-            val (status, errorMsg) = getTaskResult(userId, taskId).apply {
+            val (status, errorMsg) = getTaskResult(userId, taskId, needProxy).apply {
                 if (first == null) {
                     return Pair(TaskStatusEnum.FAILED, second)
                 }
@@ -126,8 +132,16 @@ class KubernetesTaskClient @Autowired constructor(
         }
     }
 
-    private fun getTaskResult(userId: String, taskId: String): Pair<TaskStatusEnum?, String?> {
-        val taskResponse = getTasksStatus(userId, taskId)
+    private fun getTaskResult(
+        userId: String,
+        taskId: String,
+        needProxy: Boolean
+    ): Pair<TaskStatusEnum?, String?> {
+        val taskResponse = getTasksStatus(
+            userId = userId,
+            taskId = taskId,
+            needProxy = needProxy
+        )
         val status = TaskStatusEnum.realNameOf(taskResponse.data?.status)
         if (taskResponse.isNotOk() || taskResponse.data == null) {
             // 创建失败
