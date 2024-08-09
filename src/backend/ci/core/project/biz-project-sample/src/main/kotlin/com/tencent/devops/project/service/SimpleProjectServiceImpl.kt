@@ -213,7 +213,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
         return listOf(
             OperationalProductVO(
                 productId = -1,
-                productName = "其他"
+                productName = "other"
             )
         )
     }
@@ -221,7 +221,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
     override fun getProductByProductId(productId: Int): OperationalProductVO? {
         return OperationalProductVO(
             productId = -1,
-            productName = "其他"
+            productName = "other"
         )
     }
 
@@ -229,7 +229,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
         return listOf(
             OperationalProductVO(
                 productId = -1,
-                productName = "其他"
+                productName = "other"
             )
         )
     }
