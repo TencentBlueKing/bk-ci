@@ -1070,7 +1070,7 @@ class RbacPermissionResourceMemberService constructor(
                 handoverMemberDTO.handoverTo.id
             )
         )
-        if (expiredAt < currentTimeSeconds) {
+        if (finalExpiredAt < currentTimeSeconds) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.INVALID_EXPIRED_PERM_NOT_ALLOW_TO_HANDOVER
             )
