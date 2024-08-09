@@ -29,6 +29,10 @@ package com.tencent.devops.environment.config
 
 data class NewCmdbProperties(
     /**
+     * 是否启用公司新CMDB，默认启用
+     */
+    val enabled: Boolean = true,
+    /**
      * 公司新CMDB API根地址
      */
     val newCmdbBaseUrl: String,
