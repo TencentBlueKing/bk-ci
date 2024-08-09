@@ -187,7 +187,7 @@ object TXStreamDispatchUtils {
         // pcg公共构建机
         if (poolName.startsWith("pcg")) {
             return PCGDispatchType(
-                image = poolName
+                image = poolName.removePrefix("pcg-")
             )
         }
 
