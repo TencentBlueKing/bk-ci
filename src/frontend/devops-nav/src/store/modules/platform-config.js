@@ -36,10 +36,11 @@ const actions = {
         }
         const { i18n, name, brandName } = resp
         const currentPage = window.currentPage
-        const platformTitle = `${i18n.name || name} | ${i18n.brandName || brandName}`
-        document.title = currentPage
-            ? `${currentPage.name} | ${platformTitle}`
-            : platformTitle
+        let platformTitle = `${i18n.name || name} | ${i18n.brandName || brandName}`
+        if (currentPage) {
+            platformTitle = `${currentPage.name} | ${platformTitle}`
+        }
+        document.title = platformTitle
         setShortcutIcon(resp.favicon)
         commit('setPlatformInfo', resp)
         return resp
