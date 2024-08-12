@@ -61,7 +61,7 @@ class AtomPropServiceImpl @Autowired constructor(
 ) : AtomPropService {
 
     companion object {
-        private const val DEFAULT_MAX_QUERY_NUM = 50
+        private const val DEFAULT_MAX_QUERY_NUM = 100
     }
 
     private val atomPropCache = Caffeine.newBuilder()
