@@ -55,7 +55,11 @@ class AuthResourceSyncDao {
                 status,
                 now,
                 now
-            ).execute()
+            ).onDuplicateKeyUpdate()
+                .set(STATUS, status)
+                .set(ERROR_MESSAGE, "")
+                .set(UPDATE_TIME, now)
+                .execute()
         }
     }
 
