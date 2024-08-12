@@ -78,7 +78,7 @@ for config_name in os.listdir(config_parent):
                             else:
                                 camelize_set.add(camelize_key)
                                 if line.replace(key, "").strip().endswith(":"):
-                                    line = line.replace(key, '{{ .Values.config.'+camelize_key+' | quote }}')
+                                    line = line.replace(key, '{{ .Values.config.'+camelize_key+' | default "" | quote }}')
                                 else:
                                     line = line.replace(key, '{{ .Values.config.'+camelize_key+' }}')
                         new_file.write(line)
@@ -106,7 +106,7 @@ with open(template_parent+"/_gateway.tpl", "w") as gateway_config_file:
                             gateway_config_file.write(env+": "+include_dict[camelize_key]+"\n")
                         else:
                             camelize_set.add(camelize_key)
-                            gateway_config_file.write(env+": "+'{{ .Values.config.'+camelize_key+" | quote }}\n")
+                            gateway_config_file.write(env+": "+'{{ .Values.config.'+camelize_key+' | default "" | quote }}\n')
     # 前端文件
     for root, dirs, files in os.walk(frontend_path):
         for frontend_file in files:
@@ -125,7 +125,7 @@ with open(template_parent+"/_gateway.tpl", "w") as gateway_config_file:
                                 gateway_config_file.write(env+": "+include_dict[camelize_key]+"\n")
                             else:
                                 camelize_set.add(camelize_key)
-                                gateway_config_file.write(env+": "+'{{ .Values.config.'+camelize_key+" | quote }}\n")
+                                gateway_config_file.write(env+": "+'{{ .Values.config.'+camelize_key+' | default "" | quote }}\n')
     gateway_config_file.write('NAMESPACE: {{ .Release.Namespace }}\n')
     gateway_config_file.write('CHART_NAME: {{ include "bkci.names.fullname" . }}\n')
     gateway_config_file.write('{{ end }}')

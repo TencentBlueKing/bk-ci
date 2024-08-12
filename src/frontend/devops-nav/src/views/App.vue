@@ -36,11 +36,11 @@
         }
 
         async created () {
+            this.getPlatformPreData()
             const announce = await this.getAnnouncement()
             if (announce && announce.id) {
                 this.setAnnouncement(announce)
             }
-            this.getPlatformPreData()
         }
     }
 </script>
