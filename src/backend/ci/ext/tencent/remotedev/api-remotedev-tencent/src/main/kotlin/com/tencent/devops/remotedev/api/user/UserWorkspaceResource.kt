@@ -44,6 +44,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
@@ -386,4 +387,16 @@ interface UserWorkspaceResource {
         @Parameter(description = "", required = true)
         moa2faVerifyReqData: Moa2faVerifyReqData
     ): Result<Moa2faVerifyRespData>
+
+    @Operation(summary = "对用户推送失败的消息重新推送")
+    @GET
+    @Path("/message_resend")
+    fun messageResend(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "通知类型", required = true)
+        @QueryParam("type")
+        type: RemoteDevNotifyType
+    ): Result<Boolean>
 }

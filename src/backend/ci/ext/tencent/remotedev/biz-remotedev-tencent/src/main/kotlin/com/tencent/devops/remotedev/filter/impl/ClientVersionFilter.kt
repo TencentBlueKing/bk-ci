@@ -106,10 +106,10 @@ class ClientVersionFilter constructor(
         if (checkClientVersionWarning(split = split)) {
             notifyControl.notify4User(
                 userIds = mutableSetOf(user),
-                notifyTemplateCode = CLIENT_VERSION_WARNING_NOTIFY,
                 notifyType = mutableSetOf(RemoteDevNotifyType.CLIENT_PUSH, RemoteDevNotifyType.EMAIL),
                 bodyParams = mutableMapOf(
-                    "version" to version
+                    "version" to version,
+                    "notifyTemplateCode" to CLIENT_VERSION_WARNING_NOTIFY
                 )
             )
         }

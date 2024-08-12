@@ -226,14 +226,14 @@ class RestartWorkspaceHandler @Autowired constructor(
                 )
                 notifyControl.notify4User(
                     userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
-                    notifyTemplateCode = WINDOWS_GPU_RESTART_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.CLIENT_PUSH),
                     bodyParams = mutableMapOf(
                         "workspaceName" to workspace.workspaceName,
                         "projectId" to workspace.projectId,
                         "cgsId" to (workspace.hostIp ?: workspace.workspaceName),
                         "displayName" to workspace.displayName,
-                        "time" to DateTimeUtil.formatDate(Date())
+                        "time" to DateTimeUtil.formatDate(Date()),
+                        "notifyTemplateCode" to WINDOWS_GPU_RESTART_NOTIFY
                     )
                 )
             }

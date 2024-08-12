@@ -44,6 +44,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
@@ -55,6 +56,7 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.StartControl
 import com.tencent.devops.repository.pojo.AuthorizeResult
@@ -71,7 +73,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val createControl: CreateControl,
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
-    private val deleteControl: DeleteControl
+    private val deleteControl: DeleteControl,
+    private val notifyControl: NotifyControl
 ) : UserWorkspaceResource {
 
     @AuditEntry(actionId = ActionId.CGS_CREATE)
@@ -261,7 +264,15 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.createMoa2faRequest(userId = userId, moa2faReqData = moa2faReqData))
     }
 
-    override fun verifyMoa2faResult(userId: String, moa2faVerifyReqData: Moa2faVerifyReqData): Result<Moa2faVerifyRespData> {
+    override fun verifyMoa2faResult(
+        userId: String,
+        moa2faVerifyReqData: Moa2faVerifyReqData
+    ): Result<Moa2faVerifyRespData> {
         return Result(workspaceService.verifyMoa2faResult(userId = userId, moa2faVerifyReqData = moa2faVerifyReqData))
+    }
+
+    override fun messageResend(userId: String, type: RemoteDevNotifyType): Result<Boolean> {
+        notifyControl.resendByUserId(userId, type)
+        return Result(true)
     }
 }

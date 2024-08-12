@@ -530,11 +530,11 @@ class WorkspaceCommon @Autowired constructor(
                     workspaceName = workspaceName,
                     cc = mutableSetOf(operator),
                     projectId = projectId,
-                    notifyTemplateCode = WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                     bodyParams = mutableMapOf(
                         "workspaceName" to workspaceName,
                         "cgsId" to cgsId,
+                        "notifyTemplateCode" to WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
                         "userId" to it.userId
                     )
                 )
