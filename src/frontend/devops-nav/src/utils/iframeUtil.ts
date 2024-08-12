@@ -30,15 +30,15 @@ function iframeUtil (router: any) {
     utilMap.updateTabTitle = function (title: string): void {
         if (title) {
             document.title = title
-        }
-        if (!platformInfo) return
-        const currentPage = window.currentPage
-        const platformName = platformInfo.i18n.name || platformInfo.name
-        const brandName = platformInfo.i18n.brandName || platformInfo.brandName
-        if (currentPage) {
-            document.title = `${currentPage.name} | ${platformName} | ${brandName}`
-        } else {
-            document.title = `${platformName} | ${brandName}`
+        } else if (!title && platformInfo) {
+            const currentPage = window.currentPage
+            const platformName = platformInfo.i18n.name || platformInfo.name
+            const brandName = platformInfo.i18n.brandName || platformInfo.brandName
+            let platformTitle = `${platformName} | ${brandName}`
+            if (currentPage) {
+                platformTitle = `${currentPage.name} | ${platformTitle}`
+            } 
+            document.title = platformTitle
         }
     }
 
