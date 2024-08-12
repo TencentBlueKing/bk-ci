@@ -477,10 +477,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         val projectApprovalInfo = projectApprovalService.get(englishName)
         val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
+        val beforeProductName = if (record.productId != null) {
+            getProductByProductId(record.productId)
+        } else {
+            null
+        }
         return ProjectUtils.packagingBean(
             tProjectRecord = record,
             projectApprovalInfo = projectApprovalInfo,
-            projectOrganizationInfo = rightProjectOrganization
+            projectOrganizationInfo = rightProjectOrganization,
+            beforeProductName = beforeProductName?.productName
         )
     }
 
