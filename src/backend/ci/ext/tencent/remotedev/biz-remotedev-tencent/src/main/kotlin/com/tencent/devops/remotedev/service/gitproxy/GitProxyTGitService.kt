@@ -32,7 +32,6 @@ import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclUser
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
 import com.tencent.devops.remotedev.pojo.gitproxy.LinktgitData
 import com.tencent.devops.remotedev.pojo.gitproxy.ReBindingLinkData
-import com.tencent.devops.remotedev.pojo.gitproxy.ReBindingLinkResp
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitCredType
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
@@ -147,7 +146,7 @@ class GitProxyTGitService @Autowired constructor(
         val resultArray = result.filter { it.value.second }.map { Pair(it.key, it.value) }
         resultArray.chunked(20).forEachIndexed { index, chunk ->
             // 关联项目，不符合要求的自动踢出去
-            bkitsmService.createTicket(
+            bkitsmService.createLinkTicket(
                 projectId = projectId,
                 userId = userId,
                 tData = chunk.associate { it.first to it.second },
@@ -205,7 +204,7 @@ class GitProxyTGitService @Autowired constructor(
         project: TGitProjectInfo,
         rProjectUrls: Set<String>,
         noGroup: Boolean,
-        result: MutableMap<Long, Pair<String, Boolean>>,
+        result: MutableMap<Long, Pair<String, Boolean>>
     ): Boolean {
         rProjectUrls.forEach urls@{ projectUrl ->
             if (project.httpsUrlToRepo.isNullOrBlank() && project.httpUrlToRepo.isNullOrBlank()) {
@@ -831,7 +830,7 @@ class GitProxyTGitService @Autowired constructor(
         if (noCheckedIds.isNotEmpty()) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.REBINDING_ERROR.errorCode,
-                errorType = ErrorCodeEnum.REBINDING_ERROR.errorType,
+                errorType = ErrorCodeEnum.REBINDING_ERROR.errorType
             )
         }
     }
@@ -1080,6 +1079,25 @@ class GitProxyTGitService @Autowired constructor(
 
         result.forEach { (userId, idAndUrls) ->
             projectTGitLinkDao.batchUpdateStatus(dslContext, projectId, idAndUrls.keys, TGitRepoStatus.ABNORMAL)
+            sendCheckNotify(
+                userId = userId,
+                urls = idAndUrls.values.toList(),
+                projectId = projectId,
+                projectName = project.projectName,
+                managers = project.properties?.remotedevManager?.split(";")?.filter { it.isNotBlank() }
+                    ?.toMutableSet()
+            )
+        }
+    }
+
+    private fun sendCheckNotify(
+        userId: String,
+        urls: List<String>,
+        projectId: String,
+        projectName: String,
+        managers: MutableSet<String>?
+    ) {
+        try {
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
                 SendNotifyMessageTemplateRequest(
                     templateCode = tGitConfig.expiredPermTmpCode,
@@ -1087,15 +1105,17 @@ class GitProxyTGitService @Autowired constructor(
                     notifyType = mutableSetOf(NotifyType.EMAIL.name),
                     bodyParams = mapOf(
                         "userId" to userId,
-                        "urls" to idAndUrls.values.joinToString(separator = "\n"),
+                        "urls" to urls.joinToString(separator = "\n"),
                         "projectId" to projectId,
-                        "projectName" to project.projectName
+                        "projectName" to projectName
                     ),
-                    cc = project.properties?.remotedevManager
-                        ?.split(";")?.filter { it.isNotBlank() }
-                        ?.toMutableSet()
+                    cc = managers
                 )
             )
+            // TODO: 要改建单人
+            bkitsmService.createCheckTicket(projectId, "randychen", userId, urls)
+        } catch (e: Exception) {
+            logger.error("$LOG_UPDATE_TGIT_ACL_TAG|sendCheckNotify|$userId|$projectId|$projectName|error", e)
         }
     }
 

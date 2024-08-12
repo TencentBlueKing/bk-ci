@@ -20,18 +20,14 @@ class BKItsmService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val bkConfig: BkConfig
 ) {
-
-    fun createTicket(
+    fun createLinkTicket(
         projectId: String,
         userId: String,
         tData: Map<Long, Pair<String, Boolean>>,
         index: Int?
-    ): String {
-        val url = "${bkConfig.itsmHost}/v2/itsm/create_ticket"
-        val body = BKItsmCreateTicketReq(
-            bkAppCode = bkConfig.appCode,
-            bkAppSecret = bkConfig.appSecret,
-            serviceId = bkConfig.tgitLinkServiceId!!,
+    ) {
+        createTicket(
+            projectId = projectId,
             creator = userId,
             fields = listOf(
                 mapOf(
@@ -60,6 +56,48 @@ class BKItsmService @Autowired constructor(
                 )
             )
         )
+    }
+
+    fun createCheckTicket(
+        projectId: String,
+        creator: String,
+        operator: String,
+        urls: List<String>
+    ) {
+        val fields = listOf(
+            mapOf(
+                "key" to "title",
+                "value" to "检测到云控制台有${urls.size}个工蜂仓库绑定状态异常，请及时处理！"
+            ),
+            mapOf(
+                "key" to "projectId",
+                "value" to projectId
+            ),
+            mapOf(
+                "key" to "operator",
+                "value" to operator
+            ),
+            mapOf(
+                "key" to "YCDXMLB",
+                "value" to urls.joinToString("\n")
+            )
+        )
+        createTicket(projectId, creator, fields)
+    }
+
+    fun createTicket(
+        projectId: String,
+        creator: String,
+        fields: List<Map<String, String>>
+    ): String {
+        val url = "${bkConfig.itsmHost}/v2/itsm/create_ticket"
+        val body = BKItsmCreateTicketReq(
+            bkAppCode = bkConfig.appCode,
+            bkAppSecret = bkConfig.appSecret,
+            serviceId = bkConfig.tgitLinkServiceId!!,
+            creator = creator,
+            fields = fields
+        )
         val request = Request.Builder()
             .url(url)
             .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
@@ -68,12 +106,12 @@ class BKItsmService @Autowired constructor(
         val resp = try {
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body!!.string()
-                logger.debug("createTicket｜$url|$body|${response.code}|$data")
+                logger.info("createTicket｜$url|$body|${response.code}|$data")
                 if (!response.isSuccessful) {
                     logger.error("createTicket｜$url|$body|${response.code}|$data")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
-                        params = arrayOf(projectId, userId)
+                        params = arrayOf(projectId, creator)
                     )
                 }
 
@@ -82,7 +120,7 @@ class BKItsmService @Autowired constructor(
                     logger.error("createTicket｜$url|$body|${response.code}|$data")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
-                        params = arrayOf(projectId, userId)
+                        params = arrayOf(projectId, creator)
                     )
                 }
                 resp
@@ -93,7 +131,7 @@ class BKItsmService @Autowired constructor(
             logger.error("createTicket request error", e)
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
-                params = arrayOf(projectId, userId)
+                params = arrayOf(projectId, creator)
             )
         }
 
