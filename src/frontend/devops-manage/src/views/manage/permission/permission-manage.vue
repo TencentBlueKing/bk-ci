@@ -209,7 +209,8 @@ const isChecking = ref(false);
 const canLoading = ref(true);
 const projectId = computed(() => route.params?.projectCode);
 const userId = computed(() => route.query?.userId);
-const resourceType = ref('repertory');
+const resourceType = computed(() => route.query?.resourceType) || ref('pipeline');
+console.log(resourceType, 'resourceType')
 const isSelectAll = ref(false);  // 选择全量数据
 const dateTimeRange = ref(['', '']);
 const daterangeCache = ref(['', '']);

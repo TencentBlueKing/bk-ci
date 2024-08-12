@@ -465,7 +465,7 @@ function refreshHandOverfail () {
   handleChangeOverFormName(param);
 }
 function goAuthorization(resourceType) {
-  window.open(`${location.origin}/console/manage/${projectId.value}/permission?resourceType=${resourceType}`, '_blank')
+  window.open(`${location.origin}/console/manage/${projectId.value}/permission?resourceType=${resourceType}&userId=${removeUser.value.id}`, '_blank')
 }
 /**
  * 获取人员列表数据

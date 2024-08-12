@@ -8,7 +8,6 @@
     save-key="id"
     display-key="displayName"
     is-async-list
-    allow-create
     allow-auto-match
     :list="userList"
     :pasteFn="pasteFn"
@@ -64,8 +63,8 @@ function handleChange (list) {
 }
 
 function pasteFn (val) {
-  tagInputRef.value?.handleInput();
   tagInputRef.value.curInputValue = val;
+  tagInputRef.value?.handleInput();
   return []
 }
 
