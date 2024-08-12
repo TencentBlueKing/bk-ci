@@ -565,6 +565,7 @@
     "canChooseList": "可选列表",
     "choosedList": "已选列表",
     "triggerType": "触发方式",
+    "triggerInfo": "触发方式/触发人",
     "errorCode": "错误码",
     "remark": "备注",
     "noBuildRecords": "构建记录为空",

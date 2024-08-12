@@ -188,7 +188,7 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
     startType: {
         index: 3,
         id: 'startType',
-        label: 'history.triggerType',
+        label: 'history.triggerInfo',
         width: 120
     },
     queueTime: {

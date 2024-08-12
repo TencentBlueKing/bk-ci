@@ -103,6 +103,10 @@
                         id: 'materialCommitMessage'
                     },
                     {
+                        name: this.$t('details.trigger'),
+                        id: 'triggerUser'
+                    },
+                    {
                         name: this.$t('history.triggerType'),
                         id: 'trigger',
                         multiable: true,

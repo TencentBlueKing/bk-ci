@@ -566,6 +566,7 @@
     "canChooseList": "Selectable list",
     "choosedList": "Chosen list",
     "triggerType": "Trigger Type",
+    "triggerInfo": "Trigger Type / Trigger",
     "errorCode": "Errors",
     "remark": "Remark",
     "noBuildRecords": " No build records",
