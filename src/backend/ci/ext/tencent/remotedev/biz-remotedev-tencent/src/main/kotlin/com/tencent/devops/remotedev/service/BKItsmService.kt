@@ -25,8 +25,8 @@ class BKItsmService @Autowired constructor(
         userId: String,
         tData: Map<Long, Pair<String, Boolean>>,
         index: Int?
-    ) {
-        createTicket(
+    ): String {
+        return createTicket(
             projectId = projectId,
             creator = userId,
             fields = listOf(
@@ -92,21 +92,20 @@ class BKItsmService @Autowired constructor(
     ): String {
         val url = "${bkConfig.itsmHost}/v2/itsm/create_ticket"
         val body = BKItsmCreateTicketReq(
-            bkAppCode = bkConfig.appCode,
-            bkAppSecret = bkConfig.appSecret,
             serviceId = bkConfig.tgitLinkServiceId!!,
             creator = creator,
             fields = fields
         )
         val request = Request.Builder()
             .url(url)
+            .addHeader("x-bkapi-authorization", headerStr())
             .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
         val resp = try {
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body!!.string()
-                logger.info("createTicket｜$url|$body|${response.code}|$data")
+                logger.debug("createTicket｜$url|$body|${response.code}|$data")
                 if (!response.isSuccessful) {
                     logger.error("createTicket｜$url|$body|${response.code}|$data")
                     throw ErrorCodeException(
@@ -138,16 +137,17 @@ class BKItsmService @Autowired constructor(
         return resp.data.sn
     }
 
+    private fun headerStr(): String {
+        return objectMapper.writeValueAsString(
+            mapOf("bk_app_code" to bkConfig.appCode, "bk_app_secret" to bkConfig.appSecret)
+        ).replace("\\s".toRegex(), "")
+    }
     companion object {
         private val logger = LoggerFactory.getLogger(BKItsmService::class.java)
     }
 }
 
 data class BKItsmCreateTicketReq(
-    @JsonProperty("bk_app_code")
-    val bkAppCode: String,
-    @JsonProperty("bk_app_secret")
-    val bkAppSecret: String,
     @JsonProperty("service_id")
     val serviceId: Int,
     val creator: String,

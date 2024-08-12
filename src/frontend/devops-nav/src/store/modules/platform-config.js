@@ -1,13 +1,18 @@
 import { getPlatformConfig, setShortcutIcon } from '@blueking/platform-config'
+import createLocale from '../../../../locale'
+const { i18n } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
+const locale = i18n.locale.replace('_', '-')
+const messages = i18n.messages[locale]
 
 const state = () => ({
     platformInfo: {
-        name: '蓝盾',
+        name: (messages && messages.bkci) || '蓝盾',
         nameEn: 'BLUEKING CI',
-        brandName: '腾讯蓝鲸智云',
+        brandName: (messages && messages.tencentBlueKing) || '蓝鲸智云',
         brandNameEn: 'BlueKing',
         favicon: `${window.PUBLIC_URL_PREFIX}/static/favicon.ico`,
-        version: window.BK_CI_VERSION
+        version: window.BK_CI_VERSION,
+        i18n: {}
     }
 })
 const getters = {

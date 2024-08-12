@@ -1,3 +1,5 @@
+import java.net.URI
+
 plugins {
     id("com.tencent.devops.boot") version "0.0.7"
     detektCheck
@@ -22,6 +24,11 @@ allprojects {
         if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
             pluginManager.apply("task-docker-build") // Docker镜像构建
         }
+    }
+
+    // 新增maven 仓库
+    repositories {
+        add(maven { url = URI("https://repo.jenkins-ci.org/releases") })
     }
 
     // 版本管理

@@ -59,9 +59,6 @@ class DispatchWorkspaceDao {
                 PROJECT_ID,
                 WORKSPACE_NAME,
                 ENVIRONMENT_UID,
-                GIT_URL,
-                BRANCH,
-                IMAGE,
                 STATUS,
                 REGION_ID,
                 TASK_ID
@@ -71,9 +68,6 @@ class DispatchWorkspaceDao {
                     event.projectId,
                     event.workspaceName,
                     environmentUid,
-                    event.repositoryUrl,
-                    event.branch,
-                    event.devFile.runsOn?.container?.image ?: "",
                     status.ordinal,
                     regionId,
                     taskId

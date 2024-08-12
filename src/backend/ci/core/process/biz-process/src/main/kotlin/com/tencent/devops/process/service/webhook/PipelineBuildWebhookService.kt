@@ -310,14 +310,9 @@ class PipelineBuildWebhookService @Autowired constructor(
                 } catch (ignore: Exception) {
                     logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
                     builder.eventSource(eventSource = repo.repoHashId!!)
-                    failedMatchElements.add(
-                        PipelineTriggerFailedMatchElement(
-                            elementId = element.id,
-                            elementName = element.name,
-                            elementAtomCode = element.getAtomCode(),
-                            reasonMsg = ignore.message ?: ""
-                        )
-                    )
+                    builder.status(PipelineTriggerStatus.FAILED.name)
+                        .reason(PipelineTriggerReason.TRIGGER_FAILED.name)
+                        .reasonDetail(PipelineTriggerFailedMsg(ignore.message ?: ""))
                 }
                 return true
             } else {

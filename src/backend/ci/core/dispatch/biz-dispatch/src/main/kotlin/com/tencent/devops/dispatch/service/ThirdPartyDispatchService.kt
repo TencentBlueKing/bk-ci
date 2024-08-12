@@ -433,7 +433,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 HomeHostUtil.getHost(
                     commonConfig.devopsHostGateway!!
                 )
-            }/console/pipeline/${dispatchMessage.event.projectId}/$pipelineId/detail/${dispatchMessage.event.buildId}"
+            }/console/pipeline/${dispatchMessage.event.projectId}/$pipelineId/detail/$lockedBuildId"
             if (lockedBuildId != dispatchMessage.event.buildId) {
                 I18nUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BK_LOCKED,
@@ -787,7 +787,7 @@ class ThirdPartyDispatchService @Autowired constructor(
             logger.warn(
                 "buildByEnvId|{} has singleNodeConcurrency {} but env {}|job {} null",
                 dispatchMessage.event.buildId,
-                dispatchMessage.event.allNodeConcurrency,
+                dispatchMessage.event.singleNodeConcurrency,
                 envId,
                 dispatchMessage.event.jobId
             )
@@ -1133,13 +1133,13 @@ class ThirdPartyDispatchService @Autowired constructor(
             dockerRunningCnt: Int
         ): Boolean {
             return if (dockerBuilder) {
-                agent.dockerParallelTaskCount != null &&
+                (agent.dockerParallelTaskCount == 0) || (agent.dockerParallelTaskCount != null &&
                         agent.dockerParallelTaskCount!! > 0 &&
-                        agent.dockerParallelTaskCount!! > dockerRunningCnt
+                        agent.dockerParallelTaskCount!! > dockerRunningCnt)
             } else {
-                agent.parallelTaskCount != null &&
+                (agent.parallelTaskCount == 0) || (agent.parallelTaskCount != null &&
                         agent.parallelTaskCount!! > 0 &&
-                        agent.parallelTaskCount!! > runningCnt
+                        agent.parallelTaskCount!! > runningCnt)
             }
         }
     }

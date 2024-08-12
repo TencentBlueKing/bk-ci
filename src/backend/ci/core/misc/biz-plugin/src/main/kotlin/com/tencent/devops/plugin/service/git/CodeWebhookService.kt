@@ -79,7 +79,6 @@ import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @Service
 @Suppress("ALL")
@@ -232,7 +231,7 @@ class CodeWebhookService @Autowired constructor(
                                     repositoryConfig = repositoryConfig,
                                     commitId = commitId,
                                     status = status,
-                                    startedAt = null,
+                                    startedAt = (event.startTime ?: 0L) / 1000, // 毫秒 -> 秒
                                     conclusion = conclusion,
                                     completedAt = LocalDateTime.now().timestamp(),
                                     userId = event.userId,
@@ -639,9 +638,11 @@ class CodeWebhookService @Autowired constructor(
                         detailUrl = detailUrl,
                         externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                         status = status,
-                        startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
+                        startedAt = startedAt,
                         conclusion = conclusion,
-                        completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT)
+                        completedAt = completedAt,
+                        pipelineId = pipelineId,
+                        buildId = buildId
                     )
                     pluginGithubCheckDao.create(
                         dslContext = dslContext,
@@ -660,25 +661,25 @@ class CodeWebhookService @Autowired constructor(
                         val checkRunId = if (conclusion == null) {
                             val result = scmCheckService.addGithubCheckRuns(
                                 projectId = projectId,
+                                pipelineId = pipelineId,
+                                buildId = buildId,
                                 repositoryConfig = repositoryConfig,
                                 name = record.checkRunName ?: "$pipelineName #$buildNum",
                                 commitId = commitId,
                                 detailUrl = detailUrl,
                                 externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                                 status = status,
-                                startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                ),
+                                startedAt = startedAt,
                                 conclusion = conclusion,
-                                completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                )
+                                completedAt = completedAt
                             )
                             result.id
                         } else {
                             scmCheckService.updateGithubCheckRuns(
                                 checkRunId = record.checkRunId,
                                 projectId = projectId,
+                                pipelineId = pipelineId,
+                                buildId = buildId,
                                 repositoryConfig = repositoryConfig,
                                 // 兼容历史数据
                                 name = record.checkRunName ?: "$pipelineName #$buildNum",
@@ -686,13 +687,10 @@ class CodeWebhookService @Autowired constructor(
                                 detailUrl = detailUrl,
                                 externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                                 status = status,
-                                startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                ),
+                                startedAt = startedAt,
                                 conclusion = conclusion,
-                                completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                )
+                                completedAt = completedAt,
+                                pipelineName = pipelineName
                             )
                             record.checkRunId
                         }

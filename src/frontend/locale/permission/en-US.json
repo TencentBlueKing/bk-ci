@@ -57,5 +57,7 @@
     "共N条XX": "{0} {1}s total",
     "共N个XX": "{0} {1}s total",
     "共N个监控平台空间": "{0} spaces total",
-    "项目尚未升级到新版权限系统，点击前往旧版权限中心申请": "The project has not been upgraded to the new permission system. Go to the old permission center to apply."
+    "项目尚未升级到新版权限系统，点击前往旧版权限中心申请": "The project has not been upgraded to the new permission system. Go to the old permission center to apply.",
+    "项目级用户组": "Project User Group",
+    "资源级用户组": "Resource User Group"
 }

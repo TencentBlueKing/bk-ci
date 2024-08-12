@@ -34,12 +34,10 @@ import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -47,8 +45,6 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.transfer.GitTransferService
 import com.tencent.devops.remotedev.service.transfer.GithubTransferService
 import com.tencent.devops.remotedev.service.transfer.TGitTransferService
-import java.time.Duration
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,7 +55,6 @@ class RemoteDevSettingService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val gitTransferService: GitTransferService,
     private val tGitTransferService: TGitTransferService,
     private val githubTransferService: GithubTransferService,
@@ -94,26 +89,6 @@ class RemoteDevSettingService @Autowired constructor(
             tGitAttached = kotlin.runCatching { tGitTransferService.getAndCheckOauthToken(userId) }.isSuccess,
             githubAttached = kotlin.runCatching { githubTransferService.getAndCheckOauthToken(userId) }.isSuccess
         )
-    }
-
-    fun computeWinUsageTime(userId: String? = null) {
-        logger.info("computeWinUsageTime|$userId")
-        val workingSpace = remoteDevBillingDao.fetchBillings(dslContext, WorkspaceSystemType.WINDOWS_GPU, userId)
-        val winUsageTime = workingSpace.associateBy({ it.first }) { 0 }.toMutableMap()
-        if (winUsageTime.isEmpty()) return
-        val now = LocalDateTime.now()
-        workingSpace.forEach { (userId, startTime, usageTime) ->
-            val use = winUsageTime[userId] ?: return@forEach
-            winUsageTime[userId] = use + (usageTime ?: Duration.between(startTime, now).seconds.toInt())
-        }
-        val updateData = winUsageTime.map {
-            it.key to kotlin.run {
-                val userLimit = startCloudExperienceDuration(it.key) * 60 * 60
-                userLimit - it.value
-            }
-        }
-        logger.info("computeWinUsageTime ready to update $updateData")
-        remoteDevSettingDao.batchUpdateWinUsageRemainingTime(dslContext, updateData)
     }
 
     fun userWinTimeLeft(userId: String): Int {
@@ -172,8 +147,6 @@ class RemoteDevSettingService @Autowired constructor(
                     whiteListService.removeGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
                 }
             }
-
-            computeWinUsageTime(userId)
         }
     }
 

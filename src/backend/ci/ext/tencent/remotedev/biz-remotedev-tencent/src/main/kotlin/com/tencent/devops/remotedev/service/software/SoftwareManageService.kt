@@ -47,14 +47,10 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.software.CommonArgs
 import com.tencent.devops.remotedev.pojo.software.InstallSoftwareRes
-import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.pojo.software.SoftwareCreate
 import com.tencent.devops.remotedev.pojo.software.SoftwareInfo
-import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
 import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
-import com.tencent.devops.remotedev.pojo.software.UserSoftware
-import com.tencent.devops.remotedev.pojo.software.UserSoftwareInstalledRecord
 import com.tencent.devops.remotedev.pojo.windows.WindowsDevCouldCallback
 import com.tencent.devops.remotedev.service.HttpCallBackService
 import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
@@ -63,7 +59,6 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_ASSIGN_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.net.SocketTimeoutException
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -143,8 +138,8 @@ class SoftwareManageService @Autowired constructor(
                     // todo job接口执行
                     logger.info("safeInitialization|$userId|$userId")
                     installSystemSoftwares(
-                        projectId,
-                        userId,
+                        projectId = projectId,
+                        creator = userId,
                         regionId = workspace.regionId.toString(),
                         ip = workspace.hostIp ?: "",
                         workspaceName = workspaceName
@@ -293,105 +288,6 @@ class SoftwareManageService @Autowired constructor(
         }
     }
 
-    // 获取工作空间模板
-    fun getProjectSoftwareList(projectId: String): List<ProjectSoftware> {
-        logger.info("SoftwareManageService|getProjectSoftwareList|projectId|$projectId")
-        val result = mutableListOf<ProjectSoftware>()
-        softwareManageDao.querySoftwareList(
-            projectId = projectId,
-            dslContext = dslContext
-        ).forEach {
-            result.add(
-                ProjectSoftware(
-                    id = it.id,
-                    projectId = it.projectId,
-                    name = it.name,
-                    logo = it.logo,
-                    version = it.version,
-                    source = it.source,
-                    status = it.status,
-                    classification = it.classification,
-                    installMethod = it.installMethod,
-                    creator = it.creator
-                )
-            )
-        }
-        return result
-    }
-
-    // 安装软件至用户
-    fun batchInstallSoftwareToUser(softwareList: List<UserSoftware>): Boolean {
-        logger.info("SoftwareManageService|installSoftwareToUser|softwareList|$softwareList")
-        softwareManageDao.batchInstallSoftwareToUser(dslContext, softwareList)
-        return true
-    }
-
-    fun getUserSoftwareInstalledRecord(
-        projectId: String,
-        user: String?,
-        workspaceName: String?,
-        status: SoftwareInstallStatus?
-    ): List<UserSoftwareInstalledRecord> {
-        logger.info("SoftwareManageService|getUserSoftwareInstalledRecord|projectId|$projectId")
-        val result = mutableListOf<UserSoftwareInstalledRecord>()
-        softwareManageDao.queryUserSoftwareInstalledRecord(
-            dslContext = dslContext,
-            projectId = projectId,
-            user = user,
-            workspaceName = workspaceName,
-            status = status
-        ).forEach {
-            result.add(
-                UserSoftwareInstalledRecord(
-                    projectId = it.projectId,
-                    user = it.creator,
-                    taskId = it.taskId,
-                    softwareName = it.softwareName,
-                    workspaceName = it.workspaceName,
-                    status = SoftwareInstallStatus.values()[it.status],
-                    installTime = it.createTime.toString()
-                )
-            )
-        }
-        return result
-    }
-
-    fun getSoftwareGroupInfo(): Any {
-        val headerStr = ObjectMapper().writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
-            .replace("\\s".toRegex(), "")
-        val request = Request.Builder()
-            .url(softwareGroupUrl)
-            .addHeader("x-bkapi-authorization", headerStr)
-            .get()
-            .build()
-        try {
-            OkhttpUtils.doHttp(request).use { response ->
-                if (!response.isSuccessful) {
-                    throw ErrorCodeException(
-                        statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                        errorCode = ErrorCodeEnum.GET_SOFTWARE_GROUP_FAIL.errorCode
-                    )
-                }
-                val data = JsonUtil.to(response.body!!.string(), Any::class.java)
-                logger.info("getWatermark|response code|${response.code}|content|$data")
-                return data
-            }
-        } catch (e: SocketTimeoutException) {
-            logger.error("get software group failed.", e)
-            // 接口超时失败
-            throw ErrorCodeException(
-                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                errorCode = ErrorCodeEnum.GET_SOFTWARE_GROUP_FAIL.errorCode
-            )
-        }
-    }
-
-    // 导入软件到项目中
-    fun importSoftwareToProject(software: ProjectSoftware): Boolean {
-        logger.info("SoftwareManageService|installSoftwareToUser|software|$software")
-        return softwareManageDao.importSoftwareToProject(dslContext, software) > 0
-    }
-
     /** 云桌面创建完成后安全初始化：安装ioa
      * ioa安装的脚步严格安装以下格式字符串，转base64后传入。
      * base64(-project_id "cmk-tke" -creator "raylzhang" -region_id "555" -inner_ip "SZ3.11.171.77.15")
@@ -480,11 +376,18 @@ class SoftwareManageService @Autowired constructor(
                 }
                 val createSoftwareRes: InstallSoftwareRes = jacksonObjectMapper().readValue(responseContent)
                 logger.info("installSoftwareFromXingyun|createSoftwareRes|$createSoftwareRes")
+                if (response.code == Response.Status.OK.statusCode && !createSoftwareRes.result) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.OK.statusCode,
+                        errorCode = ErrorCodeEnum.INSTALL_SOFTWARE_FAIL.errorCode,
+                        defaultMessage = createSoftwareRes.message
+                    )
+                }
                 createSoftwareRes
             }
         }.onFailure {
             logger.error("install software from xingyun failed.", it)
-        }.getOrNull()
+        }.getOrThrow()
     }
 
     // 添加系统软件安装记录
@@ -492,8 +395,6 @@ class SoftwareManageService @Autowired constructor(
         logger.info("updateSoftwareInstalledRecords|type|$type|softwareList|$softwareList")
         if (type == "SYSTEM") {
             softwareManageDao.updateSystemInstalledRecords(dslContext, softwareList)
-        } else {
-            softwareManageDao.updateUserInstalledRecords(dslContext, softwareList)
         }
     }
 }

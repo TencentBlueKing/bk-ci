@@ -25,24 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.resources.user
+package com.tencent.devops.process.enums
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.remotedev.api.user.UserWsTemplateResource
-import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
-import org.slf4j.LoggerFactory
+/**
+ * 构建历史搜索类型
+ */
+enum class HistorySearchType {
+    // 触发器
+    TRIGGER,
 
-@RestResource
-@Suppress("ALL")
-@Deprecated("LINUX 待删除")
-class UserWsTemplateResourceImpl : UserWsTemplateResource {
-    companion object {
-        val logger = LoggerFactory.getLogger(UserWsTemplateResourceImpl::class.java)!!
-    }
-
-    override fun getWorkspaceTemplateList(userId: String): Result<List<WorkspaceTemplate>> {
-        logger.info("WorkspaceTemplateService|getWorkspaceTemplateList|userId|$userId")
-        return Result(emptyList())
-    }
+    // 源材料
+    MATERIAL
 }

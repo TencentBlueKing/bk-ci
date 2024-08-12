@@ -25,34 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.api.user
+package com.tencent.devops.dispatch.kubernetes.pojo
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
-import io.swagger.v3.oas.annotations.tags.Tag
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import io.swagger.v3.oas.annotations.media.Schema
 
-@Tag(name = "USER_WORKSPACE_TEMPLATE", description = "用户-工作空间模板")
-@Path("/{apiType:user|desktop}/wstemplate")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface UserWsTemplateResource {
-
-    @Operation(summary = "获取工作空间模板")
-    @GET
-    @Path("/list")
-    fun getWorkspaceTemplateList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<List<WorkspaceTemplate>>
-}
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(title = "检查镜像信息返回模型")
+data class CheckDockerImageResponse(
+    @get:Schema(title = "错误代码")
+    val errorCode: Int,
+    @get:Schema(title = "错误信息")
+    val errorMessage: String? = "",
+    @get:Schema(title = "架构")
+    val arch: String? = "",
+    @get:Schema(title = "作者")
+    val author: String? = "",
+    @get:Schema(title = "评论")
+    val comment: String? = "",
+    @get:Schema(title = "创建时间")
+    val created: String? = "",
+    @get:Schema(title = "docker版本")
+    val dockerVersion: String? = "",
+    @get:Schema(title = "id")
+    val id: String? = "",
+    @get:Schema(title = "操作系统")
+    val os: String? = "",
+    @get:Schema(title = "操作系统版本")
+    val osVersion: String? = "",
+    @get:Schema(title = "父容器")
+    val parent: String? = "",
+    @get:Schema(title = "大小")
+    val size: Long? = 0,
+    @get:Schema(title = "仓库标签")
+    val repoTags: List<String>? = null,
+    @get:Schema(title = "image存储属性")
+    val repoDigests: List<String>? = null,
+    @get:Schema(title = "虚拟大小")
+    val virtualSize: Long? = 0
+)

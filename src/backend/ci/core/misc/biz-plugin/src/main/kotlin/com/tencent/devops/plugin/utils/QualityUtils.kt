@@ -27,13 +27,13 @@
 
 package com.tencent.devops.plugin.utils
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.plugin.constant.PluginMessageCode.BK_CI_PIPELINE
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -45,31 +45,58 @@ import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 
 @Suppress("ALL")
 object QualityUtils {
+    /**
+     * 获取质量红线结果
+     * @param client
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
+     * @param buildId 流水线构建ID
+     * @param eventStatus 事件状态
+     * @param startTime 事件开始时间
+     * @param triggerType 触发类型
+     * @param insertUrl 是否插入链接地址[github 不需要插入链接]
+     */
     fun getQualityGitMrResult(
         client: Client,
-        event: GitCommitCheckEvent
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        eventStatus: String,
+        startTime: Long,
+        triggerType: String,
+        scmType: ScmType
     ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
-        val projectId = event.projectId
-        val pipelineId = event.pipelineId
-        val buildId = event.buildId
         val pipelineName = client.get(ServicePipelineResource::class)
-                .getPipelineNameByIds(projectId, setOf(pipelineId))
-                .data?.get(pipelineId) ?: ""
-
-        val titleData = mutableListOf(event.status,
-                DateTimeUtil.formatMilliTime(System.currentTimeMillis() - event.startTime),
-                StartType.toReadableString(
-                    event.triggerType,
-                    null,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ),
-                pipelineName,
-                "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId",
-                I18nUtil.getCodeLanMessage(BK_CI_PIPELINE)
+            .getPipelineNameByIds(projectId, setOf(pipelineId))
+            .data?.get(pipelineId) ?: ""
+        // github 不需要插入链接, 仅在插件名处插入链接，链接地址用codecc插件输出变量
+        val githubRepo = scmType == ScmType.GITHUB
+        val titleData = mutableListOf(
+            eventStatus,
+            DateTimeUtil.formatMilliTime(System.currentTimeMillis() - startTime),
+            StartType.toReadableString(
+                triggerType,
+                null,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ),
+            pipelineName,
+            if (githubRepo) {
+                ""
+            } else {
+                "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+            },
+            I18nUtil.getCodeLanMessage(BK_CI_PIPELINE)
         )
 
         val ruleName = mutableSetOf<String>()
-
+        // 插件输出变量
+        val reportUrl = getBuildVar(
+            client = client,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            varName = CodeccUtils.BK_CI_CODECC_REPORT_URL
+        )
         // key：质量红线产出插件
         // value：指标、预期、结果、状态
         val resultMap = mutableMapOf<String, MutableList<List<String>>>()
@@ -79,10 +106,18 @@ object QualityUtils {
                     val indicator = client.get(ServiceQualityIndicatorResource::class)
                         .get(projectId, interceptItem.indicatorId).data
                     val indicatorElementName = indicator?.elementType ?: ""
-                    val elementCnName = ElementUtils.getElementCnName(indicatorElementName, projectId)
+
+                    val elementCnName = ElementUtils.getElementCnName(indicatorElementName, projectId).let {
+                        if (githubRepo && !reportUrl.isNullOrBlank()) {
+                            "<a target='_blank' href='$reportUrl'>$it</a>"
+                        } else {
+                            it
+                        }
+                    }
                     val resultList = resultMap[elementCnName] ?: mutableListOf()
-                    val actualValue = if (CodeccUtils.isCodeccAtom(indicatorElementName)) {
-                        getActualValue(
+                    val actualValue = when {
+                        githubRepo -> interceptItem.actualValue ?: "null"
+                        CodeccUtils.isCodeccAtom(indicatorElementName) -> getActualValue(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
@@ -90,8 +125,7 @@ object QualityUtils {
                             value = interceptItem.actualValue ?: "null",
                             client = client
                         )
-                    } else {
-                        interceptItem.actualValue ?: "null"
+                        else -> interceptItem.actualValue ?: "null"
                     }
                     resultList.add(
                         listOf(
@@ -118,13 +152,13 @@ object QualityUtils {
         value: String,
         client: Client
     ): String {
-        val variable = client.get(ServiceVarResource::class).getBuildVar(
+        val taskId = getBuildVar(
+            client = client,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             varName = CodeccUtils.BK_CI_CODECC_TASK_ID
-        ).data
-        val taskId = variable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID)
+        )
         return if (detail.isNullOrBlank() || detail.split(",").size > 1) {
             "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/" +
                 "console/codecc/$projectId/task/$taskId/detail?buildId=$buildId'>$value</a>"
@@ -136,5 +170,22 @@ object QualityUtils {
                 .replace("##detail##", detail)
             "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console$fillDetailUrl'>$value</a>"
         }
+    }
+
+    private fun getBuildVar(
+        client: Client,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        varName: String
+    ): String? {
+        val variable = client.get(ServiceVarResource::class).getBuildVar(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            varName = varName
+        ).data
+        val taskId = variable?.get(varName)
+        return taskId
     }
 }
