@@ -22,7 +22,7 @@ import kotlin.math.min
 @Service
 class ImportCmdbNodeService(
     @Autowired(required = false)
-    private val newCmdbService: TencentNewCmdbServiceImpl,
+    private val newCmdbService: TencentNewCmdbServiceImpl?,
     private val cmdbNodeDao: CmdbNodeDao,
     private val tencentCCService: TencentCCService,
     private val queryAgentStatusService: QueryAgentStatusService
@@ -83,9 +83,9 @@ class ImportCmdbNodeService(
         pageSize: Int,
     ): NewCmdbScrollPageData<NewCmdbServer> {
         return if (!bakOperator) {
-            newCmdbService.queryServerByMaintainer(userId, pageSize, scrollId)
+            newCmdbService!!.queryServerByMaintainer(userId, pageSize, scrollId)
         } else {
-            newCmdbService.queryServerByBakMaintainer(userId, pageSize, scrollId)
+            newCmdbService!!.queryServerByBakMaintainer(userId, pageSize, scrollId)
         }
     }
 
@@ -100,7 +100,7 @@ class ImportCmdbNodeService(
         pageSize: Int,
         ips: List<String>
     ): NewCmdbScrollPageData<NewCmdbServer> {
-        val serverList = newCmdbService.queryNewServerByIp(ips).values.filter {
+        val serverList = newCmdbService!!.queryNewServerByIp(ips).values.filter {
             if (!bakOperator) {
                 it.hasOperator(userId)
             } else {
