@@ -64,6 +64,7 @@ class WorkspaceNotifyHistoryDao {
             return dslContext.selectFrom(this)
                 .where(USER_IDS.eq(userId))
                 .and(TYPE.eq(type.name))
+                .and(STATUS.eq(RemoteDevNotifyType.Status.FAIL.name))
                 .orderBy(CREATED_TIME.asc())
                 .fetch()
         }
