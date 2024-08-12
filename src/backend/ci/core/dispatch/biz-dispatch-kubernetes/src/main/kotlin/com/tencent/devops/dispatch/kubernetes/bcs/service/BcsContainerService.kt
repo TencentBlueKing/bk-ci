@@ -313,7 +313,7 @@ class BcsContainerService @Autowired constructor(
         }
     }
 
-    override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
+    override fun waitTaskFinish(userId: String, taskId: String, needProxy: Boolean): DispatchBuildTaskStatus {
         val startResult = bcsTaskClient.waitTaskFinish(userId, taskId)
         if (startResult.first == BcsTaskStatusEnum.SUCCEEDED) {
             return DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
@@ -394,5 +394,9 @@ class BcsContainerService @Autowired constructor(
                 userId, dispatchBuildImageReq
             )
         )
+    }
+
+    override fun inspectDockerImage(userId: String, pool: Pool): String {
+        return ""
     }
 }
