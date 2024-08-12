@@ -25,36 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.dispatch.kubernetes.api.service
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.repository.sdk.github.pojo.CheckRunOutput
+import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.kubernetes.pojo.CheckDockerImageRequest
+import com.tencent.devops.dispatch.kubernetes.pojo.CheckDockerImageResponse
+import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Schema(title = "check run 模型")
-data class GithubCheckRuns(
-    @get:Schema(title = "名称")
-    val name: String,
-    @JsonProperty("head_sha")
-    @get:Schema(title = "head sha值", description = "head_sha")
-    val headSha: String,
-    @JsonProperty("details_url")
-    @get:Schema(title = "详情链接", description = "details_url")
-    val detailsUrl: String,
-    @JsonProperty("external_id")
-    @get:Schema(title = "拓展ID", description = "external_id")
-    val externalId: String,
-    @get:Schema(title = "状态")
-    val status: String,
-    @JsonProperty("started_at")
-    @get:Schema(title = "开始于", description = "started_at")
-    val startedAt: String?,
-    @get:Schema(title = "结论")
-    val conclusion: String?,
-    @JsonProperty("completed_at")
-    @get:Schema(title = "完成于", description = "completed_at")
-    val completedAt: String?,
-    @Parameter(description = "output", required = true)
-    val output: CheckRunOutput? = null
-)
+@Tag(name = "SERVICE_DOCKER_IMAGE", description = "镜像-镜像服务")
+@Path("/service/docker-image")
+@ServiceInterface("dispatch") // 指明接入到哪个微服务
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceDockerImageResource {
+
+    @POST
+    @Path("/checkDockerImage")
+    @Operation(summary = "检查镜像信息")
+    fun checkDockerImage(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "镜像repo", required = true)
+        checkDockerImageRequestList: List<CheckDockerImageRequest>
+    ): Result<List<CheckDockerImageResponse>>
+}

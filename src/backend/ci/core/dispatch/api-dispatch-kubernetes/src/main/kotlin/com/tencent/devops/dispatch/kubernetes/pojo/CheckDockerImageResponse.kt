@@ -25,36 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.dispatch.kubernetes.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.repository.sdk.github.pojo.CheckRunOutput
-import io.swagger.v3.oas.annotations.Parameter
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "check run 模型")
-data class GithubCheckRuns(
-    @get:Schema(title = "名称")
-    val name: String,
-    @JsonProperty("head_sha")
-    @get:Schema(title = "head sha值", description = "head_sha")
-    val headSha: String,
-    @JsonProperty("details_url")
-    @get:Schema(title = "详情链接", description = "details_url")
-    val detailsUrl: String,
-    @JsonProperty("external_id")
-    @get:Schema(title = "拓展ID", description = "external_id")
-    val externalId: String,
-    @get:Schema(title = "状态")
-    val status: String,
-    @JsonProperty("started_at")
-    @get:Schema(title = "开始于", description = "started_at")
-    val startedAt: String?,
-    @get:Schema(title = "结论")
-    val conclusion: String?,
-    @JsonProperty("completed_at")
-    @get:Schema(title = "完成于", description = "completed_at")
-    val completedAt: String?,
-    @Parameter(description = "output", required = true)
-    val output: CheckRunOutput? = null
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(title = "检查镜像信息返回模型")
+data class CheckDockerImageResponse(
+    @get:Schema(title = "错误代码")
+    val errorCode: Int,
+    @get:Schema(title = "错误信息")
+    val errorMessage: String? = "",
+    @get:Schema(title = "架构")
+    val arch: String? = "",
+    @get:Schema(title = "作者")
+    val author: String? = "",
+    @get:Schema(title = "评论")
+    val comment: String? = "",
+    @get:Schema(title = "创建时间")
+    val created: String? = "",
+    @get:Schema(title = "docker版本")
+    val dockerVersion: String? = "",
+    @get:Schema(title = "id")
+    val id: String? = "",
+    @get:Schema(title = "操作系统")
+    val os: String? = "",
+    @get:Schema(title = "操作系统版本")
+    val osVersion: String? = "",
+    @get:Schema(title = "父容器")
+    val parent: String? = "",
+    @get:Schema(title = "大小")
+    val size: Long? = 0,
+    @get:Schema(title = "仓库标签")
+    val repoTags: List<String>? = null,
+    @get:Schema(title = "image存储属性")
+    val repoDigests: List<String>? = null,
+    @get:Schema(title = "虚拟大小")
+    val virtualSize: Long? = 0
 )

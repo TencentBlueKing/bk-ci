@@ -25,36 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.dispatch.kubernetes.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.repository.sdk.github.pojo.CheckRunOutput
-import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "check run 模型")
-data class GithubCheckRuns(
-    @get:Schema(title = "名称")
-    val name: String,
-    @JsonProperty("head_sha")
-    @get:Schema(title = "head sha值", description = "head_sha")
-    val headSha: String,
-    @JsonProperty("details_url")
-    @get:Schema(title = "详情链接", description = "details_url")
-    val detailsUrl: String,
-    @JsonProperty("external_id")
-    @get:Schema(title = "拓展ID", description = "external_id")
-    val externalId: String,
-    @get:Schema(title = "状态")
-    val status: String,
-    @JsonProperty("started_at")
-    @get:Schema(title = "开始于", description = "started_at")
-    val startedAt: String?,
-    @get:Schema(title = "结论")
-    val conclusion: String?,
-    @JsonProperty("completed_at")
-    @get:Schema(title = "完成于", description = "completed_at")
-    val completedAt: String?,
-    @Parameter(description = "output", required = true)
-    val output: CheckRunOutput? = null
+data class CheckDockerImageRequest(
+    @get:Schema(title = "镜像名称", required = true)
+    val imageName: String,
+    @get:Schema(title = "镜像仓库", required = true)
+    val registryHost: String,
+    @get:Schema(title = "用户名", required = false)
+    val registryUser: String?,
+    @get:Schema(title = "密码", required = false)
+    val registryPwd: String?
 )

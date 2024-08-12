@@ -25,36 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.dispatch.kubernetes.pojo.image
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.repository.sdk.github.pojo.CheckRunOutput
-import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.media.Schema
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-@Schema(title = "check run 模型")
-data class GithubCheckRuns(
-    @get:Schema(title = "名称")
-    val name: String,
-    @JsonProperty("head_sha")
-    @get:Schema(title = "head sha值", description = "head_sha")
-    val headSha: String,
-    @JsonProperty("details_url")
-    @get:Schema(title = "详情链接", description = "details_url")
-    val detailsUrl: String,
-    @JsonProperty("external_id")
-    @get:Schema(title = "拓展ID", description = "external_id")
-    val externalId: String,
-    @get:Schema(title = "状态")
-    val status: String,
-    @JsonProperty("started_at")
-    @get:Schema(title = "开始于", description = "started_at")
-    val startedAt: String?,
-    @get:Schema(title = "结论")
-    val conclusion: String?,
-    @JsonProperty("completed_at")
-    @get:Schema(title = "完成于", description = "completed_at")
-    val completedAt: String?,
-    @Parameter(description = "output", required = true)
-    val output: CheckRunOutput? = null
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class DockerImageInspection(
+    val arch: String? = "",
+    val author: String? = "",
+    val comment: String? = "",
+    val created: String? = "",
+    val dockerVersion: String? = "",
+    val id: String? = "",
+    val os: String? = "",
+    val osVersion: String? = "",
+    val parent: String? = "",
+    val size: Long? = 0,
+    val repoTags: List<String>? = null,
+    val repoDigests: List<String>? = null,
+    val virtualSize: Long? = 0
 )
