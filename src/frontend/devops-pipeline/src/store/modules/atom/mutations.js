@@ -49,6 +49,7 @@ import {
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
+    SET_ATOMS_OUTPUT_MAP,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
@@ -206,6 +207,12 @@ export default {
     [SET_ATOM_VERSION_LIST]: (state, atomVersionList) => {
         Object.assign(state, {
             atomVersionList
+        })
+        return state
+    },
+    [SET_ATOMS_OUTPUT_MAP]: (state, atomsOutputMap) => {
+        Object.assign(state, {
+            atomsOutputMap
         })
         return state
     },
