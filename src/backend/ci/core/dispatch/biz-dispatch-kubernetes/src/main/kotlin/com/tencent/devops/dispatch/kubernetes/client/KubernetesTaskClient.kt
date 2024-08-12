@@ -117,7 +117,7 @@ class KubernetesTaskClient @Autowired constructor(
                 )
             }
             Thread.sleep(1 * 1000)
-            val (status, errorMsg) = getTaskResult(userId, taskId, needProxy).apply {
+            val (status, msg) = getTaskResult(userId, taskId, needProxy).apply {
                 if (first == null) {
                     return Pair(TaskStatusEnum.FAILED, second)
                 }
@@ -125,9 +125,9 @@ class KubernetesTaskClient @Autowired constructor(
             return when {
                 status!!.isRunning() -> continue@loop
                 status.isSuccess() -> {
-                    Pair(TaskStatusEnum.SUCCEEDED, null)
+                    Pair(TaskStatusEnum.SUCCEEDED, msg)
                 }
-                else -> Pair(status, errorMsg)
+                else -> Pair(status, msg)
             }
         }
     }
@@ -154,6 +154,6 @@ class KubernetesTaskClient @Autowired constructor(
             return Pair(status, taskResponse.data.detail)
         }
 
-        return Pair(status, null)
+        return Pair(status, taskResponse.data.detail)
     }
 }

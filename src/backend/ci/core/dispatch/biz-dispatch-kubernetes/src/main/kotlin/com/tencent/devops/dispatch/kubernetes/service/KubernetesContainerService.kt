@@ -302,7 +302,7 @@ class KubernetesContainerService @Autowired constructor(
     override fun waitTaskFinish(userId: String, taskId: String, needProxy: Boolean): DispatchBuildTaskStatus {
         val startResult = kubernetesTaskClient.waitTaskFinish(userId, taskId, needProxy)
         return if (startResult.first == TaskStatusEnum.SUCCEEDED) {
-            DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
+            DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, startResult.second)
         } else {
             DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, startResult.second)
         }
