@@ -37,7 +37,7 @@ function iframeUtil (router: any) {
             let platformTitle = `${platformName} | ${brandName}`
             if (currentPage) {
                 platformTitle = `${currentPage.name} | ${platformTitle}`
-            } 
+            }
             document.title = platformTitle
         }
     }

@@ -36,7 +36,7 @@ const actions = {
         }
         const { i18n, name, brandName } = resp
         const currentPage = window.currentPage
-        let platformTitle = `${i18n.name || name} | ${i18n.brandName || brandName}`
+        const platformTitle = `${i18n.name || name} | ${i18n.brandName || brandName}`
         document.title = currentPage
             ? `${currentPage.name} | ${platformTitle}`
             : platformTitle
