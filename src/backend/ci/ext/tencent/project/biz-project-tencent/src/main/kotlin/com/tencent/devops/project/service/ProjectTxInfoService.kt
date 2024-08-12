@@ -47,7 +47,8 @@ class ProjectTxInfoService @Autowired constructor(
     val projectDao: ProjectDao,
     val projectFreshDao: ProjectFreshDao,
     val dslContext: DSLContext,
-    val projectMemberService: ProjectMemberService
+    val projectMemberService: ProjectMemberService,
+    val productService: ProjectOperationalProductService
 ) {
 
     companion object {
@@ -155,7 +156,8 @@ class ProjectTxInfoService @Autowired constructor(
             ProjectProductInfo(
                 projectId = it.englishName,
                 projectName = it.projectName,
-                productId = it.productId?.toInt() ?: 0,
+                productId = it.productId,
+                productName = productService.getProductByProductId(it.productId)?.productName ?: "",
                 managers = projectManagers
             )
         }

@@ -10,6 +10,8 @@ data class ProjectProductInfo(
     val projectName: String,
     @get:Schema(title = "运营产品ID")
     val productId: Int,
+    @get:Schema(title = "运营产品名称")
+    val productName: String,
     @get:Schema(title = "管理员")
     val managers: List<String>
 )
