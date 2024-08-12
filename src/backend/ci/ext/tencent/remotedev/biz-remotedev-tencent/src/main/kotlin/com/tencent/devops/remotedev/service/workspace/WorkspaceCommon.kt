@@ -247,6 +247,10 @@ class WorkspaceCommon @Autowired constructor(
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.UPGRADING)
                 return WorkspaceStatus.UPGRADING
             }
+            workspaceInfo.status == EnvStatusEnum.copying -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.MAKING_IMAGE)
+                return WorkspaceStatus.MAKING_IMAGE
+            }
 
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
                 startControl.doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
