@@ -226,7 +226,7 @@ class BuildCancelControl @Autowired constructor(
         val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId) }
         val stages = model.stages
         stages.forEachIndexed nextStage@{ index, stage ->
-            if (stage.status == null || index == 0) { // Trigger 和 未启动的忽略
+            if (stage.status.isNullOrBlank() || index == 0) { // Trigger 和 未启动的忽略
                 return@nextStage
             }
 
@@ -243,7 +243,7 @@ class BuildCancelControl @Autowired constructor(
             }
 
             stage.containers.forEach nextC@{ container ->
-                if (container.status == null || BuildStatus.parse(container.status).isFinish()) { // 未启动的和已完成的忽略
+                if (container.status.isNullOrBlank() || BuildStatus.parse(container.status).isFinish()) { // 未启动的和已完成的忽略
                     return@nextC
                 }
                 val stageId = stage.id ?: ""
@@ -255,7 +255,7 @@ class BuildCancelControl @Autowired constructor(
                     executeCount = executeCount
                 )
                 container.fetchGroupContainers()?.forEach matrix@{ c ->
-                    if (c.status == null || BuildStatus.parse(c.status).isFinish()) { // 未启动的和已完成的忽略
+                    if (c.status.isNullOrBlank() || BuildStatus.parse(c.status).isFinish()) { // 未启动的和已完成的忽略
                         return@matrix
                     }
                     cancelContainerPendingTask(
