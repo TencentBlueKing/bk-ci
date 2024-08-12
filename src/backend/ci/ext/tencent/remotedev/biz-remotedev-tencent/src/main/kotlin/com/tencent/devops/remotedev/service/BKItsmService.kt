@@ -74,7 +74,7 @@ class BKItsmService @Autowired constructor(
                 "value" to projectId
             ),
             mapOf(
-                "key" to "operator",
+                "key" to "OPERATOR",
                 "value" to operator
             ),
             mapOf(
