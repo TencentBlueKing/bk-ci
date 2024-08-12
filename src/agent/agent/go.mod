@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/TencentBlueKing/bk-ci/agentcommon v0.0.0-00010101000000-000000000000
-	github.com/docker/docker v24.0.9+incompatible
+	github.com/docker/docker v25.0.6+incompatible
 	github.com/gofrs/flock v0.8.1
 	// 1.24 以上的版本引入了memcall和memguard会导致
 	// 1、ulimit corefile被设置为0 https://github.com/ci-plugins/memguard/blob/master/core/init.go
@@ -100,8 +100,11 @@ require (
 	github.com/aws/smithy-go v1.13.4 // indirect
 	github.com/blues/jsonata-go v1.5.4 // indirect
 	github.com/containerd/containerd v1.6.26 // indirect
-	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/go-logr/logr v1.4.1 // indirect
+	github.com/containerd/log v0.1.0 // indirect
+	github.com/distribution/reference v0.6.0 // indirect
+	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
+	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
@@ -110,14 +113,18 @@ require (
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/moby/patternmatcher v0.5.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
+	github.com/moby/sys/user v0.3.0 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/opencontainers/runc v1.1.12 // indirect
 	github.com/rickb777/date v1.14.2 // indirect
 	github.com/rickb777/plural v1.2.2 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.53.0 // indirect
+	go.opentelemetry.io/otel v1.28.0 // indirect
+	go.opentelemetry.io/otel/metric v1.28.0 // indirect
+	go.opentelemetry.io/otel/trace v1.28.0 // indirect
 	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/oauth2 v0.10.0 // indirect
