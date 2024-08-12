@@ -371,7 +371,7 @@
                     }).finally(() => {
                         if (this.userId) {
                             this.isLoading = this.resetType ? loading : false
-                        } else if (!this.userId) {
+                        } else {
                             this.isLoading = false
                         }
                     })
