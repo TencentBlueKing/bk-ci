@@ -25,14 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.pojo.builds
+package com.tencent.devops.dispatch.kubernetes.pojo
 
-data class DispatchBuildTaskStatus(
-    val status: DispatchBuildTaskStatusEnum,
-    val msg: String?
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import io.swagger.v3.oas.annotations.media.Schema
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(title = "检查镜像信息返回模型")
+data class CheckDockerImageResponse(
+    @get:Schema(title = "错误代码")
+    val errorCode: Int,
+    @get:Schema(title = "错误信息")
+    val errorMessage: String? = "",
+    @get:Schema(title = "架构")
+    val arch: String? = "",
+    @get:Schema(title = "作者")
+    val author: String? = "",
+    @get:Schema(title = "评论")
+    val comment: String? = "",
+    @get:Schema(title = "创建时间")
+    val created: String? = "",
+    @get:Schema(title = "docker版本")
+    val dockerVersion: String? = "",
+    @get:Schema(title = "id")
+    val id: String? = "",
+    @get:Schema(title = "操作系统")
+    val os: String? = "",
+    @get:Schema(title = "操作系统版本")
+    val osVersion: String? = "",
+    @get:Schema(title = "父容器")
+    val parent: String? = "",
+    @get:Schema(title = "大小")
+    val size: Long? = 0,
+    @get:Schema(title = "仓库标签")
+    val repoTags: List<String>? = null,
+    @get:Schema(title = "image存储属性")
+    val repoDigests: List<String>? = null,
+    @get:Schema(title = "虚拟大小")
+    val virtualSize: Long? = 0
 )
-
-enum class DispatchBuildTaskStatusEnum {
-    SUCCEEDED,
-    FAILED
-}
