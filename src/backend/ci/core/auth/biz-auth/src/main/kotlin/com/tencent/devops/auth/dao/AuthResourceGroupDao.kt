@@ -33,6 +33,7 @@ import com.tencent.devops.model.auth.tables.TAuthResourceGroup
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -312,12 +313,26 @@ class AuthResourceGroupDao {
         limit: Int
     ): List<AuthResourceGroup> {
         return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
-            dslContext.selectFrom(this)
+            val records = dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .offset(offset)
                 .limit(limit)
-                .fetch().map { convert(it) }
+                .fetch()
+            val result = mutableListOf<AuthResourceGroup>()
+            records.forEach {
+                try {
+                    result.add(convert(it))
+                } catch (ignore: Exception) {
+                    // 在同步iam组到数据库时，可能会出现少量异常数据，其relation_id为null的情况，导致转化为Int类型时报错。
+                    logger.warn(
+                        "convert Group Record failed!" +
+                            "|${it.projectCode}|${it.resourceType}|${it.resourceCode}", ignore
+                    )
+                    return@forEach
+                }
+            }
+            result
         }
     }
 
@@ -338,5 +353,9 @@ class AuthResourceGroupDao {
                 updateTime = updateTime
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AuthResourceGroupDao::class.java)
     }
 }
