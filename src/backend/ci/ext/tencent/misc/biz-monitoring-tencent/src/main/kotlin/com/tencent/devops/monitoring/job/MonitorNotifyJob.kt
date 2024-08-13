@@ -42,6 +42,12 @@ import com.tencent.devops.monitoring.util.EmailModuleData
 import com.tencent.devops.monitoring.util.EmailUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import javax.xml.parsers.DocumentBuilderFactory
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.commons.lang3.tuple.MutablePair
@@ -60,12 +66,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import javax.xml.parsers.DocumentBuilderFactory
 
 @Component
 @RefreshScope
@@ -289,10 +289,16 @@ class MonitorNotifyJob @Autowired constructor(
     }
 
     private fun getBkData(reqBody: Map<String, String>): BkDataBean {
+        val headerStr = JsonUtil.toJson(
+            mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
+        ).replace("\\s".toRegex(), "")
         val resp = OkhttpUtils.doPost(
             bkdataUrl,
             JsonUtil.toJson(reqBody),
-            mapOf("Content-Type" to "application/json; charset=utf-8")
+            mapOf(
+                "Content-Type" to "application/json; charset=utf-8",
+                "X-Bkapi-Authorization" to headerStr
+            )
         )
         if (!resp.isSuccessful) {
             throw RuntimeException("gitResponse is failed , $resp")

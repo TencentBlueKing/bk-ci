@@ -119,7 +119,7 @@ class TencentQueryFromCCService {
         )
         val url = bkccQueryBaseUrl + bkccListHostWithoutBizPath
         val resBody = executePostRequest(
-            getcommonHeaders(), url, ccListHostWithoutBizReq
+            getAuthHeaders(), url, ccListHostWithoutBizReq
         )
         return mapper.readValue(resBody!!)
     }
@@ -148,13 +148,9 @@ class TencentQueryFromCCService {
             bkHostId = hostIdList
         )
         val resBody = executePostRequest(
-            getcommonHeaders(), bkccQueryBaseUrl + bkccFindHostBizRelationsPath, ccFindHostBizRelationsReq
+            getAuthHeaders(), bkccQueryBaseUrl + bkccFindHostBizRelationsPath, ccFindHostBizRelationsReq
         )
         return mapper.readValue(resBody!!)
-    }
-
-    private fun getcommonHeaders(): Map<String, String> {
-        return mapOf("accept" to "*/*", "Content-Type" to "application/json")
     }
 
     private fun getAuthHeaders(): Map<String, String> {
