@@ -1967,7 +1967,8 @@ class PipelineBuildFacadeService(
         archiveFlag: Boolean? = false,
         customVersion: Int?,
         triggerAlias: List<String>?,
-        triggerBranch: List<String>?
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
@@ -2049,7 +2050,8 @@ class PipelineBuildFacadeService(
                 queryDslContext = queryDslContext,
                 debugVersion = targetDebugVersion,
                 triggerAlias = triggerAlias,
-                triggerBranch = triggerBranch
+                triggerBranch = triggerBranch,
+                triggerUser = triggerUser
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -2081,7 +2083,8 @@ class PipelineBuildFacadeService(
                 queryDslContext = queryDslContext,
                 debugVersion = targetDebugVersion,
                 triggerAlias = triggerAlias,
-                triggerBranch = triggerBranch
+                triggerBranch = triggerBranch,
+                triggerUser = triggerUser
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
