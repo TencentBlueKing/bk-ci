@@ -155,7 +155,7 @@ func runCommandPipelineWindows(pipeline *CommandPipeline, lines []string) error 
 	output, err := command.RunCommand(scriptFile, []string{} /*args*/, systemutil.GetWorkDir(), nil)
 	if err != nil {
 		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "run pipeline failed: "+err.Error()+"\noutput: "+string(output)))
-		return errors.Wrap(err, "run pipeline failed")
+		return errors.Wrapf(err, "run pipeline failed")
 	}
 	_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusSuccess, string(output)))
 

@@ -99,6 +99,7 @@ class CheckConditionalSkipStageCmd constructor(
         // condition check
         val variables = commandContext.variables
         var skip = false
+        val message = StringBuilder()
         if (controlOption != null) {
             val conditions = controlOption.customVariables ?: emptyList()
             val contextMap = pipelineContextService.buildContext(
@@ -118,6 +119,17 @@ class CheckConditionalSkipStageCmd constructor(
                 runCondition = controlOption.runCondition,
                 customCondition = controlOption.customCondition
             ) // #6366 增加日志明确展示跳过的原因  stage 没有相关可展示的地方，暂时不加
+            if (message.isNotBlank()) {
+                // #6366 增加日志明确展示跳过的原因
+                buildLogPrinter.addWarnLine(
+                    executeCount = commandContext.executeCount,
+                    tag = "",
+                    buildId = stage.buildId,
+                    message = message.toString(),
+                    jobId = null,
+                    stepId = null
+                )
+            }
         }
         if (skip) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_CONDITION_SKIP|${event.stageId}|$controlOption")

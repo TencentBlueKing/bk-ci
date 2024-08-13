@@ -47,7 +47,8 @@ interface BuildSDKApi : WorkerRestApiSDK {
         projectId: String,
         pipelineId: String,
         buildNum: String,
-        channelCode: ChannelCode?
+        channelCode: ChannelCode?,
+        buildId: String
     ): Result<BuildHistory?>
 
     fun getBuildDetail(

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.matrix
 
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -46,6 +47,8 @@ data class MatrixStatusElement(
     override var startEpoch: Long? = null,
     @get:Schema(title = "上下文标识", required = false)
     override var stepId: String?,
+    @get:Schema(title = "用户自定义环境变量（插件运行时写入环境）", required = false)
+    override var customEnv: List<NameAndValue>? = null,
     @get:Schema(title = "原插件的类型标识")
     val originClassType: String,
     @get:Schema(title = "原插件的市场标识")

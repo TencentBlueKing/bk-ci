@@ -48,12 +48,14 @@ data class PipelineResourceVersion(
     var yaml: String?,
     @get:Schema(title = "YAML编排版本", required = false)
     var yamlVersion: String?,
-    @get:Schema(title = "创建者", required = true)
-    val creator: String,
     @get:Schema(title = "版本名称", required = true)
     val versionName: String?,
+    @get:Schema(title = "创建者", required = true)
+    val creator: String,
     @get:Schema(title = "版本创建时间", required = true)
     val createTime: LocalDateTime,
+    @get:Schema(title = "更新操作人", required = true)
+    val updater: String?,
     @get:Schema(title = "版本修改时间", required = true)
     val updateTime: LocalDateTime?,
     @get:Schema(title = "发布版本号", required = false)

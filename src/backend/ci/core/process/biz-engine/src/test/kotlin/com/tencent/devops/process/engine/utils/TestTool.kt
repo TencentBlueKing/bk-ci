@@ -64,6 +64,7 @@ object TestTool {
             containerId = vmSeqId.toString(),
             seq = vmSeqId,
             containerHashId = containerHashId,
+            jobId = "job-123",
             containerType = vmContainerType,
             status = status,
             startTime = startTime,

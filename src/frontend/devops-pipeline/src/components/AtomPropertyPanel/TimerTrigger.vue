@@ -74,7 +74,7 @@
                     </div>
                 </form-field>
     
-                <form-field class="cron-build-tab" :label="$t('editPage.branches')">
+                <form-field class="cron-build-tab" :label="$t('editPage.branches')" :desc="$t('editPage.timerTriggerBranchTips')">
                     <BranchParameterArray
                         name="branches"
                         :repository-type="element['repositoryType']"
@@ -111,7 +111,7 @@
             return {
                 isShowBasicRule: false,
                 advance: false,
-                isShowCodelibConfig: this.element?.repoHashId || this.element?.noScm || this.element?.repoName || this.element?.branchs?.length,
+                isShowCodelibConfig: this.element?.repoHashId || this.element?.noScm || this.element?.repoName || this.element?.branches?.length || this.element?.repositoryType === 'SELF',
                 advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || '',
                 repositoryType: this.element.repositoryType || 'ID'
             }

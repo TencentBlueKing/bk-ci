@@ -317,11 +317,11 @@
                                         </bk-form-item>
                                         <bk-form-item :label="$t('quality.审核超时时间')">
                                             <bk-input type="number"
-                                                :placeholder="$t('quality.超时以分钟为单位，最高60')"
+                                                :placeholder="$t('quality.超时以分钟为单位')"
                                                 v-model="createRuleForm.auditTimeoutMinutes">
                                             </bk-input>
                                             <span class="time-unit">{{$t('quality.分钟')}}</span>
-                                            <p class="prompt-tips">{{$t('quality.默认为15分钟，最长不超过60分钟')}}</p>
+                                            <p class="prompt-tips">{{$t('quality.默认为15分钟，最长不超过600分钟')}}</p>
                                         </bk-form-item>
                                     </bk-form>
                                 </div>

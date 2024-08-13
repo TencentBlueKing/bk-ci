@@ -45,5 +45,9 @@ object ExpressionJsonUtil {
         return objectMapper.readTree(jsonReader)
     }
 
+    fun write(node: JsonNode): String {
+        return objectMapper.writeValueAsString(node)
+    }
+
     fun getObjectMapper() = objectMapper
 }
