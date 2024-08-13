@@ -156,7 +156,6 @@ class StartWorkspaceService @Autowired constructor(
         return true
     }
 
-
     fun sendMessage(
         operator: String,
         userIdList: Set<String>,

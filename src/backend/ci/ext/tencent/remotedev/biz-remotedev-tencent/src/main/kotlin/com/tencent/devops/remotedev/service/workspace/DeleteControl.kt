@@ -211,7 +211,7 @@ class DeleteControl @Autowired constructor(
                     "cgsIp" to (windowsInfo?.hostIp ?: ""),
                     "userId" to userIds.joinToString(),
                     "projectId" to (workspace.projectId),
-                    "notifyTemplateCode" to NotifyControl.WORKSPACE_FORCE_DELETE,
+                    "notifyTemplateCode" to NotifyControl.WORKSPACE_FORCE_DELETE
                 )
             )
         }
