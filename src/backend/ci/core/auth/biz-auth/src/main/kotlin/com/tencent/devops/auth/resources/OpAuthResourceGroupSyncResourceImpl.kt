@@ -67,4 +67,9 @@ class OpAuthResourceGroupSyncResourceImpl @Autowired constructor(
         )
         return Result(true)
     }
+
+    override fun fixResourceGroupMember(projectId: String): Result<Boolean> {
+        permissionResourceGroupSyncService.fixResourceGroupMember(projectId)
+        return Result(true)
+    }
 }

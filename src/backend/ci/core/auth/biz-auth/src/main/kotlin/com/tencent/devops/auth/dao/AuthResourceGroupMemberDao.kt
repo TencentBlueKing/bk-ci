@@ -199,6 +199,19 @@ class AuthResourceGroupMemberDao {
         }
     }
 
+    fun deleteByIamGroupIds(
+        dslContext: DSLContext,
+        projectCode: String,
+        iamGroupIds: List<Int>
+    ) {
+        with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            dslContext.delete(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(IAM_GROUP_ID.`in`(iamGroupIds))
+                .execute()
+        }
+    }
+
     fun deleteByResource(
         dslContext: DSLContext,
         projectCode: String,
@@ -292,6 +305,22 @@ class AuthResourceGroupMemberDao {
             memberType?.let { select.and(MEMBER_TYPE.eq(memberType)) }
             iamGroupId?.let { select.and(IAM_GROUP_ID.eq(iamGroupId)) }
             select.fetch().map { convert(it) }
+        }
+    }
+
+    fun listProjectGroups(
+        dslContext: DSLContext,
+        projectCode: String,
+        offset: Int,
+        limit: Int
+    ): List<Int> {
+        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            dslContext.select(IAM_GROUP_ID).from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .groupBy(IAM_GROUP_ID)
+                .orderBy(CREATE_TIME.desc())
+                .offset(offset).limit(limit)
+                .fetch().map { it.value1() }
         }
     }
 

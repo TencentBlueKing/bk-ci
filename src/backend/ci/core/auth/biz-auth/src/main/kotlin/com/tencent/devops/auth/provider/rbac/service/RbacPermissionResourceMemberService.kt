@@ -928,7 +928,8 @@ class RbacPermissionResourceMemberService constructor(
         logger.info("remove member from project $userId|$projectCode|$removeMemberFromProjectReq")
         return with(removeMemberFromProjectReq) {
             val memberType = targetMember.type
-            if (memberType == ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
+            val isNeedToHandover = handoverTo != null
+            if (memberType == ManagerScopesEnum.getType(ManagerScopesEnum.USER) && isNeedToHandover) {
                 removeMemberFromProjectReq.checkHandoverTo()
                 val handoverMemberDTO = GroupMemberHandoverConditionReq(
                     allSelection = true,
@@ -951,21 +952,6 @@ class RbacPermissionResourceMemberService constructor(
                         checkPermission = false
                     )
                 )
-                // 查询用户还存在那些组织中
-                val userDeptInfos = deptService.getUserInfo(
-                    userId = "admin",
-                    name = targetMember.id
-                )?.deptInfo?.map { it.name!! }
-                if (userDeptInfos != null) {
-                    authResourceGroupMemberDao.isMembersInProject(
-                        dslContext = dslContext,
-                        projectCode = projectCode,
-                        memberNames = userDeptInfos,
-                        memberType = ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)
-                    )
-                } else {
-                    emptyList()
-                }
             } else {
                 val removeMemberDTO = GroupMemberCommonConditionReq(
                     allSelection = true,
@@ -976,8 +962,24 @@ class RbacPermissionResourceMemberService constructor(
                     conditionReq = removeMemberDTO,
                     operateGroupMemberTask = ::deleteTask
                 )
-                emptyList()
             }
+
+            if (memberType == ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
+                // 查询用户还存在那些组织中
+                val userDeptInfos = deptService.getUserInfo(
+                    userId = "admin",
+                    name = targetMember.id
+                )?.deptInfo?.map { it.name!! }
+                if (userDeptInfos != null) {
+                    return authResourceGroupMemberDao.isMembersInProject(
+                        dslContext = dslContext,
+                        projectCode = projectCode,
+                        memberNames = userDeptInfos,
+                        memberType = ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)
+                    )
+                }
+            }
+            return emptyList()
         }
     }
 

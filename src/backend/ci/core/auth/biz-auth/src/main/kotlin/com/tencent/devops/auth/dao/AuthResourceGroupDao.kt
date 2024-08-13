@@ -247,6 +247,19 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun listIamGroupIdsByConditions(
+        dslContext: DSLContext,
+        projectCode: String,
+        iamGroupIds: List<String>
+    ): List<Int> {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.select(RELATION_ID).from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RELATION_ID.`in`(iamGroupIds))
+                .fetch().map { it.value1().toInt() }
+        }
+    }
+
     fun getByGroupName(
         dslContext: DSLContext,
         projectCode: String,

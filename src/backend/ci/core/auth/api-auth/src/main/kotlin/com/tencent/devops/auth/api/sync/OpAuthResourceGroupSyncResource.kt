@@ -91,4 +91,13 @@ interface OpAuthResourceGroupSyncResource {
         @PathParam(value = "resourceCode")
         resourceCode: String
     ): Result<Boolean>
+
+    @POST
+    @Path("/{projectId}/fixResourceGroupMember")
+    @Operation(summary = "修复用户组成员表")
+    fun fixResourceGroupMember(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam(value = "projectId")
+        projectId: String
+    ): Result<Boolean>
 }

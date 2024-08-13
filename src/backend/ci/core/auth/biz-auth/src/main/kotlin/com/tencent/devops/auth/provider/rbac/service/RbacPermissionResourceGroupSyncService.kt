@@ -185,6 +185,8 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     syncProjectGroup(projectCode = projectCode)
                     // 同步组成员
                     syncResourceGroupMember(projectCode = projectCode)
+                    // 防止出现用户组表的数据已经删了，但是用户组成员表的数据未删除，导致出现不同步，调用iam接口报错问题。
+                    fixResourceGroupMember(projectCode = projectCode)
                     // 记录完成状态
                     authResourceSyncDao.updateStatus(
                         dslContext = dslContext,
@@ -364,6 +366,44 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to sync resource group member $projectCode"
+            )
+        }
+    }
+
+    override fun fixResourceGroupMember(projectCode: String) {
+        val limit = 100
+        var offset = 0
+        val startEpoch = System.currentTimeMillis()
+        logger.info("start to fix resource group member|$projectCode")
+        try {
+            do {
+                val resourceMemberGroupIds = authResourceGroupMemberDao.listProjectGroups(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    offset = offset,
+                    limit = limit
+                )
+                val resourceGroupIds = authResourceGroupDao.listIamGroupIdsByConditions(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    iamGroupIds = resourceMemberGroupIds.map { it.toString() }
+                )
+                val unsyncGroupIds = resourceMemberGroupIds.filterNot { resourceGroupIds.contains(it) }
+                if (unsyncGroupIds.isNotEmpty()) {
+                    authResourceGroupMemberDao.deleteByIamGroupIds(
+                        dslContext = dslContext,
+                        projectCode = projectCode,
+                        iamGroupIds = unsyncGroupIds
+                    )
+                }
+                offset += limit
+            } while (resourceMemberGroupIds.size == limit)
+        } catch (ignored: Exception) {
+            logger.error("Failed to fix resource group member|$projectCode", ignored)
+            throw ignored
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to fix resource group member|$projectCode"
             )
         }
     }
