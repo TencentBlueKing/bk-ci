@@ -369,7 +369,7 @@ class TemplateFacadeService @Autowired constructor(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
-        val templateModel: Model = PipelineUtils.fixedTemplateParam(objectMapper.readValue(template))
+        val templateModel: Model = objectMapper.readValue(template)
         checkTemplateAtomsForExplicitVersion(templateModel, userId)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
@@ -382,7 +382,7 @@ class TemplateFacadeService @Autowired constructor(
                 templateName = saveAsTemplateReq.templateName,
                 versionName = INIT_TEMPLATE_NAME,
                 userId = userId,
-                template = JsonUtil.toJson(templateModel, formatted = false),
+                template = template,
                 storeFlag = false,
                 version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data,
                 desc = null

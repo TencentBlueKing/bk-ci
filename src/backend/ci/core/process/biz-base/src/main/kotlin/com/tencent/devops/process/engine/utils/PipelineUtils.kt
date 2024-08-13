@@ -42,9 +42,9 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
+import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 import javax.ws.rs.core.Response
-import org.slf4j.LoggerFactory
 
 object PipelineUtils {
 
@@ -159,39 +159,6 @@ object PipelineUtils {
     }
 
     /**
-     * 将流水线常量转换成模板常量
-     */
-    fun fixedTemplateParam(model: Model): Model {
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val params = mutableListOf<BuildFormProperty>()
-        val templateParams = mutableListOf<BuildFormProperty>()
-        triggerContainer.params.forEach {
-            if (it.constant == true) {
-                templateParams.add(it)
-            } else {
-                params.add(it)
-            }
-        }
-        val fixedTriggerContainer = triggerContainer.copy(
-            params = params,
-            templateParams = if (templateParams.isEmpty()) {
-                null
-            } else {
-                templateParams
-            }
-        )
-        val stages = ArrayList<Stage>()
-        model.stages.forEachIndexed { index, stage ->
-            if (index == 0) {
-                stages.add(stage.copy(containers = listOf(fixedTriggerContainer)))
-            } else {
-                stages.add(stage)
-            }
-        }
-        return model.copy(stages = stages)
-    }
-
-    /**
      * 通过流水线参数和模板编排生成新Model
      */
     @Suppress("ALL")
@@ -211,8 +178,8 @@ object PipelineUtils {
             BuildPropertyCompatibilityTools.mergeProperties(
                 from = templateTrigger.params,
                 to = BuildPropertyCompatibilityTools.mergeProperties(
-                    // 模板常量需要变成流水线常量
-                    from = templateTrigger.templateParams!!.map { it.copy(constant = true) },
+                    // 模板常量转换成流水线变量(是否为入参:false,运行时只读:true),不能转换成流水线常量,因为用户可以通过openapi修改入参
+                    from = templateTrigger.templateParams!!.map { it.copy(required = false, readOnly = true) },
                     to = param ?: emptyList()
                 )
             )
