@@ -88,14 +88,14 @@
     :width="640"
     @closed="handOverClose"
   >
-  <template #header>
-    {{ t("移出项目") }}
-    <span class="dialog-header"> {{t("移出用户")}}： {{ removeUser.id }}({{ removeUser.name }}) </span>
-  </template>
+    <template #header>
+      {{ t("移出项目") }}
+      <span class="dialog-header"> {{t("移出用户")}}： {{ removeUser.id }} ({{ removeUser.name }}) </span>
+    </template>
     <bk-loading :loading="removeCheckLoading">
       <template #default>
         <template v-if="removeMemberChecked">
-            <p class="remove-tips">{{ t('XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？', [`${removeUser.id}(${removeUser.name})}`]) }}</p>
+          <p class="remove-tips">{{ t('XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？', [`${removeUser.id} (${removeUser.name})`]) }}</p>
         </template>
         <template v-else>
           <div class="dialog">
@@ -162,23 +162,23 @@
           </div>
         </template>
       </template>
-      <template #footer>
-        <bk-button
-          theme="primary"
-          @click="handConfirm('user')"
-          :loading="manageAsideStore.btnLoading"
-          :disabled="!isAuthorizedSuccess && !removeMemberChecked"
-        >
-          {{ removeMemberChecked ? t('确定') : t("移交并移出")}}
-        </bk-button>
-        <bk-button
-          class="btn-margin"
-          @click="handOverClose"
-        >
-          {{ t('取消') }}
-        </bk-button>
-      </template>
     </bk-loading>
+    <template #footer>
+      <bk-button
+        theme="primary"
+        @click="handConfirm('user')"
+        :loading="manageAsideStore.btnLoading"
+        :disabled="!isAuthorizedSuccess && !removeMemberChecked"
+      >
+        {{ removeMemberChecked ? t('确定') : t("移交并移出")}}
+      </bk-button>
+      <bk-button
+        class="btn-margin"
+        @click="handOverClose"
+      >
+        {{ t('取消') }}
+      </bk-button>
+    </template>
   </bk-dialog>
 
   <bk-dialog
@@ -362,9 +362,9 @@ function handOverClose() {
 /**
  *  移出项目弹窗提交
  */
-async function handConfirm(flag){
+async function handConfirm (flag) {
   try {
-    if(flag === 'user'){
+    if (flag === 'user') {
       if (removeMemberChecked.value) {
         emit('removeConfirm', removeUser.value, {});
       } else {
