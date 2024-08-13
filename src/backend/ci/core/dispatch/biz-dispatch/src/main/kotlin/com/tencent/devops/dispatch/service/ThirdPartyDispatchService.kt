@@ -971,6 +971,6 @@ class ThirdPartyDispatchService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ThirdPartyDispatchService::class.java)
         private val availableAgentMatcher = AvailableAgent()
         private val idleAgentMatcher = IdleAgent()
-        private const val DISPATCH_QUEUE_GRAY_PROJECT_PIPELINE = "DISPATCH_REDIS_QUEUE_GRAY_PROJECT_PIPELINE"
+        const val DISPATCH_QUEUE_GRAY_PROJECT_PIPELINE = "DISPATCH_REDIS_QUEUE_GRAY_PROJECT_PIPELINE"
     }
 }
