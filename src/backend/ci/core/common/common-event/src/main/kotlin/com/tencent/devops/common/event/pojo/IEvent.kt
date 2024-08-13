@@ -52,7 +52,7 @@ open class IEvent(
             val eventType = this::class.java.annotations.find { s -> s is Event } as Event
             bridge.send(
                 destination ?: DefaultBindingUtils.getOutBindingName(this::class.java),
-                buildMessage(eventType.delayMills)
+                buildMessage(if (delayMills > 0) delayMills else eventType.delayMills)
             )
         } catch (ignored: Exception) {
             logger.error("[STREAM MQ] Fail to dispatch the event($this)", ignored)
