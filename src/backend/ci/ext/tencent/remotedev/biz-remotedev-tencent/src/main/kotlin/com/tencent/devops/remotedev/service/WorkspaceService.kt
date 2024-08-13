@@ -1130,7 +1130,7 @@ class WorkspaceService @Autowired constructor(
 
     // 校验是否需要moa 2fa验证，true:需要 ；false：不需要
     fun checkMoa2fa(userId: String, workspaceName: String): Boolean {
-        /*1. 个人云桌面 + 内部员工拥有者 --直接返回true
+        /*1.个人云桌面 + 内部员工拥有者 --直接返回true
          *2.团队云桌面 + 内部员工拥有者，则调用wesec接口判断
           */
         logger.info("$userId check moa 2fa workspace $workspaceName")
@@ -1143,10 +1143,12 @@ class WorkspaceService @Autowired constructor(
         )
         // TODO 目前阶段先对内部员工做 moa 验证，后续放开 cp 也需要验证。
         if (!ws.realOwner.isNullOrBlank() && !ws.realOwner!!.endsWith("@tai")) {
-            return apiGwService.checkMoa2fa(
-                project = ws.projectId,
-                workspactName = workspaceName
-            ) ?: false.also { logger.warn("MOA 2FA check failed for workspace $workspaceName") }
+            return kotlin.runCatching {
+                apiGwService.checkMoa2fa(
+                    project = ws.projectId,
+                    workspactName = workspaceName
+                )
+            }.getOrNull() ?: false.also { logger.warn("MOA 2FA check failed for workspace $workspaceName") }
         }
         return false
     }
