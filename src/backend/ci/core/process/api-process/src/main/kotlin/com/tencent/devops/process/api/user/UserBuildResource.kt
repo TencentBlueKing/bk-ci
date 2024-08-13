@@ -469,7 +469,10 @@ interface UserBuildResource {
         triggerAlias: List<String>?,
         @Parameter(description = "触发分支", required = false)
         @QueryParam("triggerBranch")
-        triggerBranch: List<String>?
+        triggerBranch: List<String>?,
+        @Parameter(description = "触发方式", required = false)
+        @QueryParam("triggerUser")
+        triggerUser: List<String>?,
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "修改流水线备注")

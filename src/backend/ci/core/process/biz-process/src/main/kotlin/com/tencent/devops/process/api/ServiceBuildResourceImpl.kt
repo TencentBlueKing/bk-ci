@@ -387,7 +387,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         archiveFlag: Boolean?,
         customVersion: Int?,
         triggerAlias: List<String>?,
-        triggerBranch: List<String>?
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -423,7 +424,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
             archiveFlag = archiveFlag,
             customVersion = customVersion,
             triggerAlias = triggerAlias,
-            triggerBranch = triggerBranch
+            triggerBranch = triggerBranch,
+            triggerUser = triggerUser
         )
         return Result(result)
     }
