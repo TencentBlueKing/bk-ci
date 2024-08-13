@@ -1,5 +1,5 @@
 <template>
-  <bk-loading class="aside" :loading="manageAsideStore.isLoading" >
+  <bk-loading class="aside" :loading="manageAsideStore.isLoading">
     <div class="aside-header">
       {{t("组织/用户")}}
       <span class="refresh" @click="refresh">
@@ -88,96 +88,99 @@
     :width="640"
     @closed="handOverClose"
   >
-    <template #header>
-      {{ t("移出项目") }}
-      <span class="dialog-header"> {{t("移出用户")}}： {{ removeUser.id }}({{ removeUser.name }}) </span>
-    </template>
-    <template #default>
-      <template v-if="removeMemberChecked">
-          <p class="remove-tips">{{ t('XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？', [`${removeUser.id}(${removeUser.name})}`]) }}</p>
-      </template>
-      <template v-else>
-        <div class="dialog">
-          <p class="text-tag">
-            <i class="manage-icon manage-icon-info-line"></i>
-            <span>
-              {{t("将用户移出项目前，需要指定移交人，平台将自动完成所有权限/授权的移交")}}。
-            </span>
-          </p>
-          <bk-form
-            ref="formRef"
-            :rules="rules"
-            :model="handOverForm"
-            form-type="vertical"
-          >
-            <bk-form-item
-              required
-              :label="t('移交人')"
-              property="name"
-              labelWidth=""
-            >
-              <project-user-selector
-                @change="handleChangeOverFormName"
-                @removeAll="handOverInputClear"
-              >
-              </project-user-selector>
-            </bk-form-item>
-          </bk-form>
-  
-          <p class="verifying">
-            <span v-if="isChecking">
-              <Spinner class="check-checking-icon" />
-              {{ t("正在校验授权") }}
-            </span>
-            <span v-if="isAuthorizedSuccess">
-              <Success class="check-success-icon" />
-              {{t("授权校验通过")}}
-            </span>
-          </p>
-  
-          <div v-if="isHandOverfail" class="hand-over-fail">
-            <p class="err-text">
-              <p class="deal">
-                <i class="manage-icon manage-icon-close"></i>
-                <i18n-t keypath="检测到以下授权将无法移交给X，请先前往「授权管理」单独处理" tag="div" >
-                  <span> {{ handOverForm.name }} </span>
-                </i18n-t>
-              </p>
-              <p class="blue-text" @click="refreshHandOverfail">
-                <i class="manage-icon manage-icon-refresh"></i>
-                <span>{{t("刷新")}}</span>
-              </p>
+  <template #header>
+    {{ t("移出项目") }}
+    <span class="dialog-header"> {{t("移出用户")}}： {{ removeUser.id }}({{ removeUser.name }}) </span>
+  </template>
+    <bk-loading :loading="removeCheckLoading">
+      <template #default>
+        <template v-if="removeMemberChecked">
+            <p class="remove-tips">{{ t('XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？', [`${removeUser.id}(${removeUser.name})}`]) }}</p>
+        </template>
+        <template v-else>
+          <div class="dialog">
+            <p class="text-tag">
+              <i class="manage-icon manage-icon-info-line"></i>
+              <span>
+                {{t("将用户移出项目时需指定移交人，确认后将自动移交有效的权限/授权；已过期权限不交接，将自动清理。")}}
+              </span>
             </p>
-            <div class="hand-over-table-group" v-for="item in overTable" :key="item.id">
-              <p class="hand-over-table-item">
-                {{item.name}}({{ item.resourceType }})
+            <bk-form
+              ref="formRef"
+              :rules="rules"
+              :model="handOverForm"
+              form-type="vertical"
+            >
+              <bk-form-item
+                required
+                :label="t('移交人')"
+                property="name"
+                labelWidth=""
+              >
+                <project-user-selector
+                  @change="handleChangeOverFormName"
+                  @removeAll="handOverInputClear"
+                >
+                </project-user-selector>
+              </bk-form-item>
+            </bk-form>
+    
+            <p class="verifying">
+              <span v-if="isChecking">
+                <Spinner class="check-checking-icon" />
+                {{ t("正在校验授权") }}
+              </span>
+              <span v-if="isAuthorizedSuccess">
+                <Success class="check-success-icon" />
+                {{t("授权校验通过")}}
+              </span>
+            </p>
+    
+            <div v-if="isHandOverfail" class="hand-over-fail">
+              <p class="err-text">
+                <p class="deal">
+                  <i class="manage-icon manage-icon-close"></i>
+                  <i18n-t keypath="检测到以下授权将无法移交给X，请先前往「授权管理」单独处理" tag="div" >
+                    <span> {{ handOverForm.name }} </span>
+                  </i18n-t>
+                </p>
+                <p class="blue-text" @click="refreshHandOverfail">
+                  <i class="manage-icon manage-icon-refresh"></i>
+                  <span>{{t("刷新")}}</span>
+                </p>
               </p>
-              <p class="blue-text" @click="goAuthorization(item.resourceType)">
-                <i class="manage-icon manage-icon-jump"></i>
-                <span>{{t("前往处理")}}</span>
-              </p>
+              <div class="hand-over-table-group" v-for="item in overTable" :key="item.id">
+                <p class="hand-over-table-item">
+                  {{item.name}}({{ item.resourceType }})
+                </p>
+                <p class="blue-text" @click="goAuthorization(item.resourceType)">
+                  <i class="manage-icon manage-icon-jump"></i>
+                  <span>{{t("前往处理")}}</span>
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        </template>
       </template>
-    </template>
-    <template #footer>
-      <bk-button
-        theme="primary"
-        @click="handConfirm('user')"
-        :loading="manageAsideStore.btnLoading"
-        :disabled="!isAuthorizedSuccess && !removeMemberChecked"
-      >
-        {{ removeMemberChecked ? t('确定') : t("移交并移出")}}
-      </bk-button>
-      <bk-button
-        class="btn-margin"
-        @click="handOverClose"
-      >
-        {{ t('取消') }}
-      </bk-button>
-    </template>
+      <template #footer>
+        <bk-button
+          theme="primary"
+          @click="handConfirm('user')"
+          :loading="manageAsideStore.btnLoading"
+          :disabled="!isAuthorizedSuccess && !removeMemberChecked"
+        >
+          {{ removeMemberChecked ? t('确定') : t("移交并移出")}}
+        </bk-button>
+        <bk-button
+          class="btn-margin"
+          @click="handOverClose"
+        >
+          {{ t('取消') }}
+        </bk-button>
+      </template>
+    </bk-loading>
   </bk-dialog>
+
   <bk-dialog
     :width="480"
     theme="primary"
@@ -253,6 +256,7 @@ const route = useRoute();
 const manageAsideStore = useManageAside();
 const current = ref(1);
 const isShowHandOverDialog = ref(false);
+const removeCheckLoading = ref(false);
 const formRef = ref(null);
 const isHandOverfail = ref(false);
 const isShowPersonDialog = ref(false);
@@ -323,23 +327,26 @@ function pageChange(current) {
   emit('pageChange', current, projectId.value);
 }
 async function handleRemoval(item) {
-  if(item.type === 'department') {
+  removeUser.value = item;
+  if (item.type === 'department') {
     isShowRemoveDialog.value = true;
   } else {
-    await removeMemberFromProjectCheck(item);
     handOverForm.value && (Object.assign(handOverForm.value, getHandOverForm()));
-    formRef.value?.clearValidate();
     isShowHandOverDialog.value = true;
+    await removeMemberFromProjectCheck(item);
+    formRef.value?.clearValidate();
   }
-  removeUser.value = item;
 }
 
 async function removeMemberFromProjectCheck (payload) {
   try {
+    removeCheckLoading.value = true;
     removeMemberChecked.value = await http.removeMemberFromProjectCheck(projectId.value, {
       targetMember: payload
     })
+    removeCheckLoading.value = false;
   } catch (e) {
+    removeCheckLoading.value = false;
     console.error(e)
   }
 
@@ -639,7 +646,7 @@ onUnmounted(() => {
     .manage-icon-info-line{
       font-size: 14px;
       color: #3A84FF;
-      margin-right: 10px;
+      margin-right: 5px;
     }
 
     span {

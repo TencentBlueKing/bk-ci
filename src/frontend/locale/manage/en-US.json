@@ -213,7 +213,7 @@
     "人员列表": "User List",
     "移出项目": "Remove",
     "移出用户": "User",
-    "将用户移出项目前，需要指定移交人，平台将自动完成所有权限/授权的移交": "Before removing the user from the project, a transferee needs to be designated, and the platform will automatically transfer all permissions/authorizations",
+    "将用户移出项目时需指定移交人，确认后将自动移交有效的权限/授权；已过期权限不交接，将自动清理。": "When removing a user from the project, a transferee must be designated. Upon confirmation, valid permissions/authorizations will be automatically transferred; expired permissions will not be transferred and will be automatically cleaned up.",
     "移交人": "Transferee",
     "刷新": "Refresh",
     "检测到以下授权将无法移交给X，请先前往「授权管理」单独处理": "The following authorizations cannot be transferred to {0}, please go to \"Authorization Management\" to handle it individually",

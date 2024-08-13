@@ -4,7 +4,7 @@
       <ul class="aside">
         <li
           class="aside-item"
-          :class="activeIndex == index ? 'aside-active' : ''"
+          :class="resourceType == item.resourceType ? 'aside-active' : ''"
           v-for="(item, index) in permissionList"
           :key="index"
           @click="handleAsideClick(item, index)"
@@ -146,10 +146,11 @@
           <bk-table
             ref="resetTable"
             :data="resetTableData"
+            :pagination="resetTablePagination"
             :border="['outer', 'row']"
             show-overflow-tooltip
           >
-            <bk-table-column :label="searchName" prop="resourceName" />
+            <bk-table-column :label="searchName" width="200" prop="resourceName" />
             <bk-table-column :label="t('失败原因')" prop="handoverFailedMessage">
               <template v-slot="{ row }">
                 <span class="failed-msg" v-html="row.handoverFailedMessage"></span>
@@ -195,7 +196,12 @@ const { t } = useI18n();
 const route = useRoute();
 const tableData = ref([]);
 const resetTableData = ref([]);
-const activeIndex = ref(0);
+const resetTablePagination = ref({
+  count: 0,
+  limit: 6,
+  current: 1,
+  limitList: [6, 10, 20]
+})
 const formRef = ref(null);
 const refTable = ref(null);
 const selectList = ref([]);
@@ -209,8 +215,8 @@ const isChecking = ref(false);
 const canLoading = ref(true);
 const projectId = computed(() => route.params?.projectCode);
 const userId = computed(() => route.query?.userId);
-const resourceType = computed(() => route.query?.resourceType) || ref('pipeline');
-console.log(resourceType, 'resourceType')
+const initialResourceType  = computed(() => route.query?.resourceType || 'repertory');
+const resourceType = ref(initialResourceType.value);
 const isSelectAll = ref(false);  // 选择全量数据
 const dateTimeRange = ref(['', '']);
 const daterangeCache = ref(['', '']);
@@ -359,11 +365,6 @@ watch(() => searchValue.value, (val, oldVal) => {
 });
 
 onMounted(() => {
-  const currentResourceType = route.query.resourceType;
-  if(currentResourceType){
-    activeIndex.value = permissionList.value.findIndex(item => item.resourceType === currentResourceType);
-    resourceType.value = currentResourceType;
-  }
   init();
 });
 
@@ -419,8 +420,7 @@ async function getTableList () {
  * aside点击事件
  */
 function handleAsideClick(item, index) {
-  if (activeIndex.value === index) return;
-  activeIndex.value = index;
+  if (item.resourceType === resourceType.value) return;
   resourceType.value = item.resourceType;
   init();
 };
@@ -510,7 +510,8 @@ async function handleCheckReset () {
     if (!resetFormData.value.name) return // 点击input输入框清空按钮，会触发失焦事件
     failedCount.value = res['FAILED']?.length || 0
     if (failedCount.value) {
-      resetTableData.value = res['FAILED'].splice(0,6)
+      resetTableData.value = res['FAILED']
+      resetTablePagination.value.count = failedCount.value
     }
     isResetFailure.value = !!failedCount.value;
     isResetSuccess.value = !failedCount.value;
@@ -519,6 +520,8 @@ async function handleCheckReset () {
     const selectFlag = isSelectAll.value ? pagination.value.count : selectList.value.length
     disabledResetBtn.value = failedCount.value === selectFlag;
   } catch (e) {
+    isChecking.value = false;
+    canLoading.value = false;
     console.error(e)
   }
 }
