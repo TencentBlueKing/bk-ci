@@ -36,5 +36,5 @@ abstract class EsbBaseReq(
     open var bk_username: String,
     open val bk_token: String = ""
 ) {
-    fun toMap() = mapOf("X-Bkapi-Authorization" to JsonUtil.toJson(this))
+    fun toMap() = mapOf("X-Bkapi-Authorization" to JsonUtil.toJson(this).replace("\\s".toRegex(), ""))
 }
