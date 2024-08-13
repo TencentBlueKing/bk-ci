@@ -80,8 +80,6 @@ import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.Devfile
 import com.tencent.devops.remotedev.service.PermissionService
-import com.tencent.devops.remotedev.service.RemoteDevSettingService
-import com.tencent.devops.remotedev.service.RemoteDevSettingService.Companion
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
