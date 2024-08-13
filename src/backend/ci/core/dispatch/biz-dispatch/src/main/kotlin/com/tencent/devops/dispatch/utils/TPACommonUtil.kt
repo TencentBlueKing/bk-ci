@@ -131,7 +131,7 @@ class TPACommonUtil @Autowired constructor(
         val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         // 跨项目使用 agent
         val projectId = if (data.dispatchType is ThirdPartyAgentEnvDispatchType) {
-            data.dispatchType.envProjectId ?: data.projectId
+            data.dispatchType.envProjectId?.ifBlank { data.projectId } ?: data.projectId
         } else {
             data.projectId
         }
