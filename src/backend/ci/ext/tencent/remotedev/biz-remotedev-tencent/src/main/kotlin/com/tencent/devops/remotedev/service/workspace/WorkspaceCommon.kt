@@ -238,6 +238,15 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.RESTARTING
             }
 
+            workspaceInfo.status == EnvStatusEnum.starting -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.STARTING)
+                return WorkspaceStatus.STARTING
+            }
+            workspaceInfo.status == EnvStatusEnum.stopping -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.STOPPING)
+                return WorkspaceStatus.STOPPING
+            }
+
             workspaceInfo.status == EnvStatusEnum.rebuilding -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.REBUILDING)
                 return WorkspaceStatus.REBUILDING
