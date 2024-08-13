@@ -9,7 +9,6 @@ import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.QueueFailureException
 import com.tencent.devops.dispatch.pojo.QueueRetryException
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -109,25 +108,15 @@ class TPACommonUtil @Autowired constructor(
         messageCode: String,
         param: Array<String>? = null,
         pipelineId: String,
-        buildId: String,
+        lockedBuildId: String,
         linkTip: String
     ) {
         val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
-        val link = "$host/console/pipeline/${data.projectId}/$pipelineId/detail/${data.buildId}"
-        val msg = if (buildId != data.buildId) {
-            I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BK_LOCKED,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ) + ": $linkTip<a target='_blank' href='$link'>" +
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.BK_CLICK,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ) + "</a>"
+        val link = "$host/console/pipeline/${data.projectId}/$pipelineId/detail/$lockedBuildId"
+        val msg = if (lockedBuildId != data.buildId) {
+            "$linkTip<a target='_blank' href='$link'>$lockedBuildId</a>"
         } else {
-            I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BK_CURRENT,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ) + ": $linkTip"
+            linkTip
         }
 
         logI18n(data, messageCode, param, suffixMsg = msg)
@@ -150,13 +139,7 @@ class TPACommonUtil @Autowired constructor(
         val msg = if (nodeHashId.isNullOrBlank()) {
             ""
         } else {
-            I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BK_LOCKED,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ) + ": <a target='_blank' href='$link'>" + I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BK_CLICK,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ) + "</a>"
+            "<a target='_blank' href='$link'>$nodeHashId</a>"
         }
 
         logI18n(data, messageCode, param, suffixMsg = msg)

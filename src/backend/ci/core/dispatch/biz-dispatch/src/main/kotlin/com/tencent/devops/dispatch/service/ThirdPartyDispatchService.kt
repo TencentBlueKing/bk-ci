@@ -95,9 +95,17 @@ class ThirdPartyDispatchService @Autowired constructor(
                 event.dispatchType is ThirdPartyAgentEnvDispatchType ||
                 event.dispatchType is ThirdPartyDevCloudDispatchType
 
-    // TODO: 按 Redis 灰度使用新排队逻辑的项目或者流水线
+    // 按 Redis 灰度使用新排队逻辑的项目或者流水线
+    // project to pipeline1;pipeline2;.....
     private fun useNewQueue(projectId: String, pipelineId: String): Boolean {
-        return false
+        val v = redisOperation.hget(
+            DISPATCH_QUEUE_GRAY_PROJECT_PIPELINE, projectId
+        )?.ifEmpty { return false } ?: return false
+        if (v.isBlank()) {
+            return true
+        }
+        val pipelines = v.split(";").toSet()
+        return projectId in pipelines
     }
 
     fun startUp(dispatchMessage: DispatchMessage) {
@@ -962,5 +970,6 @@ class ThirdPartyDispatchService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ThirdPartyDispatchService::class.java)
         private val availableAgentMatcher = AvailableAgent()
         private val idleAgentMatcher = IdleAgent()
+        private const val DISPATCH_QUEUE_GRAY_PROJECT_PIPELINE = "DISPATCH_REDIS_QUEUE_GRAY_PROJECT_PIPELINE"
     }
 }
