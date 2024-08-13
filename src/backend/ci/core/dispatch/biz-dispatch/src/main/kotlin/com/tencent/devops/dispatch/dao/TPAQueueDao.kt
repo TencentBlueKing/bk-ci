@@ -15,7 +15,6 @@ import java.time.LocalDateTime
 
 @Repository
 class TPAQueueDao {
-    // TODO: 记得要配置索引
     fun add(
         dslContext: DSLContext,
         projectId: String,
