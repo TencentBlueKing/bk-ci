@@ -140,4 +140,6 @@ object AuthMessageCode {
     const val ERROR_BATCH_OPERATE_GROUP_MEMBERS = "2121087" // 批量操作组成员失败
     const val INVALID_HANDOVER_TO = "2121088" // 目标对象和交接人不允许相同
     const val INVALID_EXPIRED_PERM_NOT_ALLOW_TO_HANDOVER = "2121089" // 已过期的权限不允许交接
+
+    const val ERROR_USER_INFORMATION_NOT_SYNCED = "2121090" // 请等待第二天用户信息同步后再尝试操作，因为新入职用户的信息尚未同步完成。
 }
