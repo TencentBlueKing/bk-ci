@@ -62,6 +62,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.util.Optional
 import java.util.concurrent.TimeUnit
+import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
 
 class AuthDeptServiceImpl @Autowired constructor(
     val redisOperation: RedisOperation,
@@ -313,6 +315,7 @@ class AuthDeptServiceImpl @Autowired constructor(
         val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url)
+            .headers(searchEntity.toMap().toHeaders())
             .post(requestBody)
             .build()
         OkhttpUtils.doHttp(request).use {

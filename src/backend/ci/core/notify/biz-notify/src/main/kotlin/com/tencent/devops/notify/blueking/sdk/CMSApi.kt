@@ -61,6 +61,7 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+import okhttp3.Headers.Companion.toHeaders
 
 class CMSApi(private val notifyProperties: NotifyProperties) {
 
@@ -171,6 +172,7 @@ class CMSApi(private val notifyProperties: NotifyProperties) {
 
         val request = Request.Builder()
             .url(url)
+            .headers(body.toMap().toHeaders())
             .post(requestBody)
             .build()
         val result = this.doRequest(request)
