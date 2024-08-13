@@ -38,6 +38,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.UUID
 
 @Service
 class TPAQueueService @Autowired constructor(
@@ -73,13 +74,52 @@ class TPAQueueService @Autowired constructor(
             data = sqlData,
             dataType = dataType,
             sendData = data,
-            delayMills = 5000
+            delayMills = 5000,
+            lockValue = UUID.randomUUID().toString()
         )
         dispatch(event)
     }
 
+    /**
+     * 因为每个消费消息的线程数量有限制，如果线程慢了，其他消息不会消失，只会等待消费
+     * 所以生产和消费共用一把锁，这样才可以做到每次只有一个消息在消费
+     * TODO: 还需要再想想看看，比如 uuid 一直用会不会重复，把 error 日志汇总下方便告警
+     */
     private fun dispatch(event: TPAQueueEvent) {
         logger.info("queue_dispatch|${event.toLog()}")
+        // 每个排队队列中的最长的只会是Job排队时间，7天
+        // 目前只有ENV
+        val lock = ThirdPartyAgentQueueEnvLock(
+            redisOperation = redisOperation,
+            projectId = event.projectId,
+            queueKey = event.data,
+            expiredTimeInSeconds = ENV_LOCK_TIME_OUT_7D,
+            lockValue = event.lockValue
+        )
+        if (!lock.tryLock(timeout = 5000, interval = 1000)) {
+            if (event.sendData != null) {
+                commonUtil.logDebug(event.sendData!!, "do queue no lock wait other queue")
+                logger.info("doQueue|${event.sendData?.toLog()}|no lock wait other queue")
+                event.sendData = null
+            }
+            return
+        }
+        try {
+            if (event.sendData != null) {
+                commonUtil.logDebug(event.sendData!!, "do queue get lock in queue")
+                logger.info("doQueue|${event.sendData?.toLog()}|get lock in queue")
+                event.sendData = null
+            }
+            logger.info("queue_dispatch|${event.toLog()}")
+            send(event)
+        } catch (e: Throwable) {
+            // 只可能是发送消息错误或者抓到的异常处理逻辑错误，但是为了防止没解锁
+            logger.error("dispatch|${event.toLog()}|error", e)
+            lock.unlock()
+        }
+    }
+
+    private fun send(event: TPAQueueEvent) {
         val eventType = event::class.java.annotations.find { s -> s is Event } as Event
         rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
             // 事件中的变量指定
@@ -101,27 +141,15 @@ class TPAQueueService @Autowired constructor(
      * 同时将排队信息保存到 sql 中，每次结束排队都更新，这样不论哪个消息进来了，信息都是持久化的
      */
     fun doQueue(event: TPAQueueEvent) {
-        // 每个排队队列中的最长的只会是Job排队时间，7天
-        // 目前只有ENV
-        val lock = ThirdPartyAgentQueueEnvLock(redisOperation, event.projectId, event.data, ENV_LOCK_TIME_OUT_7D)
-        try {
-            if (!lock.tryLock(timeout = 5000, interval = 1000)) {
-                if (event.sendData != null) {
-                    commonUtil.logDebug(event.sendData!!, "do queue no lock wait other queue")
-                    logger.info("doQueue|${event.sendData?.toLog()}|no lock wait other queue")
-                    event.sendData = null
-                }
-                return
-            }
-            if (event.sendData != null) {
-                commonUtil.logDebug(event.sendData!!, "do queue get lock in queue")
-                logger.info("doQueue|${event.sendData?.toLog()}|get lock in queue")
-                event.sendData = null
-            }
-            inQueue(event)
-        } finally {
-            lock.unlock()
-        }
+        inQueue(event)
+        val lock = ThirdPartyAgentQueueEnvLock(
+            redisOperation = redisOperation,
+            projectId = event.projectId,
+            queueKey = event.data,
+            expiredTimeInSeconds = ENV_LOCK_TIME_OUT_7D,
+            lockValue = event.lockValue
+        )
+        lock.unlock()
         // 解锁后去查询，如果还有没有下发完的那么就再发送一条记录
         try {
             val count = tpaQueueDao.fetchProjectDataCount(

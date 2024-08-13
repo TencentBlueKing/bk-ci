@@ -16,7 +16,9 @@ data class TPAQueueEvent(
     // 发送这个事件的消息，只在第一次发送消息时携带，重放后置空，方便做一些日志输出或者记录
     var sendData: ThirdPartyAgentDispatchData?,
     // 消息队列延迟消息时间
-    val delayMills: Int
+    val delayMills: Int,
+    // 拿到的锁的值，为了保证生产和消费始终只有一个消息，所以需要在生产和消费端共用一把锁
+    val lockValue: String
 ) {
     fun toLog() = "${this.projectId}|${this.pipelineId}|${this.data}|${this.dataType}"
 }

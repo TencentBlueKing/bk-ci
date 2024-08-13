@@ -8,11 +8,13 @@ class ThirdPartyAgentQueueEnvLock(
     redisOperation: RedisOperation,
     projectId: String,
     queueKey: String,
-    expiredTimeInSeconds: Long
+    expiredTimeInSeconds: Long,
+    lockValue: String
 ) : RedisLock(
     redisOperation = redisOperation,
     lockKey = "DISPATCH_REDIS_QUEUE_LOCK_ENV_${projectId}_$queueKey",
-    expiredTimeInSeconds = expiredTimeInSeconds
+    expiredTimeInSeconds = expiredTimeInSeconds,
+    lockValue = lockValue
 ) {
 
     fun tryLock(timeout: Long = 1000, interval: Long = 100): Boolean {
