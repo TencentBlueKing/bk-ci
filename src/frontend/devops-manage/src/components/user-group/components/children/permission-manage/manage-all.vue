@@ -212,12 +212,12 @@
       <h2 class="dialog-header"> {{t('成功移除XX', [`${removeUserDeptListMap.removeUser.id}(${removeUserDeptListMap.removeUser.name})`])}}</h2>
     </template>
     <template #default>
-      <p>{{ $t('用户XXX已从项目下移除，但其所属的如下组织架构在项目下拥有权限，此用户依然可以进入项目进行操作：', [`${removeUserDeptListMap.removeUser.id} (${removeUserDeptListMap.removeUser.name})`]) }}</p>
+      <p>{{ t('用户XXX已从项目下移除，但其所属的如下组织架构在项目下拥有权限，此用户依然可以进入项目进行操作：', [`${removeUserDeptListMap.removeUser.id} (${removeUserDeptListMap.removeUser.name})`]) }}</p>
       <p v-for="dept in removeUserDeptListMap.list" :key="dept.id">
         - {{ dept.name }}
       </p>
       <p class="mt30">
-        {{ $t('请评估按照组织架构开通的权限是否合理。') }}
+        {{ t('请评估按照组织架构开通的权限是否合理。') }}
       </p>
       <div class="option-btn">
         <bk-button
