@@ -1,8 +1,15 @@
 import { showLoginPopup } from '@/utils/util'
 import eventBus from './eventBus'
+import store from '@/store'
+const { platformInfo } = (store.state as any).platFormConfig
 interface UrlParam {
     url: string
     refresh: boolean
+}
+
+interface titleParams {
+    title: string,
+    serverName: string
 }
 
 function iframeUtil (router: any) {
@@ -25,10 +32,12 @@ function iframeUtil (router: any) {
             params
         }, '*')
     }
-
-    utilMap.updateTabTitle = function (title: string): void {
+    utilMap.updateTabTitle = function ({ title, serverName }: titleParams): void {
         if (title) {
             document.title = title
+        }
+        if (!title && serverName) {
+            document.title = `${serverName} | ${platformInfo.i18n.name || platformInfo.name} | ${platformInfo.i18n.brandName || platformInfo.brandName}`
         }
     }
 

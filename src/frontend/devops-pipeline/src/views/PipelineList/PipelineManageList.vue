@@ -333,7 +333,9 @@
         },
 
         created () {
-            this.$updateTabTitle?.(this.$t('documentTitlePipeline'))
+            this.$updateTabTitle?.({
+                serverName: this.$t('pipeline')
+            })
             this.goList()
             this.checkHasCreatePermission()
         },

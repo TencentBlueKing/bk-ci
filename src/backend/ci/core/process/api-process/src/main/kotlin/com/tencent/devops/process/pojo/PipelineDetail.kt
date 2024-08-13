@@ -51,6 +51,8 @@ data class PipelineDetail(
     val instanceFromTemplate: Boolean,
     @get:Schema(title = "当前模板的ID", required = false)
     var templateId: String?,
+    @get:Schema(title = "关联模板版本", required = false)
+    var templateVersion: Long?,
     @get:Schema(title = "草稿或最新的发布版本")
     val version: Int,
     @get:Schema(title = "草稿或最新的发布版本名称")
