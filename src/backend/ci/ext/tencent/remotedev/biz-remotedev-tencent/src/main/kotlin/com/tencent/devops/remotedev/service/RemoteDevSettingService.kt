@@ -70,24 +70,11 @@ class RemoteDevSettingService @Autowired constructor(
     fun getRemoteDevSettings(userId: String): RemoteDevSettings {
         logger.info("$userId get remote dev setting")
         val setting = remoteDevSettingDao.fetchOneSetting(dslContext, userId)
-
-        if (setting.projectId.isBlank()) {
-            kotlin.runCatching {
-                client.get(ServiceTxProjectResource::class).getRemoteDevUserProject(userId)
-            }.onFailure { logger.warn("create user project fail ${it.message}", it) }.getOrNull().let {
-                if (it?.data == null) {
-                    logger.warn("create user project fail ${it?.message}")
-                }
-                remoteDevSettingDao.updateProjectId(dslContext, userId, it?.data?.englishName ?: "")
-                setting.projectId = it?.data?.englishName ?: ""
-            }
-        }
-
         return setting.copy(
             envsForFile = emptyList(),
-            gitAttached = kotlin.runCatching { gitTransferService.getAndCheckOauthToken(userId) }.isSuccess,
-            tGitAttached = kotlin.runCatching { tGitTransferService.getAndCheckOauthToken(userId) }.isSuccess,
-            githubAttached = kotlin.runCatching { githubTransferService.getAndCheckOauthToken(userId) }.isSuccess
+            gitAttached = false,
+            tGitAttached = false,
+            githubAttached = false
         )
     }
 
