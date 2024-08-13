@@ -124,7 +124,9 @@ object MatrixContextUtils {
 }
     """
 
-    private val yaml = Yaml()
+    private val yaml = ThreadLocal.withInitial {
+        Yaml()
+    }
 
     private val schemaFactory = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
         .objectMapper(YamlUtil.getObjectMapper())
@@ -151,7 +153,7 @@ object MatrixContextUtils {
         if (originYaml.isBlank()) {
             return
         }
-        val yamlJson = YamlUtil.getObjectMapper().readTree(YamlUtil.toYaml(yaml.load(originYaml))).replaceOn()
+        val yamlJson = YamlUtil.getObjectMapper().readTree(YamlUtil.toYaml(yaml.get().load(originYaml))).replaceOn()
         schemaFactory.getSchema(schemaJson).check(yamlJson)
     }
 

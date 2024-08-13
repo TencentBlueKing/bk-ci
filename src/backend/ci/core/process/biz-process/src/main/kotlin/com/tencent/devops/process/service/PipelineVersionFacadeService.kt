@@ -196,6 +196,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             hasCollect = detailInfo.hasCollect,
             instanceFromTemplate = detailInfo.instanceFromTemplate,
             templateId = detailInfo.templateId,
+            templateVersion = detailInfo.templateVersion,
             canManualStartup = detailInfo.canManualStartup,
             canDebug = canDebug,
             canRelease = canRelease,

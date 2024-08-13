@@ -597,7 +597,8 @@
     "showAll": "显示全部",
     "copyToCustomArtifactory": "复制至自定义仓库",
     "downloading": "正在下载",
-    "copySuc": "复制{0}至自定义仓库成功"
+    "copySuc": "复制{0}至自定义仓库成功",
+    "buildMsg": "构建信息"
   },
   "preview": {
     "build": "构建",
@@ -1453,6 +1454,7 @@
   "oauth": "OAUTH 授权",
   "refreshOauthStatus": "刷新授权状态",
   "oauthPacTips": "尚未授权，请先点击按钮授权。<br/> 授权后，将使用你的身份提交 YAML 文件到代码库。需拥有代码库开发者及以上权限。",
+  "withoutOauthCodelib": "当前环境支持的代码库源，尚未对接 PAC 功能，请咨询",
   "reExec": "重新执行",
   "reDebug": "重新调试",
   "pipelineConf": "流水线配置",
@@ -1569,5 +1571,6 @@
     "resetSuc": "重置成功",
     "authTime": "授权时间" 
   },
-  "debugHint": "调试和执行不共享构建号，但共享并发控制。调试记录仅在草稿版本调试期间有效，版本发布后将自动清理。"
+  "debugHint": "调试和执行不共享构建号，但共享并发控制。调试记录仅在草稿版本调试期间有效，版本发布后将自动清理。",
+  "templateRollbackBackTips": "当前流水线为约束模式（模板实例），需要跳转到模板进行版本回滚。"
 }

@@ -598,8 +598,9 @@
     "showAll": "Show all",
     "copyToCustomArtifactory": "Copy to custom artifactory",
     "downloading": "Downloading ",
-    "copySuc": " Copy {0} to custom artifactory successfully"
-  },
+    "copySuc": " Copy {0} to custom artifactory successfully",
+    "buildMsg": "Build Message"
+},
   "preview": {
     "build": "Build",
     "introVersion": "Recommended Version",
@@ -1452,6 +1453,7 @@
   "oauth": "OAUTH Authorization",
   "refreshOauthStatus": "Refresh Authorization Status",
   "oauthPacTips": "Not yet authorized, please click the button to authorize first.<br/> After authorization, your identity will be used to submit the YAML file to the code repository. You need to have developer or higher permissions in the code repository.",
+  "withoutOauthCodelib": "The code library source supported by the current environment has not yet been connected to the PAC function, please consult us",
   "reExec": "Re-execute",
   "reDebug": "Re-debug",
   "pipelineConf": "Pipeline Configuration",
@@ -1568,5 +1570,6 @@
     "resetSuc": "Reset successful",
     "authTime": "Authorization Time" 
   },
-  "debugHint": "Debugging and execution do not share build numbers, but they share concurrency control. Debug records are only valid during the draft version debugging period and will be automatically cleared after the version is released."
+  "debugHint": "Debugging and execution do not share build numbers, but they share concurrency control. Debug records are only valid during the draft version debugging period and will be automatically cleared after the version is released.",
+  "templateRollbackBackTips": "The current pipeline is in constraint mode (template instance). You need to jump to the template to roll back the version."
 }

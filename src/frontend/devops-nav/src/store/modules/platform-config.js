@@ -1,11 +1,15 @@
 import { getPlatformConfig, setShortcutIcon } from '@blueking/platform-config'
+import createLocale from '../../../../locale'
+const { i18n } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
+const locale = i18n.locale.replace('_', '-')
+const messages = i18n.messages[locale]
 
 const state = () => ({
     platformInfo: {
-        name: '蓝盾',
-        nameEn: 'BLUEKING CI',
-        brandName: '腾讯蓝鲸智云',
-        brandNameEn: 'BlueKing',
+        name: (messages && messages.bkci) || '蓝盾',
+        nameEn: 'BK-CI',
+        brandName: (messages && messages.tencentBlueKing) || '蓝鲸智云',
+        brandNameEn: 'Tencent BlueKing',
         favicon: `${window.PUBLIC_URL_PREFIX}/static/favicon.ico`,
         version: window.BK_CI_VERSION,
         i18n: {}
@@ -31,7 +35,12 @@ const actions = {
             resp = await getPlatformConfig(config)
         }
         const { i18n, name, brandName } = resp
-        document.title = `${i18n.name || name} | ${i18n.brandName || brandName}`
+        const currentPage = window.currentPage
+        let platformTitle = `${i18n.name || name} | ${i18n.brandName || brandName}`
+        if (currentPage) {
+            platformTitle = `${currentPage.name} | ${platformTitle}`
+        }
+        document.title = platformTitle
         setShortcutIcon(resp.favicon)
         commit('setPlatformInfo', resp)
         return resp

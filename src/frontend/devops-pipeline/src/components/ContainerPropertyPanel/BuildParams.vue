@@ -127,7 +127,7 @@
                                                 :data-vv-scope="`param-${param.id}`"
                                                 :disabled="disabled"
                                                 :handle-change="(name, value) => handleUpdateParamId(name, value, index)"
-                                                v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(',')}`"
+                                                v-validate.initial="`required|paramsIdRule|unique:${validateParams.map(p => p.id).join(',')}`"
                                                 name="id"
                                                 :placeholder="$t('nameInputTips')"
                                                 :value="param.id"
