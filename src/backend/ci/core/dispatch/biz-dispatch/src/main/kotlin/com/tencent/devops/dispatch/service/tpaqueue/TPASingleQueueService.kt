@@ -57,7 +57,11 @@ class TPASingleQueueService @Autowired constructor(
     ): Boolean {
         if (data.dispatchType.isEnv()) {
             commonUtil.logWithAgentUrl(
-                data, TRY_AGENT_DISPATCH, arrayOf("[${agent.agentId}]${agent.hostname}/${agent.ip}"), agent.nodeId
+                data = data,
+                messageCode = TRY_AGENT_DISPATCH,
+                param = arrayOf("[${agent.agentId}]${agent.hostname}/${agent.ip}"),
+                nodeHashId = agent.nodeId,
+                agentHashId = agent.agentId
             )
         }
         val redisLock = ThirdPartyAgentLock(redisOperation, data.projectId, agent.agentId)

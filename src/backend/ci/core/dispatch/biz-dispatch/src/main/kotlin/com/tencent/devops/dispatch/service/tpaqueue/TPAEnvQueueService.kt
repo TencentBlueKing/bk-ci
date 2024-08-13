@@ -180,7 +180,8 @@ class ThirdPartyAgentEnvQueueService @Autowired constructor(
 
         val agentMap = context.agents.associateBy { it.agentId }
         data.ignoreEnvAgentIds.forEach {
-            commonUtil.logWithAgentUrl(data, BK_ENV_WORKER_ERROR_IGNORE, arrayOf(it), agentMap[it]?.nodeId)
+            val a = agentMap[it]
+            commonUtil.logWithAgentUrl(data, BK_ENV_WORKER_ERROR_IGNORE, arrayOf(it), a?.nodeId, a?.agentId)
         }
 
         val activeAgents = context.agents.filter { it.agentId !in data.ignoreEnvAgentIds }
@@ -434,7 +435,11 @@ class ThirdPartyAgentEnvQueueService @Autowired constructor(
             }
 
             commonUtil.logWithAgentUrl(
-                data, BK_ENV_DISPATCH_AGENT, arrayOf("[${agent.agentId}]${agent.hostname}/${agent.ip}"), agent.nodeId
+                data = data,
+                messageCode = BK_ENV_DISPATCH_AGENT,
+                param = arrayOf("[${agent.agentId}]${agent.hostname}/${agent.ip}"),
+                nodeHashId = agent.nodeId,
+                agentHashId = agent.agentId
             )
             return true
         }

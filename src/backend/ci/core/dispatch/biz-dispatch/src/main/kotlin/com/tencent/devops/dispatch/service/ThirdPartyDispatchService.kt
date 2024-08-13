@@ -100,12 +100,12 @@ class ThirdPartyDispatchService @Autowired constructor(
     private fun useNewQueue(projectId: String, pipelineId: String): Boolean {
         val v = redisOperation.hget(
             DISPATCH_QUEUE_GRAY_PROJECT_PIPELINE, projectId
-        )?.ifEmpty { return false } ?: return false
+        ) ?: return false
         if (v.isBlank()) {
             return true
         }
         val pipelines = v.split(";").toSet()
-        return projectId in pipelines
+        return pipelineId in pipelines
     }
 
     fun startUp(dispatchMessage: DispatchMessage) {
@@ -453,7 +453,8 @@ class ThirdPartyDispatchService @Autowired constructor(
             val data = ThirdPartyAgentDispatchData(dispatchMessage, dispatchType)
             val agentMap = activeAgents.associateBy { it.agentId }
             dispatchMessage.event.ignoreEnvAgentIds?.forEach {
-                commonUtil.logWithAgentUrl(data, BK_ENV_WORKER_ERROR_IGNORE, arrayOf(it), agentMap[it]?.nodeId)
+                val a = agentMap[it]
+                commonUtil.logWithAgentUrl(data, BK_ENV_WORKER_ERROR_IGNORE, arrayOf(it), a?.nodeId, a?.agentId)
             }
             jobEnvActiveAgents = activeAgents.filter { it.agentId !in dispatchMessage.event.ignoreEnvAgentIds!! }
             if (jobEnvActiveAgents.isEmpty()) {

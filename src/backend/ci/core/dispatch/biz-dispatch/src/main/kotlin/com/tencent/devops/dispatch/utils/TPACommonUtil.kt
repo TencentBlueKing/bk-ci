@@ -114,7 +114,7 @@ class TPACommonUtil @Autowired constructor(
         val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         val link = "$host/console/pipeline/${data.projectId}/$pipelineId/detail/$lockedBuildId"
         val msg = if (lockedBuildId != data.buildId) {
-            "$linkTip<a target='_blank' href='$link'>$lockedBuildId</a>"
+            "$linkTip <a target='_blank' href='$link'>$lockedBuildId</a>"
         } else {
             linkTip
         }
@@ -126,7 +126,8 @@ class TPACommonUtil @Autowired constructor(
         data: ThirdPartyAgentDispatchData,
         messageCode: String,
         param: Array<String>? = null,
-        nodeHashId: String?
+        nodeHashId: String?,
+        agentHashId: String?
     ) {
         val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         // 跨项目使用 agent
@@ -139,7 +140,7 @@ class TPACommonUtil @Autowired constructor(
         val msg = if (nodeHashId.isNullOrBlank()) {
             ""
         } else {
-            "<a target='_blank' href='$link'>$nodeHashId</a>"
+            " <a target='_blank' href='$link'>$agentHashId</a>"
         }
 
         logI18n(data, messageCode, param, suffixMsg = msg)
