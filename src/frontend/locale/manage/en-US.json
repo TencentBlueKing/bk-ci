@@ -218,7 +218,7 @@
     "刷新": "Refresh",
     "检测到以下授权将无法移交给X，请先前往「授权管理」单独处理": "The following authorizations cannot be transferred to {0}, please go to \"Authorization Management\" to handle it individually",
     "移交并移出": "Transfer and Remove",
-    "确认将组织移出本项目吗": "Confirm to remove the organization from this project?",
+    "确认将组织移出本项目吗": "Confirm to remove the organization from this project",
     "待移出组织": "Organizations to be removed",
     "正在校验授权": "Validating authorization",
     "已过期": "expired",
@@ -254,5 +254,6 @@
     "已过期，无需移交": "Expired, no need to transfer",
     "该用户已离职，无需续期": "The user has left the company, no need to renew",
     "同步成功": "Sync successfully",
-    "XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？": "All permissions of {0} have expired, no need for transfer. Are you sure you want to remove the user and clean up the expired permissions?"
+    "XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？": "All permissions of {0} have expired, no need for transfer. Are you sure you want to remove the user and clean up the expired permissions?",
+    "确定": "Confirm"
 }
