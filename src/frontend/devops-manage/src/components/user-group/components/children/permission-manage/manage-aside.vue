@@ -637,7 +637,7 @@ onUnmounted(() => {
   .text-tag {
     width: 100%;
     line-height: 30px;
-    padding-left: 10px;
+    padding-left: 5px;
     margin-bottom: 16px;
     background: #F0F8FF;
     border: 1px solid #C5DAFF;
@@ -646,7 +646,6 @@ onUnmounted(() => {
     .manage-icon-info-line{
       font-size: 14px;
       color: #3A84FF;
-      margin-right: 5px;
     }
 
     span {
