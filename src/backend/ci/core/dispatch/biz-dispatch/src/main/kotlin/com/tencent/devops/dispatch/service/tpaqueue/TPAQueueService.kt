@@ -268,7 +268,7 @@ class TPAQueueService @Autowired constructor(
             is QueueRetryException, is DispatchRetryMQException -> {
                 // 用时间做判断，避免 retryTime 的加减
                 val timeOut = data.queueTimeoutMinutes ?: 10
-                if (sqlData.createTime.plusMinutes(timeOut.toLong()) < LocalDateTime.now()) {
+                if (sqlData.createTime.plusMinutes(timeOut.toLong()) > LocalDateTime.now()) {
                     eventContext.addRetry(sqlData.recordId)
                     return
                 }
