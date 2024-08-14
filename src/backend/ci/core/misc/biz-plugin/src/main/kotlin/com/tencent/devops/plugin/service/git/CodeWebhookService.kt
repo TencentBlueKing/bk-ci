@@ -544,30 +544,23 @@ class CodeWebhookService @Autowired constructor(
                     val checkRunId = if (conclusion == null) {
                         val result = scmCheckService.addGithubCheckRuns(
                             projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
                             repositoryConfig = repositoryConfig,
                             name = record.checkRunName ?: "$pipelineName #$buildNum",
                             commitId = commitId,
                             detailUrl = detailUrl,
                             externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                             status = status,
-                            startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
-                                DateTimeFormatter.ISO_INSTANT
-                            ),
+                            startedAt = startedAt,
                             conclusion = conclusion,
-                            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(
-                                DateTimeFormatter.ISO_INSTANT
-                            )
+                            completedAt = completedAt,
+                            pipelineId = pipelineId,
+                            buildId = buildId
                         )
                         result.id
                     } else {
                         scmCheckService.updateGithubCheckRuns(
                             checkRunId = record.checkRunId,
                             projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            pipelineName = pipelineName,
                             repositoryConfig = repositoryConfig,
                             // 兼容历史数据
                             name = record.checkRunName ?: "$pipelineName #$buildNum",
@@ -575,13 +568,12 @@ class CodeWebhookService @Autowired constructor(
                             detailUrl = detailUrl,
                             externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                             status = status,
-                            startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
-                                DateTimeFormatter.ISO_INSTANT
-                            ),
+                            startedAt = startedAt,
                             conclusion = conclusion,
-                            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(
-                                DateTimeFormatter.ISO_INSTANT
-                            )
+                            completedAt = completedAt,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            pipelineName = pipelineName
                         )
                         record.checkRunId
                     }

@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.commit.check
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -81,7 +82,6 @@ import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @Service
 @Suppress("ALL")
@@ -235,7 +235,7 @@ class CodeWebhookService @Autowired constructor(
                                     repositoryConfig = repositoryConfig,
                                     commitId = commitId,
                                     status = GITHUB_CHECK_RUNS_STATUS_COMPLETED,
-                                    startedAt = null,
+                                    startedAt = (event.startTime ?: 0L) / 1000, // 毫秒数 -> 秒数
                                     conclusion = if (buildStatus == BuildStatus.SUCCEED) {
                                         GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
                                     } else {
@@ -336,6 +336,7 @@ class CodeWebhookService @Autowired constructor(
                 }
 
                 else -> {
+                    logger.warn("fail to consume git event", ignored)
                     throw ignored
                 }
             }
@@ -493,6 +494,10 @@ class CodeWebhookService @Autowired constructor(
             val completedAt = event.completedAt?.let {
                 LocalDateTime.ofInstant(Instant.ofEpochSecond(it), ZoneId.systemDefault())
             }
+            logger.info(
+                "consume github pr event|startAt[${DateTimeUtil.toDateTime(startedAt)}]|" +
+                        "completedAt[${DateTimeUtil.toDateTime(completedAt)}]"
+            )
             addGithubPullRequestCheck(
                 userId = event.userId,
                 projectId = event.projectId,
@@ -520,6 +525,10 @@ class CodeWebhookService @Autowired constructor(
                             )
                         )
                     )
+                }
+                else -> {
+                    logger.warn("fail to consume github pr event", ignored)
+                    throw ignored
                 }
             }
         }
@@ -590,6 +599,7 @@ class CodeWebhookService @Autowired constructor(
                     context = name,
                     targetBranch = targetBranch
                 )
+                logger.info("get github commit check record[$record]")
                 if (record == null) {
                     val result = scmCheckService.addGithubCheckRuns(
                         projectId = projectId,
@@ -599,10 +609,13 @@ class CodeWebhookService @Autowired constructor(
                         detailUrl = detailUrl,
                         externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                         status = status,
-                        startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
+                        startedAt = startedAt,
                         conclusion = conclusion,
-                        completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT)
+                        completedAt = completedAt,
+                        pipelineId = pipelineId,
+                        buildId = buildId
                     )
+                    logger.info("get github commit check run info[$result]")
                     addGitCheckCommitRecord(
                         pipelineId = pipelineId,
                         buildNum = buildNum.toInt(),
@@ -624,13 +637,11 @@ class CodeWebhookService @Autowired constructor(
                                 detailUrl = detailUrl,
                                 externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                                 status = status,
-                                startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                ),
+                                startedAt = startedAt,
                                 conclusion = conclusion,
-                                completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                )
+                                completedAt = completedAt,
+                                pipelineId = pipelineId,
+                                buildId = buildId
                             )
                             result.id
                         } else {
@@ -644,13 +655,12 @@ class CodeWebhookService @Autowired constructor(
                                 detailUrl = detailUrl,
                                 externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                                 status = status,
-                                startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                ),
+                                startedAt = startedAt,
                                 conclusion = conclusion,
-                                completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                )
+                                completedAt = completedAt,
+                                pipelineId = pipelineId,
+                                buildId = buildId,
+                                pipelineName = pipelineName
                             )
                             record.checkRunId
                         }
@@ -854,9 +864,9 @@ class CodeWebhookService @Autowired constructor(
                         status = GITHUB_CHECK_RUNS_STATUS_COMPLETED,
                         startedAt = null,
                         conclusion = GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS,
-                        completedAt = LocalDateTime.now().atZone(ZoneId.systemDefault())?.format(
-                            DateTimeFormatter.ISO_INSTANT
-                        )
+                        completedAt = LocalDateTime.now(),
+                        buildId = buildId,
+                        pipelineId = pipelineId
                     )
                 }
 
