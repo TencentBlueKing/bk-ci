@@ -1098,20 +1098,6 @@ class GitProxyTGitService @Autowired constructor(
         managers: MutableSet<String>?
     ) {
         try {
-//            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
-//                SendNotifyMessageTemplateRequest(
-//                    templateCode = tGitConfig.expiredPermTmpCode,
-//                    receivers = mutableSetOf(userId),
-//                    notifyType = mutableSetOf(NotifyType.EMAIL.name),
-//                    bodyParams = mapOf(
-//                        "userId" to userId,
-//                        "urls" to urls.joinToString(separator = "\n"),
-//                        "projectId" to projectId,
-//                        "projectName" to projectName
-//                    ),
-//                    cc = managers
-//                )
-//            )
             bkitsmService.createCheckTicket(projectId, "devops", userId, urls)
         } catch (e: Exception) {
             logger.error("$LOG_UPDATE_TGIT_ACL_TAG|sendCheckNotify|$userId|$projectId|$projectName|error", e)
