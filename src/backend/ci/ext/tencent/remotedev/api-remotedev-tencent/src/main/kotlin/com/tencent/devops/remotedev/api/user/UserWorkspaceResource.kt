@@ -282,15 +282,6 @@ interface UserWorkspaceResource {
         workspaceName: String
     ): Result<Boolean>
 
-    @Operation(summary = "校验用户是否能创建工作空间")
-    @GET
-    @Path("/check_user_create")
-    fun checkUserCreate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<Boolean>
-
     @Operation(summary = "获取指定工作空间详情")
     @GET
     @Path("/start_cloud_workspace_detail")

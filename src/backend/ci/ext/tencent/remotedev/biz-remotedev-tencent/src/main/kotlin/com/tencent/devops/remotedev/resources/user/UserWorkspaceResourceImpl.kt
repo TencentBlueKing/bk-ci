@@ -210,10 +210,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(permissionService.checkUserPermission(userId, workspaceName))
     }
 
-    override fun checkUserCreate(userId: String): Result<Boolean> {
-        return Result(permissionService.checkUserCreate(userId))
-    }
-
     @AuditEntry(actionId = ActionId.CGS_VIEW)
     override fun startCloudWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceStartCloudDetail?> {
         return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName))

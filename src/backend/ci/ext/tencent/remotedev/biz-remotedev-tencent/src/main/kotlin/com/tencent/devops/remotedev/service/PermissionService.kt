@@ -270,11 +270,6 @@ class PermissionService @Autowired constructor(
         return true
     }
 
-    fun checkUserCreate(userId: String): Boolean {
-        whiteListService.windowsGpuCheck(userId, 1)
-        return true
-    }
-
     /**
      * 检查工蜂接口是否返回401，针对这种情况，抛出OAUTH_ILLEGAL 让前端跳转去重新授权
      */
