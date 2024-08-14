@@ -255,7 +255,8 @@ class PermissionService @Autowired constructor(
         val key = initRedisUser(
             UserOnePassword(
                 userId, workspaceName, projectId
-            ), expiredInSecond
+            ),
+                expiredInSecond
         )
         logger.info("start init1Password|$userId|$workspaceName|$key")
         return URLEncoder.encode(key, "UTF-8")
