@@ -30,7 +30,6 @@ package com.tencent.devops.process.engine.service.record
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -414,7 +413,6 @@ class TaskBuildRecordService(
             val runCondition = buildTask.additionalOptions?.runCondition
             val containPostTaskFlag = buildRecordContainer.containPostTaskFlag
             val containerId = buildRecordContainer.containerId
-            val containerType = buildRecordContainer.containerType
             // 判断取消的task任务对应的container是否包含post任务
             val cancelTaskPostFlag = buildStatus == BuildStatus.CANCELED && containPostTaskFlag == true
             val currentTaskSeq = recordTask.taskSeq
@@ -436,12 +434,9 @@ class TaskBuildRecordService(
                     var endTaskSeq = startTaskSeq
                     recordPostTasks.forEach { recordPostTask ->
                         // 计算post父任务序号
-                        val parentElementJobIndex = recordPostTask.elementPostInfo!!.parentElementJobIndex
-                        val parentTaskSeq = if (containerType == NormalContainer.classType) {
-                            parentElementJobIndex + 1
-                        } else {
-                            parentElementJobIndex + 2
-                        }
+                        val parentElementJobIndex =
+                            recordPostTask.elementPostInfo?.parentElementJobIndex ?: return@forEach
+                        val parentTaskSeq = parentElementJobIndex + 2
                         // 判断父任务的序号是否在取消任务之后
                         if (parentTaskSeq <= currentTaskSeq) {
                             endTaskSeq = recordPostTask.taskSeq - 1
@@ -474,6 +469,15 @@ class TaskBuildRecordService(
                         stepId = buildTask.stepId
                     )
                 )
+                updateTaskStatus(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    executeCount = executeCount,
+                    buildStatus = buildStatus,
+                    operation = "taskSkip#$taskId"
+                )
             }
         }
         return pipelineTaskStatusInfos
@@ -485,13 +489,12 @@ class TaskBuildRecordService(
         endTaskSeq: Int,
         pipelineTaskStatusInfos: MutableList<PipelineTaskStatusInfo>
     ) {
-        if (endTaskSeq <= startTaskSeq) {
+        if (endTaskSeq < startTaskSeq) {
             return
         }
         val projectId = taskBuildEndParam.projectId
         val containerId = taskBuildEndParam.containerId
         val buildId = taskBuildEndParam.buildId
-        val taskId = taskBuildEndParam.taskId
         val executeCount = taskBuildEndParam.executeCount
         // 把post任务和取消任务之间的任务置为UNEXEC状态
         val buildTasks = pipelineBuildTaskDao.getTasksInCondition(
@@ -503,10 +506,16 @@ class TaskBuildRecordService(
             startTaskSeq = startTaskSeq,
             endTaskSeq = endTaskSeq
         )
+        var unExecTaskIds: MutableSet<String>? = null
         buildTasks.forEach { pipelineBuildTask ->
             val additionalOptions = pipelineBuildTask.additionalOptions
             if (!pipelineBuildTask.status.isFinish() && additionalOptions?.elementPostInfo == null) {
+                if (unExecTaskIds == null) {
+                    unExecTaskIds = mutableSetOf()
+                }
                 val unExecBuildStatus = BuildStatus.UNEXEC
+                val taskId = pipelineBuildTask.taskId
+                unExecTaskIds?.add(taskId)
                 pipelineTaskStatusInfos.add(
                     PipelineTaskStatusInfo(
                         taskId = taskId,
@@ -518,6 +527,17 @@ class TaskBuildRecordService(
                     )
                 )
             }
+        }
+        if (!unExecTaskIds.isNullOrEmpty()) {
+            recordTaskDao.updateRecordStatus(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = taskBuildEndParam.pipelineId,
+                buildId = buildId,
+                executeCount = executeCount,
+                buildStatus = BuildStatus.UNEXEC,
+                taskIds = unExecTaskIds
+            )
         }
     }
 

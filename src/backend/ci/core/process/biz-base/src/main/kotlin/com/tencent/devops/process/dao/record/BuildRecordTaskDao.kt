@@ -145,7 +145,8 @@ class BuildRecordTaskDao {
         executeCount: Int,
         buildStatus: BuildStatus,
         stageId: String? = null,
-        containerId: String? = null
+        containerId: String? = null,
+        taskIds: Set<String>? = null
     ) {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val update = dslContext.update(this)
@@ -158,6 +159,7 @@ class BuildRecordTaskDao {
                 )
             stageId?.let { update.and(STAGE_ID.eq(stageId)) }
             containerId?.let { update.and(CONTAINER_ID.eq(containerId)) }
+            taskIds?.let { update.and(TASK_ID.`in`(taskIds)) }
             update.execute()
         }
     }
