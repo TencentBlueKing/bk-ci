@@ -334,37 +334,39 @@ class AuthResourceGroupDao {
                 .fetch()
             val result = mutableListOf<AuthResourceGroup>()
             records.forEach {
-                try {
-                    result.add(convert(it))
-                } catch (ignore: Exception) {
-                    // 在同步iam组到数据库时，可能会出现少量异常数据，其relation_id为null的情况，导致转化为Int类型时报错。
-                    logger.warn(
-                        "convert Group Record failed!" +
-                            "|${it.projectCode}|${it.resourceType}|${it.resourceCode}", ignore
-                    )
-                    return@forEach
+                val authResourceGroup = convert(it)
+                if (authResourceGroup != null) {
+                    result.add(authResourceGroup)
                 }
             }
             result
         }
     }
 
-    fun convert(record: TAuthResourceGroupRecord): AuthResourceGroup {
-        return with(record) {
-            AuthResourceGroup(
-                id = id,
-                projectCode = projectCode,
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                resourceName = resourceName,
-                iamResourceCode = iamResourceCode,
-                groupCode = groupCode,
-                groupName = groupName,
-                defaultGroup = defaultGroup,
-                relationId = relationId.toInt(),
-                createTime = createTime,
-                updateTime = updateTime
-            )
+    fun convert(record: TAuthResourceGroupRecord): AuthResourceGroup? {
+        // 同步iam数据时，可能会出现relationId为null的情况，此时转Int类型，会有异常
+        with(record) {
+            return try {
+                AuthResourceGroup(
+                    id = id,
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = resourceName,
+                    iamResourceCode = iamResourceCode,
+                    groupCode = groupCode,
+                    groupName = groupName,
+                    defaultGroup = defaultGroup,
+                    relationId = relationId.toInt(),
+                    createTime = createTime,
+                    updateTime = updateTime
+                )
+            } catch (ignore: Exception) {
+                logger.warn(
+                    "convert Group Record failed!|${projectCode}|${resourceType}|${resourceCode}", ignore
+                )
+                null
+            }
         }
     }
 
