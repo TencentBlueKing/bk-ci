@@ -31,7 +31,11 @@
             <div class="panel-content">
                 <p>
                     <label class="block-row-label">{{ $t('delegation.proxyHolderForExecutionPermissions') }}</label>
-                    <span class="block-row-value reset-row">
+                    <span
+                        :class="{
+                            'block-row-value': true,
+                            'reset-row': !resourceAuthData.executePermission
+                        }">
                         <span
                             :class="{
                                 'name': true,
@@ -44,7 +48,7 @@
                         >
                             {{ resourceAuthData.handoverFrom }}
                         </span>
-                        <bk-tag theme="danger" v-if="!resourceAuthData.executePermission">{{ $t('delegation.expired') }}</bk-tag>
+                        <bk-tag theme="danger" v-if="!resourceAuthData?.executePermission && !isLoading">{{ $t('delegation.expired') }}</bk-tag>
                         <span
                             class="refresh-auth"
                             v-perm="{
@@ -120,6 +124,7 @@
         },
         data () {
             return {
+                isLoading: false,
                 showResetDialog: false,
                 resetLoading: false,
                 resourceAuthData: {}
@@ -160,6 +165,7 @@
             },
             async fetchResourceAuth () {
                 try {
+                    this.isLoading = true
                     this.resourceAuthData = await this.getResourceAuthorization({
                         projectId: this.projectId,
                         resourceType: 'pipeline',
@@ -167,6 +173,8 @@
                     })
                 } catch (e) {
                     console.error(e)
+                } finally {
+                    this.isLoading = false
                 }
             },
             async handleReset () {
