@@ -447,22 +447,6 @@ class CreateControl @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.CGS_CREATE_CONTENT
     )
-    @Deprecated("待废弃")
-    fun createWorkspace(
-        userId: String,
-        bkTicket: String,
-        projectId: String,
-        workspaceCreate: WorkspaceCreate
-    ): WorkspaceResponse {
-        logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
-        permissionService.checkUserCreate(userId)
-
-        throw ErrorCodeException(
-            errorCode = ErrorCodeEnum.CLIENT_NEED_UPDATED.errorCode,
-            params = arrayOf(redisCache.get(RedisKeys.REDIS_CLIENT_INSTALL_URL).toString()),
-            defaultMessage = ErrorCodeEnum.CLIENT_NEED_UPDATED.formatErrorMessage
-        )
-    }
 
     fun afterCreateWorkspace(event: RemoteDevUpdateEvent) {
         val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = event.workspaceName)

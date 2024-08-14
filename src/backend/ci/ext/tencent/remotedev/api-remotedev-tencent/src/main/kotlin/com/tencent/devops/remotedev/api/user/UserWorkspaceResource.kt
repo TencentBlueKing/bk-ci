@@ -70,22 +70,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserWorkspaceResource {
-    @Operation(summary = "创建新的工作空间")
-    @POST
-    @Path("/")
-    fun createWorkspace(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "bkTicket", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
-        bkTicket: String,
-        @Parameter(description = "projectId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String,
-        @Parameter(description = "工作空间描述", required = true)
-        workspace: WorkspaceCreate
-    ): Result<WorkspaceResponse>
 
     @Operation(summary = "获取用户工作空间列表")
     @GET

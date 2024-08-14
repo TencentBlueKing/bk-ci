@@ -74,16 +74,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val deleteControl: DeleteControl
 ) : UserWorkspaceResource {
 
-    @AuditEntry(actionId = ActionId.CGS_CREATE)
-    override fun createWorkspace(
-        userId: String,
-        bkTicket: String,
-        projectId: String,
-        workspace: WorkspaceCreate
-    ): Result<WorkspaceResponse> {
-        return Result(createControl.createWorkspace(userId, bkTicket, projectId, workspace))
-    }
-
     @AuditEntry(actionId = ActionId.CGS_START)
     override fun startWorkspace(
         userId: String,
