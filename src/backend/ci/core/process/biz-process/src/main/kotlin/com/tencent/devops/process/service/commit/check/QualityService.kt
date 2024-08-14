@@ -37,7 +37,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.plugin.constant.PluginMessageCode
 import com.tencent.devops.process.api.service.ServiceVarResource
-import com.tencent.devops.process.pojo.mq.commit.check.TGitCommitCheckEvent
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
