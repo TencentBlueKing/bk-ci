@@ -1,11 +1,6 @@
 <template>
     <div v-if="execDetail" class="pipeline-detail-header">
-        <pipeline-bread-crumb :show-record-entry="isDebugExec" :pipeline-name="execDetail?.pipelineName">
-            <span class="build-num-switcher-wrapper">
-                {{ $t(isDebugExec ? 'draftExecDetail' : 'pipelinesDetail') }}
-                <build-num-switcher v-bind="buildNumConf" />
-            </span>
-        </pipeline-bread-crumb>
+        <pipeline-bread-crumb :show-record-entry="isDebugExec" :pipeline-name="pipelineInfo?.pipelineName" />
         <aside :class="['pipeline-detail-right-aside', {
             'is-debug-exec-detail': isDebugExec
         }]">
@@ -88,14 +83,12 @@
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import BuildNumSwitcher from './BuildNumSwitcher'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     import ReleaseButton from './ReleaseButton'
 
     export default {
         components: {
             PipelineBreadCrumb,
-            BuildNumSwitcher,
             ReleaseButton
         },
         data () {
@@ -259,11 +252,6 @@
     height: 32px;
     width: 1px;
     background: #d8d8d8;
-  }
-  .build-num-switcher-wrapper {
-    display: grid;
-    grid-auto-flow: column;
-    grid-gap: 6px;
   }
   .pipeline-detail-right-aside {
     display: grid;
