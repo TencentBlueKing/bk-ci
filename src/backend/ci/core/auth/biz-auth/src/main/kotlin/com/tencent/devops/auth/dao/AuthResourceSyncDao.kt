@@ -37,7 +37,7 @@ import java.time.LocalDateTime
 @Repository
 class AuthResourceSyncDao {
 
-    fun create(
+    fun createOrUpdate(
         dslContext: DSLContext,
         projectCode: String,
         status: Int

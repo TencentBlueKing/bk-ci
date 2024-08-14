@@ -176,7 +176,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 val startEpoch = System.currentTimeMillis()
                 try {
                     logger.info("sync group and member|start:$projectCode")
-                    authResourceSyncDao.create(
+                    authResourceSyncDao.createOrUpdate(
                         dslContext = dslContext,
                         projectCode = projectCode,
                         status = AuthMigrateStatus.PENDING.value
