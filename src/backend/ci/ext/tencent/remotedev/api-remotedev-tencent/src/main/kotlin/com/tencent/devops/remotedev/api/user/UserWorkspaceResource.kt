@@ -248,25 +248,6 @@ interface UserWorkspaceResource {
         gitType: RemoteDevGitType = RemoteDevGitType.GIT
     ): Result<List<String>>
 
-    @Operation(summary = "返回目标代码库devfile路径")
-    @GET
-    @Path("/repository_devfile")
-    fun checkDevfile(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "代码库项目全路径", required = true)
-        @QueryParam("pathWithNamespace")
-        pathWithNamespace: String,
-        @Parameter(description = "分支", required = true)
-        @QueryParam("branch")
-        branch: String,
-        @Parameter(description = "git 类型", required = true)
-        @QueryParam("gitType")
-        @DefaultValue("GIT")
-        gitType: RemoteDevGitType = RemoteDevGitType.GIT
-    ): Result<List<String>>
-
     @Operation(summary = "根据用户ID判断用户是否已经oauth认证")
     @GET
     @Path("/isOauth")

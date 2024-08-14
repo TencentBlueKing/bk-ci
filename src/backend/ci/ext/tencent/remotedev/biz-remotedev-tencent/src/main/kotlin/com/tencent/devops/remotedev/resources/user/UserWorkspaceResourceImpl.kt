@@ -190,22 +190,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun checkDevfile(
-        userId: String,
-        pathWithNamespace: String,
-        branch: String,
-        gitType: RemoteDevGitType
-    ): Result<List<String>> {
-        return Result(
-            workspaceService.checkDevfile(
-                userId = userId,
-                pathWithNamespace = pathWithNamespace,
-                branch = branch,
-                gitType = gitType
-            )
-        )
-    }
-
     override fun isOAuth(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
