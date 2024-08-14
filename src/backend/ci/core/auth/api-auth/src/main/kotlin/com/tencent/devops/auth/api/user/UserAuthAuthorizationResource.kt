@@ -138,6 +138,4 @@ interface UserAuthAuthorizationResource {
         @Parameter(description = "资源授权交接条件实体", required = true)
         condition: ResetAllResourceAuthorizationReq
     ): Result<List<ResourceTypeInfoVo>>
-
-
 }
