@@ -363,7 +363,7 @@ class AuthResourceGroupDao {
                 )
             } catch (ignore: Exception) {
                 logger.warn(
-                    "convert Group Record failed!|${projectCode}|${resourceType}|${resourceCode}", ignore
+                    "convert Group Record failed!|$projectCode|$resourceType|$resourceCode", ignore
                 )
                 null
             }
