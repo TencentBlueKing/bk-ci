@@ -225,7 +225,7 @@
     }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
     .delegation-permission {
         padding: 24px;
         font-size: 12px;
@@ -251,6 +251,15 @@
         .highlight {
             color: #FF9C01;
             font-weight: 700;
+        }
+        .reset-row {
+            position: relative;
+            top: -4px;
+            .not-permission {
+                color: #C4C6CC;
+                text-decoration: line-through;
+                margin-right: 5px;
+            }
         }
     }
     .panel-content {
@@ -314,15 +323,6 @@
             .btn {
                 width: 88px;
             }
-        }
-    }
-    .reset-row {
-        position: relative;
-        top: -4px;
-        .not-permission {
-            color: #C4C6CC;
-            text-decoration: line-through;
-            margin-right: 5px;
         }
     }
 </style>
