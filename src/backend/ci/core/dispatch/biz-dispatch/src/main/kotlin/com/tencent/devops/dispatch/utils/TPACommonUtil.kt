@@ -10,6 +10,7 @@ import com.tencent.devops.dispatch.pojo.QueueFailureException
 import com.tencent.devops.dispatch.pojo.QueueRetryException
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.process.engine.common.VMUtils
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -199,5 +200,10 @@ class TPACommonUtil @Autowired constructor(
                 errorMessage = errMsg
             )
         }
+
+        private const val TPA_QUEUE_LOG_TAG = "tpa_queue_log_tag"
+        // 打印带特定tag的日志
+        fun Logger.tagError(msg: String) = this.error("$TPA_QUEUE_LOG_TAG$msg")
+        fun Logger.tagError(msg: String, o: Any) = this.error("$TPA_QUEUE_LOG_TAG$msg", o)
     }
 }

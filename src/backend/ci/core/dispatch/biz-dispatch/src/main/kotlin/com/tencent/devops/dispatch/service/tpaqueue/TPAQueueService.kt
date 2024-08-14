@@ -28,6 +28,7 @@ import com.tencent.devops.dispatch.pojo.TPAQueueEvent
 import com.tencent.devops.dispatch.pojo.TPAQueueEventContext
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentSqlQueueType
 import com.tencent.devops.dispatch.utils.TPACommonUtil
+import com.tencent.devops.dispatch.utils.TPACommonUtil.Companion.tagError
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentQueueEnvLock
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
@@ -83,7 +84,7 @@ class TPAQueueService @Autowired constructor(
     /**
      * 因为每个消费消息的线程数量有限制，如果线程慢了，其他消息不会消失，只会等待消费
      * 所以生产和消费共用一把锁，这样才可以做到每次只有一个消息在消费
-     * TODO: 还需要再想想看看，比如 uuid 一直用会不会重复，把 error 日志汇总下方便告警
+     * TODO: 耗时上报 BuildTimestampType
      */
     private fun dispatch(event: TPAQueueEvent) {
         logger.info("queue_dispatch|${event.toLog()}")
@@ -114,7 +115,7 @@ class TPAQueueService @Autowired constructor(
             send(event)
         } catch (e: Throwable) {
             // 只可能是发送消息错误或者抓到的异常处理逻辑错误，但是为了防止没解锁
-            logger.error("dispatch|${event.toLog()}|error", e)
+            logger.tagError("dispatch|send|${event.toLog()}|error", e)
             lock.unlock()
         }
     }
@@ -164,7 +165,7 @@ class TPAQueueService @Autowired constructor(
             }
         } catch (e: Throwable) {
             // 只可能是Sql错误或者抓到的异常处理逻辑错误，但是为了防止丢失消息，还是抓一下重发
-            logger.error("doQueue|${event.toLog()}|error", e)
+            logger.tagError("doQueue|fetchProjectDataCount|${event.toLog()}|error", e)
             dispatch(event)
         }
     }
@@ -190,7 +191,7 @@ class TPAQueueService @Autowired constructor(
             tpaQueueDao.addRetryTimeByIds(dslContext, eventContext.needRetryRecord)
         } catch (e: Throwable) {
             // 只可能是Sql错误或者抓到的异常处理逻辑错误，但是为了防止丢失消息，还是抓一下重发
-            logger.error("doEnvQueue|${event.toLog()}|error", e)
+            logger.tagError("inQueue|fetchProjectData|${event.toLog()}|error", e)
             dispatch(event)
         }
     }
@@ -329,7 +330,7 @@ class TPAQueueService @Autowired constructor(
             }
 
             else -> {
-                logger.error("doEnvQueue|unknowError|${data.toLog()}", e)
+                logger.tagError("queueEnd|unKnowError|${data.toLog()}", e)
                 onFailure(
                     data = data,
                     exception = QueueFailureException(
@@ -364,7 +365,7 @@ class TPAQueueService @Autowired constructor(
                 errorMsg = exception.formatErrorMessage
             )
         } catch (ignore: ClientException) {
-            logger.error("SystemErrorLogMonitor|onContainerFailure|${data.toLog()}|error=$exception")
+            logger.tagError("onContainerFailure|setVMStatus|${data.toLog()}|error=$exception")
         }
         DispatchLogRedisUtils.removeRedisExecuteCount(data.buildId)
     }

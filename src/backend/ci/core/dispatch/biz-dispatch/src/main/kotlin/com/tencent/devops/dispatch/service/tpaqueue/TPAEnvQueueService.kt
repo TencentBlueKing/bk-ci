@@ -26,6 +26,7 @@ import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.TPAQueueEventContext
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.utils.TPACommonUtil
+import com.tencent.devops.dispatch.utils.TPACommonUtil.Companion.tagError
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
@@ -321,7 +322,7 @@ class ThirdPartyAgentEnvQueueService @Autowired constructor(
 
         if (!data.dispatchType.isEnv()) {
             // 理论上不可能但是逻辑上有可能所以打印日志切不进行选取
-            logger.error("PickupAgentCheck|${data.toLog()}|not env")
+            logger.tagError("PickupAgentCheck|not env|${data.toLog()}")
             return false
         }
 

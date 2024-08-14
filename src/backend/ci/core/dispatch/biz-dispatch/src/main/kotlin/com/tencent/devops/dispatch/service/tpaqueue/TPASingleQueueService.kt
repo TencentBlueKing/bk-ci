@@ -14,6 +14,7 @@ import com.tencent.devops.dispatch.pojo.QueueDataContext
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.utils.TPACommonUtil
+import com.tencent.devops.dispatch.utils.TPACommonUtil.Companion.tagError
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
@@ -43,7 +44,7 @@ class TPASingleQueueService @Autowired constructor(
         val data = dataContext.data
         val agent = dataContext.buildAgent ?: run {
             // 理论上不可能但是逻辑上可能所以加校验
-            logger.error("GenAgentBuildCheck|${data.toLog()}|build agent is null")
+            logger.tagError("genAgentBuild|build agent is null|${data.toLog()}")
             return false
         }
 
@@ -126,7 +127,7 @@ class TPASingleQueueService @Autowired constructor(
                     )
                 }
             } catch (e: Exception) {
-                logger.error("agentInQueue|${data.toLog()}|setContextVar|error", e)
+                logger.tagError("agentInQueue|${data.toLog()}|setContextVar|error", e)
             }
         } else {
             val lockedBuildId = redisOperation.get(lockKey)
@@ -247,7 +248,7 @@ class TPASingleQueueService @Autowired constructor(
                 )
             )
         } catch (e: Exception) {
-            logger.error("inQueue|${data.toLog()}|setContextVar|error", e)
+            logger.tagError("inQueue|${data.toLog()}|setContextVar|error", e)
         }
     }
 
