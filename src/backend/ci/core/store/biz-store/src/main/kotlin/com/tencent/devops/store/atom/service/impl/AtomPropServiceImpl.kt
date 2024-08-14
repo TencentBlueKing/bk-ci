@@ -82,7 +82,7 @@ class AtomPropServiceImpl @Autowired constructor(
         val testAtoms = storeProjectRelDao.getTestProjectCodeStoreCodes(
             dslContext = dslContext,
             storeCode = atomCodes,
-            storeType = StoreTypeEnum.IMAGE,
+            storeType = StoreTypeEnum.ATOM,
             projectCode = projectCode
         )
         if (atomPropMap == null) {
