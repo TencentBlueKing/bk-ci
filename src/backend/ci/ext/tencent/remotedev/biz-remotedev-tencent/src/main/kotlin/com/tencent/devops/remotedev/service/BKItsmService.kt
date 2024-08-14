@@ -54,7 +54,8 @@ class BKItsmService @Autowired constructor(
                     "key" to "tgit_ids_no_url",
                     "value" to tData.map { it.key.toString() }.toSet().joinToString(";")
                 )
-            )
+            ),
+            bkConfig.tgitLinkServiceId!!
         )
     }
 
@@ -82,17 +83,18 @@ class BKItsmService @Autowired constructor(
                 "value" to urls.joinToString("\n")
             )
         )
-        createTicket(projectId, creator, fields)
+        createTicket(projectId, creator,fields, bkConfig.dailyCheckServiceId!!)
     }
 
     fun createTicket(
         projectId: String,
         creator: String,
-        fields: List<Map<String, String>>
+        fields: List<Map<String, String>>,
+        serviceId: Int
     ): String {
         val url = "${bkConfig.itsmHost}/v2/itsm/create_ticket"
         val body = BKItsmCreateTicketReq(
-            serviceId = bkConfig.tgitLinkServiceId!!,
+            serviceId = serviceId,
             creator = creator,
             fields = fields
         )
