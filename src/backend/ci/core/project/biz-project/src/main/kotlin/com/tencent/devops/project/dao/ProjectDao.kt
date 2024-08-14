@@ -187,7 +187,8 @@ class ProjectDao {
                     if (routerTag == AuthSystemType.RBAC_AUTH_TYPE) {
                         conditions.add(
                             ROUTER_TAG.like("%${projectConditionDTO.routerTag!!.value}%")
-                                .or(ROUTER_TAG.like("%devx%")).or(ROUTER_TAG.isNull())
+                                .or(ROUTER_TAG.like("%devx%"))
+                                .let { if (includeNullRouterTag == true) it.or(ROUTER_TAG.isNull()) else it }
                         )
                     } else {
                         conditions.add(
@@ -621,6 +622,7 @@ class ProjectDao {
                                     it.orderBy(DSL.field("CONVERT({0} USING GBK)", PROJECT_NAME).desc())
                                 }
                             }
+
                             ProjectSortType.ENGLISH_NAME -> {
                                 if (collation == ProjectCollation.DEFAULT || collation == ProjectCollation.ASC) {
                                     it.orderBy(ENGLISH_NAME.asc())
@@ -628,6 +630,7 @@ class ProjectDao {
                                     it.orderBy(ENGLISH_NAME.desc())
                                 }
                             }
+
                             else -> {
                                 it
                             }
