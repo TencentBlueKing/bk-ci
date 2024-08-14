@@ -51,8 +51,20 @@ interface PermissionAuthorizationService {
     fun getResourceAuthorization(
         projectCode: String,
         resourceType: String,
-        resourceCode: String
+        resourceCode: String,
+        executePermissionCheck: Boolean = false
     ): ResourceAuthorizationResponse
+
+    /**
+     * 当移出用户组时做授权检查
+     */
+    fun checkAuthorizationWhenRemoveGroupMember(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        memberId: String
+    ): Boolean
 
     /**
      * 获取项目资源授予记录--根据条件
