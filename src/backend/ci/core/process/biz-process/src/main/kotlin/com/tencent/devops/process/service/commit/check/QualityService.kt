@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 class QualityService @Autowired constructor(
     private val client: Client,
