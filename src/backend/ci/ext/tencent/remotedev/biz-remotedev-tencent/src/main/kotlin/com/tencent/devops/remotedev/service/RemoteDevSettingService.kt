@@ -31,8 +31,6 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.ci.UserUtil
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.pojo.OPUserSetting
@@ -42,9 +40,6 @@ import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
-import com.tencent.devops.remotedev.service.transfer.GitTransferService
-import com.tencent.devops.remotedev.service.transfer.GithubTransferService
-import com.tencent.devops.remotedev.service.transfer.TGitTransferService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,12 +47,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class RemoteDevSettingService @Autowired constructor(
-    private val client: Client,
     private val dslContext: DSLContext,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val gitTransferService: GitTransferService,
-    private val tGitTransferService: TGitTransferService,
-    private val githubTransferService: GithubTransferService,
     private val redisCacheService: RedisCacheService,
     private val whiteListService: WhiteListService,
     private val taiClient: TaiClient
@@ -70,25 +61,7 @@ class RemoteDevSettingService @Autowired constructor(
     fun getRemoteDevSettings(userId: String): RemoteDevSettings {
         logger.info("$userId get remote dev setting")
         val setting = remoteDevSettingDao.fetchOneSetting(dslContext, userId)
-
-        if (setting.projectId.isBlank()) {
-            kotlin.runCatching {
-                client.get(ServiceTxProjectResource::class).getRemoteDevUserProject(userId)
-            }.onFailure { logger.warn("create user project fail ${it.message}", it) }.getOrNull().let {
-                if (it?.data == null) {
-                    logger.warn("create user project fail ${it?.message}")
-                }
-                remoteDevSettingDao.updateProjectId(dslContext, userId, it?.data?.englishName ?: "")
-                setting.projectId = it?.data?.englishName ?: ""
-            }
-        }
-
-        return setting.copy(
-            envsForFile = emptyList(),
-            gitAttached = kotlin.runCatching { gitTransferService.getAndCheckOauthToken(userId) }.isSuccess,
-            tGitAttached = kotlin.runCatching { tGitTransferService.getAndCheckOauthToken(userId) }.isSuccess,
-            githubAttached = kotlin.runCatching { githubTransferService.getAndCheckOauthToken(userId) }.isSuccess
-        )
+        return setting
     }
 
     fun userWinTimeLeft(userId: String): Int {
