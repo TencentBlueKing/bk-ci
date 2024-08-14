@@ -58,6 +58,7 @@ spec:
                 -H 'Content-Type: application/json' \
                 -d '{
                 "resourceType": "pipeline",
+                "includeNullRouterTag": true,
                 "migrateProjectResource": true,
                 "migrateProjectDefaultGroup": true,
                 "migrateOtherResource": true
