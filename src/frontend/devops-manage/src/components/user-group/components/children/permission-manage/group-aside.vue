@@ -21,14 +21,17 @@
         <div
           :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
           @click="handleChooseGroup(group)"
-          >
+        >
           <span class="group-name" :title="group.name">{{ group.name }}</span>
           <div class="num-box" v-for="item in groupCountField" :key="item">
-            <i :class="{
-              'group-icon manage-icon manage-icon-user-shape': item === 'userCount',
-              'group-icon manage-icon manage-icon-organization': item === 'departmentCount',
-              'active': activeTab === group.groupId
-            }" />
+            <template v-if="item === 'templateCount' && resourceType === 'pipeline'">
+              <i :class="{
+                'group-icon manage-icon manage-icon-user-shape': item === 'userCount',
+                'group-icon manage-icon manage-icon-user-template': item === 'templateCount',
+                'group-icon manage-icon manage-icon-organization': item === 'departmentCount',
+                'active': activeTab === group.groupId
+              }" />
+            </template>
             <div class="group-num">{{ group[item] }}</div>
           </div>
           <bk-popover
@@ -195,7 +198,6 @@ export default {
       renameGroupId: 0,
       curGroupIndex: -1,
       keyWords: '',
-      groupCountField: ['userCount', 'departmentCount'],
       t,
     };
   },
@@ -203,6 +205,12 @@ export default {
     disableDeleteBtn() {
       return !(this.keyWords === this.deleteObj.group.name);
     },
+    groupCountField () {
+      if (this.resourceType === 'pipeline') {
+        return ['userCount', 'templateCount', 'departmentCount']
+      }
+      return ['userCount', 'departmentCount']
+    }
   },
   watch: {
     activeIndex(newVal) {
@@ -309,13 +317,14 @@ export default {
             this.groupList[this.curGroupIndex].userCount += data.data.users.length
             this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
-          case 'remove_user_confirm':
+          case 'remove_user_confirm': {
             const departments = data.data.members.filter(i => i.type === 'department')
             const users = data.data.members.filter(i => i.type === 'user')
             this.groupList[this.curGroupIndex].departmentCount -= departments.length
             this.groupList[this.curGroupIndex].userCount -= users.length
             this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
+          }
           case 'change_group_detail_tab':
             this.$emit('change-group-detail-tab', data.data.tab)
         }

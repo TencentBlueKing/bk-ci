@@ -36,8 +36,8 @@ export default {
         title: '',
         description: '',
         showBtn: false,
-        t
-      }
+      },
+      t
     }
   },
   created () {

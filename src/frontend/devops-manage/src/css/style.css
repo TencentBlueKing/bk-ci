@@ -110,3 +110,6 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .manage-icon-tishi:before {
 	content: "\e13c";
 }
+.manage-icon-user-template:before {
+	content: "\e13d";
+}
