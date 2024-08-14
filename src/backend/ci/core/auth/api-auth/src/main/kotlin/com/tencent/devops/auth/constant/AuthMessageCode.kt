@@ -133,4 +133,6 @@ object AuthMessageCode {
 
     const val ERROR_MOA_CREDENTIAL_KEY_VERIFY_FAIL = "2121082" // MOA票据校验失败
     const val ERROR_USER_NOT_BELONG_TO_THE_PROJECT = "2121083" // 用户不属于项目
+
+    const val ERROR_USER_INFORMATION_NOT_SYNCED = "2121090" // 请等待第二天用户信息同步后再尝试操作，因为新入职用户的信息尚未同步完成。
 }
