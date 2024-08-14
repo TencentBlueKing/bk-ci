@@ -68,9 +68,9 @@ interface UserSensitiveApiResource {
         @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "组件标识", required = true)
+        @Parameter(description = "开发语言", required = true)
         @QueryParam("language")
-        language: String
+        language: String = ""
     ): Result<List<SensitiveApiNameInfo>>
 
     @Operation(summary = "敏感API申请")

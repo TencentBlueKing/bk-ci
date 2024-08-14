@@ -28,6 +28,7 @@ package com.tencent.devops.store.image.service
 
 import com.tencent.devops.store.common.service.impl.StoreMemberServiceImpl
 import com.tencent.devops.store.image.dao.MarketImageDao
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -37,7 +38,7 @@ class ImageMemberService : StoreMemberServiceImpl() {
     @Autowired
     lateinit var marketImageDao: MarketImageDao
 
-    override fun getStoreName(storeCode: String): String {
+    override fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String {
         return marketImageDao.getLatestImageByCode(dslContext, storeCode)?.imageName ?: ""
     }
 }

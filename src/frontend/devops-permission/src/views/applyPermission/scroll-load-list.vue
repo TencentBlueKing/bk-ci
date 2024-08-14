@@ -5,7 +5,7 @@
       v-if="titleType === 'resourceCode'"
       class="search-input"
       behavior="simplicity"
-      :placeholder="$t('请输入搜索')"
+      :placeholder="t('请输入搜索')"
       @input="handleChangeKeyWords"
     >
     </bk-input>
@@ -26,13 +26,14 @@
           <slot :data="item"></slot>
         </li>
       </template>
-      <div v-else class="loading-panel">{{ $t('正在加载中...') }}</div>
-      <div v-if="!isLoading && !list.length" class="loading-panel">{{ $t('查询无数据') }}</div>
+      <div v-else class="loading-panel">{{ t('正在加载中...') }}</div>
+      <div v-if="!isLoading && !list.length" class="loading-panel">{{ t('查询无数据') }}</div>
     </ul>
   </section>
 </template>
 
 <script lang="ts">
+import { useI18n } from 'vue-i18n';
 export default {
   props: {
     list: Array,
@@ -44,12 +45,14 @@ export default {
   },
 
   data() {
+    const { t } = useI18n();
     return {
       page: 1,
       pageSize: 20,
       isLoadingMore: false,
       isLoading: false,
       keyWords: '',
+      t,
     };
   },
 

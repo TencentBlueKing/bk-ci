@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.transfer
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.client.Client
@@ -48,11 +49,14 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.transfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
+import com.tencent.devops.process.yaml.v3.models.on.CustomFilter
 import com.tencent.devops.process.yaml.v3.models.on.EnableType
 import com.tencent.devops.process.yaml.v3.models.on.IssueRule
 import com.tencent.devops.process.yaml.v3.models.on.MrRule
@@ -96,9 +100,15 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
                     eventType = CodeEventType.PUSH,
-                    includePushAction = push.action,
+                    includePushAction = push.action ?: listOf(
+                        TGitPushActionType.PUSH_FILE.value,
+                        TGitPushActionType.NEW_BRANCH.value
+                    ),
                     repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName
+                    repositoryName = triggerOn.repoName,
+                    enableThirdFilter = !push.custom?.url.isNullOrBlank(),
+                    thirdUrl = push.custom?.url,
+                    thirdSecretToken = push.custom?.credentials
                 ).checkTriggerElementEnable(push.enable).apply {
                     version = "2.*"
                 }
@@ -140,10 +150,17 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     enableCheck = mr.reportCommitCheck,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
-                    includeMrAction = mr.action,
+                    includeMrAction = mr.action ?: listOf(
+                        TGitMrEventAction.OPEN.value,
+                        TGitMrEventAction.REOPEN.value,
+                        TGitMrEventAction.PUSH_UPDATE.value
+                    ),
                     eventType = CodeEventType.MERGE_REQUEST,
                     repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName
+                    repositoryName = triggerOn.repoName,
+                    enableThirdFilter = !mr.custom?.url.isNullOrBlank(),
+                    thirdUrl = mr.custom?.url,
+                    thirdSecretToken = mr.custom?.credentials
                 ).checkTriggerElementEnable(mr.enable).apply {
                     version = "2.*"
                 }
@@ -236,14 +253,18 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 CodeEventType.PUSH -> nowExist.push = PushRule(
                     name = git.name.nullIfDefault(defaultName),
                     enable = git.enable.nullIfDefault(true),
-                    branches = git.branchName?.disjoin() ?: emptyList(),
+                    branches = git.branchName?.disjoin(),
                     branchesIgnore = git.excludeBranchName?.disjoin(),
                     paths = git.includePaths?.disjoin(),
                     pathsIgnore = git.excludePaths?.disjoin(),
                     users = git.includeUsers,
                     usersIgnore = git.excludeUsers,
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    action = git.includePushAction
+                    action = git.includePushAction,
+                    custom = if (git.enableThirdFilter == true) CustomFilter(
+                        url = git.thirdUrl,
+                        credentials = git.thirdSecretToken
+                    ) else null
                 )
 
                 CodeEventType.TAG_PUSH -> nowExist.tag = TagRule(
@@ -271,8 +292,17 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     webhookQueue = git.webhookQueue.nullIfDefault(false),
                     reportCommitCheck = git.enableCheck.nullIfDefault(true),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    action = git.includeMrAction
+                    action = git.includeMrAction,
+                    custom = if (git.enableThirdFilter == true) CustomFilter(
+                        url = git.thirdUrl,
+                        credentials = git.thirdSecretToken
+                    ) else null
                 )
+                CodeEventType.MERGE_REQUEST_ACCEPT ->
+                    throw PipelineTransferException(
+                        errorCode = CommonMessageCode.MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER,
+                        params = arrayOf(git.name)
+                    )
 
                 CodeEventType.REVIEW -> nowExist.review = ReviewRule(
                     name = git.name.nullIfDefault(defaultName),
@@ -312,14 +342,20 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name)
                 )
 
-                CodeEventType.CHANGE_COMMIT -> nowExist.push = PushRule(
-                    name = git.name.nullIfDefault(defaultName),
-                    enable = git.enable.nullIfDefault(true),
-                    branches = null,
-                    branchesIgnore = null,
-                    paths = git.includePaths?.disjoin(),
-                    pathsIgnore = git.excludePaths?.disjoin()
-                )
+                in CodeEventType.CODE_P4_EVENTS -> {
+                    buildP4TriggerOn(
+                        codeEventType = git.eventType,
+                        triggerOn = nowExist,
+                        rule = PushRule(
+                            name = git.name.nullIfDefault(defaultName),
+                            enable = git.enable.nullIfDefault(true),
+                            branches = null,
+                            branchesIgnore = null,
+                            paths = git.includePaths?.disjoin(),
+                            pathsIgnore = git.excludePaths?.disjoin()
+                        )
+                    )
+                }
 
                 CodeEventType.PULL_REQUEST -> nowExist.mr = MrRule(
                     name = git.name.nullIfDefault(defaultName),
@@ -365,7 +401,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                                 ?: PathFilterType.NamePrefixFilter,
                             eventType = CodeEventType.PUSH,
-                            includeMrAction = push.action,
+                            includeMrAction = push.action ?: listOf(
+                                TGitPushActionType.PUSH_FILE.value,
+                                TGitPushActionType.NEW_BRANCH.value
+                            ),
                             repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
                         )
@@ -417,7 +456,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             enableCheck = mr.reportCommitCheck,
                             pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                                 ?: PathFilterType.NamePrefixFilter,
-                            includeMrAction = mr.action,
+                            includeMrAction = mr.action ?: listOf(
+                                TGitMrEventAction.OPEN.value,
+                                TGitMrEventAction.REOPEN.value,
+                                TGitMrEventAction.PUSH_UPDATE.value
+                            ),
                             eventType = CodeEventType.MERGE_REQUEST,
                             repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
@@ -633,25 +676,21 @@ class TriggerTransfer @Autowired(required = false) constructor(
 
     @Suppress("ComplexMethod")
     fun yaml2TriggerP4(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
-        val repositoryType = if (triggerOn.repoName.isNullOrBlank()) {
-            TriggerRepositoryType.SELF
-        } else {
-            TriggerRepositoryType.NAME
-        }
-        triggerOn.push?.let { push ->
-            elementQueue.add(
-                CodeP4WebHookTriggerElement(
-                    name = push.name ?: "P4事件触发",
-                    data = CodeP4WebHookTriggerData(
-                        input = CodeP4WebHookTriggerInput(
-                            includePaths = push.paths.nonEmptyOrNull()?.join(),
-                            excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
-                            eventType = CodeEventType.CHANGE_COMMIT,
-                            repositoryType = repositoryType,
-                            repositoryName = triggerOn.repoName
-                        )
-                    )
-                ).checkTriggerElementEnable(push.enable).apply { version = "2.*" }
+        with(triggerOn) {
+            val repositoryType = if (repoName.isNullOrBlank()) {
+                TriggerRepositoryType.SELF
+            } else {
+                TriggerRepositoryType.NAME
+            }
+            elementQueue.addAll(
+                listOfNotNull(
+                    buildP4TriggerElement(push, CodeEventType.CHANGE_COMMIT, repositoryType, repoName),
+                    buildP4TriggerElement(changeCommit, CodeEventType.CHANGE_COMMIT, repositoryType, repoName),
+                    buildP4TriggerElement(changeContent, CodeEventType.CHANGE_CONTENT, repositoryType, repoName),
+                    buildP4TriggerElement(changeSubmit, CodeEventType.CHANGE_SUBMIT, repositoryType, repoName),
+                    buildP4TriggerElement(shelveCommit, CodeEventType.SHELVE_COMMIT, repositoryType, repoName),
+                    buildP4TriggerElement(shelveSubmit, CodeEventType.SHELVE_SUBMIT, repositoryType, repoName)
+                )
             )
         }
     }
@@ -675,12 +714,15 @@ class TriggerTransfer @Autowired(required = false) constructor(
             schedule.forEach { timer ->
                 val repositoryType = when {
                     !timer.repoId.isNullOrBlank() ->
-                        RepositoryType.ID
+                        TriggerRepositoryType.ID
 
                     !timer.repoName.isNullOrBlank() ->
-                        RepositoryType.NAME
+                        TriggerRepositoryType.NAME
 
-                    else -> null
+                    timer.repoType == TriggerRepositoryType.NONE.name ->
+                        null
+                    // code -> ui,默认监听PAC代码库
+                    else -> TriggerRepositoryType.SELF
                 }
                 elementQueue.add(
                     TimerTriggerElement(
@@ -723,7 +765,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeGitlabWebHookTriggerElement(
-                    name = push.name ?: "Gitlab变更触发",
+                    name = push.name ?: "Gitlab事件触发",
                     branchName = push.branches.nonEmptyOrNull()?.join(),
                     excludeBranchName = push.branchesIgnore.nonEmptyOrNull()?.join(),
                     includePaths = push.paths.nonEmptyOrNull()?.join(),
@@ -733,10 +775,15 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
                     eventType = CodeEventType.PUSH,
-                    // todo action
+                    includeMrAction = push.action ?: listOf(
+                        TGitPushActionType.PUSH_FILE.value,
+                        TGitPushActionType.NEW_BRANCH.value
+                    ),
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
-                ).checkTriggerElementEnable(push.enable)
+                ).checkTriggerElementEnable(push.enable).apply {
+                    version = "2.*"
+                }
             )
         }
 
@@ -758,7 +805,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.mr?.let { mr ->
             elementQueue.add(
                 CodeGitlabWebHookTriggerElement(
-                    name = mr.name ?: "Gitlab变更触发",
+                    name = mr.name ?: "Gitlab事件触发",
                     branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
                     excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
                     includeSourceBranchName = mr.sourceBranches.nonEmptyOrNull()?.join(),
@@ -770,11 +817,17 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     block = mr.blockMr,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
-                    // todo action
+                    includeMrAction = mr.action ?: listOf(
+                        TGitMrEventAction.OPEN.value,
+                        TGitMrEventAction.REOPEN.value,
+                        TGitMrEventAction.PUSH_UPDATE.value
+                    ),
                     eventType = CodeEventType.MERGE_REQUEST,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
-                ).checkTriggerElementEnable(mr.enable)
+                ).checkTriggerElementEnable(mr.enable).apply {
+                    version = "2.*"
+                }
             )
         }
     }
@@ -792,4 +845,39 @@ class TriggerTransfer @Autowired(required = false) constructor(
     private fun String.disjoin() = this.split(",")
 
     private fun List<String>?.nonEmptyOrNull() = this?.ifEmpty { null }
+
+    private fun buildP4TriggerElement(
+        rule: PushRule?,
+        eventType: CodeEventType,
+        repositoryType: TriggerRepositoryType,
+        repoName: String?
+    ): Element? {
+        return rule?.let {
+            CodeP4WebHookTriggerElement(
+                name = rule.name ?: "P4事件触发",
+                data = CodeP4WebHookTriggerData(
+                    input = CodeP4WebHookTriggerInput(
+                        includePaths = rule.paths.nonEmptyOrNull()?.join(),
+                        excludePaths = rule.pathsIgnore.nonEmptyOrNull()?.join(),
+                        eventType = eventType,
+                        repositoryType = repositoryType,
+                        repositoryName = repoName
+                    )
+                )
+            ).checkTriggerElementEnable(rule.enable).apply {
+                // P4触发器(v2)仅支持CHANGE_COMMIT事件
+                version = if (eventType == CodeEventType.CHANGE_COMMIT) "2.*" else "1.*"
+            }
+        }
+    }
+
+    fun buildP4TriggerOn(codeEventType: CodeEventType?, triggerOn: TriggerOn, rule: PushRule) {
+        when (codeEventType) {
+            CodeEventType.CHANGE_COMMIT -> triggerOn.changeCommit = rule
+            CodeEventType.CHANGE_SUBMIT -> triggerOn.changeSubmit = rule
+            CodeEventType.CHANGE_CONTENT -> triggerOn.changeContent = rule
+            CodeEventType.SHELVE_COMMIT -> triggerOn.shelveCommit = rule
+            CodeEventType.SHELVE_SUBMIT -> triggerOn.shelveSubmit = rule
+        }
+    }
 }

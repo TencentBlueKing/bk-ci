@@ -45,6 +45,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.process.constant.ProcessMessageCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -225,8 +226,12 @@ class QueueInterceptor @Autowired constructor(
             )
             buildLogPrinter.addRedLine(
                 buildId = buildInfo.buildId,
-                message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
-                    "a higher priority waiting request</a> for group($groupName) exists",
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_BUILD_QUEUE_WAIT_FOR_CONCURRENCY,
+                    params = arrayOf(groupName,
+                        "<a target='_blank' href='$detailUrl'>${task.buildId}</a>"
+                    )
+                ),
                 tag = "QueueInterceptor",
                 containerHashId = "",
                 executeCount = 1,

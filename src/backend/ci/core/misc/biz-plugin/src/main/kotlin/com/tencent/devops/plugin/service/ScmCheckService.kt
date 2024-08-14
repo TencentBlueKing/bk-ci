@@ -35,7 +35,9 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.utils.QualityUtils
 import com.tencent.devops.process.utils.Credential
@@ -52,6 +54,7 @@ import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.sdk.github.pojo.CheckRunOutput
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -60,6 +63,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Base64
 import javax.ws.rs.NotFoundException
 
@@ -118,7 +124,16 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 description = description,
                 block = block,
                 mrRequestId = event.mergeRequestId,
-                reportData = QualityUtils.getQualityGitMrResult(client, event),
+                reportData = QualityUtils.getQualityGitMrResult(
+                    client = client,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    startTime = startTime,
+                    eventStatus = status,
+                    triggerType = triggerType,
+                    scmType = repo.getScmType()
+                ),
                 targetBranch = targetBranch
             )
             if (isOauth) {
@@ -132,15 +147,17 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
 
     fun addGithubCheckRuns(
         projectId: String,
+        pipelineId: String,
+        buildId: String,
         repositoryConfig: RepositoryConfig,
         name: String,
         commitId: String,
         detailUrl: String,
         externalId: String,
         status: String,
-        startedAt: String?,
+        startedAt: LocalDateTime?,
         conclusion: String?,
-        completedAt: String?
+        completedAt: LocalDateTime?
     ): GithubCheckRunsResponse {
         logger.info("Project($projectId) add github commit($commitId) check runs")
 
@@ -154,9 +171,9 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
             detailsUrl = detailUrl,
             externalId = externalId,
             status = status,
-            startedAt = startedAt,
+            startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
             conclusion = conclusion,
-            completedAt = completedAt
+            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT)
         )
 
         return client.get(ServiceGithubResource::class).addCheckRuns(
@@ -169,15 +186,18 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
     fun updateGithubCheckRuns(
         checkRunId: Long,
         projectId: String,
+        pipelineId: String,
+        buildId: String,
         repositoryConfig: RepositoryConfig,
         name: String,
         commitId: String,
         detailUrl: String,
         externalId: String,
         status: String,
-        startedAt: String?,
+        startedAt: LocalDateTime?,
         conclusion: String?,
-        completedAt: String?
+        completedAt: LocalDateTime?,
+        pipelineName: String
     ) {
         logger.info("Project($projectId) update github commit($commitId) check runs")
 
@@ -191,9 +211,24 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
             detailsUrl = detailUrl,
             externalId = externalId,
             status = status,
-            startedAt = startedAt,
+            startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
             conclusion = conclusion,
-            completedAt = completedAt
+            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
+            output = CheckRunOutput(
+                summary = "This check concluded as $conclusion.",
+                text = null, // github
+                title = pipelineName,
+                reportData = QualityUtils.getQualityGitMrResult(
+                    client = client,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    startTime = startedAt?.timestampmilli() ?: 0L,
+                    eventStatus = status,
+                    triggerType = StartType.WEB_HOOK.name,
+                    scmType = ScmType.GITHUB
+                )
+            )
         )
 
         client.get(ServiceGithubResource::class).updateCheckRuns(

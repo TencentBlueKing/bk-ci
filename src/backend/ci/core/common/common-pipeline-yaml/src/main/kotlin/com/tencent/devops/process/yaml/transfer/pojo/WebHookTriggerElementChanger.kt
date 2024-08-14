@@ -242,6 +242,8 @@ data class WebHookTriggerElementChanger(
         excludeTagName = data.excludeTagName,
         excludeSourceBranchName = data.excludeSourceBranchName,
         includeSourceBranchName = data.includeSourceBranchName,
+        includeMrAction = data.includeMrAction,
+        includePushAction = data.includePushAction,
         enable = data.isElementEnable()
     )
 }

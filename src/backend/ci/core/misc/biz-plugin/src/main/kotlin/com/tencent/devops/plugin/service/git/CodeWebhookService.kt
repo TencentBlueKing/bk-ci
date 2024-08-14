@@ -76,7 +76,6 @@ import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @Service
 @Suppress("ALL")
@@ -159,7 +158,7 @@ class CodeWebhookService @Autowired constructor(
                                     repositoryConfig = repositoryConfig,
                                     commitId = commitId,
                                     status = status,
-                                    startedAt = null,
+                                    startedAt = (event.startTime ?: 0L) / 1000, // 毫秒 -> 秒
                                     conclusion = conclusion,
                                     completedAt = LocalDateTime.now().timestamp(),
                                     userId = event.userId,
@@ -207,8 +206,10 @@ class CodeWebhookService @Autowired constructor(
                 return
             }
 
-            if (variables[PIPELINE_START_CHANNEL] != ChannelCode.BS.name) {
-                logger.warn("Process instance($buildId) is not bs channel")
+            if (variables[PIPELINE_START_CHANNEL] != ChannelCode.BS.name &&
+                variables[PIPELINE_START_CHANNEL] != ChannelCode.GONGFENGSCAN.name
+            ) {
+                logger.warn("Process instance($buildId) is not bs or gongfengscan channel")
                 return
             }
             // 发布瞬间，重试的构建由process服务处理
@@ -543,6 +544,8 @@ class CodeWebhookService @Autowired constructor(
                     val checkRunId = if (conclusion == null) {
                         val result = scmCheckService.addGithubCheckRuns(
                             projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
                             repositoryConfig = repositoryConfig,
                             name = record.checkRunName ?: "$pipelineName #$buildNum",
                             commitId = commitId,
@@ -562,6 +565,9 @@ class CodeWebhookService @Autowired constructor(
                         scmCheckService.updateGithubCheckRuns(
                             checkRunId = record.checkRunId,
                             projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            pipelineName = pipelineName,
                             repositoryConfig = repositoryConfig,
                             // 兼容历史数据
                             name = record.checkRunName ?: "$pipelineName #$buildNum",

@@ -114,4 +114,12 @@ class StorePipelineRelDao {
                 .execute()
         }
     }
+
+    fun deleteStorePipelineRelById(dslContext: DSLContext, id: String) {
+        with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
+            dslContext.deleteFrom(this)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
 }

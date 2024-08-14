@@ -288,8 +288,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
         if (hwSpec != null && buildType != null) {
             kotlin.run {
                 val res = transferCache.getDockerResource(userId, projectId, buildType)
-                // hwSpec为0时为特殊值，表示默认配置
-                if (res?.default == hwSpec || hwSpec == "0") {
+                // hwSpec为0和1时为特殊值，表示默认配置Basic
+                if (res?.default == hwSpec || hwSpec == "0" || hwSpec == "1") {
                     hwSpec = null
                     return@run
                 }
@@ -309,9 +309,9 @@ class ContainerTransfer @Autowired(required = false) constructor(
     }
 
     private fun makeJobTimeout(controlOption: JobControlOption?): String? {
-        return controlOption?.timeoutVar.nullIfDefault(
+        return (controlOption?.timeoutVar ?: controlOption?.timeout?.toString()).nullIfDefault(
             VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES.toString()
-        ) ?: controlOption?.timeout.nullIfDefault(VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES)?.toString()
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -426,8 +426,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 null
             },
             timeoutMinutes = if (resource.queueEnable) {
-                resource.timeoutVar.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES.toString())
-                    ?: resource.timeout.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES)?.toString()
+                (resource.timeoutVar ?: resource.timeout.toString())
+                    .nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES.toString())
             } else {
                 null
             }
