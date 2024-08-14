@@ -541,19 +541,6 @@ class WorkspaceDao {
         }
     }
 
-    fun updateWorkspaceSleepingTime(
-        workspaceName: String,
-        sleepTime: Int,
-        dslContext: DSLContext
-    ) {
-        with(TWorkspace.T_WORKSPACE) {
-            dslContext.update(this)
-                .set(SLEEPING_TIME, SLEEPING_TIME + sleepTime)
-                .where(NAME.eq(workspaceName))
-                .execute()
-        }
-    }
-
     fun bakWorkspace(
         dslContext: DSLContext,
         workspaceName: String,
