@@ -31,8 +31,20 @@
             <div class="panel-content">
                 <p>
                     <label class="block-row-label">{{ $t('delegation.proxyHolderForExecutionPermissions') }}</label>
-                    <span class="block-row-value">
-                        {{ resourceAuthData.handoverFrom }}
+                    <span class="block-row-value reset-row">
+                        <span
+                            :class="{
+                                'name': true,
+                                'not-permission': !resourceAuthData.executePermission
+                            }"
+                            v-bk-tooltips="{
+                                content: $t('delegation.expiredTips'),
+                                disabled: resourceAuthData.executePermission
+                            }"
+                        >
+                            {{ resourceAuthData.handoverFrom }}
+                        </span>
+                        <bk-tag theme="danger" v-if="!resourceAuthData.executePermission">{{ $t('delegation.expired') }}</bk-tag>
                         <span
                             class="refresh-auth"
                             v-perm="{
@@ -205,7 +217,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .delegation-permission {
         padding: 24px;
         font-size: 12px;
@@ -294,6 +306,15 @@
             .btn {
                 width: 88px;
             }
+        }
+    }
+    .reset-row {
+        position: relative;
+        top: -4px;
+        .not-permission {
+            color: #C4C6CC;
+            text-decoration: line-through;
+            margin-right: 5px;
         }
     }
 </style>
