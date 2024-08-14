@@ -477,6 +477,8 @@ class PipelineBuildDao {
                 val select = dslContext.selectFrom(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId))
+                    // 增加过滤，插件按照构建号的查询也屏蔽已删除构建
+                    .and(DELETE_TIME.isNull)
                 if (!statusSet.isNullOrEmpty()) {
                     select.and(STATUS.`in`(statusSet.map { it.ordinal }))
                 }
