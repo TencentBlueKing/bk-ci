@@ -73,7 +73,7 @@ enum class BuildStatus(
 
     fun isNeverRun(): Boolean = this == UNEXEC || this == TRIGGER_REVIEWING
 
-    fun isFinish(): Boolean = isFailure() || isSuccess() || isCancel()
+    fun isFinish(): Boolean = isFailure() || isSuccess() || isCancel() || this == UNEXEC
 
     fun isFailure(): Boolean = this == FAILED || isPassiveStop() || isTimeout() || this == QUOTA_FAILED
 
