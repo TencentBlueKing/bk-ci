@@ -142,21 +142,6 @@ interface UserWorkspaceResource {
         workspaceName: String
     ): Result<Boolean>
 
-    @Operation(summary = "分享工作空间")
-    @POST
-    @Path("/share")
-    fun shareWorkspace(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "工作空间名称", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String,
-        @Parameter(description = "分享用户", required = true)
-        @QueryParam("sharedUser")
-        sharedUser: String
-    ): Result<Boolean>
-
     @Operation(summary = "修改工作空间")
     @POST
     @Path("/edit")

@@ -88,11 +88,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(sleepControl.stopWorkspace(userId, workspaceName))
     }
 
-    @AuditEntry(actionId = ActionId.CGS_SHARE)
-    override fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Result<Boolean> {
-        return Result(workspaceService.shareWorkspace(userId, workspaceName, sharedUser))
-    }
-
     @AuditEntry(actionId = ActionId.CGS_EDIT)
     override fun editWorkspace(userId: String, workspaceName: String, displayName: String): Result<Boolean> {
         return Result(
