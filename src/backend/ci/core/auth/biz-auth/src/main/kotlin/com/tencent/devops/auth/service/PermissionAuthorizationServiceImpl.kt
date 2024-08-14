@@ -86,7 +86,7 @@ class PermissionAuthorizationServiceImpl constructor(
                 resourceType = resourceType,
                 relationResourceType = null
             )
-            record.copy(executePermission = isHandoverFromHasExecutePermission)
+            return record.copy(executePermission = isHandoverFromHasExecutePermission)
         }
         return record
     }
