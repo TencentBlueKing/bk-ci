@@ -80,10 +80,6 @@
                 type: Boolean,
                 default: false
             },
-            fileParamsNameFlag: {
-                type: String,
-                default: ''
-            },
             isDiffParam: {
                 type: String,
                 default: false
