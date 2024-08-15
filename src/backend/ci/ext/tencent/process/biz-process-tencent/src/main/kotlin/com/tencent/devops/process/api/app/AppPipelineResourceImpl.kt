@@ -117,7 +117,7 @@ class AppPipelineResourceImpl @Autowired constructor(
                 customVersion = customVersion,
                 triggerAlias = triggerAlias,
                 triggerBranch = triggerBranch,
-                triggerUser =  triggerUser
+                triggerUser = triggerUser
             )
         )
     }

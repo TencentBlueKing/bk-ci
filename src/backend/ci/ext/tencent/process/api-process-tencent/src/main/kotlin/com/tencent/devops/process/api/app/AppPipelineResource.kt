@@ -151,7 +151,7 @@ interface AppPipelineResource {
         triggerBranch: List<String>?,
         @Parameter(description = "触发人", required = false)
         @QueryParam("triggerUser")
-        triggerUser: List<String>? = null,
+        triggerUser: List<String>? = null
     ): Result<Page<AppPipelineHistory>>
 
     @Operation(summary = "获取流水线构建中的查询条件-分支")
