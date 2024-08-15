@@ -1474,8 +1474,9 @@ class RepositoryService @Autowired constructor(
                     logger.warn("get git repository members failed: $ignored")
                     null
                 } ?: emptyList()
-                (members.find { it.username == userId && it.accessLevel >= GitAccessLevelEnum.REPORTER.level } != null) to
-                    GitUtils.getHttpUrl(repository.url)
+                (members.find {
+                    it.username == userId && it.accessLevel >= GitAccessLevelEnum.REPORTER.level
+                } != null) to GitUtils.getHttpUrl(repository.url)
             }
 
             is GithubRepository -> {
