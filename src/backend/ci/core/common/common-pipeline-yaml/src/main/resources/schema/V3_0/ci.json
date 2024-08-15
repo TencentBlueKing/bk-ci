@@ -1532,10 +1532,10 @@
                       }
                     }
                   },
-                  "glob" : {
+                  "filter-rule" : {
                     "type" : "string"
                   },
-                  "properties" : {
+                  "metadata" : {
                     "type" : "object"
                   },
                   "payload" : {
@@ -1691,10 +1691,10 @@
                     }
                   }
                 },
-                "glob" : {
+                "filter-rule" : {
                   "type" : "string"
                 },
-                "properties" : {
+                "metadata" : {
                   "type" : "object"
                 },
                 "payload" : {
