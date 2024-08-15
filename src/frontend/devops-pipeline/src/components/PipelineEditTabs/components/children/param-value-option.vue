@@ -4,7 +4,7 @@
             :hide-colon="true"
             v-if="isCodelibParam(param.type)"
             :label="$t('editPage.codelibParams')"
-            :is-error="errors.has(`scmType`)"
+            :is-error="errors.has(`pipelineParam.scmType`)"
             :error-msg="errors.first(`pipelineParam.scmType`)"
         >
             <selector
@@ -14,13 +14,15 @@
                 name="scmType"
                 placeholder=""
                 :value="param.scmType"
+                :clearable="false"
             ></selector>
         </form-field>
         <form-field
             :hide-colon="true"
             v-if="isGitParam(param.type)"
             :label="$t('editPage.gitRepo')"
-            :is-error="errors.has(`repoHashId`)"
+            :required="true"
+            :is-error="errors.has(`pipelineParam.repoHashId`)"
             :error-msg="errors.first(`pipelineParam.repoHashId`)"
         >
             <request-selector
@@ -40,7 +42,8 @@
             :hide-colon="true"
             v-if="isSvnParam(param.type)"
             :label="$t('editPage.svnParams')"
-            :is-error="errors.has(`repoHashId`)"
+            :required="true"
+            :is-error="errors.has(`pipelineParam.repoHashId`)"
             :error-msg="errors.first(`pipelineParam.repoHashId`)"
         >
             <request-selector
@@ -190,7 +193,7 @@
             :hide-colon="true"
             v-if="isSvnParam(param.type)"
             :label="$t('editPage.relativePath')"
-            :is-error="errors.has(`relativePath`)"
+            :is-error="errors.has(`pipelineParam.relativePath`)"
             :error-msg="errors.first(`pipelineParam.relativePath`)"
         >
             <vuex-input
@@ -206,7 +209,7 @@
             <form-field
                 :hide-colon="true"
                 :label="$t('editPage.buildEnv')"
-                :is-error="errors.has(`os`)"
+                :is-error="errors.has(`pipelineParam.os`)"
                 :error-msg="errors.first(`pipelineParam.os`)"
             >
                 <selector
@@ -223,7 +226,7 @@
             <form-field
                 :hide-colon="true"
                 :label="$t('editPage.addMetaData')"
-                :is-error="errors.has(`buildType`)"
+                :is-error="errors.has(`pipelineParam.buildType`)"
                 :error-msg="errors.first(`pipelineParam.buildType`)"
             >
                 <selector
@@ -252,6 +255,7 @@
 
         <template v-if="isArtifactoryParam(param.type)">
             <form-field
+                :hide-colon="true"
                 :label="$t('editPage.filterRule')"
                 :is-error="errors.has(`pipelineParam.glob`)"
                 :error-msg="errors.first(`pipelineParam.glob`)"
@@ -267,7 +271,7 @@
             </form-field>
 
             <form-field
-                label-width="auto"
+                :hide-colon="true"
                 :label="$t('metaData')"
                 :is-error="errors.has(`pipelineParam.properties`)"
                 :error-msg="errors.first(`pipelineParam.properties`)"
