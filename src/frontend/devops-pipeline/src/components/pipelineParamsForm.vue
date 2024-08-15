@@ -21,12 +21,15 @@
                     :disabled="disabled"
                     :placeholder="param.placeholder"
                     :upload-file-name="uploadFileName"
+                    :file-params-name-flag="fileParamsNameFlag"
+                    :is-diff-param="highlightChangedParam && param.isChanged"
                 />
+                
                 <div class="file-upload" v-if="showFileUploader(param.type)">
                     <file-upload
                         name="fileName"
                         :file-path="param.value"
-                        @handle-change="(value) => uploadPathFromFileName(value)"
+                        @handle-change="(value) => uploadPathFromFileName(value, param.name)"
                     />
                 </div>
             </section>
@@ -107,7 +110,8 @@
         },
         data () {
             return {
-                uploadFileName: ''
+                uploadFileName: '',
+                fileParamsNameFlag: ''
             }
         },
         computed: {
@@ -177,6 +181,11 @@
                 })
             }
         },
+        watch: {
+            fileParamsNameFlag () {
+                this.uploadFileName = ''
+            }
+        },
         methods: {
             getParamComponentType (param) {
                 if (isRemoteType(param)) {
@@ -223,8 +232,11 @@
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1
             },
 
-            uploadPathFromFileName (value) {
-                this.uploadFileName = value
+            uploadPathFromFileName (value, name) {
+                this.fileParamsNameFlag = `devops${name}`
+                this.$nextTick(() => {
+                    this.uploadFileName = value
+                })
             }
         }
     }

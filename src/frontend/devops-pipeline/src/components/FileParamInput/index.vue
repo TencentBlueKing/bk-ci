@@ -10,6 +10,9 @@
             :click-unfold="true"
             :placeholder="$t('editPage.filePathTips')"
             :value="fileDefaultVal.directory"
+            :class="{
+                'is-diff-param': isDiffParam
+            }"
         />
         <vuex-input
             class="file-name"
@@ -21,6 +24,9 @@
             :click-unfold="true"
             :placeholder="$t('editPage.fileNameTips')"
             :value="fileDefaultVal.fileName"
+            :class="{
+                'is-diff-param': isDiffParam
+            }"
         />
     </section>
 </template>
@@ -32,6 +38,10 @@
             VuexInput
         },
         props: {
+            id: {
+                type: String,
+                default: ''
+            },
             name: {
                 type: String,
                 default: ''
@@ -52,6 +62,14 @@
             uploadFileName: {
                 type: String,
                 default: ''
+            },
+            fileParamsNameFlag: {
+                type: String,
+                default: ''
+            },
+            isDiffParam: {
+                type: String,
+                default: false
             }
         },
         data () {
@@ -64,7 +82,12 @@
         },
         watch: {
             uploadFileName (val) {
-                this.updatePathFromFileName(val)
+                if (this.fileParamsNameFlag === this.id || this.fileParamsNameFlag === this.name || !this.fileParamsNameFlag) {
+                    this.updatePathFromFileName(val)
+                }
+            },
+            value () {
+                this.splitFilePath()
             }
         },
         created () {
@@ -101,5 +124,8 @@
             border-radius: 0 2px 2px 0;
             border-left: 0;
         }
+    }
+    .is-diff-param {
+        border-color: #FF9C01 !important;
     }
 </style>

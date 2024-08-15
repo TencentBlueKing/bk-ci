@@ -242,17 +242,19 @@
                                         >
                                             <file-param-input
                                                 name="defaultValue"
+                                                v-bind="param"
                                                 :required="valueRequired"
                                                 :disabled="disabled"
                                                 :value="param.defaultValue"
                                                 :upload-file-name="uploadFileName"
+                                                :file-params-name-flag="fileParamsNameFlag"
                                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                             />
                                             <file-upload
                                                 class="mt10"
                                                 name="fileName"
                                                 :file-path="param.defaultValue"
-                                                @handle-change="(value) => uploadPathFromFileName(value)"
+                                                @handle-change="(value) => uploadPathFromFileName(value, param.id)"
                                             ></file-upload>
                                         </bk-form-item>
                                     </div>
@@ -516,10 +518,10 @@
             return {
                 paramIdCount: 0,
                 renderParams: [],
-                uploadFileName: ''
+                uploadFileName: '',
+                fileParamsNameFlag: ''
             }
         },
-
         computed: {
             ...mapGetters('atom', [
                 'osList',
@@ -585,6 +587,9 @@
         watch: {
             params (newVal) {
                 this.renderParams = this.getParams(newVal)
+            },
+            fileParamsNameFlag () {
+                this.uploadFileName = ''
             }
         },
 
@@ -835,8 +840,11 @@
                     : []
             },
 
-            uploadPathFromFileName (value) {
-                this.uploadFileName = value
+            uploadPathFromFileName (value, name) {
+                this.fileParamsNameFlag = name
+                this.$nextTick(() => {
+                    this.uploadFileName = value
+                })
             }
         }
     }

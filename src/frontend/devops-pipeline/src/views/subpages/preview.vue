@@ -371,6 +371,7 @@
             updateParams (valueKey = 'defaultValue') {
                 this.showChangedParamsAlert = valueKey === 'value'
                 this.paramsValues = getParamsValuesMap(this.paramList, valueKey)
+                console.log(this.paramsValues, 'paramsValues')
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,
                     params: {
