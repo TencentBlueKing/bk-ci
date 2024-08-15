@@ -35,6 +35,7 @@
                 }"
             />
         </div>
+        <div v-if="!flex" class="upload-tips">{{ $t('sizeLimit', [100]) }}</div>
         <div
             :class="{
                 'mt10': !flex,
@@ -105,12 +106,12 @@
             uploadFileName (val) {
                 this.updatePathFromFileName(val)
             },
-            value () {
-                this.splitFilePath()
+            value: {
+                handler () {
+                    this.splitFilePath()
+                },
+                immediate: true
             }
-        },
-        created () {
-            this.splitFilePath()
         },
         methods: {
             splitFilePath () {
@@ -128,7 +129,8 @@
                 const val = `${this.fileDefaultVal.directory}/${this.fileDefaultVal.fileName}`
                 this.handleChange(this.name, val)
             },
-            uploadPathFromFileName (value, name) {
+            uploadPathFromFileName (value) {
+                if (this.fileDefaultVal.fileName) return
                 this.uploadFileName = value
             }
         }
@@ -167,6 +169,9 @@
     }
     .is-diff-param {
         border-color: #FF9C01 !important;
+    }
+    .upload-tips {
+        font-size: 12px;
     }
     .file-upload {
         display: flex;

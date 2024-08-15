@@ -142,7 +142,7 @@
   "importPipelineLabel": "Please upload a pipeline JSON file",
   "invalidPipelineJson": "Invalid Pipeline JSON",
   "exportPipelineSuccess": "Export Pipeline Success",
-  "sizeLimit": "Maximum file size: {0}MB",
+  "sizeLimit": "Maximum file size is 100MB. When re-uploading, if the path remains unchanged, there is no need to save the pipeline.",
   "fileUploadSuccess": "Upload Successful",
   "empty": "No Data",
   "link": "link",
@@ -1024,8 +1024,8 @@
     "codelibConfigs": "Code Repositories Config",
     "timerTriggerCodelibTips": "- Git repository: Branch is optional, defaults to the default branch when not specified.\n-SVN repository: Branch is mandatory, must be a first-level subdirectory under the repository root path.",
     "timerTriggerBranchTips": "If multiple branches have changes, each branch will trigger once when conditions are met.",
-    "filePathTips": "Please enter the directory where the file is stored",
-    "fileNameTips": "File name, will be automatically read after file upload"
+    "filePathTips": "Please enter directory, e.g., /a",
+    "fileNameTips": "File name, leave blank to auto-detect"
   },
   "storeMap": {
     "textarea": "Textarea",
