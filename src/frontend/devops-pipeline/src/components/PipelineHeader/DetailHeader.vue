@@ -126,13 +126,6 @@
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? false
             },
-            buildNumConf () {
-                return {
-                    latestBuildNum: this.execDetail?.latestBuildNum ?? 1,
-                    currentBuildNum: this.execDetail?.buildNum ?? 1,
-                    version: this.pipelineInfo?.[this.isDebugExec ? 'version' : 'releaseVersion']
-                }
-            },
             isDebugExec () {
                 return this.execDetail?.debug ?? false
             }

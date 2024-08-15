@@ -4,7 +4,7 @@
         <mode-switch draft />
         <aside class="pipeline-edit-right-aside">
             <bk-button
-                :disabled="saveSta24pxusaveSta24px"
+                :disabled="saveStatus"
                 :loading="saveStatus"
                 outline
                 theme="primary"

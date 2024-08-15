@@ -632,7 +632,8 @@
                                 versionNum,
                                 baseVersion: version,
                                 baseVersionName: versionName,
-                                latestVersionStatus: VERSION_STATUS_ENUM.RELEASED
+                                latestVersionStatus: VERSION_STATUS_ENUM.RELEASED,
+                                pipelineName: this.pipelineName
                             }
                             : {}),
                         ...(
