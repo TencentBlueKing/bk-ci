@@ -79,6 +79,14 @@
                             </bk-checkbox-group>
                         </bk-form-item>
                     </template>
+                    <bk-form-item ext-cls="namingConvention">
+                        <syntax-style-configuration
+                            :inherited-dialect="inheritedDialect"
+                            :pipeline-dialect="pipelineDialect"
+                            @inherited-change="inheritedChange"
+                            @pipeline-dialect-change="pipelineDialectChange"
+                        />
+                    </bk-form-item>
                 </bk-form>
                 <footer style="margin-top: 24px;">
                     <bk-button
@@ -187,12 +195,14 @@
     import { templateTypeEnum } from '@/utils/pipelineConst'
     import { getCacheViewId } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
+    import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
 
     export default {
         components: {
             pipelineHeader,
             PipelineTemplatePreview,
-            Logo
+            Logo,
+            SyntaxStyleConfiguration
         },
         data () {
             return {
@@ -201,6 +211,9 @@
                 isDisabled: false,
                 activeTempIndex: 0,
                 applySettings: [],
+                inheritedDialect: true,
+                pipelineDialect: 'CLASSIC',
+                currentPipelineDialect: '',
                 isLoading: false,
                 newPipelineName: '',
                 searchName: '',
@@ -332,6 +345,7 @@
             this.requestPipelineTemplate({
                 projectId: this.$route.params.projectId
             })
+            this.requestPipelineDialect()
         },
         mounted () {
             console.log(this.$refs.pipelineName)
@@ -346,7 +360,8 @@
             ]),
             ...mapActions('pipelines', [
                 'installPipelineTemplate',
-                'createPipelineWithTemplate'
+                'createPipelineWithTemplate',
+                'getPipelineDialect'
             ]),
             goList () {
                 this.$router.push(this.pipelineListRoute)
@@ -462,7 +477,9 @@
                             result[item] = true
                             return result
                         }, {}),
-                        instanceType: this.templateType
+                        instanceType: this.templateType,
+                        inheritedDialect: this.inheritedDialect,
+                        pipelineDialect: this.pipelineDialect
                     }
 
                     if (this.templateType === templateTypeEnum.CONSTRAIN) {
@@ -505,6 +522,25 @@
                 } finally {
                     this.isDisabled = false
                 }
+            },
+            async requestPipelineDialect () {
+                try {
+                    const projectId = this.$route.params.projectId
+                    const { data } = await this.getPipelineDialect(projectId)
+                    this.currentPipelineDialect = data
+                    this.pipelineDialect = data
+                } catch (err) {
+                    console.log(err)
+                }
+            },
+            inheritedChange (value) {
+                this.inheritedDialect = value
+                if (value) {
+                    this.pipelineDialect = this.currentPipelineDialect
+                }
+            },
+            pipelineDialectChange (value) {
+                this.pipelineDialect = value
             }
         }
     }
@@ -532,6 +568,10 @@
             padding: 24px;
             background: white;
             overflow: auto;
+            
+            .namingConvention {
+                position: relative;
+            }
 
             .pipeline-input {
                 position: relative;

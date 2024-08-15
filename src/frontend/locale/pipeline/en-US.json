@@ -1551,5 +1551,40 @@
   "completeness": "Completeness: ",
   "pacDesc": "Pipeline as Code mode, referred to as PAC mode. After enabling and submitting the pipeline file to the code base, you can maintain the pipeline by maintaining the code base file.",
   "debugHint": "Debugging and execution do not share build numbers, but they share concurrency control. Debug records are only valid during the draft version debugging period and will be automatically cleared after the version is released.",
-  "templateRollbackBackTips": "The current pipeline is in constraint mode (template instance). You need to jump to the template to roll back the version."
+  "templateRollbackBackTips": "The current pipeline is in constraint mode (template instance). You need to jump to the template to roll back the version.",
+  "namingConvention": "Naming Convention",
+  "inheritedProject": "Inherited Project Settings",
+  "traditionalStyle": "Traditional Style",
+  "constraintStyle": "Constraint Style",
+  "grammaticalDifferences": "Grammatical Differences",
+  "differenceItem": "Difference Item",
+
+  "expressionFormat": "Expression Format",
+  "traditionalFormat": "Single or Double Curly Braces",
+  "traditionalFormatExample": "e.g., ${var}, ${{var}}",
+  "constraintFormat": "Only Double Curly Braces Supported to Avoid System Assignment Issues in Bash Scripts",
+  "constraintFormatExample": "e.g., ${{variables.var}}",
+
+  "quoteMode": "Quote Mode",
+  "traditionalQuoteMode": "Direct Variable Name or Contextual Reference",
+  "constraintQuoteMode": "Only Contextual Reference Supported",
+  "constraintQuoteModeExample": "e.g., ${{ci.pipeline_id}}, ${{variables.a}}, ${{steps.get_code.outputs.a}}",
+
+  "environmentVariable": "Environment Variable",
+  "traditionalEnvironmentVariableMode": "Pipeline Variables and Plugin Output Variables are Automatically Set as Environment Variables",
+  "constraintEnvironmentVariableMode": "Specify as Needed in Job/Step to Reduce Environment Pollution Risk",
+
+  "readOnlyVariable": "Reset Built-in Read-Only Variables",
+  "traditionalReadOnlyMode": "Not Effective, Only Warning without Error",
+  "constraintReadOnlyMode": "Will Cause Error and Run Failure",
+
+  "variableValueTooLong": "Variable Value Too Long",
+  "traditionalValueTooLongMode": "Only Warning without Error",
+
+  "variableNotFound": "Variable Not Found",
+  "traditionalNotFoundMode": "No Error, Continue Execution, Check Execution Logic as Needed",
+
+  "variableStandard": "Variable ID Standard",
+  "traditionalStandardMode": "No Restriction",
+  "constraintStandardMode": "Chinese IDs Not Supported to Reduce Compatibility Issues in Different Build Environments"
 }

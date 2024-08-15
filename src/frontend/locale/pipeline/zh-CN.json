@@ -1552,5 +1552,40 @@
   "completeness": "完成度：",
   "pacDesc": "Pipeline as Code 模式，简称 PAC 模式。开启并将流水线文件提交到代码库后，可通过维护代码库文件的方式来维护流水线。",
   "debugHint": "调试和执行不共享构建号，但共享并发控制。调试记录仅在草稿版本调试期间有效，版本发布后将自动清理。",
-  "templateRollbackBackTips": "当前流水线为约束模式（模板实例），需要跳转到模板进行版本回滚。"
+  "templateRollbackBackTips": "当前流水线为约束模式（模板实例），需要跳转到模板进行版本回滚。",
+  "namingConvention": "变量语法风格",
+  "inheritedProject": "继承项目设置",
+  "traditionalStyle": "传统风格",
+  "constraintStyle": "制约风格",
+  "grammaticalDifferences": "语法差异",
+  "differenceItem": "差异项",
+
+  "expressionFormat": "表达式格式",
+  "traditionalFormat": "单花括号或双花括号",
+  "traditionalFormatExample": "如：${var}、${{var}}",
+  "constraintFormat": "仅支持双花括号，避免出现 bash 脚本变量在执行前被系统赋值的问题",
+  "constraintFormatExample": "如：${{variables.var}}",
+
+  "quoteMode": "引用方式",
+  "traditionalQuoteMode": "直接引用变量名或上下文方式引用",
+  "constraintQuoteMode": "仅支持上下文方式引用",
+  "constraintQuoteModeExample": "如：${{ci.pipeline_id}}、${{variables.a}}、${{steps.get_code.outputs.a}}",
+
+  "environmentVariable": "环境变量",
+  "traditionalEnvironmentVariableMode": "流水线变量、插件输出变量会自动设置为环境变量",
+  "constraintEnvironmentVariableMode": "需要时通过在 Job/Step 上按需指定，降低环境污染风险",
+
+  "readOnlyVariable": "重置内置只读变量",
+  "traditionalReadOnlyMode": "不生效，仅警告未报错",
+  "constraintReadOnlyMode": "将报错，运行失败",
+
+  "variableValueTooLong": "变量值超长",
+  "traditionalValueTooLongMode": "仅警告未报错",
+
+  "variableNotFound": "变量不存在",
+  "traditionalNotFoundMode": "未报错，继续执行，依赖执行逻辑自行检查",
+
+  "variableStandard": "变量 ID 规范",
+  "traditionalStandardMode": "未限制",
+  "constraintStandardMode": "不支持中文 ID，减少不同构建环境下的兼容问题"
 }

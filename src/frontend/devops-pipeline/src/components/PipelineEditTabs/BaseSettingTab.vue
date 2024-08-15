@@ -55,7 +55,7 @@
         },
         methods: {
             handleBaseInfoChange (name, value) {
-                if (this.pipelineSetting[name] !== value) {
+                if (this.pipelineSetting[name] !== value || name === 'pipelineAsCodeSettings') {
                     this.updatePipelineSetting({
                         setting: this.pipelineSetting,
                         param: {

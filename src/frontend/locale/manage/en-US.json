@@ -138,5 +138,40 @@
     "重命名": "Rename",
     "项目类型": "Project Type",
     "创建项目申请单已撤回": "Creation of project application has been withdrawn",
-    "全员": "EveryOne"
+    "全员": "EveryOne",
+    "变量语法风格": "Naming Convention",
+    "继承项目设置": "Inherited Project Settings",
+    "传统风格": "Traditional Style",
+    "制约风格": "Constraint Style",
+    "语法差异": "Grammatical Differences",
+    "差异项": "Difference Item",
+
+    "表达式格式": "Expression Format",
+    "单花括号或双花括号": "Single or Double Curly Braces",
+    "如：${var}、${{var}}": "e.g., {'${var}'}、{'${{var}}'}",
+    "仅支持双花括号，避免出现 bash 脚本变量在执行前被系统赋值的问题": "Only Double Curly Braces Supported to Avoid System Assignment Issues in Bash Scripts",
+    "如：${{variables.var}}": "e.g., {'${{variables.var}}'}",
+
+    "引用方式": "Quote Mode",
+    "直接引用变量名或上下文方式引用": "Direct Variable Name or Contextual Reference",
+    "仅支持上下文方式引用": "Only Contextual Reference Supported",
+    "如：${{ci.pipeline_id}}、${{variables.a}}、${{steps.get_code.outputs.a}}": "e.g., {'${{ci.pipeline_id}}'}、{'${{variables.a}}'}、{'${{steps.get_code.outputs.a}}'}",
+
+    "环境变量": "Environment Variable",
+    "流水线变量、插件输出变量会自动设置为环境变量": "Pipeline Variables and Plugin Output Variables are Automatically Set as Environment Variables",
+    "需要时通过在 Job/Step 上按需指定，降低环境污染风险": "Specify as Needed in Job/Step to Reduce Environment Pollution Risk",
+
+    "重置内置只读变量": "Reset Built-in Read-Only Variables",
+    "不生效，仅警告未报错": "Not Effective, Only Warning without Error",
+    "将报错，运行失败": "Will Cause Error and Run Failure",
+
+    "变量值超长": "Variable Value Too Long",
+    "仅警告未报错": "Only Warning without Error",
+
+    "变量不存在": "Variable Not Found",
+    "未报错，继续执行，依赖执行逻辑自行检查": "No Error, Continue Execution, Check Execution Logic as Needed",
+
+    "变量 ID 规范": "Variable ID Standard",
+    "未限制": "No Restriction",
+    "不支持中文 ID，减少不同构建环境下的兼容问题": "Chinese IDs Not Supported to Reduce Compatibility Issues in Different Build Environments"
 }

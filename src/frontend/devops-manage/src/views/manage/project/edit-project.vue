@@ -32,6 +32,8 @@ const statusDisabledTips = {
   1: t('新建项目申请审批中，暂不可修改'),
   4: t('更新项目信息审批中，暂不可修改'),
 };
+const currentDialect = ref();
+const isDialectDialog = ref(false);
 
 const fetchProjectData = async () => {
   isLoading.value = true;
@@ -39,6 +41,7 @@ const fetchProjectData = async () => {
     englishName: projectCode,
   }).then((res) => {
     projectData.value = res;
+    currentDialect.value = res.pipelineDialect;
     if (projectData.value.centerId === '0') projectData.value.centerId = ''
     if (projectData.value.projectType === 0) projectData.value.projectType = ''
   }).catch((err) => {
@@ -144,11 +147,28 @@ const showNeedApprovedTips = () => {
 /**
  * 更新项目
  */
-const handleUpdate = async () => {
+const handleUpdate = () => {
+  if(currentDialect.value === 'CLASSIC' && projectData.value.pipelineDialect === 'CONSTRAINED'){
+    isDialectDialog.value = true;
+    return
+  }
+  updateConfirm()
+};
+
+const updateConfirm = async () => {
   projectForm.value?.validate().then(async () => {
     await updateProject();
   })
-};
+}
+
+const handleConfirm = () => {
+  isDialectDialog.value = false;
+  updateConfirm()
+}
+
+const handleClosed = () => {
+  isDialectDialog.value = false;
+}
 
 const initProjectForm = (value) => {
   projectForm.value = value;
@@ -228,6 +248,27 @@ onMounted(() => {
       </bk-button>
     </bk-exception>
   </bk-loading>
+  <bk-dialog
+    :width="480"
+    header-align="center"
+    footer-align="center"
+    :is-show="isDialectDialog"
+    @confirm="handleConfirm"
+    @closed="handleClosed"
+  >
+    <template #header>
+      <img src="@/css/svg/warninfo.svg" class="manage-icon-tips">
+      <h2 class="dialog-header"> {{ t('确定升级变量语法风格为制约风格？')}}</h2>
+    </template>
+    <template #default>
+      <div class="project">
+        {{ t('项目：') }} <span class="project-name">{{ projectData.projectName }}</span>
+      </div>
+      <div class="description">
+        {{ t('升级后，该项目对变量引用方式将有更严格的要求。') }}
+      </div>
+    </template>
+  </bk-dialog>
 </template>
 
 <style lang="postcss" scoped>
@@ -268,5 +309,35 @@ onMounted(() => {
     .btn {
       width: 88px;
     }
+  }
+  .manage-icon-tips {
+    width: 42px;
+    height: 42px;
+  }
+  .dialog-header {
+    font-family: MicrosoftYaHei;
+    font-size: 20px;
+    color: #313238;
+    letter-spacing: 0;
+  }
+  .progect {
+    font-size: 14px;
+    color: #63656E;
+    .project-name {
+      color: #313238;
+      font-weight: bold;
+    }
+  }
+  .description {
+    display: flex;
+    align-items: center;
+    width: 416px;
+    height: 46px;
+    padding: 0 16px;
+    margin: 16px 0;
+    background: #F5F6FA;
+    border-radius: 2px;
+    font-size: 14px;
+    color: #63656E;
   }
 </style>
