@@ -112,7 +112,7 @@
                 </div>
             </header>
         </template>
-        <div class="pipeline-list-box table-box" ref="tableBox">
+        <div class="pipeline-list-box" ref="tableBox">
             <pipeline-table-view
                 v-if="isTableLayout"
                 :filter-params="filters"
@@ -236,15 +236,15 @@
                     action: this.toggleImportPipelinePopup
                 }],
                 RESOURCE_ACTION,
-                PROJECT_RESOURCE_ACTION
+                PROJECT_RESOURCE_ACTION,
+                tableHeight: null
             }
         },
         computed: {
             ...mapState('pipelines', [
                 'allPipelineGroup',
                 'pipelineActionState',
-                'isManage',
-                'tableHeight'
+                'isManage'
             ]),
             projectId () {
                 return this.$route.params.projectId
@@ -343,7 +343,7 @@
             webSocketMessage.installWsMessage(this.$refs.pipelineBox?.updatePipelineStatus)
             bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
             bus.$on(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
-            setTimeout(this.updateTableHeight)
+            this.updateTableHeight()
             window.addEventListener('resize', this.updateTableHeight)
         },
 
@@ -355,9 +355,11 @@
 
         methods: {
             ...mapActions('pipelines', [
-                'requestHasCreatePermission',
-                'updateTableHeight'
+                'requestHasCreatePermission'
             ]),
+            updateTableHeight () {
+                this.tableHeight = this.$refs.tableBox.offsetHeight
+            },
             isActiveSort (sortType) {
                 return this.$route.query.sortType === sortType
             },

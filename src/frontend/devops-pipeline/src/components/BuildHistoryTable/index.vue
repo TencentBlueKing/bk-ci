@@ -67,7 +67,7 @@
             </div>
         </bk-exception>
         <div
-            class="table-box bkdevops-build-history-table-wrapper"
+            class="bkdevops-build-history-table-wrapper"
             ref="tableBox"
             :style="{ height: `${tableHeight}px` }"
             v-else
@@ -588,15 +588,15 @@
                 buildHistories: [],
                 stoping: {},
                 isLoading: false,
-                tableColumnKeys: initSortedColumns
+                tableColumnKeys: initSortedColumns,
+                tableHeight: null
             }
         },
         computed: {
             ...mapGetters({
                 historyPageStatus: 'pipelines/getHistoryPageStatus',
                 isReleasePipeline: 'atom/isReleasePipeline',
-                isCurPipelineLocked: 'atom/isCurPipelineLocked',
-                tableHeight: 'pipelines/tableHeight'
+                isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
             ...mapState('atom', [
                 'pipelineInfo',
@@ -792,7 +792,6 @@
         },
         mounted () {
             webSocketMessage.installWsMessage(this.requestHistory)
-            setTimeout(this.updateTableHeight, 100)
             window.addEventListener('resize', this.updateTableHeight)
         },
 
@@ -806,9 +805,11 @@
                 'updateBuildRemark',
                 'requestPipelinesHistory',
                 'setHistoryPageStatus',
-                'resetHistoryFilterCondition',
-                'updateTableHeight'
+                'resetHistoryFilterCondition'
             ]),
+            updateTableHeight () {
+                this.tableHeight = this.$refs.tableBox.offsetHeight
+            },
             handleColumnChange (columns) {
                 this.tableColumnKeys = columns
                 this.$refs.tableSetting.$parent.instance?.hide()

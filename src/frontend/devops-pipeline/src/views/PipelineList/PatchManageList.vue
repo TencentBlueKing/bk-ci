@@ -26,7 +26,7 @@
                 />
             </div>
         </header>
-        <div class="pipeline-list-box table-box" ref="tableBox">
+        <div class="pipeline-list-box" ref="tableBox">
             <pipeline-table-view
                 ref="pipelineTable"
                 :fetch-pipelines="getPipelines"
@@ -74,13 +74,13 @@
                 selected: [],
                 addToDialogShow: false,
                 filters: restQuery,
-                isConfirmShow: false
+                isConfirmShow: false,
+                tableHeight: null
             }
         },
         computed: {
             ...mapGetters('pipelines', [
-                'groupMap',
-                'tableHeight'
+                'groupMap'
             ]),
             currentViewName () {
                 return this.$t(this.groupMap?.[this.$route.params.viewId]?.name ?? '')
@@ -104,7 +104,7 @@
             moment.locale(this.$i18n.locale)
         },
         mounted () {
-            setTimeout(this.updateTableHeight)
+            this.updateTableHeight()
             window.addEventListener('resize', this.updateTableHeight)
         },
         beforeDestroy () {
@@ -112,9 +112,11 @@
         },
         methods: {
             ...mapActions('pipelines', [
-                'requestAllPipelinesListByFilter',
-                'updateTableHeight'
+                'requestAllPipelinesListByFilter'
             ]),
+            updateTableHeight () {
+                this.tableHeight = this.$refs.tableBox.offsetHeight
+            },
             exitPatch () {
                 this.$router.push({
                     name: 'PipelineManageList',
