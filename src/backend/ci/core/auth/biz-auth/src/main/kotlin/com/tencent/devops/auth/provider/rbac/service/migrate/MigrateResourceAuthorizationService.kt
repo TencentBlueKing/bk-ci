@@ -153,6 +153,7 @@ class MigrateResourceAuthorizationService @Autowired constructor(
     ) {
         var offset = 0L
         val limit = 100L
+        val resourceAuthorizationIds = mutableListOf<String>()
         do {
             val resourceAuthorizationData = listResourceAuthorization(
                 offset = offset,
@@ -168,7 +169,7 @@ class MigrateResourceAuthorizationService @Autowired constructor(
             if (resourceAuthorizationData == null || resourceAuthorizationData.result.isNullOrEmpty()) {
                 return
             }
-            permissionAuthorizationService.addResourceAuthorization(
+            permissionAuthorizationService.migrateResourceAuthorization(
                 resourceAuthorizationList = resourceAuthorizationData.result.map {
                     ResourceAuthorizationDTO(
                         projectCode = projectCode,
@@ -180,8 +181,15 @@ class MigrateResourceAuthorizationService @Autowired constructor(
                     )
                 }
             )
+            resourceAuthorizationIds.addAll(resourceAuthorizationData.result.map { it.resourceCode })
             offset += limit
         } while (resourceAuthorizationData!!.result.size.toLong() == limit)
+        // 由于生产和灰度不是同时发布，可能会出现生产删除资源，但是授权记录未删除，而导致出现的脏数据，需要进行删除。
+        permissionAuthorizationService.fixResourceAuthorization(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceAuthorizationIds = resourceAuthorizationIds
+        )
     }
 
     private fun listResourceAuthorization(

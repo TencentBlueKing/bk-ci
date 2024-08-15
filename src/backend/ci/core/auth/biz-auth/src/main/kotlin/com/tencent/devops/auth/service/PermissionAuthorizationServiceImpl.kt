@@ -50,12 +50,23 @@ class PermissionAuthorizationServiceImpl constructor(
     override fun addResourceAuthorization(resourceAuthorizationList: List<ResourceAuthorizationDTO>): Boolean {
         logger.info("add resource authorization:$resourceAuthorizationList")
         addHandoverFromCnName(resourceAuthorizationList)
-        authAuthorizationDao.batchAddOrUpdate(
+        authAuthorizationDao.batchAdd(
             dslContext = dslContext,
             resourceAuthorizationList = resourceAuthorizationList
         )
         return true
     }
+
+    override fun migrateResourceAuthorization(resourceAuthorizationList: List<ResourceAuthorizationDTO>): Boolean {
+        logger.info("migrate resource authorization:$resourceAuthorizationList")
+        addHandoverFromCnName(resourceAuthorizationList)
+        authAuthorizationDao.migrate(
+            dslContext = dslContext,
+            resourceAuthorizationList = resourceAuthorizationList
+        )
+        return true
+    }
+
 
     override fun getResourceAuthorization(
         projectCode: String,
@@ -149,6 +160,21 @@ class PermissionAuthorizationServiceImpl constructor(
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode
+        )
+        return true
+    }
+
+    override fun fixResourceAuthorization(
+        projectCode: String,
+        resourceType: String,
+        resourceAuthorizationIds: List<String>
+    ): Boolean {
+        logger.info("fix resource authorizations:$projectCode|$resourceType|$resourceAuthorizationIds")
+        authAuthorizationDao.delete(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCodes = resourceAuthorizationIds
         )
         return true
     }
