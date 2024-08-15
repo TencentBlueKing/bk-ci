@@ -67,7 +67,6 @@ class PermissionAuthorizationServiceImpl constructor(
         return true
     }
 
-
     override fun getResourceAuthorization(
         projectCode: String,
         resourceType: String,
