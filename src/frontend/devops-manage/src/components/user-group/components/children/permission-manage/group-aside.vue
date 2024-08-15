@@ -24,14 +24,13 @@
         >
           <span class="group-name" :title="group.name">{{ group.name }}</span>
           <div class="num-box" v-for="item in groupCountField" :key="item">
-            <template v-if="item === 'templateCount' && resourceType === 'pipeline'">
-              <i :class="{
-                'group-icon manage-icon manage-icon-user-shape': item === 'userCount',
-                'group-icon manage-icon manage-icon-user-template': item === 'templateCount',
-                'group-icon manage-icon manage-icon-organization': item === 'departmentCount',
-                'active': activeTab === group.groupId
-              }" />
-            </template>
+            <i
+              :class="{
+              'group-icon manage-icon manage-icon-user-shape': item === 'userCount',
+              'group-icon manage-icon manage-icon-user-template': item === 'templateCount',
+              'group-icon manage-icon manage-icon-organization': item === 'departmentCount',
+              'active': activeTab === group.groupId
+            }" />
             <div class="group-num">{{ group[item] }}</div>
           </div>
           <bk-popover
