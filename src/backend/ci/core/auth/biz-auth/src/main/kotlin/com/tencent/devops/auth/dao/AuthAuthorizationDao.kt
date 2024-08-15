@@ -15,7 +15,38 @@ import java.time.LocalDateTime
 
 @Repository
 class AuthAuthorizationDao {
-    fun batchAddOrUpdate(
+    fun batchAdd(
+        dslContext: DSLContext,
+        resourceAuthorizationList: List<ResourceAuthorizationDTO>
+    ) {
+        with(TAuthResourceAuthorization.T_AUTH_RESOURCE_AUTHORIZATION) {
+            dslContext.batch(
+                resourceAuthorizationList.map { resourceAuthorizationDto ->
+                    val handoverDateTime = Timestamp(resourceAuthorizationDto.handoverTime!!).toLocalDateTime()
+                    dslContext.insertInto(
+                        this,
+                        PROJECT_CODE,
+                        RESOURCE_TYPE,
+                        RESOURCE_CODE,
+                        RESOURCE_NAME,
+                        HANDOVER_FROM,
+                        HANDOVER_FROM_CN_NAME,
+                        HANDOVER_TIME
+                    ).values(
+                        resourceAuthorizationDto.projectCode,
+                        resourceAuthorizationDto.resourceType,
+                        resourceAuthorizationDto.resourceCode,
+                        resourceAuthorizationDto.resourceName,
+                        resourceAuthorizationDto.handoverFrom,
+                        resourceAuthorizationDto.handoverFromCnName,
+                        handoverDateTime
+                    )
+                }
+            ).execute()
+        }
+    }
+
+    fun migrate(
         dslContext: DSLContext,
         resourceAuthorizationList: List<ResourceAuthorizationDTO>
     ) {
@@ -45,7 +76,7 @@ class AuthAuthorizationDao {
                         .set(HANDOVER_FROM_CN_NAME, resourceAuthorizationDto.handoverFromCnName)
                         .set(RESOURCE_NAME, resourceAuthorizationDto.resourceName)
                         .set(HANDOVER_TIME, handoverDateTime)
-                        .set(UPDATE_TIME, LocalDateTime.now())
+                        .where(CREATE_TIME.eq(UPDATE_TIME))
                 }
             ).execute()
         }
@@ -89,6 +120,21 @@ class AuthAuthorizationDao {
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .and(RESOURCE_CODE.eq(resourceCode))
+                .execute()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCodes: List<String>
+    ) {
+        with(TAuthResourceAuthorization.T_AUTH_RESOURCE_AUTHORIZATION) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.notIn(resourceCodes))
                 .execute()
         }
     }

@@ -46,6 +46,13 @@ interface PermissionAuthorizationService {
     ): Boolean
 
     /**
+     * 迁移资源授权管理
+     */
+    fun migrateResourceAuthorization(
+        resourceAuthorizationList: List<ResourceAuthorizationDTO>
+    ): Boolean
+
+    /**
      * 获取资源授权记录
      */
     fun getResourceAuthorization(
@@ -87,6 +94,15 @@ interface PermissionAuthorizationService {
         projectCode: String,
         resourceType: String,
         resourceCode: String
+    ): Boolean
+
+    /**
+     * 修复迁移产生的脏数据
+     */
+    fun fixResourceAuthorization(
+        projectCode: String,
+        resourceType: String,
+        resourceAuthorizationIds: List<String>
     ): Boolean
 
     /**
