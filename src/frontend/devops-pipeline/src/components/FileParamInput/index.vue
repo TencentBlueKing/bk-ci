@@ -35,7 +35,11 @@
                 }"
             />
         </div>
-        <div class="file-upload">
+        <div
+            :class="{
+                'mt10': !flex,
+                'file-upload': flex
+            }">
             <file-upload
                 name="fileName"
                 :file-path="value"
@@ -164,11 +168,9 @@
     .is-diff-param {
         border-color: #FF9C01 !important;
     }
-
     .file-upload {
         display: flex;
         color: #737987;
-        margin-top: 10px;
         ::v-deep .bk-upload.button {
             position: static;
             display: flex;
