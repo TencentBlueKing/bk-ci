@@ -6,8 +6,10 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthAuthorizationDao
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
+import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResetAllResourceAuthorizationReq
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationConditionRequest
@@ -17,6 +19,7 @@ import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationResponse
 import com.tencent.devops.common.auth.enums.HandoverChannelCode
 import com.tencent.devops.common.auth.enums.ResourceAuthorizationHandoverStatus
+import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceEnvNodeAuthorizationResource
@@ -32,7 +35,8 @@ class PermissionAuthorizationServiceImpl constructor(
     private val authAuthorizationDao: AuthAuthorizationDao,
     private val client: Client,
     private val permissionResourceValidateService: PermissionResourceValidateService,
-    private val deptService: DeptService
+    private val deptService: DeptService,
+    private val permissionService: PermissionService
 ) : PermissionAuthorizationService {
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionAuthorizationServiceImpl::class.java)
@@ -56,10 +60,11 @@ class PermissionAuthorizationServiceImpl constructor(
     override fun getResourceAuthorization(
         projectCode: String,
         resourceType: String,
-        resourceCode: String
+        resourceCode: String,
+        executePermissionCheck: Boolean
     ): ResourceAuthorizationResponse {
         logger.info("get resource authorization:$projectCode|$resourceType|$resourceCode")
-        return authAuthorizationDao.get(
+        val record = authAuthorizationDao.get(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = resourceType,
@@ -67,6 +72,42 @@ class PermissionAuthorizationServiceImpl constructor(
         ) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.ERROR_RESOURCE_AUTHORIZATION_NOT_FOUND
         )
+        // 流水线代持人可能会因为被移出用户组，导致失去执行权限。
+        if (executePermissionCheck && resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
+            val action = RbacAuthUtils.buildAction(
+                authResourceType = AuthResourceType.PIPELINE_DEFAULT,
+                authPermission = AuthPermission.EXECUTE
+            )
+            val isHandoverFromHasExecutePermission = permissionService.validateUserResourcePermissionByRelation(
+                userId = record.handoverFrom,
+                action = action,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceType = resourceType,
+                relationResourceType = null
+            )
+            return record.copy(executePermission = isHandoverFromHasExecutePermission)
+        }
+        return record
+    }
+
+    override fun checkAuthorizationWhenRemoveGroupMember(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        memberId: String
+    ): Boolean {
+        if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
+            val record = getResourceAuthorization(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                executePermissionCheck = true
+            )
+            return memberId == record.handoverFrom && !record.executePermission!!
+        }
+        return true
     }
 
     override fun listResourceAuthorizations(

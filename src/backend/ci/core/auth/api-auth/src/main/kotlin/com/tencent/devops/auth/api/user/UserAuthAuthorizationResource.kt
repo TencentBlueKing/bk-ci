@@ -90,6 +90,27 @@ interface UserAuthAuthorizationResource {
         resourceCode: String
     ): Result<ResourceAuthorizationResponse>
 
+    @GET
+    @Path("/{projectId}/{resourceType}/checkAuthorizationWhenRemoveGroupMember")
+    @Operation(summary = "当移出用户组时做授权检查")
+    fun checkAuthorizationWhenRemoveGroupMember(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "资源类型", required = true)
+        @PathParam("resourceType")
+        resourceType: String,
+        @Parameter(description = "资源code", required = true)
+        @QueryParam("resourceCode")
+        resourceCode: String,
+        @Parameter(description = "成员ID", required = true)
+        @QueryParam("memberId")
+        memberId: String
+    ): Result<Boolean>
+
     @POST
     @Path("/{projectId}/resetResourceAuthorization")
     @Operation(summary = "重置资源授权管理")

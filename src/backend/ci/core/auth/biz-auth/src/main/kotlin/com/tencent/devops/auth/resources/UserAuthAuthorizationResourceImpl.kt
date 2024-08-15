@@ -41,7 +41,26 @@ class UserAuthAuthorizationResourceImpl(
             permissionAuthorizationService.getResourceAuthorization(
                 resourceType = resourceType,
                 projectCode = projectId,
-                resourceCode = resourceCode
+                resourceCode = resourceCode,
+                executePermissionCheck = true
+            )
+        )
+    }
+
+    override fun checkAuthorizationWhenRemoveGroupMember(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        resourceCode: String,
+        memberId: String
+    ): Result<Boolean> {
+        return Result(
+            permissionAuthorizationService.checkAuthorizationWhenRemoveGroupMember(
+                userId = userId,
+                projectCode = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                memberId = memberId
             )
         )
     }
