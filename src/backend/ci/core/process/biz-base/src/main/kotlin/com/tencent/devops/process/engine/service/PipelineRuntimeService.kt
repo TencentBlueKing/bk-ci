@@ -1883,7 +1883,7 @@ class PipelineRuntimeService @Autowired constructor(
         debugVersion: Int? = null,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?,
+        triggerUser: List<String>?
     ): Int {
         return pipelineBuildDao.count(
             dslContext = queryDslContext ?: dslContext,

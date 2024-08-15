@@ -1024,7 +1024,7 @@ class PipelineBuildDao {
                     buildMsg = buildMsg,
                     triggerAlias = triggerAlias,
                     triggerBranch = triggerBranch,
-                    triggerUser= triggerUser
+                    triggerUser = triggerUser
                 )
                 where.fetchOne(0, Int::class.java)!!
             }
