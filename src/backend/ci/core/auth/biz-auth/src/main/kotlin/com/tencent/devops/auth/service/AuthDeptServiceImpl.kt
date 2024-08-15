@@ -54,14 +54,15 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import java.util.Optional
+import java.util.concurrent.TimeUnit
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.util.Optional
-import java.util.concurrent.TimeUnit
 
 class AuthDeptServiceImpl @Autowired constructor(
     val redisOperation: RedisOperation,
@@ -313,6 +314,7 @@ class AuthDeptServiceImpl @Autowired constructor(
         val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url)
+            .headers(searchEntity.toMap().toHeaders())
             .post(requestBody)
             .build()
         OkhttpUtils.doHttp(request).use {
