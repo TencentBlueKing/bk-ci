@@ -40,6 +40,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import com.tencent.devops.common.api.pojo.Result
+import javax.ws.rs.POST
 
 @Tag(name = "SERVICE_AGENT", description = "服务-Agent")
 @Path("/service/agents")
@@ -83,4 +84,13 @@ interface ServiceAgentResource {
         @QueryParam("vmSeqId")
         vmSeqId: String
     ): Result<String>
+
+    @Operation(summary = "获取某个时间后有构建的Agent")
+    @POST
+    @Path("/fetch_build_by_time")
+    fun fetchAgentBuildByTime(
+        @QueryParam("time")
+        time: Long,
+        agentIds: Set<String>
+    ): Result<Set<String>>
 }

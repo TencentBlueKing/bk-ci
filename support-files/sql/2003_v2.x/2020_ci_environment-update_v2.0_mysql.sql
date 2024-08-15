@@ -133,6 +133,15 @@ BEGIN
             ADD COLUMN `ENABLE_NODE` bit(1) DEFAULT 1 NOT NULL COMMENT '是否启用节点';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ENVIRONMENT_THIRDPARTY_AGENT'
+                    AND COLUMN_NAME = 'DISABLE_INFO') THEN
+        ALTER TABLE `T_ENVIRONMENT_THIRDPARTY_AGENT`
+            ADD COLUMN `DISABLE_INFO` json NULL COMMENT '被禁用信息';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

@@ -48,8 +48,6 @@ import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
-import java.net.URLDecoder
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -60,6 +58,8 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.lower
 import org.springframework.stereotype.Repository
+import java.net.URLDecoder
+import java.time.LocalDateTime
 import java.util.Locale
 
 @Suppress("ALL")
@@ -1039,6 +1039,28 @@ class ProjectDao {
                 .from(this)
                 .where(ENGLISH_NAME.`in`(englishNameList))
                 .fetch(ENGLISH_NAME, String::class.java)
+        }
+    }
+
+    fun getDisableProject(
+        dslContext: DSLContext,
+        channelCodes: List<String>,
+        /*获取小于该更新时间的项目*/
+        ltUpdateTime: String,
+        limit: Int,
+        offset: Int
+    ): Result<TProjectRecord> {
+        val date = DateTimeUtil.stringToLocalDate(ltUpdateTime)!!.atStartOfDay()
+        return with(TProject.T_PROJECT) {
+            dslContext.selectFrom(this)
+                .where(ENABLED.eq(false))
+                .and(CHANNEL.`in`(channelCodes))
+                .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .and(UPDATED_AT.lt(date))
+                .orderBy(UPDATED_AT)
+                .limit(limit)
+                .offset(offset)
+                .fetch()
         }
     }
 

@@ -314,4 +314,8 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun disableAgent(projects: Set<String>) {
+        agentService.disableAgent(projects, null)
+    }
 }

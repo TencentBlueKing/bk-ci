@@ -87,7 +87,10 @@ class ProcessDataClearService @Autowired constructor(
             }
             processDataClearDao.deletePipelineInfoByPipelineId(context, projectId, pipelineId)
         }
-        processRelatedPlatformDataClearService.cleanBuildData(projectId, pipelineId)
+        processRelatedPlatformDataClearService.cleanBuildData(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
     }
 
     private fun generateFinalDslContext(archiveFlag: Boolean?): DSLContext {

@@ -447,4 +447,11 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "修改数据", required = true)
         data: BatchUpdateAgentEnvVar
     ): Result<Boolean>
+
+    @Operation(summary = "禁用Agent")
+    @POST
+    @Path("/disable_agent")
+    fun disableAgent(
+        projects: Set<String>
+    )
 }

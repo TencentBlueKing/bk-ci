@@ -126,6 +126,11 @@ func doAsk() {
 			upgrade.UninstallAgent()
 			return
 		}
+		if result.IsAgentDisabled() {
+			logs.Warn("agent has disabled, uninstall")
+			upgrade.UninstallAgent()
+			return
+		}
 		return
 	}
 
