@@ -44,9 +44,12 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 
 @Service
 class RemoteDevSettingService @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val redisCacheService: RedisCacheService,
@@ -61,6 +64,18 @@ class RemoteDevSettingService @Autowired constructor(
     fun getRemoteDevSettings(userId: String): RemoteDevSettings {
         logger.info("$userId get remote dev setting")
         val setting = remoteDevSettingDao.fetchOneSetting(dslContext, userId)
+        // TODO 待删除，等新版本客户端不依赖这个项目 id 后再去掉。
+        if (setting.projectId.isBlank()) {
+            kotlin.runCatching {
+                client.get(ServiceTxProjectResource::class).getRemoteDevUserProject(userId)
+            }.onFailure { logger.warn("create user project fail ${it.message}", it) }.getOrNull().let {
+                if (it?.data == null) {
+                    logger.warn("create user project fail ${it?.message}")
+                }
+                remoteDevSettingDao.updateProjectId(dslContext, userId, it?.data?.englishName ?: "")
+                setting.projectId = it?.data?.englishName ?: ""
+            }
+        }
         return setting
     }
 
