@@ -249,6 +249,42 @@
                 @handle-change="(value) => uploadPathFromFileName(value)"
             ></file-upload>
         </form-field>
+
+        <template v-if="isArtifactoryParam(param.type)">
+            <form-field
+                :label="$t('editPage.filterRule')"
+                :is-error="errors.has(`pipelineParam.glob`)"
+                :error-msg="errors.first(`pipelineParam.glob`)"
+            >
+                <vuex-input
+                    :disabled="disabled"
+                    :handle-change="handleChange"
+                    name="glob"
+                    :data-vv-scope="'pipelineParam'"
+                    :placeholder="$t('editPage.filterRuleTips')"
+                    :value="param.glob"
+                ></vuex-input>
+            </form-field>
+
+            <form-field
+                label-width="auto"
+                :label="$t('metaData')"
+                :is-error="errors.has(`pipelineParam.properties`)"
+                :error-msg="errors.first(`pipelineParam.properties`)"
+            >
+                <key-value-normal
+                    :disabled="disabled"
+                    name="properties"
+                    :data-vv-scope="'pipelineParam'"
+                    :is-metadata-var="true"
+                    :add-btn-text="$t('editPage.addMetaData')"
+                    :value="getProperties(param)"
+                    :handle-change="
+                        (name, value) => handleProperties(name, value)
+                    "
+                ></key-value-normal>
+            </form-field>
+        </template>
     </section>
 </template>
 
@@ -263,6 +299,7 @@
     import Selector from '@/components/atomFormField/Selector'
     import FileUpload from '@/components/FileUpload'
     import FileParamInput from '@/components/FileParamInput'
+    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import validMixins from '@/components/validMixins'
     import {
         isTextareaParam,
@@ -307,7 +344,8 @@
             VuexTextarea,
             RequestSelector,
             FileUpload,
-            FileParamInput
+            FileParamInput,
+            KeyValueNormal
         },
         mixins: [validMixins],
         props: {
@@ -496,9 +534,27 @@
                 }
                 this.handleUpdateParam(key, value)
             },
-
             uploadPathFromFileName (value) {
                 this.uploadFileName = value
+            },
+            getProperties (param) {
+                try {
+                    return Object.keys(param.properties).map((item) => {
+                        return {
+                            key: item,
+                            value: param.properties[item]
+                        }
+                    })
+                } catch (e) {
+                    return []
+                }
+            },
+            handleProperties (key, value, index) {
+                const properties = {}
+                value.forEach((val) => {
+                    properties[val.key] = val.value
+                })
+                this.handleUpdateParam(key, properties)
             }
         }
     }
