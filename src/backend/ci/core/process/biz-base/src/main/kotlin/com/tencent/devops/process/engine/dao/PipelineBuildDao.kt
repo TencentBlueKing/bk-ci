@@ -1296,7 +1296,7 @@ class PipelineBuildDao {
             where.and(conditionsOr)
         }
         if (!triggerUser.isNullOrEmpty()) { // filterNotNull不能删
-            where.and(TRIGGER_USER.`in`(triggerUser.map { it }))
+            where.and(TRIGGER_USER.`in`(triggerUser))
         }
     }
 
@@ -1455,7 +1455,7 @@ class PipelineBuildDao {
             where.and(conditionsOr)
         }
         if (!triggerUser.isNullOrEmpty()) { // filterNotNull不能删
-            where.and(TRIGGER_USER.`in`(triggerUser.map { it }))
+            where.and(TRIGGER_USER.`in`(triggerUser))
         }
     }
 
