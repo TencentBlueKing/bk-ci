@@ -246,16 +246,8 @@
                                                 :required="valueRequired"
                                                 :disabled="disabled"
                                                 :value="param.defaultValue"
-                                                :upload-file-name="uploadFileName"
-                                                :file-params-name-flag="fileParamsNameFlag"
                                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                             />
-                                            <file-upload
-                                                class="mt10"
-                                                name="fileName"
-                                                :file-path="param.defaultValue"
-                                                @handle-change="(value) => uploadPathFromFileName(value, param.id)"
-                                            ></file-upload>
                                         </bk-form-item>
                                     </div>
 
@@ -423,7 +415,6 @@
 </template>
 
 <script>
-    import FileUpload from '@/components/FileUpload'
     import FileParamInput from '@/components/FileParamInput'
     import Accordion from '@/components/atomFormField/Accordion'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
@@ -483,7 +474,6 @@
             draggable,
             VuexTextarea,
             RequestSelector,
-            FileUpload,
             FileParamInput
         },
         mixins: [validMixins],
@@ -517,9 +507,7 @@
         data () {
             return {
                 paramIdCount: 0,
-                renderParams: [],
-                uploadFileName: '',
-                fileParamsNameFlag: ''
+                renderParams: []
             }
         },
         computed: {
@@ -587,9 +575,6 @@
         watch: {
             params (newVal) {
                 this.renderParams = this.getParams(newVal)
-            },
-            fileParamsNameFlag () {
-                this.uploadFileName = ''
             }
         },
 
@@ -838,13 +823,6 @@
                         return false
                     }).map(opt => ({ id: opt.key, name: opt.value }))
                     : []
-            },
-
-            uploadPathFromFileName (value, name) {
-                this.fileParamsNameFlag = name
-                this.$nextTick(() => {
-                    this.uploadFileName = value
-                })
             }
         }
     }

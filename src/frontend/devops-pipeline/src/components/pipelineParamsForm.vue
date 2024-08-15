@@ -14,24 +14,15 @@
                     :click-unfold="true"
                     :show-select-all="true"
                     :handle-change="handleParamUpdate"
+                    flex
                     v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
                     :class="{
                         'is-diff-param': highlightChangedParam && param.isChanged
                     }"
                     :disabled="disabled"
                     :placeholder="param.placeholder"
-                    :upload-file-name="uploadFileName"
-                    :file-params-name-flag="fileParamsNameFlag"
                     :is-diff-param="highlightChangedParam && param.isChanged"
                 />
-                
-                <div class="file-upload" v-if="showFileUploader(param.type)">
-                    <file-upload
-                        name="fileName"
-                        :file-path="param.value"
-                        @handle-change="(value) => uploadPathFromFileName(value, param.name)"
-                    />
-                </div>
             </section>
             <span
                 v-if="!errors.has('devops' + param.name)"
@@ -52,7 +43,6 @@
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
-    import FileUpload from '@/components/FileUpload'
     import FileParamInput from '@/components/FileParamInput'
     import {
         BOOLEAN_LIST,
@@ -86,7 +76,6 @@
             VuexTextarea,
             FormField,
             metadataList,
-            FileUpload,
             FileParamInput
         },
         props: {
@@ -107,12 +96,6 @@
                 default: () => () => {}
             },
             highlightChangedParam: Boolean
-        },
-        data () {
-            return {
-                uploadFileName: '',
-                fileParamsNameFlag: ''
-            }
         },
         computed: {
             paramList () {
@@ -181,11 +164,6 @@
                 })
             }
         },
-        watch: {
-            fileParamsNameFlag () {
-                this.uploadFileName = ''
-            }
-        },
         methods: {
             getParamComponentType (param) {
                 if (isRemoteType(param)) {
@@ -230,13 +208,6 @@
             },
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1
-            },
-
-            uploadPathFromFileName (value, name) {
-                this.fileParamsNameFlag = `devops${name}`
-                this.$nextTick(() => {
-                    this.uploadFileName = value
-                })
             }
         }
     }
