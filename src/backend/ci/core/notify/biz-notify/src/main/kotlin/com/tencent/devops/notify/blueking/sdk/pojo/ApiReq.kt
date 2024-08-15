@@ -35,5 +35,5 @@ abstract class ApiReq(
     open var bk_token: String?,
     open val bk_username: String?
 ) {
-    fun toMap() = mapOf("X-Bkapi-Authorization" to JsonUtil.toJson(this))
+    fun toMap() = mapOf("X-Bkapi-Authorization" to JsonUtil.toJson(this).replace("\\s".toRegex(), ""))
 }

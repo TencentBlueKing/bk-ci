@@ -836,8 +836,20 @@ class CreateControl @Autowired constructor(
     private fun checkOrInitPersonalProject(userId: String): String {
         val userProjectId = "_$userId"
         val projectInfo = getProjectInfo(userProjectId)
+        var projectId = ""
+        if (projectInfo == null) {
+            kotlin.runCatching {
+                client.get(ServiceTxProjectResource::class).getRemoteDevUserProject(userId)
+            }.onFailure { logger.warn("create user project fail ${it.message}", it) }.getOrNull().let {
+                if (it?.data == null) {
+                    logger.warn("create user project fail ${it?.message}")
+                }
+                remoteDevSettingDao.updateProjectId(dslContext, userId, it?.data?.englishName ?: "")
+                projectId = it?.data?.englishName ?: ""
+            }
+        }
 
-        if (projectInfo == null || projectInfo.properties?.remotedev != true) {
+        if (projectId.isNotBlank() || projectInfo?.properties?.remotedev != true) {
             initPersonalProject(userId, userProjectId)
         }
 

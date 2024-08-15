@@ -26,7 +26,6 @@
  */
 package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.utils
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,8 +33,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class StartCloudRedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper
+    private val redisOperation: RedisOperation
 ) {
 
     /*-------------------------*/

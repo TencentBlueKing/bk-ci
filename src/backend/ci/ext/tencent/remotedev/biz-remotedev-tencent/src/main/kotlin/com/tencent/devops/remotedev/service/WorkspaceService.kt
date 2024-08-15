@@ -50,7 +50,6 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.cron.HolidayHelper
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -100,7 +99,6 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
 import com.tencent.devops.remotedev.service.tai.TaiService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
-import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon.Companion.DEFAULT_WAIT_TIME
 import java.time.Duration
@@ -136,10 +134,7 @@ class WorkspaceService @Autowired constructor(
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val expertSupportDao: ExpertSupportDao,
     private val apiGwService: ApiGwService,
-    private val notifyControl: NotifyControl,
     private val startWorkspaceService: StartWorkspaceService,
-    private val bkBaseService: BKBaseService,
-    private val holidayHelper: HolidayHelper,
     private val taiClient: TaiClient,
     private val taiService: TaiService
 ) {
@@ -1131,6 +1126,31 @@ class WorkspaceService @Autowired constructor(
             displayName = displayName,
             checkPermission = false
         )
+    }
+
+    // 校验是否需要moa 2fa验证，true:需要 ；false：不需要
+    fun checkMoa2fa(userId: String, workspaceName: String): Boolean {
+        /*1.个人云桌面 + 内部员工拥有者 --直接返回true
+         *2.团队云桌面 + 内部员工拥有者，则调用wesec接口判断
+          */
+        logger.info("$userId check moa 2fa workspace $workspaceName")
+        val ws = getWorkspaceList4WeSec(
+            workspaceName = workspaceName,
+            notStatus = null
+        ).firstOrNull() ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(workspaceName)
+        )
+        // TODO 目前阶段先对内部员工做 moa 验证，后续放开 cp 也需要验证。
+        if (!ws.realOwner.isNullOrBlank() && !ws.realOwner!!.endsWith("@tai")) {
+            return kotlin.runCatching {
+                apiGwService.checkMoa2fa(
+                    project = ws.projectId,
+                    workspactName = workspaceName
+                )
+            }.getOrNull() ?: false.also { logger.warn("MOA 2FA check failed for workspace $workspaceName") }
+        }
+        return false
     }
 
     fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Moa2faRespData {
