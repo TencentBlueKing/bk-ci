@@ -356,6 +356,6 @@ interface AppPipelineBuildResource {
         triggerBranch: List<String>?,
         @Parameter(description = "触发人", required = false)
         @QueryParam("triggerUser")
-        triggerUser: List<String>?,
+        triggerUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>>
 }

@@ -513,8 +513,7 @@ interface ServiceBuildResource {
         triggerBranch: List<String>? = null,
         @Parameter(description = "触发人", required = false)
         @QueryParam("triggerUser")
-        triggerUser: List<String>? = null,
-
+        triggerUser: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "获取构建详情")
