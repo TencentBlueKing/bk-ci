@@ -19,7 +19,8 @@
 
 import {
     PROCESS_API_URL_PREFIX,
-    STORE_API_URL_PREFIX
+    STORE_API_URL_PREFIX,
+    PROJECT_API_URL_PREFIX
 } from '@/store/constants'
 import ajax from '@/utils/request'
 
@@ -38,6 +39,9 @@ const mutations = {
 }
 
 const actions = {
+    async getPipelineDialect (_, projectId) {
+        return ajax.get(`${PROJECT_API_URL_PREFIX}/user/projects/${projectId}/pipelineDialect`)
+    },
     installPipelineTemplate (_, params) {
         return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install`, params).then(response => {
         })

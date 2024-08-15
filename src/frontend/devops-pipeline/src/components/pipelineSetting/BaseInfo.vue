@@ -91,6 +91,15 @@
                     :handle-change="handleBaseInfoChange"
                 />
             </bk-form-item>
+
+            <bk-form-item ext-cls="namingConvention">
+                <syntax-style-configuration
+                    :inherited-dialect="settings.inheritedDialect"
+                    :pipeline-dialect="settings.pipelineDialect"
+                    @inherited-change="inheritedChange"
+                    @pipeline-dialect-change="pipelineDialectChange"
+                />
+            </bk-form-item>
         </bk-form>
     </div>
 </template>
@@ -98,13 +107,15 @@
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
-    import { mapGetters } from 'vuex'
+    import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
+    import { mapGetters, mapActions } from 'vuex'
 
     export default {
         name: 'bkdevops-base-info-setting-tab',
         components: {
             VuexTextarea,
-            VuexInput
+            VuexInput,
+            SyntaxStyleConfiguration
         },
         props: {
             pipelineSetting: Object,
@@ -113,6 +124,16 @@
                 default: true
             },
             handleBaseInfoChange: Function
+        },
+        data () {
+            return {
+                settings: {
+                    enable: null,
+                    inheritedDialect: true,
+                    pipelineDialect: ''
+                },
+                currentPipelineDialect: ''
+            }
         },
         computed: {
             ...mapGetters({
@@ -137,10 +158,24 @@
                 })
             }
         },
+        watch: {
+            pipelineSetting: {
+                handler (newVal) {
+                    if (newVal) {
+                        this.initializePipelineAsCodeSettings(newVal.pipelineAsCodeSettings)
+                    }
+                }
+
+            }
+        },
         created () {
             this.requestGrouptLists()
+            this.requestPipelineDialect()
         },
         methods: {
+            ...mapActions('pipelines', [
+                'getPipelineDialect'
+            ]),
             /** *
              * 获取标签及其分组
              */
@@ -169,6 +204,34 @@
             toManageLabel () {
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/list/group`
                 window.open(url, '_blank')
+            },
+            initializePipelineAsCodeSettings (settings) {
+                const { enable, inheritedDialect } = settings
+                this.settings = {
+                    ...this.settings,
+                    enable,
+                    inheritedDialect
+                }
+            },
+            async requestPipelineDialect () {
+                try {
+                    const { data } = await this.getPipelineDialect(this.projectId)
+                    this.currentPipelineDialect = data
+                    this.settings.pipelineDialect = data
+                } catch (err) {
+                    console.log(err)
+                }
+            },
+            inheritedChange (value) {
+                if (value) {
+                    this.settings.pipelineDialect = this.currentPipelineDialect
+                }
+                this.settings.inheritedDialect = value
+                this.handleBaseInfoChange('pipelineAsCodeSettings', this.settings)
+            },
+            pipelineDialectChange (value) {
+                this.settings.pipelineDialect = value
+                this.handleBaseInfoChange('pipelineAsCodeSettings', this.settings)
             }
         }
     }
@@ -231,6 +294,14 @@
                 justify-content: center;
                 color: #979BA5;
                 font-size: 12px;
+            }
+        }
+        .namingConvention {
+            position: relative;
+            .bk-form-control {
+                display: flex;
+                grid-gap: 16px;
+                margin-top: 8px;
             }
         }
     }

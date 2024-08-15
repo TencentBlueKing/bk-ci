@@ -16,6 +16,7 @@ import {
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import IAMIframe from './IAM-Iframe';
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 const {
   t,
 } = useI18n();
@@ -572,6 +573,24 @@ onBeforeUnmount(() => {
         class="edit-line ml5"
         @click="showMemberDialog"
       />
+    </bk-form-item>
+    <bk-form-item
+      property="pipelineDialect"
+    >
+    <template #label>
+      <dialect-popover-table />
+    </template>
+    <bk-radio-group
+      v-model="projectData.pipelineDialect"
+      @change="handleChangeForm"
+    >
+        <bk-radio label="CLASSIC">
+          <span>{{ t('传统风格') }}</span>
+        </bk-radio>
+        <bk-radio label="CONSTRAINED">
+          <span>{{ t('制约风格') }}</span>
+        </bk-radio>
+      </bk-radio-group>
     </bk-form-item>
     <div>
       <slot></slot>

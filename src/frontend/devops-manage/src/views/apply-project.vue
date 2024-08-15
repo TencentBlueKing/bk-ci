@@ -31,6 +31,7 @@ const projectData = ref({
   subjectScopes: [],
   secrecy: false,
   authSecrecy: 0,
+  pipelineDialect: 'CLASSIC',
 });
 const projectForm = ref(null);
 const btnLoading = ref(false);
