@@ -97,7 +97,7 @@ interface ApigwDeskTopResource {
 
     @Operation(summary = "给云桌面发送消息")
     @POST
-    @Path("/notify")
+    @Path("/sdk/notify")
     fun messageRegister(
         @Parameter(description = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
