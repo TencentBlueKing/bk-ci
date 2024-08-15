@@ -393,7 +393,7 @@ kubernetes-manager:
       targetCPU: 80
       targetMemory: 80
     # 使用的镜像
-    image: bkci/bkci-kubernetes-manager:0.0.31
+    image: bkci/bkci-kubernetes-manager:0.0.33
     # 决定每次helm部署时的构建机所在的命名空间，同时dockerInitSh也在那里，为空时默认为 {{ .Release.Namespace }}
     builderNamespace:
     redis:
