@@ -43,5 +43,7 @@ data class BuildParameters(
     @get:Schema(title = "描述", required = false)
     var desc: String? = null,
     @get:Schema(title = "默认值", required = false)
-    var defaultValue: Any? = null
+    var defaultValue: Any? = null,
+    @get:Schema(title = "元素对应代码库", required = false)
+    var repoHashId: String? = null
 )

@@ -106,6 +106,9 @@ data class VariableProps(
     @JsonProperty("repo-id")
     @get:Schema(title = "repo-id")
     val repoHashId: String? = null,
+    @JsonProperty("repo-name")
+    @get:Schema(title = "repo-name")
+    val repoName: String? = null,
     @JsonProperty("scm-type")
     @get:Schema(title = "scm-type")
     val scmType: String? = null,
@@ -178,6 +181,8 @@ enum class VariablePropType(val value: String) {
     TIME_PICKER("time-picker"),
     COMPANY_STAFF_INPUT("company-staff-input"),
     GIT_REF("git-ref"),
+    SVN_REF("svn-tag"),
+    REPO_REF("repo-ref"),
     CODE_LIB("code-lib"),
     CONTAINER_TYPE("container-type"),
     ARTIFACTORY("artifactory"),

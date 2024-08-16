@@ -205,4 +205,21 @@ class UserBuildParametersResourceImpl @Autowired constructor(
             result.map { BuildFormValue(it, it) }
         )
     }
+
+    override fun listSvnRefs(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        search: String?
+    ): Result<List<BuildFormValue>> {
+        val repositoryConfig = RepositoryConfigUtils.buildConfig(repositoryId, repositoryType)
+        val branches = scmProxyService.listBranches(
+            projectId = projectId,
+            repositoryConfig = repositoryConfig,
+            search = search
+        ).data ?: listOf()
+        return Result(
+            branches.map { BuildFormValue(it, it) }
+        )
+    }
 }

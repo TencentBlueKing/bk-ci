@@ -89,5 +89,17 @@ data class BuildFormProperty(
     @get:Schema(title = "参数值是否必填", required = false)
     val valueNotEmpty: Boolean? = false,
     @get:Schema(title = "页面所需内容，后台仅保存，不做处理", required = false)
-    val payload: Any? = null
+    val payload: Any? = null,
+    @get:Schema(title = "默认分支", required = false)
+    var defaultBranch: String? = null,
+    @get:Schema(title = "Git分支搜索url, 当是下拉框选项时，列表值从url获取不再从option获取", required = false)
+    var gitBranchSearchUrl: String? = null,
+    @get:Schema(title = "SVN分支搜索url, 当是下拉框选项时，列表值从url获取不再从option获取", required = false)
+    var svnBranchSearchUrl: String? = null,
+    @get:Schema(title = "替换搜索url中的分支搜素关键字", required = false)
+    val branchReplaceKey: String? = null,
+    @get:Schema(title = "替换搜索url中的代码库HashId搜素关键字", required = false)
+    val repoHashIdReplaceKey: String? = null,
+    @get:Schema(title = "分支下拉框列表", required = false)
+    var branchOptions: List<BuildFormValue>? = emptyList()
 )
