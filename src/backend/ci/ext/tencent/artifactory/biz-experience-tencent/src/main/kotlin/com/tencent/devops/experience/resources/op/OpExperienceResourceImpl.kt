@@ -49,7 +49,9 @@ import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperienceSearchRecommendDao
+import com.tencent.devops.experience.pojo.ExperienceClean
 import com.tencent.devops.experience.pojo.ExperienceExtendBanner
+import com.tencent.devops.experience.service.ExperienceService
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 import org.apache.commons.lang3.RandomStringUtils
@@ -66,14 +68,16 @@ class OpExperienceResourceImpl @Autowired constructor(
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceSearchRecommendDao: ExperienceSearchRecommendDao,
     private val redisOperation: RedisOperation,
-    private val experienceExtendBannerDao: ExperienceExtendBannerDao
+    private val experienceExtendBannerDao: ExperienceExtendBannerDao,
+    private val experienceService: ExperienceService
 ) : OpExperienceResource {
     override fun switchNecessary(userId: String, id: Long): Result<String> {
         val record = experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException(
             MessageUtil.getMessageByLocale(
                 messageCode = RECORD_COULD_NOT_FOUND,
                 language = I18nUtil.getLanguage(userId)
-        ))
+            )
+        )
 
         experiencePublicDao.updateById(
             dslContext = dslContext,
@@ -82,11 +86,11 @@ class OpExperienceResourceImpl @Autowired constructor(
         )
 
         return Result(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_UPDATED_SUCCESSFULLY_AND_SET,
-                    language = I18nUtil.getLanguage(userId)
-                ) + "${record.necessary.not()}"
-            )
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_UPDATED_SUCCESSFULLY_AND_SET,
+                language = I18nUtil.getLanguage(userId)
+            ) + "${record.necessary.not()}"
+        )
     }
 
     override fun setNecessaryIndex(userId: String, id: Long, necessaryIndex: Int): Result<String> {
@@ -105,9 +109,10 @@ class OpExperienceResourceImpl @Autowired constructor(
 
         return Result(
             MessageUtil.getMessageByLocale(
-            messageCode = BK_UPDATED_SUCCESSFULLY,
-            language = I18nUtil.getLanguage(userId)
-        ))
+                messageCode = BK_UPDATED_SUCCESSFULLY,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
     }
 
     override fun setBannerUrl(userId: String, id: Long, bannerUrl: String): Result<String> {
@@ -125,10 +130,10 @@ class OpExperienceResourceImpl @Autowired constructor(
         )
 
         return Result(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_UPDATED_SUCCESSFULLY_AND_SET,
-                    language = I18nUtil.getLanguage(userId)
-                ) + "$bannerUrl"
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_UPDATED_SUCCESSFULLY_AND_SET,
+                language = I18nUtil.getLanguage(userId)
+            ) + "$bannerUrl"
         )
     }
 
@@ -243,5 +248,9 @@ class OpExperienceResourceImpl @Autowired constructor(
                 experienceExtendBanner = experienceExtendBanner
             )
         )
+    }
+
+    override fun clean(userId: String, experienceClean: ExperienceClean): Result<Boolean> {
+        return Result(experienceService.clean(experienceClean))
     }
 }
