@@ -28,9 +28,14 @@
 package com.tencent.devops.auth.provider.stream.service
 
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import org.springframework.beans.factory.annotation.Autowired
 
 class GitlabStreamPermissionServiceImpl @Autowired constructor() : StreamPermissionServiceImpl() {
+    override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
+        return emptyList()
+    }
+
     override fun isPublicProject(projectCode: String, userId: String?): Boolean {
         TODO("Not yet implemented")
     }

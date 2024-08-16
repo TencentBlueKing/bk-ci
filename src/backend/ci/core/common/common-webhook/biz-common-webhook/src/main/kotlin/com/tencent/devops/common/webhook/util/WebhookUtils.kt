@@ -356,4 +356,12 @@ object WebhookUtils {
         ))
         return startParams
     }
+
+    fun joinToString(list: List<String>?): String {
+        return if (list.isNullOrEmpty()) {
+            ""
+        } else {
+            list.joinToString(",")
+        }
+    }
 }

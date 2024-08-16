@@ -598,7 +598,8 @@
     "showAll": "显示全部",
     "copyToCustomArtifactory": "复制至自定义仓库",
     "downloading": "正在下载",
-    "copySuc": "复制{0}至自定义仓库成功"
+    "copySuc": "复制{0}至自定义仓库成功",
+    "buildMsg": "构建信息"
   },
   "preview": {
     "build": "构建",

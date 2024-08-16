@@ -25,40 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.provider.stream.service
+package com.tencent.devops.process.enums
 
-import com.tencent.devops.auth.utils.GitTypeUtils
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.client.Client
-import org.springframework.beans.factory.annotation.Autowired
+/**
+ * 构建历史搜索类型
+ */
+enum class HistorySearchType {
+    // 触发器
+    TRIGGER,
 
-class CentralizedStramPermissionServiceImpl @Autowired constructor(
-    val client: Client
-) : StreamPermissionServiceImpl() {
-    override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
-        return emptyList()
-    }
-
-    override fun isPublicProject(projectCode: String, userId: String?): Boolean {
-        val gitType = GitTypeUtils.getType()
-        // type: github, gitlab, svn, tgitd等
-        // TODO: 根据不同的类型调用不同的代码源接口
-        return true
-    }
-
-    override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
-        val gitType = GitTypeUtils.getType()
-        // TODO: 根据不同的类型调用不同的代码源接口
-        return Pair(true, true)
-    }
-
-    override fun extPermission(
-        projectCode: String,
-        userId: String,
-        action: AuthPermission,
-        resourceType: String
-    ): Boolean {
-        return false
-    }
+    // 源材料
+    MATERIAL
 }
