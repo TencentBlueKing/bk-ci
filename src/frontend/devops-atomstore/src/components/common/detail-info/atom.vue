@@ -346,9 +346,7 @@
                 }
             },
             getHotIcon (hotFlag) {
-                return hotFlag
-                    ? require('../../../images/hot-red.png')
-                    : require('../../../images/hot.png')
+                return require(`../../../images/hot${hotFlag ? '-red' : ''}.png`)
             }
         }
     }
