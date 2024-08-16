@@ -138,8 +138,8 @@ class SoftwareManageService @Autowired constructor(
                     // todo job接口执行
                     logger.info("safeInitialization|$userId|$userId")
                     installSystemSoftwares(
-                        projectId,
-                        userId,
+                        projectId = projectId,
+                        creator = userId,
                         regionId = workspace.regionId.toString(),
                         ip = workspace.hostIp ?: "",
                         workspaceName = workspaceName
@@ -376,11 +376,18 @@ class SoftwareManageService @Autowired constructor(
                 }
                 val createSoftwareRes: InstallSoftwareRes = jacksonObjectMapper().readValue(responseContent)
                 logger.info("installSoftwareFromXingyun|createSoftwareRes|$createSoftwareRes")
+                if (response.code == Response.Status.OK.statusCode && !createSoftwareRes.result) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.OK.statusCode,
+                        errorCode = ErrorCodeEnum.INSTALL_SOFTWARE_FAIL.errorCode,
+                        defaultMessage = createSoftwareRes.message
+                    )
+                }
                 createSoftwareRes
             }
         }.onFailure {
             logger.error("install software from xingyun failed.", it)
-        }.getOrNull()
+        }.getOrThrow()
     }
 
     // 添加系统软件安装记录

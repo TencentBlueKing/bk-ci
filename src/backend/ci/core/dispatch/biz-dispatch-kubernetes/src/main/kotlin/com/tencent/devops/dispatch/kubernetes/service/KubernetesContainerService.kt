@@ -53,6 +53,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.BK_START_BUILD_CONTAINER_FAIL
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImage
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImageInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
+import com.tencent.devops.dispatch.kubernetes.pojo.Credential
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
@@ -298,10 +299,10 @@ class KubernetesContainerService @Autowired constructor(
         }
     }
 
-    override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
-        val startResult = kubernetesTaskClient.waitTaskFinish(userId, taskId)
+    override fun waitTaskFinish(userId: String, taskId: String, needProxy: Boolean): DispatchBuildTaskStatus {
+        val startResult = kubernetesTaskClient.waitTaskFinish(userId, taskId, needProxy)
         return if (startResult.first == TaskStatusEnum.SUCCEEDED) {
-            DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
+            DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, startResult.second)
         } else {
             DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, startResult.second)
         }
@@ -423,6 +424,17 @@ class KubernetesContainerService @Autowired constructor(
         }
 
         return DispatchTaskResp(kubernetesJobClient.buildAndPushImage(userId, info))
+    }
+
+    override fun inspectDockerImage(userId: String, pool: Pool): String {
+        return kubernetesBuilderClient.inspectDockerImage(
+            userId = userId,
+            imageName = pool.container ?: "",
+            credential = pool.credential ?: Credential(
+                user = "",
+                password = ""
+            )
+        )
     }
 
     private fun getBuilderName(): String {

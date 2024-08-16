@@ -238,6 +238,15 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.RESTARTING
             }
 
+            workspaceInfo.status == EnvStatusEnum.starting -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.STARTING)
+                return WorkspaceStatus.STARTING
+            }
+            workspaceInfo.status == EnvStatusEnum.stopping -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.STOPPING)
+                return WorkspaceStatus.STOPPING
+            }
+
             workspaceInfo.status == EnvStatusEnum.rebuilding -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.REBUILDING)
                 return WorkspaceStatus.REBUILDING
@@ -246,6 +255,10 @@ class WorkspaceCommon @Autowired constructor(
             workspaceInfo.status == EnvStatusEnum.upgrading -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.UPGRADING)
                 return WorkspaceStatus.UPGRADING
+            }
+            workspaceInfo.status == EnvStatusEnum.copying -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.MAKING_IMAGE)
+                return WorkspaceStatus.MAKING_IMAGE
             }
 
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {

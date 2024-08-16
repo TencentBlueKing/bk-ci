@@ -50,6 +50,7 @@ import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
 import java.net.URLDecoder
 import java.time.LocalDateTime
+import java.util.Locale
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -60,7 +61,6 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.lower
 import org.springframework.stereotype.Repository
-import java.util.Locale
 
 @Suppress("ALL")
 @Repository
@@ -188,6 +188,7 @@ class ProjectDao {
                         conditions.add(
                             ROUTER_TAG.like("%${projectConditionDTO.routerTag!!.value}%")
                                 .or(ROUTER_TAG.like("%devx%"))
+                                .let { if (includeNullRouterTag == true) it.or(ROUTER_TAG.isNull()) else it }
                         )
                     } else {
                         conditions.add(
@@ -621,6 +622,7 @@ class ProjectDao {
                                     it.orderBy(DSL.field("CONVERT({0} USING GBK)", PROJECT_NAME).desc())
                                 }
                             }
+
                             ProjectSortType.ENGLISH_NAME -> {
                                 if (collation == ProjectCollation.DEFAULT || collation == ProjectCollation.ASC) {
                                     it.orderBy(ENGLISH_NAME.asc())
@@ -628,6 +630,7 @@ class ProjectDao {
                                     it.orderBy(ENGLISH_NAME.desc())
                                 }
                             }
+
                             else -> {
                                 it
                             }

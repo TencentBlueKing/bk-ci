@@ -9,10 +9,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
-import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.Environment
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction
-import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentOpRsp
-import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentOpRspData
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentStatus
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentStatusRsp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.APP_NOT_BIND_CGS
@@ -118,46 +115,6 @@ class WorkspaceBcsClient @Autowired constructor(
             logger.error("User $userId create environment get SocketTimeoutException", e)
             throw WorkspaceDispatchException(
                 errorMessage = "创建环境接口返回失败: 接口超时, url: $url"
-            )
-        }
-    }
-
-    fun createWorkspace(userId: String, environment: Environment): EnvironmentOpRspData {
-        val url = bcsCloudUrl + "/api/v1/remotedevenv/create"
-        val body = ObjectMapper().writeValueAsString(environment)
-        logger.info("User $userId request url: $url, body: $body")
-        val request = Request.Builder()
-            .url(url)
-            .headers(makeHeaders().toHeaders())
-            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
-            .build()
-
-        try {
-            OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body!!.string()
-                logger.info(
-                    "User $userId create environment response: " +
-                        "${response.rid()}|${response.code}|$responseContent"
-                )
-                if (!response.isSuccessful) {
-                    throw WorkspaceDispatchException(
-                        "Env creation interface exception.: ${response.code}"
-                    )
-                }
-
-                val environmentOpRsp: EnvironmentOpRsp = jacksonObjectMapper().readValue(responseContent)
-                if (OK == environmentOpRsp.code) {
-                    return environmentOpRsp.data
-                } else {
-                    throw WorkspaceDispatchException(
-                        "创建环境接口返回失败: ${environmentOpRsp.message}"
-                    )
-                }
-            }
-        } catch (e: SocketTimeoutException) {
-            logger.error("User $userId create environment get SocketTimeoutException", e)
-            throw WorkspaceDispatchException(
-                errorMessage = "创建环境接口返回失败: url: $url"
             )
         }
     }

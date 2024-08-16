@@ -333,7 +333,7 @@
         },
 
         created () {
-            this.$updateTabTitle?.(this.$t('documentTitlePipeline'))
+            this.$updateTabTitle?.()
             this.goList()
             this.checkHasCreatePermission()
         },

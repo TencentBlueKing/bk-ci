@@ -158,7 +158,7 @@ class BKBaseService @Autowired constructor(
     ): Map<String, String> {
         val sql = "SELECT node_id, MAX(dtEventTime) as Maxtime " +
             "FROM 100656_cgs_report_game_all.hdfs " +
-            "WHERE where node_id in (${
+            "WHERE node_id in (${
                 nodeIds.joinToString(separator = "','", prefix = "'", postfix = "'")
             }) " +
             "GROUP BY node_id"

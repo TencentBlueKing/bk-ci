@@ -143,7 +143,7 @@
                         label: this.$t('settings.trigger'),
                         component: 'TriggerTab',
                         bindData: {
-                            editable: !this.pipeline?.instanceFromTemplate,
+                            editable: !this.isTemplatePipeline,
                             pipeline: this.pipeline
                         }
                     },
