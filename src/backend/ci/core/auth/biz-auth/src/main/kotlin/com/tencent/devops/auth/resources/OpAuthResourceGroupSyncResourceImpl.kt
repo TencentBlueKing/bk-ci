@@ -27,42 +27,49 @@
 
 package com.tencent.devops.auth.resources
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.devops.auth.api.user.UserDeptResource
-import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
-import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.api.sync.OpAuthResourceGroupSyncResource
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserDeptResourceImpl @Autowired constructor(
-    val deptService: DeptService
-) : UserDeptResource {
-    override fun getDeptByLevel(userId: String, accessToken: String?, level: Int): Result<DeptInfoVo?> {
-        return Result(deptService.getDeptByLevel(level, accessToken, userId))
+class OpAuthResourceGroupSyncResourceImpl @Autowired constructor(
+    private val permissionResourceGroupSyncService: PermissionResourceGroupSyncService
+) : OpAuthResourceGroupSyncResource {
+
+    override fun syncByCondition(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
+        permissionResourceGroupSyncService.syncByCondition(projectConditionDTO)
+        return Result(true)
     }
 
-    override fun getDeptByParent(
-        userId: String,
-        accessToken: String?,
-        parentId: Int,
-        pageSize: Int?
-    ): Result<DeptInfoVo?> {
-        return Result(deptService.getDeptByParent(parentId, accessToken, userId, pageSize))
+    override fun batchSyncGroupAndMember(projectIds: List<String>): Result<Boolean> {
+        permissionResourceGroupSyncService.batchSyncGroupAndMember(projectIds)
+        return Result(true)
     }
 
-    override fun getUserAndDeptByName(
-        userId: String,
-        accessToken: String?,
-        name: String,
-        type: ManagerScopesEnum
-    ): Result<List<UserAndDeptInfoVo?>> {
-        return Result(deptService.getUserAndDeptByName(name, accessToken, userId, type))
+    override fun batchSyncProjectGroup(projectIds: List<String>): Result<Boolean> {
+        permissionResourceGroupSyncService.batchSyncProjectGroup(projectIds)
+        return Result(true)
     }
 
-    override fun getDeptUsers(userId: String, accessToken: String?, deptId: Int): Result<List<String>?> {
-        return Result(deptService.getDeptUser(deptId, accessToken))
+    override fun batchSyncAllMember(projectIds: List<String>): Result<Boolean> {
+        permissionResourceGroupSyncService.batchSyncAllMember(projectIds)
+        return Result(true)
+    }
+
+    override fun syncResourceMember(projectId: String, resourceType: String, resourceCode: String): Result<Boolean> {
+        permissionResourceGroupSyncService.syncResourceMember(
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        return Result(true)
+    }
+
+    override fun fixResourceGroupMember(projectId: String): Result<Boolean> {
+        permissionResourceGroupSyncService.fixResourceGroupMember(projectId)
+        return Result(true)
     }
 }

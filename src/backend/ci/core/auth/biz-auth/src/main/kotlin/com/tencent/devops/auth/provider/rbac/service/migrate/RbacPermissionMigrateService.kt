@@ -83,7 +83,8 @@ class RbacPermissionMigrateService constructor(
     private val authMigrationDao: AuthMigrationDao,
     private val authMonitorSpaceDao: AuthMonitorSpaceDao,
     private val cacheService: RbacCacheService,
-    private val permissionResourceMemberService: PermissionResourceMemberService
+    private val permissionResourceMemberService: PermissionResourceMemberService,
+    private val migrateResourceAuthorizationService: MigrateResourceAuthorizationService
 ) : PermissionMigrateService {
 
     companion object {
@@ -673,5 +674,15 @@ class RbacPermissionMigrateService constructor(
             offset += limit
         } while (resourceSize == limit)
         logger.info("Finish to auto renewal|$projectCode|${System.currentTimeMillis() - startTime}")
+    }
+
+    override fun migrateResourceAuthorization(projectCodes: List<String>): Boolean {
+        return migrateResourceAuthorizationService.migrateResourceAuthorization(
+            projectCodes = projectCodes
+        )
+    }
+
+    override fun migrateAllResourceAuthorization(): Boolean {
+        return migrateResourceAuthorizationService.migrateAllResourceAuthorization()
     }
 }

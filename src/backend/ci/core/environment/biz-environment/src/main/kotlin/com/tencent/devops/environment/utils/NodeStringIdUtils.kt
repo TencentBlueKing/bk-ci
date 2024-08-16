@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.utils
 
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
@@ -66,7 +67,8 @@ object NodeStringIdUtils {
             bakOperator = nodeRecord.bakOperator,
             gateway = "",
             displayName = getRefineDisplayName(nodeStringId, nodeRecord.displayName),
-            envEnableNode = null
+            envEnableNode = null,
+            lastModifyTime = nodeRecord.lastModifyTime.timestampmilli()
         )
     }
 }

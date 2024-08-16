@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -37,6 +38,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -2127,5 +2129,18 @@ class PipelineRepositoryService constructor(
             pipelineId = pipelineId,
             locked = locked
         )
+    }
+
+    fun getPipelineOauthUser(projectId: String, pipelineId: String): String? {
+        return try {
+            client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
+                projectId = projectId,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceCode = pipelineId
+            ).data
+        } catch (ignored: Exception) {
+            logger.info("get pipeline oauth user fail", ignored)
+            null
+        }?.handoverFrom
     }
 }
