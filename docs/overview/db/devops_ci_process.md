@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_process
 
-**文档版本：** 1.0.2
+**文档版本：** 1.0.3
 
 **文档描述：** devops_ci_process 的数据库文档
 | 表名                  | 说明       |
@@ -775,7 +775,8 @@
 |  18   | STATUS |   varchar   | 16 |   0    |    Y     |  N   |       | 版本状态  |
 |  19   | BRANCH_ACTION |   varchar   | 32 |   0    |    Y     |  N   |       | 分支状态  |
 |  20   | DESCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 版本变更说明  |
-|  21   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  21   | UPDATER |   varchar   | 64 |   0    |    Y     |  N   |       | 最近更新人  |
+|  22   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_PIPELINE_RULE</a>
 

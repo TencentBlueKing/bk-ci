@@ -5,6 +5,7 @@ import (
 	"disaptch-k8s-manager/pkg/logs"
 	"disaptch-k8s-manager/pkg/types"
 	"fmt"
+
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -18,12 +19,12 @@ func DoCreateBuildAndPushImageJob(
 	// 创建镜像拉取凭据
 	_, err := kubeclient.CreateDockerRegistry(job.Pod.PullImageSecret)
 	if err != nil {
-		failTask(taskId, errors.Wrap(err, "create build and push image job pull image secret error").Error())
+		FailTask(taskId, errors.Wrap(err, "create build and push image job pull image secret error").Error())
 		return
 	}
 
 	if _, err = kubeclient.CreateDockerRegistry(kanikoSecret); err != nil {
-		failTask(taskId, errors.Wrap(err, "create build and push image push secret error").Error())
+		FailTask(taskId, errors.Wrap(err, "create build and push image push secret error").Error())
 		return
 	}
 
@@ -32,14 +33,14 @@ func DoCreateBuildAndPushImageJob(
 		return
 	}
 
-	failTask(taskId, errors.Wrap(err, "create job error").Error())
+	FailTask(taskId, errors.Wrap(err, "create job error").Error())
 	deleteJobLinkRes(job.Name)
 }
 
 func DoCreateJob(taskId string, job *kubeclient.Job) {
 	_, err := kubeclient.CreateDockerRegistry(job.Pod.PullImageSecret)
 	if err != nil {
-		failTask(taskId, errors.Wrap(err, "create job pull image secret error").Error())
+		FailTask(taskId, errors.Wrap(err, "create job pull image secret error").Error())
 		return
 	}
 
@@ -49,7 +50,7 @@ func DoCreateJob(taskId string, job *kubeclient.Job) {
 	}
 
 	// 创建失败后的操作
-	failTask(taskId, errors.Wrap(err, "create job error").Error())
+	FailTask(taskId, errors.Wrap(err, "create job error").Error())
 	deleteJobLinkRes(job.Name)
 
 }
@@ -57,13 +58,13 @@ func DoCreateJob(taskId string, job *kubeclient.Job) {
 func DoDeleteJob(taskId string, jobName string) {
 	err := kubeclient.DeleteJob(jobName)
 	if err != nil {
-		failTask(taskId, errors.Wrap(err, "delete job error").Error())
+		FailTask(taskId, errors.Wrap(err, "delete job error").Error())
 		return
 	}
 
 	deleteJobLinkRes(jobName)
 
-	okTask(taskId)
+	OkTask(taskId)
 }
 
 // deleteJobLinkRes 删除JOB相关联的kubernetes资源
@@ -103,18 +104,18 @@ func watchJobTaskPodCreateOrStart(event watch.Event, pod *corev1.Pod, taskId str
 		{
 			switch podStatus.Phase {
 			case corev1.PodPending:
-				updateTask(taskId, types.TaskRunning)
+				UpdateTask(taskId, types.TaskRunning)
 			// 对于task的start/create来说，启动了就算成功，而不关系启动成功还是失败了
 			case corev1.PodRunning, corev1.PodSucceeded, corev1.PodFailed:
-				okTask(taskId)
+				OkTask(taskId)
 			case corev1.PodUnknown:
-				updateTask(taskId, types.TaskUnknown)
+				UpdateTask(taskId, types.TaskUnknown)
 			}
 		}
 	case watch.Error:
 		{
 			logs.Error("add job error. ", pod)
-			failTask(taskId, podStatus.Message+"|"+podStatus.Reason)
+			FailTask(taskId, podStatus.Message+"|"+podStatus.Reason)
 		}
 	}
 }

@@ -75,7 +75,6 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceVarResource
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.SetContextVarData
 import com.tencent.devops.process.pojo.VmInfo
@@ -437,22 +436,12 @@ class ThirdPartyDispatchService @Autowired constructor(
                 )
             }/console/pipeline/${dispatchMessage.event.projectId}/$pipelineId/detail/$lockedBuildId"
             if (lockedBuildId != dispatchMessage.event.buildId) {
-                I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_LOCKED,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ) + ": $linkTip<a target='_blank' href='$link'>" +
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = ProcessMessageCode.BK_CLICK,
-                            language = I18nUtil.getDefaultLocaleLanguage()
-                        ) + "</a>"
+                "$linkTip<a target='_blank' href='$link'>$lockedBuildId</a>"
             } else {
-                I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_CURRENT,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ) + ": $linkTip"
+                linkTip
             }
         } ?: ""
-        log(
+        logWarn(
             dispatchMessage.event,
             I18nUtil.getCodeLanMessage(
                 messageCode = AGENT_REUSE_MUTEX_REDISPATCH,
