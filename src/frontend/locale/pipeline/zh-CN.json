@@ -142,7 +142,7 @@
   "importPipelineLabel": "请上传一个流水线JSON文件",
   "invalidPipelineJson": "非法的流水线JSON文件",
   "exportPipelineSuccess": "导出流水线成功",
-  "sizeLimit": "最大上传{0}MB的文件",
+  "sizeLimit": "最大上传{0}MB，重新上传时若路径未变更，无需保存流水线",
   "fileUploadSuccess": "上传成功",
   "empty": "暂无数据",
   "link": "链接",
@@ -1022,8 +1022,8 @@
     "codelibConfigs": "代码库配置",
     "timerTriggerCodelibTips": "- Git 仓库，分支非必填，缺省时为默认分支\n- SVN 仓库，分支必填，为仓库根路径下的一级子目录",
     "timerTriggerBranchTips": "若多个分支均有变更，满足条件时每个分支将触发一次",
-    "filePathTips": "请填写存放文件的目录",
-    "fileNameTips": "文件名，上传文件后自动读取"
+    "filePathTips": "请填写自定义仓库目录，如/a",
+    "fileNameTips": "文件名，留空则自动读取"
   },
   "storeMap": {
     "textarea": "文本框",
