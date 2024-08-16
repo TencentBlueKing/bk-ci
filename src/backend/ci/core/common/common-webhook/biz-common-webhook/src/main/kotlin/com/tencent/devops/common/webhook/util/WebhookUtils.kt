@@ -91,8 +91,8 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import java.util.regex.Pattern
 import org.slf4j.LoggerFactory
+import java.util.regex.Pattern
 
 object WebhookUtils {
 

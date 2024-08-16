@@ -27,7 +27,10 @@ import ajax from '@/utils/request'
 
 // import axios from 'axios'
 // const CancelToken = axios.CancelToken
-import { PIPELINE_AUTHORITY_MUTATION, RESET_TEMPLATE_SETTING_MUNTATION, TEMPLATE_SETTING_MUTATION, UPDATE_TEMPLATE_SETTING_MUNTATION } from './constants'
+import {
+    PIPELINE_AUTHORITY_MUTATION,
+    RESET_TEMPLATE_SETTING_MUNTATION, TEMPLATE_SETTING_MUTATION, UPDATE_TEMPLATE_SETTING_MUNTATION
+} from './constants'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/pipelines/`
 const versionPrefix = `/${PROCESS_API_URL_PREFIX}/user/version`
@@ -118,6 +121,16 @@ const actions = {
 
     requestStoreImageList ({ commit }, { projectCode, agentType, recommendFlag, page, pageSize }) {
         return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/jobMarketImages?projectCode=${projectCode}&agentType=${agentType}&recommendFlag=${recommendFlag}&page=${page}&pageSize=${pageSize}`)
+    },
+    requestProjectGroupAndUsers: async ({ commit }, { projectId }) => {
+        try {
+            const response = await ajax.get(`/experience/api/user/groups/${projectId}/projectGroupAndUsers`)
+            return response.data
+        } catch (e) {
+            if (e.code === 403) {
+                e.message = ''
+            }
+        }
     },
     requestTemplateSetting: async ({ commit }, { projectId, templateId }) => {
         try {

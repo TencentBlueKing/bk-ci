@@ -159,6 +159,7 @@
     import TimePicker from '@/components/AtomFormComponent/TimePicker'
     import Tips from '@/components/AtomFormComponent/Tips'
     import Accordion from '@/components/atomFormField/Accordion'
+    import NameSpaceVar from '@/components/atomFormField/NameSpaceVar'
     import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
     import Selector from '../AtomFormComponent/Selector'
     import validMixins from '../validMixins'
@@ -175,6 +176,7 @@
             TimePicker,
             Parameter,
             Tips,
+            NameSpaceVar,
             DynamicParameter,
             DynamicParameterSimple,
             AtomOutput

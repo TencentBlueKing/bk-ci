@@ -31,12 +31,15 @@ import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
 import com.tencent.devops.common.event.pojo.measure.BuildEndTaskMetricsData
-import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.metrics.api.ServiceMetricsDataReportResource
 import com.tencent.devops.metrics.dao.DispatchJobMetricsDao
 import com.tencent.devops.metrics.dao.MetricsDataQueryDao
 import com.tencent.devops.metrics.dao.MetricsDataReportDao
@@ -84,6 +87,7 @@ import org.springframework.stereotype.Service
 @Service
 @Suppress("ComplexMethod", "NestedBlockDepth", "LongMethod", "LongParameterList")
 class MetricsDataReportServiceImpl @Autowired constructor(
+    private val bkTag: BkTag,
     private val dslContext: DSLContext,
     private val metricsDataQueryDao: MetricsDataQueryDao,
     private val metricsDataReportDao: MetricsDataReportDao,
@@ -234,11 +238,31 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             return false
         }
 
-        val newDispatchJobMetricsDataList = dispatchJobMetricsDataList.map {
-            it.copy(id = idList.removeAt(0) ?: 0)
+        dispatchJobMetricsDataList.forEach {
+            fixBkTagMetricsJobDispatchDataReport(it.copy(id = idList.removeAt(0) ?: 0))
         }
-        dispatchJobMetricsDao.batchSaveDispatchJobMetrics(dslContext, newDispatchJobMetricsDataList)
         return true
+    }
+
+    override fun metricsJobDispatchDataReport(dispatchJobMetricsData: DispatchJobMetricsData): Boolean {
+        dispatchJobMetricsDao.saveDispatchJobMetrics(dslContext, dispatchJobMetricsData)
+        return true
+    }
+
+    private fun fixBkTagMetricsJobDispatchDataReport(dispatchJobMetricsData: DispatchJobMetricsData) {
+        try {
+            val projectId = dispatchJobMetricsData.projectId
+            val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectId)
+
+            return bkTag.invokeByTag(projectConsulTag) {
+                val bkFinalTag = bkTag.getFinalTag()
+                logger.info("MetricsJobDispatchDataReport $projectId|$projectConsulTag|$bkFinalTag")
+                client.getGateway(ServiceMetricsDataReportResource::class)
+                    .metricsJobDispatchDataReport(dispatchJobMetricsData).data
+            }
+        } catch (e: Exception) {
+            logger.error("Save dispatchJobMetrics error.", e)
+        }
     }
 
     private fun atomFailSummaryDataReport(

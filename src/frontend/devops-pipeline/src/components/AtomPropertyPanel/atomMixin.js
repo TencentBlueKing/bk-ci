@@ -20,6 +20,8 @@
 import DefineParam from '@/components/AtomFormComponent/DefineParam'
 import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
 import SelectInput from '@/components/AtomFormComponent/SelectInput'
+import Tips from '@/components/AtomFormComponent/Tips'
+import TipsSimple from '@/components/AtomFormComponent/TipsSimple'
 import NotifyType from '@/components/AtomFormComponent/notifyType'
 import Accordion from '@/components/atomFormField/Accordion'
 import AtomAceEditor from '@/components/atomFormField/AtomAceEditor'
@@ -28,10 +30,17 @@ import AtomCheckboxList from '@/components/atomFormField/AtomCheckboxList'
 import AtomDatePicker from '@/components/atomFormField/AtomDatePicker'
 import AtomMarkdown from '@/components/atomFormField/AtomMarkdown'
 import AutoComplete from '@/components/atomFormField/AutoComplete'
+import CheckInline from '@/components/atomFormField/CheckInline'
 import CodeModeInput from '@/components/atomFormField/CodeModeInput'
 import CodeModeSelector from '@/components/atomFormField/CodeModeSelector'
+import CompanyStaffInput from '@/components/atomFormField/CompanyStaffInput'
+import CompositeInput from '@/components/atomFormField/CompositeInput'
+import ConditionalInputSelector from '@/components/atomFormField/ConditionalInputSelector'
 import CronTimer from '@/components/atomFormField/CronTimer/week'
+import EnumButton from '@/components/atomFormField/EnumButton'
 import EnumInput from '@/components/atomFormField/EnumInput'
+import ExperienceInput from '@/components/atomFormField/ExperienceInput'
+import GitRequestSelector from '@/components/atomFormField/GitRequestSelector'
 import KeyValue from '@/components/atomFormField/KeyValue'
 import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
 import NameSpaceVar from '@/components/atomFormField/NameSpaceVar'
@@ -41,8 +50,8 @@ import RemoteCurlUrl from '@/components/atomFormField/RemoteCurlUrl'
 import RequestSelector from '@/components/atomFormField/RequestSelector'
 import RouteTips from '@/components/atomFormField/RouteTips'
 import Selector from '@/components/atomFormField/Selector'
+import StaffInput from '@/components/atomFormField/StaffInput'
 import SvnpathInput from '@/components/atomFormField/SvnpathInput'
-import UserInput from '@/components/atomFormField/UserInput'
 import VuexInput from '@/components/atomFormField/VuexInput'
 import VuexTextarea from '@/components/atomFormField/VuexTextarea'
 import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
@@ -50,12 +59,6 @@ import { mapActions, mapGetters, mapState } from 'vuex'
 import { bkVarWrapper, rely, urlJoin } from '../../utils/util'
 import FormField from './FormField'
 import FormFieldGroup from './FormFieldGroup'
-import StaffInput from '@/components/atomFormField/StaffInput'
-import CompositeInput from '@/components/atomFormField/CompositeInput'
-import ConditionalInputSelector from '@/components/atomFormField/ConditionalInputSelector'
-import EnumButton from '@/components/atomFormField/EnumButton'
-import TipsSimple from '@/components/AtomFormComponent/TipsSimple'
-import Tips from '@/components/AtomFormComponent/Tips'
 
 const atomMixin = {
     props: {
@@ -80,14 +83,17 @@ const atomMixin = {
         SelectInput,
         AtomAceEditor,
         CronTimer,
-        UserInput,
+        StaffInput,
+        CompanyStaffInput,
         RequestSelector,
+        GitRequestSelector,
         AtomCheckbox,
         AtomCheckboxList,
         FormField,
         AtomDatePicker,
         CodeModeSelector,
         CodeModeInput,
+        ExperienceInput,
         ParamsView,
         SvnpathInput,
         KeyValue,
@@ -96,12 +102,12 @@ const atomMixin = {
         NotifyType,
         NameSpaceVar,
         RouteTips,
+        CheckInline,
         GroupIdSelector,
         QualitygateTips,
         AutoComplete,
         DevopsSelect,
         AtomMarkdown,
-        StaffInput,
         FormFieldGroup,
         CompositeInput,
         ConditionalInputSelector,
@@ -231,7 +237,10 @@ const atomMixin = {
             }
         },
         rely (obj, element) {
-            return rely(obj, element)
+            return rely(obj, {
+                bkPoolType: this?.container?.dispatchType?.buildType,
+                ...element
+            })
         },
         /**
          * 获取每种类型最大长度限制

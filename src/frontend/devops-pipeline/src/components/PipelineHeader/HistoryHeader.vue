@@ -138,8 +138,8 @@
         },
         data () {
             return {
-                showVersionSideslider: false,
-                isPipelineIdChanged: false
+                RESOURCE_ACTION,
+                showVersionSideslider: false
             }
         },
         computed: {
@@ -212,9 +212,6 @@
                         content: this.$t(!this.isReleasePipeline ? 'draftPipelineExecTips' : this.isCurPipelineLocked ? 'pipelineLockTips' : 'pipelineManualDisable'),
                         delay: [300, 0]
                     }
-            },
-            RESOURCE_ACTION () {
-                return RESOURCE_ACTION
             }
         },
         watch: {

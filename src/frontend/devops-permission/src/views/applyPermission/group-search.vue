@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
 import http from '@/http/api';
-import GroupDeatil from './group-detail.vue';
-import SearchSelect from './search-select';
-import GroupTab from './group-tab';
+import BkCheckbox from 'bkui-vue/lib/checkbox';
 import {
-  h,
-  ref,
-  watch,
   computed,
+  h,
   onMounted,
+  ref,
   resolveDirective,
+  watch,
   withDirectives,
 } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import BkCheckbox from 'bkui-vue/lib/checkbox';
+import GroupDeatil from './group-detail.vue';
+import GroupTab from './group-tab';
+import SearchSelect from './search-select';
 
 const route = useRoute();
 

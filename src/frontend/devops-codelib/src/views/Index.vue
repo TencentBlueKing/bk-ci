@@ -126,7 +126,7 @@
     } from '../config/'
     import { getOffset } from '../utils/'
     import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
-    
+                                    
     export default {
         name: 'codelib-list',
 
@@ -143,6 +143,7 @@
                 RESOURCE_ACTION,
                 RESOURCE_TYPE,
                 isLoading: !this.codelibs,
+                isSearch: false,
                 defaultPagesize: 10,
                 startPage: 1,
                 showCodelibDialog: false,

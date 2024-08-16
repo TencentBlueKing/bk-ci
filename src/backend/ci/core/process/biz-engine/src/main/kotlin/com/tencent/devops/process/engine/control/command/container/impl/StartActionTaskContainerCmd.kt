@@ -484,13 +484,17 @@ class StartActionTaskContainerCmd(
     ): Boolean {
 
         if (this.taskId != VMUtils.genStartVMTaskId(this.containerId)) { // 非开机插件,检查条件
+
             return ControlUtils.checkTaskSkip(
+                projectId = projectId,
+                pipelineId = pipelineId,
                 buildId = buildId,
                 additionalOptions = additionalOptions,
                 containerFinalStatus = containerContext.buildStatus,
                 variables = contextMap,
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                message = message
+                message = message,
+                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
             )
         }
 
@@ -500,12 +504,15 @@ class StartActionTaskContainerCmd(
             val it = containerContext.containerTasks[idx]
             if (!VMUtils.isVMTask(it.taskId)) {
                 skip = ControlUtils.checkTaskSkip(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
                     buildId = buildId,
                     additionalOptions = it.additionalOptions,
                     containerFinalStatus = containerContext.buildStatus,
                     variables = contextMap,
                     hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                    message = message
+                    message = message,
+                    asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
                 )
                 if (LOG.isDebugEnabled) {
                     LOG.debug("ENGINE|$buildId|CHECK_QUICK_SKIP|$stageId|j($containerId)|${it.taskName}|$skip")

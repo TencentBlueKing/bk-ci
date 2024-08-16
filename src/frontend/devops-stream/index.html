@@ -13,13 +13,8 @@
             var SITE_URL = ''
             var STATIC_URL = '/'
             var REMOTE_STATIC_URL = ''
-            // 接口请求前缀
-            var AJAX_URL_PREFIX = '/'
-            // websocket 链接地址
-            var WEBSOCKET_URL_PREFIX = ''
-            // 记录项目 id 的 cookie key
+            var PROXY_URL_PREFIX = 'devnet.devops.woa.com'
             var X_DEVOPS_PROJECT_ID = 'X-DEVOPS-PROJECT-ID'
-            // 判断是否灰度的 cookie key
             var ROUTER_TAG = 'ROUTER_TAG'
             // 自动登录地址
             var LOGIN_SERVICE_URL = '__STREAM_SERVICE_LOGIN_URL__'
@@ -42,11 +37,10 @@
                 url.searchParams.append('bk_appid', 1)
                 url.searchParams.append('bk_login', 1)
                 url.searchParams.append('c_url', cUrl)
-                
+
                 loginUrl.searchParams.append('title', 'bklogin')
                 loginUrl.searchParams.append('appkey', APP_KEY)
                 loginUrl.searchParams.append('url', url)
-                
                 return loginUrl.href
             }
         </script>

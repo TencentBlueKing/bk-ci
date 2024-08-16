@@ -1,0 +1,87 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: config
+  cloud:
+    config:
+      server:
+        git:
+          uri: file:///data1/work/config/devops-config
+          search-paths:
+            - config-server
+            - "config-server/{application}"
+          default-label: develop
+    consul:
+      discovery:
+        tags: dev
+
+---
+server:
+  port: 80
+spring:
+  profiles: local
+  cloud:
+    config:
+      server:
+        git:
+          uri: file:///data1/work/config/devops-config
+          search-paths:
+            - config-server
+            - "config-server/{application}"
+          default-label: local
+    consul:
+      discovery:
+        enabled: false
+
+
+---
+spring:
+  profiles: dev
+  cloud:
+    config:
+      server:
+        git:
+          uri: file:///data1/work/config/devops-config
+
+
+---
+spring:
+  profiles: test
+  cloud:
+    config:
+      server:
+        git:
+          uri: file:///data1/work/config/devops-config
+          default-label: integration
+    consul:
+      discovery:
+        tags: test
+
+server:
+  port: 21937
+
+---
+spring:
+  profiles: prod
+  cloud:
+    config:
+      server:
+        git:
+          uri: file:///data/bkci/config-server/devops-config
+          default-label: master
+    consul:
+      discovery:
+        tags: prod
+
+server:
+  port: 21937
+
+---
+spring:
+  profiles: prod-gray
+  cloud:
+    config:
+      server:
+        git:
+          default-label: master-gray

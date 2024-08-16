@@ -49,6 +49,7 @@ import {
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
+    SET_AUTH_EDITING,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
@@ -90,6 +91,11 @@ import {
 } from './constants'
 
 export default {
+    [SET_AUTH_EDITING]: (state, editing) => {
+        return Object.assign(state, {
+            authSettingEditing: editing
+        })
+    },
     [TOGGLE_STAGE_REVIEW_PANEL]: (state, { showStageReviewPanel, editingElementPos = null }) => {
         Object.assign(state, {
             showStageReviewPanel,

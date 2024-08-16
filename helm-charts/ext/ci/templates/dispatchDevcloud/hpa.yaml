@@ -1,0 +1,38 @@
+# dispatchDevcloud hpa
+{{ if .Values.dispatchDevcloud.enabled -}}
+{{ if .Values.dispatchDevcloud.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-dispatch-devcloud
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/name: dispatch-devcloud
+    app.kubernetes.io/component: microservice
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  scaleTargetRef:
+    apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+    kind: Deployment
+    name: {{ include "bkci.names.fullname" . }}-dispatch-devcloud
+  minReplicas: {{ .Values.dispatchDevcloud.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.dispatchDevcloud.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.dispatchDevcloud.autoscaling.targetCPU }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.dispatchDevcloud.autoscaling.targetCPU }}
+    {{- end }}
+    {{- if .Values.dispatchDevcloud.autoscaling.targetMemory }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.dispatchDevcloud.autoscaling.targetMemory  }}
+    {{- end }}
+{{- end }}
+{{- end -}}

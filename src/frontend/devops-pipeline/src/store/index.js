@@ -21,6 +21,7 @@
  * @file main store
  */
 
+import request from '@/utils/request'
 import Vue from 'vue'
 import Vuex from 'vuex'
 import ajax from '../utils/ajax'
@@ -30,12 +31,22 @@ import pipelines from './modules/pipelines/'
 
 import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
 
+import { ARTIFACT_HOOK_CONST, PIPELINE_EXECUTE_DETAIL_HOOK_CONST, PIPELINE_HISTORY_TAB_HOOK_CONST } from '../utils/extensionHooks'
 import {
     BKUI_LS_PIPELINE_MODE,
     FETCH_ERROR,
+    SET_SERVICE_HOOKS,
+    STORE_API_URL_PREFIX,
     UPDATE_PIPELINE_MODE
 } from './constants'
 Vue.use(Vuex)
+
+function getHookByHTMLPath (htmlPath) {
+    return state => {
+        const { hooks } = state
+        return Array.isArray(hooks) ? hooks.filter(hook => hook.htmlPath === htmlPath) : []
+    }
+}
 
 const modeList = [UI_MODE, CODE_MODE]
 const initPipelineMode = localStorage.getItem(BKUI_LS_PIPELINE_MODE)
@@ -56,11 +67,17 @@ export default new Vuex.Store({
         fetchError: null,
 
         cancelTokenMap: {},
+        hooks: [],
         modeList: [...modeList],
         pipelineMode: modeList.includes(initPipelineMode) ? initPipelineMode : UI_MODE
     },
     // 公共 mutations
     mutations: {
+        [SET_SERVICE_HOOKS]: (state, hooks) => {
+            Object.assign(state, {
+                hooks
+            })
+        },
         /**
          * 更新当前project
          *
@@ -90,6 +107,12 @@ export default new Vuex.Store({
     },
     // 公共 actions
     actions: {
+        setServiceHooks: ({ commit }, hooks) => {
+            commit(SET_SERVICE_HOOKS, hooks)
+        },
+        fetchExtensionByHookId: ({ commit }, { projectCode, itemIds }) => {
+            return request.get(`${STORE_API_URL_PREFIX}/user/ext/services/items/projects/${projectCode}/list?itemIds=${itemIds}`)
+        },
         requestProjectDetail: async ({ commit }, { projectId }) => {
             return ajax.get(API_URL_PREFIX + `/project/api/user/projects/${projectId}/`).then(response => {
                 let data = {}
@@ -109,6 +132,18 @@ export default new Vuex.Store({
     },
     // 公共 getters
     getters: {
+        hookKeyMap (state) {
+            if (Array.isArray(state.hooks)) {
+                return state.hooks.reduce((acc, hook) => {
+                    acc[hook.itemId] = hook
+                    return acc
+                }, {})
+            }
+            return null
+        },
+        artifactHooks: getHookByHTMLPath(ARTIFACT_HOOK_CONST),
+        extensionTabsHooks: getHookByHTMLPath(PIPELINE_HISTORY_TAB_HOOK_CONST),
+        extensionExecuteDetailTabsHooks: getHookByHTMLPath(PIPELINE_EXECUTE_DETAIL_HOOK_CONST),
         isUiMode: state => {
             return state.pipelineMode === UI_MODE
         },

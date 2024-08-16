@@ -34,9 +34,9 @@ import { judgementLsVersion } from './utils/util'
 import validDictionary from './utils/validDictionary'
 
 // 全量引入 bk-magic-vue
-import bkMagic from 'bk-magic-vue'
+import bkMagic from '@tencent/bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
+require('@tencent/bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
 
 declare module 'vue/types/vue' {
     interface Vue {
@@ -44,6 +44,7 @@ declare module 'vue/types/vue' {
         $bkInfo: any
         $showTips: any
         iframeUtil: any
+        isExtendTx: boolean
         handleNoPermission: any
     }
 }
@@ -94,6 +95,7 @@ window.vuexStore = store
 Vue.prototype.iframeUtil = iframeUtil(router)
 Vue.prototype.$setLocale = setLocale
 Vue.prototype.$localeList = localeList
+Vue.prototype.isExtendTx = VERSION_TYPE === 'tencent'
 Vue.prototype.BKCI_DOCS = BkciDocs
 Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
@@ -105,6 +107,10 @@ judgementLsVersion()
 
 Vue.mixin({
     methods: {
+        tencentPermission (url) {
+            const permUrl = this.isExtendTx ? url : PERM_URL_PREFIX
+            window.open(permUrl, '_blank')
+        },
         showUndeployDialog ({
             title,
             desc,
@@ -132,6 +138,7 @@ Vue.mixin({
                     resourceId,
                     instanceId
                 }])
+                console.log('redirectUrl', redirectUrl)
                 window.open(redirectUrl, '_blank')
                 this.$bkInfo({
                     title: this.$t('permissionRefreshtitle'),

@@ -1,6 +1,6 @@
 {
   "name": "devops-environment",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "private": true,
   "dependencies": {
@@ -10,7 +10,10 @@
     "vue": "~2.7.16",
     "vue-echarts": "^6.0.2",
     "vue-file-upload": "^0.1.12",
-    "vuex-class": "^0.3.0"
+    "vuex-class": "^0.3.0",
+    "lodash": "^4.17.21",
+    "ace-builds": "^1.4.12",
+    "@blueking/search-select": "0.0.1-beta.2"
   },
   "devDependencies": {
     "@babel/core": "^7.15.8",

@@ -131,6 +131,7 @@ export const defaultBuildNo = {
     buildNoType: buildNoRules[2].value
 }
 
+export const SET_AUTH_EDITING = 'SET_AUTH_EDITING'
 export const TOGGLE_STAGE_REVIEW_PANEL = 'TOGGLE_STAGE_REVIEW_PANEL'
 export const SELECT_PIPELINE_VERSION = 'SELECT_PIPELINE_VERSION'
 export const SWITCHING_PIPELINE_VERSION = 'SWITCHING_PIPELINE_VERSION'

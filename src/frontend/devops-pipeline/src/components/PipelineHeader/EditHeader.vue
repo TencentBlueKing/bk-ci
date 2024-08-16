@@ -280,16 +280,14 @@
                     })
                     return true
                 } catch (e) {
-                    const { projectId, pipelineId } = this.$route.params
-
                     if (e.code === 2101244) {
                         showPipelineCheckMsg(this.$bkMessage, e.message, this.$createElement)
                     } else {
                         this.handleError(e, {
-                            projectId,
-                            resourceCode: pipelineId,
+                            projectId: this.projectId,
+                            resourceCode: this.pipelineId,
                             action: RESOURCE_ACTION.EDIT
-                        })
+                        }, 10000)
                     }
                     return false
                 } finally {

@@ -1,0 +1,16 @@
+#wsproxy configmap
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ .Release.Name }}-tls-certs
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Release.Name }}
+data:
+  https.pem: |-
+    {{- .Values.https.crt | nindent 4 }}
+
+  https.key: |-  
+    {{- .Values.https.key | nindent 4 }}

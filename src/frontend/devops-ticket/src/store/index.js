@@ -190,7 +190,7 @@ const store = {
                     rules: 'required',
                     rule: { required: true },
                     default: '',
-                    placeholder: 'keyPasswordPlaceholder.tokenPlaceholder',
+                    placeholder: 'ticket.credential.tokenPlaceholder',
                     errorMsg: 'ticket.credential.tokenRequired',
                     type: 'password',
                     modelName: 'v1'

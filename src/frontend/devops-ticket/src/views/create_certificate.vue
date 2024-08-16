@@ -119,21 +119,21 @@
                 certType: '',
                 certData: {},
                 certTypeList: [
-                    // {
-                    //     label: this.$t('ticket.cert.iosCert'),
-                    //     value: 'ios',
-                    //     icon: 'icon-macos'
-                    // },
-                    // {
-                    //     label: this.$t('ticket.cert.androidCert'),
-                    //     value: 'android',
-                    //     icon: 'icon-android-shape'
-                    // },
-                    // {
-                    //     label: this.$t('ticket.cert.sslOrTlsCert'),
-                    //     value: 'tls',
-                    //     icon: 'icon-personal-cert'
-                    // },
+                    {
+                        label: this.$t('ticket.cert.iosCert'),
+                        value: 'ios',
+                        icon: 'icon-macos'
+                    },
+                    {
+                        label: this.$t('ticket.cert.androidCert'),
+                        value: 'android',
+                        icon: 'icon-android-shape'
+                    },
+                    {
+                        label: this.$t('ticket.cert.sslOrTlsCert'),
+                        value: 'tls',
+                        icon: 'icon-personal-cert'
+                    },
                     {
                         label: this.$t('ticket.cert.iosCorporatesignCert'),
                         value: 'enterprise',
@@ -176,6 +176,10 @@
 
             applyCreUrl () {
                 return `/console/ticket/${this.projectId}/createCredential/PASSWORD/true`
+            },
+
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
 
@@ -192,7 +196,7 @@
         methods: {
             init () {
                 const params = this.$route.params || {}
-                this.certType = params.certType ? params.certType.toLowerCase() : 'enterprise'
+                this.certType = params.certType ? params.certType.toLowerCase() : 'ios'
                 this.isEdit = this.$route.name === 'editCert'
 
                 if (this.isEdit) {

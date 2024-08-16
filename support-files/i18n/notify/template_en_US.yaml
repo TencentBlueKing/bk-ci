@@ -1,10 +1,11 @@
+# 此消息模板为腾讯内部专用，请勿将github代码库内容覆盖
 - index: 0
   id: "13ec2ac58aab4d9bb8a04bbf7a9242f6"
   templateCode: "STORE_MEMBER_ADD_ATOM"
   templateName: "Add templates for atom members of the  store"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
+    - "EMAIL"
+    - "RTX"
   priority: 1
   source: 0
   emailTemplate:
@@ -26,8 +27,8 @@
   templateCode: "MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE"
   templateName: "Manual audit-send message when reject"
   notifyTypeScope:
-  - "WEWORK"
-  - "WEWORK_GROUP"
+    - "RTX"
+    - "WEWORK_GROUP"
   priority: 0
   source: 0
   weworkTemplate:
@@ -46,8 +47,8 @@
   templateCode: "UPDATE_TEMPLATE_INSTANCE_NOTIFY_TEMPLATE"
   templateName: "Use templates to batch update notification templates for pipelined"
   notifyTypeScope:
-  - "WEWORK"
-  - "EMAIL"
+    - "RTX"
+    - "EMAIL"
   priority: 1
   source: 0
   emailTemplate:
@@ -69,8 +70,8 @@
   templateCode: "QUALITY_AUDIT_NOTIFY_TEMPLATE_V2"
   templateName: "Quality red line audit message template V2"
   notifyTypeScope:
-  - "WEWORK"
-  - "EMAIL"
+    - "RTX"
+    - "EMAIL"
   priority: 0
   source: 0
   emailTemplate:
@@ -92,8 +93,8 @@
   templateCode: "EXTENSION_RELEASE_SUCCESS_TEMPLATE"
   templateName: "Extend the service publish success message notification template"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
+    - "EMAIL"
+    - "RTX"
   priority: 0
   source: 0
   emailTemplate:
@@ -115,7 +116,7 @@
   templateCode: "STORE_COMMENT_NOTIFY_TEMPLATE"
   templateName: "Store comment message Notification template"
   notifyTypeScope:
-  - "WEWORK"
+    - "RTX"
   priority: 0
   source: 0
   weworkTemplate:
@@ -130,10 +131,10 @@
   templateCode: "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL"
   templateName: "Successful execution of details notification template code"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
-  - "VOICE"
-  - "WEWORK_GROUP"
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
   priority: 1
   source: 0
   emailTemplate:
@@ -152,11 +153,6 @@
     id: "jgj46v0knzlkhcah57rcutao30tqza5v"
     taskName: "Build Success"
     content: "${successContent}"
-  weworkGroupTemplate:
-    id: "3ffdfe998646421ba8672a9268069e4c"
-    sender: "DevOps"
-    title: "BK-CI pipeline [${pipelineName}] # ${buildNum} built successfully"
-    body: "✔️ ${successContent}\nView details: ${detailUrl}"
   creator: "system"
   modifior: "system"
 - index: 7
@@ -164,7 +160,7 @@
   templateCode: "STORE_COMMENT_REPLY_NOTIFY_TEMPLATE"
   templateName: "Store comment reply message notification template"
   notifyTypeScope:
-  - "WEWORK"
+    - "RTX"
   priority: 0
   source: 0
   weworkTemplate:
@@ -179,7 +175,7 @@
   templateCode: "ATOM_CODECC_QUALIFIED_TEMPLATE"
   templateName: "atom code scan qualified template"
   notifyTypeScope:
-  - "EMAIL"
+    - "EMAIL"
   priority: 0
   source: 0
   emailTemplate:
@@ -196,9 +192,10 @@
   templateCode: "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE"
   templateName: "Manual audit atom notification"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
-  - "WEWORK_GROUP"
+    - "EMAIL"
+    - "RTX"
+    - "WEWORK_GROUP"
+    - "MOA"
   priority: 0
   source: 0
   emailTemplate:
@@ -224,8 +221,8 @@
   templateCode: "QUALITY_NOTIFY_TEMPLATE"
   templateName: "Quality red line message template"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
+    - "EMAIL"
+    - "RTX"
   priority: 0
   source: 0
   emailTemplate:
@@ -247,7 +244,7 @@
   templateCode: "IMAGE_EXECUTE_NULL_NOTIFY_TPL"
   templateName: "Mirror execution cannot find mirror to notify administrator"
   notifyTypeScope:
-  - "WEWORK"
+    - "RTX"
   priority: 1
   source: 0
   weworkTemplate:
@@ -262,7 +259,7 @@
   templateCode: "STREAM_V2_BUILD_TEMPLATE"
   templateName: "Stream build end message template"
   notifyTypeScope:
-  - "EMAIL"
+    - "EMAIL"
   priority: 0
   source: 0
   emailTemplate:
@@ -279,8 +276,8 @@
   templateCode: "IMAGE_RELEASE_AUDIT_PASS_TEMPLATE"
   templateName: "The  store image is released through audit."
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
+    - "EMAIL"
+    - "RTX"
   priority: 1
   source: 0
   emailTemplate:
@@ -302,7 +299,7 @@
   templateCode: "PIPELINE_WEBHOOK_REGISTER_FAILURE_NOTIFY_TEMPLATE"
   templateName: "Notification template code for failed registration of pipeline webhook"
   notifyTypeScope:
-  - "WEWORK"
+    - "RTX"
   priority: 0
   source: 0
   weworkTemplate:
@@ -317,8 +314,8 @@
   templateCode: "TEMPLATE_RELEASE_AUDIT_REFUSE_TEMPLATE"
   templateName: "Template release Audit rejected message Notification template"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
+    - "EMAIL"
+    - "RTX"
   priority: 0
   source: 0
   emailTemplate:
@@ -340,10 +337,10 @@
   templateCode: "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE"
   templateName: "Failed to execute notification template code"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
-  - "VOICE"
-  - "WEWORK_GROUP"
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
   priority: 1
   source: 0
   emailTemplate:
@@ -362,11 +359,6 @@
     id: "qlzxaotr2zvr8gnj1dkpj2x5lx19wkpt"
     taskName: "Build Failure"
     content: "${failContent}"
-  weworkGroupTemplate:
-    id: "3cfc1a1ca58f4b92bf4c6d3fc8bcf790"
-    sender: "DevOps"
-    title: "Failed to build Blue Shield pipeline [${pipelineName}] # ${buildNum}"
-    body: "❌${failContent}"
   creator: "system"
   modifior: "system"
 - index: 17
@@ -374,8 +366,8 @@
   templateCode: "TEMPLATE_RELEASE_AUDIT_PASS_TEMPLATE"
   templateName: "Template release audit through message notification template"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
+    - "EMAIL"
+    - "RTX"
   priority: 0
   source: 0
   emailTemplate:
@@ -397,8 +389,8 @@
   templateCode: "QUALITY_AUDIT_NOTIFY_TEMPLATE"
   templateName: "Quality red line message template"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
+    - "EMAIL"
+    - "RTX"
   priority: 0
   source: 0
   emailTemplate:
@@ -420,7 +412,7 @@
   templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE"
   templateName: "Stage manual audit is used to send triggers"
   notifyTypeScope:
-  - "WEWORK"
+    - "RTX"
   priority: 0
   source: 0
   weworkTemplate:
@@ -435,7 +427,7 @@
   templateCode: "GITCI_V2_BUILD_TEMPLATE"
   templateName: "Worker bee CI-V2 builds end message template"
   notifyTypeScope:
-  - "EMAIL"
+    - "EMAIL"
   priority: 0
   source: 0
   emailTemplate:
@@ -452,7 +444,7 @@
   templateCode: "ATOM_CODECC_FAILED_TEMPLATE"
   templateName: "The atom code scan does not pass the template"
   notifyTypeScope:
-  - "EMAIL"
+    - "EMAIL"
   priority: 0
   source: 0
   emailTemplate:
@@ -469,10 +461,10 @@
   templateCode: "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL"
   templateName: "Failed execution of details notification template code"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
-  - "VOICE"
-  - "WEWORK_GROUP"
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
   priority: 1
   source: 0
   emailTemplate:
@@ -491,11 +483,6 @@
     id: "x79oetbqquqfjhep7zifheqe9b3tkwvx"
     taskName: "Build Failure"
     content: "${failContent}"
-  weworkGroupTemplate:
-    id: "391b2aed3ca1479b9fd78b609b23f49b"
-    sender: "DevOps"
-    title: "Failed to build Blue Shield pipeline [${pipelineName}] # ${buildNum}"
-    body: "❌ ${failContent}\n\nView details: ${detailUrl}"
   creator: "system"
   modifior: "system"
 - index: 23
@@ -503,8 +490,8 @@
   templateCode: "EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE"
   templateName: " store extended audit rejection message"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
+    - "EMAIL"
+    - "RTX"
   priority: 0
   source: 0
   emailTemplate:
@@ -526,8 +513,8 @@
   templateCode: "EXTENSION_RELEASE_FAIL_TEMPLATE"
   templateName: "Extension Service publish failure message Notification template"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
+    - "EMAIL"
+    - "RTX"
   priority: 0
   source: 0
   emailTemplate:
@@ -549,8 +536,8 @@
   templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL"
   templateName: "Details notification template code for startup"
   notifyTypeScope:
-  - "WEWORK"
-  - "EMAIL"
+    - "RTX"
+    - "EMAIL"
   priority: 1
   source: 0
   emailTemplate:
@@ -572,8 +559,8 @@
   templateCode: "STORE_MEMBER_DELETE_ATOM"
   templateName: "Research and development store atom member remove template"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
+    - "EMAIL"
+    - "RTX"
   priority: 1
   source: 0
   emailTemplate:
@@ -595,8 +582,8 @@
   templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE"
   templateName: "Started notification template code"
   notifyTypeScope:
-  - "WEWORK"
-  - "EMAIL"
+    - "RTX"
+    - "EMAIL"
   priority: 1
   source: 0
   emailTemplate:
@@ -618,10 +605,10 @@
   templateCode: "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE"
   templateName: "Successful execution of notification template code"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
-  - "VOICE"
-  - "WEWORK_GROUP"
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
   priority: 1
   source: 0
   emailTemplate:
@@ -640,11 +627,6 @@
     id: "zjeufw8tfnf53tnibu4s43leju8xgnor"
     taskName: "Build Success"
     content: "${successContent}"
-  weworkGroupTemplate:
-    id: "9c424b5784f54ba9b75e89a266951659"
-    sender: "DevOps"
-    title: "Blue Shield pipeline [${pipelineName}] # ${buildNum} built successfully"
-    body: "✔️${successContent}"
   creator: "system"
   modifior: "system"
 - index: 29
@@ -652,8 +634,8 @@
   templateCode: "PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE"
   templateName: "Build trigger audit notification"
   notifyTypeScope:
-  - "WEWORK"
-  - "EMAIL"
+    - "RTX"
+    - "EMAIL"
   priority: 1
   source: 0
   weworkTemplate:
@@ -668,7 +650,7 @@
   templateCode: "PIPELINE_TASK_PAUSE_NOTIFY"
   templateName: "Pipeline TASK pause Notification"
   notifyTypeScope:
-  - "WEWORK"
+    - "RTX"
   priority: 1
   source: 0
   weworkTemplate:
@@ -683,8 +665,8 @@
   templateCode: "QUALITY_END_NOTIFY_TEMPLATE"
   templateName: "Quality Red Line Intercept message template"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
+    - "EMAIL"
+    - "RTX"
   priority: 0
   source: 0
   emailTemplate:
@@ -706,8 +688,8 @@
   templateCode: "ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE"
   templateName: "The atom publishes an audit rejection message notification template"
   notifyTypeScope:
-  - "WEWORK"
-  - "EMAIL"
+    - "RTX"
+    - "EMAIL"
   priority: 0
   source: 0
   emailTemplate:
@@ -720,8 +702,8 @@
   weworkTemplate:
     id: "34a071f8d22f4edaba56624df3a0aae2"
     sender: "DevOps"
-    title: "The  store atom [${name}] V${version} failed the audit"
-    body: "The  store atom [${name}] V${version} failed the audit"
+    title: "The  store atom [${name}] V$ {version} failed the audit"
+    body: "The  store atom [${name}] V$ {version} failed the audit"
   creator: "system"
   modifior: "system"
 - index: 33
@@ -729,8 +711,8 @@
   templateCode: "ATOM_RELEASE_AUDIT_PASS_TEMPLATE"
   templateName: "atom release audit through message notification template"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
+    - "EMAIL"
+    - "RTX"
   priority: 0
   source: 0
   emailTemplate:
@@ -743,8 +725,8 @@
   weworkTemplate:
     id: "48ba65ca230c46f08c6e3ca2da753aee"
     sender: "DevOps"
-    title: "The  store atom [${name}] V${version} has been approved and released successfully"
-    body: "The  store atom [${name}] V${version} has been approved and released successfully"
+    title: "The  store atom [${name}] V$ {version} has been approved and released successfully"
+    body: "The  store atom [${name}] V$ {version} has been approved and released successfully"
   creator: "system"
   modifior: "system"
 - index: 34
@@ -752,8 +734,8 @@
   templateCode: "IMAGE_RELEASE_AUDIT_REFUSE_TEMPLATE"
   templateName: "Image audit of  store rejected"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
+    - "EMAIL"
+    - "RTX"
   priority: 0
   source: 0
   emailTemplate:
@@ -775,8 +757,8 @@
   templateCode: "QUALITY_END_NOTIFY_TEMPLATE_V2"
   templateName: "Quality Red Line Intercept message template V2"
   notifyTypeScope:
-  - "WEWORK"
-  - "EMAIL"
+    - "RTX"
+    - "EMAIL"
   priority: 0
   source: 0
   emailTemplate:
@@ -798,9 +780,9 @@
   templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE"
   templateName: "Phase audit notification"
   notifyTypeScope:
-  - "WEWORK"
-  - "EMAIL"
-  - "WEWORK_GROUP"
+    - "RTX"
+    - "EMAIL"
+    - "WEWORK_GROUP"
   priority: 1
   source: 0
   weworkTemplate:
@@ -819,8 +801,8 @@
   templateCode: "ATOM_COLLABORATOR_APPLY_REFUSE"
   templateName: "atom collaborative development application rejected message notification template"
   notifyTypeScope:
-  - "EMAIL"
-  - "WEWORK"
+    - "EMAIL"
+    - "RTX"
   priority: 1
   source: 0
   emailTemplate:
@@ -842,7 +824,7 @@
   templateCode: "PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE"
   templateName: "Pipeline callback disables the notification template code"
   notifyTypeScope:
-    - "WEWORK"
+    - "RTX"
   priority: 0
   source: 0
   weworkTemplate:
@@ -857,7 +839,7 @@
   templateCode: "MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE"
   templateName: "Manual review plug-in review reminder template code"
   notifyTypeScope:
-  - "WEWORK"
+    - "WEWORK"
   priority: 0
   source: 0
   weworkTemplate:

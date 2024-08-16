@@ -17,6 +17,13 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import {
+    PROJECT_RESOURCE_ACTION,
+    RESOURCE_ACTION,
+    TEMPLATE_RESOURCE_ACTION,
+    handleProjectNoPermission
+} from '@/utils/permission'
+
 import { statusAlias } from '@/utils/pipelineStatus'
 import { convertMStoStringByRule, convertTime, navConfirm } from '@/utils/util'
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
@@ -29,12 +36,6 @@ import {
     RECENT_USED_VIEW_ID,
     UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
-import {
-    PROJECT_RESOURCE_ACTION,
-    RESOURCE_ACTION,
-    TEMPLATE_RESOURCE_ACTION,
-    handleProjectNoPermission
-} from '@/utils/permission'
 
 import { ORDER_ENUM, PIPELINE_SORT_FILED, pipelineTabIdMap } from '@/utils/pipelineConst'
 import { VERSION_STATUS_ENUM } from '../utils/pipelineConst'

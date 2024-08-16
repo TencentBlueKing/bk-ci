@@ -301,6 +301,7 @@ const jobOptionConfigMixin = {
                     component: 'vuex-input',
                     default: '',
                     required: true,
+                    maxLength: 512,
                     label: this.$t('storeMap.customConditionExp'),
                     isHidden: (container) => {
                         return container?.jobControlOption?.runCondition !== 'CUSTOM_CONDITION_MATCH'

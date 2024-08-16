@@ -4,14 +4,11 @@
     :resource-type="resourceType"
     :resource-code="projectCode"
     :project-code="projectCode"
-    :rename-group-name="handelRenameGroupName"
   />
 </template>
 
 <script lang="ts">
-import http from '@/http/api';
 import PermissionMain from '@/components/user-group/components/permission-main.vue';
-import { Message } from 'bkui-vue';
 
 export default {
   components: {
@@ -28,33 +25,6 @@ export default {
     projectCode() {
       return this.$route.params.projectCode || this.$route.query.projectCode;
     },
-  },
-
-  methods: {
-    handelRenameGroupName(params: any) {
-      const {
-        resourceType,
-        projectCode,
-      } = this;
-
-      const {
-        groupName,
-        groupId,
-      } = params; 
-      return http
-        .renameGroupName({
-          resourceType,
-          projectCode,
-          groupName,
-          groupId,
-        })
-        .then(() => {
-          Message({
-            theme: 'success',
-            message: this.$t('修改成功'),
-          })
-        })
-    }
   },
 };
 </script>

@@ -64,6 +64,10 @@
             window.globalVue.$on('order::syncLocale', locale => {
                 this.$setLocale(locale, false)
             })
+
+            window.globalVue.$on('order::syncServiceHooks', serviceHooks => {
+                this.$store.dispatch('setServiceHooks', serviceHooks)
+            })
         },
         methods: {
             ...mapMutations('pipelines', [

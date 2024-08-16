@@ -1,0 +1,580 @@
+{
+  "name": "【TEST】",
+  "desc": "",
+  "stages": [
+    {
+      "containers": [
+        {
+          "@type": "trigger",
+          "id": "0",
+          "name": "构建触发",
+          "elements": [
+            {
+              "@type": "manualTrigger",
+              "name": "手动触发",
+              "id": "T-1-1-1",
+              "canElementSkip": true,
+              "useLatestParameters": false,
+              "executeCount": 1,
+              "canRetry": false,
+              "version": "1.*",
+              "classType": "manualTrigger",
+              "atomCode": "manualTrigger",
+              "elementEnable": true,
+              "taskAtom": ""
+            }
+          ],
+          "params": [
+            {
+              "id": "appName",
+              "required": true,
+              "type": "STRING",
+              "defaultValue": "",
+              "desc": "应用模块名称",
+              "readOnly": false
+            },
+            {
+              "id": "repository",
+              "required": true,
+              "type": "CODE_LIB",
+              "defaultValue": "",
+              "options": [
+                {
+                  "key": "test",
+                  "value": "test"
+                }
+              ],
+              "desc": "代码仓库",
+              "scmType": "CODE_GIT",
+              "searchUrl": "test",
+              "replaceKey": "{words}",
+              "readOnly": false
+            },
+            {
+              "id": "deployAddress",
+              "required": true,
+              "type": "STRING",
+              "defaultValue": "test",
+              "desc": "test",
+              "readOnly": false
+            }
+          ],
+          "templateParams": [],
+          "canRetry": false,
+          "containerId": "0",
+          "containerHashId": "c-c6b51f0d59814d34a2969a6543275e66",
+          "executeCount": 0,
+          "matrixGroupFlag": false,
+          "classType": "trigger"
+        }
+      ],
+      "id": "stage-1",
+      "name": "构建触发",
+      "tag": [
+        "28ee946a59f64949a74f3dee40a1bda4"
+      ],
+      "fastKill": false,
+      "finally": false,
+      "canRetry": false
+    },
+    {
+      "containers": [
+        {
+          "@type": "vmBuild",
+          "id": "1",
+          "name": "构建环境-LINUX",
+          "elements": [
+            {
+              "@type": "marketBuild",
+              "name": "拉取GIT（命令行）",
+              "id": "e-51a43140658045329c0d9898ecd99241",
+              "atomCode": "gitCodeRepo",
+              "version": "4.*",
+              "data": {
+                "input": {
+                  "repositoryType": "NAME",
+                  "repositoryHashId": "lg6v",
+                  "repositoryName": "${repository}",
+                  "pullType": "BRANCH",
+                  "branchName": "test",
+                  "tagName": "",
+                  "commitId": "",
+                  "localPath": "",
+                  "includePath": "",
+                  "excludePath": "",
+                  "fetchDepth": "",
+                  "strategy": "FRESH_CHECKOUT",
+                  "enableSubmodule": true,
+                  "submodulePath": "",
+                  "enableSubmoduleRemote": false,
+                  "enableSubmoduleRecursive": true,
+                  "newEnableSubmoduleRecursive": true,
+                  "enableVirtualMergeBranch": false,
+                  "enableAutoCrlf": false,
+                  "enableGitLfs": false,
+                  "enableGitClean": true,
+                  "enableGitCleanIgnore": true,
+                  "autoCrlf": "false"
+                },
+                "output": {
+                  "BK_CI_GIT_REPO_URL": "string",
+                  "BK_CI_GIT_REPO_NAME": "string",
+                  "BK_CI_GIT_REPO_ALIAS_NAME": "string",
+                  "BK_CI_GIT_REPO_BRANCH": "string",
+                  "BK_CI_GIT_REPO_TAG": "string",
+                  "BK_CI_GIT_REPO_CODE_PATH": "string",
+                  "BK_CI_GIT_REPO_LAST_COMMIT_ID": "string",
+                  "BK_CI_GIT_REPO_HEAD_COMMIT_ID": "string",
+                  "BK_CI_GIT_REPO_HEAD_COMMIT_COMMENT": "string",
+                  "BK_CI_GIT_REPO_HEAD_COMMIT_AUTHOR": "string",
+                  "BK_CI_GIT_REPO_HEAD_COMMIT_COMMITTER": "string",
+                  "BK_CI_GIT_REPO_CUR_COMMITS": "string"
+                },
+                "namespace": ""
+              },
+              "additionalOptions": {
+                "enable": true,
+                "continueWhenFailed": false,
+                "manualSkip": false,
+                "retryWhenFailed": false,
+                "retryCount": 1,
+                "manualRetry": true,
+                "timeout": 900,
+                "runCondition": "PRE_TASK_SUCCESS",
+                "pauseBeforeExec": false,
+                "subscriptionPauseUser": "",
+                "otherTask": "",
+                "customVariables": [
+                  {
+                    "key": "param1",
+                    "value": ""
+                  }
+                ],
+                "customCondition": "",
+                "enableCustomEnv": false,
+                "customEnv": [
+                  {
+                    "key": "param1",
+                    "value": ""
+                  }
+                ]
+              },
+              "executeCount": 1,
+              "canRetry": false,
+              "classType": "marketBuild",
+              "elementEnable": true,
+              "taskAtom": ""
+            },
+            {
+              "@type": "linuxScript",
+              "name": "安装依赖",
+              "id": "e-72b511bbe04946929cc7fa166f414cc7",
+              "scriptType": "SHELL",
+              "script": "# 您可以通过setEnv函数设置插件间传递的参数\n# setEnv \"FILENAME\" \"package.zip\"\n# 然后在后续的插件的表单中使用${FILENAME}引用这个变量\n\n# 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\" $myValue\n# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进入当前工作空间目录\ncd ${WORKSPACE}\nnpm install --unsafe-perm\n",
+              "continueNoneZero": false,
+              "enableArchiveFile": false,
+              "archiveFile": "",
+              "additionalOptions": {
+                "enable": true,
+                "continueWhenFailed": false,
+                "manualSkip": false,
+                "retryWhenFailed": false,
+                "retryCount": 1,
+                "manualRetry": true,
+                "timeout": 900,
+                "runCondition": "PRE_TASK_SUCCESS",
+                "pauseBeforeExec": false,
+                "subscriptionPauseUser": "",
+                "otherTask": "",
+                "customVariables": [
+                  {
+                    "key": "param1",
+                    "value": ""
+                  }
+                ],
+                "customCondition": "",
+                "enableCustomEnv": false,
+                "customEnv": [
+                  {
+                    "key": "param1",
+                    "value": ""
+                  }
+                ]
+              },
+              "executeCount": 1,
+              "canRetry": false,
+              "version": "1.*",
+              "classType": "linuxScript",
+              "atomCode": "linuxScript",
+              "elementEnable": true,
+              "taskAtom": ""
+            },
+            {
+              "@type": "linuxScript",
+              "name": "编译",
+              "id": "e-36a57b860eca4456a955d5e7f84d225e",
+              "scriptType": "SHELL",
+              "script": "# 您可以通过setEnv函数设置插件间传递的参数\n# setEnv \"FILENAME\" \"package.zip\"\n# 然后在后续的插件的表单中使用${FILENAME}引用这个变量\n\n# 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\" $myValue\n# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进入当前工作空间目录\ncd ${WORKSPACE}\nnpx chaos build --mode=development --type=app\n",
+              "continueNoneZero": false,
+              "enableArchiveFile": false,
+              "archiveFile": "",
+              "additionalOptions": {
+                "enable": true,
+                "continueWhenFailed": false,
+                "manualSkip": false,
+                "retryWhenFailed": false,
+                "retryCount": 1,
+                "manualRetry": true,
+                "timeout": 900,
+                "runCondition": "PRE_TASK_SUCCESS",
+                "pauseBeforeExec": false,
+                "subscriptionPauseUser": "",
+                "otherTask": "",
+                "customVariables": [
+                  {
+                    "key": "param1",
+                    "value": ""
+                  }
+                ],
+                "customCondition": "",
+                "enableCustomEnv": false,
+                "customEnv": [
+                  {
+                    "key": "param1",
+                    "value": ""
+                  }
+                ]
+              },
+              "executeCount": 1,
+              "canRetry": false,
+              "version": "1.*",
+              "classType": "linuxScript",
+              "atomCode": "linuxScript",
+              "elementEnable": true,
+              "taskAtom": ""
+            },
+            {
+              "@type": "linuxScript",
+              "name": "推送发布包",
+              "id": "e-abd7e631d4604ce1993dcb2960149f32",
+              "scriptType": "SHELL",
+              "script": "# 通过./xxx.sh的方式执行脚本\n# 即若脚本中未指定解释器，则使用系统默认的shell\n\n# 您可以通过setEnv函数设置插件间传递的参数\n# setEnv \"FILENAME\" \"package.zip\"\n# 然后在后续的插件的表单中使用${FILENAME}引用这个变量\n\n# 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\" $myValue\n# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进入当前工作空间目录\n\ncd ${WORKSPACE}\nnpx chaos deploy ${appName} http://${deployAddress}/resource/upload\n\n# 提取入口js、css\nsetEnv \"entryJs\" $(sed -n \"1p\" dist/entryfile.txt)\nsetEnv \"entryCss\" $(sed -n \"2p\" dist/entryfile.txt)\n",
+              "continueNoneZero": false,
+              "enableArchiveFile": false,
+              "archiveFile": "",
+              "additionalOptions": {
+                "enable": true,
+                "continueWhenFailed": false,
+                "manualSkip": false,
+                "retryWhenFailed": false,
+                "retryCount": 1,
+                "manualRetry": true,
+                "timeout": 900,
+                "runCondition": "PRE_TASK_SUCCESS",
+                "pauseBeforeExec": false,
+                "subscriptionPauseUser": "",
+                "otherTask": "",
+                "customVariables": [
+                  {
+                    "key": "param1",
+                    "value": ""
+                  }
+                ],
+                "customCondition": "",
+                "enableCustomEnv": false,
+                "customEnv": [
+                  {
+                    "key": "param1",
+                    "value": ""
+                  }
+                ]
+              },
+              "executeCount": 1,
+              "canRetry": false,
+              "version": "1.*",
+              "classType": "linuxScript",
+              "atomCode": "linuxScript",
+              "elementEnable": true,
+              "taskAtom": ""
+            },
+            {
+              "@type": "marketBuild",
+              "name": "发布到腾讯云COS",
+              "id": "e-7002fd4e379a4abf92fa94101775ff8b",
+              "atomCode": "pushtoqcloudcos",
+              "version": "4.*",
+              "data": {
+                "input": {
+                  "authType": "ticket",
+                  "secretId": "",
+                  "secretKey": "",
+                  "credentialId": "cos",
+                  "region": "test",
+                  "bucket": "test",
+                  "patterns": "[{\"pattern\":\"${WORKSPACE}/dist/${appName}.json\",\"to\":\"test\"}]",
+                  "conflictStrategy": "overwrite",
+                  "excludes": "[{\"values\":[{\"value\":\"\"}]}]",
+                  "ignoreNoMatched": true,
+                  "ignoreFailedFiles": false,
+                  "serviceDomain": "test"
+                },
+                "output": {
+                  "FILES_COUNT": "string",
+                  "ERROR_FILES": "string",
+                  "UPLOADED_FILES": "string"
+                },
+                "namespace": ""
+              },
+              "additionalOptions": {
+                "enable": true,
+                "continueWhenFailed": false,
+                "manualSkip": false,
+                "retryWhenFailed": false,
+                "retryCount": 1,
+                "manualRetry": false,
+                "timeout": 900,
+                "runCondition": "PRE_TASK_SUCCESS",
+                "pauseBeforeExec": false,
+                "subscriptionPauseUser": "bilihuang",
+                "otherTask": "",
+                "customVariables": [
+                  {
+                    "key": "param1",
+                    "value": ""
+                  }
+                ],
+                "customCondition": "",
+                "enableCustomEnv": false,
+                "customEnv": [
+                  {
+                    "key": "param1",
+                    "value": ""
+                  }
+                ]
+              },
+              "executeCount": 1,
+              "classType": "marketBuild",
+              "elementEnable": true,
+              "taskAtom": ""
+            }
+          ],
+          "baseOS": "LINUX",
+          "vmNames": [],
+          "maxQueueMinutes": 60,
+          "maxRunningMinutes": 900,
+          "buildEnv": {},
+          "dispatchType": {
+            "buildType": "PUBLIC_DEVCLOUD",
+            "value": "test",
+            "performanceConfigId": "0",
+            "imageType": "THIRD",
+            "credentialId": "csighub_ticket",
+            "credentialProject": "",
+            "imageCode": "tlinux_ci",
+            "imageVersion": "3.*",
+            "imageName": "tlinux_ci",
+            "dockerBuildVersion": "tlinux_ci",
+            "imagePublicFlag": false,
+            "imageRDType": "",
+            "recommendFlag": true
+          },
+          "showBuildResource": false,
+          "canRetry": false,
+          "enableExternal": false,
+          "containerId": "1",
+          "containerHashId": "c-12d9fd10cca244b4b5f9fc96db54c587",
+          "jobControlOption": {
+            "enable": true,
+            "prepareTimeout": 10,
+            "timeout": 900,
+            "runCondition": "STAGE_RUNNING",
+            "customVariables": [
+              {
+                "key": "param1",
+                "value": ""
+              }
+            ],
+            "customCondition": "",
+            "dependOnType": "ID",
+            "dependOnId": [],
+            "dependOnName": "",
+            "continueWhenFailed": false
+          },
+          "mutexGroup": {
+            "enable": false,
+            "mutexGroupName": "",
+            "queueEnable": false,
+            "timeout": 900,
+            "queue": 5
+          },
+          "executeCount": 0,
+          "jobId": "job_BT3",
+          "matrixGroupFlag": false,
+          "matrixControlOption": {
+            "strategyStr": "",
+            "includeCaseStr": "",
+            "excludeCaseStr": "",
+            "fastKill": true,
+            "maxConcurrency": 5
+          },
+          "nfsSwitch": false,
+          "classType": "vmBuild"
+        }
+      ],
+      "id": "stage-2",
+      "name": "发布流程",
+      "tag": [
+        "28ee946a59f64949a74f3dee40a1bda4"
+      ],
+      "fastKill": false,
+      "finally": false,
+      "canRetry": false,
+      "stageControlOption": {
+        "enable": true,
+        "runCondition": "AFTER_LAST_FINISHED",
+        "manualTrigger": false,
+        "triggerUsers": [],
+        "triggered": false,
+        "timeout": 24,
+        "customVariables": [
+          {
+            "key": "param1",
+            "value": ""
+          }
+        ]
+      }
+    },
+    {
+      "containers": [
+        {
+          "@type": "normal",
+          "id": "2",
+          "name": "无编译环境",
+          "elements": [
+            {
+              "@type": "marketBuildLess",
+              "name": "企业微信机器人推送-前端测试",
+              "id": "e-f7408db7cca5446cb2e9831d7ea89f03",
+              "atomCode": "WechatWorkRobot",
+              "version": "1.*",
+              "data": {
+                "input": {
+                  "inputWebhook": "test",
+                  "inputMsgtype": "text",
+                  "inputTextContentSource": "text",
+                  "inputTextContent": "发布人：${BK_CI_START_USER_NAME}\n流水线名称：${BK_CI_PIPELINE_NAME} \n提交commit：${BK_CI_GIT_REPO_HEAD_COMMIT_COMMENT}\n[查看详情]\nhttp://xxx/console/pipeline/${BK_CI_PROJECT_NAME}/${BK_CI_PIPELINE_ID}/detail/${BK_CI_BUILD_ID}",
+                  "inputTextContentFileAbsOrRel": "",
+                  "inputTextContentFile": "",
+                  "inputRelTextContentFile": "",
+                  "inputTextArtifactSrc": "",
+                  "inputTextArtifactFile": "",
+                  "inputTextMentionedList": "",
+                  "inputTextMentionedMobileList": "",
+                  "inputMarkdownContentSource": "text",
+                  "inputMarkdownContent": "",
+                  "inputMarkdownContentFileAbsOrRel": "",
+                  "inputMarkdownContentFile": "",
+                  "inputRelMarkdownContentFile": "",
+                  "inputMarkdownArtifactSrc": "",
+                  "inputMarkdownArtifactFile": "",
+                  "inputMarkdownAtShortName": false,
+                  "inputIfMarkdownAttachment": false,
+                  "inputMarkdownAttachmentActionsType": "button",
+                  "inputIfMarkdownActions2": false,
+                  "inputMarkdownAttachmentActions2Type": "button",
+                  "inputIfMarkdownActions3": false,
+                  "inputMarkdownAttachmentActions3Type": "button",
+                  "inputIfMarkdownActions4": false,
+                  "inputMarkdownAttachmentActions4Type": "button",
+                  "inputIfMarkdownActions5": false,
+                  "inputMarkdownAttachmentActions5Type": "button",
+                  "inputImageSource": "",
+                  "inputLocalImageAbsOrRel": "",
+                  "inputLocalImage": "",
+                  "inputRelLocalImage": "",
+                  "inputImageBase64": "",
+                  "inputImageMd5": "",
+                  "inputNewsTitle": "",
+                  "inputNewsUrl": "",
+                  "inputNewsDescription": "",
+                  "inputNewsPicurl": "",
+                  "inputFileSource": "",
+                  "inputLocalFileAbsOrRel": "",
+                  "inputLocalFile": "",
+                  "inputRelLocalFile": "",
+                  "inputMediaId": "",
+                  "inputChatid": "wrkSFfCgAAw2FXcFDlQ7CECxZ1eX6lUw",
+                  "inputVisibleToUser": "",
+                  "inputRetry": 1,
+                  "inputProxyPolicy": "disable"
+                },
+                "output": {},
+                "namespace": ""
+              },
+              "executeCount": 1,
+              "additionalOptions": {
+                "enable": true,
+                "continueWhenFailed": false,
+                "manualSkip": false,
+                "retryWhenFailed": false,
+                "retryCount": 1,
+                "manualRetry": false,
+                "timeout": 900,
+                "runCondition": "PRE_TASK_SUCCESS",
+                "pauseBeforeExec": false,
+                "subscriptionPauseUser": "bilihuang",
+                "otherTask": "",
+                "customVariables": [
+                  {
+                    "key": "param1",
+                    "value": ""
+                  }
+                ],
+                "customCondition": "",
+                "enableCustomEnv": false,
+                "customEnv": [
+                  {
+                    "key": "param1",
+                    "value": ""
+                  }
+                ]
+              },
+              "classType": "marketBuildLess",
+              "elementEnable": true,
+              "taskAtom": ""
+            }
+          ],
+          "enableSkip": false,
+          "containerId": "2",
+          "containerHashId": "c-cefc113914d845e1b30257588b922d6d",
+          "maxQueueMinutes": 60,
+          "maxRunningMinutes": 1440,
+          "executeCount": 0,
+          "jobId": "job_zM3",
+          "matrixGroupFlag": false,
+          "classType": "normal"
+        }
+      ],
+      "id": "stage-3",
+      "name": "stage-3",
+      "tag": [
+        "28ee946a59f64949a74f3dee40a1bda4"
+      ],
+      "fastKill": false,
+      "finally": false,
+      "checkIn": {
+        "manualTrigger": false,
+        "timeout": 24
+      },
+      "checkOut": {
+        "manualTrigger": false,
+        "timeout": 24
+      }
+    }
+  ],
+  "labels": [],
+  "instanceFromTemplate": false,
+  "pipelineCreator": "test",
+  "events": {},
+  "latestVersion": 2
+}

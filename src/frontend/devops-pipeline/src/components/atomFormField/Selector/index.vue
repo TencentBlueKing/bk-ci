@@ -2,7 +2,7 @@
     <bk-select @toggle="toggleVisible" @change="onChange" v-bind="selectProps">
         <bk-option
             v-for="(item, index) in listData"
-            :key="index"
+            :key="`${item[settingKey]}-${index}`"
             :id="item[settingKey]"
             :name="item[displayKey]"
             :disabled="item.disabled"
@@ -150,27 +150,27 @@
 </script>
 
 <style lang="scss">
-    @import "../../../scss/conf";
-    .bkdevops-option-name {
-        width: 100%;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        white-space: nowrap;
-        &.selected {
-            width: calc(100% - 24px)
-        }
-    }
-    .bk-selector-create-item {
-        a {
-            display: block;
-            color: $fontWeightColor;
-        }
+@import "../../../scss/conf";
+.bkdevops-option-name {
+  width: 100%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  &.selected {
+    width: calc(100% - 24px);
+  }
+}
+.bk-selector-create-item {
+  a {
+    display: block;
+    color: $fontWeightColor;
+  }
 
-        &:hover {
-            &, a {
-                color: $primaryColor !important;
-            }
-        }
+  &:hover {
+    &,
+    a {
+      color: $primaryColor !important;
     }
-
+  }
+}
 </style>

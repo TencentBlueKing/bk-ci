@@ -1,0 +1,50 @@
+package com.tencent.devops.dispatch.devcloud.pojo
+
+const val BUILD_ID_DEFAULT = "0000000000000000000000000000000"
+const val VM_SEQ_ID_DEFAULT = "1"
+const val VM_NAME_DEFAULT = "vmName"
+
+const val SLAVE_MODEL = "devops.slave.model"
+const val SLAVE_ENVIRONMENT = "devops.slave.environment"
+const val SLAVE_MODEL_WORKER = "worker"
+const val SLAVE_MODEL_AGENT = "agent"
+const val SLAVE_MODEL_PLUGIN_AGENT = "pluginAgent"
+
+const val SLAVE_AGENT_ROLE = "devops.slave.agent.role"
+const val SLAVE_AGENT_ROLE_MASTER = "devops.slave.agent.role.master"
+const val SLAVE_AGENT_ROLE_SLAVE = "devops.slave.agent.role.slave"
+const val SLAVE_AGENT_START_FILE = "devops.slave.agent.start.file"
+
+const val SLAVE_BUILD_TYPE = "build.type"
+
+const val WORKSPACE_ENV = "WORKSPACE"
+
+const val ENV_KEY_DISTCC = "DISTCC_HOSTS"
+const val ENV_KEY_PROJECT_ID = "devops_project_id"
+const val ENV_KEY_AGENT_ID = "devops_agent_id"
+const val ENV_KEY_AGENT_SECRET_KEY = "devops_agent_secret_key"
+const val ENV_KEY_GATEWAY = "devops_gateway"
+const val ENV_DEVOPS_AGENT_JDK_PATH = "devops_agent_jdk_path"
+const val DEVOPS_AGENT_SLAVE_USER = "devops_agent_slave_user"
+const val DEVOPS_AGENT_REQUEST_TIMEOUT = "devops_agent_request_timeout"
+const val DEVOPS_AGENT_LOG_KEEP_HOUR = "devops_agent_log_keep_hour"
+const val BK_DISTCC_LOCAL_IP = "BK_DISTCC_LOCAL_IP"
+const val ENV_DEFAULT_LOCALE_LANGUAGE = "BK_CI_LOCALE_LANGUAGE"
+const val ENV_JOB_BUILD_TYPE = "JOB_POOL"
+const val ENV_DEVCLOUD_CPU = "DEVCLOUD_CPU"
+const val ENV_DEVCLOUD_MEM = "DEVCLOUD_MEM"
+const val ENV_DEVCLOUD_DISK = "DEVCLOUD_DISK"
+
+// 持久化容器变量
+const val DEVOPS_AGENTSLIM_ISDEBUG = "DEVOPS_AGENTSLIM_ISDEBUG"
+const val DEVOPS_AGENTSLIM_LOGPATH = "DEVOPS_AGENTSLIM_LOGPATH"
+const val DEVOPS_AGENTSLIM_WORKER_USER = "DEVOPS_AGENTSLIM_WORKER_USER"
+const val DEVOPS_AGENTSLIM_LANUAGE = "DEVOPS_AGENTSLIM_LANUAGE"
+const val DEVOPS_AGENTSLIM_MAX_WORKER_COUNT = "DEVOPS_AGENTSLIM_MAX_WORKER_COUNT"
+const val DEVOPS_AGENTSLIM_GATEWAY = "DEVOPS_AGENTSLIM_GATEWAY"
+const val DEVOPS_AGENTSLIM_FILEGATEWAY = "DEVOPS_AGENTSLIM_FILEGATEWAY"
+const val DEVOPS_AGENTSLIM_PROJECT_ID = "DEVOPS_AGENTSLIM_PROJECT_ID"
+const val DEVOPS_AGENTSLIM_CONTAINER_NAME = "DEVOPS_AGENTSLIM_CONTAINER_NAME"
+const val DEVOPS_AGENTSLIM_WORKER_PATH = "DEVOPS_AGENTSLIM_WORKER_PATH"
+const val DEVOPS_AGENTSLIM_JAVA_PATH = "DEVOPS_AGENTSLIM_JAVA_PATH"
+const val DEVOPS_AGENTSLIM_WORKER_DETECTSHELL = "DEVOPS_AGENTSLIM_WORKER_DETECTSHELL"

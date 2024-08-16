@@ -95,7 +95,7 @@
             position: relative;
             top: 1px;
             left: 4px;
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
         }
         li:hover {
             background-color: #ebf4ff;

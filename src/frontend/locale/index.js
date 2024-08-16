@@ -1,5 +1,5 @@
+import { lang, locale } from '@tencent/bk-magic-vue'
 import axios from 'axios'
-import { lang, locale } from 'bk-magic-vue'
 import cookies from 'js-cookie'
 import VueI18n from 'vue-i18n'
 const DEFAULT_LOCALE = window.INIT_LOCALE || 'zh-CN'
@@ -18,12 +18,14 @@ const localeAliasMap = {
     'zh-CN': 'zh-CN',
     'zh-cn': 'zh-CN',
     zh_CN: 'zh-CN',
+    zh_cn: 'zh-CN',
     cn: 'zh-CN',
     'en-US': 'en-US',
     'en-us': 'en-US',
     en: 'en-US',
     us: 'en-US',
-    en_US: 'en-US'
+    en_US: 'en-US',
+    en_us: 'en-US'
 }
 
 const backendLocalEnum = {
@@ -37,7 +39,7 @@ const backendLocalEnum = {
     'fr-FR': 'fr_FR' // 法文
 }
 
-function getSubDoamin () {
+function getSubDomain () {
     try {
         return location.hostname.split('.').reduce((acc, _, index, list) => {
             const last = list.length - 1
@@ -67,7 +69,7 @@ function getLsLocale () {
 function setLsLocale (locale) {
     const formateLocale = localeAliasMap[locale] === 'zh-CN' ? 'zh-cn' : 'en'
     if (typeof cookies.set === 'function') {
-        const subDomains = getSubDoamin()
+        const subDomains = getSubDomain()
         subDomains.forEach(domain => {
             cookies.remove(LS_KEY, { domain, path: '/' })
         })

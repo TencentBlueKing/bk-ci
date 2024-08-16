@@ -110,10 +110,10 @@ class TaskDaemon(
                     )
                     return@forEach
                 }
-                if (SensitiveValueService.matchSensitiveValue(value)) {
-                    LoggerService.addWarnLine("Warning, credentials cannot be assigned to variable[$key]")
-                    return@forEach
-                }
+//                if (SensitiveValueService.matchSensitiveValue(value)) {
+//                    LoggerService.addWarnLine("Warning, credentials cannot be assigned to variable[$key]")
+//                    return@forEach
+//                }
                 buildResult[key] = value
             }
         }

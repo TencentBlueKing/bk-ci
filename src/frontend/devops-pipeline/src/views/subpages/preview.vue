@@ -207,9 +207,9 @@
 
 <script>
     import Pipeline from '@/components/Pipeline'
-    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
-    import { UPDATE_PREVIEW_PIPELINE_NAME, bus } from '@/utils/bus'
+    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
+    import { bus, UPDATE_PREVIEW_PIPELINE_NAME } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -296,10 +296,7 @@
             }, 0)
         },
         methods: {
-            ...mapActions('atom', [
-                'togglePropertyPanel',
-                'fetchPipelineByVersion'
-            ]),
+            ...mapActions('atom', ['togglePropertyPanel', 'fetchPipelineByVersion']),
             ...mapActions('pipelines', [
                 'requestStartupInfo',
                 'requestExecPipeline',
@@ -512,10 +509,11 @@
                 } finally {
                     this.setExecuteStatus(false)
 
-                    message && this.$showTips({
-                        message,
-                        theme
-                    })
+                    message
+                        && this.$showTips({
+                            message,
+                            theme
+                        })
                 }
             },
 

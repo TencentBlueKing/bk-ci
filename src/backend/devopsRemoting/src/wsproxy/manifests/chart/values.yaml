@@ -1,0 +1,71 @@
+kubeConfig:
+  useKubeConfig: true
+  # 配置的kubeConfig文件内容
+  content: |
+    # useKubeConfig开启时，这里需要填写kubeconfig
+
+wsproxy:
+  replicas: 1
+  image: mirrors.tencent.com/ruotiantang/wsproxy-demo:0.0.23-debug
+  resources:
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
+  # 获取kubernetes集群信息的类型  KUBE_API|BACKEND  
+  kubemanagerType: KUBE_API
+  # 监听的pod的命名空间    
+  namespace: blueking-dispatch
+  devRemotingBackend:
+    hostName: ""
+    workspaceHostSuffix: ""
+    sha1key: ""
+    oauthRedirectUrl: ""
+  # 关于日志的配置  
+  logConfig:  
+    # 日志是否落盘
+    enablePathLog: true
+    serviceLogPath: "/data/workspace/wsproxy/logs/service.log"
+    errorLogPath: "/data/workspace/wsproxy/logs/error.log"
+    # 使用sidecar模式采集日志
+    sidecar:
+      enable: true
+      image: ""
+      env: 
+      - name: xxx
+      resources:
+        requests:
+          cpu: 500m
+          memory: 256Mi
+        limits:
+          cpu: 750m
+          memory: 512Mi
+      workingDir: ""
+
+# 镜像配置
+backendImage:
+  pullPolicy: IfNotPresent
+
+# wsproxy service
+service:
+  # 部署的service的类型: ClusterIP|NodePort|LoadBalancer
+  serviceType: ClusterIP
+  # 部署的service的annotations:
+  serviceAnnotations:
+  # 部署的service对外暴露的端口
+  sshPort: 22
+  httpProxyPort: 8080
+  httpsProxyPort: 9090
+  # nodeport模式下nodeport的端口
+  sshNodePort: 30022
+  httpProxyNodePort: 30080
+  httpsProxyNodePort: 30090
+
+# https证书相关配置
+https:
+  key: |
+    # https开启时，这里需要https证书key
+  crt: |
+    # https开启时，这里需要https证书crt

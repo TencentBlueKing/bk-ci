@@ -618,6 +618,10 @@ export function getQueryParamList (arr = [], key) {
     }
 }
 
+export function isAbsoluteURL (url = '') {
+    return /^https?:\/\//i.test(url)
+}
+
 // 将vue-router的query参数转换成字符串
 export function getQueryParamString (query) {
     const params = []

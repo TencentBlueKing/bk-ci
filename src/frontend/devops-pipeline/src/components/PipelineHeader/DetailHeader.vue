@@ -109,14 +109,14 @@
                 isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
             ...mapState('pipelines', ['executeStatus']),
-            RESOURCE_ACTION () {
-                return RESOURCE_ACTION
-            },
             projectId () {
                 return this.$route.params.projectId
             },
             pipelineId () {
                 return this.$route.params.pipelineId
+            },
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
             },
             canEdit () {
                 return this.pipelineInfo?.permissions?.canEdit ?? true
@@ -168,9 +168,10 @@
                     }
                 } catch (err) {
                     this.handleError(err, {
-                        projectId: this.$route.params.projectId,
-                        resourceCode: this.$route.params.pipelineId,
-                        action: this.$permissionResourceAction.EXECUTE
+                        projectId: this.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: this.pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
                     })
                     this.loading = false
                 }

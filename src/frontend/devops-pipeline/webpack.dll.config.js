@@ -26,6 +26,8 @@ module.exports = (env = {}, argv) => {
         entry: [
             'axios',
             'vee-validate',
+            'echarts',
+            'vue-echarts',
             'vue-i18n',
             'moment'
         ],

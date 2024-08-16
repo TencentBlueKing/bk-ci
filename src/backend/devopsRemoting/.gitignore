@@ -1,0 +1,10 @@
+.idea
+test/*
+bin
+temp/*
+ide/openvscode*
+
+src/cmd/devopsRemoting/*.json
+.codecc
+build.yml
+manifests/wsproxy/chart/wsproxy*.tgz

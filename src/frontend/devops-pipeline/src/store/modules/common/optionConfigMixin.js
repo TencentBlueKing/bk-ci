@@ -181,6 +181,7 @@ const optionConfigMixin = {
                 component: 'vuex-input',
                 default: '',
                 required: true,
+                maxLength: 512,
                 label: this.$t('storeMap.customConditionExp'),
                 isHidden: (element) => {
                     return element?.additionalOptions?.runCondition !== 'CUSTOM_CONDITION_MATCH'

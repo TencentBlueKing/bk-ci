@@ -3,7 +3,7 @@
         <header class="manage-detail-header">
             <span @click="$router.back()">{{ $t('store.取消编辑') }}</span>
         </header>
-        <component :is="`${$route.params.type}Edit`" :detail="detail" class="edit-main" ref="edit"></component>
+        <component :is="`${$route.params.type}Edit`" :user-info="userInfo" :detail="detail" class="edit-main" ref="edit"></component>
     </article>
 </template>
 
@@ -11,16 +11,19 @@
     import { mapGetters } from 'vuex'
     import atomEdit from '@/components/manage/detail/atom-detail/edit.vue'
     import imageEdit from '@/components/manage/detail/image-detail/edit.vue'
+    import serviceEdit from '@/components/manage/detail/service-detail/edit.vue'
 
     export default {
         components: {
             atomEdit,
-            imageEdit
+            imageEdit,
+            serviceEdit
         },
 
         computed: {
             ...mapGetters('store', {
-                detail: 'getDetail'
+                detail: 'getDetail',
+                userInfo: 'getUserInfo'
             })
         },
 
@@ -90,6 +93,11 @@
                 margin-top: 0;
                 .bk-label {
                     display: none;
+                }
+            }
+            .radio-group {
+                .bk-form-radio {
+                    margin-right: 10px;
                 }
             }
         }

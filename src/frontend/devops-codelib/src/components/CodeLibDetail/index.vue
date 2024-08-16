@@ -130,7 +130,7 @@
                         :repo-info="repoInfo"
                         :cur-repo="curRepo"
                         :type="repoInfo['@type']"
-                        :pac-project-name="pacProjectName"
+                        :pac-project-name.sync="pacProjectName"
                         :fetch-repo-detail="fetchRepoDetail"
                         :event-type-list="eventTypeList"
                         :trigger-type-list="triggerTypeList"
@@ -566,7 +566,7 @@
     }
 </script>
 <style lang='scss' scoped>
-    @media (max-width: 1400px) {
+    @media (max-width: 1200px) {
         .codelib-name {
             span {
                 max-width: 300px;
@@ -576,14 +576,15 @@
             max-width: 300px;
         }
     }
-    @media (min-width: 1400px) {
+
+    @media (min-width: 1200px) {
         .codelib-name {
             span {
-                max-width: 320px;
+                max-width: 350px;
             }
         }
         .codelib-address {
-            max-width: 380px;
+            max-width: 400px;
         }
     }
     ::v-deep {

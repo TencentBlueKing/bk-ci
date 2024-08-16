@@ -11,10 +11,10 @@
                 slot="dropdown-content"
             >
                 <ul v-for="(parent, index) in actionConfMenus" :key="index">
-                    <template v-for="(action, aIndex) in parent">
+                    <template v-for="action in parent">
                         <li
                             v-if="!action.hidden"
-                            :key="aIndex"
+                            :key="action.label"
                             v-perm="{
                                 ...action.vPerm
                             }"

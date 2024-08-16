@@ -55,7 +55,11 @@
                         {{ $t('environment.nodeInfo.fetchInstallCommandTips') }}
                     </div>
                 </div>
-                <p class="handler-prompt">{{ $t('environment.nodeInfo.connectedNodes') }}</p>
+                <div class="handler-prompt-node">
+                    <p>{{ $t('environment.nodeInfo.connectedNodes') }}</p>
+                    <a :href="spawnNodesDescLink" target="_blank">
+                        {{ $t('environment.nodeInfo.unableToSpawnNodes') }}</a>
+                </div>
                 <div class="construct-card-item connection-node-card">
                     <p class="no-connection-node" v-if="connectNodeDetail.status === 'UN_IMPORT'">
                         {{ $t('environment.nodeInfo.noConnectedNodes') }}，<span class="refresh-detail" @click="requetConstructNode">{{ $t('environment.clickToRefresh') }}</span>
@@ -78,7 +82,7 @@
                         <!-- <div class="delete-handler"><i class="devops-icon icon-close"></i></div> -->
                     </div>
                 </div>
-                <p v-if="isAgent" class="target-console-tips">{{ $t('environment.nodeInfo.loginMethod') }}：ssh -p36000 root@{{ nodeIp }} {{ $t('environment.nodeInfo.checkMails') }}！</p>
+                <p v-if="isAgent && constructImportForm.model !== 'WINDOWS'" class="target-console-tips">{{ $t('environment.nodeInfo.loginMethod') }}：ssh -p36000 root@{{ nodeIp }} </p>
             </div>
 
             <empty-tips v-if="!hasPermission"
@@ -89,7 +93,7 @@
         </div>
         <div slot="footer">
             <div class="footer-handler">
-                <bk-button theme="primary" :disabled="connectNodeDetail.status === 'UN_IMPORT'"
+                <bk-button key="a" theme="primary" :disabled="connectNodeDetail.status === 'UN_IMPORT'"
                     @click="confirmFn">{{ constructToolConf.importText }}</bk-button>
                 <bk-button theme="default" @click="cancelFn">{{ $t('environment.cancel') }}</bk-button>
             </div>
@@ -122,7 +126,8 @@
         data () {
             return {
                 defaultMachineCover: require('../../../scss/logo/machine.svg'),
-                installDocsLink: this.BKCI_DOCS.WIN_AGENT_GUIDE
+                installDocsLink: this.BKCI_DOCS.WIN_AGENT_GUIDE,
+                spawnNodesDescLink: this.BKCI_DOCS.SPAWN_NODES_DOC
             }
         },
         methods: {
@@ -149,6 +154,16 @@
         .handler-prompt {
             margin-top: 24px;
             text-align: left;
+        }
+
+        .handler-prompt-node {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            a {
+                cursor: pointer;
+                color: $primaryColor;
+            }
         }
 
         .construct-card-item {
@@ -195,7 +210,7 @@
         .no-connection-node {
             margin-top: 18px;
             width: 100%;
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
         }
 
         .refresh-detail {
@@ -246,7 +261,7 @@
             .icon-close {
                 position: relative;
                 top: -26px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 font-size: 12px;
                 cursor: pointer;
             }

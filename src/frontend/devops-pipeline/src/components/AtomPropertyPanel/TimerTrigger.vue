@@ -96,10 +96,10 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
-    import BranchParameterArray from '../AtomFormComponent/BranchParameterArray/index'
     import { REPOSITORY_API_URL_PREFIX } from '@/store/constants'
+    import BranchParameterArray from '../AtomFormComponent/BranchParameterArray/index'
+    import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
 
     export default {
         name: 'timer-trigger',

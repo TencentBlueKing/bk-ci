@@ -155,6 +155,19 @@ export const DEFAULT_PARAM = {
         required: true,
         readOnly: false
     },
+    [ARTIFACTORY]: {
+        id: 'artifactory',
+        defaultValue: '',
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
+        desc: '',
+        options: [],
+        glob: '*',
+        properties: {},
+        type: ARTIFACTORY,
+        typeDesc: 'artifactory',
+        required: true
+    },
     [SUB_PIPELINE]: {
         id: 'subPipeline',
         name: 'subPipeline',
@@ -296,6 +309,10 @@ export const CODE_LIB_TYPE = [
     {
         id: 'CODE_GIT',
         name: 'GIT'
+    },
+    {
+        id: 'CODE_SVN',
+        name: 'SVN'
     },
     {
         id: 'GITHUB',

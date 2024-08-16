@@ -16,6 +16,17 @@
                     </bk-checkbox>
                 </bk-checkbox-group>
             </bk-form-item>
+            <bk-form-item :label="$t('settings.noticeGroup')">
+                <bk-checkbox-group :value="subscription.groups" @change="value => updateSubscription('groups', value)">
+                    <bk-checkbox v-for="item in projectGroupAndUsers" :key="item.groupId" :value="item.groupId" class="groups-users-checkbox">
+                        {{ item.groupName }}
+                        <bk-popover placement="top">
+                            <span class="info-notice-length">({{ item.users.length }})</span>
+                            <div slot="content" style="max-width: 300px;word-wrap:break-word; word-break: normal">{{ item.users.length ? item.users.join(';') : $t('settings.emptyNoticeGroup') }}</div>
+                        </bk-popover>
+                    </bk-checkbox>
+                </bk-checkbox-group>
+            </bk-form-item>
             <bk-form-item :label="$t('settings.additionUser')">
                 <staff-input
                     :handle-change="(name, value) => subscription.users = value.join(',')"
@@ -68,9 +79,9 @@
 </template>
 
 <script>
-    import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
-    import StaffInput from '@/components/atomFormField/StaffInput'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import StaffInput from '@/components/atomFormField/StaffInput'
+    import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
     export default {
         name: 'notify-setting',
         components: {
@@ -80,7 +91,8 @@
         },
         props: {
             subscription: Object,
-            updateSubscription: Function
+            updateSubscription: Function,
+            projectGroupAndUsers: Array
         },
         data () {
             return {
@@ -108,7 +120,7 @@
             noticeList () {
                 return [
                     { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
-                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'WEWORK' },
+                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'RTX' },
                     { id: 6, name: this.$t('settings.weworkGroup'), value: 'WEWORK_GROUP' },
                     { id: 5, name: this.$t('settings.voice'), value: 'VOICE' }
                     // { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
@@ -117,6 +129,14 @@
             },
             groupIdDesc () {
                 return this.$t('settings.groupIdDesc')
+            },
+            pipelineSettingUser () {
+                return this.subscription && this.subscription.users ? this.subscription.users.split(',') : []
+            }
+        },
+        methods: {
+            handleUsers (name, value) {
+                this.updateSubscription(name, value.join(','))
             }
         }
     }
@@ -140,10 +160,16 @@
             width: auto;
             margin-right: 24px;
         }
-        .notify-setting-no-data {
-            vertical-align: top;
-            font-size: 12px;
-            color: #63656e;
+        .groups-users-checkbox {
+            width: 150px;
+            margin-bottom: 4px;
+            margin-right: 8px;
+            .bk-checkbox-text {
+                max-width: 126px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
         }
     }
 </style>

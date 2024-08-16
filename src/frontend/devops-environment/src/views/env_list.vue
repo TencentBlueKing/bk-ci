@@ -239,6 +239,21 @@
              */
             localConvertTime (timestamp) {
                 return convertTime(timestamp * 1000)
+            },
+
+            askEnvDeletePermission (id, name) {
+                this.$showAskPermissionDialog({
+                    noPermissionList: [{
+                        actionId: this.$permissionActionMap.delete,
+                        resourceId: this.$permissionResourceMap.environment,
+                        instanceId: [{
+                            id,
+                            name
+                        }],
+                        projectId: this.projectId
+                    }],
+                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=environment&project_code=${this.projectId}&service_code=environment&role_creator=environment`
+                })
             }
         }
     }

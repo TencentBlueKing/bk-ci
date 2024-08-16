@@ -34,6 +34,7 @@
     import {
         PROCESS_API_URL_PREFIX
     } from '@/store/constants'
+
     export default {
         name: 'branch-parameter-array',
         components: {

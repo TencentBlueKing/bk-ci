@@ -64,7 +64,7 @@
                             @click="$router.push({ name: 'editImage', params: { imageId: props.row.imageId } })"> {{ $t('store.升级') }} </span>
                         <span class="shelf-btn"
                             v-if="props.row.imageStatus === 'RELEASED' && !props.row.publicFlag"
-                            @click="$router.push({ name: 'install', query: { code: props.row.imageCode, type: 'image', from: 'imageWork' } })"> {{ $t('store.安装') }} </span>
+                            @click="$router.push({ name: 'install', query: { code: props.row.imageCode, type: 'image', from: 'serviceWork' } })"> {{ $t('store.安装') }} </span>
                         <span class="schedule-btn"
                             v-if="['AUDITING', 'COMMITTING', 'CHECKING', 'CHECK_FAIL', 'UNDERCARRIAGING', 'TESTING'].includes(props.row.imageStatus)"
                             @click="$router.push({ name: 'imageProgress', params: { imageId: props.row.imageId } })"> {{ $t('store.进度') }} </span>
@@ -95,8 +95,7 @@
                         :rules="[requireRule, nameRule]"
                         error-display-type="normal"
                     >
-                        <bk-input
-                            v-model="relateImageData.form.imageName" :placeholder="$t('store.请输入镜像名称，不超过20个字符')" style="width: 96%;" @change="handleChangeForm"></bk-input>
+                        <bk-input v-model="relateImageData.form.imageName" :placeholder="$t('store.请输入镜像名称，不超过20个字符')" style="width: 96%;" @change="handleChangeForm"></bk-input>
                         <bk-popover placement="right" class="is-tooltips">
                             <i class="devops-icon icon-info-circle info-icon"></i>
                             <template slot="content">
@@ -120,7 +119,8 @@
                         </bk-popover>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]">
-                        <bk-radio-group v-model="relateImageData.form.imageSourceType" @change="handleChangeForm" class="mt6">
+                        <bk-radio-group v-model="relateImageData.form.imageSourceType" @change="handleChangeForm">
+                            <bk-radio value="BKDEVOPS" class="mr12"> {{ $t('store.蓝盾源') }} </bk-radio>
                             <bk-radio value="THIRD"> {{ $t('store.第三方源') }} </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
@@ -203,8 +203,8 @@
 </template>
 
 <script>
-    import { debounce } from '@/utils/index'
     import { imageStatusList } from '@/store/constants'
+    import { debounce } from '@/utils/index'
     import status from './status'
 
     export default {
@@ -235,7 +235,7 @@
                         imageCode: '',
                         projectCode: '',
                         imageName: '',
-                        imageSourceType: 'THIRD',
+                        imageSourceType: 'BKDEVOPS',
                         ticketId: ''
                     }
                 },
@@ -385,6 +385,8 @@
                 }
                 this.$bkInfo({
                     title: this.$t('store.确认要删除？'),
+                    type: 'warning',
+                    theme: 'warning',
                     confirmFn
                 })
             },

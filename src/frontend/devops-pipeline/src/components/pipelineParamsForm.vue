@@ -22,6 +22,11 @@
                     :placeholder="param.placeholder"
                     :upload-file-name="uploadFileName"
                 />
+                <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('metaData') }}
+                    <aside class="metadata-box">
+                        <metadata-list :is-left-render="(index % 2) === 1" :path="isArtifactoryParam(param.type) ? param.value : ''"></metadata-list>
+                    </aside>
+                </span>
                 <div class="file-upload" v-if="showFileUploader(param.type)">
                     <file-upload
                         name="fileName"
@@ -59,6 +64,7 @@
         isGitParam,
         isCodelibParam,
         isFileParam,
+        isArtifactoryParam,
         isRemoteType,
         ParamComponentMap,
         STRING,
@@ -70,6 +76,7 @@
         CODE_LIB,
         CONTAINER_TYPE,
         SUB_PIPELINE,
+        ARTIFACTORY,
         TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
 
@@ -178,6 +185,7 @@
             }
         },
         methods: {
+            isArtifactoryParam,
             getParamComponentType (param) {
                 if (isRemoteType(param)) {
                     return 'request-selector'
@@ -195,6 +203,7 @@
                     case param.type === GIT_REF:
                     case param.type === CODE_LIB:
                     case param.type === CONTAINER_TYPE:
+                    case param.type === ARTIFACTORY:
                     case param.type === SUB_PIPELINE:
                         return param.options
                     default:
@@ -218,6 +227,9 @@
                     value = Array.isArray(value) ? value.join(',') : ''
                 }
                 this.handleParamChange(param.name, value)
+            },
+            showMetadata (type, value) {
+                return isArtifactoryParam(type) && value && this.$route.path.indexOf('preview') > -1
             },
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1

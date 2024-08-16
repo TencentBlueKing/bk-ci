@@ -9,7 +9,7 @@
     </span>
 </template>
 <script>
-    import { bkTooltips } from 'bk-magic-vue'
+    import { bkTooltips } from '@tencent/bk-magic-vue'
     import Logo from './Logo'
     import { localeMixins } from './locale'
     import {

@@ -1,6 +1,7 @@
 <template>
     <div class="devops-app" v-bkloading="{ isLoading: moduleLoading }">
         <router-view />
+        <AnnouncementDialog />
     </div>
 </template>
 
@@ -8,8 +9,13 @@
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
     import { Action, State } from 'vuex-class'
+    import AnnouncementDialog from '../components/AnnouncementDialog/index.vue'
     
-    @Component()
+    @Component({
+        components: {
+            AnnouncementDialog
+        }
+    })
     export default class App extends Vue {
         @State fetchError
         @State moduleLoading

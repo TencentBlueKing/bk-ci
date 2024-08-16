@@ -1,0 +1,34 @@
+package com.tencent.devops.remotedev.common
+
+enum class WorkspaceNotifyTemplateEnum(val templateCode: String) {
+    /**
+     * linux的自动回收通知模板代码
+     */
+    REMOTEDEV_WORKSPACE_RECYCLE_TEMPLATE("REMOTEDEV_WORKSPACE_RECYCLE_TEMPLATE"),
+
+    /**
+     * 云桌面的自动回收通知模板代码
+     */
+    REMOTEDEV_START_DESKTOP_RECYCLE_TEMPLATE("REMOTEDEV_START_DESKTOP_RECYCLE_TEMPLATE"),
+
+    /**
+     * 流水线设置-启动的通知模板代码
+     */
+    REMOTEDEV_WORKSPACE_RENEWAL_TEMPLATE("REMOTEDEV_WORKSPACE_RENEWAL_TEMPLATE"),
+
+    /**
+     * 未知模板代码
+     */
+    UNKNOWN("NULL");
+
+    companion object {
+
+        fun parse(name: String?): WorkspaceNotifyTemplateEnum {
+            return try {
+                if (name == null) UNKNOWN else valueOf(name)
+            } catch (ignored: Exception) {
+                UNKNOWN
+            }
+        }
+    }
+}

@@ -1,0 +1,24 @@
+#prebuild debug
+{{ if .Values.prebuild.enabled -}}
+{{ if .Values.remoteDebug.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: debug-prebuild
+  labels: 
+    app.kubernetes.io/name: prebuild
+    app.kubernetes.io/component: microservice
+  annotations:
+    service.kubernetes.io/qcloud-loadbalancer-internal-subnetid: subnet-2mgq2ka8
+spec:
+  type: LoadBalancer
+  selector: 
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: prebuild
+  ports:
+    - name: debug
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+{{- end -}}
+{{- end -}}

@@ -136,7 +136,9 @@
     import { bus } from '@/utils/bus'
     import { isObject } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import AtomFormWithAppID from './AtomFormWithAppID'
     import AtomOption from './AtomOption'
+    import BcsContainerOp from './BcsContainerOp'
     import BuildArchiveGet from './BuildArchiveGet'
     import BuildScript from './BuildScript'
     import CodeGitWebHookTrigger from './CodeGitWebHookTrigger'
@@ -145,10 +147,18 @@
     import CodePullGitX from './CodePullGitX'
     import CodePullSvn from './CodePullSvn'
     import CodeSvnWebHookTrigger from './CodeSvnWebHookTrigger'
+    import CodeWebHookTrigger from './CodeWebHookTrigger'
+    import Codecc from './Codecc'
     import CrossDistribute from './CrossDistribute'
     import FormField from './FormField'
+    import Gcloud from './Gcloud'
     import IosCertInstall from './IosCertInstall'
+    import JobDevOpsFastPushFile from './JobDevOpsFastPushFile'
+    import JobDevopsExecuteTaskExt from './JobDevopsExecuteTaskExt'
+    import JobDevopsFastExecuteScript from './JobDevopsFastExecuteScript'
+    import JobExecuteTaskExt from './JobExecuteTaskExt'
     import ManualReviewUserTask from './ManualReviewUserTask'
+    import NewBcsContainerOp from './NewBcsContainerOp'
     import NormalAtom from './NormalAtom'
     import NormalAtomV2 from './NormalAtomV2'
     import PullGithub from './PullGithub'
@@ -158,9 +168,16 @@
     import ReportArchive from './ReportArchive'
     import SendWechatNotify from './SendWechatNotify'
     import SubPipelineCall from './SubPipelineCall'
+    import Tcls from './Tcls'
+    import Tcm from './Tcm'
     import TimerTrigger from './TimerTrigger'
     import Unity3dBuild from './Unity3dBuild'
-    import CodeWebHookTrigger from './CodeWebHookTrigger'
+    import VersionExperience from './VersionExperience'
+    import WeTest from './WeTest'
+    import ZhiyunInstanceMaintenance from './ZhiyunInstanceMaintenance'
+    import ZhiyunUpdateAsyncEX from './ZhiyunUpdateAsyncEX'
+    import jobCloudsFastExecuteScript from './jobCloudsFastExecuteScript'
+    import jobCloudsFastPush from './jobCloudsFastPush'
 
     export default {
         name: 'atom-content',
@@ -170,18 +187,35 @@
             AtomOption,
             VuexInput,
             Selector,
+            Gcloud,
+            JobExecuteTaskExt,
             FormField,
             BuildArchiveGet,
+            Codecc,
+            JobDevopsFastExecuteScript,
+            Tcls,
+            JobDevOpsFastPushFile,
+            JobDevopsExecuteTaskExt,
+            ZhiyunInstanceMaintenance,
             CodePullGitX,
             CodePullSvn,
+            ZhiyunUpdateAsyncEX,
+            Tcm,
             IosCertInstall,
+            BcsContainerOp,
+            NewBcsContainerOp,
             CrossDistribute,
+            VersionExperience,
             SendWechatNotify,
             QualitygateTips,
+            WeTest,
             CodeGithubWebHookTrigger,
+            jobCloudsFastPush,
+            jobCloudsFastExecuteScript,
             ReportArchive,
             CodeSvnWebHookTrigger,
             PullGithub,
+            AtomFormWithAppID,
             NormalAtomV2,
             PushImageToThirdRepo,
             CodeGitWebHookTrigger,
@@ -398,6 +432,27 @@
                     CODE_SVN: CodePullSvn,
                     iosCertInstall: IosCertInstall,
                     acrossProjectDistribution: CrossDistribute,
+                    comDistribution: AtomFormWithAppID,
+                    cloudStone: AtomFormWithAppID,
+                    openStatePushFile: AtomFormWithAppID,
+                    gseKitProcRunCmdDev: AtomFormWithAppID,
+                    gseKitProcRunCmdProd: AtomFormWithAppID,
+                    linuxPaasCodeCCScript: Codecc,
+                    gcloud: Gcloud,
+                    jobExecuteTaskExt: JobExecuteTaskExt,
+                    jobDevOpsFastExecuteScript: JobDevopsFastExecuteScript,
+                    tclsAddVersion: Tcls,
+                    jobDevOpsFastPushFile: JobDevOpsFastPushFile,
+                    jobDevOpsExecuteTaskExt: JobDevopsExecuteTaskExt,
+                    zhiyunInstanceMaintenance: ZhiyunInstanceMaintenance,
+                    zhiyunUpdateAsyncEX: ZhiyunUpdateAsyncEX,
+                    tcmElement: Tcm,
+                    bcsContainerOp: BcsContainerOp,
+                    bcsContainerOpByName: NewBcsContainerOp,
+                    experience: VersionExperience,
+                    wetestElement: WeTest,
+                    jobCloudsFastPush: jobCloudsFastPush,
+                    jobCloudsFastExecuteScript: jobCloudsFastExecuteScript,
                     sendRTXNotify: SendWechatNotify,
                     reportArchive: ReportArchive,
                     reportArchiveService: ReportArchive,
@@ -517,7 +572,8 @@
             handleFetchAtomModal (atomCode, version) {
                 const { getAtomModal, fetchAtomModal } = this
                 const atomModal = getAtomModal({ atomCode, version })
-                const queryOfflineFlag = !this.editable
+                // const queryOfflineFlag = !this.editable
+                const queryOfflineFlag = true // TODO: 临时放开，后续需要优化
                 if (!atomModal && atomCode) { // 获取插件详情
                     fetchAtomModal({
                         projectCode: this.projectId,

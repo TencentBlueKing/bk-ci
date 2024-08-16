@@ -33,6 +33,7 @@ out
 .prebuild.yml
 .temp
 .history
+/src/backend/ci/core/sign/biz-sign/test.ipa
 .codecc
 build.yml
 *.ipa
@@ -50,3 +51,6 @@ docker-images/core/ci/*.gz
 #turbo 忽略文件
 src/backend/turbo/**/build/
 src/backend/turbo/release/
+
+
+pre-*-bkcodeai

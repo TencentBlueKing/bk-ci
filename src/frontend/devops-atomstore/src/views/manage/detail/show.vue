@@ -20,11 +20,13 @@
     import { mapGetters } from 'vuex'
     import atomShow from '@/components/manage/detail/atom-detail/show.vue'
     import imageShow from '@/components/manage/detail/image-detail/show.vue'
+    import serviceShow from '@/components/manage/detail/service-detail/show.vue'
 
     export default {
         components: {
             atomShow,
-            imageShow
+            imageShow,
+            serviceShow
         },
 
         computed: {

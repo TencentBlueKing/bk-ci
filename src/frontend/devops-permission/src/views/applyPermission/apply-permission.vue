@@ -195,7 +195,7 @@ const getProjectByName = async () => {
     if (res.records.length) {
       projectList.value = [...res.records, ...projectList.value];
       curProject.value = res.records[0];
-      selectVueKey.value = curProject.value.englishName
+      selectVueKey.value = curProject.value.englishName;
       isDisabled.value = curProject.value.permission;
     } else {
       formData.value.projectCode = ''

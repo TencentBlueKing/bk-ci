@@ -36,6 +36,15 @@
                     class="project-dialog-error-tips"
                 >
                     {{ errors.first('projectName') }}
+                    <span v-if="isErrorsRule(errors, 'projectNameUnique')">
+                        {{ $t('questionTips') }}
+                        <a
+                            class="text-link"
+                            href="wxwork://message/?username=DevOps"
+                        >
+                            {{ $t('quickStart.blueShieldAssistant') }}
+                        </a>
+                    </span>
                 </div>
             </devops-form-item>
             <devops-form-item
@@ -70,6 +79,81 @@
                     name="description"
                 />
             </devops-form-item>
+            <bk-form-item
+                :label="$t('centerInfo')"
+                :required="true"
+            >
+                <div class="bk-dropdown-box">
+                    <bk-select
+                        v-model="newProject.bgId"
+                        :placeholder="$t('BGLabel')"
+                        name="bg"
+                        :loading="deptLoading.bg"
+                        searchable
+                        @selected="id => setOrgName('bg', id)"
+                    >
+                        <bk-option
+                            v-for="bg in curDepartmentInfo.bg"
+                            :id="bg.id"
+                            :key="bg.id"
+                            :name="bg.name"
+                        />
+                    </bk-select>
+                </div>
+                <div class="bk-dropdown-box">
+                    <bk-select
+                        v-model="newProject.deptId"
+                        :placeholder="$t('departmentLabel')"
+                        name="dept"
+                        :loading="deptLoading.dept"
+                        searchable
+                        @selected="id => setOrgName('dept', id)"
+                    >
+                        <bk-option
+                            v-for="bg in curDepartmentInfo.dept"
+                            :id="bg.id"
+                            :key="bg.id"
+                            :name="bg.name"
+                        />
+                    </bk-select>
+                </div>
+                <div class="bk-dropdown-box">
+                    <bk-select
+                        v-model="newProject.centerId"
+                        :placeholder="$t('centerLabel')"
+                        name="center"
+                        :loading="deptLoading.center"
+                        searchable
+                        @selected="id => setOrgName('center', id)"
+                    >
+                        <bk-option
+                            v-for="center in curDepartmentInfo.center"
+                            :id="center.id"
+                            :key="center.id"
+                            :name="center.name"
+                        />
+                    </bk-select>
+                </div>
+            </bk-form-item>
+            <bk-form-item
+                :label="$t('projectTypeLabel')"
+                :required="true"
+                property="projectType"
+            >
+                <bk-select
+                    v-model="newProject.projectType"
+                    :placeholder="$t('selectProjectTypePlaceholder')"
+                    name="center"
+                    searchable
+                >
+                    <bk-option
+                        v-for="type in projectTypeList"
+                        :id="type.id"
+                        :key="type.id"
+                        :name="type.name"
+                    />
+                </bk-select>
+            </bk-form-item>
         </bk-form>
                         
         <template slot="footer">
@@ -96,14 +180,14 @@
 </template>
 
 <script lang='ts'>
+    import {
+        RESOURCE_ACTION,
+        handleProjectNoPermission
+    } from '@/utils/permission'
     import Vue from 'vue'
     import { Component, Prop, Watch } from 'vue-property-decorator'
-    import { State, Action, Getter } from 'vuex-class'
+    import { Action, Getter, State } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
-    import {
-        handleProjectNoPermission,
-        RESOURCE_ACTION
-    } from '@/utils/permission'
 
     @Component
     export default class ProjectDialog extends Vue {
@@ -116,6 +200,12 @@
         descriptionLength: number = 100
         defaultProjectInfo: any = {}
         validate: object = {}
+        curDepartmentInfo: any = {
+            bg: [],
+            dept: [],
+            center: []
+        }
+
         isNew: boolean = true
         isCreating: boolean = false
         deptLoading: any = {
@@ -129,10 +219,12 @@
         @Getter isEmptyProject
         @Action updateNewProject
         @Action toggleProjectDialog
+        @Action getDepartmentInfo
         @Action ajaxUpdatePM
         @Action ajaxAddPM
         @Action getProjects
         @Action resetNewProject
+        @Action getMyDepartmentInfo
 
         handleProjectChange (e): void {
             const { name, value, type, checked } = e.target
@@ -141,6 +233,31 @@
             this.updateNewProject({
                 [name]: isCheckbox ? checked : value
             })
+        }
+
+        get projectTypeList (): object {
+            return [
+                {
+                    id: 1,
+                    name: this.$t('mobileGame')
+                },
+                {
+                    id: 2,
+                    name: this.$t('pcGame')
+                },
+                {
+                    id: 3,
+                    name: this.$t('webGame')
+                },
+                {
+                    id: 4,
+                    name: this.$t('platformProduct')
+                },
+                {
+                    id: 5,
+                    name: this.$t('supportProduct')
+                }
+            ]
         }
 
         get showDialog (): boolean {
@@ -166,15 +283,83 @@
                 } else {
                     this.isNew = true
                 }
+                this.getDepartment('bg', '0')
+                
+                if (this.isEmptyProject(this.newProject)) {
+                    this.deptLoading.bg = true
+                    this.deptLoading.dept = true
+                    this.deptLoading.center = true
+                    const res = await this.getMyDepartmentInfo()
+                    if (res) {
+                        this.setOrganizationValue({
+                            bgId: res.bgId,
+                            bgName: res.bgName
+                        })
+                        this.defaultProjectInfo = {
+                            ...res
+                        }
+                    }
+                }
             }
         }
-        
+
+        @Watch('newProject.bgId')
+        watchBg (bgId: string): void {
+            console.log('watch')
+            this.curDepartmentInfo.dept = []
+            this.curDepartmentInfo.center = []
+            bgId && this.getDepartment('dept', this.newProject.bgId)
+        }
+
+        @Watch('newProject.deptId')
+        watchDept (deptId: string): void {
+            this.curDepartmentInfo.center = []
+            
+            deptId && this.getDepartment('center', this.newProject.deptId)
+        }
+
         isErrorsRule (errors, rule): boolean {
             try {
                 return errors.items.find(item => item.rule === rule)
             } catch (e) {
                 console.error(e)
                 return false
+            }
+        }
+
+        async getDepartment (type: string, id: string) {
+            this.deptLoading[type] = true
+            try {
+                const res = await this.getDepartmentInfo({
+                    type,
+                    id
+                })
+                this.curDepartmentInfo[type] = [...res]
+                
+                // 选中默认值
+                const typeIdKey = `${type}Id`
+                const typeId = this.newProject[typeIdKey] || this.defaultProjectInfo[typeIdKey]
+                const info = res.find(info => info.id === typeId)
+                this.setOrganizationValue({
+                    [typeIdKey]: info ? info.id : '',
+                    [`${type}Name`]: info ? info.name : ''
+                })
+            } catch (e) {
+                this.curDepartmentInfo[type] = []
+            }
+            this.deptLoading[type] = false
+        }
+
+        setOrganizationValue (value) {
+            this.newProject = Object.assign(this.newProject, {
+                ...value
+            })
+        }
+
+        setOrgName (field, id) {
+            const item = this.curDepartmentInfo[field].find(item => item.id === id)
+            if (item) {
+                this.newProject[`${field}Name`] = item.name
             }
         }
 
@@ -195,29 +380,18 @@
                     await this.getProjects()
                     eventBus.$emit('addNewProject', data)
                 } else {
-                    throw Error(this.$t('exception.apiError'))
+                    throw Error(String(this.$t('exception.apiError')))
                 }
             } catch (err: any) {
                 if (err.code === 403) {
                     const {
-                        projectCode,
-                        projectName,
-                        routerTag
+                        projectCode
                     } = data.data || {}
-                    const url = /rbac/.test(routerTag)
-                            ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_create&iamResourceCode=${projectCode}&groupId&x-devops-project-id=${projectCode}`
-                            : `/console/perm/apply-perm?project_code=${projectCode}&x-devops-project-id=${projectCode}`
                     handleProjectNoPermission(
                         {
                             projectId: projectCode,
                             resourceCode: projectCode,
                             action: RESOURCE_ACTION.EDIT
-                        },
-                        {
-                            actionName: this.$t('createProject'),
-                            groupInfoList: [{ url }],
-                            resourceName: projectName,
-                            resourceTypeName: this.$t('project')
                         }
                     )
                 } else {
@@ -244,29 +418,18 @@
                     this.closeDialog()
                     await this.getProjects()
                 } else {
-                    throw Error(this.$t('exception.apiError'))
+                    throw Error(String(this.$t('exception.apiError')))
                 }
             } catch (e: any) {
                 if (e.code === 403) {
                     const {
-                        projectCode,
-                        projectName,
-                        routerTag
+                        projectCode
                     } = data.data || {}
-                    const url = /rbac/.test(routerTag)
-                            ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_enable&iamResourceCode=${projectCode}&groupId&x-devops-project-id=${projectCode}`
-                            : `/console/perm/apply-perm?project_code=${projectCode}&x-devops-project-id=${projectCode}`
                     handleProjectNoPermission(
                         {
                             projectId: projectCode,
                             resourceCode: projectCode,
                             action: RESOURCE_ACTION.EDIT
-                        },
-                        {
-                            actionName: this.$t('editProject'),
-                            groupInfoList: [{ url }],
-                            resourceName: projectName,
-                            resourceTypeName: this.$t('project')
                         }
                     )
                 } else {
@@ -292,6 +455,34 @@
             if (!valid) {
                 return valid
             }
+            if (data.bgId === '') {
+                this.$bkMessage({
+                    theme: 'error',
+                    message: this.$t('noBGErrorTips')
+                })
+                return false
+            }
+            if (data.deptId === '') {
+                this.$bkMessage({
+                    theme: 'error',
+                    message: this.$t('noDeptErrorTips')
+                })
+                return false
+            }
+            if (data.centerId === '') {
+                this.$bkMessage({
+                    theme: 'error',
+                    message: this.$t('noCenterErrorTips')
+                })
+                return false
+            }
+            if (data.projectType === '') {
+                this.$bkMessage({
+                    theme: 'error',
+                    message: this.$t('selectProjectTypePlaceholder')
+                })
+                return false
+            }
             this.isCreating = true
             if (this.isNew) {
                 this.addProject(data)
@@ -299,7 +490,7 @@
                 const { projectCode } = this.newProject
                 const params = {
                     projectCode,
-                    data
+                    data: this.newProject
                 }
                 this.updateProject(params)
             }

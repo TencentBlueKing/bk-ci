@@ -7,9 +7,14 @@
                     <bk-input class="review-name" :placeholder="'Flow ' + (index + 1)" :disabled="disabled"
                         :value="reviewGroup.name" @change="modifyReviewName(reviewGroup, ...arguments)"></bk-input>
 
-                    <user-input clearable class="review-user" :placeholder="$t('stageReview.userInputTips')"
-                        :value="reviewGroup.reviewers" :disabled="disabled"
-                        :handle-change="(name, value) => addReviewUser(reviewGroup, name, value)"></user-input>
+                    <staff-input
+                        clearable
+                        class="review-user"
+                        :placeholder="$t('stageReview.userInputTips')"
+                        :value="reviewGroup.reviewers"
+                        :disabled="disabled"
+                        :handle-change="(name, value) => addReviewUser(reviewGroup, name, value)"
+                    ></staff-input>
 
                     <bk-button text title="primary" @click="deleteReviewGroup(index)" :disabled="disabled"
                         class="review-opt">{{ $t('delete') }}</bk-button>
@@ -26,11 +31,11 @@
 </template>
 
 <script>
-    import UserInput from '@/components/atomFormField/UserInput'
+    import StaffInput from '@/components/atomFormField/StaffInput'
 
     export default {
         components: {
-            UserInput
+            StaffInput
         },
 
         props: {

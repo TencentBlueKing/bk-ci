@@ -69,6 +69,7 @@ export default {
         globalEnvs: null,
         commonParams: [],
         saveStatus: false,
+        authSettingEditing: false,
         stageTagList: [],
         defaultStageTags: [],
         showReviewDialog: false,

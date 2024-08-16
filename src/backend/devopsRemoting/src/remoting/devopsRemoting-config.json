@@ -1,0 +1,6 @@
+{
+  "ideConfigLocation": "/ide/devopsRemoting-ide-config.json",
+  "desktopIdeConfigLocation": "/ide-desktop/devopsRemoting-ide-desktop-config.json",
+  "apiServerPort": 22999,
+  "sshPort": 23001
+}

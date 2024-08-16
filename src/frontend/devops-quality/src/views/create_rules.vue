@@ -307,13 +307,15 @@
                                             </bk-checkbox-group>
                                         </bk-form-item>
                                         <bk-form-item :label="$t('quality.附加通知人员')" :desc="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')">
-                                            <user-input :handle-change="handleChange" name="attacher" :value="createRuleForm.notifyUserList" :placeholder="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')"></user-input>
+                                            <staff-input v-if="isExtendTx" :name="'attacher'" :value="createRuleForm.notifyUserList" :handle-change="handleChange"></staff-input>
+                                            <user-input v-else :handle-change="handleChange" name="attacher" :value="createRuleForm.notifyUserList" :placeholder="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')"></user-input>
                                         </bk-form-item>
                                     </bk-form>
 
                                     <bk-form v-else :label-width="120" :model="createRuleForm" class="user-audit-form">
                                         <bk-form-item :label="$t('quality.审核人')" :desc="$t('quality.请输入审核人，支持输入流水线变量')" :required="true">
-                                            <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" :placeholder="$t('quality.请输入审核人，支持输入流水线变量')"></user-input>
+                                            <staff-input v-if="isExtendTx" :name="'reviewer'" :value="createRuleForm.auditUserList" :handle-change="handleChange"></staff-input>
+                                            <user-input v-else :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" :placeholder="$t('quality.请输入审核人，支持输入流水线变量')"></user-input>
                                         </bk-form-item>
                                         <bk-form-item :label="$t('quality.审核超时时间')">
                                             <bk-input type="number"
@@ -423,6 +425,7 @@
 </template>
 
 <script>
+    import staffInput from '@/components/devops/StaffInput'
     import UserInput from '@/components/devops/UserInput/index.vue'
     import createGroup from '@/components/devops/create_group'
     import emptyTips from '@/components/devops/emptyTips'
@@ -440,6 +443,7 @@
             pipelineList,
             TemplateList,
             metadataPanel,
+            staffInput,
             UserInput,
             emptyTips
         },
@@ -582,10 +586,17 @@
                 const target = this.createRuleForm.indicators.map(item => item.cnName)
                 return target.join('、')
             },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            },
             noticeTypeList () {
                 const list = [
+                    { name: 'work-wechat', value: 'RTX', isChecked: false },
                     { name: 'email', value: 'EMAIL', isChecked: false }
                 ]
+                if (!this.isExtendTx) {
+                    list.splice(0, 2)
+                }
                 return list
             }
         },
@@ -1221,7 +1232,7 @@
                 return element.some(item => item.params.asynchronous)
             },
             checkAtomCount (element) {
-                return element.some(item => item.count > 1)
+                return element.filter(item => item.cnName === this.createRuleForm.controlPointName).some(item => item.count > 1)
             },
             updatePipelineStatus (pipelineId) {
                 const target = this.createRuleForm.pipelineList.map(item => {
@@ -1406,7 +1417,6 @@
                             } finally {
                                 this.isEditing = false
                                 this.loading.isLoading = false
-
                                 if (theme === 'success') this.toRuleList()
                             }
                         }
@@ -1678,7 +1688,7 @@
                 .bk-selector-input {
                     border-radius: 0;
                     border-color: #DDE4EB;
-                    // color: $fontLigtherColor;
+                    // color: $fontLighterColor;
                     border: none;
                 }
             }

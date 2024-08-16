@@ -59,7 +59,10 @@
 
             getAtomIndex (stages, hash) { // 新增
                 let pos
-                const keyword = hash.substr(1)
+                let keyword = hash.substr(1)
+                if (keyword === 'codecc') {
+                    keyword = 'linuxPaasCodeCCScript'
+                }
                 stages.forEach((stage, sIndex) => {
                     stage.containers.forEach((container, cIndex) => {
                         container.elements.forEach((ele, eIndex) => {

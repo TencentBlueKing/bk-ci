@@ -31,7 +31,7 @@ import store from './store'
 
 import mavonEditor from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
-import PortalVue from "portal-vue"; // eslint-disable-line
+import PortalVue from 'portal-vue'; // eslint-disable-line
 import VeeValidate from 'vee-validate'
 import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
@@ -39,17 +39,13 @@ import createLocale from '../../locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 
-import {
-    handlePipelineNoPermission,
-    RESOURCE_ACTION
-} from '@/utils/permission'
-import bkMagic from 'bk-magic-vue'
-
-import { pipelineDocs } from '../../common-lib/docs'
+import { handlePipelineNoPermission, RESOURCE_ACTION } from '@/utils/permission'
+import bkMagic from '@tencent/bk-magic-vue'
 // 权限指令
-import 'bk-magic-vue/dist/bk-magic-vue.min.css'
+import '@tencent/bk-magic-vue/dist/bk-magic-vue.min.css'
 import { BkPermission, PermissionDirective } from 'bk-permission'
 import 'bk-permission/dist/main.css'
+import { pipelineDocs } from '../../common-lib/docs'
 
 const { i18n, setLocale } = createLocale(
     require.context('@locale/pipeline/', false, /\.json$/)
@@ -79,6 +75,7 @@ VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
 
 Vue.prototype.$setLocale = setLocale
+Vue.prototype.isExtendTx = VERSION_TYPE === 'tencent'
 Vue.prototype.$permissionResourceAction = RESOURCE_ACTION
 Vue.prototype.$pipelineDocs = pipelineDocs
 Vue.prototype.$bkMessage = function (config) {
@@ -93,7 +90,21 @@ String.prototype.isBkVar = function () {
 /* eslint-disable */
 
 Vue.mixin({
+    computed: {
+        roleMap () {
+            return {
+                executor: 'role_executor',
+                manager: 'role_manager',
+                viewer: 'role_viewer',
+                creator: 'role_creator'
+            }
+        },
+    },
     methods: {
+        tencentPermission (url) {
+            const permUrl = this.isExtendTx ? url : PERM_URL_PREFIX
+            window.open(permUrl, '_blank')
+        },
         handleError (e, data, delay = 3000) {
             if (e.code === 403) { // 没有权限编辑
                 handlePipelineNoPermission(data)

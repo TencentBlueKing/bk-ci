@@ -203,22 +203,51 @@
             </empty-tips>
             <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
         </section>
+        <bk-dialog
+            v-model="showFailedEnableDialog"
+            :width="600"
+            header-position="left"
+            :title="$t('启用项目失败')">
+            {{ $t('项目尚未关联运营产品，启用失败，请先关联所属运营产品再启用项目。') }}
+
+            <div slot="footer">
+                <bk-button class="mr10" theme="primary" @click="handleToProjectManage">{{ $t('去关联运营产品') }}</bk-button>
+                <bk-button @click="showFailedEnableDialog = false">{{ $t('cancel') }}</bk-button>
+            </div>
+        </bk-dialog>
+        <bk-dialog
+            v-model="showDisableProjectDialog"
+            :width="600"
+            header-position="left"
+            :title="$t('确定停用项目吗？')">
+            <i18n
+                tag="div"
+                path="停用项目后，系统将定期清理已停用项目下流水线产生的构建日志、制品、报告。请备份需要的数据后再停用！"
+                class="empty-tips">
+                <span style="color: red">{{$t('流水线产生的构建日志、制品、报告。')}}</span>
+                <span style="color: red">{{$t('备份需要的')}}</span>
+            </i18n>
+            <div slot="footer">
+                <bk-button class="mr10" theme="primary" @click="toggleEnable">{{ $t('confirm') }}</bk-button>
+                <bk-button @click="showDisableProjectDialog = false">{{ $t('cancel') }}</bk-button>
+            </div>
+        </bk-dialog>
     </div>
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
     import {
         handleProjectNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
-    
+    import { mapActions } from 'vuex'
+    import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
+
     const PROJECT_SORT_FILED = {
         projectName: 'PROJECT_NAME',
         englishName: 'ENGLISH_NAME'
     }
-    
+
     const ORDER_ENUM = {
         ascending: 'ASC',
         descending: 'DESC'
@@ -251,7 +280,11 @@
                     3: this.$t('创建中'),
                     4: this.$t('已启用')
                 },
-                isEnabled: true // 查询过滤-已启用项目
+                isEnabled: true, // 查询过滤-已启用项目
+                showFailedEnableDialog: false,
+                showDisableProjectDialog: false,
+                projectCode: '',
+                selectedProjectInfo: {}
             }
         },
         computed: {
@@ -295,23 +328,19 @@
                 }).catch(() => [])
                 this.isDataLoading = false
             },
-
             matchForCode (projectCode) {
                 const event = projectCode.substr(0, 1)
                 const key = event.charCodeAt() % 4
                 return this.matchColorList[key]
             },
-
             handleNewProject () {
                 const { origin } = window.location
                 window.location.href = `${origin}/console/manage/apply`
             },
-
             handleApplyProject () {
                 const { origin } = window.location
                 window.location.href = `${origin}/console/permission/apply`
             },
-
             handleGoUserGroup (row) {
                 const { projectCode, relationId, routerTag } = row
                 const projectTag = this.getProjectTag(routerTag)
@@ -327,7 +356,6 @@
                         break
                 }
             },
-
             handleGoExtend (row) {
                 const { englishName: projectCode, routerTag } = row
                 const projectTag = this.getProjectTag(routerTag)
@@ -341,16 +369,13 @@
                         break
                 }
             },
-
             pageChange (page) {
                 this.pagination.current = page
             },
-
             limitChange (limit) {
                 this.pagination.current = 1
                 this.pagination.limit = limit
             },
-
             goToProjectManage (row) {
                 const { englishName: projectCode, relationId, routerTag } = row
                 const projectTag = this.getProjectTag(routerTag)
@@ -366,16 +391,16 @@
                         break
                 }
             },
-            handleChangeEnabled (row) {
-                if ([1, 3, 4].includes(row.approvalStatus)) return
-                const { englishName: projectCode, enabled, projectName, routerTag } = row
+
+            toggleEnable () {
+                const { englishName: projectCode, enabled, projectName, routerTag } = this.selectedProjectInfo
                 this.toggleProjectEnable({
                     projectCode: projectCode,
                     enabled: !enabled
                 }).then(async () => {
-                    row.enabled = !row.enabled
+                    this.selectedProjectInfo.enabled = !enabled
                     this.$bkMessage({
-                        message: row.enabled ? this.$t('启用项目成功') : this.$t('停用项目成功'),
+                        message: this.selectedProjectInfo.enabled ? this.$t('启用项目成功') : this.$t('停用项目成功'),
                         theme: 'success'
                     })
                     this.fetchProjects()
@@ -404,10 +429,35 @@
                             theme: 'error'
                         })
                     }
+                }).finally(() => {
+                    this.selectedProjectInfo = {}
+                    this.showDisableProjectDialog = false
+                    this.showFailedEnableDialog = false
                 })
             },
-            getProjectTag () {
-                return 'rbac'
+
+            handleChangeEnabled (row) {
+                if ([1, 3, 4].includes(row.approvalStatus)) return
+                this.selectedProjectInfo = row
+                // 启用项目
+                if (!row.productId && !row.enabled) {
+                    this.showFailedEnableDialog = true
+                    this.projectCode = row.englishName
+                } else if (row.productId && !row.enabled) {
+                    this.toggleEnable()
+                } else if (row.enabled) {
+                    // 停用项目
+                    this.showDisableProjectDialog = true
+                }
+            },
+            getProjectTag (routerTag) {
+                if (/v3/.test(routerTag)) {
+                    return 'v3'
+                }
+                if (/rbac|devx/.test(routerTag)) {
+                    return 'rbac'
+                }
+                return 'v0'
             },
 
             handleSortChange ({ prop, order }) {
@@ -427,6 +477,12 @@
                     sortType,
                     collation
                 })
+            },
+
+            handleToProjectManage () {
+                const { origin } = window.location
+                const url = `${origin}/console/manage/${this.projectCode}/edit`
+                window.open(url, '_blank')
             }
         }
     })
@@ -578,7 +634,7 @@
                 background-color: #3C96FF;
             }
         }
-        
+
     }
     .biz-pm-form {
         margin: 0 auto 15px auto;
@@ -595,7 +651,6 @@
         right: 10px;
         font-size: 12px;
     }
-
     .create-project-dialog {
         button.disabled {
             background-color: #fafafa;
@@ -608,7 +663,6 @@
             }
         }
     }
-
     .biz-guide-box {
         background-color: #fff;
         padding: 75px 30px;
@@ -641,12 +695,19 @@
 <style lang="scss">
     @import '../assets/scss/conf.scss';
     @import '../assets/scss/mixins/scroller.scss';
-
     @media screen and (max-width: $mediaWidth) {
         .biz-create-pm .bk-dialog-body {
             max-height: 440px;
             // overflow: auto;
             @include scroller(#9e9e9e);
+        }
+    }
+    .failed-enable-dialog {
+        .bk-dialog-body {
+            text-align: center;
+        }
+        .footer {
+            margin-top: 30px;
         }
     }
 </style>

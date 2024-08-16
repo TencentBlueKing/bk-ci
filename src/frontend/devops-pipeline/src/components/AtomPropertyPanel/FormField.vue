@@ -76,7 +76,7 @@
                 }} >
                     { label && <label title={label} class='bk-label atom-form-label' style={widthStyle}>{label}{hideColon ? '' : '：'}
                         { docsLink
-                            && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
+                            && <a target="_blank" href={docsLink}><i class="devops-icon icon-question-circle"></i></a>
                         }
                         { label.trim() && desc.trim() && <bk-popover placement="top">
                             <i class={{ 'bk-icon': true, 'icon-info-circle': true }} style={{ 'margin-left': hideColon ? '4px' : '0', color: hideColon ? '#979BA5' : '' }}></i>

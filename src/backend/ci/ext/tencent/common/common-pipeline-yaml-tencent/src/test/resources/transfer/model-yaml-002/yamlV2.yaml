@@ -1,0 +1,15 @@
+version: v2.0
+name: all job
+extends:
+  template: pipeline-template.yaml@repoA
+  ref: master
+  variables:
+    aaaa: bbbb
+    cccc: dddd
+resources:
+  repositories:
+    - repository: groupA/repoA
+      name: repoA
+      ref: refs/tags/v1.0
+      credentials:
+        personal-access-token: GIT_ACCESS_TOKEN

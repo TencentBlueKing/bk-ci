@@ -53,9 +53,9 @@ import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
 import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData
 import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import com.tencent.devops.model.metrics.tables.TPipelineStageOverviewData
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class MetricsDataReportDao {

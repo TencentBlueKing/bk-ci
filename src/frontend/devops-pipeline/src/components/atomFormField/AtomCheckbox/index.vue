@@ -1,5 +1,5 @@
 <template>
-    <bk-checkbox :disabled="disabled" :title="title" :value="value" @change="handleSwitch">
+    <bk-checkbox :disabled="disabled" :title="title" :value="value" @change="handleSwitch" ref="checkbox">
         {{ text ? text : $t('editPage.checkOrNot') }}
         <bk-popover v-if="desc" placement="top">
             <i @click.stop class="bk-icon icon-info-circle"></i>
