@@ -495,6 +495,10 @@ class TxProjectServiceImpl @Autowired constructor(
         return projectOperationalProductService.listAllProducts()
     }
 
+    override fun getProductByProductId(productId: Int): OperationalProductVO? {
+        return projectOperationalProductService.getProductByProductId(productId)
+    }
+
     override fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO> {
         return projectOperationalProductService.listProductByBgName(bgName) ?: emptyList()
     }

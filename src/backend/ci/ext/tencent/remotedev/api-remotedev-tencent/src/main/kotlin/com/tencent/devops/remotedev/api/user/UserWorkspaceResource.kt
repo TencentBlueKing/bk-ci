@@ -365,6 +365,18 @@ interface UserWorkspaceResource {
         macAddress: String
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>>
 
+    @Operation(summary = "校验是否需要moa 2fa二次验证，true：需求；false：不需要")
+    @GET
+    @Path("/check_moa_2fa")
+    fun checkMoa2fa(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "实例ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
     @Operation(summary = "发起moa 2fa二次验证")
     @POST
     @Path("/2fa/request")

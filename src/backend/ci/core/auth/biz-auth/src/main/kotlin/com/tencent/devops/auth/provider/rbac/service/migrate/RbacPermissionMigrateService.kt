@@ -57,12 +57,12 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
+import java.util.concurrent.CompletionException
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
-import java.util.concurrent.CompletionException
-import java.util.concurrent.Executors
 
 /**
  * rbac迁移服务
@@ -206,11 +206,15 @@ class RbacPermissionMigrateService constructor(
         val resourceType = migrateResourceDTO.resourceType
         val isMigrateProjectResource = migrateResourceDTO.migrateProjectResource == true
         val isMigrateOtherResource = migrateResourceDTO.migrateOtherResource == true &&
-            resourceType != null
+                resourceType != null
         val projectInfoList = client.get(ServiceProjectResource::class).listByProjectCode(projectCodes.toSet())
             .data!!.filter {
-                it.routerTag != null && (
-                    it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value) || it.routerTag!!.contains("devx"))
+                val r = it.routerTag
+                if (migrateResourceDTO.includeNullRouterTag == true) {
+                    r == null || r.contains(AuthSystemType.RBAC_AUTH_TYPE.value) || r.contains("devx")
+                } else {
+                    r != null && (r.contains(AuthSystemType.RBAC_AUTH_TYPE.value) || r.contains("devx"))
+                }
             }
         val traceId = MDC.get(TraceTag.BIZID)
         projectInfoList.forEach {
@@ -273,7 +277,8 @@ class RbacPermissionMigrateService constructor(
                 val migrateProjects = client.get(ServiceProjectResource::class).listProjectsByCondition(
                     projectConditionDTO = ProjectConditionDTO(
                         routerTag = AuthSystemType.RBAC_AUTH_TYPE,
-                        enabled = true
+                        enabled = true,
+                        includeNullRouterTag = migrateResourceDTO.includeNullRouterTag
                     ),
                     limit = limit,
                     offset = offset
@@ -449,6 +454,7 @@ class RbacPermissionMigrateService constructor(
                         watcher = watcher
                     )
                 }
+
                 AuthSystemType.V3_AUTH_TYPE -> {
                     migrateV3Auth(
                         projectCode = projectCode,
@@ -587,12 +593,15 @@ class RbacPermissionMigrateService constructor(
             is IamException -> {
                 exception.errorMsg
             }
+
             is ErrorCodeException -> {
                 exception.defaultMessage
             }
+
             is CompletionException -> {
                 exception.cause?.message ?: exception.message
             }
+
             else -> {
                 exception.toString()
             }

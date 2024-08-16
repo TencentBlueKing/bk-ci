@@ -37,8 +37,10 @@ class WatermarkService {
         val request = Request.Builder()
             .url(url)
             .addHeader("x-bkapi-authorization", headerStr)
-            .post(JsonUtil.toJson(watermark, false)
-                .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .post(
+                JsonUtil.toJson(watermark, false)
+                .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+            )
             .build()
         try {
             OkhttpUtils.doHttp(request).use { response ->

@@ -55,7 +55,7 @@ data class TriggerContainer(
     @get:Schema(title = "参数化构建", required = false)
     var params: List<BuildFormProperty> = listOf(),
     @get:Schema(title = "模板参数构建", required = false)
-    val templateParams: List<BuildFormProperty>? = null,
+    var templateParams: List<BuildFormProperty>? = null,
     @get:Schema(title = "构建版本号", required = false)
     var buildNo: BuildNo? = null,
     @get:Schema(title =
@@ -105,8 +105,6 @@ data class TriggerContainer(
     override fun isContainerEnable(): Boolean {
         return true
     }
-
-    override fun setContainerEnable(enable: Boolean) = Unit
 
     override fun transformCompatibility() {
         super.transformCompatibility()

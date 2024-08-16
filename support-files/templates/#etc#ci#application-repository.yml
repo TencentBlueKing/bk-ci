@@ -25,8 +25,8 @@ scm:
   git:
     url: __BK_CI_REPOSITORY_GIT_URL__
     apiUrl: __BK_CI_REPOSITORY_GIT_URL__/api/v3
-    clientId: clientId
-    clientSecret: Secret
+    clientId: __BK_CI_REPOSITORY_GIT_CLIENT_ID__
+    clientSecret: __BK_CI_REPOSITORY_GIT_CLIENT_SECRET__
     redirectUrl: __BK_CI_PUBLIC_URL__/console/codelib
     redirectAtomMarketUrl: __BK_CI_PUBLIC_URL__/console/store/atomList
     gitHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codegit/commit

@@ -287,27 +287,29 @@ class PipelineRepositoryService constructor(
             )
             result
         } else {
-            val result = create(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                model = model,
-                customSetting = setting,
-                yaml = yaml,
-                userId = userId,
-                channelCode = channelCode,
-                canManualStartup = canManualStartup,
-                canElementSkip = canElementSkip,
-                buildNo = buildNo,
-                modelTasks = modelTasks,
-                useSubscriptionSettings = useSubscriptionSettings,
-                useLabelSettings = useLabelSettings,
-                useConcurrencyGroup = useConcurrencyGroup,
-                templateId = templateId,
-                versionStatus = versionStatus,
-                branchName = branchName,
-                description = description,
-                baseVersion = baseVersion
-            )
+            val result = JooqUtils.retryWhenDeadLock(3) {
+                create(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    model = model,
+                    customSetting = setting,
+                    yaml = yaml,
+                    userId = userId,
+                    channelCode = channelCode,
+                    canManualStartup = canManualStartup,
+                    canElementSkip = canElementSkip,
+                    buildNo = buildNo,
+                    modelTasks = modelTasks,
+                    useSubscriptionSettings = useSubscriptionSettings,
+                    useLabelSettings = useLabelSettings,
+                    useConcurrencyGroup = useConcurrencyGroup,
+                    templateId = templateId,
+                    versionStatus = versionStatus,
+                    branchName = branchName,
+                    description = description,
+                    baseVersion = baseVersion
+                )
+            }
             operationLogService.addOperationLog(
                 userId = userId,
                 projectId = projectId,
@@ -735,18 +737,14 @@ class PipelineRepositoryService constructor(
                             newSetting = setting
                         }
                         // 如果不需要覆盖模板内容，则直接保存传值或默认值
-                        JooqUtils.retryWhenDeadLock {
-                            pipelineSettingDao.saveSetting(transactionContext, newSetting)
-                        }
-                        JooqUtils.retryWhenDeadLock {
-                            pipelineSettingVersionDao.saveSetting(
-                                dslContext = transactionContext,
-                                setting = newSetting,
-                                id = client.get(ServiceAllocIdResource::class)
-                                    .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
-                                version = settingVersion
-                            )
-                        }
+                        pipelineSettingDao.saveSetting(transactionContext, newSetting)
+                        pipelineSettingVersionDao.saveSetting(
+                            dslContext = transactionContext,
+                            setting = newSetting,
+                            id = client.get(ServiceAllocIdResource::class)
+                                .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
+                            version = settingVersion
+                        )
                     } else {
                         pipelineSettingDao.updateSetting(
                             dslContext = transactionContext,
@@ -755,16 +753,14 @@ class PipelineRepositoryService constructor(
                             name = model.name,
                             desc = model.desc ?: ""
                         )?.let { setting ->
-                            JooqUtils.retryWhenDeadLock {
-                                pipelineSettingVersionDao.saveSetting(
-                                    dslContext = transactionContext,
-                                    setting = setting,
-                                    id = client.get(ServiceAllocIdResource::class)
-                                        .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME)
-                                        .data,
-                                    version = settingVersion
-                                )
-                            }
+                            pipelineSettingVersionDao.saveSetting(
+                                dslContext = transactionContext,
+                                setting = setting,
+                                id = client.get(ServiceAllocIdResource::class)
+                                    .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME)
+                                    .data,
+                                version = settingVersion
+                            )
                             newSetting = setting
                         }
                     }
@@ -1711,6 +1707,28 @@ class PipelineRepositoryService constructor(
             )
         }
 
+        return JooqUtils.retryWhenDeadLock(3) {
+            transactionSaveSetting(
+                context = context,
+                setting = setting,
+                versionStatus = versionStatus,
+                userId = userId,
+                updateLastModifyUser = updateLastModifyUser,
+                version = version,
+                isTemplate = isTemplate
+            )
+        }
+    }
+
+    private fun transactionSaveSetting(
+        context: DSLContext?,
+        setting: PipelineSetting,
+        versionStatus: VersionStatus,
+        userId: String,
+        updateLastModifyUser: Boolean?,
+        version: Int,
+        isTemplate: Boolean
+    ): PipelineName {
         var oldName: String = setting.pipelineName
         (context ?: dslContext).transaction { t ->
             val transactionContext = DSL.using(t)
@@ -1743,19 +1761,17 @@ class PipelineRepositoryService constructor(
                         maxPipelineResNum = old.maxPipelineResNum
                     )
                 }
-                JooqUtils.retryWhenDeadLock {
-                    pipelineSettingVersionDao.saveSetting(
-                        dslContext = transactionContext,
-                        setting = setting,
-                        version = version,
-                        isTemplate = isTemplate,
-                        id = client.get(ServiceAllocIdResource::class).generateSegmentId(
-                            PIPELINE_SETTING_VERSION_BIZ_TAG_NAME
-                        ).data
-                    )
-                }
+                pipelineSettingVersionDao.saveSetting(
+                    dslContext = transactionContext,
+                    setting = setting,
+                    version = version,
+                    isTemplate = isTemplate,
+                    id = client.get(ServiceAllocIdResource::class).generateSegmentId(
+                        PIPELINE_SETTING_VERSION_BIZ_TAG_NAME
+                    ).data
+                )
             }
-            if (versionStatus.isReleasing()) JooqUtils.retryWhenDeadLock {
+            if (versionStatus.isReleasing()) {
                 pipelineSettingDao.saveSetting(
                     transactionContext, setting, isTemplate
                 )

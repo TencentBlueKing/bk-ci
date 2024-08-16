@@ -66,19 +66,19 @@
 </template>
 
 <script>
-    import { deepCopy } from '@/utils/util'
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import Selector from '@/components/atomFormField/Selector'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import validMixins from '@/components/validMixins'
+    import { deepCopy } from '@/utils/util'
     import ParamValueOption from './children/param-value-option'
 
     import {
+        CONST_TYPE_LIST,
         DEFAULT_PARAM,
         PARAM_LIST,
-        CONST_TYPE_LIST,
         STRING
     } from '@/store/modules/atom/paramsConfig'
 
