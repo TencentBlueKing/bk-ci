@@ -88,17 +88,6 @@ class GithubTokenService @Autowired constructor(
         )
     }
 
-    fun getAccessToken(
-        userId: String
-    ): GithubToken? {
-        val githubTokenRecord = githubTokenDao.getOrNull(dslContext, userId, null) ?: return null
-        return GithubToken(
-            BkCryptoUtil.decryptSm4OrAes(aesKey, githubTokenRecord.accessToken),
-            githubTokenRecord.tokenType,
-            githubTokenRecord.scope
-        )
-    }
-
     fun checkAndGetAccessToken(projectId: String, buildId: String, userId: String): GithubToken? {
         logger.info("buildId: $buildId, userId: $userId")
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
