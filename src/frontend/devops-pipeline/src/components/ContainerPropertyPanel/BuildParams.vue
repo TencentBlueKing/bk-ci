@@ -127,7 +127,7 @@
                                                 :data-vv-scope="`param-${param.id}`"
                                                 :disabled="disabled"
                                                 :handle-change="(name, value) => handleUpdateParamId(name, value, index)"
-                                                v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(',')}`"
+                                                v-validate.initial="`required|paramsIdRule|unique:${validateParams.map(p => p.id).join(',')}`"
                                                 name="id"
                                                 :placeholder="$t('nameInputTips')"
                                                 :value="param.id"
@@ -242,18 +242,12 @@
                                         >
                                             <file-param-input
                                                 name="defaultValue"
+                                                v-bind="param"
                                                 :required="valueRequired"
                                                 :disabled="disabled"
                                                 :value="param.defaultValue"
-                                                :upload-file-name="uploadFileName"
                                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                             />
-                                            <file-upload
-                                                class="mt10"
-                                                name="fileName"
-                                                :file-path="param.defaultValue"
-                                                @handle-change="(value) => uploadPathFromFileName(value)"
-                                            ></file-upload>
                                         </bk-form-item>
                                     </div>
 
@@ -421,7 +415,6 @@
 </template>
 
 <script>
-    import FileUpload from '@/components/FileUpload'
     import FileParamInput from '@/components/FileParamInput'
     import Accordion from '@/components/atomFormField/Accordion'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
@@ -481,7 +474,6 @@
             draggable,
             VuexTextarea,
             RequestSelector,
-            FileUpload,
             FileParamInput
         },
         mixins: [validMixins],
@@ -515,11 +507,9 @@
         data () {
             return {
                 paramIdCount: 0,
-                renderParams: [],
-                uploadFileName: ''
+                renderParams: []
             }
         },
-
         computed: {
             ...mapGetters('atom', [
                 'osList',
@@ -833,10 +823,6 @@
                         return false
                     }).map(opt => ({ id: opt.key, name: opt.value }))
                     : []
-            },
-
-            uploadPathFromFileName (value) {
-                this.uploadFileName = value
             }
         }
     }

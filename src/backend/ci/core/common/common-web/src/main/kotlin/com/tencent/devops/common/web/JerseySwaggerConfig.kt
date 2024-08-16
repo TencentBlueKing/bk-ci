@@ -70,6 +70,7 @@ class JerseySwaggerConfig : JerseyConfig() {
                         .info(Info().title(applicationDesc).version(applicationVersion))
                         .addServersItem(Server().url("/$service"))
                     resourcePackages = setOf(packageName)
+                    scannerClass = "com.tencent.devops.common.web.swagger.BkJaxrsAnnotationScanner"
                 }
             } else {
                 SwaggerConfiguration().apply {
@@ -77,6 +78,7 @@ class JerseySwaggerConfig : JerseyConfig() {
                         .info(Info().title(applicationDesc).version(applicationVersion))
                         .addServersItem(Server().url("/"))
                     resourcePackages = setOf(packageName)
+                    scannerClass = "com.tencent.devops.common.web.swagger.BkJaxrsAnnotationScanner"
                 }
             }
         }

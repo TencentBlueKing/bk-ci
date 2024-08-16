@@ -50,6 +50,7 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
     }
 
     override fun list(): Result<List<RepositoryConfig>> {
+        // TODO 源码管理需要优化
         val managers = ScmType.values().map {
             val status = when {
                 it == ScmType.GITHUB && gitConfig.githubClientId.isBlank() ->

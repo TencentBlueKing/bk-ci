@@ -28,6 +28,8 @@
 
 package com.tencent.devops.repository.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.Repository
@@ -36,7 +38,9 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -74,4 +78,33 @@ interface ServiceRepositoryPacResource {
         @QueryParam("scmType")
         scmType: ScmType
     ): Result<Repository?>
+    @Operation(summary = "开启pac")
+    @PUT
+    @Path("/{projectId}/{repositoryHashId}/enable")
+    fun enablePac(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "关闭pac")
+    @PUT
+    @Path("/{projectId}/{repositoryHashId}/disable")
+    fun disablePac(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String
+    ): Result<Boolean>
 }

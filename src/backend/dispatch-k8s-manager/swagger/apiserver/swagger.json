@@ -300,6 +300,55 @@
                 }
             }
         },
+        "/docker/inspect": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "docker"
+                ],
+                "summary": "docker inspect命令(同时会pull)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "凭证信息",
+                        "name": "Devops-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "构建机信息",
+                        "name": "info",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.DockerInspectInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "任务ID",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/types.Result"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.TaskId"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/jobs": {
             "post": {
                 "consumes": [
@@ -609,7 +658,11 @@
                 },
                 "info": {
                     "description": "构建并推送镜像的具体信息",
-                    "$ref": "#/definitions/service.buildImageInfo"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/service.buildImageInfo"
+                        }
+                    ]
                 },
                 "name": {
                     "description": "唯一名称",
@@ -618,11 +671,19 @@
                 },
                 "podNameSelector": {
                     "description": "Pod名称调度",
-                    "$ref": "#/definitions/service.PodNameSelector"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/service.PodNameSelector"
+                        }
+                    ]
                 },
                 "resource": {
                     "description": "工作负载资源",
-                    "$ref": "#/definitions/service.CommonWorkLoadResource"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/service.CommonWorkLoadResource"
+                        }
+                    ]
                 }
             }
         },
@@ -666,19 +727,35 @@
                 },
                 "privateBuilder": {
                     "description": "私有构建机配置",
-                    "$ref": "#/definitions/service.DedicatedBuilder"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/service.DedicatedBuilder"
+                        }
+                    ]
                 },
                 "registry": {
                     "description": "镜像凭证",
-                    "$ref": "#/definitions/types.Registry"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/types.Registry"
+                        }
+                    ]
                 },
                 "resource": {
                     "description": "工作负载资源",
-                    "$ref": "#/definitions/service.CommonWorkLoadResource"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/service.CommonWorkLoadResource"
+                        }
+                    ]
                 },
                 "specialBuilder": {
                     "description": "特殊构建机配置",
-                    "$ref": "#/definitions/service.DedicatedBuilder"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/service.DedicatedBuilder"
+                        }
+                    ]
                 }
             }
         },
@@ -699,6 +776,27 @@
                 }
             }
         },
+        "service.BuilderState": {
+            "type": "string",
+            "enum": [
+                "readyToRun",
+                "notExist",
+                "pending",
+                "running",
+                "succeeded",
+                "failed",
+                "unknown"
+            ],
+            "x-enum-varnames": [
+                "BuilderReadyToRun",
+                "BuilderNotExist",
+                "BuilderPending",
+                "BuilderRunning",
+                "BuilderSucceeded",
+                "BuilderFailed",
+                "BuilderUnknown"
+            ]
+        },
         "service.BuilderStatus": {
             "type": "object",
             "properties": {
@@ -706,7 +804,7 @@
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
+                    "$ref": "#/definitions/service.BuilderState"
                 }
             }
         },
@@ -757,10 +855,46 @@
                 }
             }
         },
+        "service.Credential": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "service.DedicatedBuilder": {
             "type": "object",
             "properties": {
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.DockerInspectInfo": {
+            "type": "object",
+            "required": [
+                "name",
+                "ref"
+            ],
+            "properties": {
+                "cred": {
+                    "description": "拉取镜像凭据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/service.Credential"
+                        }
+                    ]
+                },
+                "name": {
+                    "description": "任务名称，唯一",
+                    "type": "string"
+                },
+                "ref": {
+                    "description": "docker镜像信息 如：docker:latest",
                     "type": "string"
                 }
             }
@@ -809,17 +943,46 @@
                 },
                 "podNameSelector": {
                     "description": "Pod名称调度选项",
-                    "$ref": "#/definitions/service.PodNameSelector"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/service.PodNameSelector"
+                        }
+                    ]
                 },
                 "registry": {
                     "description": "镜像凭证",
-                    "$ref": "#/definitions/types.Registry"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/types.Registry"
+                        }
+                    ]
                 },
                 "resource": {
                     "description": "工作负载资源",
-                    "$ref": "#/definitions/service.CommonWorkLoadResource"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/service.CommonWorkLoadResource"
+                        }
+                    ]
                 }
             }
+        },
+        "service.JobState": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "running",
+                "succeeded",
+                "failed",
+                "unknown"
+            ],
+            "x-enum-varnames": [
+                "JobPending",
+                "JobRunning",
+                "JobSucceeded",
+                "JobFailed",
+                "JobUnknown"
+            ]
         },
         "service.JobStatus": {
             "type": "object",
@@ -831,7 +994,7 @@
                     "type": "string"
                 },
                 "state": {
-                    "type": "string"
+                    "$ref": "#/definitions/service.JobState"
                 }
             }
         },
@@ -866,7 +1029,7 @@
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
+                    "$ref": "#/definitions/types.TaskState"
                 }
             }
         },
@@ -949,6 +1112,23 @@
                     "type": "integer"
                 }
             }
+        },
+        "types.TaskState": {
+            "type": "string",
+            "enum": [
+                "waiting",
+                "running",
+                "succeeded",
+                "failed",
+                "unknown"
+            ],
+            "x-enum-varnames": [
+                "TaskWaiting",
+                "TaskRunning",
+                "TaskSucceeded",
+                "TaskFailed",
+                "TaskUnknown"
+            ]
         }
     }
 }

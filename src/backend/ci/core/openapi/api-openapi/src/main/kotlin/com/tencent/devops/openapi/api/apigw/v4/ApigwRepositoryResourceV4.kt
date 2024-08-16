@@ -243,4 +243,46 @@ interface ApigwRepositoryResourceV4 {
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<Repository>
+
+    @Operation(summary = "开启PAC", tags = ["v4_app_repository_enable_pac", "v4_user_repository_enable_pac"])
+    @PUT
+    @Path("/{repositoryHashId}/pac/enable")
+    fun enablePac(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "关闭PAC", tags = ["v4_app_repository_disable_pac", "v4_user_repository_disable_pac"])
+    @PUT
+    @Path("/{repositoryHashId}/pac/disable")
+    fun disablePac(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String
+    ): Result<Boolean>
 }
