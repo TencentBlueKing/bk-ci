@@ -289,7 +289,7 @@ class RbacPermissionResourceMemberService constructor(
 
         val memberDetails = deptService.getMemberInfo(
             memberId = memberId,
-            memberType = ManagerScopesEnum.valueOf(memberType)
+            memberType = ManagerScopesEnum.valueOf(memberType.uppercase())
         )
         with(authResourceGroup) {
             authResourceGroupMemberDao.create(
@@ -388,7 +388,7 @@ class RbacPermissionResourceMemberService constructor(
             iamMemberInfos.forEach {
                 val memberDetails = deptService.getMemberInfo(
                     memberId = it.id,
-                    memberType = ManagerScopesEnum.valueOf(it.type)
+                    memberType = ManagerScopesEnum.valueOf(it.type.uppercase())
                 )
                 groupMembersList.add(
                     AuthResourceGroupMember(
