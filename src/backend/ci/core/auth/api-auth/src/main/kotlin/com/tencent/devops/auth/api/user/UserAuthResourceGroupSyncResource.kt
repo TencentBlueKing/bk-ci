@@ -27,92 +27,63 @@
 
 package com.tencent.devops.auth.api.user
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
+import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Tag(name = "USER_DEPT", description = "组织架构")
-@Path("/user/dept")
+@Tag(name = "AUTH_RESOURCE_GROUP_SYNC", description = "用户态-iam用户组_同步")
+@Path("/user/auth/resource/group/sync/{projectId}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserDeptResource {
+interface UserAuthResourceGroupSyncResource {
 
-    @GET
-    @Path("/levels/{level}")
-    @Operation(summary = "按组织级别获取组织列表")
-    fun getDeptByLevel(
+    @PUT
+    @Path("syncGroupAndMember")
+    @Operation(summary = "同步IAM组和成员")
+    fun syncGroupAndMember(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?,
-        @PathParam("level")
-        @Parameter(description = "组织级别", required = true)
-        level: Int
-    ): Result<DeptInfoVo?>
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Boolean>
 
-    @GET
-    @Path("/parents/{parentId}")
-    @Operation(summary = "按组织级别获取组织列表")
-    fun getDeptByParent(
+    @PUT
+    @Path("{groupId}/syncGroupMember")
+    @Operation(summary = "同步IAM")
+    fun syncGroupMember(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?,
-        @PathParam("parentId")
-        @Parameter(description = "父组织Id", required = true)
-        parentId: Int,
-        @QueryParam("pageSize")
-        @Parameter(description = "父组织Id", required = false)
-        pageSize: Int?
-    ): Result<DeptInfoVo?>
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "用户组Id")
+        @PathParam("groupId")
+        groupId: Int
+    ): Result<Boolean>
 
     @GET
-    @Path("/names/{name}")
-    @Operation(summary = "按组织级别获取组织列表")
-    fun getUserAndDeptByName(
+    @Path("/getStatusOfSync")
+    @Operation(summary = "获取同步状态")
+    fun getStatusOfSync(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?,
-        @PathParam("name")
-        @Parameter(description = "模糊搜索名称", required = true)
-        name: String,
-        @QueryParam("type")
-        @Parameter(description = "搜索类型", required = true)
-        type: ManagerScopesEnum
-    ): Result<List<UserAndDeptInfoVo?>>
-
-    @GET
-    @Path("/{deptId}/users")
-    fun getDeptUsers(
-        @Parameter(description = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?,
-        @PathParam("deptId")
-        @Parameter(description = "组织Id", required = true)
-        deptId: Int
-    ): Result<List<String>?>
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<AuthMigrateStatus>
 }

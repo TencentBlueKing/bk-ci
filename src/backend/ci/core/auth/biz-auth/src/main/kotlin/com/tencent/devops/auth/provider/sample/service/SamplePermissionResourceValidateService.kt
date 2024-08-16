@@ -39,4 +39,11 @@ class SamplePermissionResourceValidateService : PermissionResourceValidateServic
     ): Map<String, Boolean> {
         return permissionBatchValidateDTO.actionList.associateWith { true }
     }
+
+    override fun hasManagerPermission(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean = true
 }
