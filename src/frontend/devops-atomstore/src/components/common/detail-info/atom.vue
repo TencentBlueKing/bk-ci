@@ -48,8 +48,7 @@
                     <span class="ml6">{{ detail.score }}</span>
                 </section>
                 <section class="num-wraper">
-                    <img v-if="detail.hotFlag" class="hot-icon" src="../../../images/hot-red.png">
-                    <img v-else class="hot-icon" src="../../../images/hot.png">
+                    <img :src="getHotIcon(detail.hotFlag)" class="hot-icon">
                     <span class="ml3">{{ getShowNum(detail.recentExecuteNum) }}</span>
                 </section>
             </h3>
@@ -99,7 +98,6 @@
                     <icon class="detail-img mr4" name="gray-git-code" size="14" />
                     <span class="approve-msg">{{ isPublic ? $t('store.源码') : $t('store.未开源') }}</span>
                 </h5>
-                <span class="gap"></span>
                 <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
                     <h5 :title="approveTip" :class="[{ 'not-public': approveMsg !== $t('store.协作') }, 'click-button']" @click="cooperation">
                         <icon class="detail-img mr4" name="cooperation" size="16" />
@@ -346,6 +344,11 @@
                 } else {
                     return num
                 }
+            },
+            getHotIcon (hotFlag) {
+                return hotFlag
+                    ? require('../../../images/hot-red.png')
+                    : require('../../../images/hot.png')
             }
         }
     }
