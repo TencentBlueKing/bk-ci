@@ -1,97 +1,102 @@
 <template>
     <bk-dialog v-model="nodeSelectConf.isShow"
-        :width="'900'"
+        width="900"
         :ext-cls="'node-select-wrapper'"
         :close-icon="false">
-        <div>
-            <div class="node-list-header">
-                <div class="title">{{ $t('environment.nodeInfo.selectNodeTip') }}
-                    <span class="selected-node-prompt">
-                        {{ $t('environment.nodeInfo.total') }}<span class="node-count"> {{ pagination.count }} </span>{{ $t('environment.nodes') }}
-                    </span>
-                    <span class="selected-node-prompt">
-                        {{ $t('environment.selected') }}<span class="node-count"> {{ selectedNodeList.length }} </span>{{ $t('environment.nodes') }}
-                    </span>
-                    <bk-popover placement="right">
-                        <i class="devops-icon icon-info-circle"></i>
-                        <template slot="content">
-                            <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{ $t('environment.cmdbNodeDesc') }}</p>
-                        </template>
-                    </bk-popover>
-                </div>
-                <div class="search-input-row">
-                    <bk-select v-model="operator" class="operator-select" :clearable="false" @change="changeOperator">
-                        <bk-option v-for="(option, index) in operatorList"
-                            :key="index"
-                            :id="option.id"
-                            :name="option.name">
-                        </bk-option>
-                    </bk-select>
-                    <div class="biz-search-input">
-                        <div class="biz-ip-searcher-wrapper">
-                            <div class="biz-searcher" @click="focusSearch" ref="bizSearcher">
-                                <ul class="search-key" ref="searchKey">
-                                    <li class="key-node" v-for="(entry, index) in searchKeyList" :key="index">
-                                        <span>{{ entry }}</span>
-                                        <i class="devops-icon icon-close" @click="deleteKey(index)"></i>
-                                    </li>
-                                    <li class="input-item">
-                                        <input type="text" class="search-input" ref="searchInput"
-                                            v-model="inputValue"
-                                            :style="inputStyle"
-                                            @blur="handleBlur"
-                                            @paste="paste"
-                                            @keyup="keyupHandler">
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="actions">
-                                <i class="devops-icon icon-close" @click="deleteAllKey" v-if="searchKeyList.length"></i>
-                                <i class="devops-icon icon-search" @click="searchNode"></i>
-                            </div>
-                            <div class="ip-searcher-footer" v-if="isSearchFooter">
-                                <p>{{ $t('environment.nodeInfo.searchNodePlaceholder') }}</p>
-                            </div>
+        <div class="node-list-header">
+            <div class="title">{{ $t('environment.nodeInfo.selectNodeTip') }}
+                <span class="selected-node-prompt">
+                    {{ $t('environment.selected') }}<span class="node-count"> {{ selectedNodeList.length }} </span>{{ $t('environment.nodes') }}
+                </span>
+                <bk-popover placement="right">
+                    <i class="devops-icon icon-info-circle"></i>
+                    <template slot="content">
+                        <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{ $t('environment.cmdbNodeDesc') }}</p>
+                    </template>
+                </bk-popover>
+            </div>
+            <div class="search-input-row">
+                <bk-select v-model="operator" class="operator-select" :clearable="false" @change="changeOperator">
+                    <bk-option v-for="(option, index) in operatorList"
+                        :key="index"
+                        :id="option.id"
+                        :name="option.name">
+                    </bk-option>
+                </bk-select>
+                <div class="biz-search-input">
+                    <div class="biz-ip-searcher-wrapper">
+                        <div class="biz-searcher" @click="focusSearch" ref="bizSearcher">
+                            <ul class="search-key" ref="searchKey">
+                                <li class="key-node" v-for="(entry, index) in searchKeyList" :key="index">
+                                    <span>{{ entry }}</span>
+                                    <i class="devops-icon icon-close" @click="deleteKey(index)"></i>
+                                </li>
+                                <li class="input-item">
+                                    <input type="text" class="search-input" ref="searchInput"
+                                        v-model="inputValue"
+                                        :style="inputStyle"
+                                        @blur="handleBlur"
+                                        @paste="paste"
+                                        @keyup="keyupHandler">
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="actions">
+                            <i class="devops-icon icon-close" @click="deleteAllKey" v-if="searchKeyList.length"></i>
+                            <i class="devops-icon icon-search" @click="searchNode"></i>
+                        </div>
+                        <div class="ip-searcher-footer" v-if="isSearchFooter">
+                            <p>{{ $t('environment.nodeInfo.searchNodePlaceholder') }}</p>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="node-table"
-                v-bkloading="{
-                    isLoading: loading.isLoading,
-                    title: loading.title
-                }"
-            >
-                <bk-table
-                    ref="nodeListTable"
-                    :data="rowList"
-                    height="100%"
-                    size="small"
-                    ext-cls="node-list-table"
-                    :empty-text="$t('environment.nodeEmptyOpertaor')"
-                    :pagination="pagination"
-                    @page-change="handlePageChange"
-                    @page-limit-change="pageLimitChange"
-                    @select="toggleNodeSelect"
-                    @select-all="toggleAllSelect"
-                >
-                    <bk-table-column type="selection" width="60" align="center" :selectable="isImported" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column label="IP" prop="ip" width="150" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('environment.nodeInfo.hostName')" prop="name" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('environment.operator')" width="150" prop="operator" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('environment.bkOperator')" width="150" prop="bakOperator" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('environment.status')" prop="nodeStatus" show-overflow-tooltip>
-                        <template slot-scope="{ row }">
-                            <span>
-                                <StatusIcon v-if="successStatus.includes(row.nodeStatus)" status="success" />
-                                <StatusIcon v-else-if="failStatus.includes(row.nodeStatus)" status="error" />
-                                <StatusIcon v-else-if="['NOT_INSTALLED'].includes(row.nodeStatus)" status="normal" />
-                                {{ ['NOT_IN_CC', 'NOT_IN_CMDB'].includes(row.nodeStatus) ? '' : $t('environment.nodeStatusMap')[row.nodeStatus] }}
-                            </span>
-                        </template>
-                    </bk-table-column>
-                </bk-table>
+        </div>
+        <bk-table
+            v-bkloading="{
+                isLoading: loading.isLoading,
+                title: loading.title
+            }"
+            ref="nodeListTable"
+            :data="rowList"
+            height="100%"
+            size="small"
+            ext-cls="node-list-table"
+            :empty-text="$t('environment.nodeEmptyOpertaor')"
+            @select="toggleNodeSelect"
+            @select-all="toggleAllSelect"
+        >
+            <bk-table-column type="selection" width="60" align="center" :selectable="isImported" show-overflow-tooltip></bk-table-column>
+            <bk-table-column label="IP" prop="ip" width="150" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('environment.nodeInfo.hostName')" width="190" prop="name" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('environment.operator')" width="150" prop="operator" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('environment.bkOperator')" width="150" prop="bakOperator" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('environment.status')" width="190" prop="nodeStatus" show-overflow-tooltip>
+                <template slot-scope="{ row }">
+                    <span>
+                        <StatusIcon v-if="successStatus.includes(row.nodeStatus)" status="success" />
+                        <StatusIcon v-else-if="failStatus.includes(row.nodeStatus)" status="error" />
+                        <StatusIcon v-else-if="['NOT_INSTALLED'].includes(row.nodeStatus)" status="normal" />
+                        {{ ['NOT_IN_CC', 'NOT_IN_CMDB'].includes(row.nodeStatus) ? '' : $t('environment.nodeStatusMap')[row.nodeStatus] }}
+                    </span>
+                </template>
+            </bk-table-column>
+        </bk-table>
+        <div
+            v-if="rowList.length"
+            class="pagination-content"
+        >
+            <div class="loaded" v-if="pagination.loadedNum">
+                {{ pagination.hasNext ? $t('environment.已加载X条', [pagination.loadedNum]) : $t('environment.共X个节点', [pagination.loadedNum]) }}
             </div>
+            <bk-pagination
+                ext-cls="node-pagination"
+                v-bind="pagination"
+                @change="handlePageChange"
+                @limit-change="pageLimitChange"
+            >
+                
+            </bk-pagination>
         </div>
         <div slot="footer">
             <div class="footer-handler">
@@ -124,7 +129,24 @@
             }
         },
         data () {
+            const getDefaultCmdbPagination = () => {
+                return {
+                    current: 1,
+                    limit: 20,
+                    count: 0,
+                    location: 'left',
+                    align: 'right',
+                    cacheScrollIdList: [
+                        {
+                            key: 1,
+                            scrollId: 0
+                        }
+                    ],
+                    loadedNum: 0
+                }
+            }
             return {
+                getDefaultCmdbPagination,
                 isSearchFooter: false,
                 inputValue: '',
                 operator: 'operator',
@@ -139,12 +161,7 @@
                     isLoading: false,
                     title: ''
                 },
-                pagination: {
-                    current: 1,
-                    count: 0,
-                    limit: 8,
-                    limitList: [8, 20, 50, 100]
-                },
+                pagination: getDefaultCmdbPagination(),
                 selectedNodeList: [],
                 successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
                 failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN']
@@ -163,6 +180,9 @@
                 const tag = this.inputValue
                 const charLen = this.getCharLength(tag) + 1
                 return { width: charLen * 8 + 'px' }
+            },
+            scrollId () {
+                return this.pagination.cacheScrollIdList.find(i => i.key === this.pagination.current)?.scrollId || 0
             }
         },
         watch: {
@@ -174,8 +194,8 @@
                     this.operator = 'operator'
                     this.importText = this.$t('environment.import')
                     this.searchKeyList.splice(0, this.searchKeyList.length)
+                    this.pagination = this.getDefaultCmdbPagination()
                 } else {
-                    this.pagination.current = 1
                     await this.getDate()
                 }
             },
@@ -190,13 +210,24 @@
                 try {
                     const params = {
                         bakOperator: this.operator === 'bakOperator',
-                        ipList: this.searchKeyList,
-                        page: this.pagination.current,
+                        ips: this.searchKeyList,
+                        scrollId: this.scrollId,
                         pageSize: this.pagination.limit,
                         projectId: this.projectId
                     }
                     const res = await this.$store.dispatch('environment/requestCmdbNode', { params })
+                   
                     this.rowList = res.records || []
+                    if (this.pagination.current >= this.pagination.cacheScrollIdList.length) {
+                        this.pagination.loadedNum += res.records.length
+                    }
+                    if (res.hasNext && this.pagination.current >= this.pagination.cacheScrollIdList.length) {
+                        this.pagination.cacheScrollIdList.push({
+                            key: this.pagination.current + 1,
+                            scrollId: res.scrollId
+                        })
+                    }
+                    this.pagination.count = res.hasNext ? this.pagination.loadedNum + 1 : this.pagination.loadedNum
                     
                     // 回填已经导入的节点
                     this.$nextTick(() => {
@@ -206,7 +237,6 @@
                             }
                         })
                     })
-                    this.pagination.count = res.count
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -232,16 +262,21 @@
                 return bitLen
             },
             changeOperator () {
-                this.pagination.current = 1
+                this.pagination = this.getDefaultCmdbPagination()
                 this.getDate()
             },
             handlePageChange (page) {
+                if (page === this.pagination.current) return
                 this.pagination.current = page
+                this.selectedNodeList = []
+                this.rowList = []
                 this.getDate()
             },
             pageLimitChange (pageSize) {
+                this.pagination = this.getDefaultCmdbPagination()
                 this.pagination.limit = pageSize
-                this.pagination.current = 1
+                this.selectedNodeList = []
+                this.rowList = []
                 this.getDate()
             },
             handleFocus () {
@@ -304,7 +339,6 @@
                     case 'Enter':
                     case 'NumpadEnter':
                         this.searchNode()
-                        console.log(123)
                         break
                     case 'Backspace':
                         if (!this.inputValue) {
@@ -563,8 +597,8 @@
             }
         }
 
-        .node-table {
-            height: 450px;
+        .node-list-table {
+            height: 450px !important;
             margin: 0;
             border: none;
         }
@@ -698,5 +732,22 @@
         .bk-page-selection-count {
             display: none;
         }
+    }
+    .pagination-content {
+        display: flex;
+        align-items: center;
+        border-top: 1px solid #dfe0e5;
+        padding: 0 30px 0 20px;
+        .loaded {
+            font-size: 12px;
+            height: 60px;
+            line-height: 60px;
+            margin-right: 20px;
+        }
+    }
+    .node-pagination {
+        flex: 1;
+        overflow: hidden;
+        white-space: normal;
     }
 </style>
