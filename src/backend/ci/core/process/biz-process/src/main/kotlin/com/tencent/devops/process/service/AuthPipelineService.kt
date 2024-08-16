@@ -41,6 +41,7 @@ import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.ListResourcesAuthorizationDTO
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -141,6 +142,7 @@ class AuthPipelineService @Autowired constructor(
         authTokenApi.checkToken(token)
         val pipelineInfos = pipelineListFacadeService.getPipelinePage(
             projectId = projectId,
+            channelCode = ChannelCode.BS,
             limit = limit,
             offset = offset
         )

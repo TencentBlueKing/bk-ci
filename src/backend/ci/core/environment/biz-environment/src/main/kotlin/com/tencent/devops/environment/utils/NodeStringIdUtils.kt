@@ -68,7 +68,7 @@ object NodeStringIdUtils {
             gateway = "",
             displayName = getRefineDisplayName(nodeStringId, nodeRecord.displayName),
             envEnableNode = null,
-            lastModifyTime = nodeRecord.lastModifyTime.timestampmilli()
+            lastModifyTime = (nodeRecord.lastModifyTime ?: nodeRecord.createdTime).timestampmilli()
         )
     }
 }
