@@ -89,6 +89,7 @@ class ExpertSupportService @Autowired constructor(
             params = arrayOf(data.workspaceName)
         )
 
+
         if (!permissionService.hasManagerOrViewerPermission(userId, record.projectId, record.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
@@ -204,6 +205,7 @@ class ExpertSupportService @Autowired constructor(
 
                 "managers" -> newParam[k] = projectInfo.properties?.remotedevManager ?: ""
                 "requestIp" -> newParam[k] = requestIp ?: ""
+                "displayName" -> newParam[k] = record.displayName
 
                 else -> newParam[k] = v
             }
