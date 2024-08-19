@@ -89,7 +89,6 @@ class ExpertSupportService @Autowired constructor(
             params = arrayOf(data.workspaceName)
         )
 
-
         if (!permissionService.hasManagerOrViewerPermission(userId, record.projectId, record.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
