@@ -248,7 +248,7 @@ class CreateControl @Autowired constructor(
         if (workspaceCreate.imageCosFile.isBlank()) {
             val spec = lazy { windowsResourceConfigService.getAllSpecZoneShortName() }
             val resource = startCloudResourceCountCheck(
-                workspaceCreate.windowsType, QuotaType.parse(ownerType)
+                workspaceCreate.windowsType
             ).filter {
                 when {
                     /*指定了cgsId*/
@@ -256,7 +256,7 @@ class CreateControl @Autowired constructor(
                     /*其余情况不应放开lock==true的情况*/
                     it.locked == true -> false
                     /*不同云区域的忽略*/
-                    it.internal != QuotaType.parse(ownerType).getInternal() -> false
+//                    it.internal != QuotaType.parse(ownerType).getInternal() -> false
                     /*使用普通区域，则应到避免落入特殊区域*/
                     availableZone.type == WindowsResourceZoneConfigType.DEFAULT && it.zoneId in spec.value -> false
                     /*特殊情况，限制具体的区域id*/
@@ -287,7 +287,8 @@ class CreateControl @Autowired constructor(
                         appName = gameId.first,
                         gameId = gameId.second,
                         cgsId = cgsId,
-                        ownerType = ownerType
+                        ownerType = ownerType,
+                        quotaType = QuotaType.parse(zoneType)
                     )
                 }
                 return true
@@ -310,7 +311,7 @@ class CreateControl @Autowired constructor(
                 windowsZone = availableZone,
                 windowsConfig = windowsConfig,
                 newNum = newNum,
-                quotaType = QuotaType.parse(ownerType)
+                quotaType = QuotaType.parse(zoneType)
             )
         )
         repeat(generateWorkspaceName.size) { i ->
@@ -329,7 +330,8 @@ class CreateControl @Autowired constructor(
                 appName = gameId.first,
                 gameId = gameId.second,
                 cgsId = cgsId,
-                ownerType = ownerType
+                ownerType = ownerType,
+                quotaType = QuotaType.parse(zoneType)
             )
         }
         return false
@@ -348,13 +350,14 @@ class CreateControl @Autowired constructor(
         appName: String,
         gameId: Long,
         cgsId: String?,
-        ownerType: WorkspaceOwnerType
+        ownerType: WorkspaceOwnerType,
+        quotaType: QuotaType
     ) {
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
         logger.info(
             "doCreateWorkspace|$i|$workspaceName|$workspaceCreate|$projectId|$creator|$owner|" +
-                "$windowsConfig|$organization|$zoneId|$appName|$gameId|$cgsId|$ownerType"
+                "$windowsConfig|$organization|$zoneId|$appName|$gameId|$cgsId|$ownerType|$quotaType"
         )
         if (!owner.isNullOrBlank()) {
             workspaceSharedDao.batchCreate(
@@ -404,7 +407,7 @@ class CreateControl @Autowired constructor(
                     machineType = windowsConfig.size,
                     cgsId = cgsId,
                     imageCosFile = workspaceCreate.imageCosFile,
-                    quotaType = QuotaType.parse(ws.ownerType)
+                    quotaType = quotaType
                 ),
                 projectId = projectId,
                 mountType = mountType,
@@ -862,7 +865,7 @@ class CreateControl @Autowired constructor(
         }
     }
 
-    private fun startCloudResourceCountCheck(type: String, quotaType: QuotaType) =
+    private fun startCloudResourceCountCheck(type: String) =
         workspaceCommon.syncStartCloudResourceList().filter {
             it.status == 11 &&
                 it.machineType == type

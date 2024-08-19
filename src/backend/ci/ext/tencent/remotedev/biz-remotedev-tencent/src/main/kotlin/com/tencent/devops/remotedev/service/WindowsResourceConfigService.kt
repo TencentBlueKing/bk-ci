@@ -522,7 +522,7 @@ class WindowsResourceConfigService @Autowired constructor(
             windowsZone = windowsZone,
             windowsConfig = windowsConfig,
             newNum = newNum,
-            quotaType = QuotaType.parse(ownerType)
+            quotaType = QuotaType.parse(windowsZone.type)
         )
     }
 }
