@@ -94,6 +94,7 @@ if string.sub(target, 1, string.len(prefix)) == prefix then
     end
 end
 
+ngx.var.target = target
 
 -- 特殊逻辑
 if ngx.var.url_prefix ~= nil then
