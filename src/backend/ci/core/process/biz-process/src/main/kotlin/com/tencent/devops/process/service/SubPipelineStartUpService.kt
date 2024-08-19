@@ -464,8 +464,7 @@ class SubPipelineStartUpService @Autowired constructor(
         if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
         }
-        val startUser = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId) ?: userId
-        val result = pipelineBuildFacadeService.buildManualStartupInfo(startUser, projectId, pipelineId, ChannelCode.BS)
+        val result = pipelineBuildFacadeService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS)
         val parameter = ArrayList<SubPipelineStartUpInfo>()
         val prop = result.properties.filter {
             val const = if (includeConst == false) { it.constant != true } else { true }
