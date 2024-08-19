@@ -60,6 +60,7 @@ import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_NUM
@@ -89,7 +90,8 @@ class SubPipelineStartUpService @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineUrlBean: PipelineUrlBean
+    private val pipelineUrlBean: PipelineUrlBean,
+    private val templateFacadeService: TemplateFacadeService
 ) {
 
     companion object {
@@ -238,6 +240,10 @@ class SubPipelineStartUpService @Autowired constructor(
             val model = getModel(projectId, pipelineId = pipelineId, version = readyToBuildPipelineInfo.version)
 
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+            templateFacadeService.printModifiedTemplateParams(
+                projectId = projectId, pipelineId = pipelineId,
+                pipelineParams = triggerContainer.params, paramValues = parameters
+            )
             // #6090 拨乱反正
             val params = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, parameters)
 

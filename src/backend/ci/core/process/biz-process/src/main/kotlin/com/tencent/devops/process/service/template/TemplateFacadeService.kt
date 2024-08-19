@@ -2710,6 +2710,7 @@ class TemplateFacadeService @Autowired constructor(
                     logger.warn(
                         "BKSystemErrorMonitor|$projectId|$pipelineId|" +
                                 "templateId:${templateRecord.id}|templateVersion:${templateRecord.version}|" +
+                                "defaultValue:${template.defaultValue}|newValue:$value|" +
                                 "template params cannot be modified"
                     )
                     return
