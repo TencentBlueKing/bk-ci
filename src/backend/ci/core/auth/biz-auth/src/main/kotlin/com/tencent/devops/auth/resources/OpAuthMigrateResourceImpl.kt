@@ -106,4 +106,8 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
     override fun migrateAllResourceAuthorization(): Result<Boolean> {
         return Result(permissionMigrateService.migrateAllResourceAuthorization())
     }
+
+    override fun fixResourceGroups(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.fixResourceGroups(projectCodes))
+    }
 }

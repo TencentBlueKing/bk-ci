@@ -182,7 +182,7 @@ class AuthResourceService @Autowired constructor(
             resourceCode = resourceCode
         ).filter {
             it.groupCode != DefaultGroupType.MANAGER.value
-        }.map { it.id }
+        }.map { it.id!! }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             authResourceDao.disable(

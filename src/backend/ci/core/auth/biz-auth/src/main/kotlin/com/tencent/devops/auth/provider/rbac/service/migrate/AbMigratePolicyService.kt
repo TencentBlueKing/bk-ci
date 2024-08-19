@@ -157,7 +157,7 @@ abstract class AbMigratePolicyService(
                 projectName = groupInfo.resourceName
             )
             authorizationScopeList.forEach { authorizationScope ->
-                v2ManagerService.grantRoleGroupV2(groupInfo.relationId.toInt(), authorizationScope)
+                v2ManagerService.grantRoleGroupV2(groupInfo.relationId, authorizationScope)
             }
         }
     }

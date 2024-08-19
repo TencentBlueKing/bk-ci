@@ -153,4 +153,12 @@ interface OpAuthMigrateResource {
     @Path("/migrateAllResourceAuthorization")
     @Operation(summary = "迁移资源授权-全量")
     fun migrateAllResourceAuthorization(): Result<Boolean>
+
+    @POST
+    @Path("/fixResourceGroups")
+    @Operation(summary = "修复资源组")
+    fun fixResourceGroups(
+        @Parameter(description = "迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
 }

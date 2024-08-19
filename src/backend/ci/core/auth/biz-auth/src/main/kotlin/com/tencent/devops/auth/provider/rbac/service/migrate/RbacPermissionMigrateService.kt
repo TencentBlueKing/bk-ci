@@ -57,12 +57,12 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
-import java.util.concurrent.CompletionException
-import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
+import java.util.concurrent.CompletionException
+import java.util.concurrent.Executors
 
 /**
  * rbac迁移服务
@@ -84,7 +84,8 @@ class RbacPermissionMigrateService constructor(
     private val authMonitorSpaceDao: AuthMonitorSpaceDao,
     private val cacheService: RbacCacheService,
     private val permissionResourceMemberService: PermissionResourceMemberService,
-    private val migrateResourceAuthorizationService: MigrateResourceAuthorizationService
+    private val migrateResourceAuthorizationService: MigrateResourceAuthorizationService,
+    private val migrateResourceGroupService: MigrateResourceGroupService
 ) : PermissionMigrateService {
 
     companion object {
@@ -207,7 +208,7 @@ class RbacPermissionMigrateService constructor(
         val resourceType = migrateResourceDTO.resourceType
         val isMigrateProjectResource = migrateResourceDTO.migrateProjectResource == true
         val isMigrateOtherResource = migrateResourceDTO.migrateOtherResource == true &&
-                resourceType != null
+            resourceType != null
         val projectInfoList = client.get(ServiceProjectResource::class).listByProjectCode(projectCodes.toSet())
             .data!!.filter {
                 val r = it.routerTag
@@ -684,5 +685,14 @@ class RbacPermissionMigrateService constructor(
 
     override fun migrateAllResourceAuthorization(): Boolean {
         return migrateResourceAuthorizationService.migrateAllResourceAuthorization()
+    }
+
+    override fun fixResourceGroups(projectCodes: List<String>): Boolean {
+        projectCodes.forEach {
+            migrateResourceGroupService.fixResourceGroups(
+                projectCode = it
+            )
+        }
+        return true
     }
 }

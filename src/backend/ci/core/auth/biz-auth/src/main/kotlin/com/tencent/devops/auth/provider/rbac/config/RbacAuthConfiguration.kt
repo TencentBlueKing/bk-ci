@@ -73,6 +73,7 @@ import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiServic
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigratePermissionHandoverService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceAuthorizationService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceCodeConverter
+import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceGroupService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResultService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateV0PolicyService
@@ -373,6 +374,19 @@ class RbacAuthConfiguration {
     )
 
     @Bean
+    fun migrateResourceGroupService(
+        authResourceService: AuthResourceService,
+        dslContext: DSLContext,
+        authResourceGroupDao: AuthResourceGroupDao,
+        iamV2ManagerService: V2ManagerService
+    ) = MigrateResourceGroupService(
+        authResourceService = authResourceService,
+        dslContext = dslContext,
+        authResourceGroupDao = authResourceGroupDao,
+        iamV2ManagerService = iamV2ManagerService
+    )
+
+    @Bean
     fun migrateIamApiService() = MigrateIamApiService()
 
     @Bean
@@ -486,7 +500,8 @@ class RbacAuthConfiguration {
         authMonitorSpaceDao: AuthMonitorSpaceDao,
         cacheService: RbacCacheService,
         permissionResourceMemberService: RbacPermissionResourceMemberService,
-        migrateResourceAuthorizationService: MigrateResourceAuthorizationService
+        migrateResourceAuthorizationService: MigrateResourceAuthorizationService,
+        migrateResourceGroupService: MigrateResourceGroupService
     ) = RbacPermissionMigrateService(
         client = client,
         migrateResourceService = migrateResourceService,
@@ -503,7 +518,8 @@ class RbacAuthConfiguration {
         authMonitorSpaceDao = authMonitorSpaceDao,
         cacheService = cacheService,
         permissionResourceMemberService = permissionResourceMemberService,
-        migrateResourceAuthorizationService = migrateResourceAuthorizationService
+        migrateResourceAuthorizationService = migrateResourceAuthorizationService,
+        migrateResourceGroupService = migrateResourceGroupService
     )
 
     @Bean
