@@ -202,6 +202,7 @@ class TPACommonUtil @Autowired constructor(
         }
 
         private const val TPA_QUEUE_LOG_TAG = "tpa_queue_log_tag"
+
         // 打印带特定tag的日志
         fun Logger.tagError(msg: String) = this.error("$TPA_QUEUE_LOG_TAG$msg")
         fun Logger.tagError(msg: String, o: Any) = this.error("$TPA_QUEUE_LOG_TAG$msg", o)

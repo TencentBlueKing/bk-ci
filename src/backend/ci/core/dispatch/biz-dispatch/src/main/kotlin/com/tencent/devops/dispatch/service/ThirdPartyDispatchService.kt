@@ -137,6 +137,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     )
                 }
 
+                // TODO: 老逻辑只能在消息事件里面加计时了，但是要看下 shutdown 事件如何处理
                 buildByAgentId(dispatchMessage, dispatchType.copy(displayName = agentId, agentType = AgentType.ID))
             }
 

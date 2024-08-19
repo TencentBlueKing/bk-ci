@@ -23,7 +23,6 @@ import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.EnvQueueContext
 import com.tencent.devops.dispatch.pojo.QueueDataContext
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
-import com.tencent.devops.dispatch.pojo.TPAQueueEventContext
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.TPACommonUtil.Companion.tagError
@@ -39,40 +38,13 @@ import javax.ws.rs.core.Response
  * 存放第三方构建机环境相关逻辑
  */
 @Service
-class ThirdPartyAgentEnvQueueService @Autowired constructor(
+class TPAEnvQueueService @Autowired constructor(
     private val client: Client,
     private val commonUtil: TPACommonUtil,
     private val thirdPartyAgentService: ThirdPartyAgentService,
     private val tpaSingleQueueService: TPASingleQueueService
 ) {
-    fun inEnvQueue(eventContext: TPAQueueEventContext, dataContext: QueueDataContext) {
-        if (eventContext.context == null) {
-            eventContext.context = initEnvContext(dataContext)
-        }
-        val context = eventContext.context!!
-        ignoreAgentCheck(context, dataContext)
-        allNodeConcurrencyCheck(context, dataContext)
-        singleNodeConcurrencyCheck(context, dataContext)
-        if (context.agents.isNotEmpty() && pickupAgent(context, dataContext)) {
-            afterGenAgentBuild(context, dataContext)
-            return
-        }
-
-        // 没有可用构建机列表进入下一次重试
-        val data = dataContext.data
-        logger.info("START_AGENT|${data.toLog()}|Not Found, Retry!")
-        commonUtil.logWarnI18n(data, BK_AGENT_IS_BUSY, suffixMsg = dataContext.retryLog("env agents not found"))
-        throw TPACommonUtil.queueRetry(
-            errorCode = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
-            errMsg = "${data.buildId}|${data.vmSeqId} " + I18nUtil.getCodeLanMessage(
-                messageCode = BK_QUEUE_TIMEOUT_MINUTES,
-                language = I18nUtil.getDefaultLocaleLanguage(),
-                params = arrayOf("${data.queueTimeoutMinutes}")
-            )
-        )
-    }
-
-    private fun initEnvContext(
+    fun initEnvContext(
         dataContext: QueueDataContext
     ): EnvQueueContext {
         val data = dataContext.data
@@ -89,6 +61,32 @@ class ThirdPartyAgentEnvQueueService @Autowired constructor(
         }
 
         commonUtil.logWarnI18n(data, BK_NO_AGENT_AVAILABLE)
+        throw TPACommonUtil.queueRetry(
+            errorCode = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
+            errMsg = "${data.buildId}|${data.vmSeqId} " + I18nUtil.getCodeLanMessage(
+                messageCode = BK_QUEUE_TIMEOUT_MINUTES,
+                language = I18nUtil.getDefaultLocaleLanguage(),
+                params = arrayOf("${data.queueTimeoutMinutes}")
+            )
+        )
+    }
+
+    fun inEnvQueue(
+        context: EnvQueueContext,
+        dataContext: QueueDataContext
+    ) {
+        ignoreAgentCheck(context, dataContext)
+        allNodeConcurrencyCheck(context, dataContext)
+        singleNodeConcurrencyCheck(context, dataContext)
+        if (context.agents.isNotEmpty() && pickupAgent(context, dataContext)) {
+            afterGenAgentBuild(context, dataContext)
+            return
+        }
+
+        // 没有可用构建机列表进入下一次重试
+        val data = dataContext.data
+        logger.info("START_AGENT|${data.toLog()}|Not Found, Retry!")
+        commonUtil.logWarnI18n(data, BK_AGENT_IS_BUSY, suffixMsg = dataContext.retryLog("env agents not found"))
         throw TPACommonUtil.queueRetry(
             errorCode = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
             errMsg = "${data.buildId}|${data.vmSeqId} " + I18nUtil.getCodeLanMessage(
@@ -510,7 +508,7 @@ class ThirdPartyAgentEnvQueueService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ThirdPartyAgentEnvQueueService::class.java)
+        private val logger = LoggerFactory.getLogger(TPAEnvQueueService::class.java)
         private val availableAgentMatcher = AvailableAgent()
         private val idleAgentMatcher = IdleAgent()
     }

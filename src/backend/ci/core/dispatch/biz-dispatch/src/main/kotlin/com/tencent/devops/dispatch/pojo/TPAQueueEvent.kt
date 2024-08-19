@@ -2,10 +2,12 @@ package com.tencent.devops.dispatch.pojo
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
+import java.time.LocalDateTime
 
 @Event(MQ.EXCHANGE_THIRD_PARTY_AGENT_QUEUE, MQ.ROUTE_THIRD_PARTY_AGENT_QUEUE)
 data class TPAQueueEvent(
@@ -25,11 +27,12 @@ data class TPAQueueEvent(
 
 data class TPAQueueEventContext(
     var context: EnvQueueContext? = null,
-    val needDeleteRecord: MutableSet<Long> = mutableSetOf(),
-    val needRetryRecord: MutableSet<Long> = mutableSetOf()
+    val needDeleteRecord: MutableMap<Long, Long> = mutableMapOf(),
+    val needRetryRecord: MutableSet<Long> = mutableSetOf(),
+    val startTimeMilliSecond: Long = System.currentTimeMillis()
 ) {
     fun addDelete(recordId: Long) {
-        needDeleteRecord.add(recordId)
+        needDeleteRecord[recordId] = LocalDateTime.now().timestampmilli()
     }
 
     fun addRetry(recordId: Long) {
@@ -98,7 +101,7 @@ data class EnvQueueContext(
 }
 
 /**
- * 队列中单独消息自己的上下文，生命周期跟随每个消息
+ * 队列中单独消息自己的上下文，生命周期跟随每次消息执行
  * @param data 消息详情
  * @param retryTime 重试次数
  * @param buildAgent 这个消息每次选择的尝试去下发任务的 agent

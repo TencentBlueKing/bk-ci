@@ -6,13 +6,16 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.UNABLE_GET_PIPEL
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -49,7 +52,7 @@ class TPAQueueService @Autowired constructor(
     private val client: Client,
     private val commonUtil: TPACommonUtil,
     private val tpaQueueDao: TPAQueueDao,
-    private val thirdPartyAgentEnvQueueService: ThirdPartyAgentEnvQueueService
+    private val tpaEnvQueueService: TPAEnvQueueService
 ) {
     fun queue(data: ThirdPartyAgentDispatchData) {
         logger.info("queue|${data.toLog()}")
@@ -84,7 +87,6 @@ class TPAQueueService @Autowired constructor(
     /**
      * 因为每个消费消息的线程数量有限制，如果线程慢了，其他消息不会消失，只会等待消费
      * 所以生产和消费共用一把锁，这样才可以做到每次只有一个消息在消费
-     * TODO: 耗时上报 BuildTimestampType
      */
     private fun dispatch(event: TPAQueueEvent) {
         logger.info("queue_dispatch|${event.toLog()}")
@@ -171,23 +173,24 @@ class TPAQueueService @Autowired constructor(
     }
 
     fun inQueue(event: TPAQueueEvent) {
-        // context 只能初始化一次，但是因为初始化过程中也可能出现报错，所以需要把可能的报错分摊给每个消息，防止一次报错整个队列没了
-        val eventContext = TPAQueueEventContext()
         try {
-            tpaQueueDao.fetchProjectData(
+            val records = tpaQueueDao.fetchProjectData(
                 dslContext = dslContext,
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 data = event.data,
                 dataType = event.dataType
-            ).forEach { sqlData ->
+            )
+            // 事件开始，在这初始化时间去掉数据库查询的系统时间
+            val eventContext = TPAQueueEventContext()
+            records.forEachIndexed { index, sqlData ->
                 // 目前只做环境排队
                 if (event.dataType == ThirdPartyAgentSqlQueueType.ENV) {
-                    inEnvQueue(eventContext, sqlData)
+                    inEnvQueue(eventContext, sqlData, records.size, index + 1)
                 }
             }
             // 循环事件结束收尾，删除调度成功的，增加重试测试
-            tpaQueueDao.deleteByIds(dslContext, eventContext.needDeleteRecord)
+            tpaQueueDao.deleteByIds(dslContext, eventContext.needDeleteRecord.keys)
             tpaQueueDao.addRetryTimeByIds(dslContext, eventContext.needRetryRecord)
         } catch (e: Throwable) {
             // 只可能是Sql错误或者抓到的异常处理逻辑错误，但是为了防止丢失消息，还是抓一下重发
@@ -201,18 +204,50 @@ class TPAQueueService @Autowired constructor(
      */
     fun inEnvQueue(
         eventContext: TPAQueueEventContext,
-        sqlData: ThirdPartyAgentQueueSqlData
+        sqlData: ThirdPartyAgentQueueSqlData,
+        queueSize: Int,
+        queueIndex: Int
     ) {
-        kotlin.runCatching {
+        val startTime = LocalDateTime.now()
+        try {
             val dataContext = QueueDataContext(sqlData.data, sqlData.retryTime)
             if (!checkRunning(dataContext)) {
                 eventContext.addDelete(sqlData.recordId)
                 return
             }
-            thirdPartyAgentEnvQueueService.inEnvQueue(eventContext, dataContext)
+
+            val costMilliSecond = System.currentTimeMillis() - eventContext.startTimeMilliSecond
+            commonUtil.logDebug(
+                dataContext.data, "env queue size:$queueSize index:$queueIndex cost $costMilliSecond"
+            )
+            // context 只能初始化一次，但是因为初始化过程中也可能出现报错，所以需要把可能的报错分摊给每个消息，防止一次报错整个队列没了
+            if (eventContext.context == null) {
+                eventContext.context = tpaEnvQueueService.initEnvContext(dataContext)
+            }
+            tpaEnvQueueService.inEnvQueue(eventContext.context!!, dataContext)
             // 只有调度成功才能走到这一步，到这一步就删除,同时删除数据库
             eventContext.addDelete(sqlData.recordId)
-        }.onFailure { queueEnd(eventContext, sqlData, it) }
+        } catch (e: Throwable) {
+            queueEnd(eventContext, sqlData, e)
+        } finally {
+            // 计算用户耗时，只能刚下发就写入，防止计算完了
+            if (eventContext.needDeleteRecord.containsKey(sqlData.recordId)) {
+                client.get(ServiceBuildResource::class).updateContainerTimeout(
+                    userId = sqlData.data.userId,
+                    projectId = sqlData.data.projectId,
+                    pipelineId = sqlData.data.pipelineId,
+                    buildId = sqlData.data.buildId,
+                    containerId = sqlData.data.vmSeqId,
+                    executeCount = sqlData.data.executeCount ?: 1,
+                    timestamps = mapOf(
+                        BuildTimestampType.JOB_THIRD_PARTY_QUEUE to BuildRecordTimeStamp(
+                            sqlData.createTime.timestampmilli(),
+                            eventContext.needDeleteRecord[sqlData.recordId]
+                        )
+                    )
+                )
+            }
+        }
     }
 
     private fun checkRunning(dataContext: QueueDataContext): Boolean {
@@ -292,7 +327,7 @@ class TPAQueueService @Autowired constructor(
         e: Throwable
     ) {
         val data = sqlData.data
-        when (e) {
+        val failureE = when (e) {
             // 未来架构稳定后整合到一起
             is QueueRetryException, is DispatchRetryMQException -> {
                 // 用时间做判断，避免 retryTime 的加减
@@ -302,47 +337,38 @@ class TPAQueueService @Autowired constructor(
                     return
                 }
                 // 超时就是结束
-                onFailure(
-                    data = data,
-                    exception = QueueFailureException(
-                        errorType = ErrorType.SYSTEM,
-                        errorCode = DispatchSdkErrorCode.RETRY_STARTUP_FAIL,
-                        formatErrorMessage = e.message ?: "Fail to start up the job after $timeOut minutes",
-                        errorMessage = e.message ?: "Fail to start up the job after $timeOut minutes"
-                    )
+                QueueFailureException(
+                    errorType = ErrorType.SYSTEM,
+                    errorCode = DispatchSdkErrorCode.RETRY_STARTUP_FAIL,
+                    formatErrorMessage = e.message ?: "Fail to start up the job after $timeOut minutes",
+                    errorMessage = e.message ?: "Fail to start up the job after $timeOut minutes"
                 )
             }
 
-            is QueueFailureException -> {
-                onFailure(data, e)
-            }
+            is QueueFailureException -> e
 
             // 未来架构稳定后整合到一起
             is BuildFailureException -> {
-                onFailure(
-                    data, QueueFailureException(
-                        errorType = e.errorType,
-                        errorCode = e.errorCode,
-                        formatErrorMessage = e.formatErrorMessage,
-                        errorMessage = e.message ?: ""
-                    )
+                QueueFailureException(
+                    errorType = e.errorType,
+                    errorCode = e.errorCode,
+                    formatErrorMessage = e.formatErrorMessage,
+                    errorMessage = e.message ?: ""
                 )
             }
 
             else -> {
                 logger.tagError("queueEnd|unKnowError|${data.toLog()}", e)
-                onFailure(
-                    data = data,
-                    exception = QueueFailureException(
-                        errorType = ErrorType.SYSTEM,
-                        errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR,
-                        formatErrorMessage = "Fail to handle the start up message",
-                        errorMessage = e.message ?: ""
-                    )
+                QueueFailureException(
+                    errorType = ErrorType.SYSTEM,
+                    errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR,
+                    formatErrorMessage = "Fail to handle the start up message",
+                    errorMessage = e.message ?: ""
                 )
             }
         }
         eventContext.addDelete(sqlData.recordId)
+        onFailure(data, failureE)
     }
 
     private fun onFailure(
