@@ -34,6 +34,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
@@ -45,7 +46,6 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.code.PipelineBuildCommit
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerParams
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
@@ -262,7 +262,10 @@ class StreamYamlBaseBuild @Autowired constructor(
                     userId = pipeline.creator ?: "",
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = projectCode,
-                    modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(pipeline.displayName),
+                    modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(
+                        pipeline.displayName,
+                        action.data.context.pipelineAsCodeSettings
+                    ),
                     updateLastModifyUser = true
                 )
                 streamPipelineBranchService.saveOrUpdate(
