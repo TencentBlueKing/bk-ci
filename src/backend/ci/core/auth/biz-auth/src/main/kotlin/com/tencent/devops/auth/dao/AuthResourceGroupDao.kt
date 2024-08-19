@@ -123,7 +123,7 @@ class AuthResourceGroupDao {
                     it.iamTemplateId
                 ).onDuplicateKeyUpdate()
                     .set(GROUP_NAME, it.groupName)
-                    .set(UPDATE_TIME, it.updateTime)
+                    .set(UPDATE_TIME, now)
             }).execute()
         }
     }
@@ -135,13 +135,15 @@ class AuthResourceGroupDao {
         resourceCode: String,
         resourceName: String,
         groupCode: String,
-        groupName: String
+        groupName: String,
+        relationId: String? = null
     ): Int {
         val now = LocalDateTime.now()
         return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
             dslContext.update(this)
                 .set(GROUP_NAME, groupName)
                 .set(RESOURCE_NAME, resourceName)
+                .let { if (relationId != null) it.set(RELATION_ID, relationId) else it }
                 .set(UPDATE_TIME, now)
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_CODE.eq(resourceCode))
@@ -281,11 +283,29 @@ class AuthResourceGroupDao {
         projectCode: String,
         resourceType: String,
         resourceCode: String
-    ): List<TAuthResourceGroupRecord> {
+    ): List<AuthResourceGroup> {
         return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            val result = mutableListOf<AuthResourceGroup>()
             dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_CODE.eq(resourceCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
+                .fetch().forEach {
+                    val authResourceGroup = convert(it)
+                    if (authResourceGroup != null) {
+                        result.add(authResourceGroup)
+                    }
+                }
+            result
+        }
+    }
+
+    fun listRecordsOfNeedToFix(
+        dslContext: DSLContext,
+        projectCode: String
+    ): Result<TAuthResourceGroupRecord> {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RELATION_ID.eq("null"))
                 .fetch()
         }
     }
