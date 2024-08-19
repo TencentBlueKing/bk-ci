@@ -357,7 +357,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             it.groupCode != DefaultGroupType.MANAGER.value
         }.forEach {
             logger.info("delete subset manage default group|$subsetManagerId|${it.relationId}")
-            iamV2ManagerService.deleteRoleGroupV2(it.relationId.toInt())
+            iamV2ManagerService.deleteRoleGroupV2(it.relationId)
         }
     }
 }

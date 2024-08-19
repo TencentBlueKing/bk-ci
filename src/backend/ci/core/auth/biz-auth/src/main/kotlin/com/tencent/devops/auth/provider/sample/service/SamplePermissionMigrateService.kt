@@ -98,4 +98,6 @@ class SamplePermissionMigrateService(
     override fun migrateAllResourceAuthorization(): Boolean {
         return migrateResourceAuthorizationService.migrateAllResourceAuthorization()
     }
+
+    override fun fixResourceGroups(projectCodes: List<String>): Boolean = true
 }

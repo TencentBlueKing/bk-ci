@@ -143,7 +143,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 groupCode = resourceGroup.groupCode,
-                iamGroupId = resourceGroup.relationId.toInt()
+                iamGroupId = resourceGroup.relationId
             )
         }
     }
@@ -262,7 +262,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 projectCode = projectCode,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode
-            ).associateBy { it.relationId.toInt() }
+            ).associateBy { it.relationId }
 
             // 查询项目下用户组列表
             val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
@@ -304,16 +304,13 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                         projectGroup.description != iamGroupInfo.description ||
                         projectGroup.iamTemplateId != templateId
                     ) {
-                        val toUpdateGroupRecord = authResourceGroupDao.convert(projectGroup)
-                        if (toUpdateGroupRecord != null) {
-                            toUpdateGroups.add(
-                                toUpdateGroupRecord.copy(
-                                    groupName = iamGroupInfo.name,
-                                    description = iamGroupInfo.description,
-                                    iamTemplateId = templateId
-                                )
+                        toUpdateGroups.add(
+                            projectGroup.copy(
+                                groupName = iamGroupInfo.name,
+                                description = iamGroupInfo.description,
+                                iamTemplateId = templateId
                             )
-                        }
+                        )
                     }
                 } else {
                     toAddGroups.add(
@@ -335,7 +332,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             }
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                authResourceGroupDao.deleteByIds(transactionContext, toDeleteGroups.map { it.id })
+                authResourceGroupDao.deleteByIds(transactionContext, toDeleteGroups.map { it.id!! })
                 authResourceGroupDao.batchCreate(transactionContext, toAddGroups)
                 authResourceGroupDao.batchUpdate(transactionContext, toUpdateGroups)
             }
