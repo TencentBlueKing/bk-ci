@@ -34,7 +34,6 @@ import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
@@ -65,12 +64,10 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
-import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOrganization
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
-import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -435,7 +432,7 @@ class CreateControl @Autowired constructor(
                 zoneType = zoneType
             )
         } else {
-            loadWorkspaceWithPersonalWindows(userId = userId, workspaceCreate = workspaceCreate, zoneType = zoneType)
+            loadWorkspaceWithPersonalWindows(userId = userId, workspaceCreate = workspaceCreate)
         }
         return true
     }
@@ -759,10 +756,9 @@ class CreateControl @Autowired constructor(
     fun loadWorkspaceWithPersonalWindows(
         userId: String,
         workspaceCreate: WindowsWorkspaceCreate,
-        zoneType: WindowsResourceZoneConfigType?,
         cgsId: String? = null
     ) {
-        logger.info("loadWorkspaceWithPersonalWindows|$userId|$workspaceCreate|$zoneType|$cgsId")
+        logger.info("loadWorkspaceWithPersonalWindows|$userId|$workspaceCreate|$cgsId")
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
@@ -776,11 +772,13 @@ class CreateControl @Autowired constructor(
             )
         }
 
-        val windowsZone = windowsResourceConfigService.getZoneConfig(workspaceCreate.windowsZone)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(workspaceCreate.windowsZone)
-            )
+        val windowsZone = windowsResourceConfigService.getAvailableZone(
+            zoneId = workspaceCreate.windowsZone,
+            type = WindowsResourceZoneConfigType.DEVCLOUD
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+            params = arrayOf(workspaceCreate.windowsZone)
+        )
         if (windowsZone.available == false) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
@@ -804,7 +802,8 @@ class CreateControl @Autowired constructor(
             creator = userId,
             projectId = projectId,
             windowsZone = windowsZone,
-            zoneType = zoneType,
+            /* 个人云桌面强制指定为devcloud专区 */
+            zoneType = WindowsResourceZoneConfigType.DEVCLOUD,
             workspaceCreate = workspaceCreate,
             cgsId = cgsId,
             windowsConfig = windowsConfig,

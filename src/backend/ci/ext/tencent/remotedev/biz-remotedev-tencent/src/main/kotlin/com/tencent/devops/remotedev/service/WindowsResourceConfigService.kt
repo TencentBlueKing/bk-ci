@@ -41,8 +41,8 @@ import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
-import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
@@ -253,6 +253,18 @@ class WindowsResourceConfigService @Autowired constructor(
             withUnavailable = true,
             type = type ?: WindowsResourceZoneConfigType.DEFAULT
         ).firstOrNull { it.id == windowsZone.id }
+    }
+
+    fun getAvailableZone(
+        zoneId: String,
+        type: WindowsResourceZoneConfigType
+    ): WindowsResourceZoneConfig? {
+        logger.info("get windows resource config zone type $type")
+        return windowsResourceZoneDao.fetchAll(
+            dslContext = dslContext,
+            withUnavailable = true,
+            type = type
+        ).firstOrNull { it.zoneShortName.startsWith(zoneId) }
     }
 
     fun getAllSpecZoneShortName() = windowsResourceZoneDao.fetchAllSpec(dslContext).map { it.zoneShortName }
