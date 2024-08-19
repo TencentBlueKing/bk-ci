@@ -53,7 +53,6 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
-import org.jooq.Record2
 import org.jooq.RecordMapper
 import org.jooq.Result
 import org.jooq.TableField
@@ -291,21 +290,6 @@ class WorkspaceDao {
         }
     }
 
-    fun fetchCreators(
-        dslContext: DSLContext,
-        status: WorkspaceStatus,
-        systemType: WorkspaceSystemType = WorkspaceSystemType.WINDOWS_GPU,
-        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
-    ): List<Record2<String, String>> {
-        with(TWorkspace.T_WORKSPACE) {
-            return dslContext.select(CREATOR, NAME).from(this)
-                .where(STATUS.eq(status.ordinal))
-                .and(SYSTEM_TYPE.eq(systemType.name))
-                .and(OWNER_TYPE.eq(ownerType.name))
-                .fetch()
-        }
-    }
-
     fun fetchAnyWorkspace(
         dslContext: DSLContext,
         userId: String? = null,
@@ -328,40 +312,6 @@ class WorkspaceDao {
             return dslContext.selectFrom(this)
                 .where(condition)
                 .fetchAny(workspaceMapper)
-        }
-    }
-
-    fun fetchWorkspace(
-        dslContext: DSLContext,
-        userId: String? = null,
-        status: WorkspaceStatus? = null,
-        mountType: WorkspaceMountType? = null,
-        projectId: String? = null,
-        systemType: WorkspaceSystemType? = null,
-        notDeleted: Boolean? = false,
-        ownerType: WorkspaceOwnerType? = null
-    ): List<WorkspaceRecord>? {
-        with(TWorkspace.T_WORKSPACE) {
-            val condition = mixCondition(
-                userId = userId,
-                status = status,
-                mountType = mountType,
-                projectId = projectId,
-                systemType = systemType,
-                ownerType = ownerType
-            )
-
-            if (notDeleted == true) {
-                condition.add(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-            }
-
-            if (condition.isEmpty()) {
-                return null
-            }
-
-            return dslContext.selectFrom(this)
-                .where(condition)
-                .fetch(workspaceMapper)
         }
     }
 
@@ -587,32 +537,6 @@ class WorkspaceDao {
                 .set(CREATOR_CENTER_NAME, centerName)
                 .set(CREATOR_GROUP_NAME, groupName)
                 .where(NAME.eq(workspaceName).and(CREATOR.eq(creator)))
-                .execute()
-        }
-    }
-
-    fun updateWorkspaceUsageTime(
-        workspaceName: String,
-        usageTime: Int,
-        dslContext: DSLContext
-    ) {
-        with(TWorkspace.T_WORKSPACE) {
-            dslContext.update(this)
-                .set(USAGE_TIME, USAGE_TIME + usageTime)
-                .where(NAME.eq(workspaceName))
-                .execute()
-        }
-    }
-
-    fun updateWorkspaceSleepingTime(
-        workspaceName: String,
-        sleepTime: Int,
-        dslContext: DSLContext
-    ) {
-        with(TWorkspace.T_WORKSPACE) {
-            dslContext.update(this)
-                .set(SLEEPING_TIME, SLEEPING_TIME + sleepTime)
-                .where(NAME.eq(workspaceName))
                 .execute()
         }
     }

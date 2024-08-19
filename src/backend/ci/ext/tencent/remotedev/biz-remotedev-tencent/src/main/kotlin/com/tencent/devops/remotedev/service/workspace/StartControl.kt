@@ -39,7 +39,6 @@ import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -76,7 +75,6 @@ class StartControl @Autowired constructor(
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val permissionService: PermissionService,
     private val dispatcher: RemoteDevDispatcher,
-    private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceCommon: WorkspaceCommon,
     private val notifyControl: NotifyControl
 ) {
@@ -282,14 +280,10 @@ class StartControl @Autowired constructor(
                 )
 
                 val lastSleepTimeCost = if (lastHistory?.endTime != null) {
-                    Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt().also {
-                        workspaceDao.updateWorkspaceSleepingTime(
-                            workspaceName = workspaceName,
-                            sleepTime = it,
-                            dslContext = transactionContext
-                        )
-                    }
-                } else 0
+                    Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt()
+                } else {
+                    0
+                }
                 workspaceHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
                     workspaceName = workspaceName,

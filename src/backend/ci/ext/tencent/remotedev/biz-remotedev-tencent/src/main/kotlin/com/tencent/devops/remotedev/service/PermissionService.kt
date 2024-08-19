@@ -255,7 +255,8 @@ class PermissionService @Autowired constructor(
         val key = initRedisUser(
             UserOnePassword(
                 userId, workspaceName, projectId
-            ), expiredInSecond
+            ),
+                expiredInSecond
         )
         logger.info("start init1Password|$userId|$workspaceName|$key")
         return URLEncoder.encode(key, "UTF-8")
@@ -267,11 +268,6 @@ class PermissionService @Autowired constructor(
         if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
             return false
         }
-        return true
-    }
-
-    fun checkUserCreate(userId: String): Boolean {
-        whiteListService.windowsGpuCheck(userId, 1)
         return true
     }
 

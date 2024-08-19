@@ -1676,7 +1676,12 @@ class PipelineListFacadeService @Autowired constructor(
         )
     }
 
-    fun getPipelinePage(projectId: String, limit: Int?, offset: Int?): PipelineViewPipelinePage<PipelineInfo> {
+    fun getPipelinePage(
+        projectId: String,
+        limit: Int?,
+        offset: Int?,
+        channelCode: ChannelCode? = null
+    ): PipelineViewPipelinePage<PipelineInfo> {
         logger.info("getPipeline |$projectId| $limit| $offset")
         val limitNotNull = limit ?: 10
         val offsetNotNull = offset ?: 0
@@ -1684,6 +1689,7 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineInfoDao.listPipelineInfoByProject(
                 dslContext = dslContext,
                 projectId = projectId,
+                channelCode = channelCode,
                 limit = limitNotNull,
                 offset = offsetNotNull
             )

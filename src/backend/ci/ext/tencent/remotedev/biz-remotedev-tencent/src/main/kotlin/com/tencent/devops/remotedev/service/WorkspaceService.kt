@@ -993,7 +993,7 @@ class WorkspaceService @Autowired constructor(
             )
         permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
         val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: defaultPageSize
+        val pageSizeNotNull = pageSize ?: DEFAULT_PAGE_SIZE
         val count = workspaceOpHistoryDao.countOpHistory(dslContext, workspaceName)
         val result = workspaceOpHistoryDao.limitFetchOpHistory(
             dslContext = dslContext,
@@ -1152,6 +1152,31 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
+    // 校验是否需要moa 2fa验证，true:需要 ；false：不需要
+    fun checkMoa2fa(userId: String, workspaceName: String): Boolean {
+        /*1.个人云桌面 + 内部员工拥有者 --直接返回true
+         *2.团队云桌面 + 内部员工拥有者，则调用wesec接口判断
+          */
+        logger.info("$userId check moa 2fa workspace $workspaceName")
+        val ws = getWorkspaceList4WeSec(
+            workspaceName = workspaceName,
+            notStatus = null
+        ).firstOrNull() ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(workspaceName)
+        )
+        // TODO 目前阶段先对内部员工做 moa 验证，后续放开 cp 也需要验证。
+        if (!ws.realOwner.isNullOrBlank() && !ws.realOwner!!.endsWith("@tai")) {
+            return kotlin.runCatching {
+                apiGwService.checkMoa2fa(
+                    project = ws.projectId,
+                    workspactName = workspaceName
+                )
+            }.getOrNull() ?: false.also { logger.warn("MOA 2FA check failed for workspace $workspaceName") }
+        }
+        return false
+    }
+
     fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Moa2faRespData {
         return taiService.createMoa2faRequest(userId = userId, moa2faReqData = moa2faReqData)
     }
@@ -1163,7 +1188,7 @@ class WorkspaceService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
-        private const val defaultPageSize = 20
+        private const val DEFAULT_PAGE_SIZE = 20
         private const val DISCOUNT_TIME = 10000
 
         private fun String.removeSuffixNumb(): String {

@@ -30,7 +30,6 @@ package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceBcsClient
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
@@ -46,8 +45,7 @@ import org.springframework.stereotype.Service
 @Service
 class StartCloudService @Autowired constructor(
     private val startCloudInterfaceService: StartCloudInterfaceService,
-    private val workspaceBcsClient: WorkspaceBcsClient,
-    private val workspaceStartCloudClient: WorkspaceStartCloudClient
+    private val workspaceBcsClient: WorkspaceBcsClient
 ) : ServiceStartCloudInterface {
 
     override fun createStartCloudUser(user: String, gameId: String?): Result<Boolean> {

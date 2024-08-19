@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.experience.pojo.ExperienceClean
 import com.tencent.devops.experience.pojo.ExperienceExtendBanner
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -181,4 +182,15 @@ interface OpExperienceResource {
         @Parameter(description = "扩展banner")
         experienceExtendBanner: ExperienceExtendBanner
     ): Result<Int>
+
+    @Operation(summary = "删除体验")
+    @Path("/clean")
+    @POST
+    fun clean(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "清理的参数")
+        experienceClean: ExperienceClean
+    ): Result<Boolean>
 }

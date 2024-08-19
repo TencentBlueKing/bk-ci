@@ -23,6 +23,8 @@ data class ProjectConditionDTO(
     val resourceType: String? = null,
     @get:Schema(title = "路由tag")
     val routerTag: AuthSystemType? = null,
+    @get:Schema(title = "是否包含router_tag为null")
+    val includeNullRouterTag: Boolean? = false,
     @get:Schema(title = "是否关联产品")
     val relatedProduct: Boolean? = null,
     @get:Schema(title = "排除创建时间大于该值的项目")

@@ -3,7 +3,7 @@
     class="group-aside"
   >
     <div class="select-project">
-      <p class="title">{{ $t('选择项目') }}</p>
+      <p class="title">{{ t('选择项目') }}</p>
       <bk-select
           v-model="projectCode"
           filterable
@@ -23,17 +23,17 @@
               <div
                 v-bk-tooltips="{
                   disabled: project.managePermission,
-                  content: $t('非项目管理员，无操作权限')
+                  content: t('非项目管理员，无操作权限')
                 }"
                 class="option-item">
                 {{ project.projectName }}
               </div>
             </bk-option>
           </div>
-        </bk-select>
+      </bk-select>
     </div>
     <div class="line-split" />
-    <span class="group-title">{{ $t('权限角色') }}</span>
+    <span class="group-title">{{ t('权限角色') }}</span>
     <scroll-load-list
       v-if="projectCode"
       class="group-list"
@@ -86,14 +86,14 @@
                   text
                   @click="handleShowRename(group)"
                 >
-                  {{ $t('重命名') }}
+                  {{ t('重命名') }}
                 </bk-button>
                 <bk-button
+                  v-if="!group.defaultGroup"
                   class="btn"
-                  :disabled="group.defaultGroup"
                   text
                   @click="handleShowDeleteGroup(group)">
-                  {{ $t('删除') }}
+                  {{ t('删除') }}
                 </bk-button>
               </div>
             </template>
@@ -108,7 +108,7 @@
       @click="handleCreateGroup">
       <span class="add-group-btn">
         <i class="permission-icon permission-icon-add-fill add-icon"></i>
-        {{ $t('新建用户组') }}
+        {{ t('新建用户组') }}
       </span>
     </div>
     <bk-dialog
@@ -123,30 +123,30 @@
     >
       <template #header>
         <div class="permission-icon permission-icon-warning-circle-fill title-icon"></div>
-        <p class="delete-title">{{ $t('确认删除【】用户组？', [deleteObj.group.name]) }}</p>
+        <p class="delete-title">{{ t('确认删除【】用户组？', [deleteObj.group.name]) }}</p>
       </template>
       <div class="delete-tips">
-        <p>{{ $t('删除用户组【】将执行如下操作：', [deleteObj.group.name]) }}</p>
+        <p>{{ t('删除用户组【】将执行如下操作：', [deleteObj.group.name]) }}</p>
         <p>
           <i class="permission-icon permission-icon-warning-circle-fill warning-icon"></i>
-          {{ $t('将用户和组织从组中移除') }}
+          {{ t('将用户和组织从组中移除') }}
         </p>
         <p>
           <i class="permission-icon permission-icon-warning-circle-fill warning-icon"></i>
-          {{ $t('删除组内用户继承该组的权限') }}
+          {{ t('删除组内用户继承该组的权限') }}
         </p>
         <p>
           <i class="permission-icon permission-icon-warning-circle-fill warning-icon"></i>
-          {{ $t('删除组信息和组权限') }}
+          {{ t('删除组信息和组权限') }}
         </p>
       </div>
       <div class="confirm-delete">
         <i18n-t keypath="此操作提交后将不能恢复，为避免误删除，请再次确认你的操作：" style="color: #737987;font-size: 14px;" tag="div">
-          <span style="color: red;">{{$t('不能恢复')}}</span>
+          <span style="color: red;">{{t('不能恢复')}}</span>
         </i18n-t>
         <bk-input
           v-model="keyWords"
-          :placeholder="$t('请输入待删除的用户组名')"
+          :placeholder="t('请输入待删除的用户组名')"
           class="confirm-input"
         ></bk-input>
       </div>
@@ -157,13 +157,13 @@
           :disabled="disableDeleteBtn"
           @click="handleDeleteGroup"
         >
-          {{ $t('删除') }}
+          {{ t('删除') }}
         </bk-button>
         <bk-button
           class="btn"
           @click="handleHiddenDeleteGroup"
         >
-          {{ $t('取消') }}
+          {{ t('取消') }}
         </bk-button>
       </div>
     </bk-dialog>
@@ -175,6 +175,7 @@ import ScrollLoadList from './scroll-load-list';
 import ajax from './ajax.js';
 import { Message } from 'bkui-vue';
 import tools from '@/utils/tools';
+import { useI18n } from 'vue-i18n';
 export default {
   components: {
     ScrollLoadList,
@@ -182,7 +183,7 @@ export default {
   props: {
     activeIndex: {
       type: Boolean,
-      default: 0,
+      default: 1,
     },
     showCreateGroup: {
       type: Boolean,
@@ -199,6 +200,7 @@ export default {
   },
   emits: ['choose-group', 'create-group', 'close-manage'],
   data() {
+    const { t } = useI18n();
     return {
       resourceType: 'project',
       projectCode: '',
@@ -217,6 +219,7 @@ export default {
       renameGroupId: 0,
       curGroupIndex: -1,
       keyWords: '',
+      t
     };
   },
   computed: {
@@ -258,7 +261,7 @@ export default {
           this.groupList.push(...data.records);
           // 首页需要加载
           if (this.page === 1) {
-            const chooseGroup = this.groupList.find(group => +group.groupId === +this.$route.query?.groupId) || this.groupList[0];
+            const chooseGroup = this.groupList.find(group => group.groupId === this.$route.query?.groupId) || this.groupList[1];
             this.handleChooseGroup(chooseGroup);
           }
           this.page += 1
@@ -287,7 +290,7 @@ export default {
           this.refreshList();
           Message({
             theme: 'success',
-            message: this.$t('删除成功')
+            message: this.t('删除成功')
           });
         })
         .finally(() => {
@@ -374,7 +377,7 @@ export default {
           group.name = this.displayGroupName;
           Message({
             theme: 'success',
-            message: this.$t('修改成功')
+            message: this.t('修改成功')
           });
         })
         .catch((err) => {

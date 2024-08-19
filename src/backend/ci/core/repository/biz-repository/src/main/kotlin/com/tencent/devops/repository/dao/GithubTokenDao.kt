@@ -88,10 +88,16 @@ class GithubTokenDao {
     fun getOrNull(
         dslContext: DSLContext,
         userId: String,
-        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+        githubTokenType: GithubTokenType?
     ): TRepositoryGithubTokenRecord? {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
-            return dslContext.selectFrom(this).where(USER_ID.eq(userId)).and(TYPE.eq(githubTokenType.name)).fetchOne()
+            return dslContext.selectFrom(this).where(USER_ID.eq(userId))
+                .let {
+                    if (githubTokenType != null) {
+                        it.and(TYPE.eq(githubTokenType.name))
+                    } else it
+                }
+                .fetchOne()
         }
     }
 

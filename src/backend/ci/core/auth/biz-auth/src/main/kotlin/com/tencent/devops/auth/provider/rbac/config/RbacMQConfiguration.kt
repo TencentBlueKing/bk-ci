@@ -32,8 +32,10 @@ import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.provider.rbac.listener.AuthItsmCallbackListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthResourceGroupCreateListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthResourceGroupModifyListener
+import com.tencent.devops.auth.provider.rbac.listener.SyncGroupAndMemberListener
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
@@ -42,6 +44,7 @@ import org.jooq.DSLContext
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
+import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
@@ -61,6 +64,55 @@ class RbacMQConfiguration {
 
     @Bean
     fun traceEventDispatcher(rabbitTemplate: RabbitTemplate) = TraceEventDispatcher(rabbitTemplate)
+
+    @Bean
+    fun projectEnableExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_ENABLE_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun syncWhenEnabledProjectQueue(): Queue {
+        return Queue(MQ.QUEUE_PROJECT_ENABLED_SYNC_GROUP_AND_MEMBER, true)
+    }
+
+    @Bean
+    fun syncWhenEnabledProjectBind(
+        @Autowired syncWhenEnabledProjectQueue: Queue,
+        @Autowired projectEnableExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(syncWhenEnabledProjectQueue).to(projectEnableExchange)
+    }
+
+    @Bean
+    fun syncGroupAndMemberListener(
+        permissionResourceGroupSyncService: PermissionResourceGroupSyncService
+    ) = SyncGroupAndMemberListener(
+        permissionResourceGroupSyncService = permissionResourceGroupSyncService
+    )
+
+    @Bean
+    fun syncEventListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired syncWhenEnabledProjectQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired syncGroupAndMemberListener: SyncGroupAndMemberListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val adapter = MessageListenerAdapter(syncGroupAndMemberListener, syncGroupAndMemberListener::execute.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = syncWhenEnabledProjectQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 10,
+            maxConcurrency = 20
+        )
+    }
 
     @Bean
     fun authRbacExchange(): DirectExchange {

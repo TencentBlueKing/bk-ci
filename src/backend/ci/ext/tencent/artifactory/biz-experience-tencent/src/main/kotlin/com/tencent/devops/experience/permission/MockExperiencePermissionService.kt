@@ -106,4 +106,6 @@ class MockExperiencePermissionService(
         projectId: String,
         groupRecordIds: List<Long>
     ) = groupRecordIds
+
+    override fun deleteExperienceResource(projectId: String, experienceId: Long) = Unit
 }
