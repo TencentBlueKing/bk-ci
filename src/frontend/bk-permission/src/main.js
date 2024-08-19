@@ -1,4 +1,3 @@
-
 import BkPermission from './components/permission-main.vue';
 import PermissionDirective from './directive/authority-directive';
 import { AuthorityDirectiveV3 } from './directive/authority-directive';
