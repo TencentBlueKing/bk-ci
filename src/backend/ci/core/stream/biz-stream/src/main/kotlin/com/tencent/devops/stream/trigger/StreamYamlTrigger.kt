@@ -199,6 +199,24 @@ class StreamYamlTrigger @Autowired constructor(
         )
         var pipeline = action.data.context.pipeline!!
 
+        // 获取蓝盾流水线的pipelineAsCodeSetting
+        val projectCode = GitCommonUtils.getCiProjectId(pipeline.gitProjectId.toLong(), streamGitConfig.getScmType())
+        action.data.context.pipelineAsCodeSettings = try {
+            if (pipeline.pipelineId.isNotBlank()) {
+                client.get(ServicePipelineSettingResource::class).getPipelineSetting(
+                    projectId = projectCode,
+                    pipelineId = pipeline.pipelineId,
+                    channelCode = ChannelCode.GIT
+                ).data?.pipelineAsCodeSettings
+            } else {
+                client.get(ServiceProjectResource::class).get(projectCode)
+                    .data?.properties?.pipelineAsCodeSettings
+            }
+        } catch (ignore: Throwable) {
+            logger.warn("StreamYamlTrigger get project[$projectCode] as code settings error.", ignore)
+            null
+        }
+
         // 提前创建新流水线，保证git提交后 stream上能看到
         if (pipeline.pipelineId.isBlank()) {
             pipeline = StreamTriggerPipeline(
@@ -223,24 +241,6 @@ class StreamYamlTrigger @Autowired constructor(
                 branch = if (needUpdateLastBuildBranch(action)) action.data.eventCommon.branch else null,
                 displayName = if (needChangePipelineDisplayName(action)) getDisplayName(action) else null
             )
-        }
-
-        // 获取蓝盾流水线的pipelineAsCodeSetting
-        val projectCode = GitCommonUtils.getCiProjectId(pipeline.gitProjectId.toLong(), streamGitConfig.getScmType())
-        action.data.context.pipelineAsCodeSettings = try {
-            if (pipeline.pipelineId.isNotBlank()) {
-                client.get(ServicePipelineSettingResource::class).getPipelineSetting(
-                    projectId = projectCode,
-                    pipelineId = pipeline.pipelineId,
-                    channelCode = ChannelCode.GIT
-                ).data?.pipelineAsCodeSettings
-            } else {
-                client.get(ServiceProjectResource::class).get(projectCode)
-                    .data?.properties?.pipelineAsCodeSettings
-            }
-        } catch (ignore: Throwable) {
-            logger.warn("StreamYamlTrigger get project[$projectCode] as code settings error.", ignore)
-            null
         }
 
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
