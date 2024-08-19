@@ -19,7 +19,7 @@
             </header>
             <div slot="content" class="cron-build-tab">
                 <form-field :required="false" :label="$t('editPage.planRule')" :is-error="errors.has('advanceExpression')" :error-msg="errors.first('advanceExpression')">
-                    <vuex-textarea name="advanceExpression" :handle-change="handleUpdateElement" :value="advanceValue" :placeholder="$t('editPage.crontabExpression')" v-validate.initial="{ 'required': advance }"></vuex-textarea>
+                    <vuex-textarea name="advanceExpression" :handle-change="handleUpdateElement" :value="advanceValue" :placeholder="$t('editPage.crontabExpression')" v-validate.initial="{ 'required': advance }" :disabled="disabled"></vuex-textarea>
                 </form-field>
             </div>
         </accordion>
