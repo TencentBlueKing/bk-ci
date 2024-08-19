@@ -10,6 +10,7 @@ type ConfigYaml struct {
 	BuildLess         BuildLess         `json:"buildless"`
 	BuildAndPushImage BuildAndPushImage `json:"buildAndPushImage"`
 	ApiServer         ApiServer         `json:"apiServer"`
+	Docker            Docker            `json:"docker"`
 }
 
 type Server struct {
@@ -143,4 +144,8 @@ type BuildLess struct {
 	Replicas    int         `yaml:"replicas"`
 	VolumeMount VolumeMount `json:"volumeMount"`
 	Volume      Volume      `json:"volume"`
+}
+
+type Docker struct {
+	Enable bool `json:"enable"`
 }

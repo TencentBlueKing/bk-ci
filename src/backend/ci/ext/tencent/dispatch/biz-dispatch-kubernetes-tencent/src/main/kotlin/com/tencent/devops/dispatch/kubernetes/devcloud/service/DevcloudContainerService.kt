@@ -141,7 +141,11 @@ class DevcloudContainerService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
+    override fun waitTaskFinish(
+        userId: String,
+        taskId: String,
+        needProxy: Boolean
+    ): DispatchBuildTaskStatus {
         // 将task放入缓存，等待回调
         devcloudWorkspaceRedisUtils.refreshTaskStatus(
             userId = userId,
@@ -203,6 +207,10 @@ class DevcloudContainerService @Autowired constructor(
         buildId: String,
         dispatchBuildImageReq: DispatchBuildImageReq
     ): DispatchTaskResp {
+        TODO("Not yet implemented")
+    }
+
+    override fun inspectDockerImage(userId: String, pool: Pool): String {
         TODO("Not yet implemented")
     }
 

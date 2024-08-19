@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
+import com.tencent.devops.project.api.pojo.ProjectProductInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.AddManagerRequest
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
@@ -424,6 +425,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     override fun projectEnableRemotedev(projectCode: String?): Result<Map<String, String>> {
         return Result(remoteDevService.fetchRemoteDevProject(projectCode))
+    }
+
+    override fun listProjectProductInfos(page: Int, pageSize: Int): Result<List<ProjectProductInfo>> {
+        return Result(projectTxService.listProjectProductInfos(page, pageSize))
     }
 
     companion object {

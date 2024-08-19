@@ -31,6 +31,7 @@ package com.tencent.devops.auth.provider.rbac.service
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -45,7 +46,8 @@ import java.time.ZoneId
 class AuthResourceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val authResourceDao: AuthResourceDao,
-    private val authResourceGroupDao: AuthResourceGroupDao
+    private val authResourceGroupDao: AuthResourceGroupDao,
+    private val authResourceGroupMemberDao: AuthResourceGroupMemberDao
 ) {
 
     companion object {
@@ -106,6 +108,12 @@ class AuthResourceService @Autowired constructor(
                 resourceCode = resourceCode
             )
             authResourceGroupDao.delete(
+                dslContext = transactionContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+            authResourceGroupMemberDao.deleteByResource(
                 dslContext = transactionContext,
                 projectCode = projectCode,
                 resourceType = resourceType,

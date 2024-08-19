@@ -110,35 +110,11 @@ class NotifyControl @Autowired constructor(
         /*云桌面通知功能-云桌面已分配到项目时*/
         const val CLIENT_VERSION_WARNING_NOTIFY = "CLIENT_VERSION_WARNING_NOTIFY"
 
-        /*云桌面处于待分配超过3天的自动回收，并邮件提醒	*/
-        const val NOT_ASSIGN_AUTO_DELETE_NOTIFY = "NOT_ASSIGN_AUTO_DELETE_NOTIFY"
-
-        /*云桌面处于待分配没有超过3天的邮件提醒	*/
-        const val NOT_ASSIGN_AUTO_NOTIFY = "NOT_ASSIGN_AUTO_NOTIFY"
-
-        /*云桌面通知-关机超过7天时自动销毁*/
-        const val SLEEP_7_DAY_AUTO_DELETE_NOTIFY = "SLEEP_7_DAY_AUTO_DELETE_NOTIFY"
-
-        /*云桌面通知-关机超过3天时提醒*/
-        const val SLEEP_3_DAY_NOTIFY = "SLEEP_3_DAY_NOTIFY"
-
-        /*云桌面通知-未登录7天时自动降配并关机*/
-        const val NOT_LOGIN_AUTO_SLEEP_NOTIFY = "NOT_LOGIN_AUTO_SLEEP_NOTIFY"
-
-        /*云桌面通知-未登录3天时提醒*/
-        const val NOT_LOGIN_NOTIFY = "NOT_LOGIN_NOTIFY"
-
         /*云桌面通知-您的云桌面已被强制销毁*/
         const val WORKSPACE_FORCE_DELETE = "WORKSPACE_FORCE_DELETE"
 
-        /*云桌面通知-未达到云桌面4星活跃自动销毁*/
-        const val NOT_4_STAR_ACTIVE_AUTO_DELETE_NOTIFY = "NOT_4_STAR_ACTIVE_AUTO_DELETE_NOTIFY"
-
         /*云桌面通知-您的云桌面已被强制批量销毁*/
         const val WORKSPACE_BATCH_FORCE_DELETE = "WORKSPACE_BATCH_FORCE_DELETE"
-
-        /*云桌面通知-云桌面连续14天活跃度不足通知*/
-        const val NOT_ACTIVE_IN_14_DAYS_NOTIFY = "NOT_ACTIVE_IN_14_DAYS_NOTIFY"
     }
 
     fun notifyWorkspaceInfo(

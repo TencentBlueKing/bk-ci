@@ -99,4 +99,16 @@ interface PermissionMigrateService {
     fun autoRenewal(
         projectConditionDTO: ProjectConditionDTO
     ): Boolean
+
+    /**
+     * 迁移资源授权--按照项目
+     */
+    fun migrateResourceAuthorization(
+        projectCodes: List<String>
+    ): Boolean
+
+    /**
+     * 全量迁移资源授权
+     */
+    fun migrateAllResourceAuthorization(): Boolean
 }

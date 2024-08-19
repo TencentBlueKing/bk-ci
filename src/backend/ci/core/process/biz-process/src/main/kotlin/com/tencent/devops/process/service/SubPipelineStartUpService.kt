@@ -310,11 +310,16 @@ class SubPipelineStartUpService @Autowired constructor(
                     params[it.key] = BuildParameters(key = it.key, value = it.value)
                 }
             }
-            // 校验父流水线最后修改人是否有子流水线执行权限
+            // 启动子流水线时使用子流水线的代持人身份，存量数据父流水线的最后修改人可能没有子流水线执行权限
+            val oauthUser = pipelineRepositoryService.getPipelineOauthUser(
+                projectId = projectId,
+                pipelineId = pipelineId
+            ) ?: readyToBuildPipelineInfo.lastModifyUser
+            // 校验父流水线授权人是否有子流水线执行权限
             checkPermission(userId = parentPipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
             // 子流水线的调用不受频率限制
             val subBuildId = pipelineBuildService.startPipeline(
-                userId = readyToBuildPipelineInfo.lastModifyUser,
+                userId = oauthUser,
                 pipeline = readyToBuildPipelineInfo,
                 startType = StartType.PIPELINE,
                 pipelineParamMap = params,
@@ -446,7 +451,6 @@ class SubPipelineStartUpService @Autowired constructor(
 
     /**
      * 获取流水线的手动启动参数，返回至前端渲染界面。
-     * @param userId 流水线启东人的用户ID
      * @param projectId 流水线所在项目ID
      * @param pipelineId 流水线ID
      */
@@ -460,7 +464,8 @@ class SubPipelineStartUpService @Autowired constructor(
         if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
         }
-        val result = pipelineBuildFacadeService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS)
+        val startUser = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId) ?: userId
+        val result = pipelineBuildFacadeService.buildManualStartupInfo(startUser, projectId, pipelineId, ChannelCode.BS)
         val parameter = ArrayList<SubPipelineStartUpInfo>()
         val prop = result.properties.filter {
             val const = if (includeConst == false) { it.constant != true } else { true }

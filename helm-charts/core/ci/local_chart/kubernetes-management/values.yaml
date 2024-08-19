@@ -94,6 +94,7 @@ service:
 # kubernetesManager Deployment
 kubernetesManager:
   enabled: true
+  debug: false
   replicas: 1
   resources:
     requests:
@@ -147,11 +148,23 @@ kubernetesManager:
       apiToken:
         key: Devops-Token
         value: landun
-      rsaPrivateKey: |
+      rsaPrivateKey: ""
   volumeMount:
       # 流水线构建工作空间和agent日志在容器内的挂载点
       dataPath: /data/devops/workspace
       logPath: /data/devops/logs
+  # manager使用docker相关配置，会启用特权模式容器
+  docker:
+    enable: true
+    image: docker:24.0.1-dind
+    resources:
+      requests:
+        cpu: 50m
+        memory: 512Mi
+      limits:
+        cpu: 100m
+        memory: 1024Mi
+
 dockerInit:
   # 是否使用当前chart的 dockerinit.sh
   useDockerInit: true

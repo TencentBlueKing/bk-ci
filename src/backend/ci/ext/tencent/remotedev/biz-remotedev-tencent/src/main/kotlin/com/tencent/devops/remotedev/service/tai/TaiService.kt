@@ -18,6 +18,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.Date
+import java.util.Locale
 
 @Suppress("ALL")
 @Service
@@ -106,7 +107,7 @@ class TaiService {
         // 随机字符串，十分钟内不重复即可
         val nonce = "${now.toString(16)}-${(Math.random() * 0xFFFFFF).toInt().toString(16)}"
         // 计算签名并转换为大写
-        val signature = sha256Hex("$timestamp$taiToken$nonce$timestamp").toUpperCase()
+        val signature = sha256Hex("$timestamp$taiToken$nonce$timestamp").uppercase(Locale.getDefault())
 
         return mapOf(
             "x-rio-paasid" to taiPassid,

@@ -153,49 +153,12 @@ class BKBaseService @Autowired constructor(
         return UserLoginTimeResp(resp.data.totalRecords, result)
     }
 
-    private fun doHttp(
-        sql: String
-    ): BakeBaseQuerySyncResp? {
-        val body = BakeBaseQuerySyncReq(
-            bkdataDataToken = bkConfig.baseToken,
-            bkAppCode = bkConfig.appCode,
-            bkAppSecret = bkConfig.appSecret,
-            sql = sql
-        )
-        val url = "${bkConfig.baseUrl}/prod/v3/queryengine/query_sync/"
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("x-bkapi-authorization", headerStr())
-            .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
-            .build()
-        try {
-            okHttpClient.newCall(request).execute().use { response ->
-                val data = response.body!!.string()
-                logger.info("fetchOnlineUserMin｜req|{}|response code|{}|content|{}", body, response.code, data)
-                if (!response.isSuccessful) {
-                    logger.error("fetchOnlineUserMin｜req|{}|response code|{}|content|{}", body, response.code, data)
-                    return null
-                }
-
-                val resp = objectMapper.readValue<BakeBaseQuerySyncResp>(data)
-                if (!resp.result) {
-                    logger.error("fetchOnlineUserMin｜req|{}|response code|{}|content|{}", body, response.code, data)
-                    return null
-                }
-                return resp
-            }
-        } catch (e: Exception) {
-            logger.error("fetchOnlineUserMin request error", e)
-            return null
-        }
-    }
-
     fun fetchLastOnline(
         nodeIds: Set<String>
     ): Map<String, String> {
         val sql = "SELECT node_id, MAX(dtEventTime) as Maxtime " +
             "FROM 100656_cgs_report_game_all.hdfs " +
-            "WHERE where node_id in (${
+            "WHERE node_id in (${
                 nodeIds.joinToString(separator = "','", prefix = "'", postfix = "'")
             }) " +
             "GROUP BY node_id"

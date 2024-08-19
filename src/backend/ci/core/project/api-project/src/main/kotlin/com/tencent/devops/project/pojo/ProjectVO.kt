@@ -154,6 +154,8 @@ data class ProjectVO(
     val channelCode: String? = null,
     @get:Schema(title = "运营产品ID")
     val productId: Int? = null,
+    @get:Schema(title = "运营产品名称")
+    val productName: String? = null,
     @get:Schema(title = "是否可以查看")
     val canView: Boolean? = null,
     @get:Schema(title = "安装模板权限")
