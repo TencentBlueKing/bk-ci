@@ -407,9 +407,13 @@ class CodeWebhookService @Autowired constructor(
                 logger.warn("Build($buildId) number is null")
                 return
             }
+            val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
+            val targetUrl = if (ChannelCode.isNeedAuth(channelCode)) {
+                "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+            } else {
+                ""
+            }
 
-            val serverHost = HomeHostUtil.innerServerHost()
-            val targetUrl = "$serverHost/console/pipeline/$projectId/$pipelineId/detail/$buildId"
             val description = when (state) {
                 GIT_COMMIT_CHECK_STATE_PENDING -> "Your pipeline [$pipelineName] is running"
                 GIT_COMMIT_CHECK_STATE_ERROR -> "Your pipeline [$pipelineName] is failed"
@@ -455,7 +459,8 @@ class CodeWebhookService @Autowired constructor(
                                 mutableListOf(targetBranch!!)
                             } else {
                                 null
-                            }
+                            },
+                            channelCode = channelCode
                         )
                         pluginGitCheckDao.create(
                             dslContext = dslContext,
@@ -477,7 +482,8 @@ class CodeWebhookService @Autowired constructor(
                             event = event,
                             targetUrl = targetUrl,
                             pipelineName = pipelineName,
-                            description = description
+                            description = description,
+                            channelCode = channelCode
                         )
                     }
                     // mr锁定并且状态为pending时才需要解锁hook锁
@@ -496,7 +502,8 @@ class CodeWebhookService @Autowired constructor(
         event: GitCommitCheckEvent,
         targetUrl: String,
         pipelineName: String,
-        description: String
+        description: String,
+        channelCode: ChannelCode
     ) {
         if (record == null) {
             logger.warn("Illegal pluginGitCheck data,Failed to add commit check information")
@@ -512,7 +519,8 @@ class CodeWebhookService @Autowired constructor(
                     mutableListOf(record.targetBranch)
                 } else {
                     null
-                }
+                },
+                channelCode = channelCode
             )
             pluginGitCheckDao.update(
                 dslContext = dslContext,
@@ -616,7 +624,13 @@ class CodeWebhookService @Autowired constructor(
         val pipelineName = buildInfo.pipelineName
         val webhookEventType = variables[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]
         val name = "$pipelineName@$webhookEventType"
-        val detailUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+
+        val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
+        val detailUrl = if (ChannelCode.isNeedAuth(channelCode)) {
+            "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+        } else {
+            ""
+        }
 
         while (true) {
             val lockKey = "code_github_check_run_lock_$pipelineId"
@@ -690,7 +704,8 @@ class CodeWebhookService @Autowired constructor(
                                 startedAt = startedAt,
                                 conclusion = conclusion,
                                 completedAt = completedAt,
-                                pipelineName = pipelineName
+                                pipelineName = pipelineName,
+                                channelCode = channelCode
                             )
                             record.checkRunId
                         }
