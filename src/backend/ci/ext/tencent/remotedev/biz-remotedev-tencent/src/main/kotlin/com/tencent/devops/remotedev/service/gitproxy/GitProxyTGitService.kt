@@ -1024,7 +1024,7 @@ class GitProxyTGitService @Autowired constructor(
     }
 
     fun checkProjectExist(projectId: String): Boolean {
-        projectTGitLinkDao.fetch(dslContext, projectId).ifEmpty { return false }
+        projectTGitLinkDao.fetch(dslContext, projectId, null).ifEmpty { return false }
         return true
     }
 
