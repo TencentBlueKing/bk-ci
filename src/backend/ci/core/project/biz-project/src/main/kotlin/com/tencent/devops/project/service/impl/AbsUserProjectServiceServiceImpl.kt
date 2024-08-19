@@ -86,7 +86,8 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                     weigHt = tServiceRecord.weight ?: 0,
                     logoUrl = tServiceRecord.logoUrl,
                     webSocket = tServiceRecord.webSocket,
-                    clusterType = tServiceRecord.clusterType
+                    clusterType = tServiceRecord.clusterType,
+                    docUrl = tServiceRecord.docUrl ?: ""
                 )
             )
         } else {
@@ -251,7 +252,8 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                             webSocket = it.webSocket,
                             newWindow = it.newWindow,
                             newWindowUrl = it.newWindowurl,
-                            clusterType = it.clusterType
+                            clusterType = it.clusterType,
+                            docUrl = it.docUrl ?: ""
                         )
                     )
                 }

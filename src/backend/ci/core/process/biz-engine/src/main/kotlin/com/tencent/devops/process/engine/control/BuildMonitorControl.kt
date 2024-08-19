@@ -97,6 +97,15 @@ class BuildMonitorControl @Autowired constructor(
     fun handle(event: PipelineBuildMonitorEvent): Boolean {
 
         val buildId = event.buildId
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            channelCode = null
+        )
+        if (pipelineInfo == null) {
+            LOG.info("ENGINE|$buildId|BUILD_MONITOR|pipeline_deleted_cancel_monitor|ec=${event.executeCount}")
+            return true
+        }
         val buildInfo = pipelineRuntimeService.getBuildInfo(event.projectId, buildId)
         if (buildInfo == null || buildInfo.isFinish()) {
             LOG.info("ENGINE|$buildId|BUILD_MONITOR|status=${buildInfo?.status}|ec=${event.executeCount}")
@@ -121,14 +130,18 @@ class BuildMonitorControl @Autowired constructor(
         val minInterval = min(jobMinInt, stageMinInt)
 
         if (minInterval < min(Timeout.CONTAINER_MAX_MILLS, Timeout.STAGE_MAX_MILLS)) {
-            LOG.info("ENGINE|${event.buildId}|BUILD_MONITOR_CONTINUE|jobMinInt=$jobMinInt|" +
-                "stageMinInt=$stageMinInt|Interval=$minInterval")
+            LOG.info(
+                "ENGINE|${event.buildId}|BUILD_MONITOR_CONTINUE|jobMinInt=$jobMinInt|" +
+                    "stageMinInt=$stageMinInt|Interval=$minInterval"
+            )
             // 每次Check间隔不能大于10分钟，防止长时间延迟消息被大量堆积
             event.delayMills = coerceAtMost10Min(minInterval).toInt()
             pipelineEventDispatcher.dispatch(event)
         } else {
-            LOG.info("ENGINE|${event.buildId}|BUILD_MONITOR_QUIT|jobMinInt=$jobMinInt|" +
-                "stageMinInt=$stageMinInt|Interval=$minInterval")
+            LOG.info(
+                "ENGINE|${event.buildId}|BUILD_MONITOR_QUIT|jobMinInt=$jobMinInt|" +
+                    "stageMinInt=$stageMinInt|Interval=$minInterval"
+            )
         }
         return true
     }

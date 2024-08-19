@@ -570,7 +570,7 @@ object ScriptYmlUtils {
 
     private fun formatStageLabel(labels: Any?): List<String> {
         if (labels == null) {
-            return emptyList()
+            return listOf(StageLabel.BUILD.id)
         }
 
         val transLabels = anyToListString(labels)
@@ -585,6 +585,9 @@ object ScriptYmlUtils {
                     I18nUtil.getCodeLanMessage(ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL)
                 )
             }
+        }
+        if (newLabels.isEmpty()) {
+            newLabels.add(StageLabel.BUILD.id)
         }
 
         return newLabels
@@ -631,7 +634,12 @@ object ScriptYmlUtils {
             note = noteRule(preTriggerOn),
             manual = manualRule(preTriggerOn),
             openapi = openapiRule(preTriggerOn),
-            remote = remoteRule(preTriggerOn)
+            remote = remoteRule(preTriggerOn),
+            changeCommit = p4EventRule(preTriggerOn.changeCommit),
+            changeSubmit = p4EventRule(preTriggerOn.changeSubmit),
+            changeContent = p4EventRule(preTriggerOn.changeContent),
+            shelveCommit = p4EventRule(preTriggerOn.shelveCommit),
+            shelveSubmit = p4EventRule(preTriggerOn.shelveSubmit)
         )
 
         if (preTriggerOn is PreTriggerOnV3) {
@@ -956,6 +964,34 @@ object ScriptYmlUtils {
                 } catch (e: Exception) {
                     null
                 }
+            }
+        }
+        return null
+    }
+
+    private fun p4EventRule(
+        rule: Any?
+    ): PushRule? {
+        if (rule != null) {
+            return try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(rule),
+                    PushRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                val pushObj = YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(rule),
+                    List::class.java
+                ) as ArrayList<String>
+
+                PushRule(
+                    branches = null,
+                    branchesIgnore = null,
+                    paths = pushObj,
+                    pathsIgnore = null,
+                    users = null,
+                    usersIgnore = null
+                )
             }
         }
         return null

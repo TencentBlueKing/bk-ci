@@ -27,9 +27,11 @@
 
 package com.tencent.devops.stream.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -66,8 +68,40 @@ interface ServiceGitBasicSettingResource {
         @Parameter(description = "开启或关闭", required = true)
         @QueryParam("enabled")
         enabled: Boolean,
+        @Parameter(description = "运营产品ID", required = true)
+        @QueryParam("productName")
+        productName: String?,
         @Parameter(description = "工蜂项目信息(初始化时用)", required = false)
         projectInfo: GitCIProjectInfo
+    ): Result<Boolean>
+
+    @Operation(summary = "更新项目组织架构")
+    @POST
+    @Path("/gitProjects/{gitProjectId}/organization")
+    fun updateProjectOrganization(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID英文名标识", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: Long,
+        @Parameter(description = "项目组织", required = true)
+        organization: ProjectOrganizationInfo
+    ): Result<Boolean>
+
+    @Operation(summary = "更新项目组织架构")
+    @POST
+    @Path("/gitProjects/{gitProjectId}/productName")
+    fun updateProjectProductName(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID英文名标识", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: Long,
+        @Parameter(description = "产品名称", required = true)
+        @QueryParam("productName")
+        productName: String
     ): Result<Boolean>
 
     @Operation(summary = "查询Stream项目配置")

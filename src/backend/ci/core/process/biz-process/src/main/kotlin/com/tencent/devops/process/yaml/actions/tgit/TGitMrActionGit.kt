@@ -446,17 +446,6 @@ class TGitMrActionGit(
                         )
                     )
                 }
-                // 源分支有，目标分支有，变更列表无，以目标分支为主，不需要校验版本
-                source in targetList && source !in changeSet -> {
-                    result.add(
-                        YamlPathListEntry(
-                            source,
-                            CheckType.NO_NEED_CHECK,
-                            targetRef,
-                            blobId
-                        )
-                    )
-                }
             }
         }
 
@@ -471,6 +460,17 @@ class TGitMrActionGit(
                 }
                 // 源分支没有，目标分支有，变更列表没有，说明是目标分支新增的，加入文件列表
                 target !in sourceList && target !in changeSet -> {
+                    result.add(
+                        YamlPathListEntry(
+                            target,
+                            CheckType.NO_NEED_CHECK,
+                            targetRef,
+                            blobId
+                        )
+                    )
+                }
+                // 源分支有，目标分支有，变更列表无，以目标分支为主，不需要校验版本
+                target in sourceList && target !in changeSet -> {
                     result.add(
                         YamlPathListEntry(
                             target,

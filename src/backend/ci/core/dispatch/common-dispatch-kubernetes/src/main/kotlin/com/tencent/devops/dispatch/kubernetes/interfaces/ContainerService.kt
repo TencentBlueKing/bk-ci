@@ -117,7 +117,8 @@ interface ContainerService {
      */
     fun waitTaskFinish(
         userId: String,
-        taskId: String
+        taskId: String,
+        needProxy: Boolean = true
     ): DispatchBuildTaskStatus
 
     /**
@@ -157,4 +158,9 @@ interface ContainerService {
         buildId: String,
         dispatchBuildImageReq: DispatchBuildImageReq
     ): DispatchTaskResp
+
+    /**
+     * inspect镜像接口
+     */
+    fun inspectDockerImage(userId: String, pool: Pool): String
 }

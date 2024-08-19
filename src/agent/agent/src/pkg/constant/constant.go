@@ -1,6 +1,3 @@
-//go:build !out
-// +build !out
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -30,9 +27,19 @@
 
 package constant
 
-// 用来放一些常量，可能内外部不一致
+import "os"
 
 const (
-	DockerDataDir    = "/data/landun/workspace"
-	DAEMON_EXIT_CODE = 88
+	DaemonExitCode = 88
+
+	// DevopsAgentEnableNewConsole 如果设为true 则windows启动进程时使用 newConsole
+	DevopsAgentEnableNewConsole = "DEVOPS_AGENT_ENABLE_NEW_CONSOLE"
+	// DevopsAgentEnableExitGroup 启动Agent杀掉构建进程组的兜底逻辑
+	DevopsAgentEnableExitGroup = "DEVOPS_AGENT_ENABLE_EXIT_GROUP"
+
+	// CommonFileModePerm 公共文件权限
+	CommonFileModePerm os.FileMode = 0644
+
+	// WinCommandNewConsole windwos启动进程时打开新的console窗口
+	WinCommandNewConsole = 0x00000010
 )

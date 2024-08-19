@@ -30,11 +30,15 @@ package com.tencent.devops.environment.resources.job
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT
+import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.jobreq.OpOperateReq
+import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
 import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.jobreq.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.jobreq.TaskTerminateReq
@@ -54,6 +58,8 @@ import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.OpService
 import com.tencent.devops.environment.service.job.PermissionManageService
 import com.tencent.devops.environment.service.job.TencentStockDataUpdateService
+import com.tencent.devops.environment.service.sync.UpdateCmdbNodeService
+import com.tencent.devops.environment.service.sync.UpdateGseAgentInfoService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -63,6 +69,8 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     private val jobService: JobService,
     private val opService: OpService,
     private val permissionManageService: PermissionManageService,
+    private val updateCmdbNodeService: UpdateCmdbNodeService,
+    private val updateGseAgentInfoService: UpdateGseAgentInfoService,
     private val tencentStockDataUpdateService: TencentStockDataUpdateService
 ) : TencentServiceJobResource {
     companion object {
@@ -186,6 +194,15 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         )
     }
 
+    override fun operateStepInstance(
+        userId: String,
+        projectId: String,
+        operateStepInstanceReq: OperateStepInstanceReq
+    ): JobResult<OperateStepInstanceResult> {
+        checkParamBlank(userId, projectId)
+        return jobService.operateStepInstance(operateStepInstanceReq)
+    }
+
     override fun operateOpProject(userId: String, opOperateReq: OpOperateReq): OpOperateResult {
         if (userId.isBlank()) throw ParamBlankException("userId is blank.")
         return opService.operateOpProject(userId, opOperateReq)
@@ -193,11 +210,11 @@ class TencentServiceJobResourceImpl @Autowired constructor(
 
     override fun checkDeployNodesInCmdb(userId: String) {
         if (userId.isBlank()) throw ParamBlankException("userId is blank.")
-        tencentStockDataUpdateService.checkDeployNodes()
+        updateCmdbNodeService.updateCmdbNodeInfo()
     }
 
     override fun updateGseAgent(userId: String) {
-        tencentStockDataUpdateService.scheduledUpdateGseAgent()
+        updateGseAgentInfoService.updateGseAgentStatusAndVersion()
     }
 
     override fun addStockNodeToCC(userId: String) {
@@ -223,8 +240,7 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         if (!permissionManageService.isJobInsBelongToProj(projectId, jobInstanceId)) {
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
-                message = "The job instance you have queried doesn't belong to the current project " +
-                    "or more than one month."
+                message = I18nUtil.getCodeLanMessage(ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT)
             )
         }
     }

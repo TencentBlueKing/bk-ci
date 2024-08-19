@@ -115,7 +115,7 @@ class PipelineSettingVersionService @Autowired constructor(
                 settingInfo.failSubscriptionList = ve.failSubscriptionList ?: settingInfo.failSubscriptionList
                 // 这里不应该出现错误的流水线名，但保留历史留下的处理方式
                 settingInfo.pipelineName = ve.pipelineName ?: settingInfo.pipelineName
-                settingInfo.labels = ve.labels ?: listOf()
+                settingInfo.labels = ve.labels ?: labels
                 settingInfo.desc = ve.desc ?: settingInfo.desc
                 settingInfo.buildNumRule = ve.buildNumRule ?: settingInfo.buildNumRule
                 // #8161 如果是PAC发布前产生的数据，则流水线名称为空，可以用正式配置覆盖

@@ -1,24 +1,24 @@
 package com.tencent.devops.remotedev.service
 
-import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceLoginDao
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class WorkspaceLoginService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceLoginDao: WorkspaceLoginDao,
-    private val workspaceDao: WorkspaceDao
+    private val workspaceJoinDao: WorkspaceJoinDao
 ) {
     fun addUserLogin(
         userId: String,
         workspaceName: String
     ) {
-        val workspace = workspaceDao.fetchWorkspaces(dslContext, setOf(workspaceName)).firstOrNull()
+        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName)
         if (workspace == null) {
             logger.error("addUserLogin workspace $workspaceName is null")
             return
@@ -27,7 +27,7 @@ class WorkspaceLoginService @Autowired constructor(
             dslContext = dslContext,
             projectId = workspace.projectId,
             workspaceName = workspaceName,
-            hostIp = workspace.hostName ?: "",
+            hostIp = workspace.hostIp ?: "",
             loginUser = userId,
             loginTime = LocalDateTime.now()
         )

@@ -62,7 +62,9 @@ class ServiceCmdbNodeResourceImpl @Autowired constructor(
     }
 
     override fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): Result<AddCmdbNodesRes> {
-        val addCmdbNodesRes = cmdbNodeService.addCmdbNodes(userId = userId, projectId = projectId, nodeIps = nodeIps)
+        val addCmdbNodesRes = cmdbNodeService.addCmdbNodesByIp(
+            userId = userId, projectId = projectId, nodeIpList = nodeIps
+        )
         return Result(addCmdbNodesRes)
     }
 }

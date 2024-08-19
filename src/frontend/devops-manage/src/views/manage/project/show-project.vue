@@ -136,6 +136,10 @@ const fieldMap = [
     current: 'centerName',
     after: 'afterCenterName',
   },
+  {
+    current: 'productName',
+    after: 'afterProductName'
+  }
 
 ];
 const fetchDiffProjectData = () => {
@@ -144,6 +148,7 @@ const fetchDiffProjectData = () => {
   }).then((res) => {
     projectDiffData.value = res;
     projectDiffData.value.afterDeptInfo = generateDeptName(res, true);
+    fetchOperationalList(projectDiffData.value.afterBgName);
 
     fieldMap.forEach((field) => {
       if (projectData.value[field.current] !== projectDiffData.value[field.after]) {
@@ -416,12 +421,12 @@ onMounted(async () => {
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目所属运营产品')" property="bg">
-                  <span>{{ getOperational(projectData.productId)?.ProductName || projectData.productId }}</span>
+                  <span>{{ projectData.productName || projectData.productId }}</span>
                   <div class="diff-content" v-if="projectData.afterProductId">
                     <p class="update-title">
                       {{ t('本次更新：') }}
                     </p>
-                    <span>{{ getOperational(projectData.afterProductId)?.ProductName || projectData.productId }}</span>
+                    <span>{{ projectData.afterProductName || projectData.afterProductId }}</span>
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目所属组织')" property="bg">

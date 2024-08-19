@@ -46,7 +46,7 @@ import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
 import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -69,10 +69,10 @@ class MigrateV0PolicyService constructor(
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
     private val rbacCacheService: RbacCacheService,
-    private val groupService: PermissionResourceGroupService,
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val permissionResourceMemberService: PermissionResourceMemberService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
     iamConfiguration = iamConfiguration,
@@ -84,7 +84,8 @@ class MigrateV0PolicyService constructor(
     permissionService = permissionService,
     rbacCacheService = rbacCacheService,
     deptService = deptService,
-    permissionGroupPoliciesService = permissionGroupPoliciesService
+    permissionGroupPoliciesService = permissionGroupPoliciesService,
+    permissionResourceMemberService = permissionResourceMemberService
 ) {
 
     companion object {
@@ -459,6 +460,7 @@ class MigrateV0PolicyService constructor(
     }
 
     override fun batchAddGroupMember(
+        projectCode: String,
         groupId: Int,
         defaultGroup: Boolean,
         members: List<RoleGroupMemberInfo>?,
@@ -480,6 +482,7 @@ class MigrateV0PolicyService constructor(
             groupIdOfPipelineActionGroupList.forEach {
                 logger.info("add subject template to group of pipeline:$it|$subjectTemplateId")
                 addGroupMember(
+                    projectCode = projectCode,
                     groupId = it.toInt(),
                     defaultGroup = true,
                     member = RoleGroupMemberInfo().apply {
@@ -503,6 +506,7 @@ class MigrateV0PolicyService constructor(
         }
         members.forEach member@{ member ->
             addGroupMember(
+                projectCode = projectCode,
                 defaultGroup = defaultGroup,
                 member = member,
                 groupId = groupId
@@ -511,6 +515,7 @@ class MigrateV0PolicyService constructor(
     }
 
     private fun addGroupMember(
+        projectCode: String,
         defaultGroup: Boolean,
         member: RoleGroupMemberInfo,
         groupId: Int
@@ -522,12 +527,13 @@ class MigrateV0PolicyService constructor(
             // 自定义用户组,半年或者一年过期
             V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(0, 2)]
         }
-        groupService.addGroupMember(
-            userId = member.id,
+        permissionResourceMemberService.addGroupMember(
+            projectCode = projectCode,
+            memberId = member.id,
             memberType = member.type,
             expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay) +
                 TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180)),
-            groupId = groupId
+            iamGroupId = groupId
         )
     }
 

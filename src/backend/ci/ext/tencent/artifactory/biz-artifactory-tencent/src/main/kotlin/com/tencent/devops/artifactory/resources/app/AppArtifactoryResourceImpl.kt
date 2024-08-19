@@ -125,32 +125,32 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 Pair("ipa", "apk")
             }
 
-            // 按字母排序
-            val comparator = Comparator<AppFileInfo> { a1, a2 -> StringUtils.compareIgnoreCase(a1.name, a2.name) }
-            val topSet = sortedSetOf(comparator)
-            val secondSet = sortedSetOf(comparator)
-            val otherSet = sortedSetOf(comparator)
+            val topList = mutableListOf<AppFileInfo>()
+            val secondList = mutableListOf<AppFileInfo>()
+            val otherList = mutableListOf<AppFileInfo>()
 
             data.forEach {
                 when {
                     it.name.endsWith(topType) -> {
-                        topSet.add(it)
+                        topList.add(it)
                     }
 
                     it.name.endsWith(secondType) -> {
-                        secondSet.add(it)
+                        secondList.add(it)
                     }
 
                     else -> {
-                        otherSet.add(it)
+                        otherList.add(it)
                     }
                 }
             }
 
+            // 按字母排序
+            val comparator = Comparator<AppFileInfo> { a1, a2 -> StringUtils.compareIgnoreCase(a1.name, a2.name) }
             data = mutableListOf<AppFileInfo>().let {
-                it.addAll(topSet)
-                it.addAll(secondSet)
-                it.addAll(otherSet)
+                it.addAll(topList.sortedWith(comparator))
+                it.addAll(secondList.sortedWith(comparator))
+                it.addAll(otherList.sortedWith(comparator))
                 it
             }
         }

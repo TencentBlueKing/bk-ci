@@ -13,6 +13,8 @@ data class JobCloudResult<out T>(
     @get:Schema(title = "请求ID")
     @JsonProperty("job_request_id")
     val jobRequestId: String?,
+    @get:Schema(title = "提示信息")
+    val message: String? = null,
     @get:Schema(title = "数据")
     @BkFieldI18n
     val data: T? = null

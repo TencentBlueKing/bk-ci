@@ -153,7 +153,7 @@
                         const logContent = res.scriptTaskLogs[0].logContent || ''
                         
                         this.editor.getSession().setValue(logContent)
-                        this.editor.scrollToLine(Infinity)
+                        // this.editor.scrollToLine(Infinity)
                         if (!this.finished) {
                             setTimeout(() => {
                                 this.fetchLogContent()

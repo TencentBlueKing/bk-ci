@@ -52,15 +52,15 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
         try {
             val projectId = AgentEnv.getProjectId()
             if (projectId.startsWith("git_")) {
-                val gitProjectId = projectId.removePrefix("git_")
-                val url = "/ms/repository/api/build/gitci/getToken?gitProjectId=$gitProjectId"
+                val url = "/ms/stream/api/build/ci/getToken"
                 val request = buildGet(url)
                 val responseContent = request(
                     request,
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_FAILED_GET_WORKER_BEE,
                         language = AgentEnv.getLocaleLanguage()
-                    ))
+                    )
+                )
                 val gitToken = objectMapper.readValue<Result<GitToken>>(responseContent)
                 context[CI_TOKEN_CONTEXT] = gitToken.data?.accessToken ?: ""
             }
@@ -83,7 +83,8 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_FAILED_GET_WORKER_BEE,
                         language = AgentEnv.getLocaleLanguage()
-                    ))
+                    )
+                )
                 val result = objectMapper.readValue<Result<Boolean>>(responseContent)
                 if (result.data == true) {
                     logger.info("ci token for project[$projectId] is cleared.")

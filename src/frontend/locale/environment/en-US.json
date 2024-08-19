@@ -236,7 +236,10 @@
         "remaining": "Remaining",
         "canApplyCount": "Can apply count",
         "selectNewNode": "Select new Agent",
-        "usage": "Usage"
+        "usage": "Usage",
+        "installMethod": "Installation Method",
+        "remoteInstall": "Remote Installation",
+        "manualInstall": "Manual Installation"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -420,8 +423,21 @@
     "关键字": "Keywords",
     "端口": "Port",
     "请填写端口": "Please enter port.",
+    "安装方式": "Installation Method",
+    "安装日志": "Installation Log",
+    "网络策略": "Network Policy",
+    "安装方式：": "Installation Method:",
+    "在目标主机通过 shell 安装：": "在目标主机通过 shell 安装：",
+    "1、Linux/Unix 系統使用非 root 安装时，要求可以免密sudo执行/tmp/setup_agent.sh 脚本": "1、Linux/Unix 系統使用非 root 安装时，要求可以免密sudo执行/tmp/setup_agent.sh 脚本",
+    "2、直连 Agent 端：保证与蓝鯨服务端以下端口互通，可使用telnet来确认端口是否可通": "2、直连 Agent 端：保证与蓝鯨服务端以下端口互通，可使用telnet<IP><PORT>来确认端口是否可通",
+    "源地址": "源地址",
+    "目标地址": "目标地址",
+    "协议": "协议",
+    "用途": "用途",
     "启用": "Enable",
     "停用": "Disable",
     "启用成功": "Enable successful",
-    "停用成功": "Disable successful"
+    "停用成功": "Disable successful",
+    "无法连通网络？": "无法连通网络？",
+    "正在生成手动安装命令": "正在生成手动安装命令"
 }

@@ -1,16 +1,15 @@
 package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -27,7 +26,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceResourceMemberResource {
-
     /**
      * @param resourceType 是个枚举类型详见 AuthResourceType
      * @see AuthResourceType
@@ -78,9 +76,6 @@ interface ServiceResourceMemberResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
         token: String,
-        @Parameter(description = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @PathParam("projectCode")
         @Parameter(description = "项目Code", required = true)
         projectCode: String,
@@ -95,9 +90,6 @@ interface ServiceResourceMemberResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
         token: String,
-        @Parameter(description = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @PathParam("projectCode")
         @Parameter(description = "项目Code", required = true)
         projectCode: String,

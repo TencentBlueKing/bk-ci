@@ -44,7 +44,6 @@ import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.process.BuildSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -108,7 +107,7 @@ class BuildArchiveGetTask : ITask() {
         count = files.size
         LoggerService.addNormalLine("total $count file(s) found")
         files.forEachIndexed { index, (fileUrl, file) ->
-            val token = RepoServiceFactory.getInstance().getRepoToken(
+            val token = archiveGetResourceApi.getRepoToken(
                 userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
                 projectId = buildVariables.projectId,
                 repoName = "pipeline",
@@ -140,7 +139,8 @@ class BuildArchiveGetTask : ITask() {
             projectId = buildVariables.projectId,
             pipelineId = pipelineId,
             buildNum = buildNo,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.BS,
+            buildId = buildVariables.buildId
         ).data ?: throw TaskExecuteException(
             errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
             errorType = ErrorType.USER,

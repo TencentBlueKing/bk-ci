@@ -28,7 +28,7 @@ function isSkip (status) {
 
 export default {
     isCurPipelineLocked: state => {
-        return state.pipelineInfo?.runLockType === 'LOCK'
+        return state.pipelineInfo?.locked ?? false
     },
     hasDraftPipeline: state => {
         return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVersion

@@ -89,8 +89,7 @@ data class TemplateVariable(private val list: List<Extends>) : List<Extends> by 
  * Variable 属性变量
  * @param label 可选, 预定义下拉可选值的字段
  * @param type 类型
- * @param options 下拉列表可选值，和 datasource 二选一
- * @param datasource 下拉列表数据源，和 values 二选一
+ * @param options 下拉列表可选值
  * @param multiple 是否允许多选，缺省时为 false（type=selector时生效）
  * @param description 可选，描述
  * @param required 可选，是否必填
@@ -101,7 +100,6 @@ data class VariableProps(
     var label: String? = null,
     val type: String? = null,
     val options: List<VariablePropOption>? = null,
-    val datasource: VariableDatasource? = null,
     var description: String? = null,
     val multiple: Boolean? = null,
     var required: Boolean? = null,

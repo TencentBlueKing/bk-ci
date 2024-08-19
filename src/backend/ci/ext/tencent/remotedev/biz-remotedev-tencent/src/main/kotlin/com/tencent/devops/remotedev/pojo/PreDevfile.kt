@@ -1,10 +1,10 @@
 package com.tencent.devops.remotedev.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.DevfileCommands
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.DevfilePorts
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.DevfileVscode
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.JobRunsOnType
+import com.tencent.devops.remotedev.pojo.remotedev.DevfileCommands
+import com.tencent.devops.remotedev.pojo.remotedev.DevfilePorts
+import com.tencent.devops.remotedev.pojo.remotedev.DevfileVscode
+import com.tencent.devops.remotedev.pojo.remotedev.JobRunsOnType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "devfile pre定义处")

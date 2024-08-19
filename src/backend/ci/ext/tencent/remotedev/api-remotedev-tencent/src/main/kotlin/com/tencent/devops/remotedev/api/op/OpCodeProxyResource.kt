@@ -2,15 +2,15 @@ package com.tencent.devops.remotedev.api.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.gitproxy.CallbackLinktgitData
+import com.tencent.devops.remotedev.pojo.gitproxy.UpdateTgitAclIpData
+import com.tencent.devops.remotedev.pojo.gitproxy.UpdateTgitAclUserData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Tag(name = "OP_CODE_PROY", description = "OP_CODE_PROY")
 @Path("/op/codeproxy")
@@ -25,13 +25,17 @@ interface OpCodeProxyResource {
         data: CallbackLinktgitData
     ): Result<Map<Long, Boolean>>
 
+    @Operation(summary = "添加或者删除工蜂ACLIP")
     @POST
-    @Path("/refresh/tGitAcl")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    fun refreshTGitAcl(
-        @QueryParam("projectId")
-        projectId: String?,
-        @QueryParam("export")
-        export: Boolean?
-    ): Response?
+    @Path("/updateTgitAclIp")
+    fun updateTgitAclIp(
+        data: UpdateTgitAclIpData
+    )
+
+    @Operation(summary = "刷新工蜂ACL用户")
+    @POST
+    @Path("/updateTgitAclUser")
+    fun updateTgitAclUser(
+        data: UpdateTgitAclUserData
+    )
 }

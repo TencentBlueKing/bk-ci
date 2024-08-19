@@ -78,4 +78,13 @@ interface ServiceUserResource {
         @Parameter(description = "用户ID列表", required = true)
         userIds: List<String>
     ): Result<List<UserDeptDetail>>
+
+    @GET
+    @Path("/parentIds/{parentId}/usernames")
+    @Operation(summary = "根据父节点ID获取用户列表")
+    fun usernamesByParentId(
+        @Parameter(description = "父节点ID", required = true)
+        @PathParam("parentId")
+        parentId: Int
+    ): Result<List<String>>
 }

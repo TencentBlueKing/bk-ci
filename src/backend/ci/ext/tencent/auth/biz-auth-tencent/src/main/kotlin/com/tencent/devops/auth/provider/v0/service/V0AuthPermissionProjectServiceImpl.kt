@@ -88,6 +88,15 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun checkUserInProjectLevelGroup(userId: String, projectCode: String): Boolean {
+        return authProjectApi.isProjectUser(
+            user = userId,
+            projectCode = projectCode,
+            group = null,
+            serviceCode = bsProjectAuthServiceCode
+        )
+    }
+
     override fun checkProjectManager(userId: String, projectCode: String): Boolean {
         return authProjectApi.checkProjectManager(
             userId = userId,

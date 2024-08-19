@@ -27,11 +27,13 @@
 
 package com.tencent.devops.environment.service
 
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 
 interface AgentUrlService {
 
     fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String
+
     /**
      *生成Agent URL
      */
@@ -41,6 +43,16 @@ interface AgentUrlService {
      * 生成构建机脚本下载链接
      */
     fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String
+
+    /**
+     * 生成批量下载构建机脚本链接
+     */
+    fun genAgentBatchInstallScript(
+        os: OS,
+        zoneName: String?,
+        gateway: String?,
+        token: String
+    ): String
 
     /**
      * 生成网关域名

@@ -47,8 +47,9 @@ data class AgentReuseMutex(
     companion object {
         /**
          * @see com.tencent.devops.process.engine.common.Timeout MAX_MINUTES
+         * JOB最长过期时间 7 天对应的秒数
          */
-        const val AGENT_LOCK_TIMEOUT = 10080L + 2L
+        const val AGENT_LOCK_TIMEOUT = 60 * 60 * 24 * 7L
         const val CONTEXT_KEY_SUFFIX = ".container.agent_id"
         fun genAgentContextKey(jobId: String) = "jobs.$jobId$CONTEXT_KEY_SUFFIX"
         fun genAgentReuseMutexLockKey(projectId: String, agentId: String) =
@@ -58,7 +59,7 @@ data class AgentReuseMutex(
             "lock:agent:reuse:project:$projectId:agent:$agentId:queue"
 
         fun genAgentReuseMutexLinkTipKey(buildId: String): String {
-            return "linkTip:$buildId"
+            return "agent:reuse:linkTip:$buildId"
         }
     }
 }

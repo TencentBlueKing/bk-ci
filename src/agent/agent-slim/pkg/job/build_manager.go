@@ -27,7 +27,7 @@ var GBuildManager *buildManager
 func init() {
 	GBuildManager = &buildManager{
 		lock:      &sync.RWMutex{},
-		instances: make(map[int]*buildData, 0),
+		instances: make(map[int]*buildData),
 	}
 }
 

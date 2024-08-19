@@ -28,16 +28,20 @@
 package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceResource
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
@@ -54,6 +58,7 @@ import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHan
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
@@ -73,6 +78,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
     private val rebuildWorkspaceHandler: RebuildWorkspaceHandler,
     private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
+    private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler,
     private val startWorkspaceService: StartWorkspaceService,
     private val bkBaseService: BKBaseService,
     private val xlsxExportService: WorkspaceXlsxExportService,
@@ -90,7 +96,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
             pmUserId = userId,
             projectId = projectId,
             cgsId = null,
-            workspaceCreate = workspace
+            workspaceCreate = workspace,
+            zoneType = WindowsResourceZoneConfigType.DEFAULT
         )
         return Result(true)
     }
@@ -136,7 +143,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         workspaceName: String,
         assigns: List<ProjectWorkspaceAssign>
     ): Result<Boolean> {
-        deliverControl.assignUser2Workspace(userId, projectId, workspaceName, assigns)
+        deliverControl.assignUser2Workspace(userId, workspaceName, assigns)
         return Result(true)
     }
 
@@ -146,19 +153,19 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
 
     @AuditEntry(actionId = ActionId.CGS_START)
     override fun startWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
-        startWorkspaceHandler.startWorkspace(userId, projectId, workspaceName)
+        startWorkspaceHandler.startWorkspace(userId, workspaceName)
         return Result(true)
     }
 
     @AuditEntry(actionId = ActionId.CGS_STOP)
     override fun stopWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
-        stopWorkspaceHandler.stopWorkspace(userId, projectId, workspaceName)
+        stopWorkspaceHandler.stopWorkspace(userId, workspaceName)
         return Result(true)
     }
 
     @AuditEntry(actionId = ActionId.CGS_RESTART)
     override fun restartWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
-        restartWorkspaceHandler.restartWorkspace(userId, projectId, workspaceName)
+        restartWorkspaceHandler.restartWorkspace(userId, workspaceName)
         return Result(true)
     }
 
@@ -169,21 +176,43 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         workspaceName: String,
         makeImageReq: MakeWorkspaceImageReq
     ): Result<Boolean> {
-        makeWorkspaceImageHandler.makeWorkspaceImage(userId, projectId, workspaceName, makeImageReq)
+        makeWorkspaceImageHandler.makeWorkspaceImage(
+            userId = userId,
+            workspaceName = workspaceName,
+            makeImageReq = makeImageReq
+        )
         return Result(true)
     }
 
     override fun computerStatus(userId: String, projectId: String): Result<ComputerStatusResp> {
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
+            )
+        }
         return Result(startWorkspaceService.computerStatus(projectId))
     }
 
     override fun userLoginTime(userId: String, projectId: String, timeScope: TimeScope?): Result<UserLoginTimeResp> {
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
+            )
+        }
         return Result(
             bkBaseService.fetchOnlineUserMin(timeScope, projectId) ?: UserLoginTimeResp(0, emptyList())
         )
     }
 
     override fun exportWorkspaceList(userId: String, projectId: String, page: Int?, pageSize: Int?): Response {
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
+            )
+        }
         return xlsxExportService.exportProjectWorkspaceListWeb(userId, projectId, page, pageSize)
     }
 
@@ -193,11 +222,37 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         workspaceName: String,
         rebuildReq: WorkspaceRebuildReq
     ): Result<Boolean> {
-        rebuildWorkspaceHandler.rebuildWorkspace(userId, projectId, workspaceName, rebuildReq)
+        rebuildWorkspaceHandler.rebuildWorkspace(
+            userId = userId,
+            workspaceName = workspaceName,
+            rebuildReq = rebuildReq
+        )
         return Result(true)
     }
 
-    override fun fetchSpec(userId: String, projectId: String?, machineType: String?, page: Int?, pageSize: Int?): Result<Page<WindowsSpecResInfo>> {
+    override fun fetchSpec(
+        userId: String,
+        projectId: String,
+        machineType: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<WindowsSpecResInfo>> {
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
+            )
+        }
         return Result(windowsResourceConfigService.fetchSpec(projectId, machineType, page, pageSize))
+    }
+
+    override fun upgradeWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        upgradeReq: WorkspaceUpgradeReq
+    ): Result<Boolean> {
+        upgradeWorkspaceHandler.upgradeWorkspace(userId, projectId, workspaceName, upgradeReq)
+        return Result(true)
     }
 }

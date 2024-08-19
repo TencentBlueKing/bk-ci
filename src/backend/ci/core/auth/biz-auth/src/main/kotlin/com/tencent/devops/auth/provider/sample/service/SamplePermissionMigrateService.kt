@@ -32,8 +32,11 @@ import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
+import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceAuthorizationService
 
-class SamplePermissionMigrateService : PermissionMigrateService {
+class SamplePermissionMigrateService(
+    val migrateResourceAuthorizationService: MigrateResourceAuthorizationService
+) : PermissionMigrateService {
     override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
         return true
     }
@@ -84,5 +87,15 @@ class SamplePermissionMigrateService : PermissionMigrateService {
 
     override fun autoRenewal(projectConditionDTO: ProjectConditionDTO): Boolean {
         return true
+    }
+
+    override fun migrateResourceAuthorization(projectCodes: List<String>): Boolean {
+        return migrateResourceAuthorizationService.migrateResourceAuthorization(
+            projectCodes = projectCodes
+        )
+    }
+
+    override fun migrateAllResourceAuthorization(): Boolean {
+        return migrateResourceAuthorizationService.migrateAllResourceAuthorization()
     }
 }

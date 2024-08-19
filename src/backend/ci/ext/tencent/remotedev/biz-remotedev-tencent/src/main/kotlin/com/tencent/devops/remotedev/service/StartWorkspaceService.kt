@@ -6,9 +6,11 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.model.remotedev.tables.TWorkspace
+import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.start.StartMessageDataType
 import com.tencent.devops.remotedev.pojo.startcloud.StartMessageRegisterCondition
 import com.tencent.devops.remotedev.pojo.startcloud.StartMessageRegisterData
@@ -21,18 +23,17 @@ import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.windows.ComputerUserData
 import com.tencent.devops.remotedev.pojo.windows.ComputerUserEnum
 import com.tencent.devops.remotedev.service.client.StartCloudClient
+import java.util.Base64
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Base64
 
 @Suppress("ALL")
 @Service
 class StartWorkspaceService @Autowired constructor(
     private val startCloudClient: StartCloudClient,
     private val dslContext: DSLContext,
-    private val workspaceDao: WorkspaceDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val client: Client,
     val checkTokenService: ClientTokenService
@@ -43,11 +44,16 @@ class StartWorkspaceService @Autowired constructor(
     ): ComputerStatusResp {
         // 获取这个项目下所有的工作空间
         if (projectId != null) {
-            workspaceDao.fetchWinWorkspaceIpAndRegId(dslContext, projectId).forEach { (_, cgsId, _) ->
-                if (cgsId.isNullOrBlank()) {
+            workspaceJoinDao.fetchWindowsWorkspacesSimple(
+                dslContext = dslContext,
+                projectId = projectId,
+                checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP),
+                notStatus = listOf(WorkspaceStatus.DELETED, WorkspaceStatus.UNUSED)
+            ).forEach {
+                if (it.hostIp.isNullOrBlank()) {
                     return@forEach
                 }
-                cgsIds.add(cgsId)
+                cgsIds.add(it.hostIp!!)
             }
         }
         if (cgsIds.isEmpty()) {
@@ -105,7 +111,14 @@ class StartWorkspaceService @Autowired constructor(
         ip: String,
         users: Set<String>
     ): Boolean {
-        val record = workspaceDao.fetchWorkspaceByIp(dslContext, ip).ifEmpty {
+        val record = workspaceJoinDao.fetchWindowsWorkspacesSimple(
+            dslContext, sip = ip, notStatus = listOf(
+                WorkspaceStatus.PREPARING,
+                WorkspaceStatus.DELETED,
+                WorkspaceStatus.DELIVERING_FAILED
+            ),
+            checkField = listOf(TWorkspace.T_WORKSPACE.PROJECT_ID)
+        ).ifEmpty {
             logger.warn("$ip checkIpUsers not found")
             return false
         }
@@ -118,7 +131,7 @@ class StartWorkspaceService @Autowired constructor(
         // 获取当前项目下的所有用户做过滤
         // 先使用云桌面做判断
         val projectId = record.first().projectId
-        val currUsers = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId, false)
+        val currUsers = workspaceJoinDao.fetchProjectSharedUser(dslContext, setOf(projectId))
         val subUsers = users.subtract(currUsers)
         if (subUsers.isEmpty()) {
             return true

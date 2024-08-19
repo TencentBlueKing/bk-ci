@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.pojo.code.svn
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 
 @Suppress("ALL")
@@ -40,5 +41,7 @@ data class SvnCommitEvent(
     val revision: Int,
     val paths: List<String>,
     val files: List<SvnCommitEventFile>,
-    val commitTime: Long?
+    val commitTime: Long?,
+    @JsonProperty("total_files_count")
+    val totalFilesCount: Int?
 ) : CodeWebhookEvent

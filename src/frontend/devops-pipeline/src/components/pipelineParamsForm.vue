@@ -14,21 +14,20 @@
                     :click-unfold="true"
                     :show-select-all="true"
                     :handle-change="handleParamUpdate"
+                    flex
                     v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
                     :class="{
                         'is-diff-param': highlightChangedParam && param.isChanged
                     }"
                     :disabled="disabled"
                     :placeholder="param.placeholder"
+                    :is-diff-param="highlightChangedParam && param.isChanged"
                 />
                 <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('metaData') }}
                     <aside class="metadata-box">
                         <metadata-list :is-left-render="(index % 2) === 1" :path="isArtifactoryParam(param.type) ? param.value : ''"></metadata-list>
                     </aside>
                 </span>
-                <div class="file-upload" v-if="showFileUploader(param.type)">
-                    <file-param-input :file-path="param.value"></file-param-input>
-                </div>
             </section>
             <span
                 v-if="!errors.has('devops' + param.name)"
@@ -42,35 +41,35 @@
 </template>
 
 <script>
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import Selector from '@/components/atomFormField/Selector'
-    import RequestSelector from '@/components/atomFormField/RequestSelector'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
     import FileParamInput from '@/components/FileParamInput'
     import {
-        BOOLEAN_LIST,
-        isMultipleParam,
-        isEnumParam,
-        isSvnParam,
-        isGitParam,
-        isCodelibParam,
-        isFileParam,
-        isArtifactoryParam,
-        isRemoteType,
-        ParamComponentMap,
-        STRING,
+        ARTIFACTORY,
         BOOLEAN,
-        MULTIPLE,
-        ENUM,
-        SVN_TAG,
-        GIT_REF,
+        BOOLEAN_LIST,
         CODE_LIB,
         CONTAINER_TYPE,
+        ENUM,
+        GIT_REF,
+        isArtifactoryParam,
+        isCodelibParam,
+        isEnumParam,
+        isFileParam,
+        isGitParam,
+        isMultipleParam,
+        isRemoteType,
+        isSvnParam,
+        MULTIPLE,
+        ParamComponentMap,
+        STRING,
         SUB_PIPELINE,
-        ARTIFACTORY,
+        SVN_TAG,
         TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
 
@@ -246,7 +245,9 @@
             }
 
             .bk-select {
-                background: white;
+                &:not(.is-disabled) {
+                    background: white;
+                }
                 width: 100%;
             }
             .meta-data {
@@ -260,40 +261,6 @@
             .meta-data:hover {
                 .metadata-box {
                     display: block;
-                }
-            }
-            .file-upload {
-                display: flex;
-                margin-left: 10px;
-                color: $fontWeightColor;
-                ::v-deep .bk-upload.button {
-                    position: static;
-                    display: flex;
-                    .file-wrapper {
-                        margin-bottom: 0;
-                        height: 32px;
-                        background: white;
-                    }
-                    p.tip {
-                        white-space: nowrap;
-                        position: static;
-                        margin-left: 8px;
-                    }
-                    .all-file {
-                        width: 100%;
-                        position: absolute;
-                        right: 0;
-                        top: 0;
-                        .file-item {
-                            margin-bottom: 0;
-                            &.file-item-fail {
-                                background: rgb(254,221,220);
-                            }
-                        }
-                        .error-msg {
-                            margin: 0
-                        }
-                    }
                 }
             }
         }

@@ -125,7 +125,6 @@
                         [name]: value
                     }
                 })
-                console.log(this.params, 'final')
             },
             toggleOpenVar () {
                 // 打开变量面板的同时关闭插件选择

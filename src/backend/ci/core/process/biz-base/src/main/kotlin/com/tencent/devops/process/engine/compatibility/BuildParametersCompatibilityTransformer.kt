@@ -41,6 +41,9 @@ interface BuildParametersCompatibilityTransformer {
      * 前端传入的为正确的新变量
      */
     fun parseTriggerParam(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
         paramProperties: List<BuildFormProperty>,
         paramValues: Map<String, String>
     ): MutableMap<String, BuildParameters>

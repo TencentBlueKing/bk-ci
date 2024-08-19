@@ -27,8 +27,6 @@
 
 package com.tencent.devops.remotedev.service.workspace
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -36,46 +34,44 @@ import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.dao.WorkspaceDailyCgsdataDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
-import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceKafkaInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordInf
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
-import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
-import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.BKCCService
-import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
-import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
@@ -88,6 +84,7 @@ import org.slf4j.MDC
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
 @Service
@@ -99,20 +96,16 @@ class WorkspaceCommon @Autowired constructor(
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val sharedDao: WorkspaceSharedDao,
-    private val sshService: SshPublicKeysService,
     private val client: Client,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
-    private val remoteDevSettingService: RemoteDevSettingService,
     private val redisCache: RedisCacheService,
     private val profile: Profile,
-    @org.springframework.context.annotation.Lazy
+    @Lazy
     private val startControl: StartControl,
-    @org.springframework.context.annotation.Lazy
+    @Lazy
     private val sleepControl: SleepControl,
-    @org.springframework.context.annotation.Lazy
+    @Lazy
     private val deleteControl: DeleteControl,
-    private val objectMapper: ObjectMapper,
     private val whiteListService: WhiteListService,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val notifyControl: NotifyControl,
@@ -121,12 +114,14 @@ class WorkspaceCommon @Autowired constructor(
     private val remotedevProjectService: RemotedevProjectService,
     private val projectStartAppLinkDao: ProjectStartAppLinkDao,
     private val config: RemoteDevCommonConfig,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val workspaceDailyCgsdataDao: WorkspaceDailyCgsdataDao
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceCommon::class.java)
-        private const val DEFAULT_WAIT_TIME = 60
+        const val DEFAULT_WAIT_TIME = 300
         private const val REPOID = "lsync"
         private const val LOCALDRIVER = "L"
         private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
@@ -140,81 +135,21 @@ class WorkspaceCommon @Autowired constructor(
             key.default
         } ?: key.default
 
-    fun getOrSaveWorkspaceDetail(
-        workspaceName: String,
-        projectId: String,
-        mountType: WorkspaceMountType,
-        ownerType: WorkspaceOwnerType,
-        event: RemoteDevUpdateEvent? = null
-    ): WorkSpaceCacheInfo {
-        return getWorkspaceDetail(workspaceName) ?: run {
-            return updateWorkspaceDetail(
-                workspaceName = workspaceName,
-                projectId = projectId,
-                mountType = mountType,
-                ownerType = ownerType,
-                event = event
-            )
-        }
-    }
-
-    fun updateWorkspaceDetail(
-        workspaceName: String,
-        projectId: String,
-        mountType: WorkspaceMountType,
-        ownerType: WorkspaceOwnerType,
-        event: RemoteDevUpdateEvent? = null
-    ): WorkSpaceCacheInfo {
-        logger.info("$workspaceName update workspaceDetail, $event")
-        // START非create时不更新detail
-        if (mountType == WorkspaceMountType.START && (event == null || event.type != UpdateEventType.CREATE)) {
-            return JsonUtil.to(
-                workspaceDao.getWorkspaceDetail(dslContext, workspaceName)?.detail ?: "",
-                WorkSpaceCacheInfo::class.java
-            )
-        }
-
-        val gameId = getGameIdAndAppId(projectId, ownerType)
-        val cache = if (mountType == WorkspaceMountType.START && event != null) {
-            val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                .getWorkspaceInfo(event.userId, workspaceName, mountType).data!!
-            WorkSpaceCacheInfo(
-                sshKey = "",
-                environmentHost = event.environmentHost ?: "",
-                hostIP = event.environmentIp ?: "",
-                environmentIP = event.environmentIp ?: "",
-                clusterId = "",
-                namespace = workspaceInfo.namespace,
-                curLaunchId = gameId.second.toInt(),
-                regionId = workspaceInfo.regionId
-            )
-        } else {
-            val userSet = workspaceDao.fetchWorkspaceUser(
-                dslContext,
-                workspaceName
-            ).toSet()
-            val sshKey = sshService.getSshPublicKeys4Ws(userSet)
-            val workspaceInfo =
-                client.get(ServiceRemoteDevResource::class)
-                    .getWorkspaceInfo(userSet.first(), workspaceName, mountType).data!!
-            WorkSpaceCacheInfo(
-                sshKey = sshKey,
-                environmentHost = workspaceInfo.environmentHost,
-                hostIP = workspaceInfo.hostIP,
-                environmentIP = workspaceInfo.environmentIP,
-                clusterId = workspaceInfo.environmentIP,
-                namespace = workspaceInfo.namespace,
-                curLaunchId = gameId.second.toInt(),
-                regionId = workspaceInfo.regionId
-            )
-        }
-
-        workspaceDao.saveOrUpdateWorkspaceDetail(
+    fun updateWorkspaceWinDetail(
+        ws: WorkspaceRecord?,
+        workspaceName: String
+    ) {
+        val workspace =
+            ws ?: workspaceDao.fetchAnyWorkspace(dslContext = dslContext, workspaceName = workspaceName) ?: return
+        val gameId = getGameIdAndAppId(workspace.projectId, workspace.ownerType)
+        val workspaceInfo = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
+            .getWorkspaceInfo(workspace.createUserId, workspaceName, workspace.workspaceMountType).data!!
+        workspaceWindowsDao.updateDetailInfo(
             dslContext = dslContext,
-            workspaceName = workspaceName,
-            detail = JsonUtil.toJson(cache)
+            launchId = gameId.second.toInt(),
+            regionId = workspaceInfo.regionId,
+            workspaceName = workspaceName
         )
-        return cache
     }
 
     fun checkAndFixExceptionWS(
@@ -224,8 +159,9 @@ class WorkspaceCommon @Autowired constructor(
         mountType: WorkspaceMountType
     ) {
         if (status.checkException()) {
-            when (val fix = fixUnexpectedStatus(userId, workspaceName, status, mountType)) {
-                WorkspaceStatus.EXCEPTION -> {
+            val fix = fixUnexpectedStatus(userId, workspaceName, status, mountType)
+            when {
+                fix.checkException() -> {
                     logger.info("$workspaceName is EXCEPTION and not repaired, return error.")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.WORKSPACE_ERROR.errorCode
@@ -246,9 +182,7 @@ class WorkspaceCommon @Autowired constructor(
     // 尝试修复异常工作空间状态
     fun fixUnexpectedWorkspace() {
         logger.info("fixUnexpectedWorkspace")
-        workspaceDao.fetchWorkspace(
-            dslContext, status = WorkspaceStatus.EXCEPTION
-        )?.parallelStream()?.forEach {
+        workspaceDao.fetchErrorWorkspace(dslContext)?.parallelStream()?.forEach {
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             logger.info(
                 "workspace ${it.workspaceName} is EXCEPTION, try to fix."
@@ -270,6 +204,7 @@ class WorkspaceCommon @Autowired constructor(
         }
     }
 
+    @Suppress("ComplexMethod")
     fun fixUnexpectedStatus(
         userId: String,
         workspaceName: String,
@@ -277,7 +212,7 @@ class WorkspaceCommon @Autowired constructor(
         mountType: WorkspaceMountType
     ): WorkspaceStatus {
         val workspaceInfo = kotlin.runCatching {
-            client.get(ServiceRemoteDevResource::class)
+            SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
                 .getWorkspaceInfo(userId, workspaceName, mountType).data!!
         }.getOrElse { ignore ->
             logger.warn(
@@ -303,9 +238,27 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.RESTARTING
             }
 
+            workspaceInfo.status == EnvStatusEnum.starting -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.STARTING)
+                return WorkspaceStatus.STARTING
+            }
+            workspaceInfo.status == EnvStatusEnum.stopping -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.STOPPING)
+                return WorkspaceStatus.STOPPING
+            }
+
             workspaceInfo.status == EnvStatusEnum.rebuilding -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.REBUILDING)
                 return WorkspaceStatus.REBUILDING
+            }
+
+            workspaceInfo.status == EnvStatusEnum.upgrading -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.UPGRADING)
+                return WorkspaceStatus.UPGRADING
+            }
+            workspaceInfo.status == EnvStatusEnum.copying -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.MAKING_IMAGE)
+                return WorkspaceStatus.MAKING_IMAGE
             }
 
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
@@ -313,14 +266,40 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.RUNNING
             }
 
-            workspaceInfo.status in mutableSetOf(
-                EnvStatusEnum.startFailed,
-                EnvStatusEnum.stopFailed,
-                EnvStatusEnum.abnormalAfterRunning,
-                EnvStatusEnum.abnormalAfterReady,
-                EnvStatusEnum.createFailed,
-                EnvStatusEnum.unknow
-            ) -> {
+            workspaceInfo.status == EnvStatusEnum.startFailed -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION_START_FAILED)
+                return WorkspaceStatus.EXCEPTION_START_FAILED
+            }
+
+            workspaceInfo.status == EnvStatusEnum.stopFailed -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION_STOP_FAILED)
+                return WorkspaceStatus.EXCEPTION_STOP_FAILED
+            }
+
+            workspaceInfo.status == EnvStatusEnum.abnormalAfterRunning -> {
+                workspaceDao.updateWorkspaceStatus(
+                    dslContext = dslContext,
+                    workspaceName = workspaceName,
+                    status = WorkspaceStatus.EXCEPTION_ABNORMAL_AFTER_RUNNING
+                )
+                return WorkspaceStatus.EXCEPTION_ABNORMAL_AFTER_RUNNING
+            }
+
+            workspaceInfo.status == EnvStatusEnum.abnormalAfterReady -> {
+                workspaceDao.updateWorkspaceStatus(
+                    dslContext = dslContext,
+                    workspaceName = workspaceName,
+                    status = WorkspaceStatus.EXCEPTION_ABNORMAL_AFTER_READY
+                )
+                return WorkspaceStatus.EXCEPTION_ABNORMAL_AFTER_READY
+            }
+
+            workspaceInfo.status == EnvStatusEnum.createFailed -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION_CREATE_FAILED)
+                return WorkspaceStatus.EXCEPTION_CREATE_FAILED
+            }
+
+            workspaceInfo.status == EnvStatusEnum.unknow -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION)
                 return WorkspaceStatus.EXCEPTION
             }
@@ -337,7 +316,7 @@ class WorkspaceCommon @Autowired constructor(
      * workspace 正在变更状态时，不能新建任务去执行。但如果超过 60s 便不做该限制。 以免因下游某服务节点故障状态未闭环回传导致问题。
      * 如果已经销毁，直接返回false
      */
-    fun notOk2doNextAction(workspace: WorkspaceRecord): Boolean {
+    fun notOk2doNextAction(workspace: WorkspaceRecordInf): Boolean {
         return (
             workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
                 workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
@@ -345,7 +324,7 @@ class WorkspaceCommon @Autowired constructor(
             ).seconds < DEFAULT_WAIT_TIME
             ) ||
             workspace.status.checkDeleted() || workspace.status.workspaceInitializing() ||
-            workspace.status.checkInProcess()
+            workspace.status.checkInProcess() || workspace.status.checkUnused()
     }
 
     fun updateStatusAndCreateHistory(
@@ -362,7 +341,7 @@ class WorkspaceCommon @Autowired constructor(
     }
 
     fun updateStatusAndCreateHistory(
-        workspace: WorkspaceRecord,
+        workspace: WorkspaceRecordInf,
         newStatus: WorkspaceStatus,
         action: WorkspaceAction
     ) {
@@ -446,56 +425,13 @@ class WorkspaceCommon @Autowired constructor(
         return true
     }
 
-    fun getSystemOperator(workspaceOwner: String, mountType: WorkspaceMountType): String =
-        when (mountType) {
-            WorkspaceMountType.START -> workspaceOwner
-            else -> ADMIN_NAME
-        }
-
-    fun checkWorkspaceAvailability(
-        userId: String,
-        type: WorkspaceMountType,
-        ownerType: WorkspaceOwnerType
-    ) {
-        when {
-//            --story=116722016 【个人云桌面续期优化】去掉个人云桌面体验时长的限制
-//            type == WorkspaceMountType.START && ownerType == WorkspaceOwnerType.PERSONAL -> {
-//                val timeLeft = remoteDevSettingService.userWinTimeLeft(userId)
-//                if (timeLeft <= 0) {
-//                    throw ErrorCodeException(
-//                        errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE_WIN_GPU.errorCode
-//                    )
-//                }
-//            }
-
-            else -> {}
-        }
-    }
-
     fun syncStartCloudResourceList(): List<EnvironmentResourceData> {
         return kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class)
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
                 .syncStartCloudResourceList().data
         }.onFailure {
             logger.warn("Error syncing start cloud resource list: ${it.message}")
         }.getOrNull() ?: emptyList()
-    }
-
-    fun getWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo? {
-        return try {
-            val result = workspaceDao.getWorkspaceDetail(dslContext, workspaceName)?.detail
-            if (result != null) {
-                objectMapper.readValue<WorkSpaceCacheInfo>(result)
-            } else {
-                null
-            }
-        } catch (ignore: Exception) {
-            logger.warn(
-                "get workspace detail from redis error|$workspaceName",
-                ignore
-            )
-            null
-        }
     }
 
     fun getCgsData(
@@ -503,7 +439,7 @@ class WorkspaceCommon @Autowired constructor(
         ips: List<String>?
     ): List<EnvironmentResourceData>? {
         return kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class)
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
                 .getCgsData(FetchWinPoolData(cgsIds = cgsIds, ips = ips)).data
         }.onFailure {
             logger.warn("Error syncing start cloud resource list: ${it.message}")
@@ -525,7 +461,7 @@ class WorkspaceCommon @Autowired constructor(
     // 获取cgs机型、区域
     fun getCgsConfig(): CgsResourceConfig {
         return kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class)
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
                 .getCgsConfig().data
         }.onFailure {
             logger.warn("Error get cgs config: ${it.message}")
@@ -540,10 +476,10 @@ class WorkspaceCommon @Autowired constructor(
      *
      */
     fun autoAssignOwner(
-        ws: WorkspaceRecord
+        ws: WorkspaceRecordInf
     ) {
         if (ws.ownerType != WorkspaceOwnerType.PROJECT) return
-        val owners = sharedDao.fetchWorkspaceOwner(dslContext, setOf(ws.workspaceName))
+        val owners = sharedDao.fetchWorkspaceOwner(dslContext, setOf(ws.workspaceName)).values
         if (owners.isEmpty()) return
         shareWorkspace(
             workspaceName = ws.workspaceName,
@@ -586,7 +522,7 @@ class WorkspaceCommon @Autowired constructor(
 
         val resourceId = if (mountType == WorkspaceMountType.START) {
             val gameId = getGameIdAndAppId(projectId, ownerType)
-            client.get(ServiceStartCloudResource::class)
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
                 .shareWorkspace(
                     operator = operator,
                     cgsId = cgsId,
@@ -652,7 +588,7 @@ class WorkspaceCommon @Autowired constructor(
                 val receivers = info.map { it.sharedUser }
                 logger.info("unShareWorkspace|$workspaceName|$operator|$receivers")
                 kotlin.runCatching {
-                    client.get(ServiceStartCloudResource::class)
+                    SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
                         .unShareWorkspace(
                             operator = operator, resourceId = resourceId, receivers = receivers
                         ).data!!
@@ -667,6 +603,22 @@ class WorkspaceCommon @Autowired constructor(
             sharedUsers = sharedUsers,
             assignType = assignType
         )
+        // 解绑后对原先的共享人推送websocket刷新客户端列表
+        sharedUsers.forEach { it ->
+            notifyControl.dispatchWebsocketPushEvent(
+                userId = it,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_ASSIGN,
+                status = true,
+                action = WorkspaceAction.ASSIGN,
+                systemType = null,
+                workspaceMountType = mountType,
+                ownerType = null,
+                projectId = ""
+            )
+        }
     }
 
     private fun checkUserNeedUnShare(ws: List<WorkspaceShared>, assignType: WorkspaceShared.AssignType): Boolean {
@@ -707,30 +659,21 @@ class WorkspaceCommon @Autowired constructor(
         operator: String
     ) {
         updateLastHistory(dslContext, workspace.workspaceName, operator)
-        if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
-            remoteDevSettingService.computeWinUsageTime(userId = workspace.createUserId)
-        }
-
         // 个人云桌面即使关机也需要计费
         if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU &&
             workspace.ownerType == WorkspaceOwnerType.PERSONAL
         ) {
             return
         }
-        remoteDevBillingDao.endBilling(
-            dslContext = dslContext,
-            workspaceName = workspace.workspaceName,
-            computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL
-        )
     }
 
     // 按天备份数据
     fun backupDailyCsgData() {
-        workspaceDao.backupDailyCsgData(dslContext)
+        workspaceDailyCgsdataDao.backupDailyCsgData(dslContext)
     }
 
     fun updateStatus2DeliveringFailed(
-        workspace: WorkspaceRecord,
+        workspace: WorkspaceRecordInf,
         action: WorkspaceAction,
         notifyTemplateCode: String,
         noticeParams: Map<String, String> = emptyMap()
@@ -797,16 +740,29 @@ class WorkspaceCommon @Autowired constructor(
     }
 
     fun updateHostMonitor(workspaceName: String, props: Map<String, Any>, type: WorkspaceSystemType) {
-        if (!type.checkWindows()) return
-        val detail = getWorkspaceDetail(workspaceName) ?: return
-        val regId = detail.regionId
-        val ip = detail.environmentIP.substringAfter(".")
-        if (regId == null) {
+        if (!type.checkWindows()) {
+            return
+        }
+        val detail = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName) ?: return
+        val regId = detail.regionId ?: run {
             logger.warn("update $workspaceName but regionid is null")
             return
         }
+        val ip = detail.hostIp?.substringAfter(".") ?: run {
+            logger.warn("update $workspaceName but hostIp is null")
+            return
+        }
+        updateHostMonitor(regId, ip, props, type)
+    }
+
+    fun updateHostMonitor(regionId: Int, ip: String, props: Map<String, Any>, type: WorkspaceSystemType) {
+        if (!type.checkWindows()) {
+            return
+        }
         bkccService.updateHostMonitor(
-            regId, ip, props
+            regionId = regionId,
+            ip = ip,
+            props = props
         )
     }
 

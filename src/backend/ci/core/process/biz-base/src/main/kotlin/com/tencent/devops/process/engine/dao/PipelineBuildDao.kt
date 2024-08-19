@@ -49,13 +49,11 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryReco
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.BuildRetryInfo
+import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import java.sql.Timestamp
-import java.time.LocalDateTime
-import javax.ws.rs.core.Response
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -64,6 +62,9 @@ import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
+import java.time.LocalDateTime
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Repository
@@ -72,7 +73,7 @@ class PipelineBuildDao {
     companion object {
         private val mapper = PipelineBuildInfoJooqMapper()
         private val debugMapper = PipelineDebugBuildInfoJooqMapper()
-        private const val DEFAULT_PAGE_SIZE = 10
+        private const val DEFAULT_PAGE_SIZE = 50
     }
 
     fun create(dslContext: DSLContext, startBuildContext: StartBuildContext) {
@@ -103,7 +104,8 @@ class PipelineBuildDao {
                         BUILD_NUM_ALIAS,
                         CONCURRENCY_GROUP,
                         VERSION_NAME,
-                        YAML_VERSION
+                        YAML_VERSION,
+                        EXECUTE_COUNT
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -127,7 +129,8 @@ class PipelineBuildDao {
                         startBuildContext.buildNumAlias,
                         startBuildContext.concurrencyGroup,
                         startBuildContext.versionName,
-                        startBuildContext.yamlVersion
+                        startBuildContext.yamlVersion,
+                        startBuildContext.executeCount
                     ).execute()
                 }
             } else {
@@ -156,7 +159,8 @@ class PipelineBuildDao {
                         BUILD_NUM_ALIAS,
                         CONCURRENCY_GROUP,
                         YAML_VERSION,
-                        RESOURCE_MODEL
+                        RESOURCE_MODEL,
+                        EXECUTE_COUNT
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -180,7 +184,8 @@ class PipelineBuildDao {
                         startBuildContext.buildNumAlias,
                         startBuildContext.concurrencyGroup,
                         startBuildContext.yamlVersion,
-                        startBuildContext.debugModel?.let { self -> JsonUtil.toJson(self, formatted = false) }
+                        startBuildContext.debugModelStr,
+                        startBuildContext.executeCount
                     ).execute()
                 }
             }
@@ -259,8 +264,6 @@ class PipelineBuildDao {
             if (!statusSet.isNullOrEmpty()) {
                 where.and(STATUS.`in`(statusSet.map { it.ordinal }))
             }
-            // 增加过滤，对前端屏蔽已删除的构建
-            where.and(DELETE_TIME.isNull)
             where.fetch(debugMapper)
         } else normal
     }
@@ -325,8 +328,6 @@ class PipelineBuildDao {
         } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
-                // 增加过滤，对前端屏蔽已删除的构建
-                .and(DELETE_TIME.isNull)
                 .fetchAny(debugMapper)
         }
     }
@@ -468,39 +469,44 @@ class PipelineBuildDao {
         projectId: String,
         pipelineId: String,
         buildNum: Int?,
-        statusSet: Set<BuildStatus>?
+        statusSet: Set<BuildStatus>?,
+        debug: Boolean
     ): BuildInfo? {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            val select = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
+        return if (debug) {
+            with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+                val select = dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    // 增加过滤，插件按照构建号的查询也屏蔽已删除构建
+                    .and(DELETE_TIME.isNull)
+                if (!statusSet.isNullOrEmpty()) {
+                    select.and(STATUS.`in`(statusSet.map { it.ordinal }))
+                }
 
-            if (!statusSet.isNullOrEmpty()) {
-                select.and(STATUS.`in`(statusSet.map { it.ordinal }))
+                if (buildNum != null && buildNum > 0) {
+                    select.and(BUILD_NUM.eq(buildNum))
+                } else { // 取最新的
+                    select.orderBy(BUILD_NUM.desc()).limit(1)
+                }
+                select.fetchOne(debugMapper)
             }
+        } else {
+            with(T_PIPELINE_BUILD_HISTORY) {
+                val select = dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
 
-            if (buildNum != null && buildNum > 0) {
-                select.and(BUILD_NUM.eq(buildNum))
-            } else { // 取最新的
-                select.orderBy(BUILD_NUM.desc()).limit(1)
-            }
-            select.fetchOne(mapper)
-        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            val select = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .and(DELETE_TIME.isNull)
+                if (!statusSet.isNullOrEmpty()) {
+                    select.and(STATUS.`in`(statusSet.map { it.ordinal }))
+                }
 
-            if (!statusSet.isNullOrEmpty()) {
-                select.and(STATUS.`in`(statusSet.map { it.ordinal }))
+                if (buildNum != null && buildNum > 0) {
+                    select.and(BUILD_NUM.eq(buildNum))
+                } else { // 取最新的
+                    select.orderBy(BUILD_NUM.desc()).limit(1)
+                }
+                select.fetchOne(mapper)
             }
-
-            if (buildNum != null && buildNum > 0) {
-                select.and(BUILD_NUM.eq(buildNum))
-            } else { // 取最新的
-                select.orderBy(BUILD_NUM.desc()).limit(1)
-            }
-            select.fetchOne(debugMapper)
         }
     }
 
@@ -953,7 +959,9 @@ class PipelineBuildDao {
         buildNoEnd: Int?,
         buildMsg: String?,
         startUser: List<String>?,
-        debugVersion: Int?
+        debugVersion: Int?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?
     ): Int {
         return if (debugVersion == null) {
             with(T_PIPELINE_BUILD_HISTORY) {
@@ -980,7 +988,9 @@ class PipelineBuildDao {
                     remark = remark,
                     buildNoStart = buildNoStart,
                     buildNoEnd = buildNoEnd,
-                    buildMsg = buildMsg
+                    buildMsg = buildMsg,
+                    triggerAlias = triggerAlias,
+                    triggerBranch = triggerBranch
                 )
                 where.fetchOne(0, Int::class.java)!!
             }
@@ -1011,7 +1021,9 @@ class PipelineBuildDao {
                     remark = remark,
                     buildNoStart = buildNoStart,
                     buildNoEnd = buildNoEnd,
-                    buildMsg = buildMsg
+                    buildMsg = buildMsg,
+                    triggerAlias = triggerAlias,
+                    triggerBranch = triggerBranch
                 )
                 where.fetchOne(0, Int::class.java)!!
             }
@@ -1045,7 +1057,9 @@ class PipelineBuildDao {
         buildMsg: String?,
         startUser: List<String>?,
         updateTimeDesc: Boolean? = null,
-        debugVersion: Int?
+        debugVersion: Int?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?
     ): Collection<BuildInfo> {
         return if (debugVersion == null) {
             with(T_PIPELINE_BUILD_HISTORY) {
@@ -1071,7 +1085,9 @@ class PipelineBuildDao {
                     remark = remark,
                     buildNoStart = buildNoStart,
                     buildNoEnd = buildNoEnd,
-                    buildMsg = buildMsg
+                    buildMsg = buildMsg,
+                    triggerAlias = triggerAlias,
+                    triggerBranch = triggerBranch
                 )
 
                 when (updateTimeDesc) {
@@ -1108,7 +1124,9 @@ class PipelineBuildDao {
                     remark = remark,
                     buildNoStart = buildNoStart,
                     buildNoEnd = buildNoEnd,
-                    buildMsg = buildMsg
+                    buildMsg = buildMsg,
+                    triggerAlias = triggerAlias,
+                    triggerBranch = triggerBranch
                 )
                 when (updateTimeDesc) {
                     true -> where.orderBy(UPDATE_TIME.desc(), BUILD_ID)
@@ -1142,7 +1160,9 @@ class PipelineBuildDao {
         remark: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String?
+        buildMsg: String?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?
     ) {
         if (!materialAlias.isNullOrEmpty() && materialAlias.first().isNotBlank()) {
             var conditionsOr: Condition
@@ -1240,6 +1260,36 @@ class PipelineBuildDao {
         if (!buildMsg.isNullOrBlank()) {
             where.and(BUILD_MSG.like("%$buildMsg%"))
         }
+        if (!triggerAlias.isNullOrEmpty() && triggerAlias.first().isNotBlank()) {
+            var conditionsOr: Condition
+
+            conditionsOr = JooqUtils.jsonExtract(t1 = WEBHOOK_INFO, t2 = "\$.webhookAliasName", lower = true)
+                .like("%${triggerAlias.first().lowercase()}%")
+
+            triggerAlias.forEachIndexed { index, s ->
+                if (index == 0) return@forEachIndexed
+                conditionsOr = conditionsOr.or(
+                    JooqUtils.jsonExtract(WEBHOOK_INFO, "\$.webhookAliasName", lower = true)
+                        .like("%${s.lowercase()}%")
+                )
+            }
+            where.and(conditionsOr)
+        }
+        if (!triggerBranch.isNullOrEmpty() && triggerBranch.first().isNotBlank()) {
+            var conditionsOr: Condition
+
+            conditionsOr = JooqUtils.jsonExtract(WEBHOOK_INFO, "\$.webhookBranch", lower = true)
+                .like("%${triggerBranch.first().lowercase()}%")
+
+            triggerBranch.forEachIndexed { index, s ->
+                if (index == 0) return@forEachIndexed
+                conditionsOr = conditionsOr.or(
+                    JooqUtils.jsonExtract(WEBHOOK_INFO, "\$.webhookBranch", lower = true)
+                        .like("%${s.lowercase()}%")
+                )
+            }
+            where.and(conditionsOr)
+        }
     }
 
     private fun TPipelineBuildHistoryDebug.makeDebugCondition(
@@ -1263,7 +1313,9 @@ class PipelineBuildDao {
         remark: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String?
+        buildMsg: String?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?
     ) {
         // 增加过滤，对前端屏蔽已删除的构建
         where.and(DELETE_TIME.isNull)
@@ -1363,6 +1415,36 @@ class PipelineBuildDao {
         if (!buildMsg.isNullOrBlank()) {
             where.and(BUILD_MSG.like("%$buildMsg%"))
         }
+        if (!triggerAlias.isNullOrEmpty() && triggerAlias.first().isNotBlank()) {
+            var conditionsOr: Condition
+
+            conditionsOr = JooqUtils.jsonExtract(t1 = WEBHOOK_INFO, t2 = "\$.webhookAliasName", lower = true)
+                .like("%${triggerAlias.first().lowercase()}%")
+
+            triggerAlias.forEachIndexed { index, s ->
+                if (index == 0) return@forEachIndexed
+                conditionsOr = conditionsOr.or(
+                    JooqUtils.jsonExtract(WEBHOOK_INFO, "\$.webhookAliasName", lower = true)
+                        .like("%${s.lowercase()}%")
+                )
+            }
+            where.and(conditionsOr)
+        }
+        if (!triggerBranch.isNullOrEmpty() && triggerBranch.first().isNotBlank()) {
+            var conditionsOr: Condition
+
+            conditionsOr = JooqUtils.jsonExtract(WEBHOOK_INFO, "\$.webhookBranch", lower = true)
+                .like("%${triggerBranch.first().lowercase()}%")
+
+            triggerBranch.forEachIndexed { index, s ->
+                if (index == 0) return@forEachIndexed
+                conditionsOr = conditionsOr.or(
+                    JooqUtils.jsonExtract(WEBHOOK_INFO, "\$.webhookBranch", lower = true)
+                        .like("%${s.lowercase()}%")
+                )
+            }
+            where.and(conditionsOr)
+        }
     }
 
     fun updateBuildRemark(
@@ -1407,25 +1489,43 @@ class PipelineBuildDao {
         }
     }
 
-    fun getBuildHistoryMaterial(
+    /**
+     * 构建历史搜索下拉框
+     */
+    fun listHistorySearchOptions(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        debugVersion: Int?
+        debugVersion: Int?,
+        type: HistorySearchType
     ): Collection<BuildInfo> {
         return if (debugVersion == null) {
             with(T_PIPELINE_BUILD_HISTORY) {
-                dslContext.selectFrom(this)
+                val where = dslContext.selectFrom(this)
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                    .orderBy(BUILD_NUM.desc()).limit(DEFAULT_PAGE_SIZE)
+                when (type) {
+                    HistorySearchType.MATERIAL ->
+                        where.and(MATERIAL.isNotNull)
+
+                    HistorySearchType.TRIGGER ->
+                        where.and(WEBHOOK_INFO.isNotNull)
+                }
+                where.orderBy(BUILD_NUM.desc()).limit(DEFAULT_PAGE_SIZE)
                     .fetch(mapper)
             }
         } else {
             with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-                dslContext.selectFrom(this)
+                val where = dslContext.selectFrom(this)
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                     .and(VERSION.eq(debugVersion))
-                    .orderBy(BUILD_NUM.desc()).limit(DEFAULT_PAGE_SIZE)
+                when (type) {
+                    HistorySearchType.MATERIAL ->
+                        where.and(MATERIAL.isNotNull)
+
+                    HistorySearchType.TRIGGER ->
+                        where.and(WEBHOOK_INFO.isNotNull)
+                }
+                where.orderBy(BUILD_NUM.desc()).limit(DEFAULT_PAGE_SIZE)
                     .fetch(debugMapper)
             }
         }
@@ -1734,14 +1834,14 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int? = null
     ): List<BuildInfo> {
         with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            return dslContext.selectFrom(this)
+            val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .and(VERSION.eq(version))
                 .and(DELETE_TIME.isNotNull)
-                .fetch(debugMapper)
+            version?.let { select.and(VERSION.eq(version)) }
+            return select.fetch(debugMapper)
         }
     }
 
@@ -1749,15 +1849,15 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int? = null
     ): Int {
         with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val now = LocalDateTime.now()
-            return dslContext.update(this)
+            val update = dslContext.update(this)
                 .set(DELETE_TIME, now)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .and(VERSION.eq(version))
-                .execute()
+            version?.let { update.and(VERSION.eq(version)) }
+            return update.execute()
         }
     }
 

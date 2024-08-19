@@ -25,7 +25,7 @@
 
     Component.registerHooks(['beforeRouteEnter', 'beforeRouteLeave', 'beforeRouteUpdate'])
 
-    @Component
+    @Component()
     export default class IframeView extends Vue {
         isLoading: boolean = true;
         initPath: string = '';

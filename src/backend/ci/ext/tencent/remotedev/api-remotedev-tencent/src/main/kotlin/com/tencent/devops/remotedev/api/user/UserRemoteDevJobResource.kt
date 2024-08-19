@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.job.CronJob
 import com.tencent.devops.remotedev.pojo.job.CronJobSearchParam
 import com.tencent.devops.remotedev.pojo.job.JobCreateData
+import com.tencent.devops.remotedev.pojo.job.JobDetail
 import com.tencent.devops.remotedev.pojo.job.JobRecord
 import com.tencent.devops.remotedev.pojo.job.JobRecordSearchParam
 import com.tencent.devops.remotedev.pojo.job.JobSchema
@@ -123,4 +124,16 @@ interface UserRemoteDevJobResource {
         @PathParam("id")
         id: Long
     ): Result<Boolean>
+
+    @Operation(summary = "获取JOB执行详情")
+    @GET
+    @Path("/record/{id}/detail")
+    fun fetchJobDetail(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "任务ID")
+        @PathParam("id")
+        id: Long
+    ): Result<JobDetail?>
 }

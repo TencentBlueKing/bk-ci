@@ -61,7 +61,9 @@ bk-ci provides seven core services, namely Process, CodeCheck, Repository, Ticke
 - [BK-CMDB](https://github.com/Tencent/bk-cmdb): BlueKing Configuration Management DataBase (BlueKing CMDB) is an enterprise level configuration management platform for assets and applications.
 - [BK-JOB](https://github.com/Tencent/bk-job): BlueKing JOB is a set of operation and maintenance script management platform with the ability to handle a large number of tasks concurrently.
 - [BK-PaaS](https://github.com/Tencent/bk-PaaS): BlueKing PaaS is an open development platform that allows developers to create, develop, deploy and manage SaaS applications quickly and easily.
+- [BK-Repo](https://github.com/Tencentblueking/bk-repo): The BlueKing Artifact Repository Platform is a continuous delivery platform that provides enterprises with various types of artifact package storage, proxy, distribution, promotion, scanning, and dependency package management.
 - [BK-SOPS](https://github.com/Tencent/bk-sops): BlueKing Standard OPS (SOPS) is a light-weighted SaaS product in the Tencent BlueKing product system designed for the orchestration and execution of tasks through a graphical interface.
+- [BK-Turbo](https://github.com/Tencentblueking/bk-turbo): The BlueKing Turbo Platform  provides compilation acceleration services for various languages, including UE and C/C++, in CI scenarios.
 ## Contributing
 
 - Please read [Contributing](CONTRIBUTING.en.md) for the branch management, issue and pr specifications of bk-ci.

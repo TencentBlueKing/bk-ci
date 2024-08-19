@@ -105,5 +105,14 @@ class SpringContextUtil : ApplicationContextAware {
         fun getValue(key: String): String? {
             return applicationContext?.environment?.get(key)
         }
+
+        /**
+         * 根据bean名称判断bean是否存在
+         * @param beanName bean名称
+         * @return 布尔值
+         */
+        fun isBeanExist(beanName: String): Boolean {
+            return applicationContext?.containsBean(beanName) ?: false
+        }
     }
 }

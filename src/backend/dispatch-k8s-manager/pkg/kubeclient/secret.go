@@ -44,6 +44,17 @@ func CreateDockerRegistry(dockerSecret *DockerSecret) (*corev1.Secret, error) {
 	return s, nil
 }
 
+func CreateNativeSecret(namespace string, secret *corev1.Secret) error {
+	_, err := kubeClient.CoreV1().
+		Secrets(namespace).
+		Create(context.TODO(), secret, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // DockerConfigJSON represents a local docker auth config file
 // for pulling images.
 type DockerConfigJSON struct {
@@ -94,6 +105,28 @@ func ListSecret(workloadCoreLabel string) ([]corev1.Secret, error) {
 		return nil, err
 	}
 	return l.Items, nil
+}
+
+func GetNativeSecret(namespace string, secretName string) (*corev1.Secret, error) {
+	l, err := kubeClient.CoreV1().Secrets(namespace).Get(
+		context.TODO(),
+		secretName,
+		metav1.GetOptions{},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return l, nil
+}
+
+func DeleteNativeSecret(namespace string, secretName string) error {
+	if err := kubeClient.CoreV1().
+		Secrets(namespace).
+		Delete(context.TODO(), secretName, metav1.DeleteOptions{}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func DeleteSecret(secretName string) error {

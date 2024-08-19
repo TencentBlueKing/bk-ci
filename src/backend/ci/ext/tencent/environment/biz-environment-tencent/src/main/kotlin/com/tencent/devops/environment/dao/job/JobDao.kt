@@ -29,11 +29,16 @@ package com.tencent.devops.environment.dao.job
 
 import com.tencent.devops.model.environment.tables.TProjectJob
 import org.jooq.DSLContext
+import org.jooq.Field
+import org.jooq.impl.DSL
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class JobDao {
+class JobDao @Autowired constructor(
+    private val defaultDSLContext: DSLContext
+) {
     fun isJobInsExist(
         dslContext: DSLContext,
         projectId: String,
@@ -69,5 +74,20 @@ class JobDao {
                 currentTime
             ).execute()
         }
+    }
+
+    fun deleteExpiredJobTaskRecord(days: Long): Int {
+        val maxDeleteRowNum = 10000
+        with(TProjectJob.T_PROJECT_JOB) {
+            return defaultDSLContext.deleteFrom(this)
+                .where(CREATED_TIME.lessOrEqual(timestampSubDay(days)))
+                .limit(maxDeleteRowNum)
+                .execute()
+        }
+    }
+
+    private fun timestampSubDay(day: Long): Field<LocalDateTime> {
+        val dateTimeWithDaysSubtracted = LocalDateTime.now().minusDays(day)
+        return DSL.field("TIMESTAMP '$dateTimeWithDaysSubtracted'", LocalDateTime::class.java)
     }
 }

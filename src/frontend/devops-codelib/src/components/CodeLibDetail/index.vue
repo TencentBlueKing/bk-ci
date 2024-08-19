@@ -267,6 +267,9 @@
             userId () {
                 return this.$route.query.userId || ''
             },
+            resetType () {
+                return this.$route.query.resetType || ''
+            },
             scmType () {
                 return this.$route.query.scmType || ''
             },
@@ -367,7 +370,7 @@
                         this.errorCode = e.httpStatus || 404
                     }).finally(() => {
                         if (this.userId) {
-                            this.isLoading = loading
+                            this.isLoading = this.resetType ? loading : false
                         } else {
                             this.isLoading = false
                         }

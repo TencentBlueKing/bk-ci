@@ -30,9 +30,11 @@ package com.tencent.devops.auth.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -50,6 +52,7 @@ interface ServiceLocalManagerService {
     @GET
     @Path("/projects/{projectCode}/")
     @Operation(summary = "校验用户是否有超级管理员权限")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun validateUserActionPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "待校验用户ID", required = true)

@@ -47,14 +47,6 @@ data class WorkspaceDetail(
     val usageTime: Long,
     @get:Schema(title = "休眠时间（秒）")
     val sleepingTime: Long,
-    @get:Schema(title = "CPU 核心数")
-    val cpu: Int,
-    @get:Schema(title = "内存大小（MB）")
-    val memory: Int,
-    @get:Schema(title = "存储空间大小（GB）")
-    val disk: Int,
-    @get:Schema(title = "yaml 配置内容")
-    val yaml: String?,
     @get:Schema(title = "操作系统类型")
     val systemType: WorkspaceSystemType,
     @get:Schema(title = "挂载平台类型")

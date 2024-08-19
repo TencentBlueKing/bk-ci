@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.environment.constant.BATCH_TOKEN_HEADER
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 
 /**
@@ -64,6 +65,28 @@ class BluekingAgentUrlServiceImpl constructor(
         } else {
             ""
         }
+    }
+
+    override fun genAgentBatchInstallScript(
+        os: OS,
+        zoneName: String?,
+        gateway: String?,
+        token: String
+    ): String {
+        val gw = fixGateway(gateway)
+        if (os == OS.WINDOWS) {
+            return "\$headers = @{ \"$BATCH_TOKEN_HEADER\" = \"$token\" }; " +
+                    "\$response = Invoke-WebRequest " +
+                    "-Uri \"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall\" " +
+                    "-Headers \$headers; " +
+                    "\$ps = [System.Text.Encoding]::UTF8.GetString(\$response.Content);Invoke-Expression -Command \$ps"
+        }
+        var url = "curl -H \"$BATCH_TOKEN_HEADER: $token\" " +
+                "$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
+        if (!zoneName.isNullOrBlank()) {
+            url += "?zoneName=$zoneName"
+        }
+        return "$url | bash"
     }
 
     override fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {

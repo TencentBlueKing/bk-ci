@@ -1,71 +1,184 @@
-version: v2.0
+---
+version: "v2.0"
 name: ""
 label: []
-on:
+triggerOn:
   push:
     branches:
-    - '*'
+    - "*"
   tag:
     tags:
-    - '*'
+    - "*"
   mr:
     target-branches:
-    - '*'
+    - "*"
     action:
-    - open
-    - reopen
-    - push-update
+    - "open"
+    - "reopen"
+    - "push-update"
 stages:
-- name: template_stage_id_1
+- name: "template_stage_id_1"
   label: []
+  if: null
   fast-kill: false
   jobs:
-  - id: template_stage_id_1_job_id_1
-    name: template_stage_id_1_job_id_1
+  - id: "template_stage_id_1_job_id_1"
+    name: "template_stage_id_1_job_id_1"
+    mutex: null
     runs-on:
       self-hosted: false
-      pool-name: docker
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
     services: []
+    if: null
     steps:
-    - run: |
-        echo "template_stage_id_1_job_id_1 username world"
-      runAdditionalOptions: {}
-  - id: template_stage_id_1_job_id_2
-    name: template_stage_id_1_job_id_1
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"template_stage_id_1_job_id_1 username world\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  - id: "template_stage_id_1_job_id_2"
+    name: "template_stage_id_1_job_id_1"
+    mutex: null
     runs-on:
       self-hosted: false
-      pool-name: docker
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
     services: []
+    if: null
     steps:
-    - run: |
-        echo "template_stage_id_1_job_id_2 stagename STAGENAME"
-      runAdditionalOptions: {}
-- name: stage_template_2
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"template_stage_id_1_job_id_2 stagename STAGENAME\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  if-modify: null
+  check-in: null
+  check-out: null
+- name: "stage_template_2"
   label: []
+  if: null
   fast-kill: false
   jobs:
-  - id: cyc_stage_id_1_job_id_1
-    name: cyc_stage_id_1_job_id_1
+  - id: "cyc_stage_id_1_job_id_1"
+    name: "cyc_stage_id_1_job_id_1"
+    mutex: null
     runs-on:
       self-hosted: false
-      pool-name: docker
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
     services: []
+    if: null
     steps:
-    - run: |
-        echo "cyc_stage_id_1_job_id_1 username CYC_STAGE2"
-      runAdditionalOptions: {}
-- name: stage_template_1
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"cyc_stage_id_1_job_id_1 username CYC_STAGE2\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  if-modify: null
+  check-in: null
+  check-out: null
+- name: "stage_template_1"
   label: []
+  if: null
   fast-kill: false
   jobs:
-  - id: cyc_stage_id_1_job_id_1
-    name: cyc_stage_id_1_job_id_1
+  - id: "cyc_stage_id_1_job_id_1"
+    name: "cyc_stage_id_1_job_id_1"
+    mutex: null
     runs-on:
       self-hosted: false
-      pool-name: docker
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
     services: []
+    if: null
     steps:
-    - run: |
-        echo "cyc_stage_id_1_job_id_1 username CYC_STAGE1"
-      runAdditionalOptions: {}
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"cyc_stage_id_1_job_id_1 username CYC_STAGE1\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  if-modify: null
+  check-in: null
+  check-out: null
 finally: []

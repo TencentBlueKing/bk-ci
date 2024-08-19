@@ -457,7 +457,7 @@ class TxProjectServiceImpl @Autowired constructor(
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
         projectExtPermissionService.createUser2Project(
-            createUser = createInfo.createUserId,
+            createUser = createInfo.createUserId!!,
             projectCode = projectId,
             roleName = createInfo.roleName,
             roleId = createInfo.roleId,
@@ -493,6 +493,10 @@ class TxProjectServiceImpl @Autowired constructor(
 
     override fun getOperationalProducts(): List<OperationalProductVO> {
         return projectOperationalProductService.listAllProducts()
+    }
+
+    override fun getProductByProductId(productId: Int): OperationalProductVO? {
+        return projectOperationalProductService.getProductByProductId(productId)
     }
 
     override fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO> {

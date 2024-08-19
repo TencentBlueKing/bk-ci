@@ -34,19 +34,15 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
-import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -54,21 +50,20 @@ import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import com.tencent.devops.remotedev.service.BkTicketService
+import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.service.PermissionService
-import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
-import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -79,13 +74,7 @@ class StartControl @Autowired constructor(
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val permissionService: PermissionService,
-    private val sshService: SshPublicKeysService,
-    private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
-    private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val redisHeartBeat: RedisHeartBeat,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
-    private val bkTicketServie: BkTicketService,
     private val workspaceCommon: WorkspaceCommon,
     private val notifyControl: NotifyControl
 ) {
@@ -104,7 +93,7 @@ class StartControl @Autowired constructor(
         ),
         content = ActionAuditContent.CGS_START_CONTENT
     )
-    fun startWorkspace(userId: String, bkTicket: String, workspaceName: String): WorkspaceResponse {
+    fun startWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId start workspace $workspaceName")
 
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -112,6 +101,20 @@ class StartControl @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        // 启动时先刷新状态，
+        val fix = workspaceCommon.fixUnexpectedStatus(
+            userId = userId,
+            workspaceName = workspaceName,
+            status = workspace.status,
+            mountType = workspace.workspaceMountType
+        )
+        if (fix.checkException()) {
+            logger.info("$workspaceName is EXCEPTION and not repaired, return error.")
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_ERROR.errorCode
+            )
+        }
+
         // 审计
         ActionAuditContext.current()
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
@@ -127,18 +130,11 @@ class StartControl @Autowired constructor(
             when {
                 workspace.status.checkRunning() -> {
                     logger.info("${workspace.workspaceName} is running.")
-                    remoteDevBillingDao.newBilling(dslContext, workspaceName, userId)
-                    val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+                    val workspaceInfo = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
                         .getWorkspaceInfo(
                             userId, workspaceName,
                             workspace.workspaceMountType
                         )
-                    bkTicketServie.updateBkTicket(
-                        userId,
-                        bkTicket,
-                        workspaceInfo.data?.environmentHost,
-                        workspace.workspaceMountType
-                    )
 
                     return WorkspaceResponse(
                         workspaceName = workspaceName,
@@ -168,11 +164,7 @@ class StartControl @Autowired constructor(
                         workspaceName = workspaceName,
                         mountType = workspace.workspaceMountType
                     )
-                    workspaceCommon.checkWorkspaceAvailability(
-                        userId = userId,
-                        type = workspace.workspaceMountType,
-                        ownerType = workspace.ownerType
-                    )
+
                     createWorkspaceHistoryForStart(userId, workspaceName)
                     updateWorkspaceStatus(workspace.workspaceName, workspace.status, userId)
                     val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
@@ -182,15 +174,7 @@ class StartControl @Autowired constructor(
                             userId = userId,
                             traceId = bizId,
                             type = UpdateEventType.START,
-                            sshKeys = sshService.getSshPublicKeys4Ws(
-                                workspaceDao.fetchWorkspaceUser(
-                                    dslContext,
-                                    workspaceName
-                                ).toSet()
-                            ),
                             workspaceName = workspace.workspaceName,
-                            settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
-                            bkTicket = bkTicket,
                             mountType = workspace.workspaceMountType,
                             gameId = gameId.first
                         )
@@ -255,20 +239,17 @@ class StartControl @Autowired constructor(
     fun afterStartWorkspace(event: RemoteDevUpdateEvent) {
         if (!event.status) {
             // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
-            val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+            val workspaceInfo = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
                 .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
             when {
                 workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> event.status = true
                 else -> logger.warn(
                     "start workspace callback with error|" +
-                            "${event.workspaceName}|${workspaceInfo.status}"
+                        "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
         doStartWS(event.status, event.userId, event.workspaceName, event.environmentHost, event.errorMsg)
-        if (event.status) {
-            bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost, event.mountType)
-        }
     }
 
     fun doStartWS(
@@ -292,8 +273,6 @@ class StartControl @Autowired constructor(
                     status = WorkspaceStatus.RUNNING,
                     dslContext = transactionContext
                 )
-
-                remoteDevBillingDao.newBilling(transactionContext, workspaceName, operator)
 
                 val lastHistory = workspaceHistoryDao.fetchAnyHistory(
                     dslContext = transactionContext,
@@ -326,16 +305,6 @@ class StartControl @Autowired constructor(
                         WorkspaceStatus.RUNNING.name
                     )
                 )
-            }
-
-            workspaceCommon.updateWorkspaceDetail(
-                workspaceName,
-                workspace.projectId,
-                workspace.workspaceMountType,
-                workspace.ownerType
-            )
-            if (workspace.workspaceSystemType.needHeartbeat()) {
-                redisHeartBeat.refreshHeartbeat(workspaceName)
             }
         } else {
             // 启动失败,记录为EXCEPTION

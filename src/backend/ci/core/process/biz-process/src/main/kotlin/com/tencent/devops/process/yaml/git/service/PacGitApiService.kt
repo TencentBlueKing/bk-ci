@@ -137,6 +137,8 @@ interface PacGitApiService {
         retry: ApiRequestRetryInfo
     ): PacGitFileInfo?
 
+    fun checkPushPermission(userId: String, cred: PacGitCred, gitProjectId: String): Boolean
+
     /**
      * 提交yaml文件
      */

@@ -254,7 +254,10 @@
                                 name: pipelineSetting.pipelineName,
                                 desc: pipelineSetting.desc
                             },
-                            setting: pipelineSetting
+                            setting: Object.assign(pipelineSetting, {
+                                failSubscription: undefined,
+                                successSubscription: undefined
+                            })
                         },
                         yaml: pipelineYaml
                     })
@@ -263,8 +266,9 @@
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         canDebug: true,
                         canRelease: true,
-                        baseVersion: this.pipelineInfo?.baseVersion ?? this.pipelineInfo?.releaseVersion,
-                        baseVersionName: this.pipelineInfo?.baseVersionName ?? this.pipelineInfo?.releaseVersionName,
+                        baseVersion: this.pipelineInfo?.baseVersion ?? this.pipelineInfo?.releaseVersion ?? this.pipelineInfo?.version,
+                        baseVersionName: this.pipelineInfo?.baseVersionName ?? this.pipelineInfo?.releaseVersionName ?? this.pipelineInfo?.versionName,
+                        baseVersionStatus: this.pipelineInfo?.latestVersionStatus,
                         version,
                         versionName
                     })

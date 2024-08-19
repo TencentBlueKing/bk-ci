@@ -256,7 +256,6 @@
             ]),
             ...mapGetters('atom', [
                 'getAtomModal',
-                'getAtomModalKey',
                 'getDefaultVersion',
                 'classifyCodeListByCategory',
                 'getElement',
@@ -273,7 +272,6 @@
                 'atomCodeList',
                 'atomClassifyCodeList',
                 'atomMap',
-                'atomModalMap',
                 'fetchingAtmoModal',
                 'atomVersionList',
                 'isPropertyPanelVisible',
@@ -572,10 +570,10 @@
                 }
             },
             handleFetchAtomModal (atomCode, version) {
-                const { atomModalMap, fetchAtomModal, getAtomModalKey } = this
-                const atomModalKey = getAtomModalKey(atomCode, version)
-                const atomModal = atomModalMap[atomModalKey]
-                const queryOfflineFlag = !this.editable
+                const { getAtomModal, fetchAtomModal } = this
+                const atomModal = getAtomModal({ atomCode, version })
+                // const queryOfflineFlag = !this.editable
+                const queryOfflineFlag = true // TODO: 临时放开，后续需要优化
                 if (!atomModal && atomCode) { // 获取插件详情
                     fetchAtomModal({
                         projectCode: this.projectId,

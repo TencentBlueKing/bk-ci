@@ -59,15 +59,6 @@ class WhiteListDao {
         }
     }
 
-    fun batchFetch(
-        dslContext: DSLContext,
-        type: WhiteListType
-    ): List<WhiteList> {
-        with(TWhiteList.T_WHITE_LIST) {
-            return dslContext.selectFrom(this).where(TYPE.eq(type.name)).fetch(mapper)
-        }
-    }
-
     fun delete(
         dslContext: DSLContext,
         id: Long
@@ -84,18 +75,6 @@ class WhiteListDao {
     ): Int {
         with(TWhiteList.T_WHITE_LIST) {
             return dslContext.delete(this).where(NAME.eq(name).and(TYPE.eq(type.name))).limit(1).execute()
-        }
-    }
-
-    fun updateWindowsGpuLimit(
-        dslContext: DSLContext,
-        name: String,
-        windowsGpuLimit: Int
-    ): Int {
-        with(TWhiteList.T_WHITE_LIST) {
-            return dslContext.update(this)
-                .set(WINDOWS_GPU_LIMIT, windowsGpuLimit)
-                .where(NAME.eq(name).and(TYPE.eq(WhiteListType.WINDOWS_GPU.name))).execute()
         }
     }
 

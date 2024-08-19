@@ -46,12 +46,11 @@ import com.tencent.devops.process.yaml.v3.models.VariablePropOption
 import com.tencent.devops.process.yaml.v3.models.VariablePropType
 import com.tencent.devops.process.yaml.v3.models.VariableProps
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 @Suppress("ComplexMethod")
-class VariableTransfer @Autowired constructor() {
+class VariableTransfer {
 
     companion object {
         private val logger = LoggerFactory.getLogger(VariableTransfer::class.java)
@@ -77,7 +76,7 @@ class VariableTransfer @Autowired constructor() {
                 it.type == BuildFormPropertyType.ENUM -> VariableProps(
                     type = VariablePropType.SELECTOR.value,
                     options = it.options?.map { form ->
-                        VariablePropOption(id = form.value, label = form.key)
+                        VariablePropOption(id = form.key, label = form.value)
                     },
                     payload = it.payload
                 )
@@ -97,7 +96,7 @@ class VariableTransfer @Autowired constructor() {
                 it.type == BuildFormPropertyType.MULTIPLE -> VariableProps(
                     type = VariablePropType.CHECKBOX.value,
                     options = it.options?.map { form ->
-                        VariablePropOption(id = form.value, label = form.key)
+                        VariablePropOption(id = form.key, label = form.value)
                     },
                     payload = it.payload
                 )
@@ -215,10 +214,7 @@ class VariableTransfer @Autowired constructor() {
                         else -> variable.value ?: ""
                     },
                     options = variable.props?.options?.map {
-                        BuildFormValue(
-                            key = it.label ?: it.id.toString(),
-                            value = it.id.toString()
-                        )
+                        BuildFormValue(key = it.id.toString(), value = it.label ?: it.id.toString())
                     },
                     desc = variable.props?.description,
                     repoHashId = variable.props?.repoHashId,
@@ -236,7 +232,8 @@ class VariableTransfer @Autowired constructor() {
                     readOnly = if (variable.const == true) true else {
                         variable.readonly ?: false
                     },
-                    valueNotEmpty = variable.props?.required ?: false
+                    valueNotEmpty = variable.props?.required ?: false,
+                    payload = variable.props?.payload
                 )
             )
         }

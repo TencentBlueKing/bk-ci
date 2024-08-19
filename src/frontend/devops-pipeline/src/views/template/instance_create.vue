@@ -92,13 +92,13 @@
                                     />
                                     <i
                                         class="delete-btn"
-                                        v-if="!hashVal"
+                                        v-if="!hashVal && !isCopyInstance"
                                         @click="deletePipelineName(index)"
                                         v-bk-tooltips="$t('delete')"
                                     />
                                 </div>
                             </div>
-                            <div class="pipeline-item add-item" @click="addPipelineName" v-if="!hashVal">
+                            <div class="pipeline-item add-item" @click="addPipelineName" v-if="!hashVal && !isCopyInstance">
                                 <i class="plus-icon"></i>
                                 <span>{{ $t('template.addPipelineInstance') }}</span>
                             </div>
@@ -111,25 +111,16 @@
                 <section v-for="(param, index) in pipelineNameList" :key="index">
                     <template v-if="param.pipelineName === currentPipelineParams.pipelineName">
                         <section class="params-item" v-if="param.buildParams">
-                            <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('template.newPipelineName') }}</div>
+                            <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('versionNum') }}</div>
                             <div v-if="param.buildParams" class="build-params-content">
-                                <div class="buildNo-params-content">
-                                    <pipeline-params-form
-                                        :ref="`paramsForm${index}`"
-                                        :param-values="param.paramValues"
-                                        :handle-param-change="handleParamChange"
-                                        :params="param.versionParams">
-                                    </pipeline-params-form>
-                                </div>
-                                <div class="params-flex-col" ref="buildForm">
-                                    <form-field :required="true" :label="$t('buildNum')">
-                                        <vuex-input :disabled="disabled" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="'required|numeric'" :value="param.buildParams.buildNo" :handle-change="handleBuildNoChange" />
-                                        <p v-if="errors.has('buildNo')" :class="errors.has('buildNo') ? 'error-tips' : 'normal-tips'">{{ $t('template.buildNumErrTips') }}</p>
-                                    </form-field>
-                                    <form-field class="flex-colspan-2" :required="true" :is-error="errors.has('buildNoType')" :error-msg="errors.first('buildNoType')">
-                                        <enum-input :list="buildNoRules" :disabled="disabled" name="buildNoType" v-validate.initial="'required|string'" :value="param.buildParams.buildNoType" :handle-change="handleBuildNoChange" />
-                                    </form-field>
-                                </div>
+                                <pipeline-versions-form
+                                    :ref="`paramsForm${index}`"
+                                    :build-no="param.buildParams"
+                                    :disabled="disabled"
+                                    :version-param-values="param.paramValues"
+                                    :handle-version-change="handleParamChange"
+                                    :handle-build-no-change="handleBuildNoChange"
+                                ></pipeline-versions-form>
                             </div>
                         </section>
                         <section class="params-item" v-if="param.params && param.params.filter(item => buildNoParams.indexOf(item.id) === -1 ).length">
@@ -192,16 +183,14 @@
 </template>
 
 <script>
-    import FormField from '@/components/AtomPropertyPanel/FormField'
     import Logo from '@/components/Logo'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import VuexInput from '@/components/atomFormField/VuexInput'
     import innerHeader from '@/components/devops/inner_header'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import instanceMessage from '@/components/template/instance-message.vue'
     import instancePipelineName from '@/components/template/instance-pipeline-name.vue'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { mapGetters } from 'vuex'
+    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
 
     export default {
         components: {
@@ -209,10 +198,8 @@
             PipelineParamsForm,
             instancePipelineName,
             instanceMessage,
-            VuexInput,
-            FormField,
-            EnumInput,
-            Logo
+            Logo,
+            PipelineVersionsForm
         },
         data () {
             return {
@@ -260,9 +247,6 @@
             curVersionId () {
                 return this.$route.params.curVersionId
             },
-            pipelineName () {
-                return this.$route.params.pipelineName
-            },
             type () {
                 return this.$route.params.type
             },
@@ -273,15 +257,19 @@
                     return pipeline
                 }
                 return ''
+            },
+            copyPipelineName () {
+                return this.$route.params.pipelineName
+            },
+            queryPipelineId () {
+                return this.$route.query?.pipelineId ?? ''
+            },
+            isCopyInstance () {
+                return !!(this.copyPipelineName && this.queryPipelineId)
             }
         },
         async mounted () {
-            console.log(this.$route.params)
             this.requestTemplateDatail(this.curVersionId)
-            this.handlePipeLineName()
-            if (this.hashVal) {
-                this.requestPipelineParams(this.hashVal, this.curVersionId)
-            }
             if (this.$route.query.useTemplateSettings === 'true') {
                 this.isTemplateSetting = true
             }
@@ -310,7 +298,11 @@
                     this.template.creator = res.creator
                     this.template.description = res.description
                     this.versionList = res.versions
-                    this.handleParams(res.template.stages)
+                    if (this.hashVal || this.isCopyInstance) {
+                        await this.requestPipelineParams(versionId)
+                    } else {
+                        this.handleParams(res.template.stages)
+                    }
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -321,16 +313,9 @@
                     this.showContent = true
                 }
             },
-            async requestPipelineParams (pipeline, versionId) {
+            async requestPipelineParams (versionId) {
                 const { $store, loading } = this
-                const params = []
-
-                pipeline.forEach(item => {
-                    params.push({
-                        id: item
-                    })
-                })
-
+                const pipelines = this.isCopyInstance ? [this.queryPipelineId] : this.hashVal
                 loading.isLoading = true
 
                 try {
@@ -338,9 +323,11 @@
                         projectId: this.projectId,
                         templateId: this.templateId,
                         versionId: versionId,
-                        params
+                        params: pipelines.map(id => ({
+                            id
+                        }))
                     })
-                    this.handlePipelineParams(res)
+                    this.handlePipelineParams(pipelines, res)
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -367,9 +354,9 @@
                     this.buildParams = {}
                 }
 
-                if (!this.hashVal) {
+                if (!this.hashVal && !this.isCopyInstance) {
                     this.pipelineNameList.forEach(item => {
-                        item.params = [].concat(this.deepCopy(this.paramList))
+                        item.params = this.deepCopyParams(this.paramList)
                         item.pipelineParams = item.params.filter(item => this.buildNoParams.indexOf(item.id) === -1)
                         item.versionParams = item.params.filter(item => this.buildNoParams.indexOf(item.id) > -1)
                         item.paramValues = this.deepCopy(this.paramValues)
@@ -378,37 +365,28 @@
                 }
             },
 
-            /**
-             * 初次进来的时候，如果有需要实例化流水线的名字，就带上
-             */
-            handlePipeLineName () {
-                const params = this.$route.params || {}
-                const name = params.pipelineName
-                if (name) this.confirmHandler(name)
-            },
-
-            handlePipelineParams (data) {
-                this.pipelineNameList.splice(0, this.pipelineNameList.length)
-                this.hashVal.forEach((item, index) => {
+            handlePipelineParams (pipelines, data) {
+                this.pipelineNameList = pipelines.map((id, index) => {
+                    const item = data[id]
                     const pipelineItem = {
-                        pipelineId: data[item].pipelineId,
-                        pipelineName: data[item].pipelineName,
+                        pipelineId: id,
+                        pipelineName: id === this.queryPipelineId ? this.copyPipelineName : item.pipelineName,
                         selected: index === 0
                     }
-                    if (data[item].buildNo) {
-                        pipelineItem.buildParams = data[item].buildNo
+                    if (item.buildNo) {
+                        pipelineItem.buildParams = item.buildNo
                     }
-                    if (data[item].param.length) {
-                        const paramValues = data[item].param.reduce((values, param) => {
+                    if (item.param.length) {
+                        const paramValues = item.param.reduce((values, param) => {
                             values[param.id] = param.defaultValue
                             return values
                         }, {})
-                        pipelineItem.params = [].concat(this.deepCopy(data[item].param))
-                        pipelineItem.pipelineParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) === -1)
-                        pipelineItem.versionParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) > -1)
+                        pipelineItem.params = this.deepCopyParams(item.param)
+                        pipelineItem.pipelineParams = pipelineItem.params.filter(sub => this.buildNoParams.indexOf(sub.id) === -1)
+                        pipelineItem.versionParams = pipelineItem.params.filter(sub => this.buildNoParams.indexOf(sub.id) > -1)
                         pipelineItem.paramValues = paramValues
                     }
-                    this.pipelineNameList.push(pipelineItem)
+                    return pipelineItem
                 })
                 this.currentPipelineParams = this.pipelineNameList[0]
             },
@@ -426,8 +404,16 @@
                 this.$router.push(route)
             },
             changeVersion (newVal) {
-                this.requestTemplateDatail(newVal)
-                if (this.hashVal && newVal) this.requestPipelineParams(this.hashVal, newVal)
+                if (newVal && newVal !== this.curVersionId) {
+                    this.$router.push({
+                        ...this.$route,
+                        params: {
+                            ...this.$route.params,
+                            curVersionId: newVal
+                        }
+                    })
+                    this.requestTemplateDatail(newVal)
+                }
             },
             addPipelineName () {
                 this.pipelineNameList.forEach(pipeline => {
@@ -491,7 +477,7 @@
                 this.$set(this.pipelineNameList[index], 'isEditing', false)
             },
             confirmHandler (data) {
-                const tmpParam = [].concat(this.deepCopy(this.paramList))
+                const tmpParam = this.deepCopyParams(this.paramList)
                 const pipelineParams = tmpParam.filter(item => this.buildNoParams.indexOf(item.id) === -1)
                 const versionParams = tmpParam.filter(item => this.buildNoParams.indexOf(item.id) > -1)
 
@@ -524,6 +510,12 @@
             deepCopy (value, target) {
                 return JSON.parse(JSON.stringify(value))
             },
+            deepCopyParams (params) {
+                return [].concat(this.deepCopy(params)).map(p => ({
+                    ...p,
+                    readOnly: false
+                }))
+            },
             async submit () {
                 if (!this.pipelineNameList.length) {
                     this.$showTips({
@@ -548,6 +540,14 @@
                             param: pipeline.params
                         })
                     })
+                    const isRequired = params.some(item => item.buildNo && (typeof item.buildNo.buildNo === 'undefined' || item.buildNo.buildNo === ''))
+                    if (isRequired) {
+                        this.$showTips({
+                            message: this.$t('template.buildNumErrTips'),
+                            theme: 'error'
+                        })
+                        return
+                    }
 
                     loading.isLoading = true
 
@@ -873,48 +873,8 @@
             border: 1px solid #EBF0F5;
         }
         .build-params-content {
-            padding-bottom: 20px;
+            padding: 20px 0 20px 20px;
             background: #fff;
-        }
-        .buildNo-params-content {
-            min-width: 940px;
-            padding: 20px 0 0;
-            padding-left: 20px;
-            .bk-form-item {
-                float: left;
-                width: 320px;
-                margin-top: 20px;
-                margin-left: 10px;
-                .bk-label {
-                    width: 160px;
-                }
-                .bk-form-input {
-                    width: 145px !important;
-                }
-            }
-        }
-        .params-flex-col {
-            display: flex;
-            padding: 0 40px;
-            background: #fff;
-            .bk-form-item {
-                display: flex;
-                margin: 20px 30px 0 20px;
-                font-size: 14px;
-                .bk-label {
-                    width: 108px;
-                    margin-right: 22px;
-                    line-height: 36px;
-                    text-align: right;
-                    font-weight: bold;
-                }
-                .bk-form-input {
-                    width: 145px;
-                }
-                &:last-child {
-                    min-width: 420px;
-                }
-            }
         }
         .create-instance-footer {
             margin-top: 20px;

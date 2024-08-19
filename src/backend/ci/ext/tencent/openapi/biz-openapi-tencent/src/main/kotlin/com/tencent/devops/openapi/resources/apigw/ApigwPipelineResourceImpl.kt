@@ -126,7 +126,8 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.BS,
+            checkFlag = true
         )
     }
 

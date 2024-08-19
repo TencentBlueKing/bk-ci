@@ -87,5 +87,7 @@ data class ServiceVO(
     @get:Schema(title = "new_window_url")
     val newWindowUrl: String? = null,
     @get:Schema(title = "集群类型")
-    val clusterType: String = ""
+    val clusterType: String = "",
+    @get:Schema(title = "文档链接")
+    val docUrl: String = ""
 )

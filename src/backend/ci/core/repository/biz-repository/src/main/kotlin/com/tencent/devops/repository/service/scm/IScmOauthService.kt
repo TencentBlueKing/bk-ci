@@ -63,7 +63,9 @@ interface IScmOauthService {
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String? = null
+        search: String? = null,
+        page: Int = 1,
+        pageSize: Int = 20
     ): List<String>
 
     fun listTags(

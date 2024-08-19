@@ -303,6 +303,11 @@ enum class ErrorCodeEnum(
         ErrorType.USER,
         2126054,
         "已超过DevCloud创建Job环境上限."
+    ),
+    KUBERNETES_CREATE_RESOURCE_FAIL(
+        ErrorType.SYSTEM,
+        2126055,
+        "kubernetes创建{0}资源失败，原因：{1}"
     );
 
     fun getErrorMessage(): String {

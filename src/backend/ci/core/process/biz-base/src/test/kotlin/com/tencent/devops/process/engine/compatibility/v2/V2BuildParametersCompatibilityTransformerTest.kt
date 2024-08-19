@@ -80,6 +80,7 @@ class V2BuildParametersCompatibilityTransformerTest {
             "illegalStartParam" to "i will be delete after call it"
         )
         val startBuildParameter = buildParametersCompatibilityTransformer.parseTriggerParam(
+            userId = "", projectId = "", pipelineId = "",
             paramProperties = paramProperties, paramValues = paramValues
         )
         assertEquals(2, startBuildParameter.size)

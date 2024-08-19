@@ -36,7 +36,7 @@ data class PipelineYamlVo(
     @get:Schema(title = "代码库hashId", required = true)
     val repoHashId: String,
     @get:Schema(title = "代码库类型", required = true)
-    val scmType: ScmType,
+    val scmType: ScmType? = null,
     @get:Schema(title = "yaml文件路径", required = true)
     val filePath: String,
     @get:Schema(title = "代码库项目路径", required = false)

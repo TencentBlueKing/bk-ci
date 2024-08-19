@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.metrics.pojo.dto.CodeccDataReportDTO
 import com.tencent.devops.metrics.pojo.dto.QualityDataReportDTO
 import com.tencent.devops.metrics.pojo.dto.TurboDataReportDTO
@@ -68,5 +69,13 @@ interface ServiceMetricsDataReportResource {
     fun metricsTurboDataReport(
         @Parameter(description = "编译加速数据上报传输对象", required = true)
         turboDataReportDTO: TurboDataReportDTO
+    ): Result<Boolean>
+
+    @Operation(summary = "Job并发数据上报")
+    @Path("/jobdispatch/data/report")
+    @POST
+    fun metricsJobDispatchDataReport(
+        @Parameter(description = "Job并发数据上报传输对象", required = true)
+        dispatchJobMetricsData: DispatchJobMetricsData
     ): Result<Boolean>
 }

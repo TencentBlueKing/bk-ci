@@ -185,6 +185,7 @@ class ExperienceAppService(
                 projectId = projectId,
                 bundleIdentifier = bundleIdentifier,
                 platform = null,
+                classify = experience.classify,
                 page = 1,
                 pageSize = 1000,
                 isOldVersion = true
@@ -274,6 +275,7 @@ class ExperienceAppService(
                 projectId = experience.projectId,
                 bundleIdentifier = experience.bundleIdentifier,
                 platform = experience.platform,
+                classify = experience.classify,
                 page = if (page <= 0) 1 else page,
                 pageSize = if (pageSize <= 0) 10 else pageSize,
                 isOldVersion = false,
@@ -287,7 +289,8 @@ class ExperienceAppService(
                 dslContext,
                 experience.projectId,
                 experience.bundleIdentifier,
-                experience.platform
+                experience.platform,
+                experience.classify
             ) > page * pageSize
         }
 
@@ -299,6 +302,7 @@ class ExperienceAppService(
         projectId: String,
         bundleIdentifier: String,
         platform: String?,
+        classify: String?,
         page: Int,
         pageSize: Int,
         isOldVersion: Boolean,
@@ -323,6 +327,7 @@ class ExperienceAppService(
             projectId = projectId,
             bundleIdentifier = bundleIdentifier,
             platform = platform,
+            classify = classify,
             recordIds = recordIds,
             offset = (page - 1) * pageSize,
             limit = pageSize

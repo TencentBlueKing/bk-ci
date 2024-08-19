@@ -52,6 +52,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildNum: String,
+        buildId: String?,
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         return Result(
@@ -59,6 +60,7 @@ class BuildBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildNum = buildNum.toInt(),
+                buildId = buildId,
                 channelCode = channelCode ?: ChannelCode.BS
             )
         )
@@ -68,12 +70,14 @@ class BuildBuildResourceImpl @Autowired constructor(
     override fun getLatestSuccessBuild(
         projectId: String,
         pipelineId: String,
+        buildId: String?,
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         return Result(
             data = pipelineBuildFacadeService.getLatestSuccessBuild(
                 projectId = projectId,
                 pipelineId = pipelineId,
+                buildId = buildId,
                 channelCode = channelCode ?: ChannelCode.BS
             )
         )

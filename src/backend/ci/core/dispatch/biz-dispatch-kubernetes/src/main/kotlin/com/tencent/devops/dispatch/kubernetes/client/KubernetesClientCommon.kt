@@ -52,6 +52,10 @@ class KubernetesClientCommon @Autowired constructor(
         return Request.Builder().url(commonService.getProxyUrl(kubernetesApiUrl + url)).headers(headers(headers))
     }
 
+    fun microBaseRequest(url: String, headers: Map<String, String>? = null): Request.Builder {
+        return Request.Builder().url(kubernetesApiUrl + url).headers(headers(headers))
+    }
+
     fun headers(otherHeaders: Map<String, String>? = null): Headers {
         val result = mutableMapOf<String, String>()
 

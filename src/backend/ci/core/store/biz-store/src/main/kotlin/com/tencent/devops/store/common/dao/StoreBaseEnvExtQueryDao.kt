@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreBaseEnvExt
 import com.tencent.devops.model.store.tables.records.TStoreBaseEnvExtRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -47,10 +48,16 @@ class StoreBaseEnvExtQueryDao {
 
     fun getBaseExtEnvsByEnvId(
         dslContext: DSLContext,
-        envId: String
+        envId: String,
+        fieldName: String? = null
     ): Result<TStoreBaseEnvExtRecord>? {
         return with(TStoreBaseEnvExt.T_STORE_BASE_ENV_EXT) {
-            dslContext.selectFrom(this).where(ENV_ID.eq(envId)).fetch()
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ENV_ID.eq(envId))
+            if (!fieldName.isNullOrBlank()) {
+                conditions.add(FIELD_NAME.eq(fieldName))
+            }
+            dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
 }
