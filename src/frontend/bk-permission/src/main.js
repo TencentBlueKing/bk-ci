@@ -6,7 +6,6 @@ import { handleNoPermissionV3 } from './function/permission';
 import { loadI18nMessages } from './utils/locale';
 import './css/index.css';
 
-
 function install (Vue, opts = {}) {
   loadI18nMessages(opts.i18n)
   Vue.component('bk-permission', BkPermission)

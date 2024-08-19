@@ -15,19 +15,13 @@
           @click="handleChooseGroup(group)"
         >
           <span class="group-name" :title="group.name">{{ group.name }}</span>
-          <div class="num-box">
+          <div class="num-box" v-for="item in groupCountField" :key="item">
             <i :class="{
-              'group-icon manage-icon manage-icon-user-shape': true,
+              'group-icon manage-icon manage-icon-user-shape': item === 'userCount',
+              'group-icon manage-icon manage-icon-organization': item === 'departmentCount',
               'active': activeTab === group.groupId
             }" />
-            <div class="group-num">{{ group.userCount }}</div>
-          </div>
-          <div class="num-box">
-            <i :class="{
-              'group-icon manage-icon manage-icon-organization': true,
-              'active': activeTab === group.groupId
-            }" />
-            <div class="group-num">{{ group.departmentCount }}</div>
+            <div class="group-num">{{ group[item] }}</div>
           </div>
           <bk-popover
             v-if="resourceType === 'project'"
@@ -194,6 +188,7 @@ export default {
       hasLoadEnd: false,
       isClosing: false,
       curGroupIndex: -1,
+      groupCountField: ['userCount', 'departmentCount'],
     };
   },
   watch: {
@@ -300,13 +295,14 @@ export default {
             this.groupList[this.curGroupIndex].userCount += data.data.users.length
             this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
-          case 'remove_user_confirm':
+          case 'remove_user_confirm': {
             const departments = data.data.members.filter(i => i.type === 'department')
             const users = data.data.members.filter(i => i.type === 'user')
             this.groupList[this.curGroupIndex].departmentCount -= departments.length
             this.groupList[this.curGroupIndex].userCount -= users.length
             this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
+          }
           case 'change_group_detail_tab':
             this.$emit('change-group-detail-tab', data.data.tab)
         }
@@ -335,7 +331,7 @@ export default {
   border-right: 1px solid #dde0e6;
 }
 .group-list {
-  max-height: calc(100% - 130px);
+  max-height: calc(100% - 70px);
   height: auto;
   overflow-y: auto;
   &::-webkit-scrollbar-thumb {
@@ -455,9 +451,6 @@ export default {
 .close-btn {
   margin-bottom: 20px;
   text-align: center;
-}
-.small-size {
-  scale: 0.9;
 }
 
 .close-manage-dialog {
