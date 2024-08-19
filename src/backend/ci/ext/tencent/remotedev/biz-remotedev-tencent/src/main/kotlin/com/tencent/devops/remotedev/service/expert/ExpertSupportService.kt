@@ -204,6 +204,7 @@ class ExpertSupportService @Autowired constructor(
 
                 "managers" -> newParam[k] = projectInfo.properties?.remotedevManager ?: ""
                 "requestIp" -> newParam[k] = requestIp ?: ""
+                "displayName" -> newParam[k] = record.displayName
 
                 else -> newParam[k] = v
             }
