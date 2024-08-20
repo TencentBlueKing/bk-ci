@@ -991,7 +991,13 @@ class WorkspaceService @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
+
+        if (!permissionService.hasManagerOrViewerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to get $workspaceName info")
+            )
+        }
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: DEFAULT_PAGE_SIZE
         val count = workspaceOpHistoryDao.countOpHistory(dslContext, workspaceName)
