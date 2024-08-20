@@ -481,7 +481,7 @@ class TaskBuildRecordService(
                 if (buildStatus?.isRunning() == true && recordTask.startTime == null) {
                     startTime = now
                 }
-                if (buildStatus?.isFinish() == true && recordTask.endTime == null) {
+                if (buildStatus?.isFinish() == true) {
                     endTime = now
                     if (BuildStatus.parse(recordTask.status) == BuildStatus.REVIEWING) {
                         newTimestamps[BuildTimestampType.TASK_REVIEW_PAUSE_WAITING] =

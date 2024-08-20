@@ -431,7 +431,7 @@ class ContainerBuildRecordService(
             if (buildStatus?.isRunning() == true && recordContainer.startTime == null) {
                 startTime = now
             }
-            if (buildStatus?.isFinish() == true && recordContainer.endTime == null) {
+            if (buildStatus?.isFinish() == true) {
                 endTime = now
             }
             recordContainerDao.updateRecord(
