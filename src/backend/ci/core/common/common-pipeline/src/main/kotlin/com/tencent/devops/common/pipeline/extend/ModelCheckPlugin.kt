@@ -43,6 +43,7 @@ interface ModelCheckPlugin {
 
     /**
      * 检查[model]编排的完整性，并返回[JobSize + ElementSize = MetaSize]所有元素数量
+     * @param userId 当前流水线权限代持人
      * @throws RuntimeException 子类  将检查失败或异常的以[ErrorCodeException]类抛出
      */
     @Throws(ErrorCodeException::class)
