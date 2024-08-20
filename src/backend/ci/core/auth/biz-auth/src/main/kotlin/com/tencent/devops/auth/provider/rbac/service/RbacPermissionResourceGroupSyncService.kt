@@ -173,11 +173,6 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         val traceId = MDC.get(TraceTag.BIZID)
         syncExecutorService.submit {
             MDC.put(TraceTag.BIZID, traceId)
-            SyncMemberForApplyLock(redisOperation).use { lock ->
-                if (!lock.tryLock()) {
-                    logger.info("sync members of apply | running")
-                    return@use
-                }
                 val limit = 100
                 var offset = 0
                 val startEpoch = System.currentTimeMillis()
@@ -231,7 +226,6 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     offset += limit
                 } while (records.size == limit)
                 logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync members of apply")
-            }
         }
     }
 
