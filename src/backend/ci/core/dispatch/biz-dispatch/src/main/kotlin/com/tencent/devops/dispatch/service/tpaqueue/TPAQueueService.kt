@@ -13,9 +13,7 @@ import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -76,7 +74,7 @@ class TPAQueueService @Autowired constructor(
             updateTime = now
         )
         // 写入耗时，防止在排队中被取消了
-        updateQueueTime(data, now.timestampmilli(), null)
+        commonUtil.updateQueueTime(data, now.timestampmilli(), null)
         val event = TPAQueueEvent(
             projectId = data.projectId,
             pipelineId = data.pipelineId,
@@ -219,7 +217,7 @@ class TPAQueueService @Autowired constructor(
 
             val costMilliSecond = System.currentTimeMillis() - eventContext.startTimeMilliSecond
             commonUtil.logDebug(
-                dataContext.data, "env queue size:$queueSize index:$queueIndex cost $costMilliSecond"
+                dataContext.data, "env queue size:$queueSize index:$queueIndex cost ${costMilliSecond}ms"
             )
             // context 只能初始化一次，但是因为初始化过程中也可能出现报错，所以需要把可能的报错分摊给每个消息，防止一次报错整个队列没了
             if (eventContext.context == null) {
@@ -234,7 +232,7 @@ class TPAQueueService @Autowired constructor(
             // 计算用户耗时，只能刚下发就写入，防止执行完了还没启动计算，同时也要删除，防止用户取消后计时计算错误
             if (eventContext.needDeleteRecord?.first == sqlData.recordId) {
                 tpaQueueDao.delete(dslContext, sqlData.recordId)
-                updateQueueTime(
+                commonUtil.updateQueueTime(
                     data = sqlData.data,
                     createTime = sqlData.createTime.timestampmilli(),
                     endTime = eventContext.needDeleteRecord?.second
@@ -394,30 +392,9 @@ class TPAQueueService @Autowired constructor(
         val records = tpaQueueDao.fetchTimeByBuild(dslContext, buildId, vmSeqId).ifEmpty { return }
         // 取消时兜底结束时间
         records.forEach { record ->
-            updateQueueTime(record.data, record.createTime.timestampmilli(), now)
+            commonUtil.updateQueueTime(record.data, record.createTime.timestampmilli(), now)
         }
         tpaQueueDao.deleteByIds(dslContext, records.map { it.recordId }.toSet())
-    }
-
-    /**
-     * 给引擎写入排队的启停时间，时间为 millis 的 timestamp
-     */
-    private fun updateQueueTime(data: ThirdPartyAgentDispatchData, createTime: Long, endTime: Long?) {
-        try {
-            client.get(ServiceBuildResource::class).updateContainerTimeout(
-                userId = data.userId,
-                projectId = data.projectId,
-                pipelineId = data.pipelineId,
-                buildId = data.buildId,
-                containerId = data.vmSeqId,
-                executeCount = data.executeCount ?: 1,
-                timestamps = mapOf(
-                    BuildTimestampType.JOB_THIRD_PARTY_QUEUE to BuildRecordTimeStamp(createTime, endTime)
-                )
-            )
-        } catch (e: Throwable) {
-            logger.error("updateQueueTime|${data.toLog()}|$createTime|$endTime|error", e)
-        }
     }
 
     companion object {

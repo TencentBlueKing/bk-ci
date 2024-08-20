@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
@@ -76,6 +77,7 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import javax.ws.rs.core.Response
 
 @Service
@@ -138,7 +140,6 @@ class ThirdPartyDispatchService @Autowired constructor(
                     )
                 }
 
-                // TODO: 老逻辑只能在消息事件里面加计时了，但是要看下 shutdown 事件如何处理
                 buildByAgentId(dispatchMessage, dispatchType.copy(displayName = agentId, agentType = AgentType.ID))
             }
 
@@ -227,6 +228,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         dispatchMessage: DispatchMessage,
         dispatchType: ThirdPartyAgentIDDispatchType
     ) {
+        dispatchMessage.event.dispatchQueueStartTimeMilliSecond = LocalDateTime.now().timestampmilli()
         val agentResult = if (dispatchType.idType()) {
             client.get(ServiceThirdPartyAgentResource::class)
                 .getAgentById(dispatchMessage.event.projectId, dispatchType.displayName)
@@ -281,6 +283,13 @@ class ThirdPartyDispatchService @Autowired constructor(
                 )
             )
         }
+
+        // 错误结束的在最外边有处理了，这里只管正常逻辑的
+        commonUtil.updateQueueTime(
+            event = dispatchMessage.event,
+            createTime = dispatchMessage.event.dispatchQueueStartTimeMilliSecond ?: return,
+            endTime = LocalDateTime.now().timestampmilli()
+        )
     }
 
     private fun agentInQueue(
@@ -301,6 +310,7 @@ class ThirdPartyDispatchService @Autowired constructor(
 
     @Suppress("ComplexMethod", "LongMethod", "NestedBlockDepth", "MagicNumber")
     private fun buildByEnvId(dispatchMessage: DispatchMessage, dispatchType: ThirdPartyAgentEnvDispatchType) {
+        dispatchMessage.event.dispatchQueueStartTimeMilliSecond = LocalDateTime.now().timestampmilli()
         val agentsResult = try {
             if (dispatchType.idType()) {
                 client.get(ServiceThirdPartyAgentResource::class)
@@ -503,6 +513,12 @@ class ThirdPartyDispatchService @Autowired constructor(
                         envId = envId
                     )
                 ) {
+                    // 错误结束的在最外边有处理了，这里只管正常逻辑的
+                    commonUtil.updateQueueTime(
+                        event = dispatchMessage.event,
+                        createTime = dispatchMessage.event.dispatchQueueStartTimeMilliSecond ?: return,
+                        endTime = LocalDateTime.now().timestampmilli()
+                    )
                     return
                 }
             } else {

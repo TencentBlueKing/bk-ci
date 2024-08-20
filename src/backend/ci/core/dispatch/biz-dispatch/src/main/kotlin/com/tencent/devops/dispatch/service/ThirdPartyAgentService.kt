@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -47,7 +48,6 @@ import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.dispatch.dao.TPAQueueDao
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
@@ -58,6 +58,7 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildDockerInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildWithStatus
+import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
@@ -74,6 +75,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DeadlockLoserDataAccessException
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
@@ -90,9 +92,9 @@ class ThirdPartyAgentService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao,
-    private val tpaQueueDao: TPAQueueDao,
     private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService,
-    private val tokenService: ClientTokenService
+    private val tokenService: ClientTokenService,
+    private val commonUtil: TPACommonUtil
 ) {
     @Value("\${thirdagent.workerErrorTemplate:#{null}}")
     val workerErrorRtxTemplate: String? = null
@@ -385,16 +387,39 @@ class ThirdPartyAgentService @Autowired constructor(
     }
 
     fun finishBuild(buildId: String, vmSeqId: String?, buildResult: Boolean) {
+        val now = LocalDateTime.now().timestampmilli()
         if (vmSeqId.isNullOrBlank()) {
             val records = thirdPartyAgentBuildDao.list(dslContext, buildId)
             if (records.isEmpty()) {
                 return
             }
-            records.forEach {
-                finishBuild(it, buildResult)
+            records.forEach { record ->
+                // 取消时兜底结束时间
+                commonUtil.updateQueueTime(
+                    userId = record.startUser,
+                    projectId = record.projectId,
+                    pipelineId = record.pipelineId,
+                    buildId = record.buildId,
+                    vmSeqId = record.vmSeqId,
+                    executeCount = record.executeCount,
+                    createTime = null,
+                    endTime = now
+                )
+                finishBuild(record, buildResult)
             }
         } else {
             val record = thirdPartyAgentBuildDao.get(dslContext, buildId, vmSeqId) ?: return
+            // 取消时兜底结束时间
+            commonUtil.updateQueueTime(
+                userId = record.startUser,
+                projectId = record.projectId,
+                pipelineId = record.pipelineId,
+                buildId = record.buildId,
+                vmSeqId = record.vmSeqId,
+                executeCount = record.executeCount,
+                createTime = null,
+                endTime = now
+            )
             finishBuild(record, buildResult)
         }
     }

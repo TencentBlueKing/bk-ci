@@ -1,6 +1,9 @@
 package com.tencent.devops.dispatch.utils
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -9,13 +12,17 @@ import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.QueueFailureException
 import com.tencent.devops.dispatch.pojo.QueueRetryException
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class TPACommonUtil @Autowired constructor(
+    private val client: Client,
     private val commonConfig: CommonConfig,
     private val buildLogPrinter: BuildLogPrinter
 ) {
@@ -162,6 +169,63 @@ class TPACommonUtil @Autowired constructor(
         )
     }
 
+    /**
+     * 给引擎写入排队的启停时间，时间为 millis 的 timestamp
+     */
+    fun updateQueueTime(data: ThirdPartyAgentDispatchData, createTime: Long?, endTime: Long?) {
+        updateQueueTime(
+            userId = data.userId,
+            projectId = data.projectId,
+            pipelineId = data.pipelineId,
+            buildId = data.buildId,
+            vmSeqId = data.vmSeqId,
+            executeCount = data.executeCount ?: 1,
+            createTime = createTime,
+            endTime = endTime
+        )
+    }
+
+    fun updateQueueTime(event: PipelineAgentStartupEvent, createTime: Long?, endTime: Long?) {
+        updateQueueTime(
+            userId = event.userId,
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            executeCount = event.executeCount ?: 1,
+            createTime = createTime,
+            endTime = endTime
+        )
+    }
+
+    fun updateQueueTime(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        executeCount: Int,
+        createTime: Long?,
+        endTime: Long?
+    ) {
+        try {
+            client.get(ServiceBuildResource::class).updateContainerTimeout(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                containerId = vmSeqId,
+                executeCount = executeCount ?: 1,
+                timestamps = mapOf(
+                    BuildTimestampType.JOB_THIRD_PARTY_QUEUE to BuildRecordTimeStamp(createTime, endTime)
+                )
+            )
+        } catch (e: Throwable) {
+            logger.error("updateQueueTime|$userId|$projectId|$pipelineId|$buildId|$vmSeqId|$executeCount" +
+                    "|$createTime|$endTime|error", e)
+        }
+    }
+
     companion object {
         fun queueRetry(
             errorCode: ErrorCodeEnum,
@@ -206,5 +270,7 @@ class TPACommonUtil @Autowired constructor(
         // 打印带特定tag的日志
         fun Logger.tagError(msg: String) = this.error("$TPA_QUEUE_LOG_TAG$msg")
         fun Logger.tagError(msg: String, o: Any) = this.error("$TPA_QUEUE_LOG_TAG$msg", o)
+
+        private val logger = LoggerFactory.getLogger(TPACommonUtil::class.java)
     }
 }
