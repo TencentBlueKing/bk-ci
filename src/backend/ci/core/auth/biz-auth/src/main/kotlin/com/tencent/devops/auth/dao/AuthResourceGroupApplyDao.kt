@@ -57,7 +57,7 @@ class AuthResourceGroupApplyDao {
                         .set(STATUS, ApplyToGroupStatus.PENDING.value)
                         .set(NUMBER_OF_CHECKS, 0)
                 }
-            )
+            ).execute()
         }
     }
 }
