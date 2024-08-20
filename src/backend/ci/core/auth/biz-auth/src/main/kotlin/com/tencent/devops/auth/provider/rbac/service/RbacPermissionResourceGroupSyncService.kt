@@ -42,7 +42,6 @@ import com.tencent.devops.auth.pojo.enum.ApplyToGroupStatus
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.lock.SyncGroupAndMemberLock
-import com.tencent.devops.auth.service.lock.SyncMemberForApplyLock
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -173,59 +172,59 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         val traceId = MDC.get(TraceTag.BIZID)
         syncExecutorService.submit {
             MDC.put(TraceTag.BIZID, traceId)
-                val limit = 100
-                var offset = 0
-                val startEpoch = System.currentTimeMillis()
-                do {
-                    logger.info("sync members of apply | start")
-                    val records = authResourceGroupApplyDao.list(
+            val limit = 100
+            var offset = 0
+            val startEpoch = System.currentTimeMillis()
+            do {
+                logger.info("sync members of apply | start")
+                val records = authResourceGroupApplyDao.list(
+                    dslContext = dslContext,
+                    limit = limit,
+                    offset = offset
+                )
+                val recordIdsOfTimeOut = records.filter { it.numberOfChecks >= MAX_NUMBER_OF_CHECKS }.map { it.id }
+                val (recordsOfSuccess, recordsOfPending) = records.filterNot { recordIdsOfTimeOut.contains(it.id) }.partition {
+                    try {
+                        val isMemberJoinedToGroup = iamV2ManagerService.verifyGroupValidMember(
+                            it.memberId,
+                            it.iamGroupId.toString()
+                        )[it.iamGroupId]?.belong == true
+                        isMemberJoinedToGroup
+                    } catch (ignore: Exception) {
+                        logger.warn("verify group valid member failed,${it.memberId}|${it.iamGroupId}", ignore)
+                        false
+                    }
+                }
+                if (recordIdsOfTimeOut.isNotEmpty()) {
+                    authResourceGroupApplyDao.batchUpdate(
                         dslContext = dslContext,
-                        limit = limit,
-                        offset = offset
+                        ids = recordIdsOfTimeOut,
+                        applyToGroupStatus = ApplyToGroupStatus.TIME_OUT
                     )
-                    val recordIdsOfTimeOut = records.filter { it.numberOfChecks >= MAX_NUMBER_OF_CHECKS }.map { it.id }
-                    val (recordsOfSuccess, recordsOfPending) = records.filterNot { recordIdsOfTimeOut.contains(it.id) }.partition {
-                        try {
-                            val isMemberJoinedToGroup = iamV2ManagerService.verifyGroupValidMember(
-                                it.memberId,
-                                it.iamGroupId.toString()
-                            )[it.iamGroupId]?.belong == true
-                            isMemberJoinedToGroup
-                        } catch (ignore: Exception) {
-                            logger.warn("verify group valid member failed,${it.memberId}|${it.iamGroupId}", ignore)
-                            false
-                        }
-                    }
-                    if (recordIdsOfTimeOut.isNotEmpty()) {
-                        authResourceGroupApplyDao.batchUpdate(
-                            dslContext = dslContext,
-                            ids = recordIdsOfTimeOut,
-                            applyToGroupStatus = ApplyToGroupStatus.TIME_OUT
+                }
+                if (recordsOfPending.isNotEmpty()) {
+                    authResourceGroupApplyDao.batchUpdate(
+                        dslContext = dslContext,
+                        ids = recordsOfPending.map { it.id },
+                        applyToGroupStatus = ApplyToGroupStatus.PENDING
+                    )
+                }
+                if (recordsOfSuccess.isNotEmpty()) {
+                    recordsOfSuccess.forEach {
+                        syncIamGroupMember(
+                            projectCode = it.projectCode,
+                            iamGroupId = it.iamGroupId
                         )
                     }
-                    if (recordsOfPending.isNotEmpty()) {
-                        authResourceGroupApplyDao.batchUpdate(
-                            dslContext = dslContext,
-                            ids = recordsOfPending.map { it.id },
-                            applyToGroupStatus = ApplyToGroupStatus.PENDING
-                        )
-                    }
-                    if (recordsOfSuccess.isNotEmpty()) {
-                        recordsOfSuccess.forEach {
-                            syncIamGroupMember(
-                                projectCode = it.projectCode,
-                                iamGroupId = it.iamGroupId
-                            )
-                        }
-                        authResourceGroupApplyDao.batchUpdate(
-                            dslContext = dslContext,
-                            ids = recordsOfSuccess.map { it.id },
-                            applyToGroupStatus = ApplyToGroupStatus.SUCCEED
-                        )
-                    }
-                    offset += limit
-                } while (records.size == limit)
-                logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync members of apply")
+                    authResourceGroupApplyDao.batchUpdate(
+                        dslContext = dslContext,
+                        ids = recordsOfSuccess.map { it.id },
+                        applyToGroupStatus = ApplyToGroupStatus.SUCCEED
+                    )
+                }
+                offset += limit
+            } while (records.size == limit)
+            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync members of apply")
         }
     }
 
