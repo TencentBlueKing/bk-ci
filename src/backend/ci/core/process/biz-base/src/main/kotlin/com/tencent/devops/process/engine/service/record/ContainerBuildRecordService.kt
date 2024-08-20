@@ -430,6 +430,11 @@ class ContainerBuildRecordService(
             val now = LocalDateTime.now()
             if (buildStatus?.isRunning() == true && recordContainer.startTime == null) {
                 startTime = now
+                // #10751 增加对运行中重试的兼容，因为不新增执行次数，需要刷新上一次失败的结束时间
+                if (recordContainer.endTime != null) recordContainerDao.flushEndTimeWhenRetry(
+                    dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                    buildId = buildId, containerId = containerId, executeCount = executeCount
+                )
             }
             if (buildStatus?.isFinish() == true && recordContainer.endTime == null) {
                 endTime = now

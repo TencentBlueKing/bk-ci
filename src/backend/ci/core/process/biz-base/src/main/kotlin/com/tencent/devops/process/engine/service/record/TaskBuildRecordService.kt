@@ -480,6 +480,11 @@ class TaskBuildRecordService(
                 val newTimestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
                 if (buildStatus?.isRunning() == true && recordTask.startTime == null) {
                     startTime = now
+                    // #10751 增加对运行中重试的兼容，因为不新增执行次数，需要刷新上一次失败的结束时间
+                    if (recordTask.endTime != null) recordTaskDao.flushEndTimeWhenRetry(
+                        dslContext = transactionContext, projectId = projectId, pipelineId = pipelineId,
+                        buildId = buildId, taskId = taskId, executeCount = executeCount
+                    )
                 }
                 if (buildStatus?.isFinish() == true && recordTask.endTime == null) {
                     endTime = now
