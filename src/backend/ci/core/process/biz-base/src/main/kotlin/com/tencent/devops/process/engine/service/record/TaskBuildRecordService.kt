@@ -203,7 +203,11 @@ class TaskBuildRecordService(
                 taskVar.remove(Element::errorType.name)
                 taskVar.remove(Element::errorCode.name)
                 taskVar.remove(Element::errorMsg.name)
-
+                // #10751 增加对运行中重试的兼容，因为不新增执行次数，需要刷新上一次失败的结束时间
+                if (recordTask.endTime != null) recordTaskDao.flushEndTimeWhenRetry(
+                    dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                    buildId = buildId, taskId = taskId, executeCount = executeCount
+                )
                 recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,
@@ -469,17 +473,15 @@ class TaskBuildRecordService(
                     taskId = taskId,
                     executeCount = executeCount
                 ) ?: run {
-                    logger.warn(
-                        "ENGINE|$buildId|updateTaskByMap| get task($taskId) record failed."
-                    )
+                    logger.warn("ENGINE|$buildId|updateTaskRecord| get task($taskId) record failed.")
                     return@transaction
                 }
                 var startTime: LocalDateTime? = null
                 var endTime: LocalDateTime? = null
                 val now = LocalDateTime.now()
                 val newTimestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
-                if (buildStatus?.isRunning() == true && recordTask.startTime == null) {
-                    startTime = now
+                if (buildStatus?.isRunning() == true) {
+                    if (recordTask.startTime == null) startTime = now
                     // #10751 增加对运行中重试的兼容，因为不新增执行次数，需要刷新上一次失败的结束时间
                     if (recordTask.endTime != null) recordTaskDao.flushEndTimeWhenRetry(
                         dslContext = transactionContext, projectId = projectId, pipelineId = pipelineId,
