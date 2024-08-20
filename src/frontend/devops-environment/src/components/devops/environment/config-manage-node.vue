@@ -132,14 +132,16 @@
             const getDefaultCmdbPagination = () => {
                 return {
                     current: 1,
-                    limit: 20,
+                    limit: 3,
                     count: 0,
                     location: 'left',
                     align: 'right',
+                    limitList: [3, 10, 20],
                     cacheScrollIdList: [
                         {
                             key: 1,
-                            scrollId: 0
+                            scrollId: 0,
+                            isLoaded: false
                         }
                     ],
                     loadedNum: 0
@@ -195,6 +197,7 @@
                     this.importText = this.$t('environment.import')
                     this.searchKeyList.splice(0, this.searchKeyList.length)
                     this.pagination = this.getDefaultCmdbPagination()
+                    console.log(this.pagination, 123)
                 } else {
                     await this.getDate()
                 }
@@ -217,18 +220,25 @@
                     }
                     const res = await this.$store.dispatch('environment/requestCmdbNode', { params })
                    
+                    this.pagination.hasNext = res.hasNext
                     this.rowList = res.records || []
-                    if (this.pagination.current >= this.pagination.cacheScrollIdList.length) {
+                    const curPage = this.pagination.cacheScrollIdList.find(i => i.key === this.pagination.current)
+                    if (!curPage.isLoaded) {
                         this.pagination.loadedNum += res.records.length
                     }
-                    if (res.hasNext && this.pagination.current >= this.pagination.cacheScrollIdList.length) {
+                    curPage.isLoaded = true
+                    
+                    this.pagination.count = this.pagination.loadedNum
+                    if (res.hasNext && this.pagination.current === this.pagination.cacheScrollIdList.length) {
+                        console.log(res.hasNext, this.pagination.current, this.pagination.cacheScrollIdList.length)
+                        this.pagination.count = this.pagination.loadedNum + 1
                         this.pagination.cacheScrollIdList.push({
                             key: this.pagination.current + 1,
-                            scrollId: res.scrollId
+                            scrollId: res.scrollId,
+                            isLoaded: false
                         })
                     }
-                    this.pagination.count = res.hasNext ? this.pagination.loadedNum + 1 : this.pagination.loadedNum
-                    
+                    console.log(this.pagination.cacheScrollIdList, 'cacheScrollIdList')
                     // 回填已经导入的节点
                     this.$nextTick(() => {
                         this.rowList.forEach(i => {
@@ -263,6 +273,7 @@
             },
             changeOperator () {
                 this.pagination = this.getDefaultCmdbPagination()
+                if (!this.nodeSelectConf.isShow) return
                 this.getDate()
             },
             handlePageChange (page) {
