@@ -19,7 +19,7 @@ class AuthResourceGroupApplyDao {
         return with(TAuthResourceGroupApply.T_AUTH_RESOURCE_GROUP_APPLY) {
             dslContext.selectFrom(this)
                 .where(STATUS.eq(ApplyToGroupStatus.PENDING.value))
-                .orderBy(CREATE_TIME.desc())
+                .orderBy(CREATE_TIME.asc())
                 .offset(offset)
                 .limit(limit)
                 .fetch()
