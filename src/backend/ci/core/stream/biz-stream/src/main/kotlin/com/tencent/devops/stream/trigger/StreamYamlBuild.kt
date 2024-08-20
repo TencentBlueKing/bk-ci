@@ -187,7 +187,10 @@ class StreamYamlBuild @Autowired constructor(
                         userId = action.data.getUserId(),
                         gitProjectId = action.data.eventCommon.gitProjectId.toLong(),
                         projectCode = action.getProjectCode(),
-                        modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(realPipeline.displayName),
+                        modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(
+                            realPipeline.displayName,
+                            action.data.context.pipelineAsCodeSettings
+                        ),
                         updateLastModifyUser = true
                     )
                 }
@@ -235,6 +238,7 @@ class StreamYamlBuild @Autowired constructor(
                         TriggerReason.PIPELINE_PREPARE_ERROR
                     )
                 }
+
                 is QualityRulesException -> {
                     Triple(
                         false,
@@ -246,6 +250,7 @@ class StreamYamlBuild @Autowired constructor(
                 is StreamTriggerBaseException, is ErrorCodeException -> {
                     throw e
                 }
+
                 else -> {
                     logger.warn("StreamYamlBuild|gitStartBuild|${action.data.context.requestEventId}|error", e)
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
