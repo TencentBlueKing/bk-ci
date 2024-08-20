@@ -1462,7 +1462,7 @@ class RepositoryService @Autowired constructor(
                     )
                 )
                 val members = try {
-                    gitService.getMembers(
+                    gitService.getProjectMembersAll(
                         token = token,
                         gitProjectId = projectName,
                         search = userId,
