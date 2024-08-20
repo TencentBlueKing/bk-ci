@@ -41,7 +41,7 @@ data class GithubCheckRuns(
     val headSha: String,
     @JsonProperty("details_url")
     @get:Schema(title = "详情链接", description = "details_url")
-    val detailsUrl: String,
+    val detailsUrl: String?,
     @JsonProperty("external_id")
     @get:Schema(title = "拓展ID", description = "external_id")
     val externalId: String,
