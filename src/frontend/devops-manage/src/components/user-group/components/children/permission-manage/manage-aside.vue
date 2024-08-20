@@ -396,22 +396,17 @@ async function handleChangeOverFormName ({list, userList}){
     });
     return
   }
-  if(!handOverForm.value){
-    handOverInputClear();
-    return;
-  }
-
-  isChecking.value = true;
-  isAuthorizedSuccess.value = false;
-  isHandOverfail.value = false;
 
   const params = {
     projectCode: projectId.value,
-    handoverFrom: removeUser.value.id,
-    handoverTo: handOverForm.value.id,
+    handoverFrom: removeUser.value?.id,
+    handoverTo: handOverForm.value?.id,
     preCheck: true
   }
-
+  if (!params.handoverTo) return
+  isChecking.value = true;
+  isAuthorizedSuccess.value = false;
+  isHandOverfail.value = false;
   try {
     const reset = await http.resetAllResourceAuthorization(projectId.value, params)
     if (reset.length) {
