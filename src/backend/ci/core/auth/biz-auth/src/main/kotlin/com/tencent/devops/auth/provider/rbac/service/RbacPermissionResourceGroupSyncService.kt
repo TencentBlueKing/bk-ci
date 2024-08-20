@@ -183,7 +183,9 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     offset = offset
                 )
                 val recordIdsOfTimeOut = records.filter { it.numberOfChecks >= MAX_NUMBER_OF_CHECKS }.map { it.id }
-                val (recordsOfSuccess, recordsOfPending) = records.filterNot { recordIdsOfTimeOut.contains(it.id) }.partition {
+                val (recordsOfSuccess, recordsOfPending) = records.filterNot {
+                    recordIdsOfTimeOut.contains(it.id)
+                }.partition {
                     try {
                         val isMemberJoinedToGroup = iamV2ManagerService.verifyGroupValidMember(
                             it.memberId,
