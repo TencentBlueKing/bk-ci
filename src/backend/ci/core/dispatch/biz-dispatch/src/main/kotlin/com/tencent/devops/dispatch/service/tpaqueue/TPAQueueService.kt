@@ -61,6 +61,7 @@ class TPAQueueService @Autowired constructor(
             is ThirdPartyAgentEnvDispatchType -> Pair(data.genEnv()!!, ThirdPartyAgentSqlQueueType.ENV)
             else -> throw InvalidParamException("Unknown agent type - ${data.dispatchType}")
         }
+        val now = LocalDateTime.now()
         tpaQueueDao.add(
             dslContext = dslContext,
             projectId = data.projectId,
@@ -70,8 +71,12 @@ class TPAQueueService @Autowired constructor(
             data = sqlData,
             dataType = dataType,
             info = data.genSqlJsonData(),
-            retryTime = 0
+            retryTime = 0,
+            createTime = now,
+            updateTime = now
         )
+        // 写入耗时，防止在排队中被取消了
+        updateQueueTime(data, now.timestampmilli(), null)
         val event = TPAQueueEvent(
             projectId = data.projectId,
             pipelineId = data.pipelineId,
@@ -172,7 +177,7 @@ class TPAQueueService @Autowired constructor(
         }
     }
 
-    fun inQueue(event: TPAQueueEvent) {
+    private fun inQueue(event: TPAQueueEvent) {
         try {
             val records = tpaQueueDao.fetchProjectData(
                 dslContext = dslContext,
@@ -183,14 +188,11 @@ class TPAQueueService @Autowired constructor(
             )
             // 事件开始，在这初始化时间去掉数据库查询的系统时间
             val eventContext = TPAQueueEventContext()
-            records.forEachIndexed { index, sqlData ->
-                // 目前只做环境排队
-                if (event.dataType == ThirdPartyAgentSqlQueueType.ENV) {
-                    inEnvQueue(eventContext, sqlData, records.size, index + 1)
-                }
+            // 目前只做环境排队
+            records.filter { event.dataType == ThirdPartyAgentSqlQueueType.ENV }.forEachIndexed { index, sqlData ->
+                inEnvQueue(eventContext, sqlData, records.size, index + 1)
             }
-            // 循环事件结束收尾，删除调度成功的，增加重试测试
-            tpaQueueDao.deleteByIds(dslContext, eventContext.needDeleteRecord.keys)
+            // 循环事件结束收尾，增加重试测试
             tpaQueueDao.addRetryTimeByIds(dslContext, eventContext.needRetryRecord)
         } catch (e: Throwable) {
             // 只可能是Sql错误或者抓到的异常处理逻辑错误，但是为了防止丢失消息，还是抓一下重发
@@ -202,17 +204,16 @@ class TPAQueueService @Autowired constructor(
     /**
      * 对 inEnvQueue 的包装，主要用来整合异常,例如结束和重试异常
      */
-    fun inEnvQueue(
+    private fun inEnvQueue(
         eventContext: TPAQueueEventContext,
         sqlData: ThirdPartyAgentQueueSqlData,
         queueSize: Int,
         queueIndex: Int
     ) {
-        val startTime = LocalDateTime.now()
         try {
             val dataContext = QueueDataContext(sqlData.data, sqlData.retryTime)
             if (!checkRunning(dataContext)) {
-                eventContext.addDelete(sqlData.recordId)
+                eventContext.setDelete(sqlData.recordId)
                 return
             }
 
@@ -226,25 +227,17 @@ class TPAQueueService @Autowired constructor(
             }
             tpaEnvQueueService.inEnvQueue(eventContext.context!!, dataContext)
             // 只有调度成功才能走到这一步，到这一步就删除,同时删除数据库
-            eventContext.addDelete(sqlData.recordId)
+            eventContext.setDelete(sqlData.recordId)
         } catch (e: Throwable) {
             queueEnd(eventContext, sqlData, e)
         } finally {
-            // 计算用户耗时，只能刚下发就写入，防止计算完了
-            if (eventContext.needDeleteRecord.containsKey(sqlData.recordId)) {
-                client.get(ServiceBuildResource::class).updateContainerTimeout(
-                    userId = sqlData.data.userId,
-                    projectId = sqlData.data.projectId,
-                    pipelineId = sqlData.data.pipelineId,
-                    buildId = sqlData.data.buildId,
-                    containerId = sqlData.data.vmSeqId,
-                    executeCount = sqlData.data.executeCount ?: 1,
-                    timestamps = mapOf(
-                        BuildTimestampType.JOB_THIRD_PARTY_QUEUE to BuildRecordTimeStamp(
-                            sqlData.createTime.timestampmilli(),
-                            eventContext.needDeleteRecord[sqlData.recordId]
-                        )
-                    )
+            // 计算用户耗时，只能刚下发就写入，防止执行完了还没启动计算，同时也要删除，防止用户取消后计时计算错误
+            if (eventContext.needDeleteRecord?.first == sqlData.recordId) {
+                tpaQueueDao.delete(dslContext, sqlData.recordId)
+                updateQueueTime(
+                    data = sqlData.data,
+                    createTime = sqlData.createTime.timestampmilli(),
+                    endTime = eventContext.needDeleteRecord?.second
                 )
             }
         }
@@ -367,7 +360,7 @@ class TPAQueueService @Autowired constructor(
                 )
             }
         }
-        eventContext.addDelete(sqlData.recordId)
+        eventContext.setDelete(sqlData.recordId)
         onFailure(data, failureE)
     }
 
@@ -377,7 +370,7 @@ class TPAQueueService @Autowired constructor(
     ) {
         commonUtil.logError(
             data = data,
-            message = "${I18nUtil.getCodeLanMessage("$BK_FAILED_START_BUILD_MACHINE")}-${exception.message}"
+            message = "${I18nUtil.getCodeLanMessage(BK_FAILED_START_BUILD_MACHINE)}-${exception.message}"
         )
         try {
             client.get(ServiceBuildResource::class).setVMStatus(
@@ -394,6 +387,37 @@ class TPAQueueService @Autowired constructor(
             logger.tagError("onContainerFailure|setVMStatus|${data.toLog()}|error=$exception")
         }
         DispatchLogRedisUtils.removeRedisExecuteCount(data.buildId)
+    }
+
+    fun finishQueue(buildId: String, vmSeqId: String?) {
+        val now = LocalDateTime.now().timestampmilli()
+        val records = tpaQueueDao.fetchTimeByBuild(dslContext, buildId, vmSeqId).ifEmpty { return }
+        // 取消时兜底结束时间
+        records.forEach { record ->
+            updateQueueTime(record.data, record.createTime.timestampmilli(), now)
+        }
+        tpaQueueDao.deleteByIds(dslContext, records.map { it.recordId }.toSet())
+    }
+
+    /**
+     * 给引擎写入排队的启停时间，时间为 millis 的 timestamp
+     */
+    private fun updateQueueTime(data: ThirdPartyAgentDispatchData, createTime: Long, endTime: Long?) {
+        try {
+            client.get(ServiceBuildResource::class).updateContainerTimeout(
+                userId = data.userId,
+                projectId = data.projectId,
+                pipelineId = data.pipelineId,
+                buildId = data.buildId,
+                containerId = data.vmSeqId,
+                executeCount = data.executeCount ?: 1,
+                timestamps = mapOf(
+                    BuildTimestampType.JOB_THIRD_PARTY_QUEUE to BuildRecordTimeStamp(createTime, endTime)
+                )
+            )
+        } catch (e: Throwable) {
+            logger.error("updateQueueTime|${data.toLog()}|$createTime|$endTime|error", e)
+        }
     }
 
     companion object {

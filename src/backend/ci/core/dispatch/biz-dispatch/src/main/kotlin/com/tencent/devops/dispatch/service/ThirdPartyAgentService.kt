@@ -68,7 +68,6 @@ import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgent
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -385,22 +384,18 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    fun finishBuild(event: PipelineAgentShutdownEvent) {
-        val buildId = event.buildId
-        val vmSeqId = event.vmSeqId
-        val success = event.buildResult
-        finishQueue(buildId, vmSeqId)
+    fun finishBuild(buildId: String, vmSeqId: String?, buildResult: Boolean) {
         if (vmSeqId.isNullOrBlank()) {
             val records = thirdPartyAgentBuildDao.list(dslContext, buildId)
             if (records.isEmpty()) {
                 return
             }
             records.forEach {
-                finishBuild(it, success)
+                finishBuild(it, buildResult)
             }
         } else {
             val record = thirdPartyAgentBuildDao.get(dslContext, buildId, vmSeqId) ?: return
-            finishBuild(record, success)
+            finishBuild(record, buildResult)
         }
     }
 
@@ -447,10 +442,6 @@ class ThirdPartyAgentService @Autowired constructor(
             )
         }
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
-    }
-
-    private fun finishQueue(buildId: String, vmSeqId: String?) {
-        tpaQueueDao.deleteByBuild(dslContext, buildId, vmSeqId)
     }
 
     private fun finishBuild(record: TDispatchThirdpartyAgentBuildRecord, success: Boolean) {

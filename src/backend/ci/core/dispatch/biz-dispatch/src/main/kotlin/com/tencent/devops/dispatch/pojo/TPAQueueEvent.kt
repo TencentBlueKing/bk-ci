@@ -27,12 +27,12 @@ data class TPAQueueEvent(
 
 data class TPAQueueEventContext(
     var context: EnvQueueContext? = null,
-    val needDeleteRecord: MutableMap<Long, Long> = mutableMapOf(),
+    var needDeleteRecord: Pair<Long, Long>? = null,
     val needRetryRecord: MutableSet<Long> = mutableSetOf(),
     val startTimeMilliSecond: Long = System.currentTimeMillis()
 ) {
-    fun addDelete(recordId: Long) {
-        needDeleteRecord[recordId] = LocalDateTime.now().timestampmilli()
+    fun setDelete(recordId: Long) {
+        needDeleteRecord = Pair(recordId, LocalDateTime.now().timestampmilli())
     }
 
     fun addRetry(recordId: Long) {

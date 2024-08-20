@@ -71,6 +71,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -966,6 +967,11 @@ class ThirdPartyDispatchService @Autowired constructor(
             buildId = event.buildId,
             varName = AgentReuseMutex.genAgentContextKey(jobId)
         ).data?.get(AgentReuseMutex.genAgentContextKey(jobId))
+    }
+
+    fun finishBuild(event: PipelineAgentShutdownEvent) {
+        tpaQueueService.finishQueue(event.buildId, event.vmSeqId)
+        thirdPartyAgentBuildService.finishBuild(event.buildId, event.vmSeqId, event.buildResult)
     }
 
     companion object {

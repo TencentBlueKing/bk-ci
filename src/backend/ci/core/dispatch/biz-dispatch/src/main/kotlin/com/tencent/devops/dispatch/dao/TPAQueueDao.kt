@@ -24,7 +24,9 @@ class TPAQueueDao {
         data: String,
         dataType: ThirdPartyAgentSqlQueueType,
         info: ThirdPartyAgentDispatchDataSqlJson,
-        retryTime: Int
+        retryTime: Int,
+        createTime: LocalDateTime,
+        updateTime: LocalDateTime
     ) {
         with(TDispatchThirdpartyAgentQueue.T_DISPATCH_THIRDPARTY_AGENT_QUEUE) {
             dslContext.insertInto(
@@ -36,7 +38,9 @@ class TPAQueueDao {
                 DATA,
                 DATA_TYPE,
                 INFO,
-                RETRY_TIME
+                RETRY_TIME,
+                CREATED_TIME,
+                UPDATE_TIME
             ).values(
                 projectId,
                 pipelineId,
@@ -45,7 +49,9 @@ class TPAQueueDao {
                 data,
                 dataType.name,
                 JSON.json(JsonUtil.toJson(info)),
-                retryTime
+                retryTime,
+                createTime,
+                updateTime
             ).execute()
         }
     }
@@ -92,6 +98,7 @@ class TPAQueueDao {
         with(TDispatchThirdpartyAgentQueue.T_DISPATCH_THIRDPARTY_AGENT_QUEUE) {
             dslContext.update(this)
                 .set(RETRY_TIME, RETRY_TIME.plus(1))
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.`in`(recordIds))
                 .execute()
         }
@@ -112,6 +119,20 @@ class TPAQueueDao {
     ) {
         with(TDispatchThirdpartyAgentQueue.T_DISPATCH_THIRDPARTY_AGENT_QUEUE) {
             dslContext.deleteFrom(this).where(ID.`in`(recordIds)).execute()
+        }
+    }
+
+    fun fetchTimeByBuild(
+        dslContext: DSLContext,
+        buildId: String,
+        vmSeqId: String?
+    ): List<ThirdPartyAgentQueueSqlData> {
+        with(TDispatchThirdpartyAgentQueue.T_DISPATCH_THIRDPARTY_AGENT_QUEUE) {
+            val dsl = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
+            if (!vmSeqId.isNullOrBlank()) {
+                dsl.and(VM_SEQ_ID.eq(vmSeqId))
+            }
+            return dsl.fetch(queueDataMapper)
         }
     }
 

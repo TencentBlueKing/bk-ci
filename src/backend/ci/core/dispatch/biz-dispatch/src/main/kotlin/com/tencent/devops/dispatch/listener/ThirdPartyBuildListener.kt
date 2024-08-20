@@ -73,7 +73,7 @@ class ThirdPartyBuildListener @Autowired constructor(
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
-        thirdPartyAgentService.finishBuild(event)
+        thirdPartyDispatchService.finishBuild(event)
     }
 
     override fun getVmType(): JobQuotaVmType? {
