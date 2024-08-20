@@ -47,7 +47,6 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
@@ -66,7 +65,6 @@ import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
-import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -1018,24 +1016,6 @@ class WorkspaceService @Autowired constructor(
                 )
             }
         )
-    }
-
-    fun checkDevfile(
-        userId: String,
-        pathWithNamespace: String,
-        branch: String,
-        gitType: RemoteDevGitType
-    ): List<String> {
-        logger.info("$userId get devfile list from git. $pathWithNamespace|$branch")
-        return permissionService.checkOauthIllegal(userId) {
-            remoteDevGitTransfer.load(gitType).getFileNameTree(
-                userId = userId,
-                pathWithNamespace = pathWithNamespace,
-                path = Constansts.devFileDirectoryName, // 根目录
-                ref = branch,
-                recursive = false // 不递归
-            ).map { Constansts.devFileDirectoryName + "/" + it }
-        }
     }
 
     fun getShareWorkspace(workspaceName: String?): List<WorkspaceShared> {
