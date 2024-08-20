@@ -269,7 +269,15 @@
                 return bitLen
             },
             changeOperator () {
-                this.pagination = this.getDefaultCmdbPagination()
+                this.pagination.current = 1
+                this.pagination.cacheScrollIdList = [
+                    {
+                        key: 1,
+                        scrollId: 0,
+                        isLoaded: false
+                    }
+                ]
+                this.pagination.loadedNum = 0
                 if (!this.nodeSelectConf.isShow) return
                 this.getDate()
             },
@@ -744,12 +752,11 @@
     .pagination-content {
         display: flex;
         align-items: center;
+        height: 60px;
         border-top: 1px solid #dfe0e5;
         padding: 0 30px 0 20px;
         .loaded {
             font-size: 12px;
-            height: 60px;
-            line-height: 60px;
             margin-right: 20px;
         }
     }
