@@ -629,7 +629,7 @@ class CodeWebhookService @Autowired constructor(
         val detailUrl = if (ChannelCode.isNeedAuth(channelCode)) {
             "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
         } else {
-            null
+            ""
         }
 
         while (true) {
