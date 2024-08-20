@@ -729,14 +729,7 @@ class PipelineBuildFacadeService(
             return if (targetResource.status == VersionStatus.COMMITTING) {
                 Pair(targetResource, true)
             } else {
-                val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                ) ?: throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-                )
-                Pair(releaseVersion, false)
+                Pair(targetResource, false)
             }
         }
     }
