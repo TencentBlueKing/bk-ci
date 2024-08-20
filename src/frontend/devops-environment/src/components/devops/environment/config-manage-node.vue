@@ -132,11 +132,11 @@
             const getDefaultCmdbPagination = () => {
                 return {
                     current: 1,
-                    limit: 3,
+                    limit: 20,
                     count: 0,
                     location: 'left',
                     align: 'right',
-                    limitList: [3, 10, 20],
+                    limitList: [20, 50, 100, 200],
                     cacheScrollIdList: [
                         {
                             key: 1,
@@ -197,7 +197,6 @@
                     this.importText = this.$t('environment.import')
                     this.searchKeyList.splice(0, this.searchKeyList.length)
                     this.pagination = this.getDefaultCmdbPagination()
-                    console.log(this.pagination, 123)
                 } else {
                     await this.getDate()
                 }
@@ -230,7 +229,6 @@
                     
                     this.pagination.count = this.pagination.loadedNum
                     if (res.hasNext && this.pagination.current === this.pagination.cacheScrollIdList.length) {
-                        console.log(res.hasNext, this.pagination.current, this.pagination.cacheScrollIdList.length)
                         this.pagination.count = this.pagination.loadedNum + 1
                         this.pagination.cacheScrollIdList.push({
                             key: this.pagination.current + 1,
@@ -238,7 +236,6 @@
                             isLoaded: false
                         })
                     }
-                    console.log(this.pagination.cacheScrollIdList, 'cacheScrollIdList')
                     // 回填已经导入的节点
                     this.$nextTick(() => {
                         this.rowList.forEach(i => {
