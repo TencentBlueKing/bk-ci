@@ -1498,11 +1498,16 @@ class GitService @Autowired constructor(
         page: Int,
         pageSize: Int,
         search: String?,
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        getAll: Boolean
     ): Result<List<GitMember>> {
         val url = StringBuilder(
             "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(gitProjectId, "UTF-8")}/members"
-        )
+        ).apply {
+            if (getAll) {
+                this.append("/all")
+            }
+        }
         setToken(tokenType, url, token)
         url.append(
             if (search != null) {

@@ -262,13 +262,18 @@ interface IGitService {
         tokenType: TokenTypeEnum
     ): List<GitCodeGroup>
 
+    /**
+     * 获取项目成员列表
+     * @param getAll 获取所有成员，包含项目成员/项目组成员/协作项目组成员
+     */
     fun getMembers(
         token: String,
         gitProjectId: String,
         page: Int,
         pageSize: Int,
         search: String?,
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        getAll: Boolean = false
     ): Result<List<GitMember>>
 
     fun getGitUserId(

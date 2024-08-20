@@ -1468,7 +1468,8 @@ class RepositoryService @Autowired constructor(
                         search = userId,
                         page = 1,
                         pageSize = 100,
-                        tokenType = TokenTypeEnum.OAUTH
+                        tokenType = TokenTypeEnum.OAUTH,
+                        getAll = true
                     ).data
                 } catch (ignored: Exception) {
                     logger.warn("get git repository members failed: $ignored")
