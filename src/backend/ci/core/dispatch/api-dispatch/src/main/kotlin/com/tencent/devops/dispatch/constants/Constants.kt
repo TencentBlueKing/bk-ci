@@ -44,6 +44,8 @@ const val EXCHANGE_TASK = "exchange_vm_task"
 const val ROUTE_TASK_BEGIN = "dispatch_vm_task_begin"
 const val ROUTE_TASK_END = "dispatch_vm_task_end"
 const val ROUTE_TASK_NEDD_END = "dispatch_vm_task_need_end"
+const val ENV_PUBLIC_HOST_MAX_ATOM_FILE_CACHE_SIZE = "PUBLIC_HOST_MAX_ATOM_FILE_CACHE_SIZE"
+const val ENV_THIRD_HOST_MAX_ATOM_FILE_CACHE_SIZE = "THIRD_HOST_MAX_ATOM_FILE_CACHE_SIZE"
 
 // |Docker构建|最大并行构建量(maximum parallelism)/当前正在运行构建数量(Running):
 const val BK_DOCKER_BUILD_VOLUME = "bkDockerBuildVolume"
