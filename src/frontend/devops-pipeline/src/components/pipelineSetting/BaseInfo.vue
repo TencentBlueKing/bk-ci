@@ -158,16 +158,6 @@
                 })
             }
         },
-        watch: {
-            pipelineSetting: {
-                handler (newVal) {
-                    if (newVal) {
-                        this.initializePipelineAsCodeSettings(newVal.pipelineAsCodeSettings)
-                    }
-                }
-
-            }
-        },
         created () {
             this.requestGrouptLists()
             this.requestPipelineDialect()
@@ -214,12 +204,19 @@
                 }
             },
             async requestPipelineDialect () {
-                try {
-                    const { data } = await this.getPipelineDialect(this.projectId)
-                    this.currentPipelineDialect = data
-                    this.settings.pipelineDialect = data
-                } catch (err) {
-                    console.log(err)
+                this.initializePipelineAsCodeSettings(this.pipelineSetting.pipelineAsCodeSettings)
+
+                const isInherited = this.pipelineSetting.pipelineAsCodeSettings.inheritedDialect
+                if (isInherited) {
+                    try {
+                        const { data } = await this.getPipelineDialect(this.projectId)
+                        this.currentPipelineDialect = data
+                        this.settings.pipelineDialect = data
+                    } catch (err) {
+                        console.log(err)
+                    }
+                } else {
+                    this.currentPipelineDialect = this.pipelineSetting.pipelineAsCodeSettings.pipelineDialect
                 }
             },
             inheritedChange (value) {
