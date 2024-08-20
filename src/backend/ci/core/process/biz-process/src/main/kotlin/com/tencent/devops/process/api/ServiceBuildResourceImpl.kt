@@ -823,7 +823,6 @@ class ServiceBuildResourceImpl @Autowired constructor(
     }
 
     override fun updateContainerTimeout(
-        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,

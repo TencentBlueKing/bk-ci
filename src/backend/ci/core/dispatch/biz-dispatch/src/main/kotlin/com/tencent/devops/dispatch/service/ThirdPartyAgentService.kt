@@ -396,7 +396,6 @@ class ThirdPartyAgentService @Autowired constructor(
             records.forEach { record ->
                 // 取消时兜底结束时间
                 commonUtil.updateQueueTime(
-                    userId = record.startUser,
                     projectId = record.projectId,
                     pipelineId = record.pipelineId,
                     buildId = record.buildId,
@@ -411,7 +410,6 @@ class ThirdPartyAgentService @Autowired constructor(
             val record = thirdPartyAgentBuildDao.get(dslContext, buildId, vmSeqId) ?: return
             // 取消时兜底结束时间
             commonUtil.updateQueueTime(
-                userId = record.startUser,
                 projectId = record.projectId,
                 pipelineId = record.pipelineId,
                 buildId = record.buildId,

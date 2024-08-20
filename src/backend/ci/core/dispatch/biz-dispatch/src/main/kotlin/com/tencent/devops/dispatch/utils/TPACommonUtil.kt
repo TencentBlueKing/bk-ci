@@ -174,7 +174,6 @@ class TPACommonUtil @Autowired constructor(
      */
     fun updateQueueTime(data: ThirdPartyAgentDispatchData, createTime: Long?, endTime: Long?) {
         updateQueueTime(
-            userId = data.userId,
             projectId = data.projectId,
             pipelineId = data.pipelineId,
             buildId = data.buildId,
@@ -187,7 +186,6 @@ class TPACommonUtil @Autowired constructor(
 
     fun updateQueueTime(event: PipelineAgentStartupEvent, createTime: Long?, endTime: Long?) {
         updateQueueTime(
-            userId = event.userId,
             projectId = event.projectId,
             pipelineId = event.pipelineId,
             buildId = event.buildId,
@@ -199,7 +197,6 @@ class TPACommonUtil @Autowired constructor(
     }
 
     fun updateQueueTime(
-        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -210,7 +207,6 @@ class TPACommonUtil @Autowired constructor(
     ) {
         try {
             client.get(ServiceBuildResource::class).updateContainerTimeout(
-                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -221,7 +217,7 @@ class TPACommonUtil @Autowired constructor(
                 )
             )
         } catch (e: Throwable) {
-            logger.error("updateQueueTime|$userId|$projectId|$pipelineId|$buildId|$vmSeqId|$executeCount" +
+            logger.error("updateQueueTime|$projectId|$pipelineId|$buildId|$vmSeqId|$executeCount" +
                     "|$createTime|$endTime|error", e)
         }
     }

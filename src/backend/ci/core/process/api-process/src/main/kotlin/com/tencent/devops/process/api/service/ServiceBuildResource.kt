@@ -909,10 +909,6 @@ interface ServiceBuildResource {
     @POST
     @Path("projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/updateContainerTimeout")
     fun updateContainerTimeout(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        @BkField(required = true)
-        userId: String,
         @Parameter(description = "项目ID", required = true)
         @BkField(required = true)
         @PathParam("projectId")
