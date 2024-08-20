@@ -201,12 +201,6 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                             false
                         }
                     }
-                    recordsOfSuccess.forEach {
-                        syncIamGroupMember(
-                            projectCode = it.projectCode,
-                            iamGroupId = it.iamGroupId
-                        )
-                    }
                     if (recordIdsOfTimeOut.isNotEmpty()) {
                         authResourceGroupApplyDao.batchUpdate(
                             dslContext = dslContext,
@@ -214,18 +208,24 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                             applyToGroupStatus = ApplyToGroupStatus.TIME_OUT
                         )
                     }
-                    if (recordsOfSuccess.isNotEmpty()) {
-                        authResourceGroupApplyDao.batchUpdate(
-                            dslContext = dslContext,
-                            ids = recordsOfSuccess.map { it.id },
-                            applyToGroupStatus = ApplyToGroupStatus.SUCCEED
-                        )
-                    }
                     if (recordsOfPending.isNotEmpty()) {
                         authResourceGroupApplyDao.batchUpdate(
                             dslContext = dslContext,
                             ids = recordsOfPending.map { it.id },
                             applyToGroupStatus = ApplyToGroupStatus.PENDING
+                        )
+                    }
+                    if (recordsOfSuccess.isNotEmpty()) {
+                        recordsOfSuccess.forEach {
+                            syncIamGroupMember(
+                                projectCode = it.projectCode,
+                                iamGroupId = it.iamGroupId
+                            )
+                        }
+                        authResourceGroupApplyDao.batchUpdate(
+                            dslContext = dslContext,
+                            ids = recordsOfSuccess.map { it.id },
+                            applyToGroupStatus = ApplyToGroupStatus.SUCCEED
                         )
                     }
                     offset += limit
