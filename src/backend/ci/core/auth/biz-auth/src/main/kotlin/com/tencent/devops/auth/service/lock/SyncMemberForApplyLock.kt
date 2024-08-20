@@ -25,31 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.provider.sample.service
+package com.tencent.devops.auth.service.lock
 
-import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
-import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-class SamplePermissionResourceGroupSyncService : PermissionResourceGroupSyncService {
-
-    override fun syncByCondition(projectConditionDTO: ProjectConditionDTO) = Unit
-
-    override fun batchSyncGroupAndMember(projectCodes: List<String>) = Unit
-
-    override fun syncGroupAndMember(projectCode: String) = Unit
-
-    override fun getStatusOfSync(projectCode: String): AuthMigrateStatus = AuthMigrateStatus.SUCCEED
-
-    override fun batchSyncProjectGroup(projectCodes: List<String>) = Unit
-
-    override fun batchSyncAllMember(projectCodes: List<String>) = Unit
-
-    override fun syncResourceMember(projectCode: String, resourceType: String, resourceCode: String) = Unit
-
-    override fun syncIamGroupMember(projectCode: String, iamGroupId: Int) = Unit
-
-    override fun syncIamGroupMembersOfApply() = Unit
-
-    override fun fixResourceGroupMember(projectCode: String) = Unit
+class SyncMemberForApplyLock(redisOperation: RedisOperation) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "sync.member.apply.lock",
+        // 12小时，防止服务重启，锁未释放
+        expiredTimeInSeconds = 43200
+    ) {
+    override fun decorateKey(key: String): String {
+        // buildId，key无需加上集群信息前缀来区分
+        return key
+    }
 }

@@ -44,6 +44,7 @@ import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
+import com.tencent.devops.auth.dao.AuthResourceGroupApplyDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
@@ -305,7 +306,8 @@ class RbacAuthConfiguration {
         authResourceCodeConverter: AuthResourceCodeConverter,
         permissionService: PermissionService,
         itsmService: ItsmService,
-        deptService: DeptService
+        deptService: DeptService,
+        authResourceGroupApplyDao: AuthResourceGroupApplyDao
     ) = RbacPermissionApplyService(
         dslContext = dslContext,
         v2ManagerService = v2ManagerService,
@@ -318,7 +320,8 @@ class RbacAuthConfiguration {
         authResourceCodeConverter = authResourceCodeConverter,
         permissionService = permissionService,
         itsmService = itsmService,
-        deptService = deptService
+        deptService = deptService,
+        authResourceGroupApplyDao = authResourceGroupApplyDao
     )
 
     @Bean
@@ -578,7 +581,8 @@ class RbacAuthConfiguration {
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
         rbacCacheService: RbacCacheService,
         redisOperation: RedisOperation,
-        authResourceSyncDao: AuthResourceSyncDao
+        authResourceSyncDao: AuthResourceSyncDao,
+        authResourceGroupApplyDao: AuthResourceGroupApplyDao
     ) = RbacPermissionResourceGroupSyncService(
         client = client,
         dslContext = dslContext,
@@ -588,6 +592,7 @@ class RbacAuthConfiguration {
         authResourceGroupMemberDao = authResourceGroupMemberDao,
         rbacCacheService = rbacCacheService,
         redisOperation = redisOperation,
-        authResourceSyncDao = authResourceSyncDao
+        authResourceSyncDao = authResourceSyncDao,
+        authResourceGroupApplyDao = authResourceGroupApplyDao
     )
 }
