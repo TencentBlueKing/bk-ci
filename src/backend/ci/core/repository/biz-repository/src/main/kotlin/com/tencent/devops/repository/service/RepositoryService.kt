@@ -1462,14 +1462,13 @@ class RepositoryService @Autowired constructor(
                     )
                 )
                 val members = try {
-                    gitService.getMembers(
+                    gitService.getProjectMembersAll(
                         token = token,
                         gitProjectId = projectName,
                         search = userId,
                         page = 1,
                         pageSize = 100,
-                        tokenType = TokenTypeEnum.OAUTH,
-                        getAll = true
+                        tokenType = TokenTypeEnum.OAUTH
                     ).data
                 } catch (ignored: Exception) {
                     logger.warn("get git repository members failed: $ignored")
