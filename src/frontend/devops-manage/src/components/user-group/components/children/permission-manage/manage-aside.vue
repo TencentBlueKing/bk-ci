@@ -241,15 +241,15 @@
 </template>
 
 <script setup name="ManageAside">
+import ProjectUserSelector from '@/components/project-user-selector';
 import http from '@/http/api';
-import { Message } from 'bkui-vue';
-import { useI18n } from 'vue-i18n';
-import { storeToRefs } from 'pinia';
-import { useRoute } from 'vue-router';
 import useManageAside from "@/store/manageAside";
-import { Success, Spinner } from 'bkui-vue/lib/icon';
-import ProjectUserSelector from '@/components/project-user-selector'
-import { ref, defineProps, defineEmits, computed, defineExpose, onMounted, onUnmounted } from 'vue';
+import { Message } from 'bkui-vue';
+import { Spinner, Success } from 'bkui-vue/lib/icon';
+import { storeToRefs } from 'pinia';
+import { computed, defineEmits, defineExpose, defineProps, onMounted, onUnmounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -403,7 +403,7 @@ async function handleChangeOverFormName ({list, userList}){
     handoverTo: handOverForm.value?.id,
     preCheck: true
   }
-  console.log(params, 'resourceAuth Params')
+  
   if (!params.handoverTo) return
   isChecking.value = true;
   isAuthorizedSuccess.value = false;
