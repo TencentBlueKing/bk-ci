@@ -171,7 +171,7 @@ object QualityUtils {
             if (ChannelCode.isNeedAuth(channelCode)) {
                 "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console$fillDetailUrl'>$value</a>"
             } else {
-                "<a target='_blank' href='${HomeHostUtil.innerCodeccHost()}/console$fillDetailUrl'>$value</a>"
+                "<a target='_blank' href='${HomeHostUtil.innerCodeccHost()}$fillDetailUrl'>$value</a>"
             }
         }
     }

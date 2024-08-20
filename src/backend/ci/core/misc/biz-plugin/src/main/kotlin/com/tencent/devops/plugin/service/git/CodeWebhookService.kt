@@ -408,11 +408,7 @@ class CodeWebhookService @Autowired constructor(
                 return
             }
             val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
-            val targetUrl = if (ChannelCode.isNeedAuth(channelCode)) {
-                "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
-            } else {
-                ""
-            }
+            val targetUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
 
             val description = when (state) {
                 GIT_COMMIT_CHECK_STATE_PENDING -> "Your pipeline [$pipelineName] is running"
@@ -626,11 +622,7 @@ class CodeWebhookService @Autowired constructor(
         val name = "$pipelineName@$webhookEventType"
 
         val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
-        val detailUrl = if (ChannelCode.isNeedAuth(channelCode)) {
-            "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
-        } else {
-            ""
-        }
+        val detailUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
 
         while (true) {
             val lockKey = "code_github_check_run_lock_$pipelineId"
