@@ -30,4 +30,11 @@ package com.tencent.devops.remotedev.pojo
 enum class WorkspaceOwnerType {
     PERSONAL,
     PROJECT;
+
+
+    companion object {
+        fun parse(value: String): WorkspaceOwnerType {
+            return values().find { it.name == value } ?: PERSONAL
+        }
+    }
 }
