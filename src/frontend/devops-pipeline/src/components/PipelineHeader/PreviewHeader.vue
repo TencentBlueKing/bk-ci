@@ -117,7 +117,8 @@
             },
             versionNotMatch () {
                 try {
-                    return !this.isDebugPipeline && (this.$route.params.version && this.$route.params.version !== String(this.pipelineInfo?.releaseVersion))
+                    // eslint-disable-next-line eqeqeq
+                    return !this.isDebugPipeline && (this.$route.params.version && this.$route.params.version != this.pipelineInfo?.releaseVersion)
                 } catch (error) {
                     return false
                 }
