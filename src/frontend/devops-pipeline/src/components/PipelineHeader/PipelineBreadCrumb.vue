@@ -92,7 +92,7 @@
         watch: {
             'pipelineInfo.pipelineName': {
                 handler (val) {
-                    const title = val ? `${val} | ${this.$t('pipeline')}` : this.$t('documentTitlePipeline')
+                    const title = val ? `${val} | ${this.$t('pipeline')}` : ''
                     this.$updateTabTitle?.(title)
                 },
                 immediate: true

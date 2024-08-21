@@ -29,12 +29,17 @@ package com.tencent.devops.auth.provider.stream.service
 
 import com.tencent.devops.auth.utils.GitTypeUtils
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import org.springframework.beans.factory.annotation.Autowired
 
 class CentralizedStramPermissionServiceImpl @Autowired constructor(
     val client: Client
 ) : StreamPermissionServiceImpl() {
+    override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
+        return emptyList()
+    }
+
     override fun isPublicProject(projectCode: String, userId: String?): Boolean {
         val gitType = GitTypeUtils.getType()
         // type: github, gitlab, svn, tgitd等

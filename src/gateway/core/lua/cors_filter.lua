@@ -15,16 +15,14 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-]]
-
-local http_origin = ngx.var.http_origin
+]] local http_origin = ngx.var.http_origin
 
 if not http_origin then
-  return
+    return
 end
 
 if http_origin == "" then
-  return
+    return
 end
 
 local allow_hosts = config.allow_hosts
@@ -38,21 +36,26 @@ for k, v in pairs(allow_hosts) do
 end
 
 if matched == false then
-  ngx.log(ngx.STDERR, "can not allow access: ", http_origin)
-  return
+    ngx.log(ngx.STDERR, "can not allow access: ", http_origin)
+    return
 end
 
 local m = ngx.req.get_method()
 
+local allow_headers = config.allow_headers
+if ngx.var.http_access_control_request_headers then
+  allow_headers = allow_headers .. "," .. ngx.var.http_access_control_request_headers
+end
+
 if m == "OPTIONS" then
-  ngx.header["Access-Control-Allow-Origin"] = http_origin
-  ngx.header["Access-Control-Allow-Credentials"] = "true"
-  ngx.header["Access-Control-Max-Age"] = "1728000"
-  ngx.header["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-  ngx.header["Access-Control-Allow-Headers"] = config.allow_headers
-  ngx.header["Content-Length"] = "0"
-  ngx.header["Content-Type"] = "text/plain charset=UTF-8"
-  ngx.exit(204)
+    ngx.header["Access-Control-Allow-Origin"] = http_origin
+    ngx.header["Access-Control-Allow-Credentials"] = "true"
+    ngx.header["Access-Control-Max-Age"] = "1728000"
+    ngx.header["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    ngx.header["Access-Control-Allow-Headers"] = allow_headers
+    ngx.header["Content-Length"] = "0"
+    ngx.header["Content-Type"] = "text/plain charset=UTF-8"
+    ngx.exit(204)
 end
 
 ngx.header["Access-Control-Allow-Origin"] = http_origin

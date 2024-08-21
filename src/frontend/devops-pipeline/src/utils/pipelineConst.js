@@ -276,6 +276,12 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         width: 280,
         id: 'errorCode',
         label: 'history.errorCode'
+    },
+    buildMsg: {
+        index: 16,
+        width: 180,
+        id: 'buildMsg',
+        label: 'history.buildMsg'
     }
 }
 

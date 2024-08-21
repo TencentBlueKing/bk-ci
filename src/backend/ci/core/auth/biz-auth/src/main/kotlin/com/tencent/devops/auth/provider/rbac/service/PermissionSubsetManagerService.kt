@@ -39,6 +39,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.provider.rbac.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -54,7 +55,8 @@ class PermissionSubsetManagerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val authResourceNameConverter: AuthResourceNameConverter
+    private val authResourceNameConverter: AuthResourceNameConverter,
+    private val resourceGroupSyncService: PermissionResourceGroupSyncService
 ) {
 
     companion object {
@@ -265,6 +267,8 @@ class PermissionSubsetManagerService @Autowired constructor(
                 resourceName = resourceName,
                 iamGroupId = iamGroupId
             )
+            // 这里做个兜底，刚创建的组应该是没有成员
+            resourceGroupSyncService.syncIamGroupMember(projectCode = projectCode, iamGroupId = iamGroupId)
         }
     }
 
@@ -308,6 +312,8 @@ class PermissionSubsetManagerService @Autowired constructor(
                 defaultGroup = true,
                 relationId = iamGroupInfo.id.toString()
             )
+            // 同步拥有者组里面的成员
+            resourceGroupSyncService.syncIamGroupMember(projectCode = projectCode, iamGroupId = iamGroupInfo.id)
         }
     }
 
@@ -351,7 +357,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             it.groupCode != DefaultGroupType.MANAGER.value
         }.forEach {
             logger.info("delete subset manage default group|$subsetManagerId|${it.relationId}")
-            iamV2ManagerService.deleteRoleGroupV2(it.relationId.toInt())
+            iamV2ManagerService.deleteRoleGroupV2(it.relationId)
         }
     }
 }

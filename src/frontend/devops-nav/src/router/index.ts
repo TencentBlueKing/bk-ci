@@ -96,8 +96,13 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     router.beforeEach((to, from, next) => {
         const serviceAlias = getServiceAliasByPath(to.path)
         const currentPage = window.serviceObject.serviceMap[serviceAlias]
-        if (to.name !== from.name) {
-            document.title = currentPage ? String(`${currentPage.name} | ${i18n.t('documentTitle')}`) : String(i18n.t('documentTitle'))
+        const { platformInfo } = (store.state as any).platFormConfig
+        if (to.name !== from.name && platformInfo) {
+            let platformTitle = `${platformInfo.i18n.name || platformInfo.name} | ${platformInfo.i18n.brandName || platformInfo.brandName}`
+            if (currentPage) {
+                platformTitle = `${currentPage.name} | ${platformTitle}`
+            }
+            document.title = platformTitle
         }
         window.currentPage = currentPage
         store.dispatch('updateCurrentPage', currentPage) // update currentPage

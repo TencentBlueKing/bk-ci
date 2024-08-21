@@ -904,13 +904,13 @@ class ThirdPartyDispatchService @Autowired constructor(
             dockerRunningCnt: Int
         ): Boolean {
             return if (dockerBuilder) {
-                agent.dockerParallelTaskCount != null &&
+                (agent.dockerParallelTaskCount == 0) || (agent.dockerParallelTaskCount != null &&
                         agent.dockerParallelTaskCount!! > 0 &&
-                        agent.dockerParallelTaskCount!! > dockerRunningCnt
+                        agent.dockerParallelTaskCount!! > dockerRunningCnt)
             } else {
-                agent.parallelTaskCount != null &&
+                (agent.parallelTaskCount == 0) || (agent.parallelTaskCount != null &&
                         agent.parallelTaskCount!! > 0 &&
-                        agent.parallelTaskCount!! > runningCnt
+                        agent.parallelTaskCount!! > runningCnt)
             }
         }
     }

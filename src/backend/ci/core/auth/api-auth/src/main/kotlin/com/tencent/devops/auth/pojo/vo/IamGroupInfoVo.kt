@@ -17,5 +17,9 @@ data class IamGroupInfoVo(
     @get:Schema(title = "用户组人数")
     val userCount: Int,
     @get:Schema(title = "用户组部门数")
-    val departmentCount: Int = 0
+    val departmentCount: Int = 0,
+    @get:Schema(title = "用户组模板数")
+    val templateCount: Int? = 0,
+    @get:Schema(title = "是否为项目成员组")
+    val projectMemberGroup: Boolean? = null
 )
