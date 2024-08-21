@@ -16,6 +16,7 @@ class ClientDao {
         macAddress: String,
         currentUserId: String,
         currentProjectIds: Set<String>,
+        currentWorkspaceNames: Set<String>,
         version: String,
         startVersion: String
     ) {
@@ -25,17 +26,20 @@ class ClientDao {
                 MAC_ADDRESS,
                 CURRENT_USER,
                 CURRENT_PROJECT_IDS,
+                CURRENT_WORKSPACE_NAMES,
                 VERSION,
                 START_VERSION
             ).values(
                 macAddress,
                 currentUserId,
                 JSON.json(JsonUtil.toJson(currentProjectIds, false)),
+                JSON.json(JsonUtil.toJson(currentWorkspaceNames, false)),
                 version,
                 startVersion
             ).onDuplicateKeyUpdate()
                 .set(CURRENT_USER, currentUserId)
                 .set(CURRENT_PROJECT_IDS, JSON.json(JsonUtil.toJson(currentProjectIds, false)))
+                .set(CURRENT_WORKSPACE_NAMES, JSON.json(JsonUtil.toJson(currentProjectIds, false)))
                 .set(VERSION, version)
                 .set(START_VERSION, startVersion)
                 .set(UPDATE_TIME, LocalDateTime.now())

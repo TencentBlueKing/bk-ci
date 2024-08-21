@@ -1,4 +1,4 @@
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.remotedev.pojo.clientupgrade
 
 data class ClientUpgradeData(
     val macAddress: String

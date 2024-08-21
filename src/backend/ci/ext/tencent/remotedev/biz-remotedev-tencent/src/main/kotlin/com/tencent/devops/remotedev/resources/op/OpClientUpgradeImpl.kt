@@ -3,8 +3,10 @@ package com.tencent.devops.remotedev.resources.op
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpClientUpgrade
-import com.tencent.devops.remotedev.pojo.ClientUpgradeOpType
-import com.tencent.devops.remotedev.pojo.ClientUpgradeType
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeOpType
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeType
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeVersions
+import com.tencent.devops.remotedev.pojo.clientupgrade.UpgradeVersionsData
 import com.tencent.devops.remotedev.service.clientupgrade.UpgradeProps
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -12,6 +14,28 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpClientUpgradeImpl @Autowired constructor(
     private val upgradeProps: UpgradeProps
 ) : OpClientUpgrade {
+    override fun getVersions(): Result<ClientUpgradeVersions> {
+        return Result(
+            ClientUpgradeVersions(
+                parallelUpgradeCount = upgradeProps.getMaxParallelUpgradeCount(),
+                clientVersion = UpgradeVersionsData(
+                    currentVersion = upgradeProps.getClientVersion(),
+                    maxCanUpgradeNumber = upgradeProps.getClientMaxNumb(),
+                    userVersion = upgradeProps.getClientUserVersion(),
+                    workspaceNameVersion = upgradeProps.getClientWorkspaceNameVersion(),
+                    projectVersion = upgradeProps.getClientProjectVersion()
+                ),
+                startVersion = UpgradeVersionsData(
+                    currentVersion = upgradeProps.getStartVersion(),
+                    maxCanUpgradeNumber = upgradeProps.getStartMaxNumb(),
+                    userVersion = upgradeProps.getStartUserVersion(),
+                    workspaceNameVersion = upgradeProps.getStartWorkspaceNameVersion(),
+                    projectVersion = upgradeProps.getStartProjectVersion()
+                )
+            )
+        )
+    }
+
     override fun setParallelUpgradeCount(parallelUpgradeCount: Int): Result<Boolean> {
         upgradeProps.setMaxParallelUpgradeCount(parallelUpgradeCount)
         return Result(true)
@@ -41,6 +65,18 @@ class OpClientUpgradeImpl @Autowired constructor(
         when (type) {
             ClientUpgradeType.CLIENT -> upgradeProps.setClientUserVersion(data, opType)
             ClientUpgradeType.START -> upgradeProps.setStartUserVersion(data, opType)
+        }
+        return Result(true)
+    }
+
+    override fun setWorkspaceNameVersion(
+        type: ClientUpgradeType,
+        opType: ClientUpgradeOpType,
+        data: Map<String, String>
+    ): Result<Boolean> {
+        when (type) {
+            ClientUpgradeType.CLIENT -> upgradeProps.setClientWorkspaceNameVersion(data, opType)
+            ClientUpgradeType.START -> upgradeProps.setStartWorkspaceNameVersion(data, opType)
         }
         return Result(true)
     }

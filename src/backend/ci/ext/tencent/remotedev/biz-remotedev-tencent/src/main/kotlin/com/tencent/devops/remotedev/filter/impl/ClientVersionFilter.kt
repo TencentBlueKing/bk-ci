@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.filter.impl
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -10,6 +11,8 @@ import com.tencent.devops.remotedev.dao.ClientDao
 import com.tencent.devops.remotedev.dao.ClientVersionDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.filter.ApiFilter
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -185,13 +188,23 @@ class ClientVersionFilter constructor(
         val recordVersion = clientVersion["$ip-$user"]
         logger.info("recordClientVersion|$ip|$user|$version|$recordVersion|$macAddress|$startVersion")
         if (macAddress.format().isNotBlank()) {
+            val currentWorkspaceNames = workspaceJoinDao.limitFetchProjectWorkspace(
+                dslContext = dslContext,
+                queryType = QueryType.CLIENT,
+                limit = PageUtil.convertPageSizeToSQLLimit(1, 1000),
+                search = WorkspaceSearch(
+                    viewers = listOf(user),
+                    onFuzzyMatch = false
+                )
+            )?.map { it.workspaceName } ?: emptyList()
             clientDao.createOrUpdate(
                 dslContext = dslContext,
                 macAddress = macAddress,
                 currentUserId = user.format(),
                 version = version.format(),
                 startVersion = startVersion.format(),
-                currentProjectIds = workspaceJoinDao.fetchProjectFromUser(dslContext, user)
+                currentProjectIds = workspaceJoinDao.fetchProjectFromUser(dslContext, user),
+                currentWorkspaceNames = currentWorkspaceNames.toSet()
             )
         } else {
             logger.warn("recordClientVersion macAddress is null")

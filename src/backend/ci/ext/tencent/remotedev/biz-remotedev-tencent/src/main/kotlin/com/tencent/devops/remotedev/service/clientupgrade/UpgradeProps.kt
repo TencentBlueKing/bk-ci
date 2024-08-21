@@ -4,7 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.remotedev.pojo.ClientUpgradeOpType
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeOpType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -120,6 +120,14 @@ class UpgradeProps @Autowired constructor(
     fun setStartUserVersion(version: Map<String, String>, opType: ClientUpgradeOpType) =
         opHashCache(START_UPGRADE_CURRENT_USER_VERSION, version, opType, true)
 
+    fun getClientWorkspaceNameVersion() = loadHashCache(CLIENT_UPGRADE_CURRENT_WORKSPACE_NAME_VERSION, true)
+    fun setClientWorkspaceNameVersion(version: Map<String, String>, opType: ClientUpgradeOpType) =
+        opHashCache(CLIENT_UPGRADE_CURRENT_WORKSPACE_NAME_VERSION, version, opType, true)
+
+    fun getStartWorkspaceNameVersion() = loadHashCache(START_UPGRADE_CURRENT_WORKSPACE_NAME_VERSION, true)
+    fun setStartWorkspaceNameVersion(version: Map<String, String>, opType: ClientUpgradeOpType) =
+        opHashCache(START_UPGRADE_CURRENT_WORKSPACE_NAME_VERSION, version, opType, true)
+
     fun getClientProjectVersion() = loadHashCache(CLIENT_UPGRADE_CURRENT_PROJECT_VERSION, true)
     fun setClientProjectVersion(version: Map<String, String>, opType: ClientUpgradeOpType) =
         opHashCache(CLIENT_UPGRADE_CURRENT_PROJECT_VERSION, version, opType, true)
@@ -229,6 +237,12 @@ class UpgradeProps @Autowired constructor(
         // 升级指定用户和版本
         private const val CLIENT_UPGRADE_CURRENT_USER_VERSION = "remotedev:clientupgrade:client.currentuser.version"
         private const val START_UPGRADE_CURRENT_USER_VERSION = "remotedev:clientupgrade:start.currentuser.version"
+
+        // 升级指定工作空间名称和版本
+        private const val CLIENT_UPGRADE_CURRENT_WORKSPACE_NAME_VERSION =
+            "remotedev:clientupgrade:client.workspace.name.version"
+        private const val START_UPGRADE_CURRENT_WORKSPACE_NAME_VERSION =
+            "remotedev:clientupgrade:start.workspace.name.version"
 
         // 升级指定的项目和版本
         private const val CLIENT_UPGRADE_CURRENT_PROJECT_VERSION = "remotedev:clientupgrade:client.project.version"

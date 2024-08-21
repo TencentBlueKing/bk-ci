@@ -7,8 +7,8 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.remotedev.tables.records.TClientRecord
 import com.tencent.devops.remotedev.dao.ClientDao
-import com.tencent.devops.remotedev.pojo.ClientUpgradeData
-import com.tencent.devops.remotedev.pojo.ClientUpgradeResp
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeData
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeResp
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -118,10 +118,12 @@ class ClientUpgradeService @Autowired constructor(
 
         return UpgradeDynamicProps(
             clientCanUpgradeNumb = clientCanUpgradeNumb,
-            startCanUpgradeNumb = startCanUpgradeNumb,
             clientUserVersion = upgradeProps.getClientUserVersion(),
+            clientWorkspaceNameVersion = upgradeProps.getClientWorkspaceNameVersion(),
             clientProjectVersion = upgradeProps.getClientProjectVersion(),
+            startCanUpgradeNumb = startCanUpgradeNumb,
             startUserVersion = upgradeProps.getStartUserVersion(),
+            startWorkspaceNameVersion = upgradeProps.getStartWorkspaceNameVersion(),
             startProjectVersion = upgradeProps.getStartProjectVersion()
         )
     }
@@ -147,6 +149,21 @@ class ClientUpgradeService @Autowired constructor(
                 userVersion[currentUser]
             } else {
                 null
+            }
+        }
+
+        // 根据工作空间升级
+        val currentWorkspaceNames = JsonUtil.to(
+            record.currentWorkspaceNames.data(), object : TypeReference<Set<String>>() {}
+        )
+        val workspaceVersion = props.workspaceNames(isStart)
+        currentWorkspaceNames.forEach { workspaceName ->
+            if (workspaceVersion.containsKey(workspaceName)) {
+                return if (version != workspaceVersion[workspaceName]?.trim()) {
+                    workspaceVersion[workspaceName]
+                } else {
+                    null
+                }
             }
         }
 
@@ -191,10 +208,12 @@ class ClientUpgradeService @Autowired constructor(
 
 data class UpgradeDynamicProps(
     var clientCanUpgradeNumb: Int?,
-    var startCanUpgradeNumb: Int?,
     val clientUserVersion: Map<String, String>,
+    val clientWorkspaceNameVersion: Map<String, String>,
     val clientProjectVersion: Map<String, String>,
+    var startCanUpgradeNumb: Int?,
     val startUserVersion: Map<String, String>,
+    val startWorkspaceNameVersion: Map<String, String>,
     val startProjectVersion: Map<String, String>
 ) {
     fun canUpgradeNumb(isStart: Boolean) = if (isStart) startCanUpgradeNumb else clientCanUpgradeNumb
@@ -208,4 +227,5 @@ data class UpgradeDynamicProps(
 
     fun userVersion(isStart: Boolean) = if (isStart) startUserVersion else clientUserVersion
     fun projectVersion(isStart: Boolean) = if (isStart) startProjectVersion else clientProjectVersion
+    fun workspaceNames(isStart: Boolean) = if (isStart) startWorkspaceNameVersion else clientWorkspaceNameVersion
 }
