@@ -43,7 +43,7 @@ class ClientVersionFilter constructor(
         private const val HEADER_MAC_ADDRESS = "BK-CI-CLIENT-MAC"
         private const val BK_CI_CLIENT_START_VERSION = "BK-CI-CLIENT-START-VERSION"
 
-        private fun String.format():String{
+        private fun String.format(): String {
             if (this.trim() == "null" || this.isBlank()) {
                 return ""
             }
@@ -146,10 +146,10 @@ class ClientVersionFilter constructor(
     }
 
     /*
-    * 检查是否需要告警
-    * true： 告警
-    * false： 不告警
-    * */
+     * 检查是否需要告警
+     * true： 告警
+     * false： 不告警
+     * */
     private fun checkClientVersionWarning(split: List<String>): Boolean {
         if (!this::clientVersionWarningList.isInitialized) {
             clientVersionWarningList = clientVersionWarning.split(".").map { it.toInt() }
