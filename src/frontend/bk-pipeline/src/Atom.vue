@@ -37,6 +37,11 @@
                 v-bind="progressConf"
                 :percent="atom.progressRate"
             />
+            <Logo
+                v-else-if="atom.asyncStatus && atom.asyncStatus !== 'SUCCEED'"
+                class="atom-progress"
+                :name="`sub_pipeline_${atom.asyncStatus.toLowerCase()}`"
+            />
             <status-icon
                 v-else-if="!isSkip && !!atomStatus"
                 type="element"
@@ -245,7 +250,7 @@
                 try {
                     return (
                         this.atom.status === 'SKIP'
-                        || !this.atom.additionalOptions.enable
+                        || this.atom.additionalOptions?.enable === false
                         || this.containerDisabled
                     )
                 } catch (error) {
@@ -285,7 +290,7 @@
             },
             atomStatusCls () {
                 try {
-                    if (this.atom.additionalOptions && this.atom.additionalOptions.enable === false) {
+                    if (this.atom.additionalOptions?.enable === false) {
                         return STATUS_MAP.DISABLED
                     }
                     return this.atomStatus
@@ -309,6 +314,7 @@
                     [this.qualityStatus]: this.isQualityGateAtom && !!this.qualityStatus,
                     [this.atomStatusCls]: !!this.atomStatusCls,
                     'quality-atom': this.isQualityGateAtom,
+                    'is-sub-pipeline-atom': this.atom.atomCode === 'SubPipelineExec',
                     'is-error': this.atom.isError,
                     'is-intercept': this.isQualityCheckAtom,
                     'template-compare-atom': this.atom.templateModify,
@@ -565,6 +571,7 @@
   transition: all 0.4s ease-in-out;
   z-index: 2;
   border: 1px solid $fontLighterColor;
+
   .atom-progress {
     display: inline-flex;
     width: 42px;

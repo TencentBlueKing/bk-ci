@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
+import com.tencent.devops.auth.pojo.dto.ListGroupConditionDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
@@ -40,11 +41,8 @@ import com.tencent.devops.common.api.pojo.Pagination
 class SamplePermissionResourceGroupService : PermissionResourceGroupService {
 
     override fun listGroup(
-        projectId: String,
-        resourceType: String,
-        resourceCode: String,
-        page: Int,
-        pageSize: Int
+        userId: String,
+        listGroupConditionDTO: ListGroupConditionDTO
     ): Pagination<IamGroupInfoVo> {
         return Pagination(false, emptyList())
     }

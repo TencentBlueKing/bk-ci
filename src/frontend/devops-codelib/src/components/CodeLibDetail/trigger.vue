@@ -22,7 +22,7 @@
             <bk-table-column :label="$t('codelib.事件')" prop="eventType">
                 <template slot-scope="{ row }">
                     <div class="event-name">
-                        <img class="logo" :src="`https:${row.atomLogo}`" alt="">
+                        <img class="logo" :src="row.atomLogo" alt="">
                         {{ row.eventTypeDesc }}
                     </div>
                 </template>

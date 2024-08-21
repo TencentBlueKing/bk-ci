@@ -69,6 +69,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Base64
 import javax.ws.rs.NotFoundException
 
@@ -289,7 +292,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.first,
                         region = null,
                         userName = repo.userName,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 } else {
                     val credInfo = getCredential(
@@ -306,7 +311,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.privateKey,
                         region = null,
                         userName = credInfo.username,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 }
             }
@@ -342,7 +349,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = getTGitAccessToken(repo.userName),
                         region = null,
                         userName = repo.userName,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 } else {
                     val credInfo = getCredential(
@@ -359,7 +368,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.privateKey,
                         region = null,
                         userName = credInfo.username,
-                        search = search
+                        search = search,
+                        page = 1,
+                        pageSize = 100
                     )
                 }
             }
@@ -466,7 +477,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitRepository
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.GIT_INVALID)
-        val isOauth = repo.credentialId.isEmpty()
+        val isOauth = repo.authType == RepoAuthType.OAUTH
         val token = if (isOauth) {
             getAccessToken(repo.userName).first
         } else {
@@ -693,9 +704,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         detailUrl: String,
         externalId: String,
         status: String,
-        startedAt: String?,
+        startedAt: LocalDateTime?,
         conclusion: String?,
-        completedAt: String?
+        completedAt: LocalDateTime?
     ) {
         logger.info("Project($projectId) update github commit($commitId) check runs")
 
@@ -709,9 +720,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             detailsUrl = detailUrl,
             externalId = externalId,
             status = status,
-            startedAt = startedAt,
+            startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
             conclusion = conclusion,
-            completedAt = completedAt
+            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT)
         )
 
         client.get(ServiceGithubResource::class).updateCheckRuns(

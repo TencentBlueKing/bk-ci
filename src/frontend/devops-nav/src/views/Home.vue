@@ -138,12 +138,20 @@
             </aside>
         </div>
         <section class="devops-home-footer">
-            <div class="item">
-                <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">{{ $t('technicalSupport') }}</a> |
-                <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('communityForum') }}</a> |
-                <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('ProductOfficialWebsite') }}</a>
-            </div>
-            <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved {{ BK_CI_VERSION.trim() }}</p>
+            <template v-if="hasSharedResUrl">
+                <p class="item" v-html="platformInfo.i18n.footerInfoHTML" />
+                <p class="bkci-copyright">{{ platformInfo.footerCopyrightContent }}</p>
+            </template>
+            <template v-else>
+                <section class="devops-home-footer">
+                    <div class="item">
+                        <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">{{ $t('technicalSupport') }}</a> |
+                        <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('communityForum') }}</a> |
+                        <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('ProductOfficialWebsite') }}</a>
+                    </div>
+                    <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved {{ BK_CI_VERSION.trim() }}</p>
+                </section>
+            </template>
         </section>
     </div>
 </template>
@@ -152,7 +160,7 @@
     import { isAbsoluteUrl, urlJoin } from '@/utils/util'
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { Action, State } from 'vuex-class'
+    import { Action, Getter, State } from 'vuex-class'
     import { Accordion, AccordionItem } from '../components/Accordion/index'
     import Logo from '../components/Logo/index.vue'
     import NavBox from '../components/NavBox/index.vue'
@@ -170,9 +178,11 @@
         @State news
         @State related
         @Action fetchLinks
+        @Getter platformInfo
         isAllServiceListShow: boolean = false
         isAbsoluteUrl = isAbsoluteUrl
         BK_CI_VERSION: string = window.BK_CI_VERSION
+        hasSharedResUrl: boolean = !!(window.BK_SHARED_RES_URL)
 
         get funcArray (): object[] {
             const funcArray = ['issueLabel', 'developLabel', 'testLabel', 'deployLabel', 'operationLabel']

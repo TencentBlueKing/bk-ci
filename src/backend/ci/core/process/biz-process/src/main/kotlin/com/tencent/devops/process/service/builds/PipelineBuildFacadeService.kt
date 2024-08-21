@@ -102,6 +102,7 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
+import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -123,6 +124,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
@@ -173,7 +175,8 @@ class PipelineBuildFacadeService(
     private val pipelineRedisService: PipelineRedisService,
     private val pipelineRetryFacadeService: PipelineRetryFacadeService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+    private val templateFacadeService: TemplateFacadeService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -430,11 +433,6 @@ class PipelineBuildFacadeService(
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
-            if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-                )
-            }
             if (!readyToBuildPipelineInfo.canManualStartup && checkManualStartup == false) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
@@ -580,6 +578,7 @@ class PipelineBuildFacadeService(
                 yamlVersion = buildInfo.yamlVersion,
                 frequencyLimit = true,
                 handlePostFlag = false,
+                debug = buildInfo.debug,
                 webHookStartParam = webHookStartParam
             )
         }
@@ -669,13 +668,16 @@ class PipelineBuildFacadeService(
                 logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }
 
+            templateFacadeService.printModifiedTemplateParams(
+                projectId = projectId, pipelineId = pipelineId,
+                pipelineParams = triggerContainer.params, paramValues = values
+            )
             val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,
                 paramProperties = triggerContainer.params, paramValues = values
             )
             // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用
             pipelineYamlFacadeService.buildYamlManualParamMap(
-                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId
             )?.let {
@@ -1969,7 +1971,10 @@ class PipelineBuildFacadeService(
         startUser: List<String>? = null,
         updateTimeDesc: Boolean? = null,
         archiveFlag: Boolean? = false,
-        customVersion: Int?
+        customVersion: Int?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
@@ -2049,7 +2054,10 @@ class PipelineBuildFacadeService(
                 buildMsg = buildMsg,
                 startUser = startUser,
                 queryDslContext = queryDslContext,
-                debugVersion = targetDebugVersion
+                debugVersion = targetDebugVersion,
+                triggerAlias = triggerAlias,
+                triggerBranch = triggerBranch,
+                triggerUser = triggerUser
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -2079,7 +2087,10 @@ class PipelineBuildFacadeService(
                 startUser = startUser,
                 updateTimeDesc = updateTimeDesc,
                 queryDslContext = queryDslContext,
-                debugVersion = targetDebugVersion
+                debugVersion = targetDebugVersion,
+                triggerAlias = triggerAlias,
+                triggerBranch = triggerBranch,
+                triggerUser = triggerUser
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
@@ -2161,7 +2172,9 @@ class PipelineBuildFacadeService(
         userId: String,
         projectId: String,
         pipelineId: String,
-        debugVersion: Int?
+        debugVersion: Int?,
+        search: String?,
+        type: HistorySearchType?
     ): List<String> {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -2179,7 +2192,13 @@ class PipelineBuildFacadeService(
             val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
             draftVersion?.version == debugVersion
         }
-        return pipelineRuntimeService.getHistoryConditionRepo(projectId, pipelineId, targetDebugVersion)
+        return pipelineRuntimeService.getHistoryConditionRepo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            debugVersion = targetDebugVersion,
+            search = search,
+            type = type
+        )
     }
 
     fun getHistoryConditionBranch(
@@ -2187,7 +2206,9 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         alias: List<String>?,
-        debugVersion: Int?
+        debugVersion: Int?,
+        search: String?,
+        type: HistorySearchType?
     ): List<String> {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -2206,7 +2227,12 @@ class PipelineBuildFacadeService(
             draftVersion?.version == debugVersion
         }
         return pipelineRuntimeService.getHistoryConditionBranch(
-            projectId, pipelineId, alias, targetDebugVersion
+            projectId = projectId,
+            pipelineId = pipelineId,
+            aliasList = alias,
+            debugVersion = targetDebugVersion,
+            search = search,
+            type = type
         )
     }
 
@@ -2221,7 +2247,8 @@ class PipelineBuildFacadeService(
             buildId = buildId,
             projectId = build.projectId,
             pipelineId = build.pipelineId,
-            pipelineVersion = build.version
+            pipelineVersion = build.version,
+            status = build.status
         )
     }
 

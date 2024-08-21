@@ -45,6 +45,7 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
+import org.slf4j.LoggerFactory
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
@@ -128,7 +129,7 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
                 PathFilterConfig(
                     pathFilterType = pathFilterType,
                     pipelineId = pipelineId,
-                    triggerOnPath = event.files.map { it.file },
+                    triggerOnPath = event.getMatchPaths(),
                     excludedPaths = WebhookUtils.convert(excludePaths).map { path ->
                         WebhookUtils.getFullPath(
                             projectRelativePath = projectRelativePath,
@@ -188,5 +189,19 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
         startParams[BK_REPO_SVN_WEBHOOK_USERNAME] = event.userName
         startParams[BK_REPO_SVN_WEBHOOK_COMMIT_TIME] = event.commitTime ?: 0L
         return startParams
+    }
+
+    fun SvnCommitEvent.getMatchPaths() = if ((totalFilesCount ?: 0) < FILES_COUNT_MAX) {
+        files.map { it.file }
+    } else {
+        // 超过上限则存在变更记录丢失, 用paths进行匹配
+        logger.info("File change information exceeds the limit|$totalFilesCount")
+        paths
+    }
+
+    companion object {
+        // 文件变更列表上限
+        const val FILES_COUNT_MAX = 999
+        private val logger = LoggerFactory.getLogger(SvnCommitTriggerHandler::class.java)
     }
 }

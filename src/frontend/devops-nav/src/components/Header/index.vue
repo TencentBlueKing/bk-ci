@@ -5,14 +5,22 @@
                 class="header-logo"
                 to="/console/"
             >
-                <span>
-                    <Logo
-                        :name="headerLogoName"
-                        width="auto"
-                        height="28"
-                    />
-                </span>
+                <template v-if="platformInfo.appLogo">
+                    <img class="logo" :src="platformInfo.appLogo" alt="">
+                    
+                    <div class="app-name">{{ appName }}</div>
+                </template>
+                <template v-else>
+                    <span>
+                        <Logo
+                            :name="headerLogoName"
+                            width="auto"
+                            height="28"
+                        />
+                    </span>
+                </template>
             </router-link>
+
             <template v-if="showProjectList">
                 <bk-select ref="projectDropdown"
                     class="bkdevops-project-selector"
@@ -181,6 +189,7 @@
         @State headerConfig
 
         @Getter enableProjectList
+        @Getter platformInfo
 
         @Action toggleProjectDialog
         @Action togglePopupShow
@@ -245,6 +254,10 @@
 
         get curLang () {
             return this.langs.find(item => item.id === this.$i18n.locale) || { id: 'zh-CN', icon: 'chinese' }
+        }
+
+        get appName () {
+            return this.platformInfo.i18n.name || this.$t('蓝盾')
         }
 
         $refs: {
@@ -419,6 +432,16 @@
                 > span {
                     display: inline-flex;
 
+                }
+                .logo {
+                    width: 30px;
+                    height: 30px;
+                    margin-right: 8px;
+                }
+                .app-name {
+                    font-size: 16px;
+                    line-height: 30px;
+                    color: #fff;
                 }
             }
             $dropdownBorder: #2a2a42;

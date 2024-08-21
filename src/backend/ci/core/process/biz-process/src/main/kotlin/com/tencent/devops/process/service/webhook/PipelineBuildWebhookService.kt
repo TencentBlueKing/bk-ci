@@ -217,7 +217,8 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
         // 触发事件保存流水线名称
         builder.pipelineName(pipelineInfo.pipelineName)
-        val userId = pipelineInfo.lastModifyUser
+        // 获取授权人
+        val userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId) ?: pipelineInfo.lastModifyUser
         val variables = mutableMapOf<String, String>()
         val container = model.stages[0].containers[0] as TriggerContainer
         // 解析变量
@@ -309,6 +310,10 @@ class PipelineBuildWebhookService @Autowired constructor(
                     }
                 } catch (ignore: Exception) {
                     logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
+                    builder.eventSource(eventSource = repo.repoHashId!!)
+                    builder.status(PipelineTriggerStatus.FAILED.name)
+                        .reason(PipelineTriggerReason.TRIGGER_FAILED.name)
+                        .reasonDetail(PipelineTriggerFailedMsg(ignore.message ?: ""))
                 }
                 return true
             } else {
@@ -585,7 +590,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             return buildId
         } catch (ignore: Exception) {
             logger.warn("[$pipelineId]| webhook trigger fail to start repo($repoName): ${ignore.message}", ignore)
-            return null
+            throw ignore
         } finally {
             logger.info("$pipelineId|WEBHOOK_TRIGGER|repo=$repoName|time=${System.currentTimeMillis() - startEpoch}")
         }

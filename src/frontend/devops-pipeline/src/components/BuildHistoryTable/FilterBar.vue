@@ -36,24 +36,14 @@
         },
         data () {
             return {
-                triggerList: [],
                 statusList: [],
-                repoList: [],
-                branchList: []
+                triggerList: []
             }
         },
         computed: {
             ...mapGetters({
                 historyPageStatus: 'pipelines/getHistoryPageStatus'
             }),
-            conditionsMap () {
-                return {
-                    trigger: this.triggerList,
-                    status: this.statusList,
-                    materialAlias: this.repoList,
-                    materialBranch: this.branchList
-                }
-            },
             datePickerConf () {
                 return {
                     format: 'yyyy-MM-dd HH:mm:ss',
@@ -66,19 +56,43 @@
                         name: this.$t('status'),
                         id: 'status',
                         multiable: true,
-                        children: this.statusList
+                        children: this.statusList.map(item => ({
+                            id: item.id,
+                            name: item.value
+                        }))
                     },
                     {
                         name: this.$t('materialRepo'),
                         id: 'materialAlias',
-                        multiable: true,
-                        children: this.repoList
+                        // multiable: true,
+                        remoteMethod:
+                            async (search) => {
+                                const repoList = await this.getConditionList('repo', {
+                                    type: 'MATERIAL',
+                                    search
+                                })
+                                return repoList.map(item => ({
+                                    name: item,
+                                    id: item
+                                }))
+                            },
+                        inputInclude: true
                     },
                     {
                         name: this.$t('triggerRepo'),
-                        id: 'triggerRepo',
-                        multiable: true,
-                        children: this.repoList
+                        id: 'triggerAlias',
+                        // multiable: true,
+                        remoteMethod: async (search) => {
+                            const repoList = await this.getConditionList('repo', {
+                                type: 'TRIGGER',
+                                search
+                            })
+                            return repoList.map(item => ({
+                                name: item,
+                                id: item
+                            }))
+                        },
+                        inputInclude: true
                     },
                     {
                         name: 'Commit ID',
@@ -89,22 +103,51 @@
                         id: 'materialCommitMessage'
                     },
                     {
+                        name: this.$t('details.trigger'),
+                        id: 'triggerUser'
+                    },
+                    {
                         name: this.$t('history.triggerType'),
                         id: 'trigger',
                         multiable: true,
-                        children: this.triggerList
+                        children: this.triggerList.map(item => ({
+                            id: item.id,
+                            name: item.value
+                        }))
                     },
                     {
                         name: this.$t('materialBranch'),
                         id: 'materialBranch',
-                        multiable: true,
-                        children: this.branchList
+                        // multiable: true,
+                        remoteMethod: async (search) => {
+                            const repoList = await this.getConditionList('branchName', {
+                                type: 'MATERIAL',
+                                alias: this.getSearchKeyById('materialAlias'),
+                                search
+                            })
+                            return repoList.map(item => ({
+                                name: item,
+                                id: item
+                            }))
+                        },
+                        inputInclude: true
                     },
                     {
                         name: this.$t('triggerBranch'),
                         id: 'triggerBranch',
-                        multiable: true,
-                        children: this.branchList
+                        // multiable: true,
+                        remoteMethod: async (search) => {
+                            const repoList = await this.getConditionList('branchName', {
+                                type: 'TRIGGER',
+                                alias: this.getSearchKeyById('triggerAlias'),
+                                search
+                            })
+                            return repoList.map(item => ({
+                                name: item,
+                                id: item
+                            }))
+                        },
+                        inputInclude: true
                     },
                     {
                         name: this.$t('history.remark'),
@@ -118,7 +161,6 @@
         },
         created () {
             this.init()
-            this.handlePathQuery()
         },
         methods: {
             ...mapActions('pipelines', [
@@ -126,61 +168,52 @@
             ]),
             async init () {
                 try {
-                    const [statusList, repoList, branchList, triggerList] = await Promise.all([
+                    const [statusList, triggerList] = await Promise.all([
                         'status',
-                        'repo',
-                        `branchName?materialAlias=${this.$route.query.materialAlias ?? ''}`,
                         'trigger'
                     ].map(this.getConditionList))
-                    this.statusList = statusList.map(item => ({
-                        name: item.value,
-                        id: item.id
-                    }))
-                    this.repoList = repoList.map(item => ({
-                        name: item,
-                        id: item
-                    }))
-                    this.branchList = branchList.map(item => ({
-                        name: item,
-                        id: item
-                    }))
-                    this.triggerList = triggerList.map(item => ({
-                        name: item.value,
-                        id: item.id
-                    }))
-                    this.historyPageStatus.searchKey.forEach(item => {
-                        if (this.conditionsMap[item.id]) {
-                            item.values = item.values.map(item => ({
-                                id: item,
-                                name: this.conditionsMap[item.id].find(val => val.id === item)?.name ?? 'unknown'
-                            }))
-                        }
-                    })
+                    const conditionsMap = {
+                        status: statusList,
+                        trigger: triggerList
+                    }
+                    this.statusList = statusList
+                    this.triggerList = triggerList
+                    this.handlePathQuery(conditionsMap)
                 } catch (error) {
                     console.error(error)
                 }
             },
-            async handlePathQuery () {
+            handlePathQuery (conditionsMap) {
                 // TODO 筛选参数目前不支持带#字符串回填
                 const { $route, historyPageStatus } = this
                 const pathQuery = $route.query
                 const queryArr = Object.keys(pathQuery)
-    
+
                 if (queryArr.length) {
+                    const page = pathQuery?.page ? parseInt(pathQuery?.page, 10) : 1
+                    const pageSize = pathQuery?.pageSize ? parseInt(pathQuery?.pageSize, 10) : 20
+
                     const hasTimeRange = queryArr.includes('startTimeStartTime') && queryArr.includes('endTimeEndTime')
                     const newSearchKey = queryArr.map(key => {
                         const newItem = this.filterData.find(item => item.id === key)
                         if (!newItem) return null
+                        const valueMap = conditionsMap[key]?.reduce((acc, item) => {
+                                acc[item.id] = item.value
+                                return acc
+                            }, {})
+
                         newItem.values = newItem.multiable
                             ? pathQuery[key].split(',').map(v => ({
                                 id: v,
-                                name: v
+                                name: valueMap?.[v] ?? v
                             }))
-                            : [{ id: pathQuery[key], name: pathQuery[key] }]
+                            : [{ id: pathQuery[key], name: valueMap?.[pathQuery[key]] ?? pathQuery[key] }]
                         return newItem
                     }).filter(item => !!item)
-                    
+
                     this.setHistoryPageStatus({
+                        page,
+                        pageSize,
                         dateTimeRange: hasTimeRange
                             ? [
                                 coverStrTimer(parseInt(pathQuery.startTimeStartTime)),
@@ -199,6 +232,7 @@
                         searchKey: newSearchKey
                     })
                 }
+                this.startQuery()
             },
             formatTime (date) {
                 try {
@@ -225,10 +259,11 @@
                 this.startQuery()
             },
 
-            async getConditionList (condition) {
+            async getConditionList (condition, query = {}) {
                 try {
                     const { $route: { params }, $ajax } = this
-                    const url = `${PROCESS_API_URL_PREFIX}/user/builds/${params.projectId}/${params.pipelineId}/historyCondition/${condition}`
+                    const querySearch = new URLSearchParams(query)
+                    const url = `${PROCESS_API_URL_PREFIX}/user/builds/${params.projectId}/${params.pipelineId}/historyCondition/${condition}?${querySearch}`
                     const res = await $ajax.get(url)
 
                     return res.data
@@ -244,6 +279,14 @@
                     searchKey
                 })
                 this.startQuery()
+            },
+            getSearchKeyById (id) {
+                try {
+                    const values = this.historyPageStatus.searchKey.find(item => item.id === id)?.values
+                    return Array.isArray(values) ? values.map(i => i.id).join(',') : ''
+                } catch (error) {
+                    return ''
+                }
             }
         }
     }

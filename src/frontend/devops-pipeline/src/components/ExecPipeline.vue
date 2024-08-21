@@ -294,7 +294,8 @@
                 isErrorOverflow: [],
                 curPipeline: this.execDetail?.model,
                 pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC,
-                scrollElement: '.pipeline-detail-wrapper.biz-content'
+                scrollElement: '.pipeline-detail-wrapper.biz-content',
+                isShowCheckDialog: false
             }
         },
         computed: {

@@ -20,6 +20,15 @@ BEGIN
     ALTER TABLE T_TEMPLATE_PIPELINE
         ADD COLUMN `INSTANCE_ERROR_INFO` text null comment '实例化错误信息';
     END IF;
+    
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_RECORD_TASK'
+                    AND COLUMN_NAME = 'ASYNC_STATUS') THEN
+    ALTER TABLE `T_PIPELINE_BUILD_RECORD_TASK`
+        ADD COLUMN `ASYNC_STATUS` varchar(32) DEFAULT NULL COMMENT '插件异步执行状态';
+    END IF;
 
     IF NOT EXISTS(SELECT 1
                    FROM information_schema.statistics

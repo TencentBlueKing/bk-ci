@@ -274,7 +274,8 @@ export default {
                     ? {
                         pauseBeforeExec: true
                     }
-                    : {}
+                    : {
+                    }
             }
         } else {
             const diffRes = diffAtomVersions(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)
@@ -353,7 +354,16 @@ export default {
             containers: [],
             checkIn: { timeout: 24 },
             checkOut: { timeout: 24 },
-            finally: insertStageIsFinally === true || undefined
+            finally: insertStageIsFinally === true || undefined,
+            stageControlOption: {
+                enable: true,
+                runCondition: 'AFTER_LAST_FINISHED',
+                customCondition: '',
+                customVariables: [{ key: 'param1', value: '' }],
+                manualTrigger: false,
+                triggerUsers: [],
+                timeout: 24
+            }
         })
         return state
     },

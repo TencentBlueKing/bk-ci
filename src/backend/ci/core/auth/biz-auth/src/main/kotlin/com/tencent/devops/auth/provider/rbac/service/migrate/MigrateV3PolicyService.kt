@@ -88,7 +88,8 @@ class MigrateV3PolicyService constructor(
     permissionService = permissionService,
     rbacCacheService = rbacCacheService,
     deptService = deptService,
-    permissionGroupPoliciesService = permissionGroupPoliciesService
+    permissionGroupPoliciesService = permissionGroupPoliciesService,
+    permissionResourceMemberService = permissionResourceMemberService
 ) {
 
     companion object {
@@ -156,6 +157,7 @@ class MigrateV3PolicyService constructor(
         val rbacAuthorizationScopes = mutableListOf<AuthorizationScopes>()
         result.permissions.forEach permission@{ permission ->
             val (isManager, rbacActions) = buildRbacActions(
+                projectCode = projectCode,
                 managerGroupId = managerGroupId,
                 permission = permission,
                 members = result.members
@@ -181,6 +183,7 @@ class MigrateV3PolicyService constructor(
     }
 
     private fun buildRbacActions(
+        projectCode: String,
         managerGroupId: Int,
         permission: AuthorizationScopes,
         members: List<RoleGroupMemberInfo>?
@@ -191,7 +194,12 @@ class MigrateV3PolicyService constructor(
                 // 如果包含all_action,则直接添加到管理员组
                 Constants.ALL_ACTION -> {
                     logger.info("match all_action,member add to manager group $managerGroupId")
-                    batchAddGroupMember(groupId = managerGroupId, defaultGroup = true, members = members)
+                    batchAddGroupMember(
+                        projectCode = projectCode,
+                        groupId = managerGroupId,
+                        defaultGroup = true,
+                        members = members
+                    )
                     return Pair(true, emptyList())
                 }
                 PROJECT_VIEWS_MANAGER, PROJECT_DELETE, QUALITY_GROUP_ENABLE -> {
@@ -376,6 +384,7 @@ class MigrateV3PolicyService constructor(
     }
 
     override fun batchAddGroupMember(
+        projectCode: String,
         groupId: Int,
         defaultGroup: Boolean,
         members: List<RoleGroupMemberInfo>?,
@@ -391,10 +400,11 @@ class MigrateV3PolicyService constructor(
                 member.expiredAt
             }
             permissionResourceMemberService.addGroupMember(
-                userId = member.id,
+                projectCode = projectCode,
+                memberId = member.id,
                 memberType = member.type,
                 expiredAt = expiredAt,
-                groupId = groupId
+                iamGroupId = groupId
             )
         }
     }

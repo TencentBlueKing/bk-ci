@@ -23,6 +23,7 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.engine.service.EngineConfigService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
@@ -38,12 +39,13 @@ class AgentReuseMutexCmd @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineUrlBean: PipelineUrlBean,
-    private val buildVariableService: BuildVariableService
+    private val buildVariableService: BuildVariableService,
+    private val engineConfigService: EngineConfigService
 ) : ContainerCmd {
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            !commandContext.buildStatus.isFinish() &&
-            commandContext.container.controlOption.agentReuseMutex != null
+                !commandContext.buildStatus.isFinish() &&
+                commandContext.container.controlOption.agentReuseMutex != null
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -57,19 +59,12 @@ class AgentReuseMutexCmd @Autowired constructor(
      * 互斥情况存在三种
      * 1、依赖某个AgentId，直接往下执行即可
      * 2、Root节点，即没有复用节点的节点，根据类型先拿取锁
-     * 3、Reuse节点，但没有复用节点，可能是因为和复用节点同级，或存在和复用节点先后顺序不明确的，
-     * 这种先拿取复用的JobId看有没有，没有就按root节点的逻辑走
+     * 3、Reuse节点，但没有复用节点，可能是因为和复用节点同级，或存在和复用节点先后顺序不明确的，就按root节点的逻辑走
      */
     private fun doExecute(commandContext: ContainerContext) {
         var mutex = commandContext.container.controlOption.agentReuseMutex!!
+        // 复用的不用参与锁逻辑
         if (!mutex.type.needEngineLock()) {
-            commandContext.cmdFlowState = CmdFlowState.CONTINUE
-            return
-        }
-        // 如果有依赖Job且不是依赖类型的可以先拿一下上下文看看有没有已经写入了，如果写入了可以直接跳过
-        if (mutex.reUseJobId != null &&
-            commandContext.variables.containsKey(AgentReuseMutex.genAgentContextKey(mutex.reUseJobId!!))
-        ) {
             commandContext.cmdFlowState = CmdFlowState.CONTINUE
             return
         }
@@ -83,7 +78,7 @@ class AgentReuseMutexCmd @Autowired constructor(
             AgentReuseMutexType.AGENT_ID, AgentReuseMutexType.AGENT_NAME -> {
                 acquireMutex(commandContext, mutex)
             }
-
+            // 环境的因为无法确定节点不参与锁
             else -> {
                 commandContext.cmdFlowState = CmdFlowState.CONTINUE
             }
@@ -102,7 +97,7 @@ class AgentReuseMutexCmd @Autowired constructor(
         // 超时时间限制，0表示排队不等待直接超时
         val timeOut = MutexControl.parseTimeoutVar(mutex.timeout, mutex.timeoutVar, variables)
         // 排队任务数量限制，0表示不排队
-        val queue = mutex.queue.coerceAtLeast(0).coerceAtMost(MutexControl.MUTEX_MAX_QUEUE)
+        val queue = mutex.queue.coerceAtLeast(0).coerceAtMost(engineConfigService.getMutexMaxQueue())
         // 替换环境变量
         var runtimeAgentOrEnvId = if (!mutex.agentOrEnvId.isNullOrBlank()) {
             EnvUtils.parseEnv(mutex.agentOrEnvId, variables)
@@ -158,21 +153,23 @@ class AgentReuseMutexCmd @Autowired constructor(
                     commandContext.cmdFlowState = CmdFlowState.LOOP // 循环消息命令 延时10秒钟
                 }
 
-                ContainerMutexStatus.FIRST_LOG -> { // 增加可视化的互斥状态打印
+                ContainerMutexStatus.FIRST_LOG -> { // 增加可视化的互斥状态打印，注：这里进行了Job状态流转！
                     commandContext.latestSummary = "agent_reuse_mutex_print"
                     commandContext.cmdFlowState = CmdFlowState.LOOP
                 }
 
-                else -> { // 正常运行
-                    commandContext.cmdFlowState = CmdFlowState.CONTINUE // 检查通过，继续向下执行
+                // 正常运行
+                else -> {
+                    // 检查通过，继续向下执行
+                    commandContext.cmdFlowState = CmdFlowState.CONTINUE
                 }
             }
         } else if (commandContext.container.status.isFinish()) { // 对于存在重放的结束消息做闭环
             val event = commandContext.event
 
             LOG.info(
-                "ENGINE|${event.buildId}|${event.source}|status=${commandContext.container.status}" +
-                    "|concurrent_container_event"
+                "AGENT_REUSE|ENGINE|${event.buildId}|${event.source}|status=${commandContext.container.status}" +
+                        "|concurrent_container_event"
             )
 
             releaseContainerMutex(
@@ -189,21 +186,21 @@ class AgentReuseMutexCmd @Autowired constructor(
     }
 
     private fun doAcquireMutex(container: PipelineBuildContainer, mutex: AgentReuseMutex): ContainerMutexStatus {
+        // 对于AgentId这种需要写入上下文，防止最后没有被执行导致兜底无法解锁，排队中也可能被取消导致无法退出队列
+        // 只要不是依赖节点，根节点和同级依赖节点都要写入，防止出现被同级env节点获取到节点锁但没写入依赖id节点就无法获取到AgentId
+        buildVariableService.setVariable(
+            projectId = container.projectId,
+            pipelineId = container.pipelineId,
+            buildId = container.buildId,
+            varName = AgentReuseMutex.genAgentContextKey(mutex.reUseJobId ?: mutex.jobId),
+            varValue = mutex.runtimeAgentOrEnvId!!,
+            readOnly = true,
+            rewriteReadOnly = true
+        )
+
         val res = tryAgentLockOrQueue(container, mutex)
         return if (res) {
             LOG.info("ENGINE|${container.buildId}|AGENT_REUSE_LOCK_SUCCESS|${mutex.type}")
-
-            // 对于AgentId这种获取到锁就需要写入上下文，防止最后没有被执行导致兜底无法解锁
-            // 只要不是依赖节点，根节点和同级依赖节点都要写入，防止出现被同级env节点获取到节点锁但没写入依赖id节点就无法获取到AgentId
-            buildVariableService.setVariable(
-                projectId = container.projectId,
-                pipelineId = container.pipelineId,
-                buildId = container.buildId,
-                varName = AgentReuseMutex.genAgentContextKey(mutex.reUseJobId ?: mutex.jobId),
-                varValue = mutex.runtimeAgentOrEnvId!!,
-                readOnly = true
-            )
-
             // 抢到锁则可以继续运行，并退出队列
             quitMutexQueue(
                 projectId = container.projectId,
@@ -235,13 +232,13 @@ class AgentReuseMutexCmd @Autowired constructor(
     private fun tryAgentLockOrQueue(container: PipelineBuildContainer, mutex: AgentReuseMutex): Boolean {
         val lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(container.projectId, mutex.runtimeAgentOrEnvId!!)
         val lockValue = container.buildId
-        // 过期时间按整个流水线过期时间为准
+        // 过期时间按整个流水线过期时间为准，7天
         val expireSec = AgentReuseMutex.AGENT_LOCK_TIMEOUT
         val containerMutexLock = RedisLockByValue(
             redisOperation = redisOperation,
             lockKey = lockKey,
             lockValue = lockValue,
-            expiredTimeInSeconds = AgentReuseMutex.AGENT_LOCK_TIMEOUT
+            expiredTimeInSeconds = expireSec
         )
         // 获取到锁的内容
         val lv = redisOperation.get(lockKey)
@@ -275,9 +272,9 @@ class AgentReuseMutexCmd @Autowired constructor(
         if (lockResult) {
             mutex.linkTip?.let {
                 redisOperation.set(
-                    AgentReuseMutex.genAgentReuseMutexLinkTipKey(container.buildId),
-                    mutex.linkTip!!,
-                    expireSec
+                    key = AgentReuseMutex.genAgentReuseMutexLinkTipKey(container.buildId),
+                    value = mutex.linkTip!!,
+                    expiredInSecond = expireSec
                 )
             }
             logAgentMutex(
@@ -308,7 +305,7 @@ class AgentReuseMutexCmd @Autowired constructor(
             containerVar = emptyMap(), buildStatus = null,
             timestamps = mapOf(
                 BuildTimestampType.JOB_AGENT_REUSE_MUTEX_QUEUE to
-                    BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                        BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
             )
         )
     }
@@ -345,9 +342,9 @@ class AgentReuseMutexCmd @Autowired constructor(
             // 排队等待时间为0的时候，立即超时, 退出队列，并失败, 没有就继续在队列中,timeOut时间为分钟
             if (mutex.timeout == 0 || timeDiff > TimeUnit.MINUTES.toSeconds(mutex.timeout.toLong())) {
                 val desc = "${
-                if (mutex.timeoutVar.isNullOrBlank()) {
-                    "[${mutex.timeout} minutes]"
-                } else " timeoutVar[${mutex.timeoutVar}] setup to [${mutex.timeout} minutes]"
+                    if (mutex.timeoutVar.isNullOrBlank()) {
+                        "[${mutex.timeout} minutes]"
+                    } else " timeoutVar[${mutex.timeoutVar}] setup to [${mutex.timeout} minutes]"
                 } "
                 logAgentMutex(
                     container, mutex, lockedBuildId,
@@ -441,7 +438,7 @@ class AgentReuseMutexCmd @Autowired constructor(
             containerVar = emptyMap(), buildStatus = null,
             timestamps = mapOf(
                 BuildTimestampType.JOB_MUTEX_QUEUE to
-                    BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
+                        BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
             )
         )
     }
@@ -455,7 +452,7 @@ class AgentReuseMutexCmd @Autowired constructor(
         executeCount: Int?
     ) {
         LOG.info(
-            "[$buildId]|RELEASE_MUTEX_LOCK|project=$projectId|$runtimeAgentOrEnvId"
+            "[$buildId]|AGENT_REUSE_RELEASE_MUTEX_LOCK|project=$projectId|$runtimeAgentOrEnvId"
         )
         // 删除tip
         redisOperation.delete(AgentReuseMutex.genAgentReuseMutexLinkTipKey(buildId))
@@ -512,10 +509,10 @@ class AgentReuseMutexCmd @Autowired constructor(
                         messageCode = ProcessMessageCode.BK_LOCKED,
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ) + ": $linkTip<a target='_blank' href='$link'>" +
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = ProcessMessageCode.BK_CLICK,
-                            language = I18nUtil.getDefaultLocaleLanguage()
-                        ) + "</a> | $msg"
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = ProcessMessageCode.BK_CLICK,
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            ) + "</a> | $msg"
                 } else {
                     I18nUtil.getCodeLanMessage(
                         messageCode = ProcessMessageCode.BK_CURRENT,
