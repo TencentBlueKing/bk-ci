@@ -117,7 +117,7 @@
             },
             versionNotMatch () {
                 try {
-                    return !this.isDebugPipeline && (this.$route.params.version && this.$route.params.version !== this.pipelineInfo?.releaseVersion)
+                    return !this.isDebugPipeline && (this.$route.params.version && this.$route.params.version !== String(this.pipelineInfo?.releaseVersion))
                 } catch (error) {
                     return false
                 }
