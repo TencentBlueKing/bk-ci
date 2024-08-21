@@ -4,7 +4,7 @@
         v-bkloading="{ isLoading }"
     >
         <filter-bar
-            @query="handlePageChange(1)"
+            @query="handlePageChange"
         />
         <bk-exception
             class="no-build-history-exception"
