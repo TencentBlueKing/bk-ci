@@ -69,6 +69,7 @@
         <div
             class="bkdevops-build-history-table-wrapper"
             ref="tableBox"
+            :style="{ height: `${tableHeight}px` }"
             v-else
         >
             <bk-table
@@ -587,7 +588,8 @@
                 buildHistories: [],
                 stoping: {},
                 isLoading: false,
-                tableColumnKeys: initSortedColumns
+                tableColumnKeys: initSortedColumns,
+                tableHeight: null
             }
         },
         computed: {
@@ -790,10 +792,12 @@
         },
         mounted () {
             webSocketMessage.installWsMessage(this.requestHistory)
+            window.addEventListener('resize', this.updateTableHeight)
         },
 
         beforeDestroy () {
             webSocketMessage.unInstallWsMessage()
+            window.removeEventListener('resize', this.updateTableHeight)
         },
 
         methods: {
@@ -803,6 +807,9 @@
                 'setHistoryPageStatus',
                 'resetHistoryFilterCondition'
             ]),
+            updateTableHeight () {
+                this.tableHeight = this.$refs.tableBox.offsetHeight
+            },
             handleColumnChange (columns) {
                 this.tableColumnKeys = columns
                 this.$refs.tableSetting.$parent.instance?.hide()
