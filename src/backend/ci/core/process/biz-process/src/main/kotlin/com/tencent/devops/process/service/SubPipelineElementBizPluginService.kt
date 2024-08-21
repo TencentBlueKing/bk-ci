@@ -127,9 +127,10 @@ class SubPipelineElementBizPluginService @Autowired constructor(
                     "project:$projectId|elementId:${element.id}|userId:$userId|" +
                     "subProjectId:$subProjectId|subPipelineId:$subPipelineId|oauthUser:$oauthUser"
         )
+        val targetUser = oauthUser ?: userId
         // 校验流水线修改人是否有子流水线执行权限
         val checkPermission = pipelinePermissionService.checkPipelinePermission(
-            userId = oauthUser ?: userId,
+            userId = targetUser,
             projectId = subProjectId,
             pipelineId = subPipelineId,
             permission = AuthPermission.EXECUTE
@@ -143,7 +144,7 @@ class SubPipelineElementBizPluginService @Autowired constructor(
                 result = false,
                 errorTitle = I18nUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE,
-                    params = arrayOf(userId)
+                    params = arrayOf(targetUser)
                 ),
                 errorMessage = I18nUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE,
