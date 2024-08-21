@@ -51,9 +51,19 @@ func Run(isDebug bool) {
 	// 初始化国际化
 	i18n.InitAgentI18n()
 
+	// 启动 agent，需要等到上报启动成功才能继续
 	_, err := job.AgentStartup()
 	if err != nil {
-		logs.Warn("agent startup failed: ", err.Error())
+		logs.WithError(err).Error("agent startup failed")
+		for {
+			_, err = job.AgentStartup()
+			if err == nil {
+				break
+			} else {
+				logs.WithError(err).Error("agent startup failed")
+				time.Sleep(5 * time.Second)
+			}
+		}
 	}
 
 	// 数据采集

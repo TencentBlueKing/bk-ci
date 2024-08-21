@@ -2,7 +2,10 @@
     <div class="codelib-content">
         <template v-if="hasCodelibs || aliasName.length || isLoading">
             <div id="codelib-list-content">
-                <layout :flod.sync="isListFlod" @on-flod="handleLayoutFlod">
+                <layout
+                    :flod.sync="isListFlod"
+                    @on-flod="handleLayoutFlod"
+                >
                     <template>
                         <section class="header-content">
                             <link-code-lib
@@ -19,7 +22,8 @@
                                 :create-codelib="createCodelib"
                             >
                             </link-code-lib>
-                            <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
+                            <bk-input
+                                :placeholder="$t('codelib.aliasNamePlaceholder')"
                                 :class="{
                                     'codelib-search': true,
                                     'is-fold-search': isListFlod
@@ -69,7 +73,9 @@
             <bk-button
                 v-for="item in codelibTypes"
                 :key="item.scmType"
-                :disabled="item.status !== 'OK'"
+                :ext-cls="{
+                    'is-disabled': item.status !== 'OK'
+                }"
                 @click="createCodelib(item.scmType)"
             >
                 {{ $t('codelib.linkCodelibLabel', [item.name]) }}
@@ -317,7 +323,7 @@
                 const codelibType = this.codelibTypes.find(type => type.scmType === typeLabel)
                 if (codelibType?.status === 'DEPLOYING') {
                     this.showUndeployDialog({
-                        title: this.$t('codelib.codelibUndeployTitle', [typeLabel]),
+                        title: this.$t('codelib.codelibUndeployTitle', [codelibType.name]),
                         desc: this.$t(`codelib.${typeLabel.toLowerCase()}UndeployDesc`),
                         link: `${DOCS_URL_PREFIX}${codelibType.docUrl}`
                     })

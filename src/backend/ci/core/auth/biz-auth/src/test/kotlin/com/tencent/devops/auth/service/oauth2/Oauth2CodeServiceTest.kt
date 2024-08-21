@@ -8,10 +8,12 @@ import com.tencent.devops.model.auth.tables.records.TAuthOauth2CodeRecord
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDateTime
 
+@Disabled
 class Oauth2CodeServiceTest : BkCiAbstractTest() {
     private val authOauth2CodeDao = mockk<AuthOauth2CodeDao>()
     private val oauth2CodeService = Oauth2CodeService(

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 22.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="图层_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1024 1024" style="enable-background:new 0 0 1024 1024;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#3C6BDC;}
+	.st1{fill:#23B9FB;}
+	.st2{fill:#E1EFE8;}
+</style>
+<g id="图层_2_1_">
+</g>
+<g id="图层_1_1_">
+</g>
+<g id="图层_3">
+</g>
+<g id="图层_4">
+</g>
+<g id="图层_5">
+	<g>
+		<rect x="255.5" y="95.5" class="st0" width="64" height="832"/>
+		<rect x="404.5" y="95.5" class="st0" width="64" height="832"/>
+		<rect x="553.5" y="95.5" class="st0" width="64" height="832"/>
+		<rect x="702.5" y="95.5" class="st0" width="64" height="832"/>
+	</g>
+	<g>
+		<rect x="95" y="256" class="st0" width="832" height="64"/>
+		<rect x="95" y="405" class="st0" width="832" height="64"/>
+		<rect x="95" y="554" class="st0" width="832" height="64"/>
+		<rect x="95" y="703" class="st0" width="832" height="64"/>
+	</g>
+	<path class="st1" d="M801,832H225c-17.7,0-32-14.3-32-32V224c0-17.7,14.3-32,32-32h576c17.7,0,32,14.3,32,32v576
+		C833,817.7,818.7,832,801,832z"/>
+	<path class="st2" d="M652.7,675.9H387.9c-17.6,0-32-14.4-32-32V377.8c0-17.6,14.4-32,32-32h264.8c17.6,0,32,14.4,32,32v266.1
+		C684.7,661.5,670.3,675.9,652.7,675.9z"/>
+</g>
+</svg>

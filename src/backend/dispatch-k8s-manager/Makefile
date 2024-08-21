@@ -13,6 +13,9 @@ GOFLAGS    :=
 # gin
 export GIN_MODE=release
 
+format:
+	find ./ -name "*.go" | xargs gofmt -w
+
 test: test-unit
 
 .PHONY: test-unit

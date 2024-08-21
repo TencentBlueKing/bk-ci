@@ -73,7 +73,6 @@
                 :required="valueRequired"
                 :disabled="disabled"
                 :value="param.defaultValue"
-                :upload-file-name="uploadFileName"
                 :handle-change="handleChange"
             />
             <vuex-textarea
@@ -241,17 +240,6 @@
                 ></selector>
             </form-field>
         </template>
-
-        <form-field
-            :hide-colon="true"
-            v-if="isFileParam(param.type)"
-        >
-            <file-upload
-                name="fileName"
-                :file-path="param.defaultValue"
-                @handle-change="(value) => uploadPathFromFileName(value)"
-            ></file-upload>
-        </form-field>
     </section>
 </template>
 
@@ -264,7 +252,6 @@
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
-    import FileUpload from '@/components/FileUpload'
     import FileParamInput from '@/components/FileParamInput'
     import validMixins from '@/components/validMixins'
     import {
@@ -309,7 +296,6 @@
             Selector,
             VuexTextarea,
             RequestSelector,
-            FileUpload,
             FileParamInput
         },
         mixins: [validMixins],
@@ -336,8 +322,7 @@
             return {
                 optionList: [],
                 selectDefautVal: '',
-                remoteParamOption: {},
-                uploadFileName: ''
+                remoteParamOption: {}
             }
         },
         computed: {
@@ -495,10 +480,6 @@
                     value = value.join(',')
                 }
                 this.handleChange(key, value)
-            },
-
-            uploadPathFromFileName (value) {
-                this.uploadFileName = value
             }
         }
     }

@@ -31,9 +31,9 @@ import io.swagger.v3.oas.integration.SwaggerConfiguration
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.servers.Server
+import javax.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import javax.annotation.PostConstruct
 
 class JerseySwaggerConfig : JerseyConfig() {
 
@@ -70,6 +70,7 @@ class JerseySwaggerConfig : JerseyConfig() {
                         .info(Info().title(applicationDesc).version(applicationVersion))
                         .addServersItem(Server().url("/$service"))
                     resourcePackages = setOf(packageName)
+                    scannerClass = "com.tencent.devops.common.web.swagger.BkJaxrsAnnotationScanner"
                 }
             } else {
                 SwaggerConfiguration().apply {
@@ -77,6 +78,7 @@ class JerseySwaggerConfig : JerseyConfig() {
                         .info(Info().title(applicationDesc).version(applicationVersion))
                         .addServersItem(Server().url("/"))
                     resourcePackages = setOf(packageName)
+                    scannerClass = "com.tencent.devops.common.web.swagger.BkJaxrsAnnotationScanner"
                 }
             }
         }
