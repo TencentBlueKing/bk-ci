@@ -24,7 +24,6 @@
                         <i :class="['devops-icon', `icon-${output.icon}`]"></i>
                         <span :title="output.name">{{ output.name }}</span>
                         <p class="output-hover-icon-box">
-                            <output-qrcode v-if="output.isApp" :output="output" />
                             <artifact-download-button v-if="output.downloadable" :output="output" download-icon
                                 :has-permission="hasPermission" :path="output.fullPath" :name="output.name"
                                 :artifactory-type="output.artifactoryType" />
