@@ -33,11 +33,11 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 
 @Suppress("LongParameterList", "ReturnCount")
 object StreamPipelineUtils {
@@ -66,38 +66,39 @@ object StreamPipelineUtils {
         messageId: String
     ) = "$streamUrl/notifications?id=$messageId#$gitProjectId"
 
-    fun createEmptyPipelineAndSetting(displayName: String) = PipelineModelAndSetting(
-        model = Model(
-            name = displayName,
-            desc = "",
-            stages = listOf(
-                Stage(
-                    id = VMUtils.genStageId(1),
-                    name = VMUtils.genStageId(1),
-                    containers = listOf(
-                        TriggerContainer(
-                            id = "0",
-                            name = I18nUtil.getCodeLanMessage(
-                                messageCode = BK_BUILD_TRIGGER,
-                                language = I18nUtil.getDefaultLocaleLanguage()
-                            ),
-                            elements = listOf(
-                                ManualTriggerElement(
-                                    name = I18nUtil.getCodeLanMessage(
-                                        messageCode = BK_MANUAL_TRIGGER,
-                                        language = I18nUtil.getDefaultLocaleLanguage()
-                                    ),
-                                    id = "T-1-1-1"
+    fun createEmptyPipelineAndSetting(displayName: String, pipelineAsCodeSettings: PipelineAsCodeSettings?) =
+        PipelineModelAndSetting(
+            model = Model(
+                name = displayName,
+                desc = "",
+                stages = listOf(
+                    Stage(
+                        id = VMUtils.genStageId(1),
+                        name = VMUtils.genStageId(1),
+                        containers = listOf(
+                            TriggerContainer(
+                                id = "0",
+                                name = I18nUtil.getCodeLanMessage(
+                                    messageCode = BK_BUILD_TRIGGER,
+                                    language = I18nUtil.getDefaultLocaleLanguage()
+                                ),
+                                elements = listOf(
+                                    ManualTriggerElement(
+                                        name = I18nUtil.getCodeLanMessage(
+                                            messageCode = BK_MANUAL_TRIGGER,
+                                            language = I18nUtil.getDefaultLocaleLanguage()
+                                        ),
+                                        id = "T-1-1-1"
+                                    )
                                 )
                             )
                         )
                     )
                 )
+            ),
+            setting = PipelineSetting(
+                cleanVariablesWhenRetry = true,
+                pipelineAsCodeSettings = pipelineAsCodeSettings ?: PipelineAsCodeSettings()
             )
-        ),
-        setting = PipelineSetting(
-            cleanVariablesWhenRetry = true,
-            pipelineAsCodeSettings = PipelineAsCodeSettings()
         )
-    )
 }

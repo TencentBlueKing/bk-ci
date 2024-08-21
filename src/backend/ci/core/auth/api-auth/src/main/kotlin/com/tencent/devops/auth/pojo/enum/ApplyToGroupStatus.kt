@@ -23,37 +23,18 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.auth.pojo.enum
 
-import io.swagger.v3.oas.annotations.media.Schema
+enum class ApplyToGroupStatus(val value: Int) {
+    // 审批中
+    PENDING(0),
 
-@Schema(title = "WINDOWS 地域表")
-data class WindowsResourceZoneConfig(
-    @get:Schema(title = "Id")
-    val id: Long?,
-    @get:Schema(title = "是否可用")
-    val available: Boolean?,
-    @get:Schema(title = "区域，深圳，南京等")
-    val zone: String,
-    @get:Schema(title = "区域简称，SZ,NJ")
-    var zoneShortName: String,
-    @get:Schema(title = "描述")
-    val description: String,
-    @get:Schema(title = "类型")
-    val type: WindowsResourceZoneConfigType
-)
+    // 审批成功
+    SUCCEED(1),
 
-enum class WindowsResourceZoneConfigType {
-    DEFAULT,
-    INTERNAL_USE, /*内部使用专区*/
-    CSIG_USE, /*csig使用专区*/
-    DEVCLOUD; /*devcloud使用专区*/
-
-    companion object {
-        fun parse(value: String): WindowsResourceZoneConfigType {
-            return values().find { it.name == value } ?: DEFAULT
-        }
-    }
+    // 审批超时
+    TIME_OUT(2);
 }

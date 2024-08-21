@@ -405,4 +405,18 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_RESOURCE_SYNC`
     PRIMARY KEY (`PROJECT_CODE`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='同步IAM资源';
 
+CREATE TABLE IF NOT EXISTS `T_AUTH_RESOURCE_GROUP_APPLY`
+(
+    `ID`            bigint auto_increment comment '主键ID',
+    `PROJECT_CODE`  varchar(64)                not null comment '项目ID',
+    `MEMBER_ID`     varchar(64)                not null comment '成员ID',
+    `IAM_GROUP_ID`  int(20)                    not null comment 'IAM组ID',
+    `STATUS`        int(2)       default 0     null comment '状态, 0-审批中,1-审批成功,2-审批超时',
+    `NUMBER_OF_CHECKS`  int(10)  default 0     null comment '检查次数，用于同步组数据',
+    `CREATE_TIME`   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`   datetime default CURRENT_TIMESTAMP not null comment '更新时间',
+    PRIMARY KEY (`ID`),
+    INDEX `IDX_STATUS` (`STATUS`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='用户组申请记录表';
+
 SET FOREIGN_KEY_CHECKS = 1;

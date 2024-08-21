@@ -27,7 +27,7 @@
 
 package com.tencent.devops.remotedev.pojo.common
 
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 
 enum class QuotaType {
     DEVCLOUD,
@@ -39,9 +39,9 @@ enum class QuotaType {
     }
 
     companion object {
-        fun parse(ownerType: WorkspaceOwnerType) = when (ownerType) {
-            WorkspaceOwnerType.PERSONAL -> DEVCLOUD
-            WorkspaceOwnerType.PROJECT -> OFFSHORE
+        fun parse(zoneType: WindowsResourceZoneConfigType?) = when (zoneType) {
+            WindowsResourceZoneConfigType.DEVCLOUD -> DEVCLOUD
+            else -> OFFSHORE
         }
     }
 }
