@@ -79,7 +79,13 @@ class WebhookRequestService(
             externalId = matcher.getExternalId(),
             eventType = matcher.getEventType().name,
             triggerUser = matcher.getUsername(),
-            eventMessage = matcher.getMessage() ?: "",
+            eventMessage = matcher.getMessage()?.let {
+                if (it.length >= 128) {
+                    it.substring(0, 128)
+                } else {
+                    it
+                }
+            } ?: "",
             repositoryType = scmType.name,
             requestHeader = request.headers,
             requestParam = request.queryParams,

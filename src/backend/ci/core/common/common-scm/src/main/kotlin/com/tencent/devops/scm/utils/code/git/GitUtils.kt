@@ -163,4 +163,13 @@ object GitUtils {
         Regex("not authorized").containsMatchIn(message) -> GIT_LOGIN_FAIL
         else -> null
     }
+
+    fun getHttpUrl(sshUrl: String) = when {
+        sshUrl.startsWith("http://") || sshUrl.startsWith("https://") -> sshUrl
+        sshUrl.startsWith("git@") -> {
+            val (domain, repoName) = getDomainAndRepoName(sshUrl)
+            "https://$domain/$repoName"
+        }
+        else -> throw IllegalArgumentException("Unknown code repository URL")
+    }
 }

@@ -255,6 +255,9 @@
                         "type" : "string"
                       }
                     }
+                  },
+                  "skip-wip" : {
+                    "type" : "boolean"
                   }
                 }
               } ]
@@ -943,6 +946,9 @@
                       "type" : "string"
                     }
                   }
+                },
+                "skip-wip" : {
+                  "type" : "boolean"
                 }
               }
             } ]
@@ -1526,10 +1532,10 @@
                       }
                     }
                   },
-                  "glob" : {
+                  "filter-rule" : {
                     "type" : "string"
                   },
-                  "properties" : {
+                  "metadata" : {
                     "type" : "object"
                   },
                   "payload" : {
@@ -1685,10 +1691,10 @@
                     }
                   }
                 },
-                "glob" : {
+                "filter-rule" : {
                   "type" : "string"
                 },
-                "properties" : {
+                "metadata" : {
                   "type" : "object"
                 },
                 "payload" : {
@@ -2221,6 +2227,12 @@
               "enum" : [ "markdown", "text" ]
             },
             "notify-type" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "chat-id" : {
               "type" : "array",
               "items" : {
                 "type" : "string"

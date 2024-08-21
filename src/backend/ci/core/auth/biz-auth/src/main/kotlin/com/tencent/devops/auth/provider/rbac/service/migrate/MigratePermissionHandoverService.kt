@@ -60,10 +60,11 @@ class MigratePermissionHandoverService constructor(
                 )
                 handoverToList.forEach { handoverTo ->
                     permissionResourceMemberService.addGroupMember(
-                        userId = handoverTo,
+                        projectCode = projectCode,
+                        memberId = handoverTo,
                         memberType = USER_TYPE,
                         expiredAt = GROUP_EXPIRED_TIME,
-                        groupId = projectManagerGroupId!!.relationId.toInt()
+                        iamGroupId = projectManagerGroupId!!.relationId.toInt()
                     )
                 }
             }
@@ -91,15 +92,16 @@ class MigratePermissionHandoverService constructor(
                 )
                 try {
                     permissionResourceMemberService.addGroupMember(
-                        userId = handoverTo,
+                        projectCode = projectCode,
+                        memberId = handoverTo,
                         memberType = USER_TYPE,
                         expiredAt = GROUP_EXPIRED_TIME,
-                        groupId = resourceManagerGroup!!.relationId.toInt()
+                        iamGroupId = resourceManagerGroup!!.relationId.toInt()
                     )
-                    v2ManagerService.deleteRoleGroupMemberV2(
-                        resourceManagerGroup.relationId.toInt(),
-                        USER_TYPE,
-                        handoverFrom
+                    permissionResourceMemberService.batchDeleteResourceGroupMembers(
+                        projectCode = projectCode,
+                        iamGroupId = resourceManagerGroup.relationId.toInt(),
+                        members = listOf(handoverFrom)
                     )
                 } catch (ignore: Exception) {
                     logger.warn(

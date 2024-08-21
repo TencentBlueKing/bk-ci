@@ -28,7 +28,6 @@
 package com.tencent.devops.remotedev.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
@@ -37,7 +36,6 @@ import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
-import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
@@ -70,22 +68,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserWorkspaceResource {
-    @Operation(summary = "创建新的工作空间")
-    @POST
-    @Path("/")
-    fun createWorkspace(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "bkTicket", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
-        bkTicket: String,
-        @Parameter(description = "projectId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String,
-        @Parameter(description = "工作空间描述", required = true)
-        workspace: WorkspaceCreate
-    ): Result<WorkspaceResponse>
 
     @Operation(summary = "获取用户工作空间列表")
     @GET
@@ -156,21 +138,6 @@ interface UserWorkspaceResource {
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
-    ): Result<Boolean>
-
-    @Operation(summary = "分享工作空间")
-    @POST
-    @Path("/share")
-    fun shareWorkspace(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "工作空间名称", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String,
-        @Parameter(description = "分享用户", required = true)
-        @QueryParam("sharedUser")
-        sharedUser: String
     ): Result<Boolean>
 
     @Operation(summary = "修改工作空间")
@@ -279,25 +246,6 @@ interface UserWorkspaceResource {
         gitType: RemoteDevGitType = RemoteDevGitType.GIT
     ): Result<List<String>>
 
-    @Operation(summary = "返回目标代码库devfile路径")
-    @GET
-    @Path("/repository_devfile")
-    fun checkDevfile(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "代码库项目全路径", required = true)
-        @QueryParam("pathWithNamespace")
-        pathWithNamespace: String,
-        @Parameter(description = "分支", required = true)
-        @QueryParam("branch")
-        branch: String,
-        @Parameter(description = "git 类型", required = true)
-        @QueryParam("gitType")
-        @DefaultValue("GIT")
-        gitType: RemoteDevGitType = RemoteDevGitType.GIT
-    ): Result<List<String>>
-
     @Operation(summary = "根据用户ID判断用户是否已经oauth认证")
     @GET
     @Path("/isOauth")
@@ -332,15 +280,6 @@ interface UserWorkspaceResource {
         workspaceName: String
     ): Result<Boolean>
 
-    @Operation(summary = "校验用户是否能创建工作空间")
-    @GET
-    @Path("/check_user_create")
-    fun checkUserCreate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<Boolean>
-
     @Operation(summary = "获取指定工作空间详情")
     @GET
     @Path("/start_cloud_workspace_detail")
@@ -364,6 +303,18 @@ interface UserWorkspaceResource {
         @QueryParam("macAddress")
         macAddress: String
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>>
+
+    @Operation(summary = "校验是否需要moa 2fa二次验证，true：需求；false：不需要")
+    @GET
+    @Path("/check_moa_2fa")
+    fun checkMoa2fa(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "实例ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 
     @Operation(summary = "发起moa 2fa二次验证")
     @POST

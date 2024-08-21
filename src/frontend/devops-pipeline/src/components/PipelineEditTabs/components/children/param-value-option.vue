@@ -73,7 +73,6 @@
                 :required="valueRequired"
                 :disabled="disabled"
                 :value="param.defaultValue"
-                :upload-file-name="uploadFileName"
                 :handle-change="handleChange"
             />
             <vuex-textarea
@@ -241,17 +240,6 @@
                 ></selector>
             </form-field>
         </template>
-
-        <form-field
-            :hide-colon="true"
-            v-if="isFileParam(param.type)"
-        >
-            <file-upload
-                name="fileName"
-                :file-path="param.defaultValue"
-                @handle-change="(value) => uploadPathFromFileName(value)"
-            ></file-upload>
-        </form-field>
     </section>
 </template>
 
@@ -264,7 +252,6 @@
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
-    import FileUpload from '@/components/FileUpload'
     import FileParamInput from '@/components/FileParamInput'
     import validMixins from '@/components/validMixins'
     import {
@@ -309,7 +296,6 @@
             Selector,
             VuexTextarea,
             RequestSelector,
-            FileUpload,
             FileParamInput
         },
         mixins: [validMixins],
@@ -336,8 +322,7 @@
             return {
                 optionList: [],
                 selectDefautVal: '',
-                remoteParamOption: {},
-                uploadFileName: ''
+                remoteParamOption: {}
             }
         },
         computed: {
@@ -392,9 +377,6 @@
             isFileParam,
             getParamsDefaultValueLabel,
             getParamsDefaultValueLabelTips,
-            handleUpdateParam (name, value) {
-                this.handleChange(name, value)
-            },
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
             },
@@ -417,11 +399,11 @@
             handleBuildResourceChange (name, value, param) {
                 const resetBuildType = name === 'os' ? { buildType: this.getBuildTypeList(value)[0].type } : {}
 
-                this.handleUpdateParam('containerType', Object.assign({
+                this.handleChange('containerType', Object.assign({
                     ...param.containerType,
                     [name]: value
                 }, resetBuildType))
-                this.handleUpdateParam('defaultValue', '')
+                this.handleChange('defaultValue', '')
             },
             setSelectorDefaultVal ({ type, defaultValue = '' }) {
                 if (typeof this.param.defaultValue === 'string' && (isMultipleParam(this.param.type) || isEnumParam(this.param.type))) { // 选项清除时，修改对应的默认值
@@ -431,7 +413,7 @@
                     } else {
                         this.selectDefautVal = dv.join(',')
                     }
-                    this.handleUpdateParam('defaultValue', dv.join(','))
+                    this.handleChange('defaultValue', dv.join(','))
                 }
             },
             transformOpt (opts) {
@@ -454,8 +436,8 @@
             },
 
             handleCodeTypeChange (name, value) {
-                this.handleUpdateParam(name, value)
-                this.handleUpdateParam('defaultValue', '')
+                this.handleChange(name, value)
+                this.handleChange('defaultValue', '')
             },
 
             getCodeUrl (type) {
@@ -478,7 +460,7 @@
                 } else {
                     this.selectDefautVal = ''
                 }
-                this.handleUpdateParam('defaultValue', '')
+                this.handleChange('defaultValue', '')
             },
             handleUpdateOptions (key, val) {
                 this.handleChange(key, val)
@@ -488,7 +470,7 @@
                 const { param } = this
                 if (typeof param.defaultValue === 'string' && (isMultipleParam(param.type) || isEnumParam(param.type))) { // 选项清除时，修改对应的默认值
                     const dv = param.defaultValue.split(',').filter(v => param.options.map(k => k.key).includes(v))
-                    this.handleUpdateParam('defaultValue', dv.join(','))
+                    this.handleChange('defaultValue', dv.join(','))
                 }
                 this.setSelectorDefaultVal(this.param)
             },
@@ -497,11 +479,7 @@
                 if (isMultipleParam(this.param.type)) {
                     value = value.join(',')
                 }
-                this.handleUpdateParam(key, value)
-            },
-
-            uploadPathFromFileName (value) {
-                this.uploadFileName = value
+                this.handleChange(key, value)
             }
         }
     }

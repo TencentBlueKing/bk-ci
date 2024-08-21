@@ -29,6 +29,7 @@
             </bk-form-item>
             <bk-form-item :label="$t('settings.additionUser')">
                 <staff-input
+                    name="additionUser"
                     :handle-change="(name, value) => subscription.users = value.join(',')"
                     :value="subscription.users.split(',').filter(Boolean)"
                     :placeholder="$t('settings.additionUserPlaceholder')">
@@ -51,7 +52,7 @@
                     :value="subscription.detailFlag">
                 </atom-checkbox>
             </bk-form-item>
-            
+
             <template v-if="subscription.types.includes('WEWORK_GROUP')">
                 <bk-form-item :label="$t('settings.groupIdLabel')">
                     <group-id-selector
@@ -82,12 +83,13 @@
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import StaffInput from '@/components/atomFormField/StaffInput'
     import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
+
     export default {
         name: 'notify-setting',
         components: {
             GroupIdSelector,
-            StaffInput,
-            AtomCheckbox
+            AtomCheckbox,
+            StaffInput
         },
         props: {
             subscription: Object,

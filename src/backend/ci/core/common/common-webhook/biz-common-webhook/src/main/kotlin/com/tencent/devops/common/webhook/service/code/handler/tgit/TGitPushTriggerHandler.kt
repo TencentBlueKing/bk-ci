@@ -66,7 +66,8 @@ import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
-import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter.Companion.KEYWORD_SKIP_CI
 import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
@@ -216,8 +217,9 @@ class TGitPushTriggerHandler(
                     params = listOf(triggerOnBranchName)
                 ).toJsonStr()
             )
-            val skipCiFilter = SkipCiFilter(
+            val skipCiFilter = KeywordSkipFilter(
                 pipelineId = pipelineId,
+                keyWord = KEYWORD_SKIP_CI,
                 triggerOnMessage = event.commits?.get(0)?.message ?: ""
             )
             val commits = event.commits

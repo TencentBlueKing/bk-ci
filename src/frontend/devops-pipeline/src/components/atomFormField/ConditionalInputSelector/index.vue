@@ -25,6 +25,7 @@
             v-validate.initial="Object.assign({}, { required: !!curComponent.required })"
             :handle-change="handleChange"
             :value="element[curComponent.key]"
+            :disabled="disabled"
             v-bind="curComponent">
         </component>
     </div>

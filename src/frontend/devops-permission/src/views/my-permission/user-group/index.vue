@@ -11,7 +11,7 @@
     />
     <div v-if="initPage" class="no-data">
       <img src="./images/box.png">
-      {{ $t('请先选择一个项目') }}
+      {{ t('请先选择一个项目') }}
     </div>
     <iam-iframe
       v-else-if="!initPage && path"
@@ -25,6 +25,7 @@ import ajax from './ajax.js';
 import tools from '@/utils/tools';
 import GroupAside from './group-aside.vue';
 import IamIframe from './iam-Iframe.vue';
+import { useI18n } from 'vue-i18n';
 
 export default {
   name: 'permission-manage',
@@ -48,6 +49,7 @@ export default {
   emits: ['close-manage'],
 
   data() {
+    const { t } = useI18n();
     return {
       path: '',
       activeIndex: '',
@@ -55,7 +57,8 @@ export default {
       list: [],
       searchProjectKey: '',
       projectCode: '',
-      initPage: false
+      initPage: false,
+      t
     };
   },
 

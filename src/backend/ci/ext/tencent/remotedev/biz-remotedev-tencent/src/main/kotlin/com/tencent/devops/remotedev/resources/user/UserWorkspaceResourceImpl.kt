@@ -37,7 +37,6 @@ import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
-import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
@@ -74,16 +73,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val deleteControl: DeleteControl
 ) : UserWorkspaceResource {
 
-    @AuditEntry(actionId = ActionId.CGS_CREATE)
-    override fun createWorkspace(
-        userId: String,
-        bkTicket: String,
-        projectId: String,
-        workspace: WorkspaceCreate
-    ): Result<WorkspaceResponse> {
-        return Result(createControl.createWorkspace(userId, bkTicket, projectId, workspace))
-    }
-
     @AuditEntry(actionId = ActionId.CGS_START)
     override fun startWorkspace(
         userId: String,
@@ -96,11 +85,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     @AuditEntry(actionId = ActionId.CGS_STOP)
     override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(sleepControl.stopWorkspace(userId, workspaceName))
-    }
-
-    @AuditEntry(actionId = ActionId.CGS_SHARE)
-    override fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Result<Boolean> {
-        return Result(workspaceService.shareWorkspace(userId, workspaceName, sharedUser))
     }
 
     @AuditEntry(actionId = ActionId.CGS_EDIT)
@@ -205,22 +189,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun checkDevfile(
-        userId: String,
-        pathWithNamespace: String,
-        branch: String,
-        gitType: RemoteDevGitType
-    ): Result<List<String>> {
-        return Result(
-            workspaceService.checkDevfile(
-                userId = userId,
-                pathWithNamespace = pathWithNamespace,
-                branch = branch,
-                gitType = gitType
-            )
-        )
-    }
-
     override fun isOAuth(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
@@ -241,10 +209,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(permissionService.checkUserPermission(userId, workspaceName))
     }
 
-    override fun checkUserCreate(userId: String): Result<Boolean> {
-        return Result(permissionService.checkUserCreate(userId))
-    }
-
     @AuditEntry(actionId = ActionId.CGS_VIEW)
     override fun startCloudWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceStartCloudDetail?> {
         return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName))
@@ -255,6 +219,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         macAddress: String
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>> {
         return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress))
+    }
+
+    override fun checkMoa2fa(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(workspaceService.checkMoa2fa(userId, workspaceName))
     }
 
     override fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Result<Moa2faRespData> {

@@ -1,30 +1,26 @@
 <script setup lang="ts">
 import http from '@/http/api';
 import {
+handleProjectManageNoPermission,
 RESOURCE_ACTION,
 RESOURCE_TYPE,
-handleProjectManageNoPermission,
 } from '@/utils/permission.js';
-import {
-onMounted,
-} from '@vue/runtime-core';
 import {
 InfoBox,
 Message,
 Popover,
 } from 'bkui-vue';
 import {
+onMounted,
 ref,
 watch
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-useRoute,
-useRouter,
+useRoute
 } from 'vue-router';
 
 const { t } = useI18n();
-const router = useRouter();
 const route = useRoute();
 const { projectCode } = route.params;
 const projectData = ref<any>({});
@@ -136,6 +132,10 @@ const fieldMap = [
     current: 'centerName',
     after: 'afterCenterName',
   },
+  {
+    current: 'productName',
+    after: 'afterProductName'
+  }
 
 ];
 const fetchDiffProjectData = () => {
@@ -417,12 +417,12 @@ onMounted(async () => {
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目所属运营产品')" property="bg">
-                  <span>{{ getOperational(projectData.productId)?.ProductName || projectData.productId }}</span>
+                  <span>{{ projectData.productName || projectData.productId }}</span>
                   <div class="diff-content" v-if="projectData.afterProductId">
                     <p class="update-title">
                       {{ t('本次更新：') }}
                     </p>
-                    <span>{{ getOperational(projectData.afterProductId)?.ProductName || projectData.productId }}</span>
+                    <span>{{ projectData.afterProductName || projectData.afterProductId }}</span>
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目所属组织')" property="bg">

@@ -64,7 +64,8 @@ export const RESOURCE_ACTION = {
     VIEW: 'pipeline_view',
     EDIT: 'pipeline_edit',
     DOWNLOAD: 'pipeline_download',
-    DELETE: 'pipeline_delete'
+    DELETE: 'pipeline_delete',
+    MANAGE: 'pipeline_manage'
 }
 
 export const PROJECT_RESOURCE_ACTION = {

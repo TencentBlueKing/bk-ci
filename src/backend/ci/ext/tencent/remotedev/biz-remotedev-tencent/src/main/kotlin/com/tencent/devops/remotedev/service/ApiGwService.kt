@@ -62,11 +62,52 @@ class ApiGwService @Autowired constructor(
         }
     }
 
+    // 调用wesec接口判断该项目+云桌面是否开启moa 2fa管控
+    fun checkMoa2fa(
+        project: String,
+        workspactName: String
+    ): Boolean? {
+        val url = "${bkConfig.remoteDevUrl}/apigw/v1/remote_dev/moa_verify/" +
+            "?project_code=$project&workspace_name=$workspactName"
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .header(
+                name = "X-Bkapi-Authorization",
+                value = JsonUtil.toJson(
+                    mapOf("bk_app_code" to bkConfig.appCode, "bk_app_secret" to bkConfig.appSecret),
+                    false
+                )
+            )
+            .build()
+        return OkhttpUtils.doHttp(request).use { response ->
+            val data = response.body!!.string()
+            logger.debug("checkMoa2fa|{}|{}|{}", request.url, response.code, data)
+            if (!response.isSuccessful) {
+                logger.error("checkMoa2fa|{}|{}|{}", request.url, response.code, data)
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.MOA_VERIRY.errorCode,
+                    defaultMessage = "request fail code ${response.code}"
+                )
+            }
+
+            val resp = objectMapper.readValue<MoaVerifyResp>(data)
+            if (!resp.result) {
+                logger.error("checkMoa2fa|{}|{}|{}", request.url, response.code, data)
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.MOA_VERIRY.errorCode,
+                    defaultMessage = "code ${resp.code} msg ${resp.message}"
+                )
+            }
+            resp.data.result
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ApiGwService::class.java)
     }
 }
-
+// permission check相关
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AccessDevicePermissionsResp(
     val result: Boolean,
@@ -75,11 +116,28 @@ data class AccessDevicePermissionsResp(
     val message: String?,
     @JsonProperty("request_id")
     val requestId: String?,
-    @JsonProperty("traceId")
+    @JsonProperty("trace_id")
     val traceId: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AccessDevicePermissionsRespData(
     val result: Map<String, ProjectAccessDevicePermissionsResp>?
+)
+// moa verify相关
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class MoaVerifyResp(
+    val result: Boolean,
+    val code: Int,
+    val data: MoaVerifyRespData,
+    val message: String?,
+    @JsonProperty("request_id")
+    val requestId: String?,
+    @JsonProperty("trace_id")
+    val traceId: String?
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class MoaVerifyRespData(
+    val result: Boolean?
 )
