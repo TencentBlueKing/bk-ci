@@ -575,6 +575,8 @@ class ExperienceAppService(
             sender = connectEvent.sender,
             receiver = connectEvent.receiver
         )
+        // 创建下载记录
+        experienceDownloadService.addDownloadRecord(experienceDao.get(dslContext, recordId), connectEvent.receiver)
         return true
     }
 
