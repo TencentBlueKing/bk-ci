@@ -29,6 +29,7 @@
             </bk-form-item>
             <bk-form-item :label="$t('settings.additionUser')">
                 <staff-input
+                    name="additionUser"
                     :handle-change="(name, value) => subscription.users = value.join(',')"
                     :value="subscription.users.split(',').filter(Boolean)"
                     :placeholder="$t('settings.additionUserPlaceholder')">
@@ -86,8 +87,8 @@
         name: 'notify-setting',
         components: {
             GroupIdSelector,
-            StaffInput,
-            AtomCheckbox
+            AtomCheckbox,
+            StaffInput
         },
         props: {
             subscription: Object,
