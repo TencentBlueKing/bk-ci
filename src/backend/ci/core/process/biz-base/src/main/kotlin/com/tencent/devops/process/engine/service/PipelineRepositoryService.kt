@@ -340,8 +340,8 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode,
         yamlInfo: PipelineYamlVo? = null
     ): List<PipelineModelTask> {
-        val oauthUser = getPipelineOauthUser(projectId, pipelineId) ?: userId
-        val metaSize = modelCheckPlugin.checkModelIntegrity(model, projectId, oauthUser)
+
+        val metaSize = modelCheckPlugin.checkModelIntegrity(model, projectId, userId)
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
 

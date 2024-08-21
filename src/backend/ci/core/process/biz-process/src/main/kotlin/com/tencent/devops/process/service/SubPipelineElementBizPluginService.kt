@@ -92,7 +92,8 @@ class SubPipelineElementBizPluginService @Autowired constructor(
         element: Element,
         contextMap: Map<String, String>,
         appearedCnt: Int,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        oauthUser: String?
     ): ElementCheckResult {
         // 模板保存时不需要校验子流水线权限
         if (isTemplate || projectId.isNullOrBlank()) return ElementCheckResult(true)
@@ -124,11 +125,11 @@ class SubPipelineElementBizPluginService @Autowired constructor(
         logger.info(
             "check the sub-pipeline permissions when deploying pipeline|" +
                     "project:$projectId|elementId:${element.id}|userId:$userId|" +
-                    "subProjectId:$subProjectId|subPipelineId:$subPipelineId"
+                    "subProjectId:$subProjectId|subPipelineId:$subPipelineId|oauthUser:$oauthUser"
         )
         // 校验流水线修改人是否有子流水线执行权限
         val checkPermission = pipelinePermissionService.checkPipelinePermission(
-            userId = userId,
+            userId = oauthUser ?: userId,
             projectId = subProjectId,
             pipelineId = subPipelineId,
             permission = AuthPermission.EXECUTE

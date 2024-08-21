@@ -51,7 +51,8 @@ interface ModelCheckPlugin {
         model: Model,
         projectId: String?,
         userId: String,
-        isTemplate: Boolean = false
+        isTemplate: Boolean = false,
+        oauthUser: String? = null
     ): Int
 
     /**

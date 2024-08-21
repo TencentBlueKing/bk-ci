@@ -72,7 +72,8 @@ class MarketBuildLessAtomElementBizPlugin @Autowired constructor(
         element: MarketBuildLessAtomElement,
         contextMap: Map<String, String>,
         appearedCnt: Int,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        oauthUser: String?
     ): ElementCheckResult {
         return elementBizPluginServices.find {
             it.supportElement(element)
@@ -84,7 +85,8 @@ class MarketBuildLessAtomElementBizPlugin @Autowired constructor(
             element = element,
             contextMap = contextMap,
             appearedCnt = appearedCnt,
-            isTemplate = isTemplate
+            isTemplate = isTemplate,
+            oauthUser = oauthUser
         ) ?: ElementCheckResult(true)
     }
 }
