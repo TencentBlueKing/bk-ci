@@ -279,6 +279,7 @@
                 }
             }
         },
+
         mounted () {
             if (this.$route.params.version || this.pipelineInfo?.releaseVersion) {
                 this.init()

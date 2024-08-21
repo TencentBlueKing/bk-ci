@@ -107,6 +107,7 @@
                 'togglePropertyPanel'
             ]),
             getIsEnable (row) {
+                console.log('getIsEnable, row: ', row.atomCode, row?.additionalOptions, row?.additionalOptions?.enable)
                 return row?.additionalOptions?.enable ?? true
             },
             handleUpdateOptions (index, key, val) {
