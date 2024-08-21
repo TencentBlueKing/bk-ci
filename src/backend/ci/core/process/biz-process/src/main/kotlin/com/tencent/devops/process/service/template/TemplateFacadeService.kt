@@ -2586,6 +2586,37 @@ class TemplateFacadeService @Autowired constructor(
         return pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId)
     }
 
+    // TODO 埋点统计模板常量在流水线启动时被修改日志, 后续需要删除
+    fun printModifiedTemplateParams(
+        projectId: String,
+        pipelineId: String,
+        pipelineParams: List<BuildFormProperty>,
+        paramValues: Map<String, String>
+    ) {
+        val templatePipelineRecord = templatePipelineDao.get(dslContext, projectId, pipelineId) ?: return
+        val templateRecord =
+            templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version) ?: return
+        val template: Model = objectMapper.readValue(templateRecord.template)
+        val templateParams = (template.stages[0].containers[0] as TriggerContainer).templateParams
+        if (templateParams.isNullOrEmpty()) {
+            return
+        }
+        pipelineParams.forEach { param ->
+            val value = paramValues[param.id] ?: param.defaultValue
+            templateParams.forEach { template ->
+                if (template.id == param.id && template.defaultValue != value) {
+                    logger.warn(
+                        "BKSystemErrorMonitor|$projectId|$pipelineId|" +
+                                "templateId:${templateRecord.id}|templateVersion:${templateRecord.version}|" +
+                                "defaultValue:${template.defaultValue}|newValue:$value|" +
+                                "template params cannot be modified"
+                    )
+                    return
+                }
+            }
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TemplateFacadeService::class.java)
         private const val INIT_TEMPLATE_NAME = "init"

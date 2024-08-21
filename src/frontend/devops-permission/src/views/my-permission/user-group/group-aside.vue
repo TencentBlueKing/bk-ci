@@ -255,13 +255,13 @@ export default {
   methods: {
     handleGetData(pageSize) {
       return ajax
-        .get(`${this.ajaxPrefix}/auth/api/user/auth/resource/${this.projectCode}/${this.resourceType}/${this.projectCode}/listGroup?page=${this.page}&pageSize=${pageSize}`)
+        .get(`${this.ajaxPrefix}/auth/api/user/auth/resource/${this.projectCode}/${this.resourceType}/${this.projectCode}/listGroup?page=${this.page}&pageSize=${pageSize}&allProjectMembersGroupFlag=false`)
         .then(({ data }) => {
           this.hasLoadEnd = !data.hasNext;
           this.groupList.push(...data.records);
           // 首页需要加载
           if (this.page === 1) {
-            const chooseGroup = this.groupList.find(group => group.groupId === this.$route.query?.groupId) || this.groupList[1];
+            const chooseGroup = this.groupList.find(group => group.groupId === this.$route.query?.groupId) || this.groupList[0];
             this.handleChooseGroup(chooseGroup);
           }
           this.page += 1

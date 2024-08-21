@@ -17,7 +17,7 @@
                 <span class="tips-route" :title="keystoreTips">{{ keystoreTips }}</span>
             </p>
             <p v-if="githubAppUrl" class="tips-row" style="margin-top: 10px">
-                <span class="tips-route normal-route" style="margin-left: 15px">{{ $t('editPage.githubAppTips') }}
+                <span class="tips-route" style="margin-left: 15px">{{ $t('editPage.githubAppTips') }}
                     <a class="link" :href="githubAppUrl" target="_blank">GitHub APP</a>（Tencent DevOps）
                 </span>
             </p>
@@ -96,14 +96,10 @@
                     font-size: 12px;
                     width: calc(100% - 133px);
                     overflow: hidden;
-                    text-overflow:ellipsis;
+                    text-overflow: ellipsis;
                     white-space: nowrap;
-                    overflow: hidden;
                     vertical-align: middle;
                     padding-bottom: 3px;
-                }
-                .normal-route {
-                    white-space:normal;
                     .link {
                         color: $primaryColor;
                     }

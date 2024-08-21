@@ -29,6 +29,7 @@
                         :handle-change="handleMethods"
                         :value="element[key]"
                         :element="element"
+                        :disabled="disabled"
                         v-bind="obj">
                     </component>
                 </form-field>

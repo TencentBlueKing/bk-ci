@@ -791,7 +791,7 @@
                     = name === 'imageType' || name === 'agentType'
                         ? { value: '', envProjectId: '' }
                         : {}
-                if (name === 'value' && envProjectId) {
+                if (name === 'value') {
                     emptyValueObj.envProjectId = envProjectId
                 }
                 this.handleContainerChange(

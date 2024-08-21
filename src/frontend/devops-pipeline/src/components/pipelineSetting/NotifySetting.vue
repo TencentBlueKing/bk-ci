@@ -52,7 +52,7 @@
                     :value="subscription.detailFlag">
                 </atom-checkbox>
             </bk-form-item>
-            
+
             <template v-if="subscription.types.includes('WEWORK_GROUP')">
                 <bk-form-item :label="$t('settings.groupIdLabel')">
                     <group-id-selector
@@ -83,6 +83,7 @@
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import StaffInput from '@/components/atomFormField/StaffInput'
     import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
+
     export default {
         name: 'notify-setting',
         components: {
