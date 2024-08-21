@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service
  * 存放第三方构建机单节点相关
  * Agent 不参与排队，老逻辑和新逻辑一起用
  */
+@Suppress("ComplexMethod", "NestedBlockDepth")
 @Service
 class TPASingleQueueService @Autowired constructor(
     private val redisOperation: RedisOperation,

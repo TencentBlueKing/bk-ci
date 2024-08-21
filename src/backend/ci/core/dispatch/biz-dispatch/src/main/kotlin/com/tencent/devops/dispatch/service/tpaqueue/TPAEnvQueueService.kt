@@ -37,6 +37,7 @@ import javax.ws.rs.core.Response
 /**
  * 存放第三方构建机环境相关逻辑
  */
+@Suppress("ComplexMethod")
 @Service
 class TPAEnvQueueService @Autowired constructor(
     private val client: Client,
