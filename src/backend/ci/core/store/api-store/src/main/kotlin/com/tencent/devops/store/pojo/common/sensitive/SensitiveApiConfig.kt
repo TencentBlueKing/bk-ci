@@ -30,5 +30,6 @@ package com.tencent.devops.store.pojo.common.sensitive
 data class SensitiveApiConfig(
     val apiName: String,
     val apiUrl: String,
-    val aliasNames: Map<String /*language*/, String /*aliasName*/>? = null
+    val aliasNames: Map<String /*language*/, String /*aliasName*/>? = null,
+    val hideFlag: Boolean
 )
