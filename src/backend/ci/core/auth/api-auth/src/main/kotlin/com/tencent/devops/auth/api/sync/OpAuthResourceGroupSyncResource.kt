@@ -100,4 +100,9 @@ interface OpAuthResourceGroupSyncResource {
         @PathParam(value = "projectId")
         projectId: String
     ): Result<Boolean>
+
+    @POST
+    @Path("/syncIamGroupMembersOfApply")
+    @Operation(summary = "同步iam组成员--用户申请加入")
+    fun syncIamGroupMembersOfApply(): Result<Boolean>
 }
