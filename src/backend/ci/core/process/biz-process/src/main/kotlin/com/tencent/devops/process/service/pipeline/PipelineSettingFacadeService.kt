@@ -45,6 +45,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.atom.AtomUtils
@@ -59,16 +60,12 @@ import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.process.pojo.setting.JobCommonSetting
 import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.setting.StageCommonSetting
-import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.pojo.setting.TaskCommonSetting
 import com.tencent.devops.process.pojo.setting.TaskComponentCommonSetting
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
-import com.tencent.devops.process.utils.PipelineVersionUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -88,8 +85,7 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val taskCommonSettingConfig: TaskCommonSettingConfig,
     private val auditService: AuditService,
     private val modelCheckPlugin: ModelCheckPlugin,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val pipelineTemplatePermissionService: PipelineTemplatePermissionService
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
     private val logger = LoggerFactory.getLogger(PipelineSettingFacadeService::class.java)
