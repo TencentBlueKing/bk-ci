@@ -520,7 +520,8 @@ class WorkspaceService @Autowired constructor(
                     expertSupportList = expertMap?.get(it.workspaceName),
                     macAddress = allWindows[it.workspaceName]?.macAddress,
                     remark = it.remark,
-                    labels = it.labels
+                    labels = it.labels,
+                    createTime = it.createTime.timestamp()
                 )
             )
         }
