@@ -257,11 +257,19 @@ func (j *JdkVersionType) GetJava() string {
 	}
 }
 
+func (j *JdkVersionType) GetJavaOrNull() string {
+	path := j.GetJava()
+	if _, err := os.Stat(path); err != nil && !os.IsExist(err) {
+		logs.WithError(err).Warnf("jdk %d stat %s error", j.vNum, path)
+		return ""
+	}
+	return path
+}
+
 // GetJavaLatest 获取本地java路径，默认使用最新的，没有时使用旧的
 func GetJavaLatest() string {
-	jdk17path := Jdk.Jdk17.GetJava()
-	if _, err := os.Stat(jdk17path); err != nil {
-		logs.WithError(err).Warnf("jdk17 stat %s error", jdk17path)
+	jdk17path := Jdk.Jdk17.GetJavaOrNull()
+	if jdk17path == "" {
 		return Jdk.Jdk8.GetJava()
 	}
 	return jdk17path
