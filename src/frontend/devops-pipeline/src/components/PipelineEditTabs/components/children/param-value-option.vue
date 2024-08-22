@@ -377,9 +377,6 @@
             isFileParam,
             getParamsDefaultValueLabel,
             getParamsDefaultValueLabelTips,
-            handleUpdateParam (name, value) {
-                this.handleChange(name, value)
-            },
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
             },
@@ -402,11 +399,11 @@
             handleBuildResourceChange (name, value, param) {
                 const resetBuildType = name === 'os' ? { buildType: this.getBuildTypeList(value)[0].type } : {}
 
-                this.handleUpdateParam('containerType', Object.assign({
+                this.handleChange('containerType', Object.assign({
                     ...param.containerType,
                     [name]: value
                 }, resetBuildType))
-                this.handleUpdateParam('defaultValue', '')
+                this.handleChange('defaultValue', '')
             },
             setSelectorDefaultVal ({ type, defaultValue = '' }) {
                 if (typeof this.param.defaultValue === 'string' && (isMultipleParam(this.param.type) || isEnumParam(this.param.type))) { // 选项清除时，修改对应的默认值
@@ -416,7 +413,7 @@
                     } else {
                         this.selectDefautVal = dv.join(',')
                     }
-                    this.handleUpdateParam('defaultValue', dv.join(','))
+                    this.handleChange('defaultValue', dv.join(','))
                 }
             },
             transformOpt (opts) {
@@ -439,8 +436,8 @@
             },
 
             handleCodeTypeChange (name, value) {
-                this.handleUpdateParam(name, value)
-                this.handleUpdateParam('defaultValue', '')
+                this.handleChange(name, value)
+                this.handleChange('defaultValue', '')
             },
 
             getCodeUrl (type) {
@@ -463,7 +460,7 @@
                 } else {
                     this.selectDefautVal = ''
                 }
-                this.handleUpdateParam('defaultValue', '')
+                this.handleChange('defaultValue', '')
             },
             handleUpdateOptions (key, val) {
                 this.handleChange(key, val)
@@ -473,7 +470,7 @@
                 const { param } = this
                 if (typeof param.defaultValue === 'string' && (isMultipleParam(param.type) || isEnumParam(param.type))) { // 选项清除时，修改对应的默认值
                     const dv = param.defaultValue.split(',').filter(v => param.options.map(k => k.key).includes(v))
-                    this.handleUpdateParam('defaultValue', dv.join(','))
+                    this.handleChange('defaultValue', dv.join(','))
                 }
                 this.setSelectorDefaultVal(this.param)
             },
@@ -482,7 +479,7 @@
                 if (isMultipleParam(this.param.type)) {
                     value = value.join(',')
                 }
-                this.handleUpdateParam(key, value)
+                this.handleChange(key, value)
             }
         }
     }

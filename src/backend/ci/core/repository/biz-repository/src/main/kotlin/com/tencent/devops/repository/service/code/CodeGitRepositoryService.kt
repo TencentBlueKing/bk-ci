@@ -32,6 +32,10 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverDTO
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryConstants
@@ -52,6 +56,7 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.service.CredentialService
+import com.tencent.devops.repository.service.permission.RepositoryAuthorizationService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmOauthService
@@ -67,6 +72,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 
 @Component
 class CodeGitRepositoryService @Autowired constructor(
@@ -77,7 +83,8 @@ class CodeGitRepositoryService @Autowired constructor(
     private val scmService: IScmService,
     private val gitOauthService: IGitOauthService,
     private val scmOauthService: IScmOauthService,
-    private val gitService: IGitService
+    private val gitService: IGitService,
+    private val repositoryAuthorizationService: RepositoryAuthorizationService
 ) : CodeRepositoryService<CodeGitRepository> {
     override fun repositoryType(): String {
         return CodeGitRepository::class.java.name
@@ -199,6 +206,25 @@ class CodeGitRepositoryService @Autowired constructor(
                 authType = repository.authType,
                 gitProjectId = gitProjectId
             )
+            val repositoryCodeRecord = repositoryCodeGitDao.get(
+                dslContext = transactionContext,
+                repositoryId = repositoryId
+            )
+            if (repositoryCodeRecord.authType == RepoAuthType.OAUTH.name &&
+                repositoryCodeRecord.userName != repository.userName) {
+                repositoryAuthorizationService.batchModifyHandoverFrom(
+                    projectId = projectId,
+                    resourceAuthorizationHandoverList = listOf(
+                        ResourceAuthorizationHandoverDTO(
+                            projectCode = projectId,
+                            resourceType = AuthResourceType.CODE_REPERTORY.value,
+                            resourceName = record.aliasName,
+                            resourceCode = repositoryHashId,
+                            handoverTo = repository.userName
+                        )
+                    )
+                )
+            }
         }
     }
 
@@ -495,6 +521,31 @@ class CodeGitRepositoryService @Autowired constructor(
             errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
             params = arrayOf(repoUrl, userId)
         )
+    }
+
+    override fun addResourceAuthorization(
+        projectId: String,
+        userId: String,
+        repositoryId: Long,
+        repository: CodeGitRepository
+    ) {
+        with(repository) {
+            if (authType == RepoAuthType.OAUTH) {
+                repositoryAuthorizationService.addResourceAuthorization(
+                    projectId = projectId,
+                    listOf(
+                        ResourceAuthorizationDTO(
+                            projectCode = projectId,
+                            resourceType = AuthResourceType.CODE_REPERTORY.value,
+                            resourceName = repository.aliasName,
+                            resourceCode = HashUtil.encodeOtherLongId(repositoryId),
+                            handoverFrom = userId,
+                            handoverTime = LocalDateTime.now().timestampmilli()
+                        )
+                    )
+                )
+            }
+        }
     }
 
     companion object {

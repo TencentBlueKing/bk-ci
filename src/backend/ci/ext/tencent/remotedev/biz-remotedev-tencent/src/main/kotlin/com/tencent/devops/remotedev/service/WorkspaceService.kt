@@ -969,7 +969,7 @@ class WorkspaceService @Autowired constructor(
             )
         permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
         val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: defaultPageSize
+        val pageSizeNotNull = pageSize ?: DEFAULT_PAGE_SIZE
         val count = workspaceOpHistoryDao.countOpHistory(dslContext, workspaceName)
         val result = workspaceOpHistoryDao.limitFetchOpHistory(
             dslContext = dslContext,
@@ -1164,7 +1164,7 @@ class WorkspaceService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
-        private const val defaultPageSize = 20
+        private const val DEFAULT_PAGE_SIZE = 20
         private const val DISCOUNT_TIME = 10000
     }
 }

@@ -377,13 +377,6 @@ class WorkspaceCommon @Autowired constructor(
             workspaceName = workspaceName
         )
         if (lastHistory?.startTime != null) {
-            workspaceDao.updateWorkspaceUsageTime(
-                workspaceName = workspaceName,
-                usageTime = Duration.between(
-                    lastHistory.startTime, LocalDateTime.now()
-                ).seconds.toInt(),
-                dslContext = transactionContext
-            )
             workspaceHistoryDao.updateWorkspaceHistory(
                 dslContext = transactionContext,
                 id = lastHistory.id,

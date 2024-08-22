@@ -33,6 +33,7 @@ import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerChangeEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
@@ -63,14 +64,16 @@ class TriggerConfiguration {
         schedulerManager: SchedulerManager,
         pipelineTimerService: PipelineTimerService,
         redisOperation: RedisOperation,
-        client: Client
+        client: Client,
+        pipelineRepositoryService: PipelineRepositoryService
     ): PipelineJobBean {
         return PipelineJobBean(
             pipelineEventDispatcher = pipelineEventDispatcher,
             schedulerManager = schedulerManager,
             pipelineTimerService = pipelineTimerService,
             redisOperation = redisOperation,
-            client = client
+            client = client,
+            pipelineRepositoryService = pipelineRepositoryService
         )
     }
 

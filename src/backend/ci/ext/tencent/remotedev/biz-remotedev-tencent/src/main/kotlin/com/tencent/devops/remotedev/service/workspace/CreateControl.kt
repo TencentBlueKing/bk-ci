@@ -34,7 +34,6 @@ import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
@@ -65,12 +64,10 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
-import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOrganization
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
-import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -248,7 +245,7 @@ class CreateControl @Autowired constructor(
         if (workspaceCreate.imageCosFile.isBlank()) {
             val spec = lazy { windowsResourceConfigService.getAllSpecZoneShortName() }
             val resource = startCloudResourceCountCheck(
-                workspaceCreate.windowsType, QuotaType.parse(ownerType)
+                workspaceCreate.windowsType
             ).filter {
                 when {
                     /*指定了cgsId*/
@@ -256,7 +253,7 @@ class CreateControl @Autowired constructor(
                     /*其余情况不应放开lock==true的情况*/
                     it.locked == true -> false
                     /*不同云区域的忽略*/
-                    it.internal != QuotaType.parse(ownerType).getInternal() -> false
+//                    it.internal != QuotaType.parse(ownerType).getInternal() -> false
                     /*使用普通区域，则应到避免落入特殊区域*/
                     availableZone.type == WindowsResourceZoneConfigType.DEFAULT && it.zoneId in spec.value -> false
                     /*特殊情况，限制具体的区域id*/
@@ -287,7 +284,8 @@ class CreateControl @Autowired constructor(
                         appName = gameId.first,
                         gameId = gameId.second,
                         cgsId = cgsId,
-                        ownerType = ownerType
+                        ownerType = ownerType,
+                        quotaType = QuotaType.parse(zoneType)
                     )
                 }
                 return true
@@ -310,7 +308,7 @@ class CreateControl @Autowired constructor(
                 windowsZone = availableZone,
                 windowsConfig = windowsConfig,
                 newNum = newNum,
-                quotaType = QuotaType.parse(ownerType)
+                quotaType = QuotaType.parse(zoneType)
             )
         )
         repeat(generateWorkspaceName.size) { i ->
@@ -329,7 +327,8 @@ class CreateControl @Autowired constructor(
                 appName = gameId.first,
                 gameId = gameId.second,
                 cgsId = cgsId,
-                ownerType = ownerType
+                ownerType = ownerType,
+                quotaType = QuotaType.parse(zoneType)
             )
         }
         return false
@@ -348,13 +347,14 @@ class CreateControl @Autowired constructor(
         appName: String,
         gameId: Long,
         cgsId: String?,
-        ownerType: WorkspaceOwnerType
+        ownerType: WorkspaceOwnerType,
+        quotaType: QuotaType
     ) {
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
         logger.info(
             "doCreateWorkspace|$i|$workspaceName|$workspaceCreate|$projectId|$creator|$owner|" +
-                "$windowsConfig|$organization|$zoneId|$appName|$gameId|$cgsId|$ownerType"
+                "$windowsConfig|$organization|$zoneId|$appName|$gameId|$cgsId|$ownerType|$quotaType"
         )
         if (!owner.isNullOrBlank()) {
             workspaceSharedDao.batchCreate(
@@ -404,7 +404,7 @@ class CreateControl @Autowired constructor(
                     machineType = windowsConfig.size,
                     cgsId = cgsId,
                     imageCosFile = workspaceCreate.imageCosFile,
-                    quotaType = QuotaType.parse(ws.ownerType)
+                    quotaType = quotaType
                 ),
                 projectId = projectId,
                 mountType = mountType,
@@ -432,7 +432,7 @@ class CreateControl @Autowired constructor(
                 zoneType = zoneType
             )
         } else {
-            loadWorkspaceWithPersonalWindows(userId = userId, workspaceCreate = workspaceCreate, zoneType = zoneType)
+            loadWorkspaceWithPersonalWindows(userId = userId, workspaceCreate = workspaceCreate)
         }
         return true
     }
@@ -447,22 +447,6 @@ class CreateControl @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.CGS_CREATE_CONTENT
     )
-    @Deprecated("待废弃")
-    fun createWorkspace(
-        userId: String,
-        bkTicket: String,
-        projectId: String,
-        workspaceCreate: WorkspaceCreate
-    ): WorkspaceResponse {
-        logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
-        permissionService.checkUserCreate(userId)
-
-        throw ErrorCodeException(
-            errorCode = ErrorCodeEnum.CLIENT_NEED_UPDATED.errorCode,
-            params = arrayOf(redisCache.get(RedisKeys.REDIS_CLIENT_INSTALL_URL).toString()),
-            defaultMessage = ErrorCodeEnum.CLIENT_NEED_UPDATED.formatErrorMessage
-        )
-    }
 
     fun afterCreateWorkspace(event: RemoteDevUpdateEvent) {
         val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = event.workspaceName)
@@ -772,10 +756,9 @@ class CreateControl @Autowired constructor(
     fun loadWorkspaceWithPersonalWindows(
         userId: String,
         workspaceCreate: WindowsWorkspaceCreate,
-        zoneType: WindowsResourceZoneConfigType?,
         cgsId: String? = null
     ) {
-        logger.info("loadWorkspaceWithPersonalWindows|$userId|$workspaceCreate|$zoneType|$cgsId")
+        logger.info("loadWorkspaceWithPersonalWindows|$userId|$workspaceCreate|$cgsId")
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
@@ -789,11 +772,13 @@ class CreateControl @Autowired constructor(
             )
         }
 
-        val windowsZone = windowsResourceConfigService.getZoneConfig(workspaceCreate.windowsZone)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(workspaceCreate.windowsZone)
-            )
+        val windowsZone = windowsResourceConfigService.getAvailableZone(
+            zoneId = workspaceCreate.windowsZone,
+            type = WindowsResourceZoneConfigType.DEVCLOUD
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+            params = arrayOf(workspaceCreate.windowsZone)
+        )
         if (windowsZone.available == false) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
@@ -817,7 +802,8 @@ class CreateControl @Autowired constructor(
             creator = userId,
             projectId = projectId,
             windowsZone = windowsZone,
-            zoneType = zoneType,
+            /* 个人云桌面强制指定为devcloud专区 */
+            zoneType = WindowsResourceZoneConfigType.DEVCLOUD,
             workspaceCreate = workspaceCreate,
             cgsId = cgsId,
             windowsConfig = windowsConfig,
@@ -878,7 +864,7 @@ class CreateControl @Autowired constructor(
         }
     }
 
-    private fun startCloudResourceCountCheck(type: String, quotaType: QuotaType) =
+    private fun startCloudResourceCountCheck(type: String) =
         workspaceCommon.syncStartCloudResourceList().filter {
             it.status == 11 &&
                 it.machineType == type

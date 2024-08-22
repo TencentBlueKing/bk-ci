@@ -140,4 +140,25 @@ interface OpAuthMigrateResource {
         @Parameter(description = "按条件迁移项目实体", required = true)
         projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean>
+
+    @POST
+    @Path("/migrateResourceAuthorization")
+    @Operation(summary = "迁移资源授权-按照项目")
+    fun migrateResourceAuthorization(
+        @Parameter(description = "迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/migrateAllResourceAuthorization")
+    @Operation(summary = "迁移资源授权-全量")
+    fun migrateAllResourceAuthorization(): Result<Boolean>
+
+    @POST
+    @Path("/fixResourceGroups")
+    @Operation(summary = "修复资源组")
+    fun fixResourceGroups(
+        @Parameter(description = "迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
 }

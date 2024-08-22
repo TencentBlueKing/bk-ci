@@ -1,7 +1,9 @@
 <template>
     <div v-if="!isLoading" class="pipeline-draft-debug-header">
         <pipeline-bread-crumb :pipeline-name="pipelineName">
-            {{$t('draftExecRecords')}}
+            <span>
+                {{$t('draftExecRecords')}}
+            </span>
         </pipeline-bread-crumb>
     </div>
     <i v-else class="devops-icon icon-circle-2-1 spin-icon" style="margin-left: 20px;" />
@@ -50,6 +52,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 24px 0 14px;
+    font-size: 14px;
     .pipeline-draft-version {
         display: flex;
         align-items: center;

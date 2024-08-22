@@ -48,5 +48,12 @@ data class WindowsResourceZoneConfig(
 enum class WindowsResourceZoneConfigType {
     DEFAULT,
     INTERNAL_USE, /*内部使用专区*/
-    CSIG_USE; /*csig使用专区*/
+    CSIG_USE, /*csig使用专区*/
+    DEVCLOUD; /*devcloud使用专区*/
+
+    companion object {
+        fun parse(value: String): WindowsResourceZoneConfigType {
+            return values().find { it.name == value } ?: DEFAULT
+        }
+    }
 }

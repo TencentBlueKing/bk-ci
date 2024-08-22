@@ -211,7 +211,7 @@ class WorkspaceSharedDao {
                     workspaceName = workspaceName,
                     operator = operator,
                     sharedUser = sharedUser,
-                    type = WorkspaceShared.AssignType.valueOf(assignType),
+                    type = WorkspaceShared.AssignType.parse(assignType),
                     resourceId = resourceId
                 )
             }
