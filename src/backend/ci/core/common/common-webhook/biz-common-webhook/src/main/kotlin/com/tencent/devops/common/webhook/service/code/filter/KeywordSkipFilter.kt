@@ -27,16 +27,32 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
-class SkipCiFilter(
+import org.slf4j.LoggerFactory
+
+class KeywordSkipFilter(
     private val pipelineId: String,
-    private val triggerOnMessage: String?
+    private val keyWord: List<String>,
+    private val enable: Boolean? = true,
+    private val triggerOnMessage: String?,
+    private val failedReason: String = ""
 ) : WebhookFilter {
 
     companion object {
-        private const val SKIP_CI = "[skip ci]"
+        private val logger = LoggerFactory.getLogger(KeywordSkipFilter::class.java)
+        val KEYWORD_SKIP_CI = listOf("[skip ci]")
+        val KEYWORD_SKIP_WIP = listOf("[WIP]", "WIP")
     }
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
-        return triggerOnMessage?.contains(SKIP_CI) != true
+        logger.info("$pipelineId|triggerOnMessage:$triggerOnMessage|skipWord:$keyWord|enable:$enable")
+        return when {
+            enable == false -> true
+            keyWord.any { triggerOnMessage?.contains(it) == true } -> {
+                response.failedReason = failedReason
+                false
+            }
+
+            else -> true
+        }
     }
 }

@@ -103,6 +103,10 @@
                         id: 'materialCommitMessage'
                     },
                     {
+                        name: this.$t('details.trigger'),
+                        id: 'triggerUser'
+                    },
+                    {
                         name: this.$t('history.triggerType'),
                         id: 'trigger',
                         multiable: true,
@@ -184,11 +188,10 @@
                 const { $route, historyPageStatus } = this
                 const pathQuery = $route.query
                 const queryArr = Object.keys(pathQuery)
+                const page = pathQuery?.page ? parseInt(pathQuery?.page, 10) : 1
+                const pageSize = pathQuery?.pageSize ? parseInt(pathQuery?.pageSize, 10) : 20
 
                 if (queryArr.length) {
-                    const page = pathQuery?.page ? parseInt(pathQuery?.page, 10) : 1
-                    const pageSize = pathQuery?.pageSize ? parseInt(pathQuery?.pageSize, 10) : 20
-
                     const hasTimeRange = queryArr.includes('startTimeStartTime') && queryArr.includes('endTimeEndTime')
                     const newSearchKey = queryArr.map(key => {
                         const newItem = this.filterData.find(item => item.id === key)
@@ -228,7 +231,7 @@
                         searchKey: newSearchKey
                     })
                 }
-                this.startQuery()
+                this.startQuery(page)
             },
             formatTime (date) {
                 try {
@@ -267,8 +270,8 @@
                     console.error(e)
                 }
             },
-            startQuery () {
-                this.$emit('query')
+            startQuery (page = 1) {
+                this.$emit('query', page)
             },
             updateSearchKey (searchKey) {
                 this.setHistoryPageStatus({

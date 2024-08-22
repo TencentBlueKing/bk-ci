@@ -24,7 +24,7 @@ class AuthCronSyncGroupAndMember(
         private val logger = LoggerFactory.getLogger(AuthCronSyncGroupAndMember::class.java)
     }
 
-    @Scheduled(cron = "0 0 22 * * ?")
+    @Scheduled(cron = "0 0 0 6 * ?")
     fun syncGroupAndMemberRegularly() {
         if (!enable) {
             return
@@ -42,6 +42,25 @@ class AuthCronSyncGroupAndMember(
             }
         } catch (e: Exception) {
             logger.warn("sync group and member regularly |error", e)
+        }
+    }
+
+    @Scheduled(cron = "0 0 8,16 * * ?")
+    fun syncIamGroupMembersOfApplyRegularly() {
+        if (!enable) {
+            return
+        }
+        try {
+            logger.info("sync members of apply regularly | start")
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                permissionResourceGroupSyncService.syncIamGroupMembersOfApply()
+                logger.info("sync members of apply regularly | finish")
+            } else {
+                logger.info("sync members of apply regularly | running")
+            }
+        } catch (e: Exception) {
+            logger.warn("sync members of apply regularly | error", e)
         }
     }
 }

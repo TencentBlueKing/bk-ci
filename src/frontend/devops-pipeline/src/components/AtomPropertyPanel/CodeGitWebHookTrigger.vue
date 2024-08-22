@@ -26,6 +26,7 @@
                         :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
                         :value="element[key]"
                         :element="element"
+                        :disabled="disabled"
                         v-bind="obj">
                     </component>
                 </form-field>

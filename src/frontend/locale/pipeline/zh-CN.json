@@ -565,6 +565,7 @@
     "canChooseList": "可选列表",
     "choosedList": "已选列表",
     "triggerType": "触发方式",
+    "triggerInfo": "触发方式/触发人",
     "errorCode": "错误码",
     "remark": "备注",
     "noBuildRecords": "构建记录为空",
@@ -1574,5 +1575,6 @@
     "expiredTips": "无执行权限，已失效"
   },
   "debugHint": "调试和执行不共享构建号，但共享并发控制。调试记录仅在草稿版本调试期间有效，版本发布后将自动清理。",
-  "templateRollbackBackTips": "当前流水线为约束模式（模板实例），需要跳转到模板进行版本回滚。"
+  "templateRollbackBackTips": "当前流水线为约束模式（模板实例），需要跳转到模板进行版本回滚。",
+  "versionNotMatch": "当前版本非最新版本，无法执行"
 }
