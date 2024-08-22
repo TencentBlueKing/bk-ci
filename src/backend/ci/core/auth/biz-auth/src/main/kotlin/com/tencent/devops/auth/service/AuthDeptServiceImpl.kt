@@ -33,29 +33,34 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.response.ResponseDTO
+import com.tencent.devops.auth.common.Constants.DEPT_LABEL
 import com.tencent.devops.auth.common.Constants.HTTP_RESULT
+import com.tencent.devops.auth.common.Constants.ID
 import com.tencent.devops.auth.common.Constants.LEVEL
 import com.tencent.devops.auth.common.Constants.NAME
 import com.tencent.devops.auth.common.Constants.PARENT
 import com.tencent.devops.auth.common.Constants.USERNAME
-import com.tencent.devops.auth.common.Constants.USER_LABLE
+import com.tencent.devops.auth.common.Constants.USER_LABEL
+import com.tencent.devops.auth.common.Constants.USER_NAME_AND_DISPLAY_NAME_LABEL
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.entity.SearchDeptUserEntity
 import com.tencent.devops.auth.entity.SearchProfileDeptEntity
 import com.tencent.devops.auth.entity.SearchRetrieveDeptEntity
 import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
 import com.tencent.devops.auth.entity.UserDeptTreeInfo
+import com.tencent.devops.auth.pojo.BkUserDeptInfo
+import com.tencent.devops.auth.pojo.BkUserInfo
+import com.tencent.devops.auth.pojo.DeptInfo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import java.util.Optional
-import java.util.concurrent.TimeUnit
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -63,10 +68,12 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.TimeUnit
 
 class AuthDeptServiceImpl @Autowired constructor(
-    val redisOperation: RedisOperation,
-    val objectMapper: ObjectMapper
+    private val redisOperation: RedisOperation,
+    private val objectMapper: ObjectMapper
 ) : DeptService {
 
     @Value("\${esb.code:#{null}}")
@@ -91,7 +98,15 @@ class AuthDeptServiceImpl @Autowired constructor(
     private val userInfoCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
         .expireAfterWrite(24, TimeUnit.HOURS)
-        .build<String/*userId*/, Optional<UserAndDeptInfoVo>>()
+        .build<String/*userId*/, UserAndDeptInfoVo>()
+
+    private val memberInfoCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(24, TimeUnit.HOURS)
+        .build<String/*userId*/, UserAndDeptInfoVo>()
+
+    // 已离职成员
+    private val departedMembersCache = CopyOnWriteArrayList<String>()
 
     override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo {
         val search = SearchUserAndDeptEntity(
@@ -142,7 +157,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_app_code = appCode,
             bk_app_secret = appSecret,
             bk_username = userId,
-            fields = USER_LABLE,
+            fields = USER_LABEL,
             lookupField = USERNAME,
             accessToken = accessToken
         )
@@ -161,28 +176,15 @@ class AuthDeptServiceImpl @Autowired constructor(
                 val userInfos = getUserInfo(userSearch)
                 userInfos.results.forEach {
                     userAndDeptInfos.add(
-                        UserAndDeptInfoVo(
-                            id = it.id,
-                            name = it.username,
-                            type = ManagerScopesEnum.USER,
-                            deptInfo = it.departments,
-                            extras = it.extras
-                        )
+                        it.toUserAndDeptInfoVo()
                     )
                 }
             }
 
             ManagerScopesEnum.DEPARTMENT -> {
-                val depteInfos = getDeptInfo(deptSearch)
-                depteInfos.results.forEach {
-                    userAndDeptInfos.add(
-                        UserAndDeptInfoVo(
-                            id = it.id,
-                            name = it.name,
-                            type = ManagerScopesEnum.DEPARTMENT,
-                            hasChild = it.hasChildren
-                        )
-                    )
+                val deptInfos = getDeptInfo(deptSearch)
+                deptInfos.results.forEach {
+                    it.toUserAndDeptInfoVo()
                 }
             }
 
@@ -190,24 +192,13 @@ class AuthDeptServiceImpl @Autowired constructor(
                 val userInfos = getUserInfo(userSearch)
                 userInfos.results.forEach {
                     userAndDeptInfos.add(
-                        UserAndDeptInfoVo(
-                            id = it.id,
-                            name = it.username,
-                            type = ManagerScopesEnum.USER,
-                            deptInfo = it.departments,
-                            extras = it.extras
-                        )
+                        it.toUserAndDeptInfoVo()
                     )
                 }
                 val deptInfos = getDeptInfo(deptSearch)
                 deptInfos.results.forEach {
                     userAndDeptInfos.add(
-                        UserAndDeptInfoVo(
-                            id = it.id,
-                            name = it.name,
-                            type = ManagerScopesEnum.DEPARTMENT,
-                            hasChild = it.hasChildren
-                        )
+                        it.toUserAndDeptInfoVo()
                     )
                 }
             }
@@ -255,6 +246,8 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getUserDeptInfo(userId: String): Set<String> {
+        if (userId.endsWith("@tai"))
+            return emptySet()
         if (userDeptCache.getIfPresent(userId) != null) {
             return userDeptCache.getIfPresent(userId)!!
         }
@@ -265,17 +258,138 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? {
-        return userInfoCache.getIfPresent(name)?.get() ?: getUserAndPutInCache(userId, name)
+        return userInfoCache.getIfPresent(name) ?: getUserAndPutInCache(userId, name)
     }
 
-    private fun getUserAndPutInCache(userId: String, name: String): UserAndDeptInfoVo? {
+    override fun getMemberInfo(
+        memberId: String,
+        memberType: ManagerScopesEnum
+    ): UserAndDeptInfoVo {
+        return listMemberInfos(
+            memberIds = listOf(memberId),
+            memberType = memberType
+        ).firstOrNull() ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.USER_NOT_EXIST,
+            params = arrayOf(memberId),
+            defaultMessage = "member $memberId not exist"
+        )
+    }
+
+    override fun listMemberInfos(
+        memberIds: List<String>,
+        memberType: ManagerScopesEnum
+    ): List<UserAndDeptInfoVo> {
+        val cacheResult = memberInfoCache.getAllPresent(memberIds)
+        val membersNotInCache = memberIds.filterNot { cacheResult.containsKey(it) || departedMembersCache.contains(it) }
+
+        if (membersNotInCache.isNotEmpty()) {
+            val fetchedMembers = fetchMemberInfos(membersNotInCache, memberType)
+            fetchedMembers.forEach { memberInfoCache.put(it.name, it) }
+
+            if (memberType == ManagerScopesEnum.USER) {
+                val departedMembers = membersNotInCache.subtract(fetchedMembers.map { it.name }.toSet())
+                if (departedMembers.isNotEmpty()) {
+                    departedMembersCache.addAll(departedMembers)
+                }
+            }
+        }
+        return memberInfoCache.getAllPresent(memberIds).values.toList()
+    }
+
+    override fun listDepartedMembers(memberIds: List<String>): List<String> {
+        val activeMembers = listMemberInfos(
+            memberIds = memberIds,
+            memberType = ManagerScopesEnum.USER
+        ).map { it.name }
+        return memberIds.subtract(activeMembers.toSet()).toList()
+    }
+
+    override fun isUserDeparted(userId: String): Boolean {
+        return if (departedMembersCache.contains(userId)) {
+            true
+        } else {
+            listMemberInfos(
+                memberIds = listOf(userId),
+                memberType = ManagerScopesEnum.USER
+            ).isEmpty()
+        }
+    }
+
+    private fun fetchMemberInfos(
+        memberIds: List<String>,
+        memberType: ManagerScopesEnum
+    ): List<UserAndDeptInfoVo> {
+        val memberInfos = when (memberType) {
+            ManagerScopesEnum.USER -> {
+                val userSearch = SearchUserAndDeptEntity(
+                    bk_app_code = appCode!!,
+                    bk_app_secret = appSecret!!,
+                    bk_username = "admin",
+                    fields = USER_NAME_AND_DISPLAY_NAME_LABEL,
+                    lookupField = USERNAME,
+                    exactLookups = memberIds.joinToString(",")
+                )
+                getUserInfo(userSearch).results.map { it.toUserAndDeptInfoVo() }
+            }
+            ManagerScopesEnum.DEPARTMENT -> {
+                val deptSearch = SearchUserAndDeptEntity(
+                    bk_app_code = appCode!!,
+                    bk_app_secret = appSecret!!,
+                    bk_username = "admin",
+                    fields = DEPT_LABEL,
+                    lookupField = ID,
+                    exactLookups = memberIds.joinToString(",")
+                )
+                getDeptInfo(deptSearch).results.map { it.toUserAndDeptInfoVo() }
+            }
+            else -> emptyList()
+        }
+        return memberInfos
+    }
+
+    private fun BkUserInfo.toUserAndDeptInfoVo(): UserAndDeptInfoVo {
+        val department = this.departments?.firstOrNull()
+        return UserAndDeptInfoVo(
+            id = this.id,
+            name = this.userName,
+            displayName = this.displayName,
+            type = ManagerScopesEnum.USER,
+            deptInfo = if (department == null) {
+                emptyList()
+            } else {
+                department.fullName?.split("/")?.map {
+                    BkUserDeptInfo(
+                        id = null,
+                        name = it,
+                        fullName = it
+                    )
+                } ?: emptyList()
+            },
+            extras = this.extras
+        )
+    }
+
+    private fun DeptInfo.toUserAndDeptInfoVo(): UserAndDeptInfoVo {
+        return UserAndDeptInfoVo(
+            id = this.id,
+            displayName = this.name,
+            name = this.name,
+            type = ManagerScopesEnum.DEPARTMENT,
+            hasChild = this.hasChildren
+        )
+    }
+
+    private fun getUserAndPutInCache(
+        userId: String,
+        name: String
+    ): UserAndDeptInfoVo? {
         return getUserAndDeptByName(
             name = name,
             accessToken = null,
             userId = userId,
             type = ManagerScopesEnum.USER,
             exactLookups = true
-        ).firstOrNull().also { if (it != null) userInfoCache.put(name, Optional.of(it)) }
+        ).firstOrNull().also { if (it != null) userInfoCache.put(name, it) }
     }
 
     private fun getUserDeptFamily(userId: String): String {

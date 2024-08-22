@@ -961,7 +961,8 @@ class PipelineBuildDao {
         startUser: List<String>?,
         debugVersion: Int?,
         triggerAlias: List<String>?,
-        triggerBranch: List<String>?
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): Int {
         return if (debugVersion == null) {
             with(T_PIPELINE_BUILD_HISTORY) {
@@ -990,7 +991,8 @@ class PipelineBuildDao {
                     buildNoEnd = buildNoEnd,
                     buildMsg = buildMsg,
                     triggerAlias = triggerAlias,
-                    triggerBranch = triggerBranch
+                    triggerBranch = triggerBranch,
+                    triggerUser = triggerUser
                 )
                 where.fetchOne(0, Int::class.java)!!
             }
@@ -1023,7 +1025,8 @@ class PipelineBuildDao {
                     buildNoEnd = buildNoEnd,
                     buildMsg = buildMsg,
                     triggerAlias = triggerAlias,
-                    triggerBranch = triggerBranch
+                    triggerBranch = triggerBranch,
+                    triggerUser = triggerUser
                 )
                 where.fetchOne(0, Int::class.java)!!
             }
@@ -1059,7 +1062,8 @@ class PipelineBuildDao {
         updateTimeDesc: Boolean? = null,
         debugVersion: Int?,
         triggerAlias: List<String>?,
-        triggerBranch: List<String>?
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): Collection<BuildInfo> {
         return if (debugVersion == null) {
             with(T_PIPELINE_BUILD_HISTORY) {
@@ -1087,7 +1091,8 @@ class PipelineBuildDao {
                     buildNoEnd = buildNoEnd,
                     buildMsg = buildMsg,
                     triggerAlias = triggerAlias,
-                    triggerBranch = triggerBranch
+                    triggerBranch = triggerBranch,
+                    triggerUser = triggerUser
                 )
 
                 when (updateTimeDesc) {
@@ -1126,7 +1131,8 @@ class PipelineBuildDao {
                     buildNoEnd = buildNoEnd,
                     buildMsg = buildMsg,
                     triggerAlias = triggerAlias,
-                    triggerBranch = triggerBranch
+                    triggerBranch = triggerBranch,
+                    triggerUser = triggerUser
                 )
                 when (updateTimeDesc) {
                     true -> where.orderBy(UPDATE_TIME.desc(), BUILD_ID)
@@ -1162,7 +1168,8 @@ class PipelineBuildDao {
         buildNoEnd: Int?,
         buildMsg: String?,
         triggerAlias: List<String>?,
-        triggerBranch: List<String>?
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ) {
         if (!materialAlias.isNullOrEmpty() && materialAlias.first().isNotBlank()) {
             var conditionsOr: Condition
@@ -1290,6 +1297,9 @@ class PipelineBuildDao {
             }
             where.and(conditionsOr)
         }
+        if (!triggerUser.isNullOrEmpty()) { // filterNotNull不能删
+            where.and(TRIGGER_USER.`in`(triggerUser))
+        }
     }
 
     private fun TPipelineBuildHistoryDebug.makeDebugCondition(
@@ -1315,7 +1325,8 @@ class PipelineBuildDao {
         buildNoEnd: Int?,
         buildMsg: String?,
         triggerAlias: List<String>?,
-        triggerBranch: List<String>?
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ) {
         // 增加过滤，对前端屏蔽已删除的构建
         where.and(DELETE_TIME.isNull)
@@ -1444,6 +1455,9 @@ class PipelineBuildDao {
                 )
             }
             where.and(conditionsOr)
+        }
+        if (!triggerUser.isNullOrEmpty()) { // filterNotNull不能删
+            where.and(TRIGGER_USER.`in`(triggerUser))
         }
     }
 

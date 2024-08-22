@@ -88,5 +88,9 @@ data class MrRule(
 
     @get:Schema(title = "custom-filter")
     @JsonProperty("custom-filter")
-    val custom: CustomFilter? = null
+    val custom: CustomFilter? = null,
+
+    @JsonProperty("skip-wip")
+    @get:Schema(title = "skip-wip")
+    var skipWip: Boolean? = null
 )

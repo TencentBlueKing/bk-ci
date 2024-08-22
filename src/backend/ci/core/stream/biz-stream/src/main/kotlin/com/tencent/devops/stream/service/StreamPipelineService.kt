@@ -33,12 +33,13 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -391,6 +392,13 @@ class StreamPipelineService @Autowired constructor(
             gitProjectId = gitProjectId.toLong(),
             scmType = gitConfig.getScmType()
         )
+        val pipelineAsCodeSettings = try {
+            client.get(ServiceProjectResource::class).get(gitProjectCode)
+                .data?.properties?.pipelineAsCodeSettings
+        } catch (ignore: Throwable) {
+            logger.warn("StreamYamlTrigger get project[$gitProjectCode] as code settings error.", ignore)
+            null
+        }
         val realPipeline: StreamTriggerPipeline
         // 避免出现多个触发拿到空的pipelineId后依次进来创建，所以需要在锁后重新获取pipeline
         triggerLock.use {
@@ -404,7 +412,10 @@ class StreamPipelineService @Autowired constructor(
                     userId = userId,
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = gitProjectCode,
-                    modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(realPipeline.displayName),
+                    modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(
+                        realPipeline.displayName,
+                        pipelineAsCodeSettings
+                    ),
                     updateLastModifyUser = true,
                     branch = branch,
                     // 空model计算md5没有意义，直接传空

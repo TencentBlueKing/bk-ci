@@ -44,16 +44,16 @@ class ServiceRepositoryAuthResourceImpl @Autowired constructor(
         val method = callBackInfo.method
         val page = callBackInfo.page
         val projectId = callBackInfo.filter.parent?.id ?: "" // FETCH_INSTANCE_INFO场景下iam不会传parentId
-        when (method) {
+        return when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                return repositoryAuthService.getRepository(projectId, page.offset.toInt(), page.limit.toInt(), token)
+                repositoryAuthService.getRepository(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
-                return repositoryAuthService.getRepositoryInfo(ids, token)
+                repositoryAuthService.getRepositoryInfo(ids, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
-                return repositoryAuthService.searchRepositoryInstances(
+                repositoryAuthService.searchRepositoryInstances(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
                     limit = page.limit.toInt(),
@@ -61,8 +61,17 @@ class ServiceRepositoryAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
-            else -> {}
+            CallbackMethodEnum.LIST_RESOURCE_AUTHORIZATION -> {
+                repositoryAuthService.getRepositoryAuthorization(
+                    projectId = projectId,
+                    limit = page.limit.toInt(),
+                    offset = page.offset.toInt(),
+                    token = token
+                )
+            }
+            else -> {
+                null
+            }
         }
-        return null
     }
 }

@@ -106,6 +106,9 @@ interface UserAuthResourceResource {
         @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String,
+        @Parameter(description = "获取所有成员标识")
+        @QueryParam("allProjectMembersGroupFlag")
+        allProjectMembersGroupFlag: Boolean?,
         @Parameter(description = "第几页")
         @QueryParam("page")
         page: Int,

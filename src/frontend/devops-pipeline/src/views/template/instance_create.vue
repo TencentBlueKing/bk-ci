@@ -298,6 +298,7 @@
                     this.template.creator = res.creator
                     this.template.description = res.description
                     this.versionList = res.versions
+
                     if (this.hashVal || this.isCopyInstance) {
                         await this.requestPipelineParams(versionId)
                     } else {
@@ -355,6 +356,12 @@
                 }
 
                 if (!this.hashVal && !this.isCopyInstance) {
+                    if (this.copyPipelineName) {
+                        this.pipelineNameList.push({
+                            pipelineName: this.copyPipelineName,
+                            selected: true
+                        })
+                    }
                     this.pipelineNameList.forEach(item => {
                         item.params = this.deepCopyParams(this.paramList)
                         item.pipelineParams = item.params.filter(item => this.buildNoParams.indexOf(item.id) === -1)

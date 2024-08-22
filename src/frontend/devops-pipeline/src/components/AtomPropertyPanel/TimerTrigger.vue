@@ -3,11 +3,27 @@
         <accordion show-checkbox :show-content="isShowBasicRule" :disabled="disabled" :after-toggle="toggleBasicRule">
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.baseRule') }}</span>
-                <input :class="{ 'accordion-checkbox': true, 'disabled': disabled }" type="checkbox" :disabled="disabled" :checked="isShowBasicRule" style="margin-left: auto;" />
+                <input
+                    :class="{ 'accordion-checkbox': true, 'disabled': disabled }"
+                    type="checkbox"
+                    :disabled="disabled"
+                    :checked="isShowBasicRule"
+                    style="margin-left:auto;"
+                />
             </header>
             <div slot="content">
-                <form-field :required="true" :label="$t('editPage.baseRule')" :is-error="errors.has('newExpression')">
-                    <cron-timer :name="'newExpression'" ref="newExpression" :value="element['newExpression']" :handle-change="handleUpdateElement" v-validate.initial="{ 'required': isShowBasicRule }" />
+                <form-field
+                    :required="true"
+                    :label="$t('editPage.baseRule')"
+                    :is-error="errors.has('newExpression')"
+                >
+                    <cron-timer
+                        :name="'newExpression'"
+                        ref="newExpression"
+                        :value="element['newExpression']"
+                        :handle-change="handleUpdateElement"
+                        v-validate.initial="{ 'required': isShowBasicRule }"
+                    />
                 </form-field>
             </div>
         </accordion>
@@ -18,8 +34,21 @@
                 <input class="accordion-checkbox" type="checkbox" :checked="advance" :disabled="disabled" style="margin-left: auto;" />
             </header>
             <div slot="content" class="cron-build-tab">
-                <form-field :required="false" :label="$t('editPage.planRule')" :is-error="errors.has('advanceExpression')" :error-msg="errors.first('advanceExpression')">
-                    <vuex-textarea name="advanceExpression" :handle-change="handleUpdateElement" :value="advanceValue" :placeholder="$t('editPage.crontabExpression')" v-validate.initial="{ 'required': advance }"></vuex-textarea>
+                <form-field
+                    :required="false"
+                    :label="$t('editPage.planRule')"
+                    :is-error="errors.has('advanceExpression')"
+                    :error-msg="errors.first('advanceExpression')"
+                >
+                    <vuex-textarea
+                        name="advanceExpression"
+                        :handle-change="handleUpdateElement"
+                        :value="advanceValue"
+                        :placeholder="$t('editPage.crontabExpression')"
+                        v-validate.initial="{ 'required': advance }"
+                        :disabled="disabled"
+                    >
+                    </vuex-textarea>
                 </form-field>
             </div>
         </accordion>
