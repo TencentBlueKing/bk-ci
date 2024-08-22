@@ -126,6 +126,12 @@ class TPASingleQueueService @Autowired constructor(
                             rewriteReadOnly = true
                         )
                     )
+                    // 写 linkTip，方便被阻塞的打印日志
+                    redisOperation.set(
+                        key = AgentReuseMutex.genAgentReuseMutexLinkTipKey(data.buildId),
+                        value = "${data.pipelineId}_Job[${data.vmSeqId}|${data.jobId}]",
+                        expiredInSecond = AgentReuseMutex.AGENT_LOCK_TIMEOUT
+                    )
                 }
             } catch (e: Exception) {
                 logger.tagError("agentInQueue|${data.toLog()}|setContextVar|error", e)

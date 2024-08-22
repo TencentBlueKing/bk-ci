@@ -222,6 +222,8 @@ class BuildEndControl @Autowired constructor(
                     lockValue = buildId,
                     expiredTimeInSeconds = AgentReuseMutex.AGENT_LOCK_TIMEOUT
                 ).unlock()
+                // 解锁的同时兜底删除 linkTip
+                redisOperation.delete(AgentReuseMutex.genAgentReuseMutexLinkTipKey(buildId))
                 val queueKey = AgentReuseMutex.genAgentReuseMutexQueueKey(projectId, agentId)
                 redisOperation.hdelete(queueKey, buildId)
             }
