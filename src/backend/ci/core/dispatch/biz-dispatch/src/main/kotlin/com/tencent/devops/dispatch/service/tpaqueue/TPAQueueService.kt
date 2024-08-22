@@ -1,29 +1,22 @@
 package com.tencent.devops.dispatch.service.tpaqueue
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_FAILED_START_BUILD_MACHINE
-import com.tencent.devops.common.api.constant.CommonMessageCode.JOB_BUILD_STOPS
-import com.tencent.devops.common.api.constant.CommonMessageCode.UNABLE_GET_PIPELINE_JOB_STATUS
-import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
+import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
-import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.dao.TPAQueueDao
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentQueueSqlData
 import com.tencent.devops.dispatch.exception.DispatchRetryMQException
 import com.tencent.devops.dispatch.pojo.QueueDataContext
-import com.tencent.devops.dispatch.pojo.QueueFailureException
-import com.tencent.devops.dispatch.pojo.QueueRetryException
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.TPAQueueEvent
 import com.tencent.devops.dispatch.pojo.TPAQueueEventContext
@@ -31,9 +24,6 @@ import com.tencent.devops.dispatch.pojo.ThirdPartyAgentSqlQueueType
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.TPACommonUtil.Companion.tagError
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentQueueEnvLock
-import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServicePipelineTaskResource
-import com.tencent.devops.process.engine.common.VMUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -50,7 +40,9 @@ class TPAQueueService @Autowired constructor(
     private val client: Client,
     private val commonUtil: TPACommonUtil,
     private val tpaQueueDao: TPAQueueDao,
-    private val tpaEnvQueueService: TPAEnvQueueService
+    private val tpaEnvQueueService: TPAEnvQueueService,
+    private val dispatchService: DispatchService,
+    private val jobQuotaService: JobQuotaService
 ) {
     fun queue(data: ThirdPartyAgentDispatchData) {
         logger.info("queue|${data.toLog()}")
@@ -242,12 +234,18 @@ class TPAQueueService @Autowired constructor(
     }
 
     private fun checkRunning(dataContext: QueueDataContext): Boolean {
-        if (doCheckRunning(dataContext)) {
-            return true
-        }
-        if (dataContext.retryTime > 1) {
+        val data = dataContext.data
+        val running = dispatchService.checkRunning(
+            projectId = data.projectId,
+            buildId = data.buildId,
+            containerId = data.vmSeqId,
+            retryTime = dataContext.retryTime,
+            executeCount = data.executeCount,
+            logTag = data.toLog()
+        )
+        if (!running && dataContext.retryTime > 1) {
             // 重试的请求如果流水线已结束，主动把配额记录删除
-            SpringContextUtil.getBean(JobQuotaService::class.java).removeRunningJob(
+            jobQuotaService.removeRunningJob(
                 projectId = dataContext.data.projectId,
                 pipelineId = dataContext.data.pipelineId,
                 buildId = dataContext.data.buildId,
@@ -255,61 +253,7 @@ class TPAQueueService @Autowired constructor(
                 executeCount = dataContext.data.executeCount
             )
         }
-        return false
-    }
-
-    private fun doCheckRunning(dataContext: QueueDataContext): Boolean {
-        val data = dataContext.data
-        // 判断流水线当前container是否在运行中
-        val statusResult = client.get(ServicePipelineTaskResource::class).getContainerStartupInfo(
-            projectId = data.projectId,
-            buildId = data.buildId,
-            containerId = data.vmSeqId,
-            taskId = VMUtils.genStartVMTaskId(data.vmSeqId)
-        )
-        val startBuildTask = statusResult.data?.startBuildTask
-        val buildContainer = statusResult.data?.buildContainer
-        if (statusResult.isNotOk() || startBuildTask == null || buildContainer == null) {
-            logger.warn(
-                "The build ${data.toLog()} fail to check if pipeline task is running " +
-                        "because of statusResult(${statusResult.message})"
-            )
-            val errorMessage = I18nUtil.getCodeLanMessage(UNABLE_GET_PIPELINE_JOB_STATUS)
-            throw QueueFailureException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = UNABLE_GET_PIPELINE_JOB_STATUS.toInt(),
-                formatErrorMessage = errorMessage,
-                errorMessage = errorMessage
-            )
-        }
-
-        var needStart = true
-        if (data.executeCount != startBuildTask.executeCount) {
-            // 如果已经重试过或执行次数不匹配则直接丢弃
-            needStart = false
-        } else if (startBuildTask.status.isFinish() && buildContainer.status.isRunning()) {
-            // 如果Job已经启动在运行或则直接丢弃
-            needStart = false
-        } else if (!buildContainer.status.isRunning() && !buildContainer.status.isReadyToRun()) {
-            needStart = false
-        }
-
-        if (!needStart) {
-            logger.warn("The build ${data.toLog()} is not running")
-            // dispatch主动发起的重试或者用户已取消的流水线忽略异常报错
-            if (dataContext.retryTime > 1 || buildContainer.status.isCancel()) {
-                return false
-            }
-
-            val errorMessage = I18nUtil.getCodeLanMessage(JOB_BUILD_STOPS)
-            throw QueueFailureException(
-                errorType = ErrorType.USER,
-                errorCode = JOB_BUILD_STOPS.toInt(),
-                formatErrorMessage = errorMessage,
-                errorMessage = errorMessage
-            )
-        }
-        return true
+        return running
     }
 
     fun queueEnd(
@@ -319,8 +263,7 @@ class TPAQueueService @Autowired constructor(
     ) {
         val data = sqlData.data
         val failureE = when (e) {
-            // 未来架构稳定后整合到一起
-            is QueueRetryException, is DispatchRetryMQException -> {
+            is DispatchRetryMQException -> {
                 // 用时间做判断，避免 retryTime 的加减
                 val timeOut = data.queueTimeoutMinutes ?: 10
                 if (sqlData.createTime.plusMinutes(timeOut.toLong()) > LocalDateTime.now()) {
@@ -328,7 +271,7 @@ class TPAQueueService @Autowired constructor(
                     return
                 }
                 // 超时就是结束
-                QueueFailureException(
+                BuildFailureException(
                     errorType = ErrorType.SYSTEM,
                     errorCode = DispatchSdkErrorCode.RETRY_STARTUP_FAIL,
                     formatErrorMessage = e.message ?: "Fail to start up the job after $timeOut minutes",
@@ -336,25 +279,15 @@ class TPAQueueService @Autowired constructor(
                 )
             }
 
-            is QueueFailureException -> e
-
-            // 未来架构稳定后整合到一起
-            is BuildFailureException -> {
-                QueueFailureException(
-                    errorType = e.errorType,
-                    errorCode = e.errorCode,
-                    formatErrorMessage = e.formatErrorMessage,
-                    errorMessage = e.message ?: ""
-                )
-            }
+            is BuildFailureException -> e
 
             else -> {
                 logger.tagError("queueEnd|unKnowError|${data.toLog()}", e)
-                QueueFailureException(
+                BuildFailureException(
                     errorType = ErrorType.SYSTEM,
                     errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR,
-                    formatErrorMessage = "Fail to handle the start up message",
-                    errorMessage = e.message ?: ""
+                    formatErrorMessage = e.message ?: "Fail to handle the start up message",
+                    errorMessage = e.message ?: "Fail to handle the start up message"
                 )
             }
         }
@@ -364,27 +297,19 @@ class TPAQueueService @Autowired constructor(
 
     private fun onFailure(
         data: ThirdPartyAgentDispatchData,
-        exception: QueueFailureException
+        exception: BuildFailureException
     ) {
         commonUtil.logError(
             data = data,
             message = "${I18nUtil.getCodeLanMessage(BK_FAILED_START_BUILD_MACHINE)}-${exception.message}"
         )
-        try {
-            client.get(ServiceBuildResource::class).setVMStatus(
-                projectId = data.projectId,
-                pipelineId = data.pipelineId,
-                buildId = data.buildId,
-                vmSeqId = data.vmSeqId,
-                status = BuildStatus.FAILED,
-                errorType = exception.errorType,
-                errorCode = exception.errorCode,
-                errorMsg = exception.formatErrorMessage
-            )
-        } catch (ignore: ClientException) {
-            logger.tagError("onContainerFailure|setVMStatus|${data.toLog()}|error=$exception")
-        }
-        DispatchLogRedisUtils.removeRedisExecuteCount(data.buildId)
+        dispatchService.onFailure(
+            projectId = data.projectId,
+            pipelineId = data.pipelineId,
+            buildId = data.buildId,
+            vmSeqId = data.vmSeqId,
+            e = exception
+        )
     }
 
     fun finishQueue(buildId: String, vmSeqId: String?) {

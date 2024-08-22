@@ -1,11 +1,8 @@
 package com.tencent.devops.dispatch.pojo
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import java.time.LocalDateTime
 
@@ -114,19 +111,3 @@ data class QueueDataContext(
 ) {
     fun retryLog(msg: String?) = " - retry $retryTime: $msg"
 }
-
-class QueueRetryException(
-    errorCodeEnum: ErrorCodeEnum,
-    errorMessage: String?
-) : ErrorCodeException(
-    errorCode = errorCodeEnum.errorCode.toString(),
-    errorType = errorCodeEnum.errorType,
-    defaultMessage = errorMessage
-)
-
-open class QueueFailureException(
-    val errorType: ErrorType,
-    val errorCode: Int,
-    val formatErrorMessage: String,
-    errorMessage: String
-) : Exception(errorMessage)

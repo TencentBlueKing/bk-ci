@@ -1,6 +1,7 @@
 package com.tencent.devops.dispatch.utils
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
@@ -8,9 +9,8 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.exception.DispatchRetryMQException
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
-import com.tencent.devops.dispatch.pojo.QueueFailureException
-import com.tencent.devops.dispatch.pojo.QueueRetryException
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.common.VMUtils
@@ -227,8 +227,8 @@ class TPACommonUtil @Autowired constructor(
             errorCode: ErrorCodeEnum,
             errMsg: String? = null,
             suffixMsg: String = ""
-        ): QueueRetryException {
-            throw QueueRetryException(
+        ): DispatchRetryMQException {
+            throw DispatchRetryMQException(
                 errorCodeEnum = errorCode,
                 errorMessage = (errMsg ?: errorCode.getErrorMessage()) + suffixMsg
             )
@@ -238,7 +238,7 @@ class TPACommonUtil @Autowired constructor(
             errorCode: ErrorCodeEnum,
             messageCode: String? = null,
             param: Array<String>? = null
-        ): QueueFailureException {
+        ): BuildFailureException {
             return queueFailure(
                 errorCode,
                 I18nUtil.getCodeLanMessage(
@@ -252,8 +252,8 @@ class TPACommonUtil @Autowired constructor(
         fun queueFailure(
             errorCode: ErrorCodeEnum,
             errMsg: String
-        ): QueueFailureException {
-            return QueueFailureException(
+        ): BuildFailureException {
+            return BuildFailureException(
                 errorType = errorCode.errorType,
                 errorCode = errorCode.errorCode,
                 formatErrorMessage = errorCode.formatErrorMessage,
