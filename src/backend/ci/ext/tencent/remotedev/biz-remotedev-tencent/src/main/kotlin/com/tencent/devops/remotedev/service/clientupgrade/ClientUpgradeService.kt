@@ -128,6 +128,7 @@ class ClientUpgradeService @Autowired constructor(
         )
     }
 
+    @Suppress("ComplexMethod")
     private fun checkVersion(
         isStart: Boolean,
         inCurrentVersion: String?,
