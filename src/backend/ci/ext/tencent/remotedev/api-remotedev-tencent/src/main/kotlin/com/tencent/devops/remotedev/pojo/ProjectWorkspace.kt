@@ -79,5 +79,7 @@ data class ProjectWorkspace(
     @get:Schema(title = "标签")
     var labels: List<String>? = null,
     @get:Schema(title = "创建时间<只读>", readOnly = true)
-    val createTime: Long? = null
+    val createTime: Long? = null,
+    @get:Schema(title = "镜像ID")
+    val imageId: String? = null
 ) : IWorkspace

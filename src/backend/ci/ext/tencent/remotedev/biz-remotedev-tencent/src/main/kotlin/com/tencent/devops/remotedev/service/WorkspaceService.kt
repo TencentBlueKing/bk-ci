@@ -521,7 +521,8 @@ class WorkspaceService @Autowired constructor(
                     macAddress = allWindows[it.workspaceName]?.macAddress,
                     remark = it.remark,
                     labels = it.labels,
-                    createTime = it.createTime.timestamp()
+                    createTime = it.createTime.timestamp(),
+                    imageId = detail?.imageId ?: ""
                 )
             )
         }
