@@ -330,4 +330,11 @@ class CodeTGitRepositoryService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(CodeTGitRepositoryService::class.java)
     }
+
+    override fun addResourceAuthorization(
+        projectId: String,
+        userId: String,
+        repositoryId: Long,
+        repository: CodeTGitRepository
+    ) = Unit
 }

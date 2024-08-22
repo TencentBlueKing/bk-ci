@@ -280,14 +280,10 @@ class StartControl @Autowired constructor(
                 )
 
                 val lastSleepTimeCost = if (lastHistory?.endTime != null) {
-                    Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt().also {
-                        workspaceDao.updateWorkspaceSleepingTime(
-                            workspaceName = workspaceName,
-                            sleepTime = it,
-                            dslContext = transactionContext
-                        )
-                    }
-                } else 0
+                    Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt()
+                } else {
+                    0
+                }
                 workspaceHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
                     workspaceName = workspaceName,

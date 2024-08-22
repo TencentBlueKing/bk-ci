@@ -42,6 +42,8 @@ data class RepositoryInfo(
     val url: String,
     @get:Schema(title = "类型", required = true)
     val type: ScmType,
+    @get:Schema(title = "创建时间", required = true)
+    val createdTime: Long? = null,
     @get:Schema(title = "最后更新时间", required = true)
     val updatedTime: Long,
     @get:Schema(title = "创建人", required = false)

@@ -211,4 +211,13 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
         projectId: String,
         groupRecordIds: List<Long>
     ): List<Long> = groupRecordIds
+
+    override fun deleteExperienceResource(projectId: String, experienceId: Long) {
+        bsAuthResourceApi.deleteResource(
+            serviceCode = experienceServiceCode,
+            resourceType = taskResourceType,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(experienceId)
+        )
+    }
 }

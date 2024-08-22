@@ -12,6 +12,8 @@ const ShowProject = () => import(/* webpackChunkName: "ShowProject" */ '../views
 // 用户组管理
 const UserGroup = () => import(/* webpackChunkName: "UserGroup" */ '../views/manage/group/group-entry.vue');
 const ExpandManage = () => import(/* webpackChunkName: "ExpandManage" */ '../views/manage/expand/expand-manage.vue');
+// 授权管理
+const Permission = () => import(/* webpackChunkName: "ExpandManage" */ '../views/manage/permission/permission-manage.vue');
 
 const router = createRouter({
   history: createWebHistory('manage'),
@@ -54,6 +56,11 @@ const router = createRouter({
               path: 'group',
               name: 'group',
               component: UserGroup,
+            },
+            {
+              path: 'permission',
+              name: 'permission',
+              component: Permission,
             },
             {
               path: 'expand',

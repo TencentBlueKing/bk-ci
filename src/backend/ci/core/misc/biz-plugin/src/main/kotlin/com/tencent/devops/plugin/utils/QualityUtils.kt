@@ -27,9 +27,9 @@
 
 package com.tencent.devops.plugin.utils
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -64,13 +64,12 @@ object QualityUtils {
         eventStatus: String,
         startTime: Long,
         triggerType: String,
-        scmType: ScmType
+        channelCode: ChannelCode
     ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
         val pipelineName = client.get(ServicePipelineResource::class)
             .getPipelineNameByIds(projectId, setOf(pipelineId))
             .data?.get(pipelineId) ?: ""
         // github 不需要插入链接, 仅在插件名处插入链接，链接地址用codecc插件输出变量
-        val githubRepo = scmType == ScmType.GITHUB
         val titleData = mutableListOf(
             eventStatus,
             DateTimeUtil.formatMilliTime(System.currentTimeMillis() - startTime),
@@ -80,10 +79,10 @@ object QualityUtils {
                 I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             ),
             pipelineName,
-            if (githubRepo) {
-                ""
-            } else {
+            if (ChannelCode.isNeedAuth(channelCode)) {
                 "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+            } else {
+                ""
             },
             I18nUtil.getCodeLanMessage(BK_CI_PIPELINE)
         )
@@ -108,7 +107,7 @@ object QualityUtils {
                     val indicatorElementName = indicator?.elementType ?: ""
 
                     val elementCnName = ElementUtils.getElementCnName(indicatorElementName, projectId).let {
-                        if (githubRepo && !reportUrl.isNullOrBlank()) {
+                        if (!ChannelCode.isNeedAuth(channelCode) && !reportUrl.isNullOrBlank()) {
                             "<a target='_blank' href='$reportUrl'>$it</a>"
                         } else {
                             it
@@ -116,14 +115,14 @@ object QualityUtils {
                     }
                     val resultList = resultMap[elementCnName] ?: mutableListOf()
                     val actualValue = when {
-                        githubRepo -> interceptItem.actualValue ?: "null"
                         CodeccUtils.isCodeccAtom(indicatorElementName) -> getActualValue(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
                             detail = indicator?.elementDetail,
                             value = interceptItem.actualValue ?: "null",
-                            client = client
+                            client = client,
+                            channelCode = channelCode
                         )
                         else -> interceptItem.actualValue ?: "null"
                     }
@@ -150,7 +149,8 @@ object QualityUtils {
         buildId: String,
         detail: String?,
         value: String,
-        client: Client
+        client: Client,
+        channelCode: ChannelCode
     ): String {
         val taskId = getBuildVar(
             client = client,
@@ -168,7 +168,11 @@ object QualityUtils {
                 .replace("##taskId##", taskId.toString())
                 .replace("##buildId##", buildId)
                 .replace("##detail##", detail)
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console$fillDetailUrl'>$value</a>"
+            if (ChannelCode.isNeedAuth(channelCode)) {
+                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console$fillDetailUrl'>$value</a>"
+            } else {
+                "<a target='_blank' href='${HomeHostUtil.innerCodeccHost()}$fillDetailUrl'>$value</a>"
+            }
         }
     }
 

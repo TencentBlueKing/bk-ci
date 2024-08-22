@@ -31,7 +31,7 @@
                 ref="pipelineTable"
                 :fetch-pipelines="getPipelines"
                 :filter-params="filters"
-                :max-height="$refs.tableBox?.offsetHeight"
+                :max-height="tableHeight"
                 @selection-change="handleSelectChange"
                 is-patch-view
             />
@@ -74,7 +74,8 @@
                 selected: [],
                 addToDialogShow: false,
                 filters: restQuery,
-                isConfirmShow: false
+                isConfirmShow: false,
+                tableHeight: null
             }
         },
         computed: {
@@ -102,10 +103,20 @@
         created () {
             moment.locale(this.$i18n.locale)
         },
+        mounted () {
+            this.updateTableHeight()
+            window.addEventListener('resize', this.updateTableHeight)
+        },
+        beforeDestroy () {
+            window.removeEventListener('resize', this.updateTableHeight)
+        },
         methods: {
             ...mapActions('pipelines', [
                 'requestAllPipelinesListByFilter'
             ]),
+            updateTableHeight () {
+                this.tableHeight = this.$refs.tableBox.offsetHeight
+            },
             exitPatch () {
                 this.$router.push({
                     name: 'PipelineManageList',

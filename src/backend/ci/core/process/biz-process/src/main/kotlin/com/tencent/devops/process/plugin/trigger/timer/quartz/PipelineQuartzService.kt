@@ -34,6 +34,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.plugin.trigger.lock.PipelineTimerTriggerLock
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
@@ -137,7 +138,8 @@ class PipelineJobBean(
     private val schedulerManager: SchedulerManager,
     private val pipelineTimerService: PipelineTimerService,
     private val redisOperation: RedisOperation,
-    private val client: Client
+    private val client: Client,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -197,8 +199,14 @@ class PipelineJobBean(
                     watcher.start("dispatch")
                     pipelineEventDispatcher.dispatch(
                         PipelineTimerBuildEvent(
-                            source = "timer_trigger", projectId = pipelineTimer.projectId, pipelineId = pipelineId,
-                            userId = pipelineTimer.startUser, channelCode = pipelineTimer.channelCode
+                            source = "timer_trigger",
+                            projectId = pipelineTimer.projectId,
+                            pipelineId = pipelineId,
+                            userId = pipelineRepositoryService.getPipelineOauthUser(
+                                projectId = projectId,
+                                pipelineId = pipelineId
+                            ) ?: pipelineTimer.startUser,
+                            channelCode = pipelineTimer.channelCode
                         )
                     )
                 } catch (ignored: Exception) {

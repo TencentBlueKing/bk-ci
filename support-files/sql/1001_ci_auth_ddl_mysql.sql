@@ -235,6 +235,8 @@ CREATE TABLE IF NOT EXISTS T_AUTH_RESOURCE_GROUP (
 	`RELATION_ID` varchar(32) NOT NULL COMMENT '关联的IAM组ID',
 	`CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 	`UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+	`DESCRIPTION` varchar(512) DEFAULT NULL COMMENT '用户组描述',
+    `IAM_TEMPLATE_ID` int(20) DEFAULT NULL COMMENT '人员模板ID',
 	PRIMARY KEY (`ID`),
 	UNIQUE KEY `UNIQ_PROJECT_RESOURCE` (`PROJECT_CODE`, `RESOURCE_TYPE`, `RESOURCE_CODE`, `GROUP_NAME`)
 ) ENGINE = InnoDB CHARSET = utf8mb4 COMMENT '资源关联用户组表';
@@ -359,5 +361,62 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_OAUTH2_SCOPE_OPERATION` (
    `CREATE_TIME` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
    PRIMARY KEY (`ID`)
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8 COMMENT='授权操作信息表';
+
+CREATE TABLE IF NOT EXISTS `T_AUTH_RESOURCE_GROUP_MEMBER`(
+    `ID`              bigint auto_increment comment '主键ID',
+    `PROJECT_CODE`  varchar(64)                        not null comment '项目ID',
+    `RESOURCE_TYPE` varchar(32)                        not null comment '资源类型',
+    `RESOURCE_CODE`     varchar(255) collate utf8mb4_bin   not null comment '资源ID',
+    `GROUP_CODE`        varchar(32)                        not null comment '用户组标识',
+    `IAM_GROUP_ID`  int(20)                         not null comment 'IAM组ID',
+    `MEMBER_ID`     varchar(64)                        not null comment '成员ID',
+    `MEMBER_NAME`   varchar(512)                       not null comment '成员名',
+    `MEMBER_TYPE`   varchar(32)                        not null comment '成员类型,用户/组织/模板',
+    `EXPIRED_TIME`  datetime                           not null comment '过期时间',
+    `CREATE_TIME`   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`   datetime default CURRENT_TIMESTAMP not null comment '更新时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `UNIQ_PROJECT_GROUP_MEMBER` (`PROJECT_CODE`, `IAM_GROUP_ID`,`MEMBER_ID`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='资源组成员';
+
+CREATE TABLE IF NOT EXISTS T_AUTH_RESOURCE_AUTHORIZATION (
+    `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `PROJECT_CODE` varchar(32) NOT NULL COMMENT '项目ID',
+    `RESOURCE_TYPE` varchar(32) NOT NULL COMMENT '资源类型',
+    `RESOURCE_CODE` varchar(255) COLLATE utf8mb4_bin NOT NULL COMMENT '资源ID',
+    `RESOURCE_NAME` varchar(255) NOT NULL COMMENT '资源名',
+    `HANDOVER_FROM` VARCHAR(64) NOT NULL  COMMENT '授予人',
+    `HANDOVER_FROM_CN_NAME` VARCHAR(64) NOT NULL  COMMENT '授予人中文名称',
+    `HANDOVER_TIME` timestamp NOT NULL COMMENT '授予时间',
+    `CREATE_TIME` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `UNIQ_PROJECT_RESOURCE` (`PROJECT_CODE`, `RESOURCE_TYPE`, `RESOURCE_CODE`)
+) ENGINE = InnoDB CHARSET = utf8mb4 COMMENT '资源授权管理表';
+
+CREATE TABLE IF NOT EXISTS `T_AUTH_RESOURCE_SYNC`
+(
+    `PROJECT_CODE` varchar(64) not null comment '项目ID',
+    `STATUS`             int(10)  default 0                 null comment '迁移状态, 0-同步中,1-同步成功,2-同步失败',
+    `ERROR_MESSAGE`      text                               null comment '错误信息',
+    `TOTAL_TIME`         bigint                             null comment '总耗时',
+    `CREATE_TIME`   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`   datetime default CURRENT_TIMESTAMP not null comment '更新时间',
+    PRIMARY KEY (`PROJECT_CODE`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='同步IAM资源';
+
+CREATE TABLE IF NOT EXISTS `T_AUTH_RESOURCE_GROUP_APPLY`
+(
+    `ID`            bigint auto_increment comment '主键ID',
+    `PROJECT_CODE`  varchar(64)                not null comment '项目ID',
+    `MEMBER_ID`     varchar(64)                not null comment '成员ID',
+    `IAM_GROUP_ID`  int(20)                    not null comment 'IAM组ID',
+    `STATUS`        int(2)       default 0     null comment '状态, 0-审批中,1-审批成功,2-审批超时',
+    `NUMBER_OF_CHECKS`  int(10)  default 0     null comment '检查次数，用于同步组数据',
+    `CREATE_TIME`   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`   datetime default CURRENT_TIMESTAMP not null comment '更新时间',
+    PRIMARY KEY (`ID`),
+    INDEX `IDX_STATUS` (`STATUS`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='用户组申请记录表';
 
 SET FOREIGN_KEY_CHECKS = 1;

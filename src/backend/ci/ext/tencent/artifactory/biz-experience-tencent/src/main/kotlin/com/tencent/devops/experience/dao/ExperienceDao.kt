@@ -30,6 +30,9 @@ package com.tencent.devops.experience.dao
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.model.experience.tables.TExperience
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -37,9 +40,6 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 import jakarta.ws.rs.NotFoundException
 
 @Repository
@@ -525,6 +525,16 @@ class ExperienceDao {
                 .and(END_DATE.gt(LocalDateTime.now()))
                 .and(ONLINE.eq(true))
                 .fetch(ID)
+        }
+    }
+
+    fun delete(dslContext: DSLContext, experienceId: Long): Int {
+        val now = LocalDateTime.now()
+        with(TExperience.T_EXPERIENCE) {
+            return dslContext.deleteFrom(this)
+                .where(END_DATE.lt(now).or(ONLINE.eq(false)))
+                .and(ID.eq(experienceId))
+                .execute()
         }
     }
 }

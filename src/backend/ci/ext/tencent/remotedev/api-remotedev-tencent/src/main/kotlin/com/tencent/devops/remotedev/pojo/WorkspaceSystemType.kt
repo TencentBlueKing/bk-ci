@@ -48,4 +48,10 @@ enum class WorkspaceSystemType {
         this == WINDOWS_GPU && ownerType == WorkspaceOwnerType.PROJECT -> true
         else -> true
     }
+
+    companion object {
+        fun parse(value: String): WorkspaceSystemType {
+            return values().find { it.name == value } ?: WINDOWS_GPU
+        }
+    }
 }
