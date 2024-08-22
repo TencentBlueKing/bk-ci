@@ -218,7 +218,6 @@
                         projectId: this.projectId
                     }
                     const res = await this.$store.dispatch('environment/requestCmdbNode', { params })
-                   
                     this.pagination.hasNext = res.hasNext
                     this.rowList = res.records || []
                     const curPage = this.pagination.cacheScrollIdList.find(i => i.key === this.pagination.current)
@@ -226,9 +225,11 @@
                         this.pagination.loadedNum += res.records.length
                     }
                     curPage.isLoaded = true
-                    
-                    this.pagination.count = this.pagination.loadedNum
-                    if (res.hasNext && this.pagination.current === this.pagination.cacheScrollIdList.length) {
+                    this.pagination.count = this.pagination.loadedNum || res.records.length
+                    if (res.hasNext
+                        && (this.pagination.current === this.pagination.cacheScrollIdList.length
+                            || this.pagination.cacheScrollIdList.some(i => i.key <= this.pagination.current))
+                    ) {
                         this.pagination.count = this.pagination.loadedNum + 1
                         this.pagination.cacheScrollIdList.push({
                             key: this.pagination.current + 1,
@@ -269,15 +270,7 @@
                 return bitLen
             },
             changeOperator () {
-                this.pagination.current = 1
-                this.pagination.cacheScrollIdList = [
-                    {
-                        key: 1,
-                        scrollId: 0,
-                        isLoaded: false
-                    }
-                ]
-                this.pagination.loadedNum = 0
+                this.initPagination()
                 if (!this.nodeSelectConf.isShow) return
                 this.getDate()
             },
@@ -309,7 +302,9 @@
             },
             deleteAllKey () {
                 this.searchKeyList.splice(0, this.searchKeyList.length)
+                this.initPagination()
                 this.inputValue = ''
+                this.searchNode()
             },
             paste (event) {
                 const value = event.clipboardData.getData('text')
@@ -343,7 +338,7 @@
             },
             searchNode () {
                 this.selectedKey(this.inputValue)
-                this.pagination.current = 1
+                this.initPagination()
                 this.isSearchFooter = false
                 this.getDate()
             },
@@ -368,7 +363,7 @@
             },
             deleteKey (index) {
                 this.searchKeyList.splice(index, 1)
-                this.pagination.current = 1
+                this.initPagination()
                 this.getDate()
             },
             toggleNodeSelect (selection) {
@@ -414,6 +409,17 @@
              */
             isImported (row) {
                 return !row.importStatus
+            },
+            initPagination () {
+                this.pagination.current = 1
+                this.pagination.cacheScrollIdList = [
+                    {
+                        key: 1,
+                        scrollId: 0,
+                        isLoaded: false
+                    }
+                ]
+                this.pagination.loadedNum = 0
             }
         }
     }
