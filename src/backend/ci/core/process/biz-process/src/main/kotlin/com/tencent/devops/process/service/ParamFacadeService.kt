@@ -439,7 +439,7 @@ class ParamFacadeService @Autowired constructor(
             scmType = null
         )
         val replaceKey = "{words}"
-        val repoHashIdReplaceKey = "{repoHashIdWords}"
+        val repoHashIdReplaceKey = "{repoNameWords}"
         val branchOptions = when (formProperty.scmType) {
             ScmType.CODE_SVN -> {
                 codeService.getSvnDirectories(
@@ -484,7 +484,7 @@ class ParamFacadeService @Autowired constructor(
             url.append("permission=${permission.name}")
         }
         if (scmType != null) {
-            url.append("repositoryType=${scmType.name}")
+            url.append("&repositoryType=${scmType.name}")
         }
         return url.toString()
     }
@@ -505,7 +505,5 @@ class ParamFacadeService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ParamFacadeService::class.java)
-        private const val BUILD_PARAM_GIT_REF_KEY_REPO_HASHID_SUFFIX = ".repoHashId"
-        private const val BUILD_PARAM_GIT_REF_KEY_REPO_NAME_SUFFIX = ".repoName"
     }
 }
