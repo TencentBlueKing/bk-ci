@@ -44,7 +44,6 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.constants.AGENT_REUSE_MUTEX_WAIT_REUSED_ENV
 import com.tencent.devops.dispatch.constants.BK_AGENT_IS_BUSY
@@ -66,7 +65,6 @@ import com.tencent.devops.dispatch.service.tpaqueue.TPAQueueService
 import com.tencent.devops.dispatch.service.tpaqueue.TPASingleQueueService
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
-import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
@@ -86,9 +84,7 @@ class ThirdPartyDispatchService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val buildLogPrinter: BuildLogPrinter,
-    private val commonConfig: CommonConfig,
     private val commonUtil: TPACommonUtil,
-    private val thirdPartyAgentBuildRedisUtils: ThirdPartyAgentBuildRedisUtils,
     private val thirdPartyAgentBuildService: ThirdPartyAgentService,
     private val tpaQueueService: TPAQueueService,
     private val tpaSingleQueueService: TPASingleQueueService
@@ -107,8 +103,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         if (v.isBlank()) {
             return true
         }
-        val pipelines = v.split(";").toSet()
-        return pipelineId in pipelines
+        return v.split(";").toSet().contains(pipelineId)
     }
 
     fun startUp(dispatchMessage: DispatchMessage) {
