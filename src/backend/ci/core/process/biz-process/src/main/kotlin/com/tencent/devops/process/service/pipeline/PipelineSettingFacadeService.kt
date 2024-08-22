@@ -119,8 +119,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         updateLastModifyUser: Boolean? = true,
         dispatchPipelineUpdateEvent: Boolean = true,
         updateLabels: Boolean = true,
-        updateVersion: Boolean = true,
-        isTemplate: Boolean = false
+        updateVersion: Boolean = true
     ): PipelineSetting {
         if (checkPermission) {
             val language = I18nUtil.getLanguage(userId)
@@ -145,17 +144,12 @@ class PipelineSettingFacadeService @Autowired constructor(
         setting.fixSubscriptions()
         modelCheckPlugin.checkSettingIntegrity(setting, projectId)
         ActionAuditContext.current().setInstance(setting)
-        val settingVersion = pipelineSettingVersionService.getLatestSettingVersion(
+        val settingVersion = pipelineSettingVersionService.getSettingVersionAfterUpdate(
             projectId = projectId,
-            pipelineId = pipelineId
-        )?.let { latest ->
-            if (updateVersion) PipelineVersionUtils.getSettingVersion(
-                currVersion = latest.version,
-                originSetting = latest,
-                newSetting = PipelineSettingVersion.convertFromSetting(setting)
-            ) else latest.version
-        } ?: 1
-
+            pipelineId = pipelineId,
+            updateVersion = updateVersion,
+            setting = setting
+        )
         val pipelineName = pipelineRepositoryService.saveSetting(
             context = context,
             userId = userId,
@@ -163,7 +157,7 @@ class PipelineSettingFacadeService @Autowired constructor(
             version = settingVersion,
             versionStatus = versionStatus,
             updateLastModifyUser = updateLastModifyUser,
-            isTemplate = isTemplate
+            isTemplate = false
         )
 
         if (pipelineName.name != pipelineName.oldName) {
@@ -178,22 +172,12 @@ class PipelineSettingFacadeService @Autowired constructor(
                     projectId = setting.projectId
                 )
             )
-
             if (checkPermission) {
-                if (isTemplate) {
-                    pipelineTemplatePermissionService.modifyResource(
-                        userId = userId,
-                        projectId = projectId,
-                        templateId = setting.pipelineId,
-                        templateName = setting.pipelineName
-                    )
-                } else {
-                    pipelinePermissionService.modifyResource(
-                        projectId = setting.projectId,
-                        pipelineId = setting.pipelineId,
-                        pipelineName = setting.pipelineName
-                    )
-                }
+                pipelinePermissionService.modifyResource(
+                    projectId = setting.projectId,
+                    pipelineId = setting.pipelineId,
+                    pipelineName = setting.pipelineName
+                )
             }
         }
 
