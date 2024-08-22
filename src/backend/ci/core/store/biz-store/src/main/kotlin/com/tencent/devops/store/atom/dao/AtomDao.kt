@@ -88,6 +88,8 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.utils.VersionUtils
+import java.net.URLDecoder
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -98,8 +100,6 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.net.URLDecoder
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -633,6 +633,7 @@ class AtomDao : AtomBaseDao() {
                         .where(initTestAtomCondition)
                 )
             )
+            defaultAtomCondition.add(ta.BRANCH_TEST_FLAG.eq(false))
             normalAtomConditions.add(
                 ta.ATOM_CODE.notIn(
                     dslContext.select(ta.ATOM_CODE).from(ta).join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
@@ -641,6 +642,7 @@ class AtomDao : AtomBaseDao() {
                         .where(initTestAtomCondition)
                 )
             )
+            normalAtomConditions.add(ta.BRANCH_TEST_FLAG.eq(false))
             queryNormalAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
             queryInitTestAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
         }
@@ -797,6 +799,7 @@ class AtomDao : AtomBaseDao() {
                         .where(initTestAtomCondition)
                 )
             )
+            defaultAtomCondition.add(ta.BRANCH_TEST_FLAG.eq(false))
             normalAtomConditions.add(
                 ta.ATOM_CODE.notIn(
                     dslContext.select(ta.ATOM_CODE)
@@ -806,6 +809,7 @@ class AtomDao : AtomBaseDao() {
                         .where(initTestAtomCondition)
                 )
             )
+            normalAtomConditions.add(ta.BRANCH_TEST_FLAG.eq(false))
             queryNormalAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
             queryInitTestAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
         }
@@ -1401,6 +1405,22 @@ class AtomDao : AtomBaseDao() {
                         repositoryHashId = it.value2()
                     )
                 }
+        }
+    }
+
+    fun listAtomCode(
+        dslContext: DSLContext,
+        offset: Int,
+        limit: Int
+    ): List<String> {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(ATOM_CODE)
+                .from(this)
+                .where(DELETE_FLAG.eq(false).and(REPOSITORY_HASH_ID.isNotNull))
+                .groupBy(ATOM_CODE)
+                .orderBy(CREATE_TIME.asc(), ID.asc())
+                .limit(limit).offset(offset)
+                .fetchInto(String::class.java)
         }
     }
 }

@@ -206,16 +206,16 @@ class GitService @Autowired constructor(
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         val url = "${gitConfig.gitApiUrl}/projects" +
-            "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
-                .addParams(
-                    mapOf(
-                        "search" to search,
-                        "order_by" to orderBy?.value,
-                        "sort" to sort?.value,
-                        "owned" to owned,
-                        "min_access_level" to minAccessLevel?.level
+                "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+                    .addParams(
+                        mapOf(
+                            "search" to search,
+                            "order_by" to orderBy?.value,
+                            "sort" to sort?.value,
+                            "owned" to owned,
+                            "min_access_level" to minAccessLevel?.level
+                        )
                     )
-                )
         val res = mutableListOf<Project>()
         val request = Request.Builder()
             .url(url)
@@ -260,12 +260,12 @@ class GitService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 20
         val repoId = URLEncoder.encode(repository, "utf-8")
         val url = "${gitConfig.gitApiUrl}/projects/$repoId/repository/branches" +
-            "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull" +
-            if (search != null) {
-                "&search=$search"
-            } else {
-                ""
-            }
+                "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull" +
+                if (search != null) {
+                    "&search=$search"
+                } else {
+                    ""
+                }
         val res = mutableListOf<GitBranch>()
         val request = Request.Builder()
             .url(url)
@@ -323,7 +323,7 @@ class GitService @Autowired constructor(
         logger.info("start to get the $userId's $repository tag by page: $pageNotNull pageSize: $pageSizeNotNull")
         val repoId = URLEncoder.encode(repository, "utf-8")
         val url = "${gitConfig.gitApiUrl}/projects/$repoId/repository/tags" +
-            "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+                "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
         val res = mutableListOf<GitTag>()
         val request = Request.Builder()
             .url(url)
@@ -378,11 +378,11 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "${gitConfig.gitUrl}/oauth/token" +
-                "?client_id=${gitConfig.clientId}" +
-                "&client_secret=${gitConfig.clientSecret}" +
-                "&grant_type=refresh_token" +
-                "&refresh_token=${accessToken.refreshToken}" +
-                "&redirect_uri=${gitConfig.gitHookUrl}"
+                    "?client_id=${gitConfig.clientId}" +
+                    "&client_secret=${gitConfig.clientSecret}" +
+                    "&grant_type=refresh_token" +
+                    "&refresh_token=${accessToken.refreshToken}" +
+                    "&redirect_uri=${gitConfig.gitHookUrl}"
             val request = Request.Builder()
                 .url(url)
                 .post(RequestBody.create("application/x-www-form-urlencoded;charset=utf-8".toMediaTypeOrNull(), ""))
@@ -399,7 +399,7 @@ class GitService @Autowired constructor(
     @BkTimed(extraTags = ["operation", "AUTHORIZE"], value = "bk_tgit_api_time")
     override fun getAuthUrl(authParamJsonStr: String): String {
         return "${gitConfig.gitUrl}/oauth/authorize?client_id=${gitConfig.clientId}" +
-            "&redirect_uri=${gitConfig.callbackUrl}&response_type=code&state=$authParamJsonStr"
+                "&redirect_uri=${gitConfig.callbackUrl}&response_type=code&state=$authParamJsonStr"
     }
 
     @BkTimed(extraTags = ["operation", "TOKEN"], value = "bk_tgit_api_time")
@@ -409,8 +409,8 @@ class GitService @Autowired constructor(
         try {
             val tokenUrl =
                 "${gitConfig.gitUrl}/oauth/token?client_id=${gitConfig.clientId}" +
-                    "&client_secret=${gitConfig.clientSecret}&code=$code" +
-                    "&grant_type=authorization_code&redirect_uri=${gitConfig.redirectUrl}"
+                        "&client_secret=${gitConfig.clientSecret}&code=$code" +
+                        "&grant_type=authorization_code&redirect_uri=${gitConfig.redirectUrl}"
             logger.info("getToken url>> $tokenUrl")
             val request = Request.Builder()
                 .url(tokenUrl)
@@ -495,7 +495,7 @@ class GitService @Autowired constructor(
         try {
             val url =
                 "$apiUrl/projects/${URLEncoder.encode(repoName, "UTF-8")}/repository/blobs/" +
-                    "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}"
+                        "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}"
             var realUrl = url
             val request = if (authType == RepoAuthType.OAUTH) {
                 realUrl += "&access_token=$token"
@@ -1084,7 +1084,7 @@ class GitService @Autowired constructor(
     ): GitMrInfo {
         val url = StringBuilder(
             "${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(repoName, "UTF-8")}" +
-                "/merge_request/$mrId"
+                    "/merge_request/$mrId"
         )
         logger.info("get mr info url: $url")
         setToken(tokenType, url, token)
@@ -1579,7 +1579,7 @@ class GitService @Autowired constructor(
             } else {
                 ""
             } +
-                "&page=$newPage" + "&per_page=$newPageSize"
+                    "&page=$newPage" + "&per_page=$newPageSize"
         )
         logger.info("getGitCIAllMembers request url: $url")
         val request = Request.Builder()
@@ -1589,6 +1589,32 @@ class GitService @Autowired constructor(
         OkhttpUtils.doHttp(request).use {
             val data = it.body!!.string()
             if (!it.isSuccessful) throw RuntimeException("fail to getGitCIAllMembers with: $url($data)")
+            return Result(JsonUtil.to(data, object : TypeReference<List<GitMember>>() {}))
+        }
+    }
+
+    @BkTimed(extraTags = ["operation", "获取项目组有权限的成员列表"], value = "bk_tgit_api_time")
+    override fun getProjectGroupMembersAll(
+        gitProjectGroupId: String,
+        page: Int,
+        pageSize: Int,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<List<GitMember>> {
+        val newPage = if (page == 0) 1 else page
+        val newPageSize = if (pageSize > 100) 100 else pageSize
+        val url = StringBuilder(
+            "$gitCIUrl/api/v3/groups/${URLEncoder.encode(gitProjectGroupId, "UTF8")}/members/all"
+        )
+        setToken(tokenType, url, token)
+        url.append("&page=$newPage&per_page=$newPageSize")
+        logger.info("getProjectGroupMembersAll request url: $url")
+        val request = Request.Builder().url(url.toString()).get().build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body!!.string()
+            if (!it.isSuccessful) {
+                throw RuntimeException("fail to getProjectGroupMembersAll with: $url($data)")
+            }
             return Result(JsonUtil.to(data, object : TypeReference<List<GitMember>>() {}))
         }
     }
@@ -1810,7 +1836,7 @@ class GitService @Autowired constructor(
     ): Result<Boolean> {
         logger.info(
             "enableCi projectName:$projectName," +
-                "enable:$enable,tokenType:$tokenType"
+                    "enable:$enable,tokenType:$tokenType"
         )
         val encodeProjectName = URLEncoder.encode(projectName, "utf-8")
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/ci/enable")

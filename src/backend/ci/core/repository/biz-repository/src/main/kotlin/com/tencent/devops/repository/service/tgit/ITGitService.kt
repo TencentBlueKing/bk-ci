@@ -32,6 +32,7 @@ import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
+import com.tencent.devops.repository.pojo.git.GitProjectProtectionBranchDefaultRule
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
@@ -40,6 +41,7 @@ import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
 import javax.servlet.http.HttpServletResponse
+import com.tencent.devops.common.api.pojo.Result
 
 interface ITGitService {
 
@@ -108,4 +110,42 @@ interface ITGitService {
         pageSize: Int,
         url: String
     ): List<ChangeFileInfo>
+
+    fun getProtectBranchRuleId(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        branch: String
+    ): Result<Int?>
+
+    fun createProtectBranchRules(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitProjectProtectionBranchDefaultRule: GitProjectProtectionBranchDefaultRule
+    ): Result<Int>
+
+    fun setupProtectBranch(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        branch: String,
+        ruleId: Int
+    ): Result<Boolean>
+
+    fun updateProtectBranchRule(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        ruleId: Int,
+        gitProjectProtectionBranchDefaultRule: GitProjectProtectionBranchDefaultRule
+    ): Result<Boolean>
+
+    fun updateProjectUserAccessLevel(
+        userId: Int,
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        accessLevel: Int
+    ): Result<Boolean>
 }
