@@ -80,7 +80,6 @@ class TemplateSettingService @Autowired constructor(
         // 对齐新旧通知配置，统一根据新list数据保存
         setting.fixSubscriptions()
         modelCheckPlugin.checkSettingIntegrity(setting, projectId)
-        ActionAuditContext.current().setInstance(setting)
         val settingVersion = pipelineSettingVersionService.getSettingVersionAfterUpdate(
             projectId = projectId,
             pipelineId = pipelineId,
