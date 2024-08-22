@@ -24,7 +24,6 @@
                         <i :class="['devops-icon', `icon-${output.icon}`]"></i>
                         <span :title="output.name">{{ output.name }}</span>
                         <p class="output-hover-icon-box">
-                            <output-qrcode v-if="output.isApp" :output="output" />
                             <artifact-download-button v-if="output.downloadable" :output="output" download-icon
                                 :has-permission="hasPermission" :path="output.fullPath" :name="output.name"
                                 :artifactory-type="output.artifactoryType" />
@@ -58,7 +57,6 @@
                             <bk-button text theme="primary" v-for="btn in btns" :key="btn.text" @click="btn.handler">
                                 {{ btn.text }}
                             </bk-button>
-                            <output-qrcode :output="activeOutput" v-if="activeOutputDetail.isApp" />
 
                             <ext-menu v-if="!activeOutputDetail.folder" :data="activeOutputDetail"
                                 :config="artifactMoreActions"></ext-menu>
@@ -136,7 +134,6 @@
     import Logo from '@/components/Logo'
     import CopyToCustomRepoDialog from '@/components/Outputs/CopyToCustomRepoDialog'
     import IframeReport from '@/components/Outputs/IframeReport'
-    import OutputQrcode from '@/components/Outputs/OutputQrcode'
     import ThirdPartyReport from '@/components/Outputs/ThirdPartyReport'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
@@ -151,7 +148,6 @@
             ExtMenu,
             CopyToCustomRepoDialog,
             // ArtifactsList
-            OutputQrcode,
             ArtifactDownloadButton
         },
         props: {
