@@ -31,6 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.process.engine.listener.run.PipelineBuildStartListener
+import com.tencent.devops.process.engine.listener.run.finish.PipelineBuildBatchCancelListener
+import com.tencent.devops.process.engine.listener.run.finish.PipelineBuildBatchFinishListener
 import com.tencent.devops.process.engine.listener.run.finish.PipelineBuildCancelListener
 import com.tencent.devops.process.engine.listener.run.finish.PipelineBuildFinishListener
 import org.springframework.amqp.core.Binding
@@ -135,6 +137,46 @@ class BuildEngineCoreBuildConfiguration {
         )
     }
 
+    @Value("\${queueConcurrency.buildBatchFinish:5}")
+    private val buildBatchFinishConcurrency: Int? = null
+
+    /**
+     * 构建结束队列--- 并发一般，与Stage一致
+     */
+    @Bean
+    fun pipelineBuildBatchFinishQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_BATCH_FINISH)
+
+    @Bean
+    fun pipelineBuildBatchFinishQueueBind(
+        @Autowired pipelineBuildFinishQueue: Queue,
+        @Autowired pipelineCoreExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(pipelineBuildFinishQueue)
+            .to(pipelineCoreExchange)
+            .with(MQ.ROUTE_PIPELINE_BUILD_BATCH_FINISH)
+    }
+
+    @Bean
+    fun pipelineBuildBatchFinishListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired pipelineBuildFinishQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired buildListener: PipelineBuildBatchFinishListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = pipelineBuildFinishQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = buildListener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 5,
+            concurrency = buildBatchFinishConcurrency!!,
+            maxConcurrency = 20
+        )
+    }
+
     @Value("\${queueConcurrency.buildCancel:5}")
     private val buildCancelConcurrency: Int? = null
 
@@ -173,6 +215,47 @@ class BuildEngineCoreBuildConfiguration {
             consecutiveActiveTrigger = 5,
             concurrency = buildCancelConcurrency!!,
             maxConcurrency = 50
+        )
+    }
+
+    @Value("\${queueConcurrency.buildBatchCancel:5}")
+    private val buildBatchCancelConcurrency: Int? = null
+
+    /**
+     * 构建取消队列--- 并发一般，与Stage一致
+     */
+    @Bean
+    fun pipelineBuildBatchCancelQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_BATCH_CANCEL)
+
+    @Bean
+    fun pipelineBuildBatchCancelQueueBind(
+        @Autowired pipelineBuildCancelQueue: Queue,
+        @Autowired pipelineCoreExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(pipelineBuildCancelQueue)
+            .to(pipelineCoreExchange)
+            .with(MQ.ROUTE_PIPELINE_BUILD_BATCH_CANCEL)
+    }
+
+    @Bean
+    fun pipelineBuildBatchCancelListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired pipelineBuildCancelQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired buildListener: PipelineBuildBatchCancelListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = pipelineBuildCancelQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = buildListener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 5,
+            concurrency = buildBatchCancelConcurrency!!,
+            maxConcurrency = 20
         )
     }
 }

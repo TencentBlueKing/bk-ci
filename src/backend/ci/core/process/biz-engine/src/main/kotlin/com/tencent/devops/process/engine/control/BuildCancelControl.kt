@@ -91,14 +91,19 @@ class BuildCancelControl @Autowired constructor(
     }
 
     @BkTimed
-    fun handle(event: PipelineBuildCancelEvent) {
+    fun handle(event: PipelineBuildCancelEvent, batchCancel: Boolean = false): Boolean {
         val watcher = Watcher(id = "ENGINE|BuildCancel|${event.traceId}|${event.buildId}|${event.status}")
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = event.buildId)
         try {
             watcher.start("lock")
             redisLock.lock()
             watcher.start("execute")
-            execute(event)
+            // 如果不是批量取消的请求，则直接下发流水线完成时间
+            val needFinish = cancelAndNeedFinish(event)
+            if (needFinish && !batchCancel) {
+                sendBuildFinishEvent(event)
+            }
+            return needFinish
         } catch (ignored: Exception) {
             LOG.error("ENGINE|${event.buildId}|{${event.source}}|build finish fail: $ignored", ignored)
         } finally {
@@ -106,9 +111,10 @@ class BuildCancelControl @Autowired constructor(
             watcher.stop()
             LogUtils.printCostTimeWE(watcher = watcher)
         }
+        return false
     }
 
-    private fun execute(event: PipelineBuildCancelEvent): Boolean {
+    private fun cancelAndNeedFinish(event: PipelineBuildCancelEvent): Boolean {
         val buildId = event.buildId
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId = event.projectId, buildId = buildId)
         // 已经结束的构建，不再受理，抛弃消息
@@ -118,57 +124,53 @@ class BuildCancelControl @Autowired constructor(
         }
 
         val model = pipelineBuildDetailService.getBuildModel(projectId = event.projectId, buildId = buildId)
-        return if (model != null) {
-            LOG.info("ENGINE|${event.buildId}|${event.source}|CANCEL|status=${event.status}")
-            if (event.actionType != ActionType.TERMINATE) {
-                // 往redis中设置取消构建标识以防止重复提交
-                setBuildCancelActionRedisFlag(buildId)
-            }
-            cancelAllPendingTask(event = event, model = model)
-            if (event.actionType == ActionType.TERMINATE) {
-                // 修改detail model
-                pipelineBuildRecordService.buildCancel(
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    buildId = event.buildId,
-                    buildStatus = event.status,
-                    cancelUser = event.userId,
-                    executeCount = buildInfo.executeCount ?: 1
-                )
-            }
-
-            // 排队的则不再获取Pending Stage，防止Final Stage被执行
-            val pendingStage: PipelineBuildStage? =
-                if (buildInfo.status.isReadyToRun() || buildInfo.status.isNeverRun()) {
-                    null
-                } else {
-                    pipelineStageService.getPendingStage(event.projectId, buildId)
-                }
-
-            if (pendingStage != null) {
-                if (pendingStage.status.isPause()) { // 处于审核暂停的Stage需要走取消Stage逻辑
-                    pipelineStageService.cancelStageBySystem(
-                        userId = event.userId,
-                        buildInfo = buildInfo,
-                        buildStage = pendingStage,
-                        timeout = false
-                    )
-                } else {
-                    pendingStage.dispatchEvent(event)
-                }
-            } else {
-                sendBuildFinishEvent(event)
-            }
-
-            measureService?.postCancelData(
+            ?: return false
+        LOG.info("ENGINE|${event.buildId}|${event.source}|CANCEL|status=${event.status}")
+        if (event.actionType != ActionType.TERMINATE) {
+            // 往redis中设置取消构建标识以防止重复提交
+            setBuildCancelActionRedisFlag(buildId)
+        }
+        cancelAllPendingTask(event = event, model = model)
+        if (event.actionType == ActionType.TERMINATE) {
+            // 修改detail model
+            pipelineBuildRecordService.buildCancel(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
-                buildId = buildId,
-                userId = event.userId
+                buildId = event.buildId,
+                buildStatus = event.status,
+                cancelUser = event.userId,
+                executeCount = buildInfo.executeCount ?: 1
             )
-            true
-        } else {
+        }
+
+        // 排队的则不再获取Pending Stage，防止Final Stage被执行
+        val pendingStage: PipelineBuildStage? =
+            if (buildInfo.status.isReadyToRun() || buildInfo.status.isNeverRun()) {
+                null
+            } else {
+                pipelineStageService.getPendingStage(event.projectId, buildId)
+            }
+        measureService?.postCancelData(
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            buildId = buildId,
+            userId = event.userId
+        )
+        return if (pendingStage != null) {
+            if (pendingStage.status.isPause()) { // 处于审核暂停的Stage需要走取消Stage逻辑
+                pipelineStageService.cancelStageBySystem(
+                    userId = event.userId,
+                    buildInfo = buildInfo,
+                    buildStage = pendingStage,
+                    timeout = false
+                )
+            } else {
+                pendingStage.dispatchEvent(event)
+            }
             false
+        } else {
+            // 如果没有暂停的stage可以直接发送流水线finish事件
+            true
         }
     }
 

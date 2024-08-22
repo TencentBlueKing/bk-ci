@@ -66,6 +66,11 @@ object MQ {
     const val ROUTE_PIPELINE_BUILD_FINISH = "r.engine.pipeline.build.finish"
     const val QUEUE_PIPELINE_BUILD_FINISH = "q.engine.pipeline.build.finish"
 
+    const val ROUTE_PIPELINE_BUILD_BATCH_CANCEL = "r.engine.pipeline.build.cancel"
+    const val QUEUE_PIPELINE_BUILD_BATCH_CANCEL = "q.engine.pipeline.build.cancel"
+    const val ROUTE_PIPELINE_BUILD_BATCH_FINISH = "r.engine.pipeline.build.finish"
+    const val QUEUE_PIPELINE_BUILD_BATCH_FINISH = "q.engine.pipeline.build.finish"
+
     const val ROUTE_PIPELINE_PAUSE_TASK_EXECUTE = "r.engine.pipeline.pause.task.execute"
     const val QUEUE_PIPELINE_PAUSE_TASK_EXECUTE = "q.engine.pipeline.pause.task.execute"
 
