@@ -50,6 +50,7 @@ import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateE
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -87,7 +88,8 @@ class PermissionGradeManagerService @Autowired constructor(
     private val traceEventDispatcher: TraceEventDispatcher,
     private val itsmService: ItsmService,
     private val authAuthorizationScopesService: AuthAuthorizationScopesService,
-    private val permissionResourceGroupService: PermissionResourceGroupService
+    private val permissionResourceGroupService: PermissionResourceGroupService,
+    private val resourceGroupSyncService: PermissionResourceGroupSyncService
 ) {
 
     companion object {
@@ -422,6 +424,8 @@ class PermissionGradeManagerService @Autowired constructor(
                 groupCode = groupConfig.groupCode
             )
         }
+        // 分级管理员创建后,需要同步下组、成员和分级管理员
+        resourceGroupSyncService.syncGroupAndMember(projectCode = projectCode)
     }
 
     fun modifyGradeDefaultGroup(

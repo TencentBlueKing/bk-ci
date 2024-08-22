@@ -32,15 +32,18 @@ import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.provider.rbac.listener.AuthItsmCallbackListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthResourceGroupCreateListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthResourceGroupModifyListener
+import com.tencent.devops.auth.provider.rbac.listener.SyncGroupAndMemberListener
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthItsmCallbackEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -55,6 +58,19 @@ class RbacMQConfiguration {
 
     @Bean
     fun traceEventDispatcher(streamBridge: StreamBridge) = TraceEventDispatcher(streamBridge)
+
+    @Bean
+    fun syncGroupAndMemberListener(
+        permissionResourceGroupSyncService: PermissionResourceGroupSyncService
+    ) = SyncGroupAndMemberListener(
+        permissionResourceGroupSyncService = permissionResourceGroupSyncService
+    )
+
+    @EventConsumer
+    fun syncGroupAndMemberConsumer(
+        @Autowired syncGroupAndMemberListener: SyncGroupAndMemberListener
+    ) = ScsConsumerBuilder.build<ProjectEnableStatusBroadCastEvent> { syncGroupAndMemberListener.execute(it) }
+
 
     @Bean
     fun authItsmCallbackListener(

@@ -361,6 +361,7 @@
         computed: {
             ...mapState('atom', [
                 'pipelineInfo',
+                'pipeline',
                 'pipelineSetting'
             ]),
             ...mapState('pipelines', ['isManage']),
@@ -430,6 +431,14 @@
             },
             hasPacSupportScmTypeList () {
                 return this.pacSupportScmTypeList?.length > 0
+            },
+            canManualStartup () {
+                try {
+                    const manualAtom = this.pipeline?.stages?.[0]?.containers[0]?.elements?.find(e => e.atomCode === 'manualTrigger')
+                    return manualAtom?.additionalOptions?.enable
+                } catch (error) {
+                    return false
+                }
             }
         },
         watch: {
@@ -622,6 +631,7 @@
                                 : null
                         }
                     })
+
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         ...(!targetAction || targetAction === 'COMMIT_TO_MASTER'
                             ? {
@@ -632,7 +642,9 @@
                                 versionNum,
                                 baseVersion: version,
                                 baseVersionName: versionName,
-                                latestVersionStatus: VERSION_STATUS_ENUM.RELEASED
+                                latestVersionStatus: VERSION_STATUS_ENUM.RELEASED,
+                                pipelineName: this.pipelineName,
+                                canManualStartup: this.canManualStartup
                             }
                             : {}),
                         ...(
