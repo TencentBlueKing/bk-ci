@@ -2,7 +2,6 @@
     <bk-upload
         ref="uploadRef"
         theme="button"
-        :tip="tip"
         :files="files"
         name="file"
         :delay-time="delayTime"
@@ -27,7 +26,6 @@
         },
         data () {
             return {
-                tip: this.$t('sizeLimit', [this.size]),
                 delayTime: 500,
                 files: []
             }

@@ -281,7 +281,8 @@ export default {
                     ? {
                         pauseBeforeExec: true
                     }
-                    : {}
+                    : {
+                    }
             }
         } else {
             const diffRes = diffAtomVersions(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)

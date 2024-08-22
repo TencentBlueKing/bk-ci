@@ -6,14 +6,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "资源类型")
 data class ResourceTypeInfoVo(
     @get:Schema(title = "ID")
-    val id: Int,
+    val id: Int = 0,
     @get:Schema(title = "资源类型")
     val resourceType: String,
     @get:Schema(title = "资源类型名")
     @BkFieldI18n(keyPrefixName = "resourceType")
     val name: String,
     @get:Schema(title = "父类资源")
-    val parent: String,
+    val parent: String = "",
     @get:Schema(title = "所属系统")
-    val system: String
+    val system: String = ""
 )

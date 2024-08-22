@@ -37,10 +37,11 @@ object QualityUtils {
         val url = titleData[4]
         val pipelineNameTitle = titleData[5]
         val ruleName = titleData[6]
-        val pipelineLinkElement = if (url.isBlank()) {
-            pipelineName
+        // codecc开源扫描不需要展示title,只需要展示质量红线明细
+        val (showTitle, pipelineLinkElement) = if (url.isBlank()) {
+            Pair(false, pipelineName)
         } else {
-            "<a href='$url' style=\"color: #03A9F4\">$pipelineName</a>"
+            Pair(true, "<a href='$url' style=\"color: #03A9F4\">$pipelineName</a>")
         }
         val title = "<table><tr>" +
             "<td style=\"border:none;padding-right: 0;\">$pipelineNameTitle：</td>" +
@@ -76,6 +77,10 @@ object QualityUtils {
         }
         body.append("</table>")
 
-        return title + body.toString()
+        return if (showTitle) {
+            title + body.toString()
+        } else {
+            body.toString()
+        }
     }
 }
