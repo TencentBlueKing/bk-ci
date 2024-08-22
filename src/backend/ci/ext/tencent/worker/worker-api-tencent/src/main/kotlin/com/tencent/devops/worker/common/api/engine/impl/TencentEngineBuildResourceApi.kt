@@ -71,7 +71,6 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
         return context
     }
 
-
     override fun endTask(
         variables: Map<String, String>,
         envBuildId: String,
