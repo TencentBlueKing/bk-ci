@@ -36,7 +36,6 @@ class UserMessageConsumer @Autowired constructor(
 
     fun bufferKey() = "stream_user_message_consumer:${bkTag.getLocalTag()}:buffer"
 
-
     @Value("\${queue.max.size:10000}")
     private var maxSize: Int = 10000 // 默认值
     private var size = 0
