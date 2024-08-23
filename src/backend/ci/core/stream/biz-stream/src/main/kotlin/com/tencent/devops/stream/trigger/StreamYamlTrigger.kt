@@ -111,9 +111,9 @@ class StreamYamlTrigger @Autowired constructor(
         action: BaseAction,
         trigger: String?
     ) {
-        logger.info("|${action.data.context.requestEventId}|checkAndTrigger|action|${action.format()}")
         val buildPipeline = action.data.context.pipeline!!
-
+        action.data.watcherStart("|${buildPipeline.pipelineId}|streamYamlTrigger.checkAndTrigger")
+        logger.info("|${action.data.context.requestEventId}|checkAndTrigger|action|${action.format()}")
         val filePath = buildPipeline.filePath
         // 流水线未启用则跳过
         if (!buildPipeline.enabled) {

@@ -1,6 +1,7 @@
 package com.tencent.devops.stream.trigger.service
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
@@ -48,8 +49,8 @@ class UserMessageConsumer @Autowired constructor(
         private val key = consumer.bufferKey()
 
         companion object {
-            const val SLEEP = 5000L
-            const val CHUNKED = 100
+            const val SLEEP = 10000L
+            const val CHUNKED = 200
         }
 
         override fun run() {
@@ -59,7 +60,6 @@ class UserMessageConsumer @Autowired constructor(
                 try {
                     val lockSuccess = redisLock.tryLock()
                     if (lockSuccess) {
-                        logger.info("UserMessageProcess get lock.")
                         execute()
                     }
                 } catch (e: Throwable) {
@@ -78,24 +78,39 @@ class UserMessageConsumer @Autowired constructor(
             massages.chunked(CHUNKED).forEach { keys ->
                 val updateValues = consumer.redisHashOperation.hmGet(key, keys)
                     ?: return@forEach
+                val removeDuplicates = mutableMapOf<String, UserMessageData>()
                 keys.forEachIndexed { index, key ->
+                    needDelete.add(key)
                     kotlin.runCatching {
                         val load = JsonUtil.to(updateValues[index], UserMessageData::class.java)
-                        val split = key.split("@@")
-                        consumer.writeData(
-                            projectId = split.elementAt(0),
-                            userId = split.elementAt(1),
-                            messageId = split.elementAt(2),
-                            messageType = UserMessageType.valueOf(load.messageType),
-                            messageTitle = load.messageTitle,
-                        )
+                        val loadKey = "${load.projectId}${load.userId}${load.messageId}"
+                        if (removeDuplicates[loadKey] != null &&
+                            removeDuplicates[loadKey]!!.messageType != UserMessageType.ONLY_SUCCESS.name
+                        ) {
+                            return@forEachIndexed
+                        }
+                        if (removeDuplicates[loadKey] != null &&
+                            load.messageType == UserMessageType.ONLY_SUCCESS.name
+                        ) {
+                            return@forEachIndexed
+                        }
+                        removeDuplicates[loadKey] = load
                     }.onFailure {
                         logger.warn("UserMessageProcess failed ${it.message}", it)
                     }
-                    needDelete.add(key)
+                }
+                removeDuplicates.forEach { (_, v) ->
+                    consumer.writeData(
+                        projectId = v.projectId,
+                        userId = v.userId,
+                        messageId = v.messageId,
+                        messageType = UserMessageType.parse(v.messageType),
+                        messageTitle = v.messageTitle,
+                    )
                 }
             }
             if (needDelete.isNotEmpty()) {
+                logger.info("UserMessageProcess success write ${needDelete.size} messages")
                 consumer.redisHashOperation.hdelete(key, needDelete.toTypedArray())
             }
         }
@@ -112,8 +127,16 @@ class UserMessageConsumer @Autowired constructor(
         if (size < maxSize) {
             redisHashOperation.hset(
                 bufferKey(),
-                "$projectId@@$userId@@$messageId",
-                JsonUtil.toJson(UserMessageData(messageType.name, messageTitle))
+                UUIDUtil.generate(),
+                JsonUtil.toJson(
+                    UserMessageData(
+                        projectId = projectId,
+                        userId = userId,
+                        messageId = messageId,
+                        messageType = messageType.name,
+                        messageTitle = messageTitle
+                    )
+                )
             )
         } else {
             logger.error("Queue is full. Cannot add data.")
@@ -138,7 +161,7 @@ class UserMessageConsumer @Autowired constructor(
                 messageTitle = messageTitle
             )
         } else {
-            if (exist.messageType == messageType.name) {
+            if (exist.messageType == messageType.name || exist.messageType == UserMessageType.REQUEST.name) {
                 return
             }
             userMessageDao.updateMessageType(

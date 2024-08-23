@@ -28,6 +28,9 @@
 package com.tencent.devops.stream.pojo
 
 data class UserMessageData(
+    val projectId: String,
+    val userId: String,
+    val messageId: String,
     val messageType: String,
     val messageTitle: String
 )
