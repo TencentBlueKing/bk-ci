@@ -105,7 +105,7 @@ class UserMessageConsumer @Autowired constructor(
                         userId = v.userId,
                         messageId = v.messageId,
                         messageType = UserMessageType.parse(v.messageType),
-                        messageTitle = v.messageTitle,
+                        messageTitle = v.messageTitle
                     )
                 }
             }
