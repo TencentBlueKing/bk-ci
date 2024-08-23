@@ -118,7 +118,7 @@ class ParamFacadeService @Autowired constructor(
             } else if (property.type == BuildFormPropertyType.SUB_PIPELINE) {
                 addSubPipelineProperties(userId, projectId, pipelineId, property)
             } else if (property.type == BuildFormPropertyType.REPO_REF) {
-                addSubPipelineProperties(userId, projectId, pipelineId, property)
+                addRepoRefs(projectId, property, userId, search)
             } else {
                 property
             }
