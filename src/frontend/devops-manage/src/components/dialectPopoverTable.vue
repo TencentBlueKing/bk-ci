@@ -4,6 +4,7 @@
     :width="900"
     :placement="placement"
     extCls="dialect-popover"
+    :componentEventDelay="300"
   >
     <label class="label">{{ t('变量语法风格') }}</label>
     <template #content>
@@ -117,5 +118,4 @@ const namingConventionData = [
     overflow: hidden;
   }
 }
-  
 </style>

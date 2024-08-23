@@ -482,7 +482,7 @@ onMounted(async () => {
                 </bk-form-item>
                 <bk-form-item property="pipelineDialect">
                   <template #label>
-                    <dialect-popover-table :placement="'bottom-end'"/>
+                    <dialect-popover-table :placement="'bottom-start'"/>
                   </template>
                   <div>
                     <span>{{ pipelineDialectMap[projectData.pipelineDialect] }}</span>

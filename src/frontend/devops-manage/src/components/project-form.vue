@@ -577,13 +577,13 @@ onBeforeUnmount(() => {
     <bk-form-item
       property="pipelineDialect"
     >
-    <template #label>
-      <dialect-popover-table />
-    </template>
-    <bk-radio-group
-      v-model="projectData.pipelineDialect"
-      @change="handleChangeForm"
-    >
+      <template #label>
+        <dialect-popover-table />
+      </template>
+      <bk-radio-group
+        v-model="projectData.pipelineDialect"
+        @change="handleChangeForm"
+      >
         <bk-radio label="CLASSIC">
           <span>{{ t('传统风格') }}</span>
         </bk-radio>
