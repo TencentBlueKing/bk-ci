@@ -100,14 +100,14 @@ class ImportCmdbNodeService(
         pageSize: Int,
         ips: List<String>
     ): NewCmdbScrollPageData<NewCmdbServer> {
-        val serverList = newCmdbService!!.queryNewServerByIp(ips).values.filter {
+        var serverList = newCmdbService!!.queryNewServerByIp(ips).values.filter {
             if (!bakOperator) {
                 it.hasOperator(userId)
             } else {
                 it.hasBakOperator(userId)
             }
         }.toList()
-        serverList.sortedBy { it.serverId }
+        serverList = serverList.sortedBy { it.serverId }
         return buildScrollPageDataInMemory(serverList, scrollId, pageSize)
     }
 
