@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.interceptor
 
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -46,6 +47,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildBatchCancelEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -278,7 +280,6 @@ class QueueInterceptor @Autowired constructor(
                         concurrencyGroup = concurrencyGroup,
                         status = status
                     ).toMutableList()
-                    // #8143 兼容旧流水线版本 TODO 待模板设置补上漏洞，后期下掉 # 8143
                     if (concurrencyGroup == task.pipelineInfo.pipelineId) {
                         builds.addAll(
                             0,
@@ -289,14 +290,32 @@ class QueueInterceptor @Autowired constructor(
                             )
                         )
                     }
+                    // 按照流水线ID组织批量取消的事件
+                    val cancelUser = latestStartUser ?: task.pipelineInfo.creator
+                    val pipelineToEvents = mutableMapOf<String, MutableList<String>>()
                     builds.forEach { (pipelineId, buildId) ->
+                        val cancelBuilds = pipelineToEvents[pipelineId] ?: mutableListOf()
                         pipelineRuntimeService.concurrencyCancelBuildPipeline(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
-                            userId = latestStartUser ?: task.pipelineInfo.creator,
+                            userId = cancelUser,
                             groupName = concurrencyGroup,
-                            detailUrl = detailUrl
+                            detailUrl = detailUrl,
+                            cancelBuilds = cancelBuilds
+                        )
+                        pipelineToEvents[pipelineId] = cancelBuilds
+                    }
+                    pipelineToEvents.forEach { (pipelineId, cancelBuilds) ->
+                        pipelineEventDispatcher.dispatch(
+                            PipelineBuildBatchCancelEvent(
+                                source = "concurrencyGroupCancel",
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                userId = cancelUser,
+                                buildIds = cancelBuilds,
+                                actionType = ActionType.END
+                            )
                         )
                     }
                     Response(data = BuildStatus.RUNNING)

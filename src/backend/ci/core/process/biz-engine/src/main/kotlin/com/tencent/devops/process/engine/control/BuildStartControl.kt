@@ -86,6 +86,7 @@ import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildBatchCancelEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
@@ -339,14 +340,31 @@ class BuildStartControl @Autowired constructor(
                         stageId = null,
                         needShortUrl = false
                     )
+                    // 按照流水线ID组织批量取消的事件
+                    val pipelineToEvents = mutableMapOf<String, MutableList<String>>()
                     concurrencyGroupRunning.forEach { (pipelineId, buildId) ->
+                        val cancelBuilds = pipelineToEvents[pipelineId] ?: mutableListOf()
                         pipelineRuntimeService.concurrencyCancelBuildPipeline(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
                             userId = buildInfo.startUser,
                             groupName = concurrencyGroup,
-                            detailUrl = detailUrl
+                            detailUrl = detailUrl,
+                            cancelBuilds = cancelBuilds
+                        )
+                        pipelineToEvents[pipelineId] = cancelBuilds
+                    }
+                    pipelineToEvents.forEach { (pipelineId, cancelBuilds) ->
+                        pipelineEventDispatcher.dispatch(
+                            PipelineBuildBatchCancelEvent(
+                                source = "concurrencyGroupCancel",
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                userId = userId,
+                                buildIds = cancelBuilds,
+                                actionType = ActionType.END
+                            )
                         )
                     }
                 }

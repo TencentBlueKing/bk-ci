@@ -672,7 +672,8 @@ class PipelineRuntimeService @Autowired constructor(
         userId: String,
         executeCount: Int,
         buildStatus: BuildStatus,
-        terminateFlag: Boolean = false
+        terminateFlag: Boolean = false,
+        cancelBuilds: MutableList<String>? = null
     ): Boolean {
         logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus|terminateFlag=$terminateFlag")
         // 记录该构建取消人信息
@@ -684,17 +685,22 @@ class PipelineRuntimeService @Autowired constructor(
         )
         // 发送取消事件
         val actionType = if (terminateFlag) ActionType.TERMINATE else ActionType.END
-        // 发送取消事件
+        // 按照要求发送取消事件，广播事件可以直接发送
+        val cancelEvent = PipelineBuildCancelEvent(
+            source = javaClass.simpleName,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            buildId = buildId,
+            status = buildStatus,
+            actionType = actionType
+        )
+        if (cancelBuilds == null) {
+            pipelineEventDispatcher.dispatch(cancelEvent)
+        } else {
+            cancelBuilds.add(buildId)
+        }
         pipelineEventDispatcher.dispatch(
-            PipelineBuildCancelEvent(
-                source = javaClass.simpleName,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                buildId = buildId,
-                status = buildStatus,
-                actionType = actionType
-            ),
             PipelineBuildCancelBroadCastEvent(
                 source = "cancelBuild",
                 projectId = projectId,
@@ -2056,7 +2062,8 @@ class PipelineRuntimeService @Autowired constructor(
         buildId: String,
         userId: String,
         groupName: String,
-        detailUrl: String
+        detailUrl: String,
+        cancelBuilds: MutableList<String>? = null
     ) {
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
         try {
@@ -2100,7 +2107,8 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildId,
                     userId = userId,
                     executeCount = buildInfo?.executeCount ?: 1,
-                    buildStatus = BuildStatus.CANCELED
+                    buildStatus = BuildStatus.CANCELED,
+                    cancelBuilds = cancelBuilds
                 )
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
             } catch (t: Throwable) {
