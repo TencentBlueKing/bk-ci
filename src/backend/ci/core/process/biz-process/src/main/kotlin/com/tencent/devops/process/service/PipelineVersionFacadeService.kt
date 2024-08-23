@@ -898,11 +898,30 @@ class PipelineVersionFacadeService @Autowired constructor(
         pipelineId: String,
         version: Int
     ): PipelineVersionSimple {
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+            )
+        // 获取目标的版本用于更新草稿
+        val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+            params = arrayOf(version.toString())
+        )
         val resource = pipelineRepositoryService.rollbackDraftFromVersion(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            version = version
+            targetVersion = targetVersion.copy(
+                model = pipelineInfoFacadeService.getFixedModel(
+                    targetVersion.model, projectId, pipelineId, userId, pipelineInfo
+                )
+            )
         )
         return PipelineVersionSimple(
             pipelineId = pipelineId,

@@ -61,6 +61,8 @@ import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import java.util.Date
@@ -170,28 +172,12 @@ class DispatchService constructor(
         executeCount: Int?,
         logTag: String?
     ): Boolean {
-        // 判断流水线当前container是否在运行中
-        val statusResult = client.get(ServicePipelineTaskResource::class).getContainerStartupInfo(
+        val (startBuildTask, buildContainer) = getContainerStartupInfo(
             projectId = projectId,
             buildId = buildId,
             containerId = containerId,
-            taskId = VMUtils.genStartVMTaskId(containerId)
+            logTag = logTag
         )
-        val startBuildTask = statusResult.data?.startBuildTask
-        val buildContainer = statusResult.data?.buildContainer
-        if (statusResult.isNotOk() || startBuildTask == null || buildContainer == null) {
-            logger.warn(
-                "The build event($logTag) fail to check if pipeline task is running " +
-                        "because of statusResult(${statusResult.message})"
-            )
-            val errorMessage = I18nUtil.getCodeLanMessage(UNABLE_GET_PIPELINE_JOB_STATUS)
-            throw BuildFailureException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = UNABLE_GET_PIPELINE_JOB_STATUS.toInt(),
-                formatErrorMessage = errorMessage,
-                errorMessage = errorMessage
-            )
-        }
 
         var needStart = true
         if (executeCount != startBuildTask.executeCount) {
@@ -231,7 +217,8 @@ class DispatchService constructor(
             pipelineId = event.pipelineId,
             buildId = event.buildId,
             vmSeqId = event.vmSeqId,
-            e = e
+            e = e,
+            logTag = "$event"
         )
     }
 
@@ -240,14 +227,16 @@ class DispatchService constructor(
         pipelineId: String,
         buildId: String,
         vmSeqId: String,
-        e: BuildFailureException
+        e: BuildFailureException,
+        logTag: String?
     ) {
         onContainerFailure(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             vmSeqId = vmSeqId,
-            e = e
+            e = e,
+            logTag
         )
         DispatchLogRedisUtils.removeRedisExecuteCount(buildId)
     }
@@ -257,10 +246,21 @@ class DispatchService constructor(
         pipelineId: String,
         buildId: String,
         vmSeqId: String,
-        e: BuildFailureException
+        e: BuildFailureException,
+        logTag: String?
     ) {
         logger.warn("[$buildId|$vmSeqId] Container startup failure")
         try {
+            val (startBuildTask, buildContainer) = getContainerStartupInfo(
+                projectId = projectId,
+                buildId = buildId,
+                containerId = vmSeqId,
+                logTag = logTag
+            )
+            if (buildContainer.status.isCancel() || startBuildTask.status.isCancel()) {
+                return
+            }
+
             client.get(ServiceBuildResource::class).setVMStatus(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -316,6 +316,38 @@ class DispatchService constructor(
         } catch (e: Exception) {
             logger.warn("[$pipelineId]|[$buildId]|[$vmSeqId]| sendDispatchMonitoring failed.", e.message)
         }
+    }
+
+    private fun getContainerStartupInfo(
+        projectId: String,
+        buildId: String,
+        containerId: String,
+        logTag: String?
+    ): Pair<PipelineBuildTask, PipelineBuildContainer> {
+        // 判断流水线当前container是否在运行中
+        val statusResult = client.get(ServicePipelineTaskResource::class).getContainerStartupInfo(
+            projectId = projectId,
+            buildId = buildId,
+            containerId = containerId,
+            taskId = VMUtils.genStartVMTaskId(containerId)
+        )
+        val startBuildTask = statusResult.data?.startBuildTask
+        val buildContainer = statusResult.data?.buildContainer
+        if (statusResult.isNotOk() || startBuildTask == null || buildContainer == null) {
+            logger.warn(
+                "The build event($logTag) fail to check if pipeline task is running " +
+                        "because of statusResult(${statusResult.message})"
+            )
+            val errorMessage = I18nUtil.getCodeLanMessage(UNABLE_GET_PIPELINE_JOB_STATUS)
+            throw BuildFailureException(
+                errorType = ErrorType.SYSTEM,
+                errorCode = UNABLE_GET_PIPELINE_JOB_STATUS.toInt(),
+                formatErrorMessage = errorMessage,
+                errorMessage = errorMessage
+            )
+        }
+
+        return Pair(startBuildTask, buildContainer)
     }
 
     private fun finishBuild(vmSeqId: String, buildId: String, executeCount: Int) {

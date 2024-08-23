@@ -25,25 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.atom.service
+package com.tencent.devops.process.pojo
 
-import com.tencent.devops.store.pojo.atom.AtomProp
+import io.swagger.v3.oas.annotations.media.Schema
 
-interface AtomPropService {
-
-    /**
-     * 获取插件属性列表
-     * @param atomCodes 插件代码集合
-     * @return 插件属性集合
-     */
-    fun getAtomProps(
-        atomCodes: Set<String>
-    ): Map<String, AtomProp>?
-
-    /**
-     * 获取插件输出信息
-     * @param atomInfos 插件信息集合，格式：插件标识@版本号
-     * @return 插件输出信息集合，格式：key-插件标识@版本号， value-插件输出对象
-     */
-    fun getAtomOutputInfos(atomInfos: Set<String>): Map<String, String>?
-}
+@Schema(title = "流水线模型-job执行结果")
+data class BuildJobResult(
+    @get:Schema(title = "错误原因", required = false)
+    val message: String? = null
+)

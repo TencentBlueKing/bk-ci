@@ -213,7 +213,7 @@ const isResetFailure = ref(false);
 const isResetSuccess = ref(false);
 const isChecking = ref(false);
 const canLoading = ref(true);
-const projectId = computed(() => route.params?.projectCode);
+const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
 const userId = computed(() => route.query?.userId);
 const initialResourceType  = computed(() => route.query?.resourceType || 'repertory');
 const resourceType = ref(initialResourceType.value);

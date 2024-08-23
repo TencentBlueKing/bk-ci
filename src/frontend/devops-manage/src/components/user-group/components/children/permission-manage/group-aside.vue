@@ -297,7 +297,7 @@ export default {
     },
     handleMessage(event) {
       const { data } = event;
-      if (data.type === 'IAM') {
+      if (data?.type === 'IAM') {
         switch (data.code) {
           case 'create_user_group_submit':
             this
