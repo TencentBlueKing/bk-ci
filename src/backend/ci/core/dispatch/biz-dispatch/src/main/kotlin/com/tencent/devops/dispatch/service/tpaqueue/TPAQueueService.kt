@@ -4,7 +4,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.BK_FAILED_START_
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
@@ -37,7 +36,6 @@ class TPAQueueService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val rabbitTemplate: RabbitTemplate,
-    private val client: Client,
     private val commonUtil: TPACommonUtil,
     private val tpaQueueDao: TPAQueueDao,
     private val tpaEnvQueueService: TPAEnvQueueService,
@@ -308,7 +306,8 @@ class TPAQueueService @Autowired constructor(
             pipelineId = data.pipelineId,
             buildId = data.buildId,
             vmSeqId = data.vmSeqId,
-            e = exception
+            e = exception,
+            logTag = data.toLog()
         )
     }
 
