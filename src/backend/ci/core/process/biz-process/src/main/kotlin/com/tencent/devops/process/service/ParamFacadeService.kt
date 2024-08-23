@@ -210,7 +210,7 @@ class ParamFacadeService @Autowired constructor(
         }
         val searchUrl = getCodeLibSearchUrl(
             projectId = projectId,
-            scmType = codelibFormProperty.scmType!!,
+            scmType = codelibFormProperty.scmType!!.name,
             permission = Permission.LIST
         )
         val replaceKey = "{words}"
@@ -448,7 +448,7 @@ class ParamFacadeService @Autowired constructor(
         val codeLibSearchUrl = getCodeLibSearchUrl(
             projectId = projectId,
             permission = Permission.LIST,
-            scmType = null
+            scmType = repositoryTypes
         )
         val replaceKey = "{words}"
         val repoHashIdReplaceKey = "{repoNameWords}"
@@ -485,13 +485,13 @@ class ParamFacadeService @Autowired constructor(
         )
     }
 
-    private fun getCodeLibSearchUrl(projectId: String, permission: Permission?, scmType: ScmType?): String {
+    private fun getCodeLibSearchUrl(projectId: String, permission: Permission?, scmType: String?): String {
         val url = StringBuilder("/process/api/user/buildParam/repository/$projectId/aliasName?")
         if (permission != null) {
             url.append("permission=${permission.name}")
         }
         if (scmType != null) {
-            url.append("&repositoryType=${scmType.name}")
+            url.append("&repositoryType=$scmType")
         }
         return url.toString()
     }
