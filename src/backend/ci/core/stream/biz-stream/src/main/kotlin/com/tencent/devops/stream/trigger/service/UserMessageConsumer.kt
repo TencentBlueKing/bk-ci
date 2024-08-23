@@ -58,9 +58,9 @@ class UserMessageConsumer @Autowired constructor(
                 val redisLock = RedisLock(consumer.redisHashOperation, lock, 60L)
                 try {
                     val lockSuccess = redisLock.tryLock()
-                    val massages = consumer.redisHashOperation.hkeys(key)?.ifEmpty { null } ?: return
+                    val massages = consumer.redisHashOperation.hkeys(key) ?: emptySet()
                     consumer.size = massages.size
-                    if (lockSuccess) {
+                    if (lockSuccess && massages.isNotEmpty()) {
                         execute(massages)
                     }
                 } catch (e: Throwable) {
