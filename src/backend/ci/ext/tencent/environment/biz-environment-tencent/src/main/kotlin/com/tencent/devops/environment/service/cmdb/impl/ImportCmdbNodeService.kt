@@ -80,7 +80,7 @@ class ImportCmdbNodeService(
         userId: String,
         bakOperator: Boolean,
         scrollId: String,
-        pageSize: Int,
+        pageSize: Int
     ): NewCmdbScrollPageData<NewCmdbServer> {
         return if (!bakOperator) {
             newCmdbService!!.queryServerByMaintainer(userId, pageSize, scrollId)
