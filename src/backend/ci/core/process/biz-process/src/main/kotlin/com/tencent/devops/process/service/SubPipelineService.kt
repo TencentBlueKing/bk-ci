@@ -63,8 +63,8 @@ class SubPipelineService @Autowired constructor(
                     if (supportElement(element)) {
                         checkElementPermission(
                             projectId = projectId,
-                            stage = stage,
-                            container = container,
+                            stageName = stage.name?:"",
+                            containerName = container.name,
                             element = element,
                             contextMap = contextMap,
                             userId = userId,
@@ -86,8 +86,8 @@ class SubPipelineService @Autowired constructor(
      */
     fun checkElementPermission(
         projectId: String,
-        stage: Stage,
-        container: Container,
+        stageName: String,
+        containerName: String,
         element: Element,
         contextMap: Map<String, String>,
         userId: String,
@@ -127,8 +127,8 @@ class SubPipelineService @Autowired constructor(
                 errorMessage = I18nUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE,
                     params = arrayOf(
-                        stage.name ?: "",
-                        container.name,
+                        stageName,
+                        containerName,
                         element.name,
                         pipelinePermissionUrl,
                         subPipelineName

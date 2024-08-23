@@ -89,8 +89,8 @@ class SubPipelineElementBizPluginService @Autowired constructor(
         if (isTemplate || projectId.isNullOrBlank()) return ElementCheckResult(true)
         return subPipelineService.checkElementPermission(
             projectId = projectId,
-            stage = stage,
-            container = container,
+            stageName = stage.name ?: "",
+            containerName = container.name,
             element = element,
             contextMap = contextMap,
             permission = AuthPermission.EXECUTE,
