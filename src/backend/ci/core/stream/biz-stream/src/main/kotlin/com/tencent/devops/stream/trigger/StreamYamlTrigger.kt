@@ -111,9 +111,9 @@ class StreamYamlTrigger @Autowired constructor(
         action: BaseAction,
         trigger: String?
     ) {
-        logger.info("|${action.data.context.requestEventId}|checkAndTrigger|action|${action.format()}")
         val buildPipeline = action.data.context.pipeline!!
-
+        action.data.watcherStart("|${buildPipeline.pipelineId}|streamYamlTrigger.checkAndTrigger")
+        logger.info("|${action.data.context.requestEventId}|checkAndTrigger|action|${action.format()}")
         val filePath = buildPipeline.filePath
         // 流水线未启用则跳过
         if (!buildPipeline.enabled) {
@@ -177,6 +177,7 @@ class StreamYamlTrigger @Autowired constructor(
         yamlSchemaCheck.check(action = action, templateType = null, isCiFile = true)
 
         // 进入触发流程
+        action.data.watcherStart("streamYamlTrigger.trigger")
         trigger(action, triggerEvent)
     }
 
@@ -193,6 +194,7 @@ class StreamYamlTrigger @Autowired constructor(
         action: BaseAction,
         triggerEvent: Pair<List<Any>?, TriggerResult>?
     ): Boolean {
+        action.data.watcherStart("streamYamlTrigger.triggerBuild")
         logger.info(
             "StreamYamlTrigger|triggerBuild|requestEventId" +
                 "|${action.data.context.requestEventId}|action|${action.format()}"
