@@ -29,7 +29,6 @@ package com.tencent.devops.process.service.app
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.Property
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.pipeline.AppModelDetail
@@ -121,7 +120,7 @@ class AppBuildService @Autowired constructor(
             buildNum = modelDetail.buildNum,
             cancelUserId = modelDetail.cancelUserId,
             fileCount = files?.records?.size ?: 0,
-            packageVersion = "",// TODO 废弃字段?
+            packageVersion = "", // TODO 废弃字段?
             pipelineId = pipelineId,
             pipelineVersion = version,
             pipelineName = name,
