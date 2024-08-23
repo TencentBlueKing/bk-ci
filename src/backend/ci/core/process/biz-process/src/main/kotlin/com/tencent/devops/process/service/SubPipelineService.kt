@@ -142,6 +142,38 @@ class SubPipelineService @Autowired constructor(
             (element is MarketBuildAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE) ||
             (element is MarketBuildLessAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE)
 
+    fun getSubPipelineInfo(
+        projectId: String,
+        element: Element,
+        contextMap: Map<String, String>
+    ) = when (element) {
+        is SubPipelineCallElement -> {
+            resolveSubPipelineCall(
+                projectId = projectId,
+                element = element,
+                contextMap = contextMap
+            )
+        }
+
+        is MarketBuildAtomElement -> {
+            resolveSubPipelineExec(
+                projectId = projectId,
+                inputMap = element.data["input"] as Map<String, Any>,
+                contextMap = contextMap
+            )
+        }
+
+        is MarketBuildLessAtomElement -> {
+            resolveSubPipelineExec(
+                projectId = projectId,
+                inputMap = element.data["input"] as Map<String, Any>,
+                contextMap = contextMap
+            )
+        }
+
+        else -> null
+    }
+
     private fun resolveSubPipelineCall(
         projectId: String,
         element: SubPipelineCallElement,
@@ -265,38 +297,6 @@ class SubPipelineService @Autowired constructor(
         // 检查触发容器
         val paramsMap = defaultModelCheckPlugin.checkTriggerContainer(trigger)
         return PipelineVarUtil.fillVariableMap(paramsMap.mapValues { it.value.defaultValue.toString() })
-    }
-
-    private fun getSubPipelineInfo(
-        projectId: String,
-        element: Element,
-        contextMap: Map<String, String>
-    ) = when (element) {
-        is SubPipelineCallElement -> {
-            resolveSubPipelineCall(
-                projectId = projectId,
-                element = element,
-                contextMap = contextMap
-            )
-        }
-
-        is MarketBuildAtomElement -> {
-            resolveSubPipelineExec(
-                projectId = projectId,
-                inputMap = element.data["input"] as Map<String, Any>,
-                contextMap = contextMap
-            )
-        }
-
-        is MarketBuildLessAtomElement -> {
-            resolveSubPipelineExec(
-                projectId = projectId,
-                inputMap = element.data["input"] as Map<String, Any>,
-                contextMap = contextMap
-            )
-        }
-
-        else -> null
     }
 
     companion object {
