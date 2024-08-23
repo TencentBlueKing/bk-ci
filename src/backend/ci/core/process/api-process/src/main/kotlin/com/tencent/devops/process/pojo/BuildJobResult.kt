@@ -25,42 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.engine
+package com.tencent.devops.process.pojo
 
-import com.tencent.devops.common.api.pojo.ErrorInfo
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
-import com.tencent.devops.engine.api.pojo.HeartBeatInfo
-import com.tencent.devops.process.pojo.BuildJobResult
-import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildTaskResult
-import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.api.WorkerRestApiSDK
+import io.swagger.v3.oas.annotations.media.Schema
 
-interface EngineBuildSDKApi : WorkerRestApiSDK {
-
-    fun getRequestUrl(path: String, retryCount: Int = 0, executeCount: Int = 1): String
-
-    fun setStarted(retryCount: Int): Result<BuildVariables>
-
-    fun claimTask(retryCount: Int): Result<BuildTask>
-
-    fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean>
-
-    fun endTask(
-        variables: Map<String, String>,
-        envBuildId: String,
-        retryCount: Int,
-        result: BuildJobResult
-    ): Result<Boolean>
-
-    fun heartbeat(executeCount: Int = 1, jobHeartbeatRequest: JobHeartbeatRequest): Result<HeartBeatInfo>
-
-    fun timeout(): Result<Boolean>
-
-    fun submitError(errorInfo: ErrorInfo): Result<Boolean>
-
-    fun getJobContext(): Map<String, String>
-
-    fun getBuildDetailUrl(): Result<String>
-}
+@Schema(title = "流水线模型-job执行结果")
+data class BuildJobResult(
+    @get:Schema(title = "错误原因", required = false)
+    val message: String? = null
+)
