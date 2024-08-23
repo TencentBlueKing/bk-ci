@@ -9,13 +9,15 @@ import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverResu
 import com.tencent.devops.common.auth.enums.ResourceAuthorizationHandoverStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.service.SubPipelineService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class PipelineAuthorizationService constructor(
     val pipelinePermissionService: PipelinePermissionService,
-    val authAuthorizationApi: AuthAuthorizationApi
+    val authAuthorizationApi: AuthAuthorizationApi,
+    val subPipelineService: SubPipelineService
 ) {
     fun addResourceAuthorization(
         projectId: String,
@@ -52,19 +54,43 @@ class PipelineAuthorizationService constructor(
                 pipelineId = resourceCode,
                 permission = AuthPermission.EXECUTE
             )
-            if (hasHandoverToPermission) {
-                ResourceAuthorizationHandoverResult(
-                    status = ResourceAuthorizationHandoverStatus.SUCCESS
-                )
-            } else {
-                ResourceAuthorizationHandoverResult(
-                    status = ResourceAuthorizationHandoverStatus.FAILED,
-                    message = MessageUtil.getMessageByLocale(
-                        messageCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                        params = arrayOf(AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(handoverTo))),
-                        language = I18nUtil.getLanguage(handoverTo)
+            val checkSubPipelinePermission = subPipelineService.checkSubPipelinePermission(
+                projectId = projectCode,
+                pipelineId = resourceCode,
+                userId = handoverTo!!,
+                permission = AuthPermission.EXECUTE
+            )
+            // 1.当前流水线的执行权限
+            // 2.有子流水线的执行权限
+            when {
+                hasHandoverToPermission && checkSubPipelinePermission.isEmpty() -> {
+                    ResourceAuthorizationHandoverResult(ResourceAuthorizationHandoverStatus.SUCCESS)
+                }
+
+                checkSubPipelinePermission.isNotEmpty() -> {
+                    val failTitle = I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE,
+                        params = arrayOf(handoverTo!!)
                     )
-                )
+                    val failMsg = checkSubPipelinePermission.map {
+                        it.errorMessage
+                    }.joinToString("\n")
+                    ResourceAuthorizationHandoverResult(
+                        status = ResourceAuthorizationHandoverStatus.FAILED,
+                        message = "$failTitle\n$failMsg"
+                    )
+                }
+
+                else -> {
+                    ResourceAuthorizationHandoverResult(
+                        status = ResourceAuthorizationHandoverStatus.FAILED,
+                        message = MessageUtil.getMessageByLocale(
+                            messageCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                            params = arrayOf(AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(handoverTo))),
+                            language = I18nUtil.getLanguage(handoverTo)
+                        )
+                    )
+                }
             }
         }
     }
