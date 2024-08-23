@@ -191,9 +191,6 @@
                 'setSaveStatus',
                 'updateContainer'
             ]),
-            ...mapActions('pipelines', [
-                'getPipelineDialect'
-            ]),
             async exec (debug) {
                 if (debug && this.isEditing) {
                     const result = await this.saveDraft()
@@ -244,11 +241,6 @@
                     }
                     // 清除流水线参数渲染过程中添加的key
                     this.formatParams(pipeline)
-
-                    if (!pipelineSetting.pipelineAsCodeSettings.pipelineDialect) {
-                        const { data } = await this.getPipelineDialect(this.projectId)
-                        pipelineSetting.pipelineAsCodeSettings.pipelineDialect = data
-                    }
 
                     // 请求执行构建
                     const { data: { version, versionName } } = await this.saveDraftPipeline({
