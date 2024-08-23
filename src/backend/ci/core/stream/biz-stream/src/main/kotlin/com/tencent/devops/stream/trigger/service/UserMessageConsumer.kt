@@ -44,7 +44,7 @@ class UserMessageConsumer @Autowired constructor(
         private val consumer: UserMessageConsumer
     ) : Runnable {
 
-        private val lock = "user_message_process_${consumer.bkTag}"
+        private val lock = "user_message_process_${consumer.bkTag.getLocalTag()}"
         private val key = consumer.bufferKey()
 
         companion object {
