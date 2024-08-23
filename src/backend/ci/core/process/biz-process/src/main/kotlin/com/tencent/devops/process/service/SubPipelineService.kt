@@ -50,7 +50,7 @@ class SubPipelineService @Autowired constructor(
         userId: String,
         permission: AuthPermission
     ): List<ElementCheckResult> {
-        val model = getModel(projectId, projectId) ?: throw ErrorCodeException(
+        val model = getModel(projectId, pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
