@@ -23,7 +23,7 @@ import {
   RESOURCE_ACTION,
   RESOURCE_TYPE,
 } from '@/utils/permission.js'
-import DialectPopoverTable from "@/components/dialectPopoverTable";
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -421,7 +421,7 @@ onMounted(async () => {
                 </bk-form-item>
                 <bk-form-item property="pipelineDialect">
                   <template #label>
-                    <dialect-popover-table :placement="'bottom-end'"/>
+                    <dialect-popover-table :placement="'bottom-start'"/>
                   </template>
                   <div>
                     <span>{{ pipelineDialectMap[projectData.pipelineDialect] }}</span>
