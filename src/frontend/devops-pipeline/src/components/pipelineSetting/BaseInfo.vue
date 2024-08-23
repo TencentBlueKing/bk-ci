@@ -108,7 +108,7 @@
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
     import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
-    import { mapGetters, mapActions } from 'vuex'
+    import { mapGetters } from 'vuex'
 
     export default {
         name: 'bkdevops-base-info-setting-tab',
@@ -127,11 +127,7 @@
         },
         data () {
             return {
-                settings: {
-                    enable: null,
-                    inheritedDialect: true,
-                    pipelineDialect: ''
-                },
+                settings: {},
                 currentPipelineDialect: ''
             }
         },
@@ -158,14 +154,25 @@
                 })
             }
         },
+        watch: {
+            'pipelineSetting.pipelineAsCodeSettings': {
+                handler (val) {
+                    if (val && !this.currentPipelineDialect) {
+                        const { inheritedDialect, projectDialect, pipelineDialect } = this.pipelineSetting.pipelineAsCodeSettings
+                        this.currentPipelineDialect = inheritedDialect ? projectDialect : pipelineDialect
+                        this.settings = {
+                            ...this.pipelineSetting.pipelineAsCodeSettings,
+                            pipelineDialect: this.currentPipelineDialect
+                        }
+                    }
+                },
+                immediate: true
+            }
+        },
         created () {
             this.requestGrouptLists()
-            this.requestPipelineDialect()
         },
         methods: {
-            ...mapActions('pipelines', [
-                'getPipelineDialect'
-            ]),
             /** *
              * 获取标签及其分组
              */
@@ -195,35 +202,12 @@
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/list/group`
                 window.open(url, '_blank')
             },
-            initializePipelineAsCodeSettings (settings) {
-                const { enable, inheritedDialect } = settings
+            inheritedChange (value) {
                 this.settings = {
                     ...this.settings,
-                    enable,
-                    inheritedDialect
+                    inheritedDialect: value,
+                    ...value && { pipelineDialect: this.currentPipelineDialect }
                 }
-            },
-            async requestPipelineDialect () {
-                this.initializePipelineAsCodeSettings(this.pipelineSetting.pipelineAsCodeSettings)
-
-                const isInherited = this.pipelineSetting.pipelineAsCodeSettings.inheritedDialect
-                if (isInherited) {
-                    try {
-                        const { data } = await this.getPipelineDialect(this.projectId)
-                        this.currentPipelineDialect = data
-                        this.settings.pipelineDialect = data
-                    } catch (err) {
-                        console.log(err)
-                    }
-                } else {
-                    this.currentPipelineDialect = this.pipelineSetting.pipelineAsCodeSettings.pipelineDialect
-                }
-            },
-            inheritedChange (value) {
-                if (value) {
-                    this.settings.pipelineDialect = this.currentPipelineDialect
-                }
-                this.settings.inheritedDialect = value
                 this.handleBaseInfoChange('pipelineAsCodeSettings', this.settings)
             },
             pipelineDialectChange (value) {
