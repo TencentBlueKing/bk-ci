@@ -177,6 +177,7 @@ class StreamYamlTrigger @Autowired constructor(
         yamlSchemaCheck.check(action = action, templateType = null, isCiFile = true)
 
         // 进入触发流程
+        action.data.watcherStart("streamYamlTrigger.trigger")
         trigger(action, triggerEvent)
     }
 
@@ -193,6 +194,7 @@ class StreamYamlTrigger @Autowired constructor(
         action: BaseAction,
         triggerEvent: Pair<List<Any>?, TriggerResult>?
     ): Boolean {
+        action.data.watcherStart("streamYamlTrigger.triggerBuild")
         logger.info(
             "StreamYamlTrigger|triggerBuild|requestEventId" +
                 "|${action.data.context.requestEventId}|action|${action.format()}"
