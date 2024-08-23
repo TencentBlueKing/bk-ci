@@ -42,6 +42,7 @@ import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceSvnResource
 import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.scm.pojo.enums.SvnFileType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -139,6 +140,24 @@ class CodeService @Autowired constructor(
             return result.data!!
         } catch (t: Throwable) {
             logger.warn("[$projectId|$scmType] Fail to get the repository", t)
+            throw t
+        }
+    }
+
+    fun listRepository(projectId: String, repositoryTypes: String?): List<RepositoryInfo> {
+        try {
+            val result = client.get(ServiceRepositoryResource::class).listByProject(
+                projectId,
+                repositoryTypes = repositoryTypes,
+                page = 1,
+                pageSize = 100
+            )
+            if (result.isNotOk() || result.data == null) {
+                logger.warn("[$projectId|$repositoryTypes] Fail to get the repository with message $result")
+            }
+            return result.data!!
+        } catch (t: Throwable) {
+            logger.warn("[$projectId|$repositoryTypes] Fail to get the repository", t)
             throw t
         }
     }

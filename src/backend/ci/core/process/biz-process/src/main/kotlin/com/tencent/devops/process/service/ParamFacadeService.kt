@@ -200,7 +200,7 @@ class ParamFacadeService @Autowired constructor(
         val options = if ((!userId.isNullOrBlank())) {
             // 检查代码库的权限， 只返回用户有权限代码库
             val hasPermissionCodelibs =
-                getPermissionCodelibList(userId, projectId, codelibFormProperty.scmType!!, aliasName)
+                getPermissionCodelibList(userId, projectId, codelibFormProperty.scmType!!.name, aliasName)
             logger.info("[$userId|$projectId] Get the permission code lib list ($hasPermissionCodelibs)")
             hasPermissionCodelibs.map { BuildFormValue(it.aliasName, it.aliasName) }
         } else {
@@ -351,16 +351,16 @@ class ParamFacadeService @Autowired constructor(
     private fun getPermissionCodelibList(
         userId: String,
         projectId: String,
-        scmType: ScmType?,
+        scmType: String?,
         aliasName: String? = null
     ): List<RepositoryInfo> {
-        val watcher = Watcher("getPermissionCodelibList_${userId}_${projectId}_${scmType?.name}")
+        val watcher = Watcher("getPermissionCodelibList_${userId}_${projectId}_$scmType")
         return try {
             client.get(ServiceRepositoryResource::class).hasPermissionList(
                 userId = userId,
                 projectId = projectId,
                 permission = Permission.LIST,
-                repositoryType = scmType?.name,
+                repositoryType = scmType,
                 page = 1,
                 pageSize = 100,
                 aliasName = aliasName
@@ -423,14 +423,26 @@ class ParamFacadeService @Autowired constructor(
         userId: String?,
         search: String? = null
     ): BuildFormProperty {
+        val repositoryTypes = listOf(
+            ScmType.CODE_GIT,
+            ScmType.GITHUB,
+            ScmType.CODE_SVN,
+            ScmType.CODE_TGIT,
+            ScmType.CODE_GITLAB
+        ).joinToString(separator = ",") { it.name }
         val codeLibOptions = if ((!userId.isNullOrBlank())) {
             // 检查代码库的权限， 只返回用户有权限代码库
-            val codeLibs = getPermissionCodelibList(userId, projectId, formProperty.scmType, search)
+            val codeLibs = getPermissionCodelibList(
+                userId = userId,
+                projectId = projectId,
+                scmType = repositoryTypes,
+                aliasName = search
+            )
             logger.info("[$userId|$projectId] Get the permission code lib list ($codeLibs)")
             codeLibs.map { BuildFormValue(it.aliasName, it.aliasName) }
         } else {
             // 该接口没有搜索字段
-            val codeAliasName = codeService.listRepository(projectId, formProperty.scmType!!)
+            val codeAliasName = codeService.listRepository(projectId, repositoryTypes)
             codeAliasName.map { BuildFormValue(it.aliasName, it.aliasName) }
         }
         val codeLibSearchUrl = getCodeLibSearchUrl(
@@ -465,12 +477,7 @@ class ParamFacadeService @Autowired constructor(
         ).copy(
             branchOptions = branchOptions,
             branchReplaceKey = replaceKey,
-            gitBranchSearchUrl = getGitBranchSearchUrl(
-                projectId = projectId,
-                repoHashId = repoHashIdReplaceKey,
-                repositoryType = RepositoryType.NAME
-            ),
-            svnBranchSearchUrl = getSvnBranchSearchUrl(
+            branchSearchUrl = getBranchSearchUrl(
                 projectId = projectId,
                 repoHashId = repoHashIdReplaceKey,
                 repositoryType = RepositoryType.NAME
@@ -496,11 +503,11 @@ class ParamFacadeService @Autowired constructor(
     ) = "/process/api/user/buildParam/$projectId/$repoHashId/gitRefs?search={words}&" +
             "repositoryType=${repositoryType.name}"
 
-    private fun getSvnBranchSearchUrl(
+    private fun getBranchSearchUrl(
         projectId: String,
         repoHashId: String,
         repositoryType: RepositoryType = RepositoryType.ID
-    ) = "/process/api/user/buildParam/$projectId/$repoHashId/svnRefs?search={words}&" +
+    ) = "/process/api/user/buildParam/$projectId/$repoHashId/refs?search={words}&" +
             "repositoryType=${repositoryType.name}"
 
     companion object {

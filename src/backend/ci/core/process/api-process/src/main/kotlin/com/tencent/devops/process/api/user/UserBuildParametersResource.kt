@@ -184,10 +184,10 @@ interface UserBuildParametersResource {
         search: String?
     ): Result<List<BuildFormValue>>
 
-    @Operation(summary = "构建表单查询svn分支")
+    @Operation(summary = "构建表单查询分支/Tag变量")
     @GET
-    @Path("/{projectId}/{repositoryId}/svnRefs")
-    fun listSvnRefs(
+    @Path("/{projectId}/{repositoryId}/refs")
+    fun listRepoRefs(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
