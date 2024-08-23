@@ -47,7 +47,7 @@ import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
-import javax.ws.rs.QueryParam
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_RESOURCE_GROUP", description = "用户态-iam用户组")
