@@ -48,7 +48,7 @@ class UserMessageConsumer @Autowired constructor(
         private val key = consumer.bufferKey()
 
         companion object {
-            const val SLEEP = 10000L
+            const val SLEEP = 5000L
             const val CHUNKED = 200
         }
 
@@ -58,8 +58,10 @@ class UserMessageConsumer @Autowired constructor(
                 val redisLock = RedisLock(consumer.redisHashOperation, lock, 60L)
                 try {
                     val lockSuccess = redisLock.tryLock()
+                    val massages = consumer.redisHashOperation.hkeys(key)?.ifEmpty { null } ?: return
+                    consumer.size = massages.size
                     if (lockSuccess) {
-                        execute()
+                        execute(massages)
                     }
                 } catch (e: Throwable) {
                     logger.error("UserMessageProcess failed ${e.message}", e)
@@ -70,9 +72,7 @@ class UserMessageConsumer @Autowired constructor(
             }
         }
 
-        private fun execute() {
-            val massages = consumer.redisHashOperation.hkeys(key)?.ifEmpty { null } ?: return
-            consumer.size = massages.size
+        private fun execute(massages: Set<String>) {
             val needDelete = mutableListOf<String>()
             massages.chunked(CHUNKED).forEach { keys ->
                 val updateValues = consumer.redisHashOperation.hmGet(key, keys)
