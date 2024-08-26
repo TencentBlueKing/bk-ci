@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.actions.data
 
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.stream.trigger.actions.data.context.StreamTriggerContext
 
@@ -42,10 +43,18 @@ data class ActionData(
 ) {
     // 需要根据各事件源的event去拿的通用数据，随event改变可能会不同
     lateinit var eventCommon: EventCommonData
+    lateinit var watcher: Watcher
 
     // Stream触发时需要的配置信息
     lateinit var setting: StreamTriggerSetting
     val isSettingInitialized get() = this::setting.isInitialized
+    val isWatcherInitialized get() = this::watcher.isInitialized
+
+    fun watcherStart(id: String) {
+        if (isWatcherInitialized) {
+            watcher.start(id)
+        }
+    }
 
     // 方便日志打印
     fun format() = "${event::class.qualifiedName}|$context|$eventCommon|$setting"
