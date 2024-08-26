@@ -65,6 +65,10 @@
             editingElementPos: {
                 type: Object,
                 required: true
+            },
+            properties: {
+                type: Array,
+                default: () => ['LOG', 'ARTIFACT', 'CONFIG']
             }
         },
         data () {
@@ -150,7 +154,12 @@
             },
 
             showTab () {
-                return this.tabList[1].completeLoading && this.tabList[2].completeLoading
+                const artifactoryTab = this.tabList.find(tab => tab.name === 'artifactory')
+                const reportTab = this.tabList.find(tab => tab.name === 'report')
+                if (artifactoryTab && reportTab) {
+                    return artifactoryTab.completeLoading && reportTab.completeLoading
+                }
+                return false
             }
         },
 
@@ -167,10 +176,24 @@
                 handler (val) {
                     const tab = val.find(tab => tab.name === this.currentTab)
                     if (!tab.show) {
-                        this.currentTab = 'log'
+                        this.currentTab = val[0].name
                     }
                 },
                 deep: true
+            },
+            properties: {
+                handler (newValue) {
+                    if (JSON.stringify(newValue) === JSON.stringify(['CONFIG', 'LOG', 'ARTIFACT'])) {
+                        this.tabList = [
+                            { name: 'setting', show: true },
+                            { name: 'log', show: true },
+                            { name: 'artifactory', show: false, completeLoading: false },
+                            { name: 'report', show: false, completeLoading: false }
+                        ]
+                        this.currentTab = 'setting'
+                    }
+                },
+                immediate: true
             }
         },
 
