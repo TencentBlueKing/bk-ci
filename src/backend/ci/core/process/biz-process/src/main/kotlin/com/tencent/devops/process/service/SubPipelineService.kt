@@ -5,7 +5,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
@@ -44,6 +43,7 @@ class SubPipelineService @Autowired constructor(
      * @param userId 目标用户id
      * @param permission 目标权限
      */
+    @SuppressWarnings("NestedBlockDepth")
     fun checkSubPipelinePermission(
         projectId: String,
         pipelineId: String,
@@ -84,6 +84,7 @@ class SubPipelineService @Autowired constructor(
      * @param userId 目标用户
      * @param permission 目标权限
      */
+    @SuppressWarnings("LongParameterList")
     fun checkElementPermission(
         projectId: String,
         stageName: String,
@@ -216,6 +217,7 @@ class SubPipelineService @Autowired constructor(
         )
     }
 
+    @SuppressWarnings("LongParameterList")
     private fun getSubPipelineInfo(
         projectId: String,
         subProjectId: String,
