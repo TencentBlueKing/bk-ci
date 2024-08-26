@@ -643,5 +643,24 @@ create table IF NOT EXISTS T_WORKSPACE_LABELS
 )
     comment '工作空间标签表' charset = utf8;
 
+-- ----------------------------
+-- Table structure for T_DISPATCH_WORKSPACE_OP_HIS
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS T_DISPATCH_WORKSPACE_OP_HIS
+(
+    ID              bigint auto_increment primary key,
+    WORKSPACE_NAME  varchar(128) default ''                not null comment '工作空间名称',
+    ENVIRONMENT_UID varchar(128) default ''                not null comment 'DevCloud环境ID',
+    OPERATOR        varchar(64)  default ''                not null comment '操作人',
+    ACTION          varchar(64)  default ''                not null comment '操作行为: CREATE, START, STOP, DELETE, SHARE',
+    ACTION_MSG      varchar(256) default ''                not null comment '操作行为描述',
+    CREATED_TIME    timestamp    default CURRENT_TIMESTAMP not null comment '创建时间',
+    UID             varchar(128) default ''                not null comment 'task id',
+    STATUS          varchar(32)  default ''                not null comment '操作状态',
+    UPDATE_TIME     timestamp    default CURRENT_TIMESTAMP null comment '修改时间',
+    KEY `uni_1` (`WORKSPACE_NAME`),
+    KEY `uni_2` (`UID`),
+    KEY `uni_3` (`STATUS`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='KUBERNETES构建集群工作空间操作记录表';
 
 SET FOREIGN_KEY_CHECKS = 1;
