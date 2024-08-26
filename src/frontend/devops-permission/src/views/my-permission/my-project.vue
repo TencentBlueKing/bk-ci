@@ -4,7 +4,7 @@ const urlPerfix = location.origin
 const baseUrl = `${urlPerfix}/manage/userManage`
 const route = useRoute();
 const projectCode = route?.params.projectCode || route?.query.projectCode || route?.query.project_code
-const iframeUrl = `${baseUrl}?projectCode=${projectCode}&disableSyncUrl=true`
+const iframeUrl = `${baseUrl}?projectCode=${projectCode}&disableSyncUrl=true&showSelectProject=true`
 </script>
 
 <template>
