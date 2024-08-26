@@ -90,13 +90,10 @@ class AppBuildService @Autowired constructor(
             pageSize = null,
             searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId))
         ).data
-//        val packageVersion = StringBuilder()
-//        files?.records?.forEach {
-//            val singlePackageVersion =
-//                client.get(ServiceArtifactoryResource::class).show(userId, projectId, it.artifactoryType, it.path)
-//                    .data?.meta?.get(ARCHIVE_PROPS_APP_VERSION)?.toString()
-//            if (!singlePackageVersion.isNullOrBlank()) packageVersion.append(singlePackageVersion).append(";")
-//        }
+        val packageVersion = StringBuilder()
+        files?.records?.filterNot { it.appVersion.isNullOrBlank() }?.forEach {
+            packageVersion.append(it.appVersion).append(";")
+        }
         logger.info("Query the number and version of the file: ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
 
@@ -120,7 +117,7 @@ class AppBuildService @Autowired constructor(
             buildNum = modelDetail.buildNum,
             cancelUserId = modelDetail.cancelUserId,
             fileCount = files?.records?.size ?: 0,
-            packageVersion = "", // TODO 废弃字段?
+            packageVersion = packageVersion.toString(),
             pipelineId = pipelineId,
             pipelineVersion = version,
             pipelineName = name,
