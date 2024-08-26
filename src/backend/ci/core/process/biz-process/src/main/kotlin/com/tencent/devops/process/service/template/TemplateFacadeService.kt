@@ -2114,6 +2114,7 @@ class TemplateFacadeService @Autowired constructor(
                     /**
                      * 1. 比较类型， 如果类型变了就直接用模板
                      * 2. 如果类型相同，下拉选项替换成模板的（要保存用户之前的默认值）
+                     * 3. 如果模版由常量改成变量,则流水线常量也应该改成变量
                      */
                     if (pipeline.type != template.type) {
                         result.add(template)
@@ -2121,6 +2122,7 @@ class TemplateFacadeService @Autowired constructor(
                         pipeline.options = template.options
                         pipeline.required = template.required
                         pipeline.desc = template.desc
+                        pipeline.constant = template.constant
                         result.add(pipeline)
                     }
                     return@outside
