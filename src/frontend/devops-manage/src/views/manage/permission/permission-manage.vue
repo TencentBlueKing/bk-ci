@@ -826,7 +826,7 @@ function handleChangeName ({ list }) {
     padding: 10px 0;
     .failed-item {
       line-height: 20px;
-      white-space: pre-wrap
+      text-wrap: wrap;
     }
     .failed-msg {
       a {
