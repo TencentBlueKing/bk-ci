@@ -11,6 +11,7 @@
           :scroll-loading="scrollLoading"
           :remote-method="handleSearchProject"
           @change="handleSelectProject"
+          :popoverOptions="popoverOptions"
         >
           <div v-for="(project, index) in filterProjectList"
             :key="index">
@@ -239,7 +240,10 @@ export default {
       projectList: [],
       searchProjectKey: '',
       curProjectCode: this.projectCode,
-      fetchGroupLoading: false
+      fetchGroupLoading: false,
+      popoverOptions: {
+        zIndex: 2000
+      }
     };
   },
   computed: {
