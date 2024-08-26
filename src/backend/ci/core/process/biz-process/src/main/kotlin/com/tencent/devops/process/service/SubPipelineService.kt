@@ -63,7 +63,7 @@ class SubPipelineService @Autowired constructor(
                     if (supportElement(element)) {
                         checkElementPermission(
                             projectId = projectId,
-                            stageName = stage.name?:"",
+                            stageName = stage.name ?: "",
                             containerName = container.name,
                             element = element,
                             contextMap = contextMap,
