@@ -2,9 +2,9 @@
   <bk-popover
     theme="light"
     :width="900"
-    :placement="placement"
     extCls="dialect-popover"
     :componentEventDelay="300"
+    autoPlacement
   >
     <label class="label">{{ t('变量语法风格') }}</label>
     <template #content>
@@ -45,12 +45,6 @@
 <script setup name="DialectPopoverTable">
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
-defineProps({
-  placement: {
-    type: String,
-    default: 'top-start'
-  }
-})
 const namingConventionData = [
     {
         difference: t('表达式格式'),
