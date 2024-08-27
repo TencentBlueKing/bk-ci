@@ -35,7 +35,8 @@ class ServiceRemoteDevResourceImplTest {
         restartWorkspaceHandler = mockk(),
         makeWorkspaceImageHandler = mockk(),
         bkConfig = bkConfig,
-        tGitService = mockk()
+        tGitService = mockk(),
+        workspaceRecordService = mockk()
     )
 
     @Test
