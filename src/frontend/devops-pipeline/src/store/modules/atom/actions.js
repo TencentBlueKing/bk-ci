@@ -217,7 +217,10 @@ export default {
                 })
             }
 
-            commit(PIPELINE_SETTING_MUTATION, setting)
+            commit(PIPELINE_SETTING_MUTATION, Object.assign(setting, {
+                versionUpdater: pipelineRes.data.updater,
+                versionUpdateTime: pipelineRes.data.updateTime
+            }))
             if (!pipelineRes.data.yamlSupported) {
                 rootCommit(commit, UPDATE_PIPELINE_MODE, UI_MODE)
             }
