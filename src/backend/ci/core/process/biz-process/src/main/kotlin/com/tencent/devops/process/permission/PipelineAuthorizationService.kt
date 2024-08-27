@@ -74,10 +74,10 @@ class PipelineAuthorizationService constructor(
                     )
                     val failMsg = checkSubPipelinePermission.map {
                         it.errorMessage
-                    }.joinToString("\n")
+                    }.joinToString(FAIL_MESSAGE_SEPARATOR)
                     ResourceAuthorizationHandoverResult(
                         status = ResourceAuthorizationHandoverStatus.FAILED,
-                        message = "$failTitle\n$failMsg"
+                        message = "$failTitle$FAIL_MESSAGE_SEPARATOR$failMsg"
                     )
                 }
 
@@ -97,5 +97,6 @@ class PipelineAuthorizationService constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineAuthorizationService::class.java)
+        const val FAIL_MESSAGE_SEPARATOR = "<br/>"
     }
 }
