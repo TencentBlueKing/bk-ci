@@ -515,6 +515,24 @@ interface ServiceRemoteDevResource {
         data: OperateCvmData
     ): Result<Boolean>
 
+    @Operation(summary = "开启或关闭工作空间录屏")
+    @PUT
+    @Path("/enable_workspace_record")
+    fun enableWorkspaceRecord(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "开启或关闭录屏", required = true)
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
+
     @Operation(summary = "检查是否开启录屏并获取推流地址")
     @GET
     @Path("/check_workspace_record_enable_address")

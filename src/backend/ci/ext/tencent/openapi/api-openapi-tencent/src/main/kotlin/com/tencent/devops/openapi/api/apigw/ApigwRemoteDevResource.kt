@@ -557,6 +557,24 @@ interface ApigwRemoteDevResource {
         data: OperateCvmData
     ): Result<Boolean>
 
+    @Operation(summary = "开启或关闭工作空间录屏", tags = ["v4_app_enable_workspace_record"])
+    @PUT
+    @Path("/enable_workspace_record")
+    fun enableWorkspaceRecord(
+        @Parameter(description = "用户ID", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "开启或关闭录屏", required = true)
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
+
     @Operation(summary = "检查是否开启录屏并获取推流地址", tags = ["v4_app_check_workspace_record_enable_address"])
     @GET
     @Path("/check_workspace_record_enable_address")

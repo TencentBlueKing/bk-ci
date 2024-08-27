@@ -51,7 +51,6 @@ import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -323,23 +322,5 @@ interface UserProjectWorkspaceResource {
         workspaceName: String,
         @Parameter(description = "请求报文", required = true)
         upgradeReq: WorkspaceUpgradeReq
-    ): Result<Boolean>
-
-    @Operation(summary = "开启或关闭工作空间录屏")
-    @PUT
-    @Path("/workspace/{workspaceName}/enable_workspace_record")
-    fun enableWorkspaceRecord(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "projectId", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "工作空间名称", required = true)
-        @PathParam("workspaceName")
-        workspaceName: String,
-        @Parameter(description = "开启或关闭录屏", required = true)
-        @QueryParam("enable")
-        enable: Boolean
     ): Result<Boolean>
 }

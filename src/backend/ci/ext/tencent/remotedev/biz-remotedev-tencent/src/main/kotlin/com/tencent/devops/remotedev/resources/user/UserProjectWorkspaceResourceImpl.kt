@@ -257,22 +257,4 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         upgradeWorkspaceHandler.upgradeWorkspace(userId, projectId, workspaceName, upgradeReq)
         return Result(true)
     }
-
-    override fun enableWorkspaceRecord(
-        userId: String,
-        projectId: String,
-        workspaceName: String,
-        enable: Boolean
-    ): Result<Boolean> {
-        permissionService.checkUserManager(userId, projectId)
-        workspaceRecordService.enableRecord(
-            workspaceName = workspaceName,
-            enableUser = if (enable) {
-                userId
-            } else {
-                null
-            }
-        )
-        return Result(true)
-    }
 }

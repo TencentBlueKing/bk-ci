@@ -388,12 +388,31 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).opCvm(data)
     }
 
+    override fun enableWorkspaceRecord(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info("enableWorkspaceRecord |$userId|$projectId|$workspaceName|$enable")
+        return client.get(ServiceRemoteDevResource::class).enableWorkspaceRecord(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            enable = enable
+        )
+    }
+
     override fun checkWorkspaceEnableAddress(
         userId: String,
         appId: Long,
         ip: String
     ): Result<CheckWorkspaceRecordData> {
         logger.info("checkWorkspaceEnableAddress |$userId|$appId|$ip")
-        return client.get(ServiceRemoteDevResource::class).checkWorkspaceEnableAddress(userId, appId, ip)
+        return client.get(ServiceRemoteDevResource::class).checkWorkspaceEnableAddress(
+            userId = userId,
+            appId = appId,
+            ip = ip
+        )
     }
 }

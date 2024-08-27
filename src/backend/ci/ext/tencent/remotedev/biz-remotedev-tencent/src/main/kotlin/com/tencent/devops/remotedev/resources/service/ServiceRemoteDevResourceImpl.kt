@@ -699,6 +699,24 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
+    override fun enableWorkspaceRecord(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        permissionService.checkUserProjectManager(userId, projectId)
+        workspaceRecordService.enableRecord(
+            workspaceName = workspaceName,
+            enableUser = if (enable) {
+                userId
+            } else {
+                null
+            }
+        )
+        return Result(true)
+    }
+
     override fun checkWorkspaceEnableAddress(
         userId: String,
         appId: Long,
