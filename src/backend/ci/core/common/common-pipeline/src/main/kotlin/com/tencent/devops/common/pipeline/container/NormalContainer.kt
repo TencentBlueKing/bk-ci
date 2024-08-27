@@ -139,7 +139,7 @@ data class NormalContainer(
     }
 
     override fun setContainerEnable(enable: Boolean) {
-        jobControlOption = jobControlOption?.copy(enable = false) ?: JobControlOption(false)
+        jobControlOption = jobControlOption?.copy(enable = enable) ?: JobControlOption(enable)
     }
 
     override fun transformCompatibility() {
