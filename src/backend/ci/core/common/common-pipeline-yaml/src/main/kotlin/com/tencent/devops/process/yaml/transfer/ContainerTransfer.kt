@@ -282,6 +282,10 @@ class ContainerTransfer @Autowired(required = false) constructor(
                     arrayOf("envId: $poolName")
                 )
             }
+            JobRunsOnPoolType.AGENT_REUSE_JOB.name -> {
+                nodeName = null
+                poolName = null
+            }
         }
 
         /*修正docker配额数据*/

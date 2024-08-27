@@ -161,6 +161,8 @@ data class RunsOn(
     var hwSpec: String? = null,
     @JsonProperty("node-name")
     var nodeName: String? = null,
+    @JsonProperty("lock-resource-with")
+    val lockResourceWith: String? = null,
     @JsonIgnore
     val poolType: String? = null,
     val container: Any? = null,
@@ -178,7 +180,7 @@ data class RunsOn(
     var envProjectId: String? = null
 ) {
     fun checkLinux() = poolName == "docker" || (
-        poolName == null && nodeName == null
+        poolName == null && nodeName == null && lockResourceWith == null
         )
 }
 
@@ -204,7 +206,8 @@ enum class JobRunsOnPoolType {
     ENV_NAME,
     ENV_ID,
     AGENT_ID,
-    AGENT_NAME
+    AGENT_NAME,
+    AGENT_REUSE_JOB // 构建资源锁定
 }
 
 data class Mutex(

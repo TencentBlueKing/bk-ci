@@ -1891,6 +1891,9 @@
                   "pool-name" : {
                     "type" : "string"
                   },
+                  "lock-resource-with" : {
+                    "type" : "string"
+                  },
                   "hw-spec" : {
                     "type" : "string"
                   },
@@ -2323,6 +2326,9 @@
                     "type" : "boolean"
                   },
                   "pool-name" : {
+                    "type" : "string"
+                  },
+                  "lock-resource-with" : {
                     "type" : "string"
                   },
                   "hw-spec" : {

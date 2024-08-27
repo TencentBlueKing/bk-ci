@@ -161,6 +161,7 @@ class DispatchTransfer @Autowired(required = false) constructor(
                         workspace = workspace,
                         agentName = nodeName,
                         dockerInfo = getDockerInfo(job, buildTemplateAcrossInfo),
+                        lockResourceWith = lockResourceWith,
                         envProjectId = envProjectId
                     )
                 }
