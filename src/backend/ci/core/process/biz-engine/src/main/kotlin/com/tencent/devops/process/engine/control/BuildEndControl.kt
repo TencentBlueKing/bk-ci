@@ -136,15 +136,12 @@ class BuildEndControl @Autowired constructor(
                     buildIdLock.unlock()
                 }
 
-                val buildStartLock = PipelineBuildStartLock(redisOperation, pipelineId)
-                try {
-                    watcher.start("PipelineBuildStartLock")
-                    buildStartLock.lock()
-                    watcher.start("popNextBuild")
-                    popNextBuild(buildInfo)
-                    watcher.stop()
-                } finally {
-                    buildStartLock.unlock()
+                PipelineBuildStartLock(redisOperation, pipelineId).use { buildStartLock ->
+                    watcher.start("buildStartLock")
+                    if (buildStartLock.tryLock()) {
+                        watcher.start("popNextBuild")
+                        popNextBuild(buildInfo)
+                    }
                 }
             }
         } finally {
