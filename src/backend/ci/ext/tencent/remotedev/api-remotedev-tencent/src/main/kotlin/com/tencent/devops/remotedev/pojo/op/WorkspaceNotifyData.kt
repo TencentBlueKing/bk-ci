@@ -29,7 +29,7 @@ data class WorkspaceDesktopNotifyData(
     )
     val data: String = "",
     @Parameter(description = "消息模板，邮件通知和企微通知时必填", required = false)
-    val notifyTemplateCode: String = "",
+    val notifyTemplateCode: String = "DESKTOP_APP_NOTIFY",
     @Parameter(description = "消息开始时间", required = true)
     val messageStartTime: Long,
     @Parameter(description = "消息结束时间", required = true)
