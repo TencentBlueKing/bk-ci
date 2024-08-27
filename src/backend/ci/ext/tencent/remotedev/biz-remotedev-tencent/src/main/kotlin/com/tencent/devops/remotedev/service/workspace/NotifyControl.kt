@@ -597,7 +597,7 @@ class NotifyControl @Autowired constructor(
                 projectId = projectId,
                 userId = user,
                 redisOperation = redisOperation,
-                page = WorkspacePageBuild.buildPage(workspaceName)
+                page = WorkspacePageBuild.buildPage(user)
             )
             saveResult(push.findSession().isNotEmpty())
             webSocketDispatcher.dispatch(
