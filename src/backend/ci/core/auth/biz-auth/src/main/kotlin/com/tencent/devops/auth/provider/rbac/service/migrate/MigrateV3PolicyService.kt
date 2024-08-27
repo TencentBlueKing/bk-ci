@@ -44,7 +44,7 @@ import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
 import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.jooq.DSLContext
@@ -76,7 +76,7 @@ class MigrateV3PolicyService constructor(
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
     private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
-    private val groupService: PermissionResourceGroupService
+    private val permissionResourceMemberService: PermissionResourceMemberService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
     iamConfiguration = iamConfiguration,
@@ -88,24 +88,32 @@ class MigrateV3PolicyService constructor(
     permissionService = permissionService,
     rbacCacheService = rbacCacheService,
     deptService = deptService,
-    permissionGroupPoliciesService = permissionGroupPoliciesService
+    permissionGroupPoliciesService = permissionGroupPoliciesService,
+    permissionResourceMemberService = permissionResourceMemberService
 ) {
 
     companion object {
         // 项目视图管理
         private const val PROJECT_VIEWS_MANAGER = "project_views_manager"
+
         // 项目查看权限
         private const val PROJECT_VIEW = "project_view"
+
         // 项目访问权限
         private const val PROJECT_VISIT = "project_visit"
+
         // v3项目禁用启用
         private const val PROJECT_DELETE = "project_delete"
+
         // rbac项目禁用启用
         private const val PROJECT_ENABLE = "project_enable"
+
         // v3质量红线启用,rbac没有
         private const val QUALITY_GROUP_ENABLE = "quality_group_enable"
+
         // 流水线查看权限,v3没有pipeline_list权限,迁移至rbac需要添加
         private const val PIPELINE_VIEW = "pipeline_view"
+
         // 项目访问权限
         private const val PIPELINE_LIST = "pipeline_list"
 
@@ -149,6 +157,7 @@ class MigrateV3PolicyService constructor(
         val rbacAuthorizationScopes = mutableListOf<AuthorizationScopes>()
         result.permissions.forEach permission@{ permission ->
             val (isManager, rbacActions) = buildRbacActions(
+                projectCode = projectCode,
                 managerGroupId = managerGroupId,
                 permission = permission,
                 members = result.members
@@ -174,6 +183,7 @@ class MigrateV3PolicyService constructor(
     }
 
     private fun buildRbacActions(
+        projectCode: String,
         managerGroupId: Int,
         permission: AuthorizationScopes,
         members: List<RoleGroupMemberInfo>?
@@ -184,7 +194,12 @@ class MigrateV3PolicyService constructor(
                 // 如果包含all_action,则直接添加到管理员组
                 Constants.ALL_ACTION -> {
                     logger.info("match all_action,member add to manager group $managerGroupId")
-                    batchAddGroupMember(groupId = managerGroupId, defaultGroup = true, members = members)
+                    batchAddGroupMember(
+                        projectCode = projectCode,
+                        groupId = managerGroupId,
+                        defaultGroup = true,
+                        members = members
+                    )
                     return Pair(true, emptyList())
                 }
                 PROJECT_VIEWS_MANAGER, PROJECT_DELETE, QUALITY_GROUP_ENABLE -> {
@@ -369,6 +384,7 @@ class MigrateV3PolicyService constructor(
     }
 
     override fun batchAddGroupMember(
+        projectCode: String,
         groupId: Int,
         defaultGroup: Boolean,
         members: List<RoleGroupMemberInfo>?,
@@ -383,11 +399,12 @@ class MigrateV3PolicyService constructor(
             } else {
                 member.expiredAt
             }
-            groupService.addGroupMember(
-                userId = member.id,
+            permissionResourceMemberService.addGroupMember(
+                projectCode = projectCode,
+                memberId = member.id,
                 memberType = member.type,
                 expiredAt = expiredAt,
-                groupId = groupId
+                iamGroupId = groupId
             )
         }
     }

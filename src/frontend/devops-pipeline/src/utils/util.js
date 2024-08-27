@@ -869,3 +869,49 @@ export function flatSearchKey (searchKey) {
         return searchMap
     }, {})
 }
+
+export function parseErrorMsg (msg) {
+    try {
+        return JSON.parse(msg)
+    } catch (e) {
+        return {
+            message: msg
+        }
+    }
+}
+
+export function showPipelineCheckMsg (showTooltips, message, h) {
+    const errorInfo = parseErrorMsg(message)
+    showTooltips({
+        theme: 'error',
+        delay: 0,
+        ellipsisLine: 0,
+        message: h('div', {
+            class: 'pipeline-save-error-list-box'
+        }, errorInfo.errors.map(item => h('div', {
+            class: 'pipeline-save-error-list-item'
+        }, [
+            h('p', {}, item.errorTitle),
+            h('ul', {
+                class: 'pipeline-save-error-list'
+            }, item.errorDetails.map(err => h('li', {
+                domProps: {
+                    innerHTML: err
+                }
+            })))
+        ])))
+    })
+}
+
+export async function copyToClipboard (text) {
+    if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+    } else {
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand('Copy')
+        document.body.removeChild(textArea)
+    }
+}

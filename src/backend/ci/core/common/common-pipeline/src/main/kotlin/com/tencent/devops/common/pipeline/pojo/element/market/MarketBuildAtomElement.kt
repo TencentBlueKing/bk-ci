@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.market
 
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
@@ -48,6 +49,8 @@ data class MarketBuildAtomElement(
     override var version: String = "1.*",
     @get:Schema(title = "用户自定义ID", required = false)
     override var stepId: String? = null,
+    @get:Schema(title = "用户自定义环境变量（插件运行时写入环境）", required = false)
+    override var customEnv: List<NameAndValue>? = null,
     @get:Schema(title = "插件参数数据", required = true)
     val data: Map<String, Any> = mapOf(),
     @get:Schema(title = "附加参数", required = false)

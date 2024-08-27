@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -51,6 +50,7 @@ import com.tencent.devops.common.pipeline.event.SimpleModel
 import com.tencent.devops.common.pipeline.event.SimpleStage
 import com.tencent.devops.common.pipeline.event.SimpleTask
 import com.tencent.devops.common.pipeline.event.StreamEnabledEvent
+import com.tencent.devops.common.pipeline.utils.EventUtils.toEventType
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.util.HttpRetryUtils
@@ -212,31 +212,10 @@ class CallBackControl @Autowired constructor(
         val projectId = event.projectId
         val pipelineId = event.pipelineId
         val buildId = event.buildId
-
-        val callBackEvent =
-            if (event.taskId.isNullOrBlank()) {
-                if (event.stageId.isNullOrBlank()) {
-                    if (event.actionType == ActionType.START) {
-                        CallBackEvent.BUILD_START
-                    } else {
-                        CallBackEvent.BUILD_END
-                    }
-                } else {
-                    if (event.actionType == ActionType.START) {
-                        CallBackEvent.BUILD_STAGE_START
-                    } else {
-                        CallBackEvent.BUILD_STAGE_END
-                    }
-                }
-            } else {
-                if (event.actionType == ActionType.START) {
-                    CallBackEvent.BUILD_TASK_START
-                } else if (event.actionType == ActionType.REFRESH) {
-                    CallBackEvent.BUILD_TASK_PAUSE
-                } else {
-                    CallBackEvent.BUILD_TASK_END
-                }
-            }
+        if (event.atomCode != null && VmOperateTaskGenerator.isVmAtom(event.atomCode!!)) {
+            return
+        }
+        val callBackEvent = event.toEventType() ?: return
 
         logger.info("$projectId|$pipelineId|$buildId|${callBackEvent.name}|${event.stageId}|${event.taskId}|callback")
         val list = mutableListOf<ProjectPipelineCallBack>()
@@ -278,7 +257,8 @@ class CallBackControl @Autowired constructor(
             trigger = modelDetail.trigger,
             stageId = event.stageId,
             taskId = event.taskId,
-            buildNo = modelDetail.buildNum
+            buildNo = modelDetail.buildNum,
+            debug = modelDetail.debug
         )
         sendToCallBack(CallBackData(event = callBackEvent, data = buildEvent), list)
     }
@@ -291,9 +271,11 @@ class CallBackControl @Autowired constructor(
                 is PipelineEvent -> {
                     data.pipelineId
                 }
+
                 is BuildEvent -> {
                     data.buildId
                 }
+
                 else -> ""
             }
             val watcher = Watcher(id = "${it.projectId}|${it.callBackUrl}|${it.events}|$uniqueId")

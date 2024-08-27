@@ -38,9 +38,11 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
@@ -65,6 +67,7 @@ import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.KEY_JOB
 import com.tencent.devops.process.utils.KEY_STAGE
 import com.tencent.devops.process.utils.KEY_TASK
+import com.tencent.devops.process.utils.PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -73,6 +76,7 @@ import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.version.StoreVersion
 import org.slf4j.LoggerFactory
 
+@Suppress("ComplexMethod", "ComplexCondition")
 open class DefaultModelCheckPlugin constructor(
     open val client: Client,
     open val pipelineCommonSettingConfig: PipelineCommonSettingConfig,
@@ -81,7 +85,12 @@ open class DefaultModelCheckPlugin constructor(
     open val taskCommonSettingConfig: TaskCommonSettingConfig
 ) : ModelCheckPlugin {
 
-    override fun checkModelIntegrity(model: Model, projectId: String?, userId: String): Int {
+    override fun checkModelIntegrity(
+        model: Model,
+        projectId: String?,
+        userId: String,
+        isTemplate: Boolean
+    ): Int {
         var metaSize = 0
         // 检查流水线名称
         PipelineUtils.checkPipelineName(
@@ -144,6 +153,17 @@ open class DefaultModelCheckPlugin constructor(
 
             // #4531 检查stage审核组配置是否符合要求
             stage.checkStageReviewers()
+            val stageControlOption = stage.stageControlOption
+            if (stageControlOption?.runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
+                val length = stageControlOption.customCondition?.length ?: 0
+                if (length > PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX) throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_CONDITION_EXPRESSION_TOO_LONG,
+                    params = arrayOf(
+                        stage.name ?: stage.id.toString(),
+                        PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX.toString()
+                    )
+                )
+            }
 
             val atomVersions = mutableSetOf<StoreVersion>()
             val atomInputParamList = mutableListOf<StoreParam>()
@@ -156,7 +176,8 @@ open class DefaultModelCheckPlugin constructor(
                 atomVersions = atomVersions,
                 contextMap = contextMap,
                 atomInputParamList = atomInputParamList,
-                elementCheckResults = elementCheckResults
+                elementCheckResults = elementCheckResults,
+                isTemplate = isTemplate
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
                 AtomUtils.checkModelAtoms(
@@ -232,7 +253,8 @@ open class DefaultModelCheckPlugin constructor(
         atomVersions: MutableSet<StoreVersion>,
         contextMap: Map<String, String>,
         atomInputParamList: MutableList<StoreParam>,
-        elementCheckResults: MutableList<ElementCheckResult>
+        elementCheckResults: MutableList<ElementCheckResult>,
+        isTemplate: Boolean
     ): Int /* MetaSize*/ {
         var metaSize = 0
         containers.forEach { container ->
@@ -258,6 +280,18 @@ open class DefaultModelCheckPlugin constructor(
                     errorCode = ProcessMessageCode.ERROR_EMPTY_JOB, params = arrayOf(name!!, container.name)
                 )
             )
+
+            // 检查 jobId 不超过 128 位，以及使用了包含jobId功能的不能为空
+            if (!container.jobId.isNullOrBlank() && container.jobId!!.length > 128) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_ID_FORMAT,
+                    params = arrayOf((container.id ?: ""), "128")
+                )
+            }
+            if (container is VMBuildContainer) {
+                checkJobControlNodeConcurrency(container)
+            }
+
             container.elements.forEach { e ->
                 container.checkElement(
                     projectId = projectId,
@@ -268,7 +302,8 @@ open class DefaultModelCheckPlugin constructor(
                     atomVersions = atomVersions,
                     atomInputParamList = atomInputParamList,
                     contextMap = contextMap,
-                    elementCheckResults = elementCheckResults
+                    elementCheckResults = elementCheckResults,
+                    isTemplate = isTemplate
                 )
             }
         }
@@ -284,7 +319,8 @@ open class DefaultModelCheckPlugin constructor(
         atomVersions: MutableSet<StoreVersion>,
         atomInputParamList: MutableList<StoreParam>,
         contextMap: Map<String, String>,
-        elementCheckResults: MutableList<ElementCheckResult>
+        elementCheckResults: MutableList<ElementCheckResult>,
+        isTemplate: Boolean
     ) {
         val eCnt = elementCnt.computeIfPresent(element.getAtomCode()) { _, oldValue -> oldValue + 1 }
             ?: elementCnt.computeIfAbsent(element.getAtomCode()) { 1 } // 第一次时出现1次
@@ -295,7 +331,8 @@ open class DefaultModelCheckPlugin constructor(
             container = this,
             element = element,
             contextMap = contextMap,
-            appearedCnt = eCnt
+            appearedCnt = eCnt,
+            isTemplate = isTemplate
         )
         if (elementCheckResult?.result == false) {
             elementCheckResults.add(elementCheckResult)
@@ -303,9 +340,26 @@ open class DefaultModelCheckPlugin constructor(
         addAtomInputDataInfo(element, atomVersions, atomInputParamList)
 
         checkElementTimeoutVar(container = this, element = element, contextMap = contextMap)
+
+        val elementControlOption = element.additionalOptions
+        if (elementControlOption?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH) {
+            val length = elementControlOption.customCondition?.length ?: 0
+            if (length > PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX) throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_CONDITION_EXPRESSION_TOO_LONG,
+                params = arrayOf(element.name, PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX.toString())
+            )
+        }
     }
 
     override fun checkElementTimeoutVar(container: Container, element: Element, contextMap: Map<String, String>) {
+        // 保存时将旧customEnv赋值给新的上一级customEnv
+        val oldCustomEnv = element.additionalOptions?.customEnv?.filter {
+            !(it.key == "param1" && it.value == "")
+        }
+        if (!oldCustomEnv.isNullOrEmpty()) {
+            element.customEnv = (element.customEnv ?: emptyList()).plus(oldCustomEnv)
+        }
+        element.additionalOptions?.customEnv = null
         if (!element.additionalOptions?.timeoutVar.isNullOrBlank()) {
             val obj = Timeout.decTimeout(timeoutVar = element.additionalOptions?.timeoutVar, contextMap = contextMap)
             if (obj.change && obj.replaceByVar) {
@@ -525,6 +579,14 @@ open class DefaultModelCheckPlugin constructor(
             return
         }
 
+        if (jobControlOption.runCondition == JobRunCondition.CUSTOM_CONDITION_MATCH) {
+            val length = jobControlOption.customCondition?.length ?: 0
+            if (length > PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX) throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_CONDITION_EXPRESSION_TOO_LONG,
+                params = arrayOf(container.name, PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX.toString())
+            )
+        }
+
         // 非finallyStage下不允许有finallyStageJobRunConditionSet下的条件
         if (finallyStage) {
             if (!finallyStageJobRunConditionSet.contains(jobControlOption.runCondition)) {
@@ -567,6 +629,28 @@ open class DefaultModelCheckPlugin constructor(
                 logger.info(
                     "BKSystemMonitor|[${contextMap[PROJECT_NAME]}]|[${contextMap[PIPELINE_ID]}]" +
                             "|bad timeout: ${obj.beforeChangeStr}"
+                )
+            }
+        }
+    }
+
+    private fun checkJobControlNodeConcurrency(container: VMBuildContainer) {
+        val c = container.jobControlOption ?: return
+        if (c.allNodeConcurrency != null || c.singleNodeConcurrency != null) {
+            if (container.jobId.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_ID_FORMAT,
+                    params = arrayOf((container.id ?: ""), "128")
+                )
+            }
+            if ((c.allNodeConcurrency != null &&
+                        (c.allNodeConcurrency!! <= 0 || c.allNodeConcurrency!! > 1000)) ||
+                (c.singleNodeConcurrency != null &&
+                        (c.singleNodeConcurrency!! <= 0 || c.singleNodeConcurrency!! > 1000))
+            ) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_CONTROL_NODECURR,
+                    params = arrayOf(container.id ?: "")
                 )
             }
         }

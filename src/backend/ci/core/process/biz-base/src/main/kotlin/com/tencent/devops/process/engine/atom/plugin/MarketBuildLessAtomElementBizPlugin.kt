@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import org.springframework.beans.factory.annotation.Autowired
 
 @ElementBiz
@@ -54,7 +55,8 @@ class MarketBuildLessAtomElementBizPlugin @Autowired constructor(
         userId: String,
         channelCode: ChannelCode,
         create: Boolean,
-        container: Container
+        container: Container,
+        yamlInfo: PipelineYamlVo?
     ) = Unit
 
     override fun beforeDelete(element: MarketBuildLessAtomElement, param: BeforeDeleteParam) {
@@ -69,7 +71,8 @@ class MarketBuildLessAtomElementBizPlugin @Autowired constructor(
         container: Container,
         element: MarketBuildLessAtomElement,
         contextMap: Map<String, String>,
-        appearedCnt: Int
+        appearedCnt: Int,
+        isTemplate: Boolean
     ): ElementCheckResult {
         return elementBizPluginServices.find {
             it.supportElement(element)
@@ -80,7 +83,8 @@ class MarketBuildLessAtomElementBizPlugin @Autowired constructor(
             container = container,
             element = element,
             contextMap = contextMap,
-            appearedCnt = appearedCnt
+            appearedCnt = appearedCnt,
+            isTemplate = isTemplate
         ) ?: ElementCheckResult(true)
     }
 }

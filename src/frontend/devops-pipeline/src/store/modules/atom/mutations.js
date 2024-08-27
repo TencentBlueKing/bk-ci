@@ -39,14 +39,17 @@ import {
     INSERT_ATOM,
     PIPELINE_SETTING_MUTATION,
     PROPERTY_PANEL_VISIBLE,
+    RESET_ATOM_MODAL_MAP,
     RESET_PIPELINE_SETTING_MUNTATION,
     SELECT_PIPELINE_VERSION,
     SET_ATOMS,
     SET_ATOMS_CLASSIFY,
+    SET_ATOM_EDITING,
     SET_ATOM_MODAL,
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
+    SET_ATOMS_OUTPUT_MAP,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
@@ -84,8 +87,7 @@ import {
     UPDATE_PIPELINE_INFO,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
-    UPDATE_WHOLE_ATOM_INPUT,
-    SET_ATOM_EDITING
+    UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 
 export default {
@@ -208,6 +210,12 @@ export default {
         })
         return state
     },
+    [SET_ATOMS_OUTPUT_MAP]: (state, atomsOutputMap) => {
+        Object.assign(state, {
+            atomsOutputMap
+        })
+        return state
+    },
     [SET_ATOM_MODAL_FETCHING]: (state, fetchingAtmoModal) => {
         Object.assign(state, {
             fetchingAtmoModal
@@ -220,6 +228,10 @@ export default {
             ...state.atomModalMap,
             [key]: atomModal
         })
+        return state
+    },
+    [RESET_ATOM_MODAL_MAP]: (state) => {
+        Vue.set(state, 'atomModalMap', {})
         return state
     },
     [SET_CONTAINER_FETCHING]: (state, { fetchingContainer }) => {
@@ -269,7 +281,8 @@ export default {
                     ? {
                         pauseBeforeExec: true
                     }
-                    : {}
+                    : {
+                    }
             }
         } else {
             const diffRes = diffAtomVersions(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)
@@ -348,7 +361,16 @@ export default {
             containers: [],
             checkIn: { timeout: 24 },
             checkOut: { timeout: 24 },
-            finally: insertStageIsFinally === true || undefined
+            finally: insertStageIsFinally === true || undefined,
+            stageControlOption: {
+                enable: true,
+                runCondition: 'AFTER_LAST_FINISHED',
+                customCondition: '',
+                customVariables: [{ key: 'param1', value: '' }],
+                manualTrigger: false,
+                triggerUsers: [],
+                timeout: 24
+            }
         })
         return state
     },

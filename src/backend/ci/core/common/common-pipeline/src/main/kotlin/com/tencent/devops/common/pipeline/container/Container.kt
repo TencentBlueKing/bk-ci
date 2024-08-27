@@ -58,7 +58,7 @@ interface Container : IModelTemplate {
     var containerHashId: String? // container 全局唯一ID
     var startVMStatus: String?
     var executeCount: Int?
-    val jobId: String? // 用户自定义id
+    var jobId: String? // 用户自定义id
     var containPostTaskFlag: Boolean? // 是否包含post任务
     val matrixGroupFlag: Boolean? // 是否为构建矩阵组
     var timeCost: BuildRecordTimeCost? // 耗时结果

@@ -59,7 +59,7 @@ class MigrateV3PolicyServiceTest : AbMigratePolicyServiceTest() {
             authMigrationDao = authMigrationDao,
             deptService = deptService,
             permissionGroupPoliciesService = permissionGroupPoliciesService,
-            groupService = groupService
+            permissionResourceMemberService = permissionResourceMemberService
         ),
         recordPrivateCalls = true
     )
@@ -67,7 +67,12 @@ class MigrateV3PolicyServiceTest : AbMigratePolicyServiceTest() {
     @BeforeEach
     fun v3Before() {
         justRun {
-            self.batchAddGroupMember(groupId = any(), defaultGroup = any(), members = any())
+            self.batchAddGroupMember(
+                projectCode = any(),
+                groupId = any(),
+                defaultGroup = any(),
+                members = any()
+            )
         }
     }
 

@@ -298,6 +298,7 @@ class StageTransfer @Autowired(required = false) constructor(
             }
         }
         return PreStage(
+            enable = stage.isStageEnable().nullIfDefault(true),
             name = stage.name,
             label = maskYamlStageLabel(stage.tag).ifEmpty { null },
             ifField = when (stage.stageControlOption?.runCondition) {
@@ -320,9 +321,9 @@ class StageTransfer @Autowired(required = false) constructor(
         )
     }
 
-    private fun maskYamlStageLabel(tags: List<String>?): List<String> {
+    private fun maskYamlStageLabel(tags: List<String?>?): List<String> {
         if (tags.isNullOrEmpty()) return emptyList()
-        return tags.map { StageLabel.parseById(it).value }
+        return tags.filterNotNull().map { StageLabel.parseById(it).value }
     }
 
     private fun getCheckInForStage(stage: Stage): PreStageCheck? {

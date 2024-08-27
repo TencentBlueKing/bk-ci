@@ -29,21 +29,27 @@ package com.tencent.devops.repository.dao
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.TRepository
 import com.tencent.devops.model.repository.tables.TRepositoryCodeGit
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_NOT_FOUND
+import com.tencent.devops.repository.pojo.RepositoryInfo
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.SelectForStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
 
 @Repository
 @Suppress("ALL")
@@ -219,6 +225,89 @@ class RepositoryDao {
                         .fetch()
                 }
             }
+        }
+    }
+
+    fun listRepositoryAuthorization(
+        dslContext: DSLContext,
+        projectId: String,
+        limit: Int,
+        offset: Int
+    ): List<RepositoryInfo> {
+        val repositoryAuthorizationQuery = buildRepositoryAuthorizationQuery(
+            dslContext = dslContext,
+            projectId = projectId
+        )
+        with(TRepository.T_REPOSITORY) {
+            return dslContext.select()
+                .from(repositoryAuthorizationQuery)
+                .limit(limit)
+                .offset(offset)
+                .skipCheck()
+                .fetch()
+                .map {
+                    RepositoryInfo(
+                        repositoryId = it[REPOSITORY_ID],
+                        repositoryHashId = HashUtil.encodeOtherLongId(it[REPOSITORY_ID]),
+                        aliasName = it[ALIAS_NAME],
+                        url = it[URL],
+                        type = ScmType.valueOf(it[TYPE]),
+                        createUser = it[USER_ID],
+                        createdTime = it[CREATED_TIME].timestampmilli(),
+                        updatedTime = it[UPDATED_TIME].timestampmilli()
+                    )
+                }
+        }
+    }
+
+    fun countRepositoryAuthorization(
+        dslContext: DSLContext,
+        projectId: String
+    ): Int {
+        val repositoryAuthorizationQuery = buildRepositoryAuthorizationQuery(
+            dslContext = dslContext,
+            projectId = projectId
+        )
+        return dslContext.fetchCount(repositoryAuthorizationQuery)
+    }
+
+    private fun buildRepositoryAuthorizationQuery(
+        dslContext: DSLContext,
+        projectId: String
+    ): SelectForStep<out Record> {
+        val tRepositoryCodeGit = TRepositoryCodeGit.T_REPOSITORY_CODE_GIT
+        with(TRepository.T_REPOSITORY) {
+            val codeGitQuery = dslContext.select(
+                REPOSITORY_ID,
+                ALIAS_NAME,
+                URL,
+                TYPE,
+                USER_ID,
+                CREATED_TIME,
+                UPDATED_TIME
+            )
+                .from(this)
+                .join(tRepositoryCodeGit)
+                .on(REPOSITORY_ID.eq(tRepositoryCodeGit.REPOSITORY_ID))
+                .where(IS_DELETED.eq(false))
+                .and(PROJECT_ID.eq(projectId))
+                .and(TYPE.eq(ScmType.CODE_GIT.name))
+                .and(tRepositoryCodeGit.AUTH_TYPE.eq(RepoAuthType.OAUTH.name))
+
+            val gitHubQuery = dslContext.select(
+                REPOSITORY_ID,
+                ALIAS_NAME,
+                URL,
+                TYPE,
+                USER_ID,
+                CREATED_TIME,
+                UPDATED_TIME
+            ).from(this)
+                .where(IS_DELETED.eq(false))
+                .and(PROJECT_ID.eq(projectId))
+                .and(TYPE.eq(ScmType.GITHUB.name))
+
+            return codeGitQuery.unionAll(gitHubQuery).orderBy(CREATED_TIME.desc())
         }
     }
 
@@ -541,6 +630,21 @@ class RepositoryDao {
         with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
                 .set(YAML_SYNC_STATUS, syncStatus)
+                .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
+    fun updateStoreRepoProject(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        repositoryId: Long
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(PROJECT_ID, projectId)
+                .set(USER_ID, userId)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }

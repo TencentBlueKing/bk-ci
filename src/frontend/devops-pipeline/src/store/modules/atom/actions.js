@@ -42,6 +42,7 @@ import {
     INSERT_ATOM,
     PIPELINE_SETTING_MUTATION,
     PROPERTY_PANEL_VISIBLE,
+    RESET_ATOM_MODAL_MAP,
     RESET_PIPELINE_SETTING_MUNTATION,
     SELECT_PIPELINE_VERSION,
     SET_ATOMS,
@@ -51,6 +52,7 @@ import {
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
+    SET_ATOMS_OUTPUT_MAP,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
@@ -398,6 +400,24 @@ export default {
         })
     },
 
+    fetchAtomsOutput: async ({ commit, state, getters }) => {
+        const elements = getters.getAllElements(state.pipeline?.stages)
+        const arr = elements.map(ele => `${ele.atomCode}@${ele.version}`)
+        const data = Array.from(new Set(arr))
+        try {
+            request.post(`${STORE_API_URL_PREFIX}/user/pipeline/atom/output/info/list`, data).then(res => {
+                const map = {}
+                for (const item in res.data) {
+                    map[item] = JSON.parse(res.data[item])
+                }
+                console.log(map, 88552)
+                commit(SET_ATOMS_OUTPUT_MAP, map)
+            })
+        } catch (error) {
+            commit(SET_ATOMS_OUTPUT_MAP, {})
+        }
+    },
+
     fetchAtoms: async ({ commit, state, getters }, { projectCode, category, jobType, classifyId, os, searchKey, queryProjectAtomFlag, fitOsFlag = undefined }) => {
         try {
             const isCommendAtomPageOver = state.isCommendAtomPageOver
@@ -509,7 +529,7 @@ export default {
     clearAtomData: ({ commit }) => {
         commit(CLEAR_ATOM_DATA)
     },
-
+    resetAtomModalMap: actionCreator(RESET_ATOM_MODAL_MAP),
     fetchAtomModal: async ({ commit, dispatch }, { projectCode, atomCode, version, atomIndex, container, queryOfflineFlag = false }) => {
         try {
             commit(SET_ATOM_MODAL_FETCHING, true)

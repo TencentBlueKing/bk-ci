@@ -118,6 +118,15 @@ object PipelineUtils {
         }
     }
 
+    fun transformUserIllegalReviewParams(reviewParams: List<ManualReviewParam>?) {
+        reviewParams?.forEach { param ->
+            val value = param.value
+            if (param.valueType == ManualReviewParamType.MULTIPLE && value is String && value.isBlank()) {
+                param.value = null
+            }
+        }
+    }
+
     private fun checkVariablesLength(key: String, value: String) {
         if (value.length >= PIPELINE_VARIABLES_STRING_LENGTH_MAX) {
             throw ErrorCodeException(
@@ -150,6 +159,39 @@ object PipelineUtils {
     }
 
     /**
+     * 将流水线常量转换成模板常量
+     */
+    fun fixedTemplateParam(model: Model): Model {
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val params = mutableListOf<BuildFormProperty>()
+        val templateParams = mutableListOf<BuildFormProperty>()
+        triggerContainer.params.forEach {
+            if (it.constant == true) {
+                templateParams.add(it)
+            } else {
+                params.add(it)
+            }
+        }
+        val fixedTriggerContainer = triggerContainer.copy(
+            params = params,
+            templateParams = if (templateParams.isEmpty()) {
+                null
+            } else {
+                templateParams
+            }
+        )
+        val stages = ArrayList<Stage>()
+        model.stages.forEachIndexed { index, stage ->
+            if (index == 0) {
+                stages.add(stage.copy(containers = listOf(fixedTriggerContainer)))
+            } else {
+                stages.add(stage)
+            }
+        }
+        return model.copy(stages = stages)
+    }
+
+    /**
      * 通过流水线参数和模板编排生成新Model
      */
     @Suppress("ALL")
@@ -169,7 +211,9 @@ object PipelineUtils {
             BuildPropertyCompatibilityTools.mergeProperties(
                 from = templateTrigger.params,
                 to = BuildPropertyCompatibilityTools.mergeProperties(
-                    from = templateTrigger.templateParams!!, to = param ?: emptyList()
+                    // 模板常量需要变成流水线常量
+                    from = templateTrigger.templateParams!!.map { it.copy(constant = true) },
+                    to = param ?: emptyList()
                 )
             )
         }

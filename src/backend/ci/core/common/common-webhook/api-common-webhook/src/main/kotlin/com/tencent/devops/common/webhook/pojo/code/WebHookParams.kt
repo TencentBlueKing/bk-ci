@@ -73,5 +73,7 @@ data class WebHookParams(
     var thirdUrl: String? = null,
     var thirdSecretToken: String? = null,
     // 插件版本
-    var version: String? = null
+    var version: String? = null,
+    // 跳过WIP
+    var skipWip: Boolean? = false
 )

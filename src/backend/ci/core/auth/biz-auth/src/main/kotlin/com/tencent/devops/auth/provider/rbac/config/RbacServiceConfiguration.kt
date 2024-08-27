@@ -37,6 +37,7 @@ import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceNameConverter
@@ -49,6 +50,8 @@ import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.BkHttpRequestService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import org.jooq.DSLContext
@@ -87,7 +90,8 @@ class RbacServiceConfiguration {
         dslContext: DSLContext,
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-        authResourceNameConverter: AuthResourceNameConverter
+        authResourceNameConverter: AuthResourceNameConverter,
+        resourceGroupSyncService: PermissionResourceGroupSyncService
     ) = PermissionSubsetManagerService(
         permissionGroupPoliciesService = permissionGroupPoliciesService,
         authAuthorizationScopesService = authAuthorizationScopesService,
@@ -95,13 +99,13 @@ class RbacServiceConfiguration {
         dslContext = dslContext,
         authResourceGroupDao = authResourceGroupDao,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
-        authResourceNameConverter = authResourceNameConverter
+        authResourceNameConverter = authResourceNameConverter,
+        resourceGroupSyncService = resourceGroupSyncService
     )
 
     @Bean
     fun permissionGradeManagerService(
         client: Client,
-        permissionGroupPoliciesService: PermissionGroupPoliciesService,
         iamV2ManagerService: V2ManagerService,
         iamConfiguration: IamConfiguration,
         authMonitorSpaceDao: AuthMonitorSpaceDao,
@@ -112,10 +116,11 @@ class RbacServiceConfiguration {
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
         traceEventDispatcher: TraceEventDispatcher,
         itsmService: ItsmService,
-        authAuthorizationScopesService: AuthAuthorizationScopesService
+        authAuthorizationScopesService: AuthAuthorizationScopesService,
+        permissionResourceGroupService: PermissionResourceGroupService,
+        resourceGroupSyncService: PermissionResourceGroupSyncService
     ) = PermissionGradeManagerService(
         client = client,
-        permissionGroupPoliciesService = permissionGroupPoliciesService,
         iamV2ManagerService = iamV2ManagerService,
         iamConfiguration = iamConfiguration,
         authMonitorSpaceDao = authMonitorSpaceDao,
@@ -126,7 +131,9 @@ class RbacServiceConfiguration {
         authResourceGroupConfigDao = authResourceGroupConfigDao,
         traceEventDispatcher = traceEventDispatcher,
         itsmService = itsmService,
-        authAuthorizationScopesService = authAuthorizationScopesService
+        authAuthorizationScopesService = authAuthorizationScopesService,
+        permissionResourceGroupService = permissionResourceGroupService,
+        resourceGroupSyncService = resourceGroupSyncService
     )
 
     @Bean
@@ -155,11 +162,13 @@ class RbacServiceConfiguration {
     fun authResourceService(
         dslContext: DSLContext,
         authResourceDao: AuthResourceDao,
-        authResourceGroupDao: AuthResourceGroupDao
+        authResourceGroupDao: AuthResourceGroupDao,
+        authResourceGroupMemberDao: AuthResourceGroupMemberDao
     ) = AuthResourceService(
         dslContext = dslContext,
         authResourceDao = authResourceDao,
-        authResourceGroupDao = authResourceGroupDao
+        authResourceGroupDao = authResourceGroupDao,
+        authResourceGroupMemberDao = authResourceGroupMemberDao
     )
 
     @Bean

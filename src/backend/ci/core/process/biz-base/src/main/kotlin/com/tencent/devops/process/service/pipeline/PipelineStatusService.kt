@@ -30,9 +30,7 @@ package com.tencent.devops.process.service.pipeline
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
-import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -46,7 +44,6 @@ import org.springframework.stereotype.Service
 class PipelineStatusService(
     private val dslContext: DSLContext,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineRuntimeService: PipelineRuntimeService
@@ -60,7 +57,6 @@ class PipelineStatusService(
             channelCode = ChannelCode.BS,
             pipelineId = pipelineId
         ) ?: return null
-        val pipelineSetting = pipelineSettingDao.getSetting(dslContext, projectId, pipelineId) ?: return null
         val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId) ?: return null
         val buildStatusOrd = pipelineBuildSummary.latestStatus
         val finishCount = pipelineBuildSummary.finishCount ?: 0
@@ -99,7 +95,7 @@ class PipelineStatusService(
             latestBuildStartTime = (pipelineBuildSummary.latestStartTime)?.timestampmilli() ?: 0,
             latestBuildStatus = pipelineBuildStatus,
 //            latestBuildTaskName = pipelineBuildSummary.latestTaskName,
-            lock = PipelineRunLockType.checkLock(pipelineSetting.runLockType.ordinal),
+            lock = pipelineInfo.locked,
             runningBuildCount = pipelineBuildSummary.runningCount ?: 0,
             lastBuildFinishCount = lastBuildFinishCount,
             lastBuildTotalCount = lastBuildTotalCount,

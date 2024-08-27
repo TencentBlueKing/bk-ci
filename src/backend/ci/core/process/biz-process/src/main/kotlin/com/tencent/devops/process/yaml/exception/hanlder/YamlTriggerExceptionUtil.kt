@@ -34,22 +34,21 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedErrorCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.yaml.exception.YamlTriggerException
 
 object YamlTriggerExceptionUtil {
     fun getReasonDetail(exception: Exception): Pair<String, PipelineTriggerReasonDetail> {
         return when (exception) {
             is YamlTriggerException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
+                PipelineTriggerReason.TRIGGER_FAILED.name,
                 PipelineTriggerFailedErrorCode(errorCode = exception.errorCode, params = exception.params?.toList())
             )
             is ErrorCodeException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
+                PipelineTriggerReason.TRIGGER_FAILED.name,
                 PipelineTriggerFailedErrorCode(errorCode = exception.errorCode, params = exception.params?.toList())
             )
             is NotFoundException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
+                PipelineTriggerReason.TRIGGER_FAILED.name,
                 PipelineTriggerFailedMsg(exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail)
             )
             else -> Pair(

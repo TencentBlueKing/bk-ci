@@ -17,7 +17,7 @@
                 :value="value"
                 :toggle-visible="toggleAgentList"
             >
-                
+
                 <template v-if="isAgentEnv" v-slot:option-item="optionProps">
                     <div class="env-option-item">
                         <span>{{optionProps.name}}</span>
@@ -25,9 +25,9 @@
                         <bk-link target="_blank" class="env-link" :href="optionProps.envInfoHref" theme="primary">{{ $t('newlist.view') }}</bk-link>
                     </div>
                 </template>
-                
+
                 <template>
-                    <div class="env-import-entry cursor-pointer" @click.stop.prevent="addThridSlave">
+                    <div class="env-import-entry cursor-pointer" @click.stop.prevent="addThirdSlave">
                         <i class="devops-icon icon-plus-circle"></i>
                         <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
                     </div>
@@ -63,7 +63,7 @@
                         @blur="handleBlur"
                         :value="value"
                     />
-                    
+
                 </form-field>
                 <form-field
                     v-if="isAgentEnv && !isReuseJob"
@@ -82,18 +82,18 @@
                     />
                 </form-field>
             </div>
-            
+
         </div>
     </div>
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import Selector from '@/components/atomFormField/Selector'
     import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import Selector from '@/components/atomFormField/Selector'
+    import VuexInput from '@/components/atomFormField/VuexInput'
+    import { mapActions } from 'vuex'
 
     export default {
         name: 'container-node-selector',
@@ -145,7 +145,7 @@
                 type: Function,
                 default: () => () => {}
             },
-            addThridSlave: {
+            addThirdSlave: {
                 type: Function,
                 default: () => () => {}
             },
@@ -172,7 +172,7 @@
             return {
                 isLoading: false,
                 isFocus: false,
-                
+
                 nodeList: []
             }
         },
@@ -252,7 +252,7 @@
             ]),
             handleSelect (name, value) {
                 const node = this.nodeList.find(item => item.id === value)
-                const sharedId = node && node.sharedProjectId ? node.sharedProjectId : ''
+                const sharedId = node?.sharedProjectId
                 this.handleChange(name, value, sharedId)
             },
             handleBlur () {
@@ -316,7 +316,7 @@
     .container-node-selector {
 
         .alias-name-select {
-            
+
             .abnormal-tip {
                 color: $dangerColor;
             }

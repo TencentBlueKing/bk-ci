@@ -77,16 +77,39 @@
 
                 <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable && !isRemoteAtom }">
                     <!-- <div class='desc-tips' v-if="!isNewAtomTemplate(atom.htmlTemplateVersion) && atom.description"> <span>插件描述：</span> {{ atom.description }}</div> -->
-                    <div v-if="atom.atomModal" :is="AtomComponent" :atom="atom.atomModal" :element-index="elementIndex"
-                        :container-index="containerIndex" :stage-index="stageIndex" :element="element"
-                        :container="container" :stage="stage" :atom-props-model="atom.atomModal.props"
-                        :set-parent-validate="setAtomValidate" :disabled="!editable" class="atom-content">
+                    <div
+                        v-if="atom.atomModal"
+                        :is="AtomComponent"
+                        :atom="atom.atomModal"
+                        :element-index="elementIndex"
+                        :container-index="containerIndex"
+                        :stage-index="stageIndex"
+                        :element="element"
+                        :container="container"
+                        :stage="stage"
+                        :atom-props-model="atom.atomModal.props"
+                        :set-parent-validate="setAtomValidate"
+                        :disabled="!editable"
+                        class="atom-content"
+                    >
                     </div>
+                    <CustomEnvField
+                        v-if="isVmContainer(container)"
+                        :value="element.customEnv"
+                        @change="handleUpdateAtom"
+                        :disabled="!editable"
+                    />
                     <div class="atom-option">
-                        <atom-option v-if="element['@type'] !== 'manualTrigger'" :element-index="elementIndex"
-                            :container-index="containerIndex" :stage-index="stageIndex" :element="element"
-                            :container="container" :set-parent-validate="setAtomValidate" :disabled="!editable">
-                        </atom-option>
+                        <atom-option
+                            :element-index="elementIndex"
+                            :atom-props-model="atom.atomModal.props"
+                            :container-index="containerIndex"
+                            :stage-index="stageIndex"
+                            :element="element"
+                            :container="container"
+                            :set-parent-validate="setAtomValidate"
+                            :disabled="!editable"
+                        />
                     </div>
                 </div>
             </div>
@@ -104,6 +127,7 @@
 </template>
 
 <script>
+    import CustomEnvField from '@/components/CustomEnvField'
     import Logo from '@/components/Logo'
     import QualitygateTips from '@/components/atomFormField/QualitygateTips'
     import Selector from '@/components/atomFormField/Selector'
@@ -162,7 +186,8 @@
             CodeGitWebHookTrigger,
             SubPipelineCall,
             ManualReviewUserTask,
-            Logo
+            Logo,
+            CustomEnvField
         },
         props: {
             elementIndex: Number,
@@ -196,10 +221,10 @@
             ]),
             ...mapGetters('atom', [
                 'getAtomModal',
-                'getAtomModalKey',
                 'getDefaultVersion',
                 'classifyCodeListByCategory',
                 'getElement',
+                'isVmContainer',
                 'getContainer',
                 'getContainers',
                 'getStage',
@@ -212,7 +237,6 @@
                 'atomCodeList',
                 'atomClassifyCodeList',
                 'atomMap',
-                'atomModalMap',
                 'fetchingAtmoModal',
                 'atomVersionList',
                 'isPropertyPanelVisible',
@@ -490,9 +514,8 @@
                 }
             },
             handleFetchAtomModal (atomCode, version) {
-                const { atomModalMap, fetchAtomModal, getAtomModalKey } = this
-                const atomModalKey = getAtomModalKey(atomCode, version)
-                const atomModal = atomModalMap[atomModalKey]
+                const { getAtomModal, fetchAtomModal } = this
+                const atomModal = getAtomModal({ atomCode, version })
                 const queryOfflineFlag = !this.editable
                 if (!atomModal && atomCode) { // 获取插件详情
                     fetchAtomModal({

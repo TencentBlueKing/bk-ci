@@ -74,7 +74,11 @@
                     </bk-table-column>
                     <bk-table-column :label="$t('status')" :render-header="statusHeader" prop="status">
                         <template slot-scope="props">
-                            <div v-bk-overflow-tips class="status-card" :class="statusMap[props.row.status] && statusMap[props.row.status].className">
+                            <div
+                                class="status-card"
+                                @click="handleStatusClick(props.row)"
+                                :class="statusMap[props.row.status] && statusMap[props.row.status].className"
+                            >
                                 {{ statusMap[props.row.status] && statusMap[props.row.status].label }}
                             </div>
                         </template>
@@ -166,9 +170,15 @@
             :target-tpl-params-list="targetTplParamsList"
             :cur-stages="curStages"
             :target-stages="targetStages"
-            @comfire="comfireHandler"
             @cancel="cancelHandler"
             :selected-version="selectedVersion"
+        />
+        <instance-message
+            :show-instance-message="showFailedMessageDialog"
+            :show-title="false"
+            :fail-list="activeFailInstances"
+            :fail-message="activeFailMessages"
+            @cancel="hideFailedMessageDialog"
         />
     </div>
 </template>
@@ -177,6 +187,7 @@
     import innerHeader from '@/components/devops/inner_header'
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import instanceCompared from '@/components/template/instance-compared.vue'
+    import instanceMessage from '@/components/template/instance-message.vue'
     import {
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
@@ -185,9 +196,10 @@
 
     export default {
         components: {
-            'inner-header': innerHeader,
-            'empty-tips': emptyTips,
-            'instance-compared': instanceCompared
+            innerHeader,
+            emptyTips,
+            instanceCompared,
+            instanceMessage
         },
         props: {
             isEnabledPermission: Boolean
@@ -214,6 +226,9 @@
                 curTplParamsList: [],
                 targetStages: [],
                 targetTplParamsList: [],
+                showFailedMessageDialog: false,
+                activeFailMessages: [],
+                activeFailInstances: [],
                 loading: {
                     isLoading: false,
                     title: ''
@@ -240,6 +255,10 @@
                     UPDATED: {
                         label: this.$t('template.noNeedToUpdate'),
                         className: ''
+                    },
+                    FAILED: {
+                        label: this.$t('template.updateFailed'),
+                        className: 'update-failed cursor-pointer'
                     },
                     PENDING_UPDATE: {
                         label: this.$t('template.needToUpdate'),
@@ -483,9 +502,6 @@
             isUpdating (row) {
                 return row.status !== 'UPDATING' && row.hasPermission
             },
-            comfireHandler () {
-
-            },
             cancelHandler () {
                 this.showComparedInstance = false
             },
@@ -501,13 +517,28 @@
                 const route = {
                     name: 'createInstance',
                     params: {
-                        projectId: this.projectId,
-                        pipelineId: this.pipelineId,
                         curVersionId: this.currentVersionId,
                         pipelineName: (row.pipelineName + '_copy').substring(0, 128)
+                    },
+                    query: {
+                        pipelineId: row.pipelineId
                     }
                 }
                 this.$router.push(route)
+            },
+            handleStatusClick (row) {
+                if (row.status === 'FAILED') {
+                    this.showFailedMessageDialog = true
+                    this.activeFailInstances = [
+                        row.pipelineName
+                    ]
+                    this.activeFailMessages = {
+                        [row.pipelineName]: row.instanceErrorInfo
+                    }
+                }
+            },
+            hideFailedMessageDialog () {
+                this.showFailedMessageDialog = false
             }
         }
     }
@@ -574,6 +605,9 @@
             }
             .need-update {
                 background-color: #F6B026;
+            }
+            .update-failed {
+                background-color: $dangerColor;
             }
             .updating {
                 background-color: $primaryColor;

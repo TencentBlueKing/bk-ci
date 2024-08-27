@@ -55,6 +55,7 @@ import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_MUTEX_QU
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_MUTEX_TIMEOUT_MINUTES
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
+import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.models.job.Container3
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
@@ -131,7 +132,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
             maxQueueMinutes = DEFAULT_JOB_MAX_QUEUE_MINUTES,
             maxRunningMinutes = job.timeoutMinutes?.toIntOrNull() ?: VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES,
             buildEnv = buildEnv,
-            customBuildEnv = job.env,
+            customEnv = ModelCreateUtil.getCustomEnv(job.env),
             jobControlOption = getJobControlOption(
                 job = job, jobEnable = jobEnable, finalStage = finalStage
             ),
@@ -240,7 +241,9 @@ class ContainerTransfer @Autowired(required = false) constructor(
             },
             steps = steps,
             timeoutMinutes = makeJobTimeout(job.jobControlOption),
-            env = null,
+            env = job.customEnv?.associateBy({ it.key ?: "" }) {
+                it.value
+            }?.ifEmpty { null },
             continueOnError = job.jobControlOption?.continueWhenFailed.nullIfDefault(DEFAULT_CONTINUE_WHEN_FAILED),
             strategy = if (job.matrixGroupFlag == true) {
                 getMatrixFromJob(job.matrixControlOption)
@@ -285,8 +288,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
         if (hwSpec != null && buildType != null) {
             kotlin.run {
                 val res = transferCache.getDockerResource(userId, projectId, buildType)
-                // hwSpec为0时为特殊值，表示默认配置
-                if (res?.default == hwSpec || hwSpec == "0") {
+                // hwSpec为0和1时为特殊值，表示默认配置Basic
+                if (res?.default == hwSpec || hwSpec == "0" || hwSpec == "1") {
                     hwSpec = null
                     return@run
                 }
@@ -306,9 +309,9 @@ class ContainerTransfer @Autowired(required = false) constructor(
     }
 
     private fun makeJobTimeout(controlOption: JobControlOption?): String? {
-        return controlOption?.timeoutVar.nullIfDefault(
+        return (controlOption?.timeoutVar ?: controlOption?.timeout?.toString()).nullIfDefault(
             VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES.toString()
-        ) ?: controlOption?.timeout.nullIfDefault(VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES)?.toString()
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -423,8 +426,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 null
             },
             timeoutMinutes = if (resource.queueEnable) {
-                resource.timeoutVar.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES.toString())
-                    ?: resource.timeout.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES)?.toString()
+                (resource.timeoutVar ?: resource.timeout.toString())
+                    .nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES.toString())
             } else {
                 null
             }

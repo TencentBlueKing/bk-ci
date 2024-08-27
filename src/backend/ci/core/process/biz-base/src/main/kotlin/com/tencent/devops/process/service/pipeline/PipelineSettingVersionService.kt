@@ -39,6 +39,7 @@ import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.utils.PipelineVersionUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -115,7 +116,7 @@ class PipelineSettingVersionService @Autowired constructor(
                 settingInfo.failSubscriptionList = ve.failSubscriptionList ?: settingInfo.failSubscriptionList
                 // 这里不应该出现错误的流水线名，但保留历史留下的处理方式
                 settingInfo.pipelineName = ve.pipelineName ?: settingInfo.pipelineName
-                settingInfo.labels = ve.labels ?: listOf()
+                settingInfo.labels = ve.labels ?: labels
                 settingInfo.desc = ve.desc ?: settingInfo.desc
                 settingInfo.buildNumRule = ve.buildNumRule ?: settingInfo.buildNumRule
                 // #8161 如果是PAC发布前产生的数据，则流水线名称为空，可以用正式配置覆盖
@@ -168,5 +169,23 @@ class PipelineSettingVersionService @Autowired constructor(
         ) ?: pipelineSettingDao.getSetting(
             context ?: dslContext, projectId, pipelineId
         )?.let { PipelineSettingVersion.convertFromSetting(it) }
+    }
+
+    fun getSettingVersionAfterUpdate(
+        projectId: String,
+        pipelineId: String,
+        updateVersion: Boolean,
+        setting: PipelineSetting
+    ): Int {
+        return getLatestSettingVersion(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.let { latest ->
+            if (updateVersion) PipelineVersionUtils.getSettingVersion(
+                currVersion = latest.version,
+                originSetting = latest,
+                newSetting = PipelineSettingVersion.convertFromSetting(setting)
+            ) else latest.version
+        } ?: 1
     }
 }

@@ -40,10 +40,14 @@ import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
+import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdpartyagent.AskHeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchAgentData
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateAgentEnvVar
+import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
@@ -118,7 +122,7 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "Environment Hash ID", required = true)
         @PathParam("envId")
         envId: String
-    ): Result<List<ThirdPartyAgent>>
+    ): Result<List<EnvNodeAgent>>
 
     @Operation(summary = "根据环境名称获取Agent列表")
     @GET
@@ -130,7 +134,7 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "Environment name", required = true)
         @PathParam("envName")
         envName: String
-    ): Result<List<ThirdPartyAgent>>
+    ): Result<List<EnvNodeAgent>>
 
     @Operation(summary = "Agent是否能升级")
     @GET
@@ -414,5 +418,33 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "Environment name", required = true)
         @PathParam("envName")
         envName: String
-    ): Result<Pair<Long?, List<ThirdPartyAgent>>>
+    ): Result<Pair<Long?, List<EnvNodeAgent>>>
+
+    @Operation(summary = "批量查询Agent环境变量")
+    @POST
+    @Path("/projects/{projectId}/env")
+    fun fetchAgentEnv(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "查询数据", required = true)
+        data: BatchFetchAgentData
+    ): Result<Map<String, List<EnvVar>>>
+
+    @Operation(summary = "批量修改Agent环境变量")
+    @POST
+    @Path("/projects/{projectId}/batch_update_env")
+    fun batchUpdateEnv(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "修改数据", required = true)
+        data: BatchUpdateAgentEnvVar
+    ): Result<Boolean>
 }

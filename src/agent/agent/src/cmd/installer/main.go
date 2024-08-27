@@ -76,7 +76,7 @@ func main() {
 	if config.ActionInstall == *action {
 		err := installer.DoInstallAgent()
 		if err != nil {
-			logs.Error("install new agent failed: " + err.Error())
+			logs.WithError(err).Error("install new agent failed")
 			systemutil.ExitProcess(1)
 		}
 	} else if config.ActionUninstall == *action {

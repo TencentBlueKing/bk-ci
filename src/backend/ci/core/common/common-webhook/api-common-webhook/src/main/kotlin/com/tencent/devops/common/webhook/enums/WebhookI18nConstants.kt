@@ -84,6 +84,12 @@ object WebhookI18nConstants {
     // 事件类型不匹配
     const val EVENT_TYPE_NOT_MATCH = "bkRepoTriggerEventTypeNotMatch"
 
+    // 分支不匹配
+    const val BRANCH_NOT_MATCH = "bkRepoTriggerBranchNotMatch"
+
+    // 分支被排除
+    const val BRANCH_IGNORED = "bkRepoTriggerBranchIgnored"
+
     // 目标分支不匹配
     const val TARGET_BRANCH_NOT_MATCH = "bkRepoTriggerTargetBranchNotMatch"
 
@@ -137,6 +143,9 @@ object WebhookI18nConstants {
 
     // Github Push操作类型不匹配
     const val PUSH_ACTION_NOT_MATCH = "bkRepoTriggerPushActionNotMatch"
+
+    // WIP阶段不触发
+    const val MR_SKIP_WIP = "bkRepoTriggerSkipWipNotMatch"
 
     // 事件回放
     const val EVENT_REPLAY_DESC = "bkEventReplayDesc"

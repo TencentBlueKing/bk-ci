@@ -154,6 +154,7 @@
                     EMAIL: this.$t('settings.emailNotice'),
                     WEWORK: this.$t('settings.rtxNotice'),
                     RTX: this.$t('settings.rtxNotice'),
+                    WEWORK_GROUP: this.$t('settings.weworkGroup'),
                     VOICE: this.$t('settings.voice'),
                     WECHAT: this.$t('settings.wechatNotice'),
                     SMS: this.$t('settings.smsNotice')
@@ -276,6 +277,7 @@
                     .info-content {
                         flex: 1;
                         color: #63656E;
+                        word-break: break-all;
                     }
                 }
             }

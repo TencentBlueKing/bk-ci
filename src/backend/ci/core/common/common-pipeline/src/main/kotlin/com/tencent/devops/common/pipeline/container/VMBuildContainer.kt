@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
@@ -65,10 +66,13 @@ data class VMBuildContainer(
     @get:Schema(title = "运行最长时间(分钟)", required = true)
     @Deprecated(message = "@see JobControlOption.timeout")
     val maxRunningMinutes: Int = 480,
-    @get:Schema(title = "构建机环境变量", required = false)
+    @get:Schema(title = "构建机环境变量（容器启动时写入环境）", required = false)
     val buildEnv: Map<String, String>? = null,
-    @get:Schema(title = "用户自定义环境变量", required = false)
+    @get:Schema(title = "用户自定义环境变量（Agent启动时写入环境）", required = false)
+    @Deprecated("使用新字段customEnv代替，数据结构有变化")
     val customBuildEnv: Map<String, String>? = null,
+    @get:Schema(title = "用户自定义环境变量（Agent启动时写入环境）", required = false)
+    val customEnv: List<NameAndValue>? = null,
     @get:Schema(title = "第三方构建Hash ID", required = false)
     val thirdPartyAgentId: String? = null,
     @get:Schema(title = "第三方构建环境ID", required = false)
@@ -105,7 +109,7 @@ data class VMBuildContainer(
     @get:Schema(title = "容器运行次数", required = false, readOnly = true)
     override var executeCount: Int? = null,
     @get:Schema(title = "用户自定义ID", required = false, hidden = false)
-    override val jobId: String? = null,
+    override var jobId: String? = null,
     @get:Schema(title = "是否包含post任务标识", required = false, readOnly = true)
     override var containPostTaskFlag: Boolean? = null,
     @get:Schema(title = "是否为构建矩阵", required = false, readOnly = true)

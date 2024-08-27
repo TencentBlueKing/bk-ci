@@ -385,7 +385,10 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildMsg: String?,
         startUser: List<String>?,
         archiveFlag: Boolean?,
-        debugVersion: Int?
+        customVersion: Int?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -419,7 +422,10 @@ class ServiceBuildResourceImpl @Autowired constructor(
             startUser = startUser?.filter { it.isNotBlank() },
             updateTimeDesc = updateTimeDesc,
             archiveFlag = archiveFlag,
-            debugVersion = debugVersion
+            customVersion = customVersion,
+            triggerAlias = triggerAlias,
+            triggerBranch = triggerBranch,
+            triggerUser = triggerUser
         )
         return Result(result)
     }
@@ -636,8 +642,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         val history = pipelineBuildFacadeService.getSingleHistoryBuild(
-            projectId, pipelineId,
-            buildNum.toInt(), channelCode ?: ChannelCode.BS
+            projectId = projectId, pipelineId = pipelineId,
+            buildNum = buildNum.toInt(), buildId = null,
+            channelCode = channelCode ?: ChannelCode.BS
         )
         return Result(history)
     }

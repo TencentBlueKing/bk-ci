@@ -14,16 +14,15 @@
                     :click-unfold="true"
                     :show-select-all="true"
                     :handle-change="handleParamUpdate"
+                    flex
                     v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
                     :class="{
                         'is-diff-param': highlightChangedParam && param.isChanged
                     }"
                     :disabled="disabled"
                     :placeholder="param.placeholder"
+                    :is-diff-param="highlightChangedParam && param.isChanged"
                 />
-                <div class="file-upload" v-if="showFileUploader(param.type)">
-                    <file-param-input :file-path="param.value"></file-param-input>
-                </div>
             </section>
             <span
                 v-if="!errors.has('devops' + param.name)"
@@ -219,7 +218,7 @@
     @import '@/scss/mixins/ellipsis';
     .pipeline-execute-params-form {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(200px, 1fr));
         grid-gap: 0 24px;
         &.bk-form.bk-form-vertical .bk-form-item+.bk-form-item {
             margin-top: 0 !important;
@@ -234,7 +233,9 @@
             }
 
             .bk-select {
-                background: white;
+                &:not(.is-disabled) {
+                    background: white;
+                }
                 width: 100%;
             }
             .meta-data {
@@ -248,40 +249,6 @@
             .meta-data:hover {
                 .metadata-box {
                     display: block;
-                }
-            }
-            .file-upload {
-                display: flex;
-                margin-left: 10px;
-                color: $fontWeightColor;
-                ::v-deep .bk-upload.button {
-                    position: static;
-                    display: flex;
-                    .file-wrapper {
-                        margin-bottom: 0;
-                        height: 32px;
-                        background: white;
-                    }
-                    p.tip {
-                        white-space: nowrap;
-                        position: static;
-                        margin-left: 8px;
-                    }
-                    .all-file {
-                        width: 100%;
-                        position: absolute;
-                        right: 0;
-                        top: 0;
-                        .file-item {
-                            margin-bottom: 0;
-                            &.file-item-fail {
-                                background: rgb(254,221,220);
-                            }
-                        }
-                        .error-msg {
-                            margin: 0
-                        }
-                    }
                 }
             }
         }

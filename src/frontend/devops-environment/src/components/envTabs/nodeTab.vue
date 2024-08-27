@@ -21,11 +21,13 @@
         <div class="node-table" v-if="showContent && nodeList.length">
             <bk-table
                 ref="shareDiaglogTable"
-                :data="nodeList"
+                :data="curNodeList"
+                :row-class-name="handleRowClassName"
             >
-                <bk-table-column :label="$t('environment.envInfo.name')" prop="displayName"></bk-table-column>
-                <bk-table-column :width="150" label="IP" prop="ip"></bk-table-column>
-                <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`">
+                <bk-table-column :label="$t('environment.envInfo.name')" width="150" prop="displayName" show-overflow-tooltip>
+                </bk-table-column>
+                <bk-table-column :width="150" label="IP" prop="ip" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`" show-overflow-tooltip>
                     <template slot-scope="props">
                         <span class="node-name">{{ props.row.nodeType }}</span>
                         <span>({{ props.row.createdUser }})</span>
@@ -59,8 +61,25 @@
                         <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus || '--' }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :width="80" :label="$t('environment.operation')">
+                <bk-table-column :width="180" :label="$t('environment.operation')">
                     <template slot-scope="props">
+                        <bk-button
+                            v-perm="{
+                                hasPermission: curEnvDetail.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: envHashId,
+                                    action: ENV_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                            v-if="curEnvDetail.envType === 'BUILD'"
+                            text
+                            @click="handleToggleEnable(props.row)"
+                        >
+                            {{ props.row.envEnableNode ? $t('environment.停用') : $t('environment.启用') }}
+                        </bk-button>
                         <span
                             v-perm="{
                                 hasPermission: curEnvDetail.canEdit,
@@ -166,6 +185,9 @@
         computed: {
             curUserInfo () {
                 return window.userInfo
+            },
+            curNodeList () {
+                return this.nodeList.sort((a, b) => a.envEnableNode - b.envEnableNode)
             }
         },
         watch: {
@@ -627,6 +649,31 @@
                         }
                     }
                 })
+            },
+            handleRowClassName ({ row, rowIndex }) {
+                return row.envEnableNode ? '' : 'useless'
+            },
+            async handleToggleEnable (row) {
+                try {
+                    await this.$store.dispatch('environment/enableNode', {
+                        projectId: this.projectId,
+                        envHashId: this.envHashId,
+                        nodeHashId: row.nodeHashId,
+                        enableNode: !row.envEnableNode
+                    })
+
+                    await this.requestList()
+
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: row.envEnableNode ? this.$t('environment.停用成功') : this.$t('environment.启用成功')
+                    })
+                } catch (e) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: e.message || e
+                    })
+                }
             }
         }
     }
@@ -637,5 +684,8 @@
         margin-top: 24px;
         height: calc(95% - 32px);
         overflow: auto;
+        .useless {
+            color: #c3cdd7;
+        }
     }
 </style>

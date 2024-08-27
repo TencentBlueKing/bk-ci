@@ -12,6 +12,7 @@
 
 <script>
     import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import { RESOURCE_ACTION } from '@/utils/permission'
     import { mapActions, mapState } from 'vuex'
 
     export default {
@@ -53,20 +54,24 @@
                 'setPipelineYaml',
                 'selectPipelineVersion',
                 'setPipelineWithoutTrigger',
-                'requestPipelineSummary'
+                'requestPipelineSummary',
+                'resetAtomModalMap'
             ]),
             async fetchPipelineInfo () {
                 try {
                     this.isLoading = true
                     await this.requestPipelineSummary(this.$route.params)
                 } catch (error) {
-                    this.$showTips({
-                        theme: 'error',
-                        message: error.message
+                    this.handleError(error, {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.$route.params.pipelineId,
+                        action: RESOURCE_ACTION.VIEW
                     })
-                    this.$router.replace({
-                        name: 'PipelineManageList'
-                    })
+                    if (error?.code !== 403) {
+                        this.$router.replace({
+                            name: 'PipelineManageList'
+                        })
+                    }
                     return false
                 } finally {
                     this.isLoading = false
