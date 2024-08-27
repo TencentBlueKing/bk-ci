@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.pipeline
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
@@ -37,7 +38,6 @@ import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.PipelineStatus
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 
@@ -79,7 +79,11 @@ class PipelineStatusService(
             buildTaskCountList.filter { it.value2() == BuildStatus.SUCCEED.ordinal }.sumOf { it.value3() }
 
         // 获取触发方式
-        val buildInfo = pipelineBuildDao.getBuildInfo(dslContext, projectId, pipelineBuildSummary.latestBuildId)
+        val buildInfo = if (pipelineBuildSummary.latestBuildId.isNullOrBlank()) {
+            null
+        } else {
+            pipelineBuildDao.getBuildInfo(dslContext, projectId, pipelineBuildSummary.latestBuildId)
+        }
 
         // todo还没想好与Pipeline结合，减少这部分的代码，收归一处
         return PipelineStatus(
