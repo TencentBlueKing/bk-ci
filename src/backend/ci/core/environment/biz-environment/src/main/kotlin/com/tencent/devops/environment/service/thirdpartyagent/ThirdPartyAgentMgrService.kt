@@ -1080,6 +1080,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             agentVersion = startInfo.version,
             masterVersion = startInfo.masterVersion
         )
+        if (!startInfo.masterVersion.isNullOrBlank() && agentRecord.masterVersion != startInfo.masterVersion) {
+            // 同时更新T_NODE表中 构建机的agent版本字段
+            nodeDao.updateDevopsAgentVersionByNodeId(dslContext, agentRecord.nodeId, startInfo.masterVersion!!)
+        }
         if (updateCount != 1) {
             logger.warn("Fail to update the agent info($updateCount)")
         }
