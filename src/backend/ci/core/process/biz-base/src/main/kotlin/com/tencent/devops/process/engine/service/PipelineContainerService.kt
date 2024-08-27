@@ -48,8 +48,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
-import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.ElementUtils
+import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_MANUALLY_SKIPPED
@@ -72,11 +72,11 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_NAME
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 流水线Container相关的服务
@@ -330,7 +330,7 @@ class PipelineContainerService @Autowired constructor(
                         element = atomElement,
                         stageEnableFlag = stage.isStageEnable(),
                         containerEnableFlag = container.isContainerEnable(),
-                        originMatrixContainerFlag = ContainerUtils.isOriginMatrixContainer(container)
+                        originMatrixContainerFlag = container.matrixGroupFlag == true
                     )
                 ) {
                     val taskVar = atomElement.initTaskVar()
@@ -453,7 +453,7 @@ class PipelineContainerService @Autowired constructor(
                         element = atomElement,
                         stageEnableFlag = stage.isStageEnable(),
                         containerEnableFlag = container.isContainerEnable(),
-                        originMatrixContainerFlag = ContainerUtils.isOriginMatrixContainer(container)
+                        originMatrixContainerFlag = container.matrixGroupFlag == true
                     )
                 ) {
                     taskBuildRecords.add(
