@@ -29,12 +29,12 @@ class TencentNewCmdbServiceImpl(
 
     /**
      * 使用公司新CMDB接口根据serverId查询服务器列表
-     * @param serverIds 服务器ID集合
+     * @param serverIdSet 服务器ID集合
      * @return 通用服务器信息Map<serverId, CmdbServerDTO>
      */
-    override fun queryServerByServerId(serverIds: Collection<Long>): Map<Long, CmdbServerDTO> {
+    override fun queryServerByServerId(serverIdSet: Set<Long>): Map<Long, CmdbServerDTO> {
         val newCmdbServerMap = queryNewCmdbServerByBatch(
-            queryValues = serverIds.toSet(),
+            queryValues = serverIdSet,
             buildNewCmdbConditionFunc = this::buildServerIdCondition,
             fetchNewCmdbDataFunc = newCmdbClient::queryAllServerByBaseCondition,
             keySelector = { server -> server.serverId }
@@ -46,11 +46,11 @@ class TencentNewCmdbServiceImpl(
 
     /**
      * 使用公司新CMDB接口根据IP查询服务器列表
-     * @param ips IP集合
+     * @param ipSet IP集合
      * @return 通用服务器信息Map<ip, CmdbServerDTO>
      */
-    override fun queryServerByIp(ips: Collection<String>): Map<String, CmdbServerDTO> {
-        val newCmdbServerMap = queryNewServerByIp(ips)
+    override fun queryServerByIp(ipSet: Set<String>): Map<String, CmdbServerDTO> {
+        val newCmdbServerMap = queryNewServerByIp(ipSet)
         return newCmdbServerMap.mapValues { (_, newCmdbServer) ->
             CmdbServerDTO.fromNewCmdbServer(newCmdbServer)
         }
@@ -58,12 +58,12 @@ class TencentNewCmdbServiceImpl(
 
     /**
      * 使用公司新CMDB接口根据IP查询服务器列表
-     * @param ips IP集合
+     * @param ipSet IP集合
      * @return 新CMDB服务器信息Map<ip, NewCmdbServer>
      */
-    fun queryNewServerByIp(ips: Collection<String>): Map<String, NewCmdbServer> {
+    fun queryNewServerByIp(ipSet: Set<String>): Map<String, NewCmdbServer> {
         return queryNewCmdbServerByBatch(
-            queryValues = ips.toSet(),
+            queryValues = ipSet,
             buildNewCmdbConditionFunc = this::buildServerIpCondition,
             fetchNewCmdbDataFunc = newCmdbClient::queryAllServerByBaseCondition,
             keySelector = { server -> server.getFirstIp() ?: "" }

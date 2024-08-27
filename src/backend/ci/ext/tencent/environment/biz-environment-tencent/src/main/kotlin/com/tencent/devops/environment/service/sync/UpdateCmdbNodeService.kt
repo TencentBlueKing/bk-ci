@@ -252,3 +252,11 @@ class UpdateCmdbNodeService @Autowired constructor(
             NodeStatus.NOT_INSTALLED.name
     }
 }
+
+fun main() {
+    val map = LinkedHashMap<Long?, String>()
+    map[1] = "1"
+    map[null] = "2"
+    println("hello world")
+    println(map)
+}

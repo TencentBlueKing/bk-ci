@@ -100,7 +100,7 @@ class ImportCmdbNodeService(
         pageSize: Int,
         ips: List<String>
     ): NewCmdbScrollPageData<NewCmdbServer> {
-        var serverList = newCmdbService!!.queryNewServerByIp(ips).values.filter {
+        var serverList = newCmdbService!!.queryNewServerByIp(ips.toSet()).values.filter {
             if (!bakOperator) {
                 it.hasOperator(userId)
             } else {

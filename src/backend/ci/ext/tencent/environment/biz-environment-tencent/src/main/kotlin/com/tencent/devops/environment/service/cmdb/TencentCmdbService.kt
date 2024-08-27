@@ -8,13 +8,13 @@ import com.tencent.devops.environment.pojo.cmdb.common.CmdbServerDTO
 interface TencentCmdbService {
     /**
      * 根据ServerId批量查询服务器信息
-     * @param serverIds ServerId集合
+     * @param serverIdSet ServerId集合
      */
-    fun queryServerByServerId(serverIds: Collection<Long>): Map<Long, CmdbServerDTO>
+    fun queryServerByServerId(serverIdSet: Set<Long>): Map<Long, CmdbServerDTO>
 
     /**
      * 根据IP批量查询服务器信息
-     * @param ips IP集合
+     * @param ipSet IP集合
      */
-    fun queryServerByIp(ips: Collection<String>): Map<String, CmdbServerDTO>
+    fun queryServerByIp(ipSet: Set<String>): Map<String, CmdbServerDTO>
 }

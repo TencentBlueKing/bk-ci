@@ -28,12 +28,12 @@ class TencentCmdbServiceImpl(
         private const val CMDB_SERVER_FETCH_BATCH_SIZE = 1000
     }
 
-    override fun queryServerByServerId(serverIds: Collection<Long>): Map<Long, CmdbServerDTO> {
+    override fun queryServerByServerId(serverIdSet: Set<Long>): Map<Long, CmdbServerDTO> {
         return queryCmdbServerByBatch(
             fetchRawCmdbDataFunc = { start, limit ->
                 esbCmdbClient.queryCmdbServerByServerIds(
                     userId = DEFAULT_USER,
-                    serverIds = serverIds.toSet(),
+                    serverIds = serverIdSet,
                     start = start,
                     limit = limit
                 )
@@ -42,12 +42,12 @@ class TencentCmdbServiceImpl(
         )
     }
 
-    override fun queryServerByIp(ips: Collection<String>): Map<String, CmdbServerDTO> {
+    override fun queryServerByIp(ipSet: Set<String>): Map<String, CmdbServerDTO> {
         return queryCmdbServerByBatch(
             fetchRawCmdbDataFunc = { start, limit ->
                 esbCmdbClient.queryCmdbServerByIps(
                     userId = DEFAULT_USER,
-                    ips = ips.toSet(),
+                    ips = ipSet,
                     start = start,
                     limit = limit
                 )
