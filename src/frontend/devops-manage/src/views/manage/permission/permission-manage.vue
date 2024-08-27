@@ -93,7 +93,7 @@
       :is-show="showResetDialog"
       :key="resourceType"
       theme="primary"
-      :width="640"
+      :width="740"
       :title="t('批量重置')"
       @closed="dialogClose"
     >
@@ -828,14 +828,14 @@ function handleChangeName ({ list }) {
       line-height: 20px;
       text-wrap: wrap;
     }
-    .failed-msg {
-      a {
-        color: #3A84FF;
-      }
-    }
     .expand-btn {
       color: #3A84FF;
       cursor: pointer;
+    }
+  }
+  .failed-msg {
+    a {
+      color: #3A84FF;
     }
   }
 </style>
