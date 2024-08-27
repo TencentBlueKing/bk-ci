@@ -642,6 +642,21 @@ create table IF NOT EXISTS T_WORKSPACE_LABELS
     KEY `IDX_LABEL` (`LABEL`)
 )
     comment '工作空间标签表' charset = utf8;
+	
+CREATE TABLE `T_WORKSPACE_NOTIFY_HISTORY`
+(
+    ID             bigint auto_increment
+        primary key,
+    `BIZ_ID`       varchar(64) NOT NULL COMMENT '会话ID，同一批次的通知，BIZ_ID 会一样',
+    `OPERATOR`     varchar(64) NOT NULL DEFAULT '' COMMENT '操作人',
+    `USER_IDS`        varchar(64) NOT NULL DEFAULT '' COMMENT '接收人',
+    `TYPE`         varchar(32) NOT NULL DEFAULT '' COMMENT '通知类型',
+    `STATUS`       varchar(32) NOT NULL COMMENT '通知状态',
+    `BODY_PARAMS`   text        NOT NULL COMMENT '描述内容',
+    `CREATED_TIME` timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    KEY `uni_1` (`BIZ_ID`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='云桌面消息通知历史'
 
 -- ----------------------------
 -- Table structure for T_DISPATCH_WORKSPACE_OP_HIS

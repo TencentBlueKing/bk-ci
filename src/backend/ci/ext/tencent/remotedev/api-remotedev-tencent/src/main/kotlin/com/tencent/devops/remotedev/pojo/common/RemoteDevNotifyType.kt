@@ -28,7 +28,27 @@
 package com.tencent.devops.remotedev.pojo.common
 
 enum class RemoteDevNotifyType {
+    // 邮件
     EMAIL,
+    // 蓝盾客户端-通知
     CLIENT_PUSH,
-    RTX
+    // 企业微信
+    RTX,
+    // 云桌面-跑马灯消息
+    DESKTOP_MARQUEE,
+
+    // 云桌面-复杂消息
+    DESKTOP_COMPLEX;
+
+    fun getDesktopType() = when (this) {
+        DESKTOP_MARQUEE -> 1
+        DESKTOP_COMPLEX -> 2
+        else -> 0
+    }
+
+    enum class Status {
+        SUCCESS,
+        FAIL,
+        FAIL_RESEND
+    }
 }
