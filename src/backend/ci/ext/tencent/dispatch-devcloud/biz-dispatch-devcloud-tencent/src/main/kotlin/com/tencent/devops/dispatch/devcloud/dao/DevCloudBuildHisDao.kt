@@ -85,7 +85,7 @@ class DevCloudBuildHisDao {
                 select.and(VM_SEQ_ID.eq(vmSeqId))
             }
 
-            return select.orderBy(GMT_CREATE.desc()).fetchAny()
+            return select.orderBy(GMT_CREATE.desc()).limit(1).fetchAny()
         }
     }
 
@@ -99,6 +99,7 @@ class DevCloudBuildHisDao {
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
                 .orderBy(GMT_CREATE.desc())
+                .limit(1)
                 .fetchAny()
         }
     }

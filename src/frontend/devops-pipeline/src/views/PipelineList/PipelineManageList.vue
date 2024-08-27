@@ -2,7 +2,15 @@
     <main class="pipeline-list-main">
         <div class="recycle-bin-header" v-if="isDeleteView">
             <h5>{{$t('restore.recycleBin')}}</h5>
-            <bk-input :placeholder="$t('restore.restoreSearchTips')" />
+            <bk-input
+                clearable
+                :placeholder="$t('restore.restoreSearchTips')"
+                right-icon="bk-icon icon-search"
+                :value="filters.filterByPipelineName"
+                @enter="handleSearch"
+                @clear="handleSearch"
+                @right-icon-click="handleSearch"
+            />
         </div>
         <template v-else>
             <h5 class="current-pipeline-group-name">
@@ -108,7 +116,7 @@
             <pipeline-table-view
                 v-if="isTableLayout"
                 :filter-params="filters"
-                :max-height="$refs.tableBox?.offsetHeight"
+                :max-height="tableHeight"
                 ref="pipelineBox"
             />
             <pipelines-card-view
@@ -228,7 +236,8 @@
                     action: this.toggleImportPipelinePopup
                 }],
                 RESOURCE_ACTION,
-                PROJECT_RESOURCE_ACTION
+                PROJECT_RESOURCE_ACTION,
+                tableHeight: null
             }
         },
         computed: {
@@ -323,9 +332,9 @@
                 this.filters = {}
             }
         },
-        
+
         created () {
-            this.$updateTabTitle?.(this.$t('documentTitlePipeline'))
+            this.$updateTabTitle?.()
             this.goList()
             this.checkHasCreatePermission()
         },
@@ -334,17 +343,23 @@
             webSocketMessage.installWsMessage(this.$refs.pipelineBox?.updatePipelineStatus)
             bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
             bus.$on(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
+            this.updateTableHeight()
+            window.addEventListener('resize', this.updateTableHeight)
         },
 
         beforeDestroy () {
             webSocketMessage.unInstallWsMessage()
             bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
+            window.removeEventListener('resize', this.updateTableHeight)
         },
 
         methods: {
             ...mapActions('pipelines', [
                 'requestHasCreatePermission'
             ]),
+            updateTableHeight () {
+                this.tableHeight = this.$refs.tableBox.offsetHeight
+            },
             isActiveSort (sortType) {
                 return this.$route.query.sortType === sortType
             },
@@ -439,6 +454,11 @@
             },
             refresh () {
                 this.$refs.pipelineBox?.refresh?.()
+            },
+            handleSearch (filterByPipelineName) {
+                this.filters = {
+                    filterByPipelineName
+                }
             }
         }
     }

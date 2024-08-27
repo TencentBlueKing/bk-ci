@@ -57,5 +57,7 @@ data class HostDetail(
     @get:Schema(title = "任务执行状态")
     val status: String?,
     @get:Schema(title = "任务执行状态名称")
-    val statusDisplay: String?
+    val statusDisplay: String?,
+    @get:Schema(title = "是否手动安装")
+    val isManual: Boolean?
 )

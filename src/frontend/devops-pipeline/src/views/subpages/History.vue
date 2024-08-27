@@ -49,7 +49,8 @@
         BuildHistoryTab,
         ChangeLog,
         PipelineConfig,
-        TriggerEvent
+        TriggerEvent,
+        DelegationPermission
     } from '@/components/PipelineDetailTabs'
     import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -62,7 +63,8 @@
             AuthorityTab,
             ChangeLog,
             Logo,
-            ShowVariable
+            ShowVariable,
+            DelegationPermission
         },
         computed: {
             ...mapState('atom', ['pipelineInfo', 'pipeline', 'pipelineSetting', 'activePipelineVersion', 'switchingVersion']),
@@ -146,6 +148,10 @@
                                 name: 'permission'
                             },
                             {
+                                title: this.$t('delegationPermission'),
+                                name: 'delegation'
+                            },
+                            {
                                 title: this.$t('operationLog'),
                                 disableTooltip: {
                                     content: this.$refs.disableToolTips?.[3],
@@ -167,18 +173,12 @@
             this.resetHistoryFilterCondition()
             this.selectPipelineVersion(null)
             this.resetAtomModalMap()
-            this.setPipeline(null)
-            this.setPipelineWithoutTrigger(null)
-            this.setPipelineYaml('')
         },
         methods: {
             ...mapActions('pipelines', ['resetHistoryFilterCondition']),
             ...mapActions('atom', [
                 'selectPipelineVersion',
-                'setPipeline',
-                'setPipelineYaml',
-                'resetAtomModalMap',
-                'setPipelineWithoutTrigger'
+                'resetAtomModalMap'
             ]),
             getNavComponent (type) {
                 switch (type) {
@@ -209,6 +209,10 @@
                     case 'changeLog':
                         return {
                             component: 'ChangeLog'
+                        }
+                    case 'delegation':
+                        return {
+                            component: 'DelegationPermission'
                         }
                     default:
                         return {

@@ -111,6 +111,8 @@ class ControlUtilsTest : TestBase() {
         val variables = mutableMapOf("key1" to "a", "key2" to "b")
         Assertions.assertTrue(
             ControlUtils.checkJobSkipCondition(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 conditions = conditions,
                 variables = variables,
                 buildId = buildId,
@@ -120,6 +122,8 @@ class ControlUtilsTest : TestBase() {
         )
         Assertions.assertFalse(
             ControlUtils.checkJobSkipCondition(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 conditions = conditions,
                 variables = variables,
                 buildId = buildId,
@@ -135,6 +139,8 @@ class ControlUtilsTest : TestBase() {
         variables["key3"] = "un"
         Assertions.assertFalse(
             ControlUtils.checkJobSkipCondition(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 conditions = conditions,
                 variables = variables,
                 buildId = buildId,
@@ -144,6 +150,8 @@ class ControlUtilsTest : TestBase() {
         )
         Assertions.assertTrue(
             ControlUtils.checkJobSkipCondition(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 conditions = conditions,
                 variables = variables,
                 buildId = buildId,
@@ -153,6 +161,8 @@ class ControlUtilsTest : TestBase() {
         )
         Assertions.assertFalse(
             ControlUtils.checkJobSkipCondition(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 conditions = conditions,
                 variables = variables,
                 buildId = buildId,
@@ -163,6 +173,8 @@ class ControlUtilsTest : TestBase() {
         )
         Assertions.assertFalse(
             ControlUtils.checkJobSkipCondition(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 conditions = conditions,
                 variables = variables,
                 buildId = buildId,
@@ -173,6 +185,8 @@ class ControlUtilsTest : TestBase() {
         )
         Assertions.assertFalse(
             ControlUtils.checkJobSkipCondition(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 conditions = conditions,
                 variables = variables,
                 buildId = buildId,
@@ -183,6 +197,8 @@ class ControlUtilsTest : TestBase() {
         )
         Assertions.assertTrue(
             ControlUtils.checkJobSkipCondition(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 conditions = conditions,
                 variables = variables,
                 buildId = buildId,
@@ -405,6 +421,8 @@ class ControlUtilsTest : TestBase() {
         // 条件匹配就跳过
         Assertions.assertFalse(
             ControlUtils.checkStageSkipCondition(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 conditions = conditions, variables = variables, buildId = buildId,
                 runCondition = StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
                 asCodeEnabled = true
@@ -415,6 +433,8 @@ class ControlUtilsTest : TestBase() {
         // 条件匹配就跳过
         Assertions.assertTrue(
             ControlUtils.checkStageSkipCondition(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 conditions = conditions, variables = variables, buildId = buildId,
                 runCondition = StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
                 asCodeEnabled = true
@@ -425,6 +445,8 @@ class ControlUtilsTest : TestBase() {
         // 条件匹配就跳过
         Assertions.assertFalse(
             ControlUtils.checkStageSkipCondition(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 conditions = conditions, variables = variables, buildId = buildId,
                 runCondition = StageRunCondition.CUSTOM_VARIABLE_MATCH,
                 asCodeEnabled = true
@@ -435,6 +457,8 @@ class ControlUtilsTest : TestBase() {
         // 条件匹配就跳过
         Assertions.assertTrue(
             ControlUtils.checkStageSkipCondition(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 conditions = conditions, variables = variables, buildId = buildId,
                 runCondition = StageRunCondition.CUSTOM_VARIABLE_MATCH,
                 asCodeEnabled = true
@@ -444,6 +468,8 @@ class ControlUtilsTest : TestBase() {
         run other@{
             Assertions.assertFalse(
                 ControlUtils.checkStageSkipCondition(
+                    projectId = "proj1",
+                    pipelineId = "p-xxx",
                     conditions = conditions, variables = variables, buildId = buildId,
                     runCondition = StageRunCondition.CUSTOM_CONDITION_MATCH,
                     customCondition = "a==a",
@@ -452,6 +478,8 @@ class ControlUtilsTest : TestBase() {
             )
             Assertions.assertFalse(
                 ControlUtils.checkStageSkipCondition(
+                    projectId = "proj1",
+                    pipelineId = "p-xxx",
                     conditions = conditions, variables = variables, buildId = buildId,
                     runCondition = StageRunCondition.AFTER_LAST_FINISHED,
                     asCodeEnabled = true
@@ -466,6 +494,8 @@ class ControlUtilsTest : TestBase() {
         val failed = true
         Assertions.assertTrue(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_SUCCESS),
                 containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed,
@@ -474,6 +504,8 @@ class ControlUtilsTest : TestBase() {
         )
         Assertions.assertTrue(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.CUSTOM_VARIABLE_MATCH),
                 containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed,
@@ -483,6 +515,8 @@ class ControlUtilsTest : TestBase() {
 
         Assertions.assertTrue(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN),
                 containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed,
@@ -491,6 +525,8 @@ class ControlUtilsTest : TestBase() {
         )
         Assertions.assertTrue(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.CUSTOM_CONDITION_MATCH),
                 containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed,
@@ -499,6 +535,8 @@ class ControlUtilsTest : TestBase() {
         )
         Assertions.assertTrue(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.OTHER_TASK_RUNNING),
                 containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed,
@@ -515,6 +553,8 @@ class ControlUtilsTest : TestBase() {
         // 成功不跳过
         Assertions.assertFalse(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_SUCCESS),
                 containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed,
@@ -524,6 +564,8 @@ class ControlUtilsTest : TestBase() {
         // 满足执行条件 而不跳过
         Assertions.assertFalse(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
@@ -536,6 +578,8 @@ class ControlUtilsTest : TestBase() {
         // 不满足执行条件 而跳过
         Assertions.assertTrue(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
@@ -548,6 +592,8 @@ class ControlUtilsTest : TestBase() {
         // 满足不执行的条件 而跳过
         Assertions.assertTrue(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
@@ -560,6 +606,8 @@ class ControlUtilsTest : TestBase() {
         // 不满足不执行的条件 而不跳过
         Assertions.assertFalse(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
@@ -579,6 +627,8 @@ class ControlUtilsTest : TestBase() {
         // 成功不跳过
         Assertions.assertFalse(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_SUCCESS),
                 containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed,
@@ -588,6 +638,8 @@ class ControlUtilsTest : TestBase() {
         // 满足执行条件 而不跳过
         Assertions.assertFalse(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
@@ -600,6 +652,8 @@ class ControlUtilsTest : TestBase() {
         // 不满足执行条件 而跳过
         Assertions.assertTrue(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
@@ -612,6 +666,8 @@ class ControlUtilsTest : TestBase() {
         // 满足不执行的条件 而跳过
         Assertions.assertTrue(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
@@ -624,6 +680,8 @@ class ControlUtilsTest : TestBase() {
         // 不满足不执行的条件 而不跳过
         Assertions.assertFalse(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
@@ -642,6 +700,8 @@ class ControlUtilsTest : TestBase() {
         // null check
         Assertions.assertFalse(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = null,
                 containerFinalStatus = BuildStatus.RUNNING,
@@ -654,6 +714,8 @@ class ControlUtilsTest : TestBase() {
         // RunCondition.PRE_TASK_FAILED_ONLY & RUNNING
         Assertions.assertFalse(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
@@ -667,6 +729,8 @@ class ControlUtilsTest : TestBase() {
         // RunCondition.PRE_TASK_FAILED_ONLY & FAIL
         Assertions.assertFalse(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
@@ -680,6 +744,8 @@ class ControlUtilsTest : TestBase() {
         // RunCondition.PRE_TASK_FAILED_ONLY & FAIL
         Assertions.assertFalse(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
@@ -694,6 +760,8 @@ class ControlUtilsTest : TestBase() {
         // RunCondition.PRE_TASK_FAILED_ONLY & disable
         Assertions.assertTrue(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     enable = false, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
@@ -708,6 +776,8 @@ class ControlUtilsTest : TestBase() {
         // RunCondition.PRE_TASK_FAILED_ONLY & SUCCEED
         Assertions.assertTrue(
             ControlUtils.checkTaskSkip(
+                projectId = "proj1",
+                pipelineId = "p-xxx",
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY

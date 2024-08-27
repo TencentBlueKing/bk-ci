@@ -30,16 +30,12 @@ package job
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 )
 
 // buildManager 二进制构建对象管理
@@ -90,54 +86,10 @@ func (b *buildManager) AddBuild(processId int, buildInfo *api.ThirdPartyBuildInf
 	b.instances.Store(processId, buildInfo)
 	// 启动构建了就删除preInstance
 	b.DeletePreInstance(buildInfo.BuildId)
-
-	// #5806 预先录入异常信息，在构建进程正常结束时清理掉。如果没清理掉，则说明进程非正常退出，可能被OS或人为杀死
-	errorMsgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
-	_ = fileutil.WriteString(errorMsgFile, i18n.Localize("BuilderProcessWasKilled", nil))
-	_ = systemutil.Chmod(errorMsgFile, os.ModePerm)
-	b.waitProcessDone(processId)
 }
 
-func (b *buildManager) waitProcessDone(processId int) {
-	process, err := os.FindProcess(processId)
-	inf, ok := b.instances.Load(processId)
-	var info *api.ThirdPartyBuildInfo
-	if ok {
-		info = inf.(*api.ThirdPartyBuildInfo)
-	}
-	if err != nil {
-		errMsg := i18n.Localize("BuildProcessErr", map[string]interface{}{"pid": processId, "err": err.Error()})
-		logs.Warn(errMsg)
-		b.instances.Delete(processId)
-		workerBuildFinish(info.ToFinish(false, errMsg, api.BuildProcessRunErrorEnum))
-		return
-	}
-
-	state, err := process.Wait()
-	// #5806 从b-xxxx_build_msg.log 读取错误信息，此信息可由worker-agent.jar写入，用于当异常时能够将信息上报给服务器
-	msgFile := getWorkerErrorMsgFile(info.BuildId, info.VmSeqId)
-	msg, _ := fileutil.GetString(msgFile)
-	logs.Info(fmt.Sprintf("build[%s] pid[%d] finish, state=%v err=%v, msg=%s", info.BuildId, processId, state, err, msg))
-
-	if err != nil {
-		if len(msg) == 0 {
-			msg = err.Error()
-		}
-	}
-	success := true
-	if len(msg) == 0 {
-		msg = i18n.Localize("WorkerExit", map[string]interface{}{"pid": processId})
-	} else {
-		success = false
-	}
-
-	buildInfo := info
+func (b *buildManager) DeleteBuild(processId int) {
 	b.instances.Delete(processId)
-	if success {
-		workerBuildFinish(buildInfo.ToFinish(success, msg, api.NoErrorEnum))
-	} else {
-		workerBuildFinish(buildInfo.ToFinish(success, msg, api.BuildProcessRunErrorEnum))
-	}
 }
 
 func (b *buildManager) GetPreInstancesCount() int {

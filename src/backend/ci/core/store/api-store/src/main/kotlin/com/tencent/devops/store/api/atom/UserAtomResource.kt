@@ -49,6 +49,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -206,4 +207,12 @@ interface UserAtomResource {
         @Parameter(description = "卸载插件请求包体", required = true)
         unInstallReq: UnInstallReq
     ): Result<Boolean>
+
+    @Operation(summary = "批量获取插件输出信息")
+    @POST
+    @Path("/output/info/list")
+    fun getAtomOutputInfos(
+        @Parameter(description = "插件信息集合，格式：插件标识@版本号", required = true)
+        atomInfos: Set<String>
+    ): Result<Map<String, String>?>
 }

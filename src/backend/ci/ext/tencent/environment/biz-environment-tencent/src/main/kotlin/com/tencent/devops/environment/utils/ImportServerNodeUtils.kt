@@ -30,10 +30,10 @@ package com.tencent.devops.environment.utils
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.environment.agent.client.EsbAgentClient
-import com.tencent.devops.common.environment.agent.pojo.agent.CmdbServerPage
+import com.tencent.devops.environment.service.cmdb.EsbCmdbClient
+import com.tencent.devops.environment.pojo.cmdb.resp.CmdbServerPage
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_IMPORT_EXCEED
 import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import org.jooq.DSLContext
@@ -42,7 +42,7 @@ import org.jooq.DSLContext
 object ImportServerNodeUtils {
 
     fun getUserCmdbNodeNew(
-        esbAgentClient: EsbAgentClient,
+        esbCmdbClient: EsbCmdbClient,
         redisOperation: RedisOperation,
         userId: String,
         bakOperator: Boolean,
@@ -51,19 +51,19 @@ object ImportServerNodeUtils {
         limit: Int
     ): CmdbServerPage {
         // 对没有IP条件的查询，做缓存
-        if (ips.isEmpty()) {
+        return if (ips.isEmpty()) {
             val key = "env_node_buffer_cmdb_${userId}_${offset}_${limit}_$bakOperator"
             val buffer = redisOperation.get(key)
-            return if (buffer != null) {
+            if (buffer != null) {
                 jacksonObjectMapper().readValue(buffer)
             } else {
-                val cmdbNodePage = esbAgentClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
+                val cmdbNodePage = esbCmdbClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
                 redisOperation.set(key, jacksonObjectMapper().writeValueAsString(cmdbNodePage), 60)
                 cmdbNodePage
             }
+        } else {
+            esbCmdbClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
         }
-
-        return esbAgentClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
     }
 
     fun checkImportCount(
@@ -79,7 +79,7 @@ object ImportServerNodeUtils {
         val existImportNodeCount = cmdbNodeDao.countImportNode(dslContext, projectId)
         if (toAddNodeCount + existImportNodeCount > importQuata) {
             throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_IMPORT_EXCEED,
+                errorCode = ERROR_NODE_IMPORT_EXCEED,
                 params = arrayOf(importQuata.toString())
             )
         }

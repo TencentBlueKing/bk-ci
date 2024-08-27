@@ -166,7 +166,8 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             offset = 0,
-            limit = 1000).map { it.id }
+            limit = 1000
+        ).map { it.id }
         val experienceMap = mutableMapOf<AuthPermission, List<Long>>()
         authPermissions.forEach {
             if (checkGroupPermission(user, projectId, it)) {
@@ -183,6 +184,8 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         projectId: String,
         groupRecordIds: List<Long>
     ): List<Long> = groupRecordIds
+
+    override fun deleteExperienceResource(projectId: String, experienceId: Long) = Unit
 
     private fun checkGroupPermission(
         userId: String,

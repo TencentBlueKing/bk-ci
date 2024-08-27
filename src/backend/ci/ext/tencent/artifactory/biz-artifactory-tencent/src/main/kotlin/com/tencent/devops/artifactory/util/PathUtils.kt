@@ -40,9 +40,11 @@ object PathUtils {
     fun checkAndNormalizeAbsPath(path: String): String {
         val normalizePath = Paths.get(path).normalize().toString()
         if (!normalizePath.startsWith("/")) {
-            throw BadRequestException(I18nUtil.getCodeLanMessage(
-                messageCode = BK_ILLEGAL_PATH
-            ))
+            throw BadRequestException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_ILLEGAL_PATH
+                )
+            )
         }
         return normalizePath
     }
@@ -63,7 +65,7 @@ object PathUtils {
                     URLEncoder.encode(
                         path,
                         "utf-8"
-                    )
+                    ).replace("+", "%20")
                 }"
     }
 

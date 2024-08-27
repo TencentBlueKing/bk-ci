@@ -1,16 +1,18 @@
 package com.tencent.devops.process.service.template
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.service.label.PipelineGroupService
-import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -25,12 +27,13 @@ import org.springframework.stereotype.Service
 class TemplateSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineGroupService: PipelineGroupService,
-    private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelineInfoExtService: PipelineInfoExtService,
     private val templateCommonService: TemplateCommonService,
-    private val templateDao: TemplateDao
+    private val templateDao: TemplateDao,
+    private val modelCheckPlugin: ModelCheckPlugin,
+    private val pipelineSettingVersionService: PipelineSettingVersionService,
+    private val pipelineTemplatePermissionService: PipelineTemplatePermissionService
 ) {
     fun updateTemplateSetting(
         projectId: String,
@@ -55,7 +58,11 @@ class TemplateSettingService @Autowired constructor(
                 name = setting.pipelineName,
                 desc = setting.desc
             )
-            saveTemplatePipelineSetting(context, userId, setting, true)
+            saveTemplatePipelineSetting(
+                context = context,
+                userId = userId,
+                setting = setting
+            )
         }
         return true
     }
@@ -63,32 +70,44 @@ class TemplateSettingService @Autowired constructor(
     fun saveTemplatePipelineSetting(
         context: DSLContext? = null,
         userId: String,
-        setting: PipelineSetting,
-        isTemplate: Boolean = false
+        setting: PipelineSetting
     ): PipelineSetting {
+        val projectId = setting.projectId
+        val pipelineId = setting.pipelineId
+        // 对齐新旧通知配置，统一根据新list数据保存
+        setting.fixSubscriptions()
+        modelCheckPlugin.checkSettingIntegrity(setting, projectId)
+        val settingVersion = pipelineSettingVersionService.getSettingVersionAfterUpdate(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            updateVersion = true,
+            setting = setting
+        )
+        logger.info("Save the template pipeline setting|$pipelineId|settingVersion=$settingVersion|setting=\n$setting")
+        val templateName = pipelineRepositoryService.saveSetting(
+            context = context,
+            userId = userId,
+            setting = setting,
+            version = settingVersion,
+            versionStatus = VersionStatus.RELEASED,
+            updateLastModifyUser = true,
+            isTemplate = true
+        )
+        if (templateName.name != templateName.oldName) {
+            pipelineTemplatePermissionService.modifyResource(
+                userId = userId,
+                projectId = projectId,
+                templateId = setting.pipelineId,
+                templateName = setting.pipelineName
+            )
+        }
         pipelineGroupService.updatePipelineLabel(
             userId = userId,
             projectId = setting.projectId,
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )
-        pipelineInfoDao.update(
-            dslContext = dslContext,
-            projectId = setting.projectId,
-            pipelineId = setting.pipelineId,
-            userId = userId,
-            pipelineName = setting.pipelineName,
-            pipelineDesc = setting.desc
-        )
-        logger.info("Save the template pipeline setting - ($setting)")
-        return pipelineSettingFacadeService.saveSetting(
-            context = context,
-            userId = userId,
-            projectId = setting.projectId,
-            pipelineId = setting.pipelineId,
-            setting = setting,
-            isTemplate = isTemplate
-        )
+        return setting.copy(version = settingVersion)
     }
 
     fun insertTemplateSetting(
@@ -112,13 +131,10 @@ class TemplateSettingService @Autowired constructor(
             projectId = projectId, pipelineId = templateId, pipelineName = pipelineName,
             maxPipelineResNum = null, failSubscription = failSubscription
         )
-        return pipelineSettingFacadeService.saveSetting(
+        return saveTemplatePipelineSetting(
             context = context,
             userId = userId,
-            projectId = projectId,
-            pipelineId = templateId,
-            setting = setting,
-            isTemplate = isTemplate
+            setting = setting
         )
     }
 

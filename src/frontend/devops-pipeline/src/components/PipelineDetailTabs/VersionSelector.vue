@@ -16,12 +16,26 @@
         @change="switchVersion"
         @toggle="selectorToggle"
     >
-        <div slot="trigger" class="pipeline-version-dropmenu-trigger">
-            <i v-if="isActiveDraft" class="devops-icon icon-edit-line" />
-            <logo v-else-if="isActiveBranchVersion" class="pipeline-branch-version-icon" name="branch" size="14" />
-            <i v-else :class="['devops-icon icon-check-circle', {
-                'is-release-version-icon': isCurrentVersion(activeVersion)
-            }]" />
+        <div
+            slot="trigger"
+            class="pipeline-version-dropmenu-trigger"
+        >
+            <i
+                v-if="isActiveDraft"
+                class="devops-icon icon-edit-line"
+            />
+            <logo
+                v-else-if="isActiveBranchVersion"
+                class="pipeline-branch-version-icon"
+                name="branch"
+                size="14"
+            />
+            <i
+                v-else
+                :class="['devops-icon icon-check-circle', {
+                    'is-release-version-icon': isCurrentVersion(activeVersion)
+                }]"
+            />
             <p class="pipeline-version-name">
                 <span v-bk-overflow-tips>
                     <template v-if="isActiveDraft">
@@ -31,15 +45,27 @@
                         {{ activeDisplayName }}
                     </template>
                 </span>
-                <i v-if="isCurrentVersion(activeVersion)" class="pipeline-release-version-tag">
+                <i
+                    v-if="activeVersion?.latestReleasedFlag"
+                    class="pipeline-release-version-tag"
+                >
                     {{ $t('latest') }}
                 </i>
-                <i v-else-if="isActiveDraft && showDraftTag" class="pipeline-draft-version-tag">
+                <i
+                    v-else-if="isActiveDraft && showDraftTag"
+                    class="pipeline-draft-version-tag"
+                >
                     {{ $t('willRelease') }}
                 </i>
             </p>
-            <i v-if="isLoading" class="devops-icon icon-circle-2-1 spin-icon" />
-            <i v-else class="bk-icon icon-angle-down" />
+            <i
+                v-if="isLoading"
+                class="devops-icon icon-circle-2-1 spin-icon"
+            />
+            <i
+                v-else
+                class="bk-icon icon-angle-down"
+            />
         </div>
         <bk-option
             v-for="item in versionList"
@@ -52,16 +78,30 @@
             }"
         >
             <div class="pipeline-version-option-item-name">
-                <i v-if="item.isDraft" class="devops-icon icon-edit-line" />
-                <logo v-else-if="item.isBranchVersion" class="pipeline-branch-version-icon" name="branch" size="14" />
-                <i v-else :class="['devops-icon icon-check-circle', {
-                    'is-release-version-icon': isCurrentVersion(item)
-                }]" />
+                <i
+                    v-if="item.isDraft"
+                    class="devops-icon icon-edit-line"
+                />
+                <logo
+                    v-else-if="item.isBranchVersion"
+                    class="pipeline-branch-version-icon"
+                    name="branch"
+                    size="14"
+                />
+                <i
+                    v-else
+                    :class="['devops-icon icon-check-circle', {
+                        'is-release-version-icon': isCurrentVersion(item)
+                    }]"
+                />
                 <p class="pipeline-version-name">
                     <span v-bk-overflow-tips>
                         {{ item.displayName }}
                     </span>
-                    <i v-if="isCurrentVersion(item)" class="pipeline-release-version-tag">
+                    <i
+                        v-if="isCurrentVersion(item)"
+                        class="pipeline-release-version-tag"
+                    >
                         {{ $t('latest') }}
                     </i>
                 </p>
@@ -69,21 +109,32 @@
                                 [{{ $t('mainBranch') }}]
                             </span> -->
             </div>
-            <span class="pipeline-version-option-item-desc" v-bk-overflow-tips>
+            <span
+                class="pipeline-version-option-item-desc"
+                v-bk-overflow-tips
+            >
                 {{ item.description || '--' }}
             </span>
         </bk-option>
-        <p v-if="showExtension" slot="extension" class="show-all-pipeline-version-entry" @click="showAll">
-            <logo name="tiaozhuan" :size="16" />
+        <p
+            v-if="showExtension"
+            slot="extension"
+            class="show-all-pipeline-version-entry"
+            @click="showAll"
+        >
+            <logo
+                name="tiaozhuan"
+                :size="16"
+            />
             {{ $t('viewAll') }}
         </p>
     </bk-select>
 </template>
 <script>
     import Logo from '@/components/Logo'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
-    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { convertTime } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
     export default {
@@ -237,11 +288,9 @@
                         if (page === 1) {
                             this.versionList = versions
                             const releaseVersion = versions.find(item => item.status === VERSION_STATUS_ENUM.RELEASED)
-                            if (releaseVersion.version > this.pipelineInfo.releaseVersion) {
+                            if (releaseVersion?.version > this.pipelineInfo.releaseVersion) {
                                 // HACK: 最新版本变更时，更新当前流水线信息
                                 this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                                    version: releaseVersion.version,
-                                    versionName: releaseVersion.versionName,
                                     releaseVersion: releaseVersion.version,
                                     releaseVersionName: releaseVersion.versionName
                                 })
@@ -323,11 +372,11 @@
     overflow: hidden;
     .icon-edit-line,
     .icon-check-circle {
+        color: #979BA5;
+        font-size: 14px;
         &.icon-check-circle.is-release-version-icon {
             color: #3FC362;
         }
-        color: #979BA5;
-        font-size: 14px;
     }
     .pipeline-branch-version-icon {
         color: #FF9C01;

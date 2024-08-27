@@ -365,10 +365,17 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val defaultBranch = action.data.context.defaultBranch
         val ref = yamlFile.ref
         logger.info("deleteYamlPipeline|$userId|$projectId|$repoHashId|yamlFile:$yamlFile")
+        if (ref.isNullOrBlank()) {
+            return
+        }
+        val lock = PipelineYamlTriggerLock(
+            redisOperation = redisOperation,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath
+        )
         try {
-            if (ref.isNullOrBlank()) {
-                return
-            }
+            lock.lock()
             pipelineYamlService.deleteBranchFile(
                 projectId = projectId,
                 repoHashId = repoHashId,
@@ -387,7 +394,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 ref = ref,
                 defaultBranch = defaultBranch
             )
-            if (needUnbindYamlPipeline) {
+            // 只有删除分支或者删除文件时才能解绑
+            if (releaseBranch == false && needUnbindYamlPipeline) {
                 unBindYamlPipeline(
                     userId = userId,
                     projectId = projectId,
@@ -424,6 +432,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
         } catch (ignored: Exception) {
             logger.warn("Failed to delete pipeline yaml|$projectId|${action.format()}", ignored)
             throw ignored
+        } finally {
+            lock.unlock()
         }
     }
 

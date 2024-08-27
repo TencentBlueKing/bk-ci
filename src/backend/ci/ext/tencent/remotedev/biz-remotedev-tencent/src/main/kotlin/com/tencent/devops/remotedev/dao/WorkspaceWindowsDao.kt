@@ -15,25 +15,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class WorkspaceWindowsDao {
-
-    fun opCreate(
-        dslContext: DSLContext,
-        workspaceName: String,
-        winConfigId: Int?,
-        resourceId: String = ""
-    ): Int {
-        return with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
-            dslContext.insertInto(
-                this,
-                WORKSPACE_NAME,
-                WIN_CONFIG_ID
-            ).values(
-                workspaceName,
-                winConfigId
-            ).onDuplicateKeyIgnore().execute()
-        }
-    }
-
     fun batchFetchWorkspaceWindowsInfo(
         dslContext: DSLContext,
         workspaceNames: Set<String>
@@ -64,6 +45,20 @@ class WorkspaceWindowsDao {
                 .set(RESOURCE_ID, resourceId ?: "")
                 .set(HOST_IP, hostIp ?: "")
                 .set(MAC_ADDRESS, macAddress ?: "")
+                .where(WORKSPACE_NAME.equal(workspaceName)).execute()
+        }
+    }
+
+    fun updateDetailInfo(
+        dslContext: DSLContext,
+        launchId: Int?,
+        regionId: Int?,
+        workspaceName: String
+    ): Int {
+        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
+            return dslContext.update(this)
+                .set(CUR_LAUNCH_ID, launchId)
+                .set(REGION_ID, regionId)
                 .where(WORKSPACE_NAME.equal(workspaceName)).execute()
         }
     }
@@ -135,6 +130,29 @@ class WorkspaceWindowsDao {
             .where(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME.`in`(workspaceNames))
             .and(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.eq(size))
             .fetchOne(0, Int::class.java)!!
+    }
+
+    fun bakWindowsConfig(
+        dslContext: DSLContext,
+        workspaceName: String,
+        bakName: String
+    ): Int {
+        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
+            return dslContext.update(this)
+                .set(WORKSPACE_NAME, bakName)
+                .where(WORKSPACE_NAME.equal(workspaceName)).execute()
+        }
+    }
+
+    fun fetchLastWindowsBak(
+        dslContext: DSLContext,
+        workspaceName: String
+    ): TWorkspaceWindowsRecord? {
+        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
+            return dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.like("$workspaceName.bak.%"))
+                .orderBy(ID.desc()).fetchAny()
+        }
     }
 
     fun fetchRecordByProjectIp(

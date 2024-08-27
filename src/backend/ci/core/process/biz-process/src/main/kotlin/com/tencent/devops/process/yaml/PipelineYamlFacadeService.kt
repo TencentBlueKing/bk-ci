@@ -172,7 +172,6 @@ class PipelineYamlFacadeService @Autowired constructor(
                 val repository = client.get(ServiceRepositoryPacResource::class).getPacRepository(
                     externalId = externalId, scmType = scmType
                 ).data ?: run {
-                    logger.info("pipeline yaml trigger|repository not enable pac|$externalId|$scmType")
                     return
                 }
                 val setting = PacRepoSetting(repository = repository)
@@ -289,6 +288,44 @@ class PipelineYamlFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineIds = listOf(pipelineId)
         )[pipelineId] ?: false
+    }
+
+    fun checkPushParam(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        versionName: String?,
+        repoHashId: String,
+        scmType: ScmType,
+        filePath: String,
+        content: String,
+        targetAction: CodeTargetAction
+    ) {
+        logger.info("check push yaml file|$userId|$projectId|$pipelineId|$repoHashId|$scmType|$version|$versionName")
+        val repository = client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryId = repoHashId,
+            repositoryType = RepositoryType.ID
+        ).data ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.GIT_NOT_FOUND,
+            params = arrayOf(repoHashId)
+        )
+        checkPushParam(content, repoHashId, filePath, targetAction, versionName, projectId, pipelineId)
+        val setting = PacRepoSetting(repository = repository)
+        val event = PipelineYamlManualEvent(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            scmType = scmType
+        )
+        val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
+        if (!action.checkPushPermission()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_PUSH_NO_REPO_PERMISSION,
+                params = arrayOf(userId, repository.url)
+            )
+        }
     }
 
     fun pushYamlFile(
@@ -415,28 +452,14 @@ class PipelineYamlFacadeService @Autowired constructor(
     /**
      * 构建yaml流水线触发变量
      */
-    fun buildYamlManualParamMap(userId: String, projectId: String, pipelineId: String): Map<String, BuildParameters>? {
+    fun buildYamlManualParamMap(projectId: String, pipelineId: String): Map<String, BuildParameters>? {
         val pipelineYamlInfo = pipelineYamlInfoDao.get(
             dslContext = dslContext, projectId = projectId, pipelineId = pipelineId
         ) ?: return null
-        val repoHashId = pipelineYamlInfo.repoHashId
-        val repository = client.get(ServiceRepositoryResource::class).get(
-            projectId = projectId,
-            repositoryId = repoHashId,
-            repositoryType = RepositoryType.ID
-        ).data ?: return null
-        val setting = PacRepoSetting(repository = repository)
-        val event = PipelineYamlManualEvent(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = repository.getScmType()
-        )
-        val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
         return mutableMapOf(
-            BK_REPO_WEBHOOK_HASH_ID to BuildParameters(BK_REPO_WEBHOOK_HASH_ID, repoHashId),
+            BK_REPO_WEBHOOK_HASH_ID to BuildParameters(BK_REPO_WEBHOOK_HASH_ID, pipelineYamlInfo.repoHashId),
             PIPELINE_WEBHOOK_BRANCH to BuildParameters(
-                PIPELINE_WEBHOOK_BRANCH, action.data.context.defaultBranch ?: ""
+                PIPELINE_WEBHOOK_BRANCH, pipelineYamlInfo.defaultBranch ?: ""
             )
         )
     }

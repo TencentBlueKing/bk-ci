@@ -59,15 +59,6 @@ class WhiteListDao {
         }
     }
 
-    fun batchFetch(
-        dslContext: DSLContext,
-        type: WhiteListType
-    ): List<WhiteList> {
-        with(TWhiteList.T_WHITE_LIST) {
-            return dslContext.selectFrom(this).where(TYPE.eq(type.name)).fetch(mapper)
-        }
-    }
-
     fun delete(
         dslContext: DSLContext,
         id: Long
@@ -87,24 +78,12 @@ class WhiteListDao {
         }
     }
 
-    fun updateWindowsGpuLimit(
-        dslContext: DSLContext,
-        name: String,
-        windowsGpuLimit: Int
-    ): Int {
-        with(TWhiteList.T_WHITE_LIST) {
-            return dslContext.update(this)
-                .set(WINDOWS_GPU_LIMIT, windowsGpuLimit)
-                .where(NAME.eq(name).and(TYPE.eq(WhiteListType.WINDOWS_GPU.name))).execute()
-        }
-    }
-
     class TWhiteListRecordJooqMapper : RecordMapper<TWhiteListRecord, WhiteList> {
         override fun map(record: TWhiteListRecord?): WhiteList? {
             return record?.run {
                 WhiteList(
                     name = name,
-                    type = WhiteListType.valueOf(type),
+                    type = WhiteListType.parse(type),
                     windowsGpuLimit = windowsGpuLimit
                 )
             }

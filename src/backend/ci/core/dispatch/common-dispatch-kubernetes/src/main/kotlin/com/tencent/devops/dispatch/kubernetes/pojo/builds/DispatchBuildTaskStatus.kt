@@ -29,7 +29,7 @@ package com.tencent.devops.dispatch.kubernetes.pojo.builds
 
 data class DispatchBuildTaskStatus(
     val status: DispatchBuildTaskStatusEnum,
-    val errMsg: String?
+    val msg: String?
 )
 
 enum class DispatchBuildTaskStatusEnum {

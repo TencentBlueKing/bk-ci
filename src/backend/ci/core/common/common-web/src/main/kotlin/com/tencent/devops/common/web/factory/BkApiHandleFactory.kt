@@ -30,6 +30,7 @@ package com.tencent.devops.common.web.factory
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.common.web.service.BkApiHandleService
 import com.tencent.devops.common.web.service.impl.BkApiHandleBuildAuthServiceImpl
+import com.tencent.devops.common.web.service.impl.BkApiHandleOpenAccessServiceImpl
 import com.tencent.devops.common.web.service.impl.BkApiHandlePipelineAccessServiceImpl
 import com.tencent.devops.common.web.service.impl.BkApiHandleProjectAccessServiceImpl
 import java.util.concurrent.ConcurrentHashMap
@@ -60,6 +61,13 @@ object BkApiHandleFactory {
             BkApiHandleType.PIPELINE_API_ACCESS_LIMIT -> {
                 if (bkApiHandleService == null) {
                     bkApiHandleService = BkApiHandlePipelineAccessServiceImpl()
+                    bkApiHandleMap[type.name] = bkApiHandleService
+                }
+            }
+
+            BkApiHandleType.API_OPEN_TOKEN_CHECK -> {
+                if (bkApiHandleService == null) {
+                    bkApiHandleService = BkApiHandleOpenAccessServiceImpl()
                     bkApiHandleMap[type.name] = bkApiHandleService
                 }
             }

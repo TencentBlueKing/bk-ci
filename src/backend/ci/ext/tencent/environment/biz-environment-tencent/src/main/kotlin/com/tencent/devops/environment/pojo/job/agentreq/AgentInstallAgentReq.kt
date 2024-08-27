@@ -29,6 +29,7 @@ package com.tencent.devops.environment.pojo.job.agentreq
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.environment.pojo.apigw.ApiGwReq
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "安装agent的请求信息")
@@ -46,4 +47,4 @@ data class AgentInstallAgentReq(
     @JsonProperty("is_install_latest_plugins")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val isInstallLatestPlugins: Boolean?
-)
+) : ApiGwReq()

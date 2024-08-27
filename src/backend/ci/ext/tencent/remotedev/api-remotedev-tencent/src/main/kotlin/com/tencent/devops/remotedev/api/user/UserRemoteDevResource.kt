@@ -84,21 +84,6 @@ interface UserRemoteDevResource {
         data: Watermark
     ): Result<Any>
 
-    @Operation(summary = "上报preci agent id")
-    @POST
-    @Path("/preci_agent")
-    fun preCiAgent(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "工作空间ID", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String,
-        @Parameter(description = "agentId", required = true)
-        @QueryParam("agentId")
-        agentId: String
-    ): Result<Boolean>
-
     @Operation(summary = "根据bi_ticket或bk_token获取用户名称")
     @GET
     @Path("/get_user")

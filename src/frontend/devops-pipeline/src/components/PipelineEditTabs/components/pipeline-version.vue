@@ -115,7 +115,7 @@
     import EnumInput from '@/components/atomFormField/EnumInput'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
-    import { getParamsValuesMap, bkVarWrapper } from '@/utils/util'
+    import { getParamsValuesMap, bkVarWrapper, copyToClipboard } from '@/utils/util'
 
     export default {
         components: {
@@ -209,7 +209,7 @@
         methods: {
             bkVarWrapper,
             handleCopy (con) {
-                window.navigator.clipboard.writeText(con)
+                copyToClipboard(con)
                 this.$bkMessage({
                     theme: 'success',
                     message: this.$t('copySuc'),

@@ -29,6 +29,7 @@
             </bk-form-item>
             <bk-form-item :label="$t('settings.additionUser')">
                 <staff-input
+                    name="additionUser"
                     :handle-change="(name, value) => subscription.users = value.join(',')"
                     :value="subscription.users.split(',').filter(Boolean)"
                     :placeholder="$t('settings.additionUserPlaceholder')">
@@ -51,21 +52,8 @@
                     :value="subscription.detailFlag">
                 </atom-checkbox>
             </bk-form-item>
-            
-            <bk-form-item
-                v-if="subscription.types.includes('WEWORK') || subscription.types.includes('RTX')"
-                class="checkbox-item"
-            >
-                <atom-checkbox
-                    style="width: auto"
-                    name="wechatGroupFlag"
-                    :text="$t('settings.enableGroup')"
-                    :desc="groupIdDesc"
-                    :handle-change="updateSubscription"
-                    :value="subscription.wechatGroupFlag">
-                </atom-checkbox>
-            </bk-form-item>
-            <template v-if="(subscription.types.includes('WEWORK') || subscription.types.includes('RTX')) && subscription.wechatGroupFlag">
+
+            <template v-if="subscription.types.includes('WEWORK_GROUP')">
                 <bk-form-item :label="$t('settings.groupIdLabel')">
                     <group-id-selector
                         class="item-groupid"
@@ -95,12 +83,13 @@
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import StaffInput from '@/components/atomFormField/StaffInput'
     import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
+
     export default {
         name: 'notify-setting',
         components: {
             GroupIdSelector,
-            StaffInput,
-            AtomCheckbox
+            AtomCheckbox,
+            StaffInput
         },
         props: {
             subscription: Object,
@@ -134,6 +123,7 @@
                 return [
                     { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
                     { id: 1, name: this.$t('settings.rtxNotice'), value: 'RTX' },
+                    { id: 6, name: this.$t('settings.weworkGroup'), value: 'WEWORK_GROUP' },
                     { id: 5, name: this.$t('settings.voice'), value: 'VOICE' }
                     // { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
                     // { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
@@ -158,6 +148,9 @@
     .notify-setting-comp {
         .bk-form .bk-form-content {
             min-height: 24px;
+        }
+        .bk-form .bk-form-item .bk-label {
+            font-weight: 400;
         }
         .bk-form-item.checkbox-item .bk-form-content {
             min-height: 18px;

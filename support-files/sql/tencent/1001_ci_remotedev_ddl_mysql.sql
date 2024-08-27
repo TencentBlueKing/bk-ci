@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
     `PROJECT_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '项目名称',
     `BUSINESS_LINE_NAME` varchar(255) NOT NULL DEFAULT '' COMMENT '业务线名称',
     `REMARK` varchar(255) NULL DEFAULT '' COMMENT '备注',
+    `LABELS` varchar(1024) NULL DEFAULT NULL COMMENT '标签',
+	`BAK_NAME` varchar(128) NULL DEFAULT NULL COMMENT '备份的workspace name',
     PRIMARY KEY (`ID`),
     UNIQUE INDEX `NAME`(`NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -60,6 +62,8 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
     `MAC_ADDRESS` varchar(64) NOT NULL DEFAULT '' COMMENT 'mac地址',
     `IMAGE_ID` varchar(32) default '' not null comment '镜像唯一标识',
     `ZONE_ID` varchar(32) default '' null comment '地域id',
+    `CUR_LAUNCH_ID` int(11) NULL COMMENT '根据项目区分的计费id',
+    `REGION_ID` int(11) NULL COMMENT '云区域ID',
     `ENABLE_RECORD_USER` varchar(1024) NULL COMMENT '开启云桌面录屏的人，有值等同于开启云桌面',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`WORKSPACE_NAME`),
@@ -258,6 +262,7 @@ CREATE TABLE IF NOT EXISTS `T_WINDOWS_RESOURCE_ZONE` (
     `DESCRIPTION` varchar(256) NOT NULL DEFAULT '' COMMENT '描述',
     `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+	`TYPE` varchar(32) default 'DEFAULT' not null comment '区分类型，以满足特殊区域',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`ZONE`,`SHORT_NAME`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='云桌面地域配置';
@@ -303,6 +308,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_IMAGES` (
     `STATUS` int(11) default 0 not null comment '镜像状态,0-building,1-success,2-failure',
     `CREATOR` varchar(32) default '' not null comment '创建人',
     `CREATE_TIME` timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
+    `ERROR_MSG` varchar(1024) NULL COMMENT '制作镜像失败时的失败信息',
     PRIMARY KEY (`ID`) USING BTREE,
     UNIQUE KEY `uni_1` (`PROJECT_ID`,`IMAGE_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '控制台项目镜像模板信息';
@@ -536,17 +542,6 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_TCLOUD_CFS` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
--- Table structure for T_PROJECT_TGIT_LINK 蓝盾项目和工蜂关联表
--- ----------------------------
-CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_LINK`(
-	`PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
-    `URL` varchar(255) NOT NULL COMMENT '工蜂url地址',
-    `STATUS` varchar(32) NOT NULL COMMENT '仓库状态',
-    `OAUTH_USER` varchar(32) NOT NULL COMMENT '授予oauth权限的用户',
-	PRIMARY KEY (`PROJECT_ID`, `URL`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- ----------------------------
 -- Table structure for T_WORKSPACE_NOTIFY
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_WORKSPACE_NOTIFY` (
@@ -571,6 +566,8 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_ID_LINK`(
     `OAUTH_USER` varchar(32) NOT NULL COMMENT '授予oauth权限的用户',
     `GIT_TYPE` varchar(16) NOT NULL COMMENT 'GIT仓库类型SVN或者GIT',
     `URL` varchar(255) NULL COMMENT '工蜂url地址',
+    `CREATE_TIME` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `UPDATE_TIME` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间'
 	PRIMARY KEY (`PROJECT_ID`, `TGIT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -634,5 +631,37 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_CRON_JOB` (
     KEY `IDX_PROJECT_ID` (`PROJECT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+create table IF NOT EXISTS T_WORKSPACE_LABELS
+(
+    PROJECT_ID     varchar(64)  not null comment '项目ID',
+    WORKSPACE_NAME varchar(128) not null,
+    LABEL         varchar(128) not null comment '标签',
+    constraint ukey
+        unique (PROJECT_ID, LABEL, WORKSPACE_NAME),
+    KEY `IDX_WORKSPACE_NAME` (`WORKSPACE_NAME`),
+    KEY `IDX_PROJECT_ID` (`PROJECT_ID`),
+    KEY `IDX_LABEL` (`LABEL`)
+)
+    comment '工作空间标签表' charset = utf8;
+
+-- ----------------------------
+-- Table structure for T_DISPATCH_WORKSPACE_OP_HIS
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS T_DISPATCH_WORKSPACE_OP_HIS
+(
+    ID              bigint auto_increment primary key,
+    WORKSPACE_NAME  varchar(128) default ''                not null comment '工作空间名称',
+    ENVIRONMENT_UID varchar(128) default ''                not null comment 'DevCloud环境ID',
+    OPERATOR        varchar(64)  default ''                not null comment '操作人',
+    ACTION          varchar(64)  default ''                not null comment '操作行为: CREATE, START, STOP, DELETE, SHARE',
+    ACTION_MSG      varchar(256) default ''                not null comment '操作行为描述',
+    CREATED_TIME    timestamp    default CURRENT_TIMESTAMP not null comment '创建时间',
+    UID             varchar(128) default ''                not null comment 'task id',
+    STATUS          varchar(32)  default ''                not null comment '操作状态',
+    UPDATE_TIME     timestamp    default CURRENT_TIMESTAMP null comment '修改时间',
+    KEY `uni_1` (`WORKSPACE_NAME`),
+    KEY `uni_2` (`UID`),
+    KEY `uni_3` (`STATUS`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='KUBERNETES构建集群工作空间操作记录表';
 
 SET FOREIGN_KEY_CHECKS = 1;

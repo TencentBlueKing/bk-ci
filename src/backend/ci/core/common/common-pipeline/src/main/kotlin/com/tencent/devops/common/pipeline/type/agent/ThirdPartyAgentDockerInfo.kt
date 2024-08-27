@@ -32,6 +32,11 @@ fun ThirdPartyAgentDockerInfo.replaceField(variables: Map<String, String>) {
         } else {
             EnvUtils.parseEnv(options?.gpus, variables)
         }
+        options?.privileged = if (options?.privileged == null) {
+            null
+        } else {
+            EnvUtils.parseEnv(options?.privileged.toString(), variables).toBoolean()
+        }
     }
     if (!imagePullPolicy.isNullOrBlank()) {
         imagePullPolicy = EnvUtils.parseEnv(imagePullPolicy, variables)
@@ -54,7 +59,8 @@ data class Credential(
 data class DockerOptions(
     var volumes: List<String>?,
     var mounts: List<String>?,
-    var gpus: String?
+    var gpus: String?,
+    var privileged: Boolean?
 )
 
 // 第三方构建机docker类型，调度使用，会带有调度相关信息

@@ -4,18 +4,18 @@
       v-bkloading="{ isLoading }"
       :data="memberList"
     >
-      <bk-table-column :label="$t('userGroup')" prop="groupName"></bk-table-column>
-      <bk-table-column :label="$t('createdTime')" prop="createdTime">
+      <bk-table-column :label="t('userGroup')" prop="groupName"></bk-table-column>
+      <bk-table-column :label="t('createdTime')" prop="createdTime">
         <template #default="{ row }">
           <span>{{ row.createdTime ? row.createdTime : '--' }} </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('expiredTime')" prop="expiredDisplay">
+      <bk-table-column :label="t('expiredTime')" prop="expiredDisplay">
         <template #default="{ row }">
-          <span>{{ row.expiredDisplay ? row.expiredDisplay + $t('day') : '--' }} </span>
+          <span>{{ row.expiredDisplay ? row.expiredDisplay + t('day') : '--' }} </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('status')" prop="status">
+      <bk-table-column :label="t('status')" prop="status">
         <template #default="{ row }">
           <div class="status-content">
             <img :src="statusIcon(row.status)" class="status-icon">
@@ -23,35 +23,35 @@
           </div>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('operation')">
+      <bk-table-column :label="t('operation')">
         <template #default="{ row }">
           <bk-button
             class="btn"
             theme="primary"
             text
             @click="handleViewDetail(row)"
-          >{{ $t('permissionDetail') }}</bk-button>
+          >{{ t('permissionDetail') }}</bk-button>
           <bk-button
             class="btn"
             theme="primary"
             text
             v-if="row.status === 'NOT_JOINED'"
             @click="handleApply(row)"
-          >{{ $t('applyJoin') }}</bk-button>
+          >{{ t('applyJoin') }}</bk-button>
           <bk-button
             class="btn"
             theme="primary"
             text
             v-if="['EXPIRED', 'NORMAL'].includes(row.status)"
             @click="handleRenewal(row)"
-          >{{ $t('renewal') }}</bk-button>
+          >{{ t('renewal') }}</bk-button>
           <bk-button
             class="btn"
             theme="primary"
             text
             v-if="['EXPIRED', 'NORMAL'].includes(row.status)"
             @click="handleShowLogout(row)"
-          >{{ $t('exit') }}</bk-button>
+          >{{ t('exit') }}</bk-button>
         </template>
       </bk-table-column>
     </bk-table>
@@ -62,13 +62,13 @@
     >
       <template v-slot:header>
         <div class="detail-title">
-          {{ $t('permissionDetail') }}
+          {{ t('permissionDetail') }}
           <span class="group-name">{{ groupName }}</span>
         </div>
       </template>
       <template v-slot:content>
         <div class="detail-content" v-bkloading="{ isLoading: isDetailLoading }">
-          <div class="title">{{ $t('pipelineManage') }}</div>
+          <div class="title">{{ t('pipelineManage') }}</div>
           <div class="content">
             <bk-checkbox
               v-for="(item, index) in groupPolicies"
@@ -85,12 +85,12 @@
     </side-slider>
     <permission-dialog
       :is-show="logout.isShow"
-      :title="$t('确认退出用户组')"
+      :title="t('确认退出用户组')"
       :loading="logout.loading"
       @confirm="handleLogout"
       @cancel="handleCancelLogout"
     >
-      {{ $t('exitGroupTips', [logout.name]) }}
+      {{ t('exitGroupTips', [logout.name]) }}
     </permission-dialog>
     <apply-dialog
       :is-show="apply.isShow"
@@ -110,6 +110,7 @@ import syncFailed from '../../../svg/sync-failed.svg?inline';
 import SideSlider from '../../widget-components/side-slider.jsx';
 import PermissionDialog from '../../widget-components/dialog.jsx';
 import { Message } from 'bkui-vue';
+import { useI18n } from 'vue-i18n';
 
 const initFormData = () => ({
   isShow: false,
@@ -146,6 +147,7 @@ export default {
   },
 
   data() {
+    const { t } = useI18n();
     return {
       showDetail: false,
       logout: {
@@ -160,6 +162,7 @@ export default {
       isDetailLoading: false,
       groupPolicies: [],
       groupName: '',
+      t,
     };
   },
 
@@ -213,9 +216,9 @@ export default {
 
     statusFormatter(status) {
       const map = {
-        NOT_JOINED: this.$t('notJoined'),
-        NORMAL: this.$t('normal'),
-        EXPIRED: this.$t('expired'),
+        NOT_JOINED: this.t('notJoined'),
+        NORMAL: this.t('normal'),
+        EXPIRED: this.t('expired'),
       };
       return map[status];
     },
@@ -234,7 +237,7 @@ export default {
       this.apply.groupName = row.groupName;
       this.apply.groupId = row.groupId;
       this.apply.expiredDisplay = row.expiredDisplay;
-      this.apply.title = this.$t('renewal');
+      this.apply.title = this.t('renewal');
       this.apply.type = 'renewal';
     },
 
@@ -242,7 +245,7 @@ export default {
       this.apply.isShow = true;
       this.apply.groupName = row.groupName;
       this.apply.groupId = row.groupId;
-      this.apply.title = this.$t('applyJoin');
+      this.apply.title = this.t('applyJoin');
       this.apply.type = 'apply';
     },
 

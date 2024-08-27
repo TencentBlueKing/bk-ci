@@ -51,3 +51,7 @@ func WithField(key string, value interface{}) *logrus.Entry {
 func WithError(err error) *logrus.Entry {
 	return Logs.WithError(err)
 }
+
+func WithErrorNoStack(err error) *logrus.Entry {
+	return Logs.WithField(ErrorNoStackKey, err)
+}

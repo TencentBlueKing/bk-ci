@@ -205,9 +205,7 @@ class ExtServiceBuildDeployTask : ITask() {
             val deployment = bcsResourceApi.getBcsDeploymentInfo(
                 userId = userId,
                 namespaceName = deployApp.namespaceName,
-                deploymentName = serviceCode,
-                bcsUrl = deployApp.bcsUrl,
-                token = deployApp.token
+                deploymentName = serviceCode
             ).data
             logger.info("ExtServiceBuildDeployTask deployment: $deployment")
             if (deployment == null) {

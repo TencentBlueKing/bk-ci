@@ -189,7 +189,7 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
     startType: {
         index: 3,
         id: 'startType',
-        label: 'history.triggerType',
+        label: 'history.triggerInfo',
         width: localStorage.getItem('triggerTypeWidth') ?? 120
     },
     queueTime: {
@@ -280,6 +280,12 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         width: localStorage.getItem('errorCodeWidth') ?? 280,
         id: 'errorCode',
         label: 'history.errorCode'
+    },
+    buildMsg: {
+        index: 16,
+        width: 180,
+        id: 'buildMsg',
+        label: 'history.buildMsg'
     }
 }
 

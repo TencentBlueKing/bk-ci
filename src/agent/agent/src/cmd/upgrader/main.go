@@ -74,7 +74,7 @@ func main() {
 	if config.ActionUpgrade == *action {
 		err := upgrader.DoUpgradeAgent()
 		if err != nil {
-			logs.Error("upgrade agent failed: " + err.Error())
+			logs.WithError(err).Error("upgrade agent failed")
 			systemutil.ExitProcess(1)
 		}
 	} else if config.ActionUninstall == *action {

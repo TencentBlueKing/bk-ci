@@ -14,6 +14,7 @@
 </template>
 
 <script>
+    import { copyToClipboard } from '@/utils/util'
     export default {
         props: {
             projectId: {
@@ -54,7 +55,7 @@
             copy (ref) {
                 try {
                     const copyUrl = ref === 'markdownLink' ? this.markdownLinkUrl : this.badgeImageUrl
-                    window.navigator.clipboard.writeText(copyUrl)
+                    copyToClipboard(copyUrl)
                     this.$bkMessage({
                         theme: 'success',
                         message: this.$t('copySuc'),

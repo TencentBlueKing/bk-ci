@@ -2,7 +2,10 @@
     <div class="codelib-content">
         <template v-if="hasCodelibs || aliasName.length || isLoading">
             <div id="codelib-list-content">
-                <layout :flod.sync="isListFlod" @on-flod="handleLayoutFlod">
+                <layout
+                    :flod.sync="isListFlod"
+                    @on-flod="handleLayoutFlod"
+                >
                     <template>
                         <section class="header-content">
                             <link-code-lib
@@ -17,10 +20,10 @@
                                     }
                                 }"
                                 :create-codelib="createCodelib"
-                                :is-blue-king="isBlueKing"
                             >
                             </link-code-lib>
-                            <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
+                            <bk-input
+                                :placeholder="$t('codelib.aliasNamePlaceholder')"
                                 :class="{
                                     'codelib-search': true,
                                     'is-fold-search': isListFlod
@@ -68,11 +71,14 @@
             :desc="$t('codelib.codelibDesc')"
         >
             <bk-button
-                v-for="typeLabel in codelibTypes"
-                :key="typeLabel"
-                @click="createCodelib(typeLabel)"
+                v-for="item in codelibTypes"
+                :key="item.scmType"
+                :ext-cls="{
+                    'is-disabled': item.status !== 'OK'
+                }"
+                @click="createCodelib(item.scmType)"
             >
-                {{ $t('codelib.linkCodelibLabel', [typeLabel]) }}
+                {{ $t('codelib.linkCodelibLabel', [item.name]) }}
             </bk-button>
         </empty-tips>
         <empty-tips
@@ -102,26 +108,25 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
-import CodeLibDetail from '../components/CodeLibDetail'
-import CodeLibDialog from '../components/CodeLibDialog'
-import CodeLibTable from '../components/CodeLibTable'
-import LinkCodeLib from '../components/LinkCodeLib'
-import layout from '../components/layout'
-import {
-    CODE_REPOSITORY_CACHE,
-    CODE_REPOSITORY_SEARCH_VAL,
-    codelibTypes,
-    getCodelibConfig,
-    isGit,
-    isGitLab,
-    isGithub,
-    isP4,
-    isSvn,
-    isTGit
-} from '../config/'
-import { getOffset } from '../utils/'
-import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
-
+    import CodeLibDetail from '../components/CodeLibDetail'
+    import CodeLibDialog from '../components/CodeLibDialog'
+    import CodeLibTable from '../components/CodeLibTable'
+    import LinkCodeLib from '../components/LinkCodeLib'
+    import layout from '../components/layout'
+    import {
+        CODE_REPOSITORY_CACHE,
+        CODE_REPOSITORY_SEARCH_VAL,
+        getCodelibConfig,
+        isGit,
+        isGitLab,
+        isGithub,
+        isP4,
+        isSvn,
+        isTGit
+    } from '../config/'
+    import { getOffset } from '../utils/'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
+                                    
     export default {
         name: 'codelib-list',
 
@@ -153,29 +158,9 @@ import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
         },
 
         computed: {
-            ...mapState('codelib', ['codelibs', 'showCodelibDialog', 'gitOAuth']),
+            ...mapState('codelib', ['codelibTypes', 'codelibs', 'showCodelibDialog', 'gitOAuth']),
             projectId () {
                 return this.$route.params.projectId
-            },
-            isExtendTx () {
-                return VERSION_TYPE === 'tencent'
-            },
-            codelibTypes () {
-                let typeList = codelibTypes
-                if (!this.isExtendTx) {
-                    typeList = typeList.filter(type => !['Git', 'TGit'].includes(type))
-                }
-                return typeList
-            },
-            isBlueKing () {
-                const projectId = this.$route.params.projectId
-                const filterArr = this.projectList.find(item => {
-                    return (
-                        item.centerName === '蓝鲸产品中心'
-                        && item.projectCode === projectId
-                    )
-                })
-                return filterArr
             },
             hasCodelibs () {
                 const { codelibs } = this
@@ -336,6 +321,15 @@ import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
             },
 
             async createCodelib (typeLabel, isEdit) {
+                const codelibType = this.codelibTypes.find(type => type.scmType === typeLabel)
+                if (codelibType?.status === 'DEPLOYING') {
+                    this.showUndeployDialog({
+                        title: this.$t('codelib.codelibUndeployTitle', [codelibType.name]),
+                        desc: this.$t(`codelib.${typeLabel.toLowerCase()}UndeployDesc`),
+                        link: `${DOCS_URL_PREFIX}${codelibType.docUrl}`
+                    })
+                    return
+                }
                 const { credentialTypes, typeName } = getCodelibConfig(typeLabel)
                 const CodelibDialog = {
                     showCodelibDialog: true,

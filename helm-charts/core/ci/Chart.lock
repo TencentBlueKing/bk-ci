@@ -25,6 +25,6 @@ dependencies:
   version: 10.30.6
 - name: kubernetes-manager
   repository: file://./local_chart/kubernetes-management
-  version: 0.0.37
-digest: sha256:f39b897b438471cfb4cc9e98a3c4c44ec9d8950c1bb7b658dda8a354cad922a3
-generated: "2023-08-09T15:09:12.834702422+08:00"
+  version: 0.0.45
+digest: sha256:bb11b7ac0e3487504f5563cd2b170d04038fc8971aaecbaca3dc5ecdcb792a43
+generated: "2024-08-15T12:18:41.358254786+08:00"

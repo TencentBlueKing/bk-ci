@@ -29,14 +29,16 @@ data class AsyncJobEndEvent(
 
 data class AsyncTGitAclIp(
     val projectId: String,
-    val ip: String,
-    val remove: Boolean
+    val ips: Set<String>,
+    val remove: Boolean,
+    val tgitId: Long?
 ) : AsyncExecuteEventData {
     override fun toType() = AsyncExecuteEventType.ASYNC_TGIT_ACL_IP
 }
 
 data class AsyncTGitAclUser(
-    val projectId: String
+    val projectId: String,
+    val tgitId: Long?
 ) : AsyncExecuteEventData {
     override fun toType() = AsyncExecuteEventType.ASYNC_TGIT_ACL_USER
 }

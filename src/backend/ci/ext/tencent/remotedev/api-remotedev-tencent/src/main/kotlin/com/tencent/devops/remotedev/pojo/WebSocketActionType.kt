@@ -39,5 +39,6 @@ enum class WebSocketActionType {
     WORKSPACE_MAKE_IMAGE, // 根据当前工作空间制作镜像
     WORKSPACE_DETAIL, // workspace 信息
     WORKSPACE_NOTIFY, // workspace 通知
-    WORKSPACE_ASSIGN; // 分配workspace
+    WORKSPACE_ASSIGN, // 分配workspace
+    WORKSPACE_UPGRADE; // 升级 workspace 配置
 }

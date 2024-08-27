@@ -94,6 +94,7 @@ object ActionAuditContent {
     const val CGS_DELETE_CONTENT = "delete workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_SHARE_CONTENT = "share workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_EDIT_CONTENT = "edit workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val CGS_TOKEN_GENERATE_CONTENT = "generate workspace 1password $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
     // 云桌面镜像
     const val IMAGE_LIST_CONTENT = "list workspace image $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
@@ -101,9 +102,10 @@ object ActionAuditContent {
     const val IMAGE_EDIT_CONTENT = "modify workspace image $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
     // 代理仓库
-    const val CODE_PROXY_CREATE_CONTENT = "create code proxy $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CODE_PROXY_LIST_CONTENT = "list code proxy $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CODE_PROXY_DELETE_CONTENT = "delete code proxy $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val TGIT_LINK_CREATE_CONTENT = "create tgit link $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val TGIT_LINK_CALLBACK_CREATE_CONTENT = "create tgit link callback $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val TGIT_LINK_DELETE_CONTENT = "delete tgit link $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val TGIT_LINK_CREATE_PROJECT_CONTENT = "create tgit project $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
     // 环境
     const val ENVIRONMENT_CREATE_CONTENT = "create environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"

@@ -31,6 +31,9 @@
             title: {
                 type: String
             },
+            pipelineId: {
+                type: String
+            },
             pipelineName: {
                 type: String
             },
@@ -121,8 +124,9 @@
                 })
             },
             async updatePipeline (result, newPipelineName) {
+                const { templateId, instanceFromTemplate, ...restModel } = result.model
                 const pipeline = {
-                    ...result.model,
+                    ...restModel,
                     name: newPipelineName
                 }
                 try {
@@ -142,11 +146,15 @@
                         oldYaml: ''
                     })
                 } catch (error) {
-                    console.log(error)
+                    this.$showTips({
+                        message: error.message,
+                        theme: 'error'
+                    })
                 }
 
                 this.setPipelineSetting({
                     ...result.setting,
+                    pipelineId: this.pipelineId ?? result.setting.pipelineId,
                     pipelineName: newPipelineName
                 })
                 this.setPipeline(pipeline)

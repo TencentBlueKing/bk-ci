@@ -1,35 +1,43 @@
 package com.tencent.devops.environment.resources.job
 
-import com.tencent.devops.common.api.exception.OauthForbiddenException
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentUserJobResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
-import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
-import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResult
-import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
+import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
+import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
-import com.tencent.devops.environment.pojo.job.jobresp.JobResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
+import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
+import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
+import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResult
+import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
+import com.tencent.devops.environment.pojo.job.jobresp.JobResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
-import com.tencent.devops.environment.service.job.AgentService
+import com.tencent.devops.environment.service.gseagent.GSEAgentService
+import com.tencent.devops.environment.service.gseagent.InstallTaskService
 import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.PermissionManageService
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
+import javax.ws.rs.core.Response
 
 @RestResource
 class TencentUserJobResourceImpl @Autowired constructor(
     private val jobService: JobService,
-    private val agentService: AgentService,
+    private val gseAgentService: GSEAgentService,
+    private val installTaskService: InstallTaskService,
     private val permissionManageService: PermissionManageService
 ) : TencentUserJobResource {
     override fun queryJobInstanceStatus(
@@ -85,6 +93,15 @@ class TencentUserJobResourceImpl @Autowired constructor(
         )
     }
 
+    override fun operateStepInstance(
+        userId: String,
+        projectId: String,
+        operateStepInstanceReq: OperateStepInstanceReq
+    ): JobResult<OperateStepInstanceResult> {
+        checkParamBlank(userId, projectId)
+        return jobService.operateStepInstance(operateStepInstanceReq)
+    }
+
     override fun installAgent(
         userId: String,
         projectId: String,
@@ -92,7 +109,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         installAgentReq: String
     ): AgentResult<InstallAgentResult> {
         checkParamBlank(userId, projectId)
-        return agentService.installAgent(userId, projectId, keyFile, installAgentReq)
+        return gseAgentService.installAgent(userId, keyFile, installAgentReq)
     }
 
     override fun queryAgentTaskStatus(
@@ -102,7 +119,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         queryAgentTaskStatusReq: QueryAgentTaskStatusReq
     ): AgentResult<QueryAgentTaskStatusResult> {
         checkParamBlank(userId, projectId)
-        return agentService.queryAgentTaskStatus(userId, projectId, jobId, queryAgentTaskStatusReq)
+        return installTaskService.queryAgentInstallTaskStatus(jobId, queryAgentTaskStatusReq)
     }
 
     override fun queryAgentTaskLog(
@@ -112,7 +129,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         instanceId: String
     ): AgentResult<QueryAgentTaskLogResult> {
         checkParamBlank(userId, projectId)
-        return agentService.queryAgentTaskLog(userId, projectId, jobId, instanceId)
+        return installTaskService.queryAgentInstallTaskLog(jobId, instanceId)
     }
 
     override fun terminalAgentInstallTask(
@@ -122,7 +139,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         terminateAgentInstallTaskReq: TerminateAgentInstallTaskReq
     ): AgentResult<TerminalAgentInstallTaskResult> {
         checkParamBlank(userId, projectId)
-        return agentService.terminalAgentInstallTask(userId, projectId, jobId, terminateAgentInstallTaskReq)
+        return gseAgentService.terminalAgentInstallTask(jobId, terminateAgentInstallTaskReq)
     }
 
     override fun retryAgentInstallTask(
@@ -132,7 +149,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         retryAgentInstallTaskReq: RetryAgentInstallTaskReq
     ): AgentResult<RetryAgentInstallTaskResult> {
         checkParamBlank(userId, projectId)
-        return agentService.retryAgentInstallTask(userId, projectId, jobId, retryAgentInstallTaskReq)
+        return gseAgentService.retryAgentInstallTask(jobId, retryAgentInstallTaskReq)
     }
 
     override fun queryAgentInstallChannel(
@@ -141,7 +158,17 @@ class TencentUserJobResourceImpl @Autowired constructor(
         withHidden: Boolean
     ): AgentResult<QueryAgentInstallChannelResult> {
         checkParamBlank(userId, projectId)
-        return agentService.queryAgentInstallChannel(userId, projectId, withHidden)
+        return gseAgentService.queryAgentInstallChannel(withHidden)
+    }
+
+    override fun obtainManualInstallationCommand(
+        userId: String,
+        projectId: String,
+        jobId: Int,
+        hostId: Long
+    ): AgentResult<ObtainManualCommandResult> {
+        checkParamBlank(userId, projectId)
+        return gseAgentService.obtainManualInstallationCommand(jobId, hostId)
     }
 
     private fun checkParamBlank(userId: String, projectId: String) {
@@ -155,9 +182,9 @@ class TencentUserJobResourceImpl @Autowired constructor(
 
     private fun checkJobInsBelongToProj(projectId: String, jobInstanceId: Long) {
         if (!permissionManageService.isJobInsBelongToProj(projectId, jobInstanceId)) {
-            throw OauthForbiddenException(
-                message = "The job instance you have queried doesn't belong to the current project " +
-                    "or more than three months."
+            throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = I18nUtil.getCodeLanMessage(EnvironmentMessageCode.ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT)
             )
         }
     }

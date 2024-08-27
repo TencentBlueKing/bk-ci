@@ -13,6 +13,7 @@
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
     export default {
         name: 'app',
         computed: {
@@ -22,6 +23,14 @@
             title () {
                 return this.$t('codelib.codelib')
             }
+        },
+        created () {
+            this.fetchCodeTypeList()
+        },
+        methods: {
+            ...mapActions('codelib', [
+                'fetchCodeTypeList'
+            ])
         }
     }
 </script>

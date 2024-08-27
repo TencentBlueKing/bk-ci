@@ -156,7 +156,8 @@ CREATE TABLE IF NOT EXISTS `T_NODE` (
   PRIMARY KEY (`NODE_ID`),
   KEY `PROJECT_ID` (`PROJECT_ID`),
   KEY `HOST_ID` (`HOST_ID`),
-  KEY `NODE_IP` (`NODE_IP`)
+  KEY `NODE_IP` (`NODE_IP`),
+  KEY `SERVER_ID` (`SERVER_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='节点信息表';
 
 -- ----------------------------

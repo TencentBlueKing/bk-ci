@@ -33,6 +33,7 @@ import java.util.Random
 object StringUtil {
     private const val BASE = "abcdefghijklmnopqrstuvwxyz"
     private val symbolNeedEncode = listOf('#', '【', '】', '+')
+    private const val EXCLUDE_CHARS = ":/?&="
 
     fun random(length: Int): String {
         val random = Random()
@@ -44,6 +45,14 @@ object StringUtil {
     }
 
     fun repoPathUrlEncode(url: String): String {
-        return URLEncoder.encode(url, Charsets.UTF_8.toString()).replace("+", "%20")
+        return buildString {
+            for (char in url) {
+                if (EXCLUDE_CHARS.indexOf(char) >= 0) {
+                    append(char)
+                } else {
+                    append(URLEncoder.encode(char.toString(), Charsets.UTF_8.toString()).replace("+", "%20"))
+                }
+            }
+        }
     }
 }

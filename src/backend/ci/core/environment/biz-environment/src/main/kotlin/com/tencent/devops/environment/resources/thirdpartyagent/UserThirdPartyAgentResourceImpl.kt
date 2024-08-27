@@ -142,7 +142,12 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
 
     @AuditEntry(actionId = ActionId.ENV_NODE_DELETE)
     override fun deleteAgent(userId: String, projectId: String, nodeHashId: String): Result<Boolean> {
-        thirdPartyAgentService.deleteAgent(userId, projectId, nodeHashId)
+        thirdPartyAgentService.deleteAgent(userId, projectId, setOf(nodeHashId))
+        return Result(true)
+    }
+
+    override fun batchDeleteAgent(userId: String, projectId: String, nodeHashIds: Set<String>): Result<Boolean> {
+        thirdPartyAgentService.deleteAgent(userId, projectId, nodeHashIds)
         return Result(true)
     }
 

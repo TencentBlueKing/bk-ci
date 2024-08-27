@@ -2,14 +2,18 @@ package com.tencent.devops.openapi.api.apigw
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -19,6 +23,7 @@ import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
@@ -63,6 +68,24 @@ interface ApigwRemoteDevResource {
         @QueryParam("ticket")
         ticket: String
     ): Result<Boolean>
+
+    @Operation(summary = "校验token", tags = ["v4_app_ticket_check"])
+    @GET
+    @Path("/desktop_token_check")
+    fun desktopTokenCheck(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @Parameter(description = "认证token", required = true)
+        token: String,
+        @QueryParam("dToken")
+        @Parameter(description = "dToken", required = false)
+        dToken: String
+    ): Result<UserOnePassword>
 
     @Operation(summary = "提供给wesec获取云桌面信息", tags = ["v4_app_project_workspace"])
     @GET
@@ -131,6 +154,9 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "拥有者，为空则表示不分配，只交付项目", required = false)
         @QueryParam("owner")
         owner: String?,
+        @Parameter(description = "zoneType", required = false)
+        @QueryParam("zoneType")
+        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
@@ -225,6 +251,9 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @Parameter(description = "zoneType", required = false)
+        @QueryParam("zoneType")
+        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "创建内容", required = true)
         data: WindowsWorkspaceCreate
     ): Result<Boolean>
@@ -263,6 +292,9 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "项目id", required = true)
         @QueryParam("projectId")
         projectId: String,
+        @Parameter(description = "zoneType", required = false)
+        @QueryParam("zoneType")
+        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "创建内容", required = true)
         data: WindowsWorkspaceCreate
     ): Result<Boolean>
@@ -398,7 +430,10 @@ interface ApigwRemoteDevResource {
         projectId: String?
     ): Result<Map<String, Any>>
 
-    @Operation(summary = "提供给BCS机型置换时修改旧机器的名称，以备销毁", tags = ["v4_app_modify_workspace_display_name"])
+    @Operation(
+        summary = "提供给BCS机型置换时修改旧机器的名称，以备销毁",
+        tags = ["v4_app_modify_workspace_display_name"]
+    )
     @POST
     @Path("/modify/display_name")
     fun modifyWorkspaceDisplayName(
@@ -475,6 +510,51 @@ interface ApigwRemoteDevResource {
         workspaceName: String,
         @Parameter(description = "请求报文", required = true)
         makeImageReq: MakeWorkspaceImageReq
+    ): Result<Boolean>
+
+    @Operation(summary = "修改工作空间属性", tags = ["v4_app_remotedev_modify_property"])
+    @POST
+    @Path("/modify_property")
+    fun modifyWorkspaceProperty(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "实例IP", required = true)
+        @QueryParam("ip")
+        ip: String?,
+        @Parameter(description = "备注名称", required = true)
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean>
+
+    @Operation(summary = "删除项目的自定义镜像", tags = ["v4_app_remotedev_delete_project_image"])
+    @DELETE
+    @Path("/delete/image")
+    fun deleteProjectImage(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "镜像ID", required = true)
+        @QueryParam("imageId")
+        imageId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "增删CVM机器回调", tags = ["v4_app_remotedev_operate_cvm_callback"])
+    @POST
+    @Path("/operate_cvm_callback")
+    fun operateCvmCallback(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        data: OperateCvmData
     ): Result<Boolean>
 
     @Operation(summary = "检查是否开启录屏并获取推流地址", tags = ["v4_app_check_workspace_record_enable_address"])

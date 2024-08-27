@@ -84,7 +84,8 @@ class MigrateV0PolicyService constructor(
     permissionService = permissionService,
     rbacCacheService = rbacCacheService,
     deptService = deptService,
-    permissionGroupPoliciesService = permissionGroupPoliciesService
+    permissionGroupPoliciesService = permissionGroupPoliciesService,
+    permissionResourceMemberService = permissionResourceMemberService
 ) {
 
     companion object {
@@ -459,6 +460,7 @@ class MigrateV0PolicyService constructor(
     }
 
     override fun batchAddGroupMember(
+        projectCode: String,
         groupId: Int,
         defaultGroup: Boolean,
         members: List<RoleGroupMemberInfo>?,
@@ -480,6 +482,7 @@ class MigrateV0PolicyService constructor(
             groupIdOfPipelineActionGroupList.forEach {
                 logger.info("add subject template to group of pipeline:$it|$subjectTemplateId")
                 addGroupMember(
+                    projectCode = projectCode,
                     groupId = it.toInt(),
                     defaultGroup = true,
                     member = RoleGroupMemberInfo().apply {
@@ -503,6 +506,7 @@ class MigrateV0PolicyService constructor(
         }
         members.forEach member@{ member ->
             addGroupMember(
+                projectCode = projectCode,
                 defaultGroup = defaultGroup,
                 member = member,
                 groupId = groupId
@@ -511,6 +515,7 @@ class MigrateV0PolicyService constructor(
     }
 
     private fun addGroupMember(
+        projectCode: String,
         defaultGroup: Boolean,
         member: RoleGroupMemberInfo,
         groupId: Int
@@ -523,11 +528,12 @@ class MigrateV0PolicyService constructor(
             V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(0, 2)]
         }
         permissionResourceMemberService.addGroupMember(
-            userId = member.id,
+            projectCode = projectCode,
+            memberId = member.id,
             memberType = member.type,
             expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay) +
                 TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180)),
-            groupId = groupId
+            iamGroupId = groupId
         )
     }
 

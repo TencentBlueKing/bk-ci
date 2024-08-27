@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.TokenForbiddenException
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.project.api.open.OpenProjectResource
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectVO
@@ -43,6 +45,7 @@ class OpenProjectResourceImpl constructor(
     private val projectService: ProjectService,
     private val clientTokenService: ClientTokenService
 ) : OpenProjectResource {
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun get(
         token: String,
         projectId: String
@@ -55,6 +58,7 @@ class OpenProjectResourceImpl constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun listByProjectCodes(
         token: String,
         projectCodes: Set<String>
@@ -68,6 +72,7 @@ class OpenProjectResourceImpl constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getOperationalProducts(token: String): Result<List<OperationalProductVO>> {
         check(token)
         return Result(projectService.getOperationalProducts())

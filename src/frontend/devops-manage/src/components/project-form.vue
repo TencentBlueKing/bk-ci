@@ -404,14 +404,6 @@ watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], ()
   deep: true,
 });
 
-watch(() => projectData.value.productId, (id) => {
-  emits('productIdChange', {
-    id,
-    list: operationalList.value,
-  });
-}, {
-  deep: true,
-});
 
 onMounted(async () => {
   const deptInfos = await fetchUserDetail();
@@ -622,7 +614,7 @@ onBeforeUnmount(() => {
     cursor: pointer;
   }
   .member-iframe {
-    height: 100%;
+    height: 600px;
   }
   .bk-dropdown-box {
     width: 200px;

@@ -31,8 +31,14 @@ package com.tencent.devops.stream.pojo.message
  * 用户消息通知的类型
  */
 enum class UserMessageType {
-    // 有失败的消息组
+    // 有失败的消息组 最终状态
     REQUEST,
-    // 只有成功的消息组
-    ONLY_SUCCESS
+    // 只有成功的消息组 最终或中间状态
+    ONLY_SUCCESS;
+
+    companion object {
+        fun parse(message: String): UserMessageType {
+            return values().find { it.name == message } ?: REQUEST
+        }
+    }
 }

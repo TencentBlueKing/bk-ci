@@ -12,7 +12,10 @@ abstract class ThirdPartyAgentDispatch(
     // 类型为REUSE_JOB时，被复用的job的value，防止同一个stage并发下拿不到agent，启动时填充
     open var reusedInfo: ReusedInfo?
 ) : DispatchType(value) {
-    fun idType(): Boolean = (agentType == AgentType.ID) || (reusedInfo?.agentType == AgentType.ID)
+    // 本身是 id，和被复用对象在同一JOB且被复用对象也是 id，是复用但是位于后面的 JOB
+    fun idType(): Boolean =
+        (agentType == AgentType.ID) || (reusedInfo?.agentType == AgentType.ID) ||
+                (agentType == AgentType.REUSE_JOB_ID && reusedInfo == null)
 
     // 是否在复用锁定链上
     fun hasReuseMutex(): Boolean = this.agentType.isReuse() || this.reusedInfo != null

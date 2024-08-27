@@ -459,6 +459,10 @@ const actions = {
     getAgentTaskLog (_, { projectId, jobId, instanceId }) {
         return vue.$ajax.get(`${prefix}/user/job/${projectId}/${jobId}/query_agent_task_log?instanceId=${instanceId}`)
     },
+    // 手动安装Agent,获取安装命令
+    fetchInstallCommand (_, { projectId, jobId, hostId }) {
+        return vue.$ajax.get(`${prefix}/user/job/${projectId}/${jobId}/obtain_manual_installation_command?hostId=${hostId}`)
+    },
     enableNode (_, { projectId, envHashId, nodeHashId, enableNode }) {
         return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/enableNode/${nodeHashId}?enableNode=${enableNode}`)
     }

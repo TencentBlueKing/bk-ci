@@ -9,8 +9,9 @@ data class CCListHostWithoutBizReq<T>(
     @JsonProperty("bk_app_code")
     val bkAppCode: String? = "",
     @get:Schema(title = "安全秘钥 (app secret)", required = true)
+    @SkipLogField("bk_app_secret")
     @JsonProperty("bk_app_secret")
-    @SkipLogField val bkAppSecret: String? = "",
+    val bkAppSecret: String? = "",
     @get:Schema(title = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
     val bkUsername: String? = "admin",

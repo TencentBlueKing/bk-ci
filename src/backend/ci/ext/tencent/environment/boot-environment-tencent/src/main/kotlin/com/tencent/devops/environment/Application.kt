@@ -27,12 +27,16 @@
 
 package com.tencent.devops.environment
 
+import com.tencent.devops.environment.config.EsbProperties
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
+import com.tencent.devops.environment.config.EnvironmentProperties
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.ComponentScan
 
 @MicroService
 @ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.environment")
+@EnableConfigurationProperties(EnvironmentProperties::class, EsbProperties::class)
 class Application
 
 fun main(args: Array<String>) {

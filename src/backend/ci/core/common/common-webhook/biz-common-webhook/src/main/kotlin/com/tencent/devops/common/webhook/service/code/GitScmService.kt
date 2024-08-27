@@ -37,6 +37,7 @@ import com.tencent.devops.repository.api.github.ServiceGithubPRResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
+import com.tencent.devops.repository.api.scm.ServiceTGitResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
@@ -212,16 +213,30 @@ class GitScmService @Autowired constructor(
             )
             for (i in 1..10) {
                 // 反向进行三点比较可以比较出rebase的真实提交
-                val result = client.get(ServiceGitResource::class).getChangeFileList(
-                    token = token,
-                    tokenType = tokenType,
-                    gitProjectId = repo.projectName,
-                    from = from,
-                    to = to,
-                    straight = false,
-                    page = i,
-                    pageSize = 100
-                ).data ?: emptyList()
+                val result = if (repo.getScmType() == ScmType.CODE_TGIT) {
+                    client.get(ServiceTGitResource::class).getChangeFileList(
+                        token = token,
+                        tokenType = tokenType,
+                        gitProjectId = repo.projectName,
+                        from = from,
+                        to = to,
+                        straight = false,
+                        page = i,
+                        pageSize = 100,
+                        url = repo.url
+                    ).data
+                } else {
+                    client.get(ServiceGitResource::class).getChangeFileList(
+                        token = token,
+                        tokenType = tokenType,
+                        gitProjectId = repo.projectName,
+                        from = from,
+                        to = to,
+                        straight = false,
+                        page = i,
+                        pageSize = 100
+                    ).data
+                } ?: emptyList()
                 changeSet.addAll(
                     result.map {
                         if (it.deletedFile) {

@@ -34,6 +34,7 @@ import com.tencent.devops.common.expression.expression.functions.FromJson
 import com.tencent.devops.common.expression.expression.functions.Join
 import com.tencent.devops.common.expression.expression.functions.StartsWith
 import com.tencent.devops.common.expression.expression.functions.StrToTime
+import com.tencent.devops.common.expression.expression.functions.ToJson
 import com.tencent.devops.common.expression.expression.sdk.Function
 import java.util.TreeMap
 
@@ -46,6 +47,7 @@ object ExpressionConstants {
         addFunction(EndsWith.name, 2, 2, EndsWith())
         addFunction(StartsWith.name, 2, 2, StartsWith())
         addFunction(FromJson.name, 1, 1, FromJson())
+        addFunction(ToJson.name, 1, 1, ToJson())
         addFunction(StrToTime.name, 1, 1, StrToTime())
         addFunction(Join.name, 1, 2, Join())
         addFunction(Format.name, 1, Byte.MAX_VALUE.toInt(), Format())

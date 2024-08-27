@@ -50,8 +50,8 @@ import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
-import com.tencent.devops.remotedev.service.redis.RedisKeys
 import java.net.URLEncoder
+import java.util.Base64
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -128,10 +128,29 @@ class PermissionService @Autowired constructor(
     }
 
     fun hasOwnerPermission(userId: String, workspaceName: String, projectId: String): Boolean {
-        return kotlin.runCatching {
-            checkOwnerPermission(userId, workspaceName, projectId, WorkspaceOwnerType.PROJECT)
+        kotlin.runCatching {
+            checkOwnerPermission(
+                userId = userId,
+                workspaceName = workspaceName,
+                projectId = projectId,
+                ownerType = WorkspaceOwnerType.PROJECT
+            )
         }.fold(
-            { return true }, { return false }
+            { return true }, {
+                logger.warn("not has Owner Permission|$userId, $workspaceName, $projectId")
+                return false
+            }
+        )
+    }
+
+    fun hasViewerPermission(userId: String, workspaceName: String, projectId: String): Boolean {
+        kotlin.runCatching {
+            checkViewerPermission(userId = userId, workspaceName = workspaceName, projectId = projectId)
+        }.fold(
+            { return true }, {
+                logger.warn("not has viewer Permission|$userId, $workspaceName, $projectId")
+                return false
+            }
         )
     }
 
@@ -161,7 +180,7 @@ class PermissionService @Autowired constructor(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
         val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
-            token = checkTokenService.getSystemToken()!!,
+            token = checkTokenService.getSystemToken(),
             userId = userId,
             projectCode = projectId
         ).data ?: false
@@ -175,9 +194,28 @@ class PermissionService @Autowired constructor(
     }
 
     fun hasUserManager(userId: String, projectId: String): Boolean {
-        return kotlin.runCatching { checkUserManager(userId, projectId) }.fold(
-            { return true }, { return false }
+        kotlin.runCatching { checkUserManager(userId, projectId) }.fold(
+            { return true }, {
+                logger.warn("not has manager Permission|$userId, $projectId")
+                return false
+            }
         )
+    }
+
+    fun hasManagerOrOwnerPermission(userId: String, projectId: String, workspaceName: String): Boolean {
+        return hasOwnerPermission(
+            userId = userId,
+            workspaceName = workspaceName,
+            projectId = projectId
+        ) || hasUserManager(userId, projectId)
+    }
+
+    fun hasManagerOrViewerPermission(userId: String, projectId: String, workspaceName: String): Boolean {
+        return hasViewerPermission(
+            userId = userId,
+            workspaceName = workspaceName,
+            projectId = projectId
+        ) || hasUserManager(userId, projectId)
     }
 
     // 判断用户是否项目成员
@@ -186,19 +224,20 @@ class PermissionService @Autowired constructor(
         projectCode: String
     ): Boolean {
         return kotlin.runCatching {
-            client.get(ServiceProjectResource::class).verifyUserProjectPermission(
+            client.get(ServiceProjectAuthResource::class).checkUserInProjectLevelGroup(
+                token = checkTokenService.getSystemToken(),
                 projectCode = projectCode,
                 userId = userId
             ).data
         }.getOrNull() ?: false
     }
 
-    private fun initRedisUser(params: UserOnePassword): String {
-        val key = UUIDUtil.generate()
+    private fun initRedisUser(params: UserOnePassword, expiredInSecond: Long?): String {
+        val key = Base64.getEncoder().encodeToString(UUIDUtil.generate().toByteArray())
         redisOperation.set(
             key = REDIS_KEY + key,
             value = JsonUtil.toJson(params, false),
-            expiredInSecond = redisCache.get(RedisKeys.REDIS_1PASSWORD_EXPIRED_SECOND)?.toLongOrNull() ?: EXPIRED_SECOND
+            expiredInSecond = expiredInSecond ?: EXPIRED_SECOND
         )
         return key
     }
@@ -212,11 +251,12 @@ class PermissionService @Autowired constructor(
         return JsonUtil.to(value, object : TypeReference<UserOnePassword>() {})
     }
 
-    fun init1Password(userId: String, workspaceName: String): String {
+    fun init1Password(userId: String, workspaceName: String, projectId: String?, expiredInSecond: Long?): String {
         val key = initRedisUser(
             UserOnePassword(
-                userId, workspaceName
-            )
+                userId, workspaceName, projectId
+            ),
+                expiredInSecond
         )
         logger.info("start init1Password|$userId|$workspaceName|$key")
         return URLEncoder.encode(key, "UTF-8")
@@ -228,11 +268,6 @@ class PermissionService @Autowired constructor(
         if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
             return false
         }
-        return true
-    }
-
-    fun checkUserCreate(userId: String): Boolean {
-        whiteListService.windowsGpuCheck(userId, 1)
         return true
     }
 

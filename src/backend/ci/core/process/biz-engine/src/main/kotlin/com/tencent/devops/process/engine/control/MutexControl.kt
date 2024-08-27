@@ -54,6 +54,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_RELEASE_LOCK
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.engine.service.EngineConfigService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -70,13 +71,13 @@ class MutexControl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineUrlBean: PipelineUrlBean,
     private val containerBuildRecordService: ContainerBuildRecordService,
-    private val pipelineContainerService: PipelineContainerService
+    private val pipelineContainerService: PipelineContainerService,
+    private val engineConfigService: EngineConfigService
 ) {
 
     companion object {
         private const val DELIMITERS = "_"
         const val SECOND_TO_PRINT = 19
-        const val MUTEX_MAX_QUEUE = 10
         private val LOG = LoggerFactory.getLogger(MutexControl::class.java)
         private fun getMutexContainerId(buildId: String, containerId: String) = "${buildId}$DELIMITERS$containerId"
         private fun getBuildIdAndContainerId(mutexId: String): List<String> = mutexId.split(DELIMITERS)
@@ -106,7 +107,7 @@ class MutexControl @Autowired constructor(
         // 超时时间限制，0表示排队不等待直接超时
         val timeOut = parseTimeoutVar(mutexGroup.timeout, mutexGroup.timeoutVar, variables)
         // 排队任务数量限制，0表示不排队
-        val queue = mutexGroup.queue.coerceAtLeast(0).coerceAtMost(MUTEX_MAX_QUEUE)
+        val queue = mutexGroup.queue.coerceAtLeast(0).coerceAtMost(engineConfigService.getMutexMaxQueue())
         // 替换环境变量
         val mutexLockedGroup = if (!mutexGroup.mutexGroupName.isNullOrBlank()) {
             EnvUtils.parseEnv(mutexGroup.mutexGroupName, variables)

@@ -33,7 +33,7 @@ data class CreateNodeModel(
     var nodeStringId: String? = "",
     var projectId: String,
     var nodeIp: String = "",
-    var nodeName: String = "",
+    var nodeName: String? = "",
     var nodeStatus: String = "",
     var nodeType: String = "",
     var nodeClusterId: String? = null,

@@ -295,7 +295,8 @@
                 curPipeline: this.execDetail?.model,
                 pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC,
                 element: {},
-                scrollElement: '.pipeline-detail-wrapper.biz-content'
+                scrollElement: '.pipeline-detail-wrapper.biz-content',
+                isShowCheckDialog: false
             }
         },
         computed: {

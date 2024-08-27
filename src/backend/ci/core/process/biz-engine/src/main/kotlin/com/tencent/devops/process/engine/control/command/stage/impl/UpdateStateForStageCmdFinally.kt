@@ -47,11 +47,10 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
 import com.tencent.devops.process.engine.service.record.StageBuildRecordService
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 /**
  * 每一个Stage结束后续命令处理
@@ -62,7 +61,6 @@ class UpdateStateForStageCmdFinally(
     private val pipelineStageService: PipelineStageService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContainerService: PipelineContainerService,
-    private val stageBuildDetailService: StageBuildDetailService,
     private val stageBuildRecordService: StageBuildRecordService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
@@ -97,7 +95,7 @@ class UpdateStateForStageCmdFinally(
                 pipelineStageService.pauseStage(stage, commandContext.debug)
             } else {
                 nextOrFinish(event, stage, commandContext, false)
-                sendStageEndCallBack(stage, event)
+                sendStageEndCallBack(commandContext)
             }
         } else if (commandContext.buildStatus.isFinish()) { // 当前Stage结束
             if (commandContext.buildStatus == BuildStatus.SKIP) { // 跳过
@@ -106,15 +104,19 @@ class UpdateStateForStageCmdFinally(
                 pipelineStageService.refreshCheckStageStatus(userId = event.userId, buildStage = stage, inOrOut = false)
             }
             nextOrFinish(event, stage, commandContext, commandContext.buildStatus.isSuccess())
-            sendStageEndCallBack(stage, event)
+            sendStageEndCallBack(commandContext)
         }
     }
 
-    private fun sendStageEndCallBack(stage: PipelineBuildStage, event: PipelineBuildStageEvent) {
+    private fun sendStageEndCallBack(commandContext: StageContext) {
+        val event = commandContext.event
+        val stage = commandContext.stage
         pipelineEventDispatcher.dispatch(
+            // stage 结束
             PipelineBuildStatusBroadCastEvent(
                 source = "UpdateStateForStageCmdFinally", projectId = stage.projectId, pipelineId = stage.pipelineId,
-                userId = event.userId, buildId = stage.buildId, stageId = stage.stageId, actionType = ActionType.END
+                userId = event.userId, buildId = stage.buildId, stageId = stage.stageId, actionType = ActionType.END,
+                buildStatus = commandContext.buildStatus.name, executeCount = stage.executeCount
             )
         )
     }
@@ -151,7 +153,23 @@ class UpdateStateForStageCmdFinally(
 
                 return finishBuild(commandContext = commandContext)
             }
-            event.actionType = ActionType.START // final 需要执行
+            if (nextStage.controlOption?.finally == true) {
+                val pendingStages = pipelineStageService.getPendingStages(event.projectId, event.buildId)
+                    .filter { it.stageId != nextStage.stageId }
+                pendingStages.forEach { pendingStage ->
+                    pendingStage.status = BuildStatus.UNEXEC
+                    stageBuildRecordService.updateStageStatus(
+                        projectId = pendingStage.projectId,
+                        pipelineId = pendingStage.pipelineId,
+                        buildId = pendingStage.buildId,
+                        stageId = pendingStage.stageId,
+                        executeCount = pendingStage.executeCount,
+                        buildStatus = BuildStatus.UNEXEC
+                    )
+                }
+                pipelineStageService.batchUpdate(transactionContext = null, stageList = pendingStages)
+                event.actionType = ActionType.START // final 需要执行
+            }
         } else {
             nextStage = pipelineStageService.getNextStage(
                 projectId = event.projectId,
@@ -197,9 +215,11 @@ class UpdateStateForStageCmdFinally(
             event.source == BS_QUALITY_PASS_STAGE -> {
                 qualityCheckOutPass(commandContext)
             }
+
             event.source == BS_QUALITY_ABORT_STAGE || event.actionType.isEnd() -> {
                 qualityCheckOutFailed(commandContext)
             }
+
             else -> {
                 val checkStatus = pipelineStageService.checkStageQuality(
                     event = event,
@@ -211,11 +231,13 @@ class UpdateStateForStageCmdFinally(
                     BuildStatus.QUALITY_CHECK_PASS -> {
                         qualityCheckOutPass(commandContext)
                     }
+
                     BuildStatus.QUALITY_CHECK_WAIT -> {
                         // #5246 如果设置了把关人则卡在运行状态等待审核
                         qualityCheckOutNeedReview(commandContext)
                         needBreak = true
                     }
+
                     else -> {
                         qualityCheckOutFailed(commandContext)
                     }

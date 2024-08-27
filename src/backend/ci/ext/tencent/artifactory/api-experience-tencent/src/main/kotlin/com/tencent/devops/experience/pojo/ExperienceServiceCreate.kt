@@ -63,5 +63,7 @@ data class ExperienceServiceCreate(
     @get:Schema(title = "是否发送通知", required = false)
     val sendNotification: Boolean = true,
     @get:Schema(title = "scheme", required = false)
-    val scheme: String? = null
+    val scheme: String? = null,
+    @get:Schema(title = "分类", required = false)
+    val classify: String? = null
 )

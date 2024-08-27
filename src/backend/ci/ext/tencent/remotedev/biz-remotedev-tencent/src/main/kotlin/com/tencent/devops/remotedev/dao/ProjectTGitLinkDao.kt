@@ -7,6 +7,7 @@ import com.tencent.devops.remotedev.pojo.TGitRepoDaoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class ProjectTGitLinkDao {
@@ -38,6 +39,7 @@ class ProjectTGitLinkDao {
                 url
             ).onDuplicateKeyUpdate()
                 .set(STATUS, status.name)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .set(OAUTH_USER, oauthUser)
                 .set(URL, url)
                 .execute()
@@ -69,6 +71,7 @@ class ProjectTGitLinkDao {
                         it.url
                     ).onDuplicateKeyUpdate()
                         .set(STATUS, it.status.name)
+                        .set(UPDATE_TIME, LocalDateTime.now())
                         .set(OAUTH_USER, it.oauthUser)
                         .set(URL, it.url)
                 }
@@ -88,10 +91,15 @@ class ProjectTGitLinkDao {
 
     fun fetch(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        tgitId: Long?
     ): List<TProjectTgitIdLinkRecord> {
         with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
-            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).fetch()
+            val dsl = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+            if (tgitId != null) {
+                dsl.and(TGIT_ID.eq(tgitId))
+            }
+            return dsl.fetch()
         }
     }
 
@@ -123,7 +131,10 @@ class ProjectTGitLinkDao {
         with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
             dslContext.batch(
                 tgitIds.map {
-                    dslContext.update(this).set(STATUS, status.name).where(PROJECT_ID.eq(projectId))
+                    dslContext.update(this)
+                        .set(STATUS, status.name)
+                        .set(UPDATE_TIME, LocalDateTime.now())
+                        .where(PROJECT_ID.eq(projectId))
                         .and(TGIT_ID.eq(it))
                 }
             ).execute()

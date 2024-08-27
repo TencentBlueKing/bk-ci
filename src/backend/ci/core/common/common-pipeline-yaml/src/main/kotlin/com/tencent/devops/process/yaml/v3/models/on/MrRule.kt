@@ -84,5 +84,13 @@ data class MrRule(
 
     @get:Schema(title = "path-filter-type")
     @JsonProperty("path-filter-type")
-    val pathFilterType: String? = null
+    val pathFilterType: String? = null,
+
+    @get:Schema(title = "custom-filter")
+    @JsonProperty("custom-filter")
+    val custom: CustomFilter? = null,
+
+    @JsonProperty("skip-wip")
+    @get:Schema(title = "skip-wip")
+    var skipWip: Boolean? = null
 )
