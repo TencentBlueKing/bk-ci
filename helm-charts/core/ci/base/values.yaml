@@ -412,11 +412,13 @@ kubernetes-manager:
         apiToken:
           key: Devops-Token
           value: landun
-        rsaPrivateKey: |
+        rsaPrivateKey: ""
     volumeMount:
       # 流水线构建工作空间和agent日志在容器内的挂载点
       dataPath: /data/devops/workspace
       logPath: /data/devops/logs
+    docker:
+      enable: true
   dockerInit:
     # 是否使用当前chart的 dockerinit.sh
     useDockerInit: true
