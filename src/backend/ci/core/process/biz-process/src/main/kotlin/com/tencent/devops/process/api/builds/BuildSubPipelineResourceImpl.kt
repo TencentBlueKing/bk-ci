@@ -131,6 +131,22 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         return subPipeService.getPipelineByName(projectId, pipelineName)
     }
 
+    override fun checkSubPipelinePermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        parentProjectId: String,
+        parentPipelineId: String
+    ) {
+        return subPipeService.checkSubPipelinePermission(
+            userId = userId,
+            pipelineId = pipelineId,
+            projectId = projectId,
+            parentPipelineId = parentPipelineId,
+            parentProjectId = parentProjectId
+        )
+    }
+
     private fun checkParam(userId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")

@@ -27,10 +27,12 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
@@ -573,6 +575,41 @@ class SubPipelineStartUpService @Autowired constructor(
         }
 
         return Result(data)
+    }
+
+    fun checkSubPipelinePermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        parentProjectId: String,
+        parentPipelineId: String
+    ) {
+        val pipelineOauthUser = pipelineRepositoryService.getPipelineOauthUser(
+            projectId = parentProjectId,
+            pipelineId = parentPipelineId
+        ) ?: userId
+        logger.info(
+            "checkSubPipelinePermission userId:$userId, oauthUser:$pipelineOauthUser" +
+                    "projectId:$projectId, pipelineId:$pipelineId, " +
+                    "parentProjectId:$parentProjectId, " +
+                    "parentPipelineId:$parentPipelineId"
+        )
+        pipelinePermissionService.validPipelinePermission(
+            userId = pipelineOauthUser,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EXECUTE,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
     }
 
     fun getSubPipelineStatus(projectId: String, buildId: String): Result<SubPipelineStatus> {
