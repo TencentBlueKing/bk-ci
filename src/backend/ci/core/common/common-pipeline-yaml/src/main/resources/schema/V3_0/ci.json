@@ -1894,6 +1894,12 @@
                   "lock-resource-with" : {
                     "type" : "string"
                   },
+                  "concurrency-limit-per-node" : {
+                    "type" : "integer"
+                  },
+                  "concurrency-limit-total" : {
+                    "type" : "integer"
+                  },
                   "hw-spec" : {
                     "type" : "string"
                   },
@@ -2330,6 +2336,12 @@
                   },
                   "lock-resource-with" : {
                     "type" : "string"
+                  },
+                  "concurrency-limit-per-node" : {
+                    "type" : "integer"
+                  },
+                  "concurrency-limit-total" : {
+                    "type" : "integer"
                   },
                   "hw-spec" : {
                     "type" : "string"

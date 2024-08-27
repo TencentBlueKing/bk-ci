@@ -163,6 +163,10 @@ data class RunsOn(
     var nodeName: String? = null,
     @JsonProperty("lock-resource-with")
     val lockResourceWith: String? = null,
+    @JsonProperty("concurrency-limit-per-node")
+    var singleNodeConcurrency: Int? = null,
+    @JsonProperty("concurrency-limit-total")
+    var allNodeConcurrency: Int? = null,
     @JsonIgnore
     val poolType: String? = null,
     val container: Any? = null,

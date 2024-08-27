@@ -380,7 +380,9 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 dependOnType = DependOnType.NAME,
                 dependOnName = dependOnName,
                 prepareTimeout = job.runsOn.queueTimeoutMinutes ?: VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT,
-                continueWhenFailed = job.continueOnError ?: DEFAULT_CONTINUE_WHEN_FAILED
+                continueWhenFailed = job.continueOnError ?: DEFAULT_CONTINUE_WHEN_FAILED,
+                singleNodeConcurrency = job.runsOn.singleNodeConcurrency,
+                allNodeConcurrency = job.runsOn.allNodeConcurrency
             )
         } else {
             val runCondition = kotlin.run {
@@ -399,7 +401,9 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 dependOnType = DependOnType.NAME,
                 dependOnName = dependOnName,
                 prepareTimeout = job.runsOn.queueTimeoutMinutes ?: VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT,
-                continueWhenFailed = job.continueOnError ?: DEFAULT_CONTINUE_WHEN_FAILED
+                continueWhenFailed = job.continueOnError ?: DEFAULT_CONTINUE_WHEN_FAILED,
+                singleNodeConcurrency = job.runsOn.singleNodeConcurrency,
+                allNodeConcurrency = job.runsOn.allNodeConcurrency
             )
         }
     }
