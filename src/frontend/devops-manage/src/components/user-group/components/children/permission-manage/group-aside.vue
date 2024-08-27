@@ -13,8 +13,10 @@
           @change="handleSelectProject"
           :popoverOptions="popoverOptions"
         >
-          <div v-for="(project, index) in filterProjectList"
-            :key="index">
+          <div
+            v-for="project in filterProjectList"
+            :key="project.projectCode"
+          >
             <bk-option
               :value="project.englishName"
               :disabled="!project.managePermission"
@@ -63,12 +65,13 @@
             <span class="group-name" :title="group.name">{{ group.name }}</span>
             <div class="num-box" v-for="item in groupCountField" :key="item">
               <i
-                :class="{
-                'group-icon manage-icon manage-icon-user-shape': item === 'userCount',
-                'group-icon manage-icon manage-icon-user-template': item === 'templateCount',
-                'group-icon manage-icon manage-icon-organization': item === 'departmentCount',
-                'active': activeTab === group.groupId
-              }" />
+                :class="['group-icon', 'manage-icon', {
+                  'manage-icon-user-shape': item === 'userCount',
+                  'manage-icon-user-template': item === 'templateCount',
+                  'manage-icon-organization': item === 'departmentCount',
+                  'active': activeTab === group.groupId
+                }]"
+              />
               <div class="group-num">{{ group[item] }}</div>
             </div>
             <bk-popover
@@ -76,7 +79,6 @@
               class="group-more-option"
               placement="bottom"
               theme="light dot-menu"
-              :popoverDelay="[100, 0]"
               :arrow="false"
               trigger="click"
               :offset="15"
@@ -305,10 +307,6 @@ export default {
         .get(`${this.ajaxPrefix}/project/api/user/projects/?enabled=true`)
         .then((res) => {
           this.projectList = res.data;
-          const project = this.projectList.find(i => i.projectCode === this.curProjectCode);
-          if (project) {
-            this.initPage = project.managePermission === false || !/rbac/.test(project.routerTag);
-          };
         });
     },
     refreshList() {
