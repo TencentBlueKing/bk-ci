@@ -420,7 +420,8 @@ class PipelineSettingDao {
                     cleanVariablesWhenRetry = t.cleanVariablesWhenRetry,
                     pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
                         JsonUtil.to(self, PipelineAsCodeSettings::class.java)
-                    }
+                    },
+                    version = t.version
                 )
             }
         }
