@@ -428,7 +428,17 @@ class PipelineContainerService @Autowired constructor(
         var taskSeq = 0
         val containerElements = container.elements
         val newBuildFlag = lastTimeBuildTasks.isEmpty()
+
+        // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
+        // #10751 如果不存在需要运行的插件，则直接将container设为不启用
         var containerEnable = false
+        containerElements.forEach { atomElement ->
+            atomElement.disableBySkipVar(variables = context.variables)
+            if (atomElement.additionalOptions?.enable != false) {
+                containerEnable = true
+            }
+        }
+        if (!containerEnable) container.setContainerEnable(false)
 
         containerElements.forEach nextElement@{ atomElement ->
             modelCheckPlugin.checkElementTimeoutVar(container, atomElement, contextMap = context.variables)
@@ -439,14 +449,6 @@ class PipelineContainerService @Autowired constructor(
                 if (startVMTaskSeq > 0) {
                     taskSeq++ // 当前插件任务的执行序号往后移动一位，留给构建机启动插件任务
                 }
-            }
-
-            // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
-            atomElement.disableBySkipVar(variables = context.variables)
-
-            // #10751 如果不存在需要运行的插件，则直接将container设为不启用
-            if (atomElement.additionalOptions?.enable != false) {
-                containerEnable = true
             }
 
             val status = atomElement.initStatus(
@@ -635,7 +637,7 @@ class PipelineContainerService @Autowired constructor(
                 ModelUtils.initContainerOldData(container)
                 val controlOption = when (container) {
                     is NormalContainer -> PipelineBuildContainerControlOption(
-                        jobControlOption = container.jobControlOption!!.copy(enable = containerEnable),
+                        jobControlOption = container.jobControlOption!!,
                         matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
                         mutexGroup = container.mutexGroup?.also { s ->
@@ -647,7 +649,7 @@ class PipelineContainerService @Autowired constructor(
                     )
 
                     is VMBuildContainer -> PipelineBuildContainerControlOption(
-                        jobControlOption = container.jobControlOption!!.copy(enable = containerEnable),
+                        jobControlOption = container.jobControlOption!!,
                         matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
                         mutexGroup = container.mutexGroup?.also { s ->
