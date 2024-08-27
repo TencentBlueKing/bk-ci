@@ -363,7 +363,7 @@ class PipelineResourceVersionDao {
                 query.and(VERSION.le(maxQueryVersion))
             }
             val list = query.orderBy(
-                RELEASE_TIME.desc(), VERSION_NUM.desc(), VERSION.desc()
+                RELEASE_TIME.desc(), VERSION.desc()
             ).limit(limit).offset(offset).fetch(sampleMapper)
             list.forEach { if (it.version == pipelineInfo.version) it.latestReleasedFlag = true }
             return list
