@@ -42,10 +42,4 @@ interface UserInfoResource {
     fun faceRecognition(
         data: FaceRecognitionData
     ): Result<FaceRecognitionResult>
-
-    // TODO: 看看还需要吗
-    @Operation(summary = "校验MOA二次认证结果")
-    @POST
-    @Path("/cert/moaDoubleCheck")
-    fun moaDoubleCheck()
 }

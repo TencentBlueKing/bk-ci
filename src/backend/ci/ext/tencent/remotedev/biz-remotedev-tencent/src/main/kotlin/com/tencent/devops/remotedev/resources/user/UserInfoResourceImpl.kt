@@ -25,8 +25,4 @@ class UserInfoResourceImpl @Autowired constructor(
     override fun faceRecognition(data: FaceRecognitionData): Result<FaceRecognitionResult> {
         return Result(userInfoCertService.faceRecognition(data))
     }
-
-    override fun moaDoubleCheck() {
-        TODO("Not yet implemented")
-    }
 }
