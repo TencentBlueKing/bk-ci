@@ -617,7 +617,8 @@ class PipelineStageService @Autowired constructor(
                 position = ControlPointPosition.BEFORE_POSITION,
                 stageId = stage.stageId,
                 notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType),
-                markdownContent = checkIn.markdownContent
+                markdownContent = checkIn.markdownContent,
+                mentionReceivers = true
             )
         )
         // #7971 无指定通知类型时、或者触发人是审核人时，不去通知触发人。
