@@ -122,8 +122,8 @@
                     },
                     {
                         key: 'modificationDetail',
-                        value: basicInfo?.creator ?? '--',
-                        grayDesc: ` | ${convertTime(basicInfo?.updateTime)}`
+                        value: basicInfo?.versionUpdater ?? '--',
+                        grayDesc: ` | ${convertTime(basicInfo?.versionUpdateTime)}`
                     },
                     {
                         key: 'creatorDetail',
