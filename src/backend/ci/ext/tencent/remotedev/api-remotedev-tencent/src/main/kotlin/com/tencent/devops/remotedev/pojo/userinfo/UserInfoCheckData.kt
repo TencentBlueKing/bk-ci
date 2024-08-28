@@ -31,7 +31,10 @@ data class FaceRecognitionData(
     val username: String,
     @get:Schema(title = "人脸的base64数据")
     val base64FaceData: String
-)
+) {
+    // 打日志不打印 base64，太大了
+    fun toLog(): String = username
+}
 
 @Schema(title = "人脸识别结果")
 data class FaceRecognitionResult(

@@ -13,6 +13,7 @@ import com.tencentcloudapi.common.exception.TencentCloudSDKException
 import com.tencentcloudapi.common.profile.ClientProfile
 import com.tencentcloudapi.common.profile.HttpProfile
 import com.tencentcloudapi.iai.v20180301.IaiClient
+import com.tencentcloudapi.iai.v20180301.IaiErrorCode
 import com.tencentcloudapi.iai.v20180301.models.CreatePersonRequest
 import com.tencentcloudapi.iai.v20180301.models.GetPersonBaseInfoRequest
 import com.tencentcloudapi.iai.v20180301.models.VerifyPersonRequest
@@ -68,7 +69,11 @@ class UserInfoCertService @Autowired constructor(
         val personInfo = try {
             client.GetPersonBaseInfo(GetPersonBaseInfoRequest().apply { this.personId = data.username })
         } catch (e: TencentCloudSDKException) {
-            // TODO: 如果没有找到用户 ID对应的用户会抛出异常和错误吗，需要测试下，先按没有找到算
+            // 只有人员不存在的情况才能往下走
+            if (e.errorCode != IaiErrorCode.INVALIDPARAMETERVALUE_PERSONIDNOTEXIST.value) {
+                logger.warn("faceRecognition|GetPersonBaseInfo|${data.toLog()}|$e")
+                return FaceRecognitionResult(false, FaceRecognitionNoPassType.NO_PASS, e.toString())
+            }
             null
         }
         if (personInfo != null) {
@@ -79,10 +84,10 @@ class UserInfoCertService @Autowired constructor(
                     this.qualityControl = 3
                 })
             } catch (e: TencentCloudSDKException) {
-                logger.warn("faceRecognition|VerifyPerson|$data|$e")
+                logger.warn("faceRecognition|VerifyPerson|${data.toLog()}|$e")
                 return FaceRecognitionResult(false, FaceRecognitionNoPassType.NO_PASS, e.toString())
             }
-            logger.info("faceRecognition|$data|$verifyInfo")
+            logger.info("faceRecognition|${data.toLog()}|$verifyInfo")
             return if (verifyInfo.isMatch) {
                 FaceRecognitionResult.pass()
             } else {
@@ -98,7 +103,7 @@ class UserInfoCertService @Autowired constructor(
                 this.qualityControl = 3
             })
         } catch (e: TencentCloudSDKException) {
-            logger.warn("faceRecognition|CreatePerson|$data|$e")
+            logger.warn("faceRecognition|CreatePerson|${data.toLog()}|$e")
             return FaceRecognitionResult(false, FaceRecognitionNoPassType.REUPLOAD_AVATAR, e.toString())
         }
         return FaceRecognitionResult.pass()
@@ -111,14 +116,14 @@ class UserInfoCertService @Autowired constructor(
         }
         return IaiClient(
             cred,
-            IAI_TCLOUD_REGION,
+            // 内网地域不用写，就近接入
+            "",
             ClientProfile().apply { this.httpProfile = profile }
         )
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(UserInfoCertService::class.java)
-        private const val IAI_TCLOUD_REGION = "iai.tencentcloudapi.com"
         private const val IAI_TCLOUD_DOMAIN = "iai.internal.tencentcloudapi.com"
     }
 }
