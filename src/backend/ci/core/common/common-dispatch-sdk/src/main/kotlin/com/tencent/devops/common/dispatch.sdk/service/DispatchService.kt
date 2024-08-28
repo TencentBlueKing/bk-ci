@@ -64,6 +64,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import feign.RetryableException
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
@@ -153,7 +154,7 @@ class DispatchService constructor(
     }
 
     fun checkRunning(event: PipelineAgentStartupEvent): Boolean {
-        val (startBuildTask, buildContainer) = getContainerStartupInfo(event)
+        val (startBuildTask, buildContainer) = getContainerStartupInfoWithRetry(event)
 
         var needStart = true
         if (event.executeCount != startBuildTask.executeCount) {
@@ -187,7 +188,7 @@ class DispatchService constructor(
     fun onContainerFailure(event: PipelineAgentStartupEvent, e: BuildFailureException) {
         logger.warn("[${event.buildId}|${event.vmSeqId}] Container startup failure")
         try {
-            val (startBuildTask, buildContainer) = getContainerStartupInfo(event)
+            val (startBuildTask, buildContainer) = getContainerStartupInfoWithRetry(event)
             if (buildContainer.status.isCancel() || startBuildTask.status.isCancel()) {
                 return
             }
@@ -246,6 +247,26 @@ class DispatchService constructor(
             )
         } catch (e: Exception) {
             logger.warn("[$pipelineId]|[$buildId]|[$vmSeqId]| sendDispatchMonitoring failed.", e.message)
+        }
+    }
+
+    private fun getContainerStartupInfoWithRetry(
+        event: PipelineAgentStartupEvent,
+        retryTimes: Int = RETRY_TIMES
+    ): Pair<PipelineBuildTask, PipelineBuildContainer> {
+        with(event) {
+            try {
+                return getContainerStartupInfo(event)
+            } catch (e: RetryableException) {
+                if (retryTimes > 0) {
+                    logger.warn("[$pipelineId]|[$buildId]|[$vmSeqId]| getContainerStartupInfo failed, " +
+                            "retryTimes=$retryTimes", e.message)
+                    Thread.sleep(1000)
+                    return getContainerStartupInfoWithRetry(event, retryTimes - 1)
+                } else {
+                    throw e
+                }
+            }
         }
     }
 
@@ -344,5 +365,7 @@ class DispatchService constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(DispatchService::class.java)
+
+        private const val RETRY_TIMES = 3
     }
 }
