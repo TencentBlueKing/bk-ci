@@ -1,5 +1,12 @@
 <template>
-    <div class="pipeline-execute-preview" v-bkloading="{ isLoading }">
+    <div
+        class="pipeline-execute-preview"
+        v-bkloading="{ isLoading }"
+    >
+        <bk-alert
+            v-if="isDebugPipeline"
+            :title="$t('debugHint')"
+        ></bk-alert>
         <template v-if="!isDebugPipeline && buildList.length">
             <header
                 :class="['params-collapse-trigger', {
@@ -10,7 +17,10 @@
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('buildMsg') }}
             </header>
-            <div v-if="activeName.has(1)" class="params-collapse-content">
+            <div
+                v-if="activeName.has(1)"
+                class="params-collapse-content"
+            >
                 <pipeline-params-form
                     ref="buildForm"
                     :param-values="buildValues"
@@ -29,7 +39,10 @@
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('preview.introVersion') }}
             </header>
-            <div v-if="activeName.has(2)" class="params-collapse-content">
+            <div
+                v-if="activeName.has(2)"
+                class="params-collapse-content"
+            >
                 <pipeline-versions-form
                     ref="versionParamForm"
                     :build-no="buildNo"
@@ -50,16 +63,30 @@
             {{ $t('buildParams') }}
             <template v-if="paramList.length > 0">
                 <span class="collapse-trigger-divider">|</span>
-                <span v-if="useLastParams" class="text-link" @click.stop="updateParams()">
+                <span
+                    v-if="useLastParams"
+                    class="text-link"
+                    @click.stop="updateParams()"
+                >
                     {{ $t('resetDefault') }}
-                    <i class="devops-icon icon-question-circle" v-bk-tooltips="resetDefaultParamsTips" />
+                    <i
+                        class="devops-icon icon-question-circle"
+                        v-bk-tooltips="resetDefaultParamsTips"
+                    />
                 </span>
-                <span v-else class="text-link" @click.stop="updateParams('value')">
+                <span
+                    v-else
+                    class="text-link"
+                    @click.stop="updateParams('value')"
+                >
                     {{ $t('useLastParams') }}
                 </span>
             </template>
         </header>
-        <div v-if="activeName.has(3)" class="params-collapse-content">
+        <div
+            v-if="activeName.has(3)"
+            class="params-collapse-content"
+        >
             <bk-alert
                 v-if="showChangedParamsAlert && changedParams.length"
                 type="warning"
@@ -74,7 +101,11 @@
                 :handle-param-change="handleParamChange"
                 :params="paramList"
             />
-            <bk-exception v-else type="empty" scene="part">
+            <bk-exception
+                v-else
+                type="empty"
+                scene="part"
+            >
                 {{ $t('noParams') }}
             </bk-exception>
         </div>
@@ -89,7 +120,10 @@
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('newui.const') }}
             </header>
-            <div v-if="activeName.has(4)" class="params-collapse-content">
+            <div
+                v-if="activeName.has(4)"
+                class="params-collapse-content"
+            >
                 <pipeline-params-form
                     ref="constParamsForm"
                     disabled
@@ -108,7 +142,10 @@
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('newui.pipelineParam.otherVar') }}
             </header>
-            <div v-if="activeName.has(5)" class="params-collapse-content">
+            <div
+                v-if="activeName.has(5)"
+                class="params-collapse-content"
+            >
                 <pipeline-params-form
                     ref="otherParamsForm"
                     disabled
@@ -127,21 +164,36 @@
             <i class="devops-icon icon-angle-right" />
             {{ $t(canElementSkip ? 'preview.atomToExec' : 'executeStepPreview') }}
             <template v-if="canElementSkip">
-                <span v-if="!isDebugPipeline" class="no-bold-font">
+                <span
+                    v-if="!isDebugPipeline"
+                    class="no-bold-font"
+                >
                     ({{ $t('preview.skipTipsPrefix') }}
-                    <span @click.stop="editTrigger" class="text-link item-title-tips-link">
+                    <span
+                        @click.stop="editTrigger"
+                        class="text-link item-title-tips-link"
+                    >
                         {{ $t('preview.manualTrigger') }}
                     </span>
                     {{ $t('preview.skipTipsSuffix') }})
                 </span>
-                <span @click.stop class="no-bold-font">
-                    <bk-checkbox @change="handleCheckTotalChange" v-model="checkTotal">
+                <span
+                    @click.stop
+                    class="no-bold-font"
+                >
+                    <bk-checkbox
+                        @change="handleCheckTotalChange"
+                        v-model="checkTotal"
+                    >
                         {{ $t('preview.selectAll') }}/{{ $t('preview.selectNone') }}
                     </bk-checkbox>
                 </span>
             </template>
         </header>
-        <div v-if="activeName.has(6)" class="params-collapse-content pipeline-optional-model">
+        <div
+            v-if="activeName.has(6)"
+            class="params-collapse-content pipeline-optional-model"
+        >
             <pipeline
                 is-preview
                 :show-header="false"
@@ -227,6 +279,7 @@
                 }
             }
         },
+
         mounted () {
             if (this.$route.params.version || this.pipelineInfo?.releaseVersion) {
                 this.init()
@@ -274,12 +327,19 @@
                     this.paramList = startupInfo.properties.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
                         isChanged: p.defaultValue !== p.value,
-                        readOnly: false
+                        readOnly: false,
+                        label: `${p.id}${p.name ? `(${p.name})` : ''}`
                     }))
                     this.versionParamList = startupInfo.properties.filter(p => allVersionKeyList.includes(p.id))
                     this.buildList = startupInfo.properties.filter(p => p.propertyType === 'BUILD')
-                    this.constantParams = startupInfo.properties.filter(p => p.constant)
-                    this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD')
+                    this.constantParams = startupInfo.properties.filter(p => p.constant).map(p => ({
+                        ...p,
+                        label: `${p.id}${p.name ? `(${p.name})` : ''}`
+                    }))
+                    this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
+                        ...p,
+                        label: `${p.id}${p.name ? `(${p.name})` : ''}`
+                    }))
                     this.getParamsValue(values)
                     this.setExecuteParams({
                         pipelineId: this.pipelineId,
@@ -501,7 +561,7 @@ $header-height: 36px;
     height: 100%;
     display: flex;
     flex-direction: column;
-    margin: 24px 24px 0 24px;
+    margin: 24px 24px 12px 24px;
     box-shadow: 0 2px 2px 0 #00000026;
     overflow: auto !important;
     background-color: white;

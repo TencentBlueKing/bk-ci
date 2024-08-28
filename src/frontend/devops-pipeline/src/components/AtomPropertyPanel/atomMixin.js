@@ -56,6 +56,7 @@ import ConditionalInputSelector from '@/components/atomFormField/ConditionalInpu
 import EnumButton from '@/components/atomFormField/EnumButton'
 import TipsSimple from '@/components/AtomFormComponent/TipsSimple'
 import Tips from '@/components/AtomFormComponent/Tips'
+import SubParameter from '@/components/AtomFormComponent/SubParameter'
 
 const atomMixin = {
     props: {
@@ -107,7 +108,8 @@ const atomMixin = {
         ConditionalInputSelector,
         EnumButton,
         TipsSimple,
-        Tips
+        Tips,
+        SubParameter
     },
     computed: {
         ...mapGetters('atom', [

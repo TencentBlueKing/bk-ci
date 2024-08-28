@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ManageHeader from '@/components/manage-header.vue';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
   useRouter,
@@ -23,13 +23,17 @@ const manageTabs = ref([
     title: t('用户管理'),
     name: 'group',
   },
+  {
+    title: t('授权管理'),
+    name: 'permission',
+  },
   // {
   //   title: t('微扩展管理'),
   //   name: 'expand',
   // },
 ]);
 
-const routeName = route.name;
+const routeName = computed(()=>route.name);
 const { projectCode } = route.params;
 const projectList = window.parent?.vuexStore?.state?.projectList;
 const projectName = projectList?.find(project => project.projectCode === projectCode)?.projectName || projectCode;
@@ -41,12 +45,15 @@ const handleChangeTab = (manageTab: any) => {
   });
 };
 const initActiveTab = () => {
-  const tab = manageTabs.value.find(tab => tab.name === routeName);
+  const tab = manageTabs.value.find(tab => tab.name === routeName.value);
   activeTab.value = tab?.title || t('项目信息');
 };
 onMounted(() => {
   initActiveTab();
 });
+
+watch(route, initActiveTab, { immediate: true });
+
 </script>
 
 <template>
@@ -75,6 +82,7 @@ onMounted(() => {
   font-size: 14px;
   flex: 1;
   text-align: center;
+  padding-right: 100px;
 }
 .manage-tab {
   display: inline-block;
@@ -101,7 +109,6 @@ onMounted(() => {
 }
 .manage-main {
   /* margin: 16px 24px 24px; */
-  width: calc(100% - 48px);
   height: 100%;
   /* background-color: #fff; */
   /* box-shadow: 0 2px 2px 0 rgb(0 0 0 / 15%); */

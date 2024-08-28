@@ -300,6 +300,13 @@ class CodeSvnRepositoryService @Autowired constructor(
 
     override fun getPacRepository(externalId: String): TRepositoryRecord? = null
 
+    override fun addResourceAuthorization(
+        projectId: String,
+        userId: String,
+        repositoryId: Long,
+        repository: CodeSvnRepository
+    ) = Unit
+
     companion object {
         private val logger = LoggerFactory.getLogger(CodeSvnRepositoryService::class.java)
     }

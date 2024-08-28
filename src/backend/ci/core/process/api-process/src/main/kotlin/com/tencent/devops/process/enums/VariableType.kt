@@ -33,8 +33,10 @@ enum class VariableType(val hasPrefix: Boolean = false, val alisName: String = "
     BK_CI_START_TYPE,
     BK_CI_PROJECT_NAME,
     BK_CI_PIPELINE_NAME,
+    BK_CI_BUILD_URL,
     BK_CI_BUILD_ID,
     BK_CI_BUILD_NUM,
+    BK_CI_BUILD_NUM_ALIAS,
     BK_CI_BUILD_JOB_ID(alisName = "job.id"),
     BK_CI_BUILD_MSG,
     BK_CI_BUILD_TASK_ID(alisName = "step.id"),
@@ -52,6 +54,7 @@ enum class VariableType(val hasPrefix: Boolean = false, val alisName: String = "
     BK_CI_START_CHANNEL,
     BK_CI_START_USER_ID,
     BK_CI_START_USER_NAME,
+    BK_CI_PARENT_PROJECT_ID,
     BK_CI_PARENT_PIPELINE_ID,
     BK_CI_PARENT_BUILD_ID,
     BK_CI_START_PIPELINE_USER_ID,
@@ -61,6 +64,19 @@ enum class VariableType(val hasPrefix: Boolean = false, val alisName: String = "
     BK_CI_ATOM_CODE(alisName = "step.atom_code"),
     BK_CI_TASK_NAME(alisName = "step.name"),
     BK_CI_ATOM_NAME(alisName = "step.atom_name"),
+
+    // GIT拉取常量
+    BK_CI_GIT_REPO_URL,
+    BK_CI_GIT_REPO_NAME,
+    BK_CI_GIT_REPO_ALIAS_NAME,
+    BK_CI_GIT_REPO_BRANCH,
+    BK_CI_GIT_REPO_TAG,
+    BK_CI_GIT_REPO_CODE_PATH,
+    BK_CI_GIT_REPO_LAST_COMMIT_ID,
+    BK_CI_GIT_REPO_HEAD_COMMIT_ID,
+    BK_CI_GIT_REPO_HEAD_COMMIT_COMMENT,
+    BK_CI_GIT_REPO_HEAD_COMMIT_AUTHOR,
+    BK_CI_GIT_REPO_HEAD_COMMIT_COMMITTER,
 
     // GIT事件触发公共变量
     BK_CI_REPO_WEBHOOK_REPO_TYPE,

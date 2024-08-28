@@ -5,9 +5,6 @@ import (
 	"disaptch-k8s-manager/pkg/config"
 	"disaptch-k8s-manager/pkg/types"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -15,6 +12,10 @@ import (
 	"path/filepath"
 	"runtime/debug"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var Logs *logrus.Logger
@@ -117,4 +118,12 @@ func Warn(args ...interface{}) {
 
 func Error(args ...interface{}) {
 	Logs.Error(args...)
+}
+
+func Errorf(format string, args ...interface{}) {
+	Logs.Errorf(format, args...)
+}
+
+func WithError(err error) *logrus.Entry {
+	return Logs.WithError(err)
 }

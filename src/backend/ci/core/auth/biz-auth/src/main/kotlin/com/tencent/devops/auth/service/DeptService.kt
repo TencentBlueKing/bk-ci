@@ -55,4 +55,23 @@ interface DeptService {
 
     // 获取单个用户信息
     fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo?
+
+    // 获取成员信息
+    fun getMemberInfo(
+        memberId: String,
+        memberType: ManagerScopesEnum
+    ): UserAndDeptInfoVo
+
+    // 获取成员信息
+    fun listMemberInfos(
+        memberIds: List<String>,
+        memberType: ManagerScopesEnum
+    ): List<UserAndDeptInfoVo>
+
+    // 传入成员名单，筛选出其中离职的成员
+    fun listDepartedMembers(
+        memberIds: List<String>
+    ): List<String>
+
+    fun isUserDeparted(userId: String): Boolean
 }

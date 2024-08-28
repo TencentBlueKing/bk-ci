@@ -12,7 +12,7 @@
     import { Component } from 'vue-property-decorator'
     import * as Img403 from '../assets/static/403.png'
     
-    @Component
+    @Component()
     export default class Exception403 extends Vue {
         get Img403 (): string {
             return Img403

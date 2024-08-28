@@ -30,10 +30,12 @@ package com.tencent.devops.auth.resources.user
 
 import com.tencent.devops.auth.api.user.UserAuthResourceResource
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.pojo.dto.ListGroupConditionDTO
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
+import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -42,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserAuthResourceResourceImpl @Autowired constructor(
     private val permissionResourceService: PermissionResourceService,
+    private val permissionResourceValidateService: PermissionResourceValidateService,
     private val permissionResourceGroupService: PermissionResourceGroupService
 ) : UserAuthResourceResource {
     override fun hasManagerPermission(
@@ -51,7 +54,7 @@ class UserAuthResourceResourceImpl @Autowired constructor(
         resourceCode: String
     ): Result<Boolean> {
         return Result(
-            permissionResourceService.hasManagerPermission(
+            permissionResourceValidateService.hasManagerPermission(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,
@@ -81,16 +84,21 @@ class UserAuthResourceResourceImpl @Autowired constructor(
         projectId: String,
         resourceType: String,
         resourceCode: String,
+        allProjectMembersGroupFlag: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<Pagination<IamGroupInfoVo>> {
         return Result(
             permissionResourceGroupService.listGroup(
-                projectId = projectId,
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                page = page,
-                pageSize = pageSize
+                userId = userId,
+                ListGroupConditionDTO(
+                    projectId = projectId,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    getAllProjectMembersGroup = allProjectMembersGroupFlag ?: true,
+                    page = page,
+                    pageSize = pageSize
+                )
             )
         )
     }

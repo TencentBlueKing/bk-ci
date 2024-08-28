@@ -1,6 +1,10 @@
 <template>
     <ul class="trigger-event-list">
-        <li v-for="(event, index) in events" :key="index" class="trigger-event-item">
+        <li
+            v-for="(event, index) in events"
+            :key="index"
+            class="trigger-event-item"
+        >
             <span
                 class="trigger-event-item-indicator"
                 :style="`background: ${statusColorMap[event.status]}29`"
@@ -16,8 +20,15 @@
             </p>
             <p class="trigger-event-reason">
                 <span>{{ event.reason }}</span>  |
-                <em v-if="event.buildNum" v-html="event.buildNum"></em>
-                <em v-bk-overflow-tips v-else v-html="event.reasonDetailList.join(' | ')"></em>
+                <em
+                    v-if="event.buildNum"
+                    v-html="event.buildNum"
+                ></em>
+                <em
+                    v-bk-overflow-tips
+                    v-else-if="Array.isArray(event.reasonDetailList)"
+                    v-html="event.reasonDetailList.join(' | ')"
+                ></em>
             </p>
             <bk-button
                 text
@@ -25,7 +36,7 @@
                 theme="primary"
                 @click="triggerEvent(event)"
             >
-                {{$t('reTrigger')}}
+                {{ $t('reTrigger') }}
             </bk-button>
         </li>
     </ul>

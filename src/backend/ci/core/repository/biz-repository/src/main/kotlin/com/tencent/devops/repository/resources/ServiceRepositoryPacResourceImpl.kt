@@ -54,6 +54,28 @@ class ServiceRepositoryPacResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun enablePac(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
+        repositoryPacService.enablePac(
+            userId = userId,
+            projectId = projectId,
+            repositoryHashId = repositoryHashId
+        )
+        return Result(true)
+    }
+
+    override fun disablePac(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String
+    ): Result<Boolean> {
+        repositoryPacService.disablePac(
+            userId = userId,
+            projectId = projectId,
+            repositoryHashId = repositoryHashId
+        )
+        return Result(true)
+    }
+
     override fun getPacRepository(externalId: String, scmType: ScmType): Result<Repository?> {
         return Result(repositoryPacService.getPacRepository(externalId = externalId, scmType = scmType))
     }
