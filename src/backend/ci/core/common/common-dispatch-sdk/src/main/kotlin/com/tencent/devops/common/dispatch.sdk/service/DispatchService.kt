@@ -250,6 +250,9 @@ class DispatchService constructor(
         }
     }
 
+    /**
+     * 针对服务间调用出现 Connection refused 的异常，进行重试
+     */
     private fun getContainerStartupInfoWithRetry(
         event: PipelineAgentStartupEvent,
         retryTimes: Int = RETRY_TIMES
