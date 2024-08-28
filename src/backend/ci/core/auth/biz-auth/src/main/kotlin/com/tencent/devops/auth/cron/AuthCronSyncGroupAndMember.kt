@@ -24,7 +24,7 @@ class AuthCronSyncGroupAndMember(
         private val logger = LoggerFactory.getLogger(AuthCronSyncGroupAndMember::class.java)
     }
 
-    @Scheduled(cron = "0 0 0 6 * ?")
+    @Scheduled(cron = "0 0 0 ? * SAT")
     fun syncGroupAndMemberRegularly() {
         if (!enable) {
             return

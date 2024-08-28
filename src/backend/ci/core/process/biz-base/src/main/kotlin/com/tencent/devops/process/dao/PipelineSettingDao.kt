@@ -421,7 +421,7 @@ class PipelineSettingDao {
                     pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
                         JsonUtil.to(self, PipelineAsCodeSettings::class.java)
                     },
-                    version = t.version
+                    version = t.version ?: 1
                 )
             }
         }
