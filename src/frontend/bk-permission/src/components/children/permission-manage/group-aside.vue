@@ -15,19 +15,16 @@
           @click="handleChooseGroup(group)"
         >
           <span class="group-name" :title="group.name">{{ group.name }}</span>
-          <div class="num-box">
-            <i :class="{
-              'group-icon manage-icon manage-icon-user-shape': true,
-              'active': activeTab === group.groupId
-            }" />
-            <div class="group-num">{{ group.userCount }}</div>
-          </div>
-          <div class="num-box">
-            <i :class="{
-              'group-icon manage-icon manage-icon-organization': true,
-              'active': activeTab === group.groupId
-            }" />
-            <div class="group-num">{{ group.departmentCount }}</div>
+          <div class="num-box" v-for="item in groupCountField" :key="item">
+            <i
+              :class="['group-icon', 'manage-icon', {
+                'manage-icon-user-shape': item === 'userCount',
+                'manage-icon-user-template': item === 'templateCount',
+                'manage-icon-organization': item === 'departmentCount',
+                'active': activeTab === group.groupId
+              }]"
+            />
+            <div class="group-num">{{ group[item] }}</div>
           </div>
           <bk-popover
             v-if="resourceType === 'project'"
@@ -196,6 +193,14 @@ export default {
       curGroupIndex: -1,
     };
   },
+  computed: {
+    groupCountField () {
+      if (this.resourceType === 'pipeline') {
+        return ['userCount', 'templateCount', 'departmentCount']
+      }
+      return ['userCount', 'departmentCount']
+    },
+  },
   watch: {
     activeIndex(newVal) {
       this.activeTab = this.groupList[newVal]?.groupId || '';
@@ -314,7 +319,7 @@ export default {
     },
     async syncGroupIAM(groupId){
       try {
-        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupMember`)
+        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupMember`);
       } catch (error) {
         Message({
           theme: 'error',
@@ -335,7 +340,7 @@ export default {
   border-right: 1px solid #dde0e6;
 }
 .group-list {
-  max-height: calc(100% - 130px);
+  max-height: calc(100% - 70px);
   height: auto;
   overflow-y: auto;
   &::-webkit-scrollbar-thumb {
@@ -455,9 +460,6 @@ export default {
 .close-btn {
   margin-bottom: 20px;
   text-align: center;
-}
-.small-size {
-  scale: 0.9;
 }
 
 .close-manage-dialog {
