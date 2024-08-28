@@ -149,7 +149,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         val pipelineName = pipelineRepositoryService.saveSetting(
             context = context,
             userId = userId,
-            setting = setting,
+            setting = setting.copy(version = settingVersion),
             version = settingVersion,
             versionStatus = versionStatus,
             updateLastModifyUser = updateLastModifyUser,
