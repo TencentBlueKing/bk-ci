@@ -887,7 +887,7 @@ class WorkspaceService @Autowired constructor(
             null
         }
         val zone = if (winInfo != null) {
-            workspaceResourceZoneDao.fetchAll(dslContext, false, WindowsResourceZoneConfigType.DEFAULT)
+            workspaceResourceZoneDao.fetchAll(dslContext)
                 .firstOrNull { it.zoneShortName == winInfo.zoneId.removeSuffixNumb() }?.zone
         } else {
             null

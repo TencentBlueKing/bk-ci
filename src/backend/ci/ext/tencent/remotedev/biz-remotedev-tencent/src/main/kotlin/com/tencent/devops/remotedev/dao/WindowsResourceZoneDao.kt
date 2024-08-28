@@ -65,16 +65,14 @@ class WindowsResourceZoneDao {
     fun fetchAll(
         dslContext: DSLContext,
         withUnavailable: Boolean = false,
-        type: WindowsResourceZoneConfigType?
+        type: WindowsResourceZoneConfigType = WindowsResourceZoneConfigType.DEFAULT
     ): List<WindowsResourceZoneConfig> {
         return with(TWindowsResourceZone.T_WINDOWS_RESOURCE_ZONE) {
-            val conditions = mutableListOf<Condition>()
-            type?.let { conditions.add(TYPE.eq(type.name)) }
-            if (!withUnavailable) {
-                conditions.add(AVAILABLED.eq(1))
-            }
             dslContext.selectFrom(this)
-                .where(conditions)
+                .where(TYPE.eq(type.name))
+                .let {
+                    if (!withUnavailable) it.and(AVAILABLED.eq(1)) else it
+                }
                 .skipCheck()
                 .fetch(mapper)
         }
