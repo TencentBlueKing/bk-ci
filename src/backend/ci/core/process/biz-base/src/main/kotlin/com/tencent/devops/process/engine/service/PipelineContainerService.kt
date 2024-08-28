@@ -328,7 +328,7 @@ class PipelineContainerService @Autowired constructor(
             resourceVersion?.let {
                 if (ElementUtils.getTaskAddFlag(
                         element = atomElement,
-                        stageEnableFlag = stage.isStageEnable(),
+                        stageEnableFlag = stage.stageEnabled(),
                         containerEnableFlag = container.containerEnabled(),
                         originMatrixContainerFlag = ContainerUtils.isOriginMatrixContainer(container)
                     )
@@ -459,7 +459,7 @@ class PipelineContainerService @Autowired constructor(
                 atomElement.status = status.name
                 if (newBuildFlag && ElementUtils.getTaskAddFlag(
                         element = atomElement,
-                        stageEnableFlag = stage.isStageEnable(),
+                        stageEnableFlag = stage.stageEnabled(),
                         containerEnableFlag = container.containerEnabled(),
                         originMatrixContainerFlag = ContainerUtils.isOriginMatrixContainer(container)
                     )
@@ -1048,7 +1048,7 @@ class PipelineContainerService @Autowired constructor(
 //            )
 //        )
         container.elements.forEachIndexed { index, atomElement ->
-            if (context.firstTaskId.isBlank() && atomElement.isElementEnable()) {
+            if (context.firstTaskId.isBlank() && atomElement.elementEnabled()) {
                 context.firstTaskId = atomElement.findFirstTaskIdByStartType(context.startType)
             }
 

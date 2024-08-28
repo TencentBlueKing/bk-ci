@@ -234,7 +234,7 @@ class PipelineBuildFacadeService(
         var useLatestParameters = false
         run lit@{
             triggerContainer.elements.forEach {
-                if (it is ManualTriggerElement && it.isElementEnable()) {
+                if (it is ManualTriggerElement && it.elementEnabled()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
                     useLatestParameters = it.useLatestParameters ?: false
@@ -645,7 +645,7 @@ class PipelineBuildFacadeService(
                 var canRemoteStartup = false
                 run lit@{
                     triggerContainer.elements.forEach {
-                        if (it is RemoteTriggerElement && it.isElementEnable()) {
+                        if (it is RemoteTriggerElement && it.elementEnabled()) {
                             canRemoteStartup = true
                             return@lit
                         }

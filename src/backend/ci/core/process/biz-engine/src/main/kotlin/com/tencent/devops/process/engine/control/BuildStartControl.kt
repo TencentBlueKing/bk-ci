@@ -619,7 +619,7 @@ class BuildStartControl @Autowired constructor(
                 }
                 var callScm = true
                 container.elements.forEach nextElement@{ ele ->
-                    if (!ele.isElementEnable()) {
+                    if (!ele.elementEnabled()) {
                         return@nextElement
                     }
                     if (!ele.status.isNullOrBlank()) {
