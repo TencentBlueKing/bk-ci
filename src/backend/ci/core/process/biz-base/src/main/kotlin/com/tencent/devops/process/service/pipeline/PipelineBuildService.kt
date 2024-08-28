@@ -387,7 +387,7 @@ class PipelineBuildService(
         // 流水线权限代持人
         pipelineAuthorizer?.let {
             pipelineParamMap[BK_CI_AUTHORIZER] = BuildParameters(
-                key = BK_CI_MATERIAL_URL,
+                key = BK_CI_AUTHORIZER,
                 value = it,
                 readOnly = true
             )
