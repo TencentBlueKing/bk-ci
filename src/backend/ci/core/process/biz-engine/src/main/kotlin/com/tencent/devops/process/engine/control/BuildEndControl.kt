@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -120,7 +121,10 @@ class BuildEndControl @Autowired constructor(
 
     @BkTimed
     fun handle(event: PipelineBuildFinishEvent) {
-        val watcher = Watcher(id = "ENGINE|BuildEnd|${event.traceId}|${event.buildId}|Job#${event.status}")
+        val watcher = Watcher(
+            id = "ENGINE|BuildEnd|${event.projectId}|${event.pipelineId}|" +
+                "${event.traceId}|${event.buildId}|Job#${event.status}"
+        )
         try {
             with(event) {
                 val buildIdLock = BuildIdLock(redisOperation, buildId)
@@ -136,22 +140,11 @@ class BuildEndControl @Autowired constructor(
                     buildIdLock.unlock()
                 }
 
-                tryPopNextBuild(watcher, buildInfo)
+                popNextBuild(watcher, buildInfo)
             }
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher = watcher)
-        }
-    }
-
-    private fun PipelineBuildFinishEvent.tryPopNextBuild(watcher: Watcher, buildInfo: BuildInfo?) {
-        // 这个锁其实不合理，应该按 concurrencyGroup 的值来决定锁key，而不是整个pipeline，但目前这里属于保护，暂还不需要做改进
-        PipelineBuildStartLock(redisOperation, pipelineId).use { buildStartLock ->
-            watcher.start("buildStartLock")
-            if (buildStartLock.tryLock()) {
-                watcher.start("popNextBuild")
-                popNextBuild(buildInfo)
-            }
         }
     }
 
@@ -197,7 +190,7 @@ class BuildEndControl @Autowired constructor(
         )
 
         // 更新buildNo
-        val retryFlag = buildInfo.executeCount?.let { it > 1 } == true || buildInfo.retryFlag == true
+        val retryFlag = buildInfo.executeCount?.let { it > 1 } == true
         if (!retryFlag && !buildStatus.isCancel() && !buildStatus.isFailure()) {
             setBuildNoWhenBuildSuccess(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId, debug = buildInfo.debug
@@ -210,7 +203,7 @@ class BuildEndControl @Autowired constructor(
         if (model.stages.any { stage ->
                 stage.containers.filterIsInstance<VMBuildContainer>().any { con ->
                     con.dispatchType is ThirdPartyAgentDispatch &&
-                            (con.dispatchType as ThirdPartyAgentDispatch).agentType.isReuse()
+                        (con.dispatchType as ThirdPartyAgentDispatch).agentType.isReuse()
                 }
             }) {
             buildVariableService.fetchAgentReuseMutexVar(
@@ -388,7 +381,8 @@ class BuildEndControl @Autowired constructor(
         if (errorInfoList.isNotEmpty()) buildInfo.errorInfoList = errorInfoList
     }
 
-    private fun PipelineBuildFinishEvent.popNextBuild(buildInfo: BuildInfo?) {
+    private fun PipelineBuildFinishEvent.popNextBuild(watcher: Watcher, buildInfo: BuildInfo?) {
+        watcher.start("clear_redis_restart")
         if (pipelineRedisService.getBuildRestartValue(this.buildId) != null) {
             // 删除buildId占用的refresh锁
             pipelineRedisService.deleteRestartBuild(this.buildId)
@@ -396,26 +390,26 @@ class BuildEndControl @Autowired constructor(
 
         if (buildInfo?.concurrencyGroup.isNullOrBlank()) {
             // 获取同流水线的下一个队首
-            startNextBuild(
-                pipelineRuntimeExtService.popNextQueueBuildInfo(
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
-            )
+            startNextBuild(watcher, PipelineBuildStartLock(redisOperation, pipelineId)) {
+                pipelineRuntimeExtService.popNextQueueBuildInfo(projectId = projectId, pipelineId = pipelineId)
+            }
         } else {
             // 获取同并发组的下一个队首
             buildInfo?.concurrencyGroup?.let { group ->
-                ConcurrencyGroupLock(redisOperation, projectId, group).use { groupLock ->
-                    groupLock.lock()
-                    startNextBuild(
-                        pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(projectId, group)
-                    )
+                startNextBuild(watcher, ConcurrencyGroupLock(redisOperation, projectId, group)) {
+                    pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(projectId, group)
                 }
             }
         }
     }
 
-    private fun PipelineBuildFinishEvent.startNextBuild(nextBuild: BuildInfo?) {
+    private fun PipelineBuildFinishEvent.startNextBuild(watcher: Watcher, sLock: RedisLock, pop: () -> BuildInfo?) {
+        watcher.start("tryLock_${sLock.javaClass.simpleName}")
+        if (!sLock.tryLock()) {
+            return
+        }
+        watcher.start("popNextBuild")
+        val nextBuild = pop()
         if (nextBuild == null) {
             LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|$pipelineId no queue build!")
             return
