@@ -66,6 +66,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
@@ -886,7 +887,7 @@ class WorkspaceService @Autowired constructor(
             null
         }
         val zone = if (winInfo != null) {
-            workspaceResourceZoneDao.fetchAll(dslContext)
+            workspaceResourceZoneDao.fetchAll(dslContext, false, WindowsResourceZoneConfigType.DEFAULT)
                 .firstOrNull { it.zoneShortName == winInfo.zoneId.removeSuffixNumb() }?.zone
         } else {
             null

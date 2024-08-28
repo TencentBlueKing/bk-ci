@@ -214,7 +214,7 @@ class WindowsResourceConfigService @Autowired constructor(
 
     fun getAllZone(): List<WindowsResourceZoneConfig> {
         logger.info("get all windows resource zone")
-        return windowsResourceZoneDao.fetchAll(dslContext, true)
+        return windowsResourceZoneDao.fetchAll(dslContext, true, null)
     }
 
     fun getAllType(withUnavailable: Boolean?, onlySpecModel: Boolean?): List<WindowsResourceTypeConfig> {
