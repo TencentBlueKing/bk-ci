@@ -1,8 +1,7 @@
 <template>
     <div class="pipeline-history-header">
-        <div class="pipeline-history-left-aside">
-            <pipeline-bread-crumb :is-loading="isSwitchPipeline || switchingVersion" />
-            <pac-tag class="pipeline-pac-indicator" v-if="pacEnabled" :info="yamlInfo" />
+
+        <pipeline-bread-crumb :is-loading="isSwitchPipeline || switchingVersion">
             <bk-popover :delay="[666, 0]">
                 <VersionSelector
                     :value="currentVersion"
@@ -34,7 +33,8 @@
                 :project-id="projectId"
                 :pipeline-id="pipelineId"
             />
-        </div>
+        </pipeline-bread-crumb>
+
         <aside v-show="!(isSwitchPipeline || switchingVersion)" class="pipeline-history-right-aside">
             <VersionDiffEntry
                 v-if="!isTemplatePipeline && !isReleaseVersion"
@@ -109,7 +109,7 @@
 
 <script>
     import Badge from '@/components/Badge.vue'
-    import PacTag from '@/components/PacTag.vue'
+
     import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
@@ -125,7 +125,7 @@
     export default {
         components: {
             PipelineBreadCrumb,
-            PacTag,
+
             Badge,
             MoreActions,
             VersionSelector,
@@ -157,8 +157,7 @@
                 isOutdatedVersion: 'atom/isOutdatedVersion',
                 draftBaseVersionName: 'atom/getDraftBaseVersionName',
                 pipelineHistoryViewable: 'atom/pipelineHistoryViewable',
-                onlyBranchPipeline: 'atom/onlyBranchPipeline',
-                pacEnabled: 'atom/pacEnabled'
+                onlyBranchPipeline: 'atom/onlyBranchPipeline'
             }),
             showRollback () {
                 return this.isReleaseVersion || !this.pipelineInfo?.baseVersion || this.activePipelineVersion?.baseVersion !== this.pipelineInfo?.baseVersion
@@ -322,17 +321,6 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 24px 0 14px;
-    .pipeline-history-left-aside {
-        display: grid;
-        grid-auto-flow: column;
-        align-items: center;
-        .pipeline-pac-indicator{
-            margin-right: 16px;
-        }
-        .pipeline-exec-badge  {
-            margin-left: 4px;
-        }
-    }
 
     .pipeline-history-right-aside {
         flex-shrink: 0;

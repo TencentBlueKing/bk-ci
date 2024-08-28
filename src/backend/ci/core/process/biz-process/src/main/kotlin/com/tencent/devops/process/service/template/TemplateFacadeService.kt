@@ -319,7 +319,9 @@ class TemplateFacadeService @Autowired constructor(
                     copyTemplateReq.templateName
                 )
                 templateSettingService.saveTemplatePipelineSetting(
-                    context, userId, setting, true
+                    context = context,
+                    userId = userId,
+                    setting = setting
                 )
             } else {
                 templateSettingService.insertTemplateSetting(
@@ -406,7 +408,9 @@ class TemplateFacadeService @Autowired constructor(
                     templateName = saveAsTemplateReq.templateName
                 )
                 templateSettingService.saveTemplatePipelineSetting(
-                    context, userId, setting, true
+                    context = context,
+                    userId = userId,
+                    setting = setting
                 )
             } else {
                 templateSettingService.insertTemplateSetting(
@@ -1584,8 +1588,12 @@ class TemplateFacadeService @Autowired constructor(
                             pipelineId = pipelineId,
                             templateName = instance.pipelineName
                         )
-                        templateSettingService.saveTemplatePipelineSetting(
-                            context, userId, setting
+                        pipelineSettingFacadeService.saveSetting(
+                            context = context,
+                            userId = userId,
+                            projectId = setting.projectId,
+                            pipelineId = setting.pipelineId,
+                            setting = setting
                         )
                     } else {
                         templateSettingService.insertTemplateSetting(
@@ -2106,6 +2114,7 @@ class TemplateFacadeService @Autowired constructor(
                     /**
                      * 1. 比较类型， 如果类型变了就直接用模板
                      * 2. 如果类型相同，下拉选项替换成模板的（要保存用户之前的默认值）
+                     * 3. 如果模版由常量改成变量,则流水线常量也应该改成变量
                      */
                     if (pipeline.type != template.type) {
                         result.add(template)
@@ -2113,6 +2122,7 @@ class TemplateFacadeService @Autowired constructor(
                         pipeline.options = template.options
                         pipeline.required = template.required
                         pipeline.desc = template.desc
+                        pipeline.constant = template.constant
                         result.add(pipeline)
                     }
                     return@outside
@@ -2584,6 +2594,37 @@ class TemplateFacadeService @Autowired constructor(
 
     fun enableTemplatePermissionManage(projectId: String): Boolean {
         return pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId)
+    }
+
+    // TODO 埋点统计模板常量在流水线启动时被修改日志, 后续需要删除
+    fun printModifiedTemplateParams(
+        projectId: String,
+        pipelineId: String,
+        pipelineParams: List<BuildFormProperty>,
+        paramValues: Map<String, String>
+    ) {
+        val templatePipelineRecord = templatePipelineDao.get(dslContext, projectId, pipelineId) ?: return
+        val templateRecord =
+            templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version) ?: return
+        val template: Model = objectMapper.readValue(templateRecord.template)
+        val templateParams = (template.stages[0].containers[0] as TriggerContainer).templateParams
+        if (templateParams.isNullOrEmpty()) {
+            return
+        }
+        pipelineParams.forEach { param ->
+            val value = paramValues[param.id] ?: param.defaultValue
+            templateParams.forEach { template ->
+                if (template.id == param.id && template.defaultValue != value) {
+                    logger.warn(
+                        "BKSystemErrorMonitor|$projectId|$pipelineId|" +
+                                "templateId:${templateRecord.id}|templateVersion:${templateRecord.version}|" +
+                                "defaultValue:${template.defaultValue}|newValue:$value|" +
+                                "template params cannot be modified"
+                    )
+                    return
+                }
+            }
+        }
     }
 
     companion object {

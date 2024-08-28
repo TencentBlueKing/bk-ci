@@ -1,6 +1,5 @@
 <template>
   <article class="group-aside" v-bkloading="{ isLoading: !groupList.length }">
-    <span class="group-title">{{ $t('权限角色') }}</span>
     <scroll-load-list
       class="group-list"
       ref="loadList"
@@ -22,25 +21,27 @@
         <div
           :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
           @click="handleChooseGroup(group)"
-          v-show="group.groupId !== renameGroupId"
         >
           <span class="group-name" :title="group.name">{{ group.name }}</span>
-          <span class="user-num">
-            <img src="../../../svg/user.svg?inline" class="group-icon">
-            {{ group.userCount }}
-          </span>
-          <span class="group-num">
-            <img src="../../../svg/organization.svg?inline" class="group-icon">
-            {{ group.departmentCount }}
-          </span>
+          <div class="num-box" v-for="item in groupCountField" :key="item">
+            <i
+              :class="{
+              'group-icon manage-icon manage-icon-user-shape': item === 'userCount',
+              'group-icon manage-icon manage-icon-user-template': item === 'templateCount',
+              'group-icon manage-icon manage-icon-organization': item === 'departmentCount',
+              'active': activeTab === group.groupId
+            }" />
+            <div class="group-num">{{ group[item] }}</div>
+          </div>
           <bk-popover
-            v-if="resourceType === 'project'"
+            v-if="resourceType === 'project' && !group.defaultGroup"
             class="group-more-option"
             placement="bottom"
             theme="light dot-menu"
             :popoverDelay="[100, 0]"
             :arrow="false"
-            offset="15"
+            trigger="click"
+            :offset="15"
             :distance="0">
             <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
             <template #content>
@@ -51,14 +52,14 @@
                   text
                   @click="handleShowRename(group)"
                 >
-                  {{ $t('重命名') }}
+                  {{ t('重命名') }}
                 </bk-button>
                 <bk-button
                   class="btn"
                   :disabled="group.defaultGroup"
                   text
                   @click="handleShowDeleteGroup(group)">
-                  {{ $t('删除') }}
+                  {{ t('删除') }}
                 </bk-button>
               </div>
             </template>
@@ -73,20 +74,20 @@
       @click="handleCreateGroup">
       <span class="add-group-btn">
         <i class="manage-icon manage-icon-add-fill add-icon"></i>
-        {{ $t('新建用户组') }}
+        {{ t('新建用户组') }}
       </span>
     </div>
     <div
       v-if="resourceType !== 'project'"
       class="close-btn"
     >
-      <bk-button @click="handleCloseManage" :loading="isClosing">{{ $t('关闭权限管理') }}</bk-button>
+      <bk-button @click="handleCloseManage" :loading="isClosing">{{ t('关闭权限管理') }}</bk-button>
     </div>
     <bk-dialog
       dialogType="show"
       header-align="center"
       theme="danger"
-      extCls="delete-group-dialog"
+      class="delete-group-dialog"
       :quick-close="false"
       :is-show="deleteObj.isShow"
       :is-loading="deleteObj.isLoading"
@@ -94,30 +95,30 @@
     >
       <template #header>
         <div class="manage-icon manage-icon-warning-circle-fill title-icon"></div>
-        <p class="delete-title">{{ $t('确认删除【】用户组？', [deleteObj.group.name]) }}</p>
+        <p class="delete-title">{{ t('确认删除【】用户组？', [deleteObj.group.name]) }}</p>
       </template>
       <div class="delete-tips">
-        <p>{{ $t('删除用户组【】将执行如下操作：', [deleteObj.group.name]) }}</p>
+        <p>{{ t('删除用户组【】将执行如下操作：', [deleteObj.group.name]) }}</p>
         <p>
           <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
-          {{ $t('将用户和组织从组中移除') }}
+          {{ t('将用户和组织从组中移除') }}
         </p>
         <p>
           <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
-          {{ $t('删除组内用户继承该组的权限') }}
+          {{ t('删除组内用户继承该组的权限') }}
         </p>
         <p>
           <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
-          {{ $t('删除组信息和组权限') }}
+          {{ t('删除组信息和组权限') }}
         </p>
       </div>
       <div class="confirm-delete">
         <i18n-t keypath="此操作提交后将不能恢复，为避免误删除，请再次确认你的操作：" style="color: #737987;font-size: 14px;" tag="div">
-          <span style="color: red;">{{$t('不能恢复')}}</span>
+          <span style="color: red;">{{t('不能恢复')}}</span>
         </i18n-t>
         <bk-input
           v-model="keyWords"
-          :placeholder="$t('请输入待删除的用户组名')"
+          :placeholder="t('请输入待删除的用户组名')"
           class="confirm-input"
         ></bk-input>
       </div>
@@ -128,13 +129,13 @@
           :disabled="disableDeleteBtn"
           @click="handleDeleteGroup"
         >
-          {{ $t('删除') }}
+          {{ t('删除') }}
         </bk-button>
         <bk-button
           class="btn"
           @click="handleHiddenDeleteGroup"
         >
-          {{ $t('取消') }}
+          {{ t('取消') }}
         </bk-button>
       </div>
     </bk-dialog>
@@ -145,6 +146,8 @@
 import ScrollLoadList from '../../widget-components/scroll-load-list';
 import ajax from '../../../ajax/index';
 import { Message } from 'bkui-vue';
+import http from '@/http/api';
+import { useI18n } from 'vue-i18n';
 export default {
   components: {
     ScrollLoadList,
@@ -177,6 +180,7 @@ export default {
   },
   emits: ['choose-group', 'create-group', 'close-manage'],
   data() {
+    const { t } = useI18n();
     return {
       page: 1,
       activeTab: '',
@@ -193,12 +197,19 @@ export default {
       renameGroupId: 0,
       curGroupIndex: -1,
       keyWords: '',
+      t,
     };
   },
   computed: {
     disableDeleteBtn() {
       return !(this.keyWords === this.deleteObj.group.name);
     },
+    groupCountField () {
+      if (this.resourceType === 'pipeline') {
+        return ['userCount', 'templateCount', 'departmentCount']
+      }
+      return ['userCount', 'departmentCount']
+    }
   },
   watch: {
     activeIndex(newVal) {
@@ -218,7 +229,7 @@ export default {
         .get(`${this.ajaxPrefix}/auth/api/user/auth/resource/${this.projectCode}/${this.resourceType}/${this.resourceCode}/listGroup?page=${this.page}&pageSize=${pageSize}`)
         .then(({ data }) => {
           this.hasLoadEnd = !data.hasNext;
-          this.groupList.push(...data.records);
+          this.groupList = [...this.groupList, ...data.records];
           // 首页需要加载
           if (this.page === 1) {
             const chooseGroup = this.groupList.find(group => +group.groupId === +this.$route.query?.groupId) || this.groupList[0];
@@ -248,9 +259,10 @@ export default {
         .then(() => {
           this.handleHiddenDeleteGroup();
           this.refreshList();
+          this.syncGroupAndMemberIAM();
           Message({
             theme: 'success',
-            message: this.$t('删除成功')
+            message: this.t('删除成功')
           });
         })
         .finally(() => {
@@ -285,7 +297,7 @@ export default {
     },
     handleMessage(event) {
       const { data } = event;
-      if (data.type === 'IAM') {
+      if (data?.type === 'IAM') {
         switch (data.code) {
           case 'create_user_group_submit':
             this
@@ -294,6 +306,7 @@ export default {
                 const group = this.groupList.find(group => group.groupId === data?.data?.id) || this.groupList[0];
                 this.handleChooseGroup(group);
               })
+              this.syncGroupAndMemberIAM();
             break;
           case 'create_user_group_cancel':
             this.handleChooseGroup(this.groupList[0]);
@@ -301,16 +314,39 @@ export default {
           case 'add_user_confirm':
             this.groupList[this.curGroupIndex].departmentCount += data.data.departments.length
             this.groupList[this.curGroupIndex].userCount += data.data.users.length
+            this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
-          case 'remove_user_confirm':
+          case 'remove_user_confirm': {
             const departments = data.data.members.filter(i => i.type === 'department')
             const users = data.data.members.filter(i => i.type === 'user')
             this.groupList[this.curGroupIndex].departmentCount -= departments.length
             this.groupList[this.curGroupIndex].userCount -= users.length
+            this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
+          }
           case 'change_group_detail_tab':
             this.$emit('change-group-detail-tab', data.data.tab)
         }
+      }
+    },
+    async syncGroupIAM(groupId){
+      try {
+        await http.syncGroupMember(this.projectCode, groupId);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: err.message
+        });
+      }
+    },
+    async syncGroupAndMemberIAM(){
+      try {
+        await http.syncGroupAndMember(this.projectCode);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: err.message
+        });
       }
     },
     handleShowRename (group) {
@@ -336,9 +372,10 @@ export default {
         })
         .then(() => {
           group.name = this.displayGroupName;
+          this.syncGroupAndMemberIAM();
           Message({
             theme: 'success',
-            message: this.$t('修改成功')
+            message: this.t('修改成功')
           });
         })
         .catch((err) => {
@@ -364,9 +401,10 @@ export default {
   height: 100%;
   background-color: #fff;
   border-right: 1px solid #dde0e6;
+  padding-top: 10px;
 }
 .group-list {
-  max-height: calc(100% - 130px);
+  max-height: calc(100% - 70px);
   height: auto;
   overflow-y: auto;
   &::-webkit-scrollbar-thumb {
@@ -414,8 +452,15 @@ export default {
     color: #fff;
   }
   .group-icon {
-    filter: invert(100%) sepia(0%) saturate(1%) hue-rotate(151deg) brightness(104%) contrast(101%);
+    color: #A3C5FD;
   }
+}
+.num-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-right: 10px;
 }
 .user-num,
 .group-num {
@@ -428,19 +473,19 @@ export default {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  margin-right: 20px;
 }
 .user-num,
 .group-num {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
-  width: 40px;
-  height: 16px;
+  width: 24px;
+  height: 12px;
   background: #F0F1F5;
   border-radius: 2px;
   font-size: 12px;
   line-height: 16px;
-  margin-right: 3px;
   text-align: center;
   color: #C4C6CC;
 }
@@ -454,9 +499,9 @@ export default {
   color: #3A84FF !important;
 }
 .group-icon {
-  height: 12px;
-  width: 12px;
-  filter: invert(89%) sepia(8%) saturate(136%) hue-rotate(187deg) brightness(91%) contrast(86%);
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: #C4C6CC;
 }
 .line-split {
   width: 80%;
@@ -474,9 +519,6 @@ export default {
 .close-btn {
   margin-bottom: 20px;
   text-align: center;
-}
-.small-size {
-  scale: 0.9;
 }
 .rename-input {
   position: relative;
@@ -523,9 +565,6 @@ export default {
   .delete-tips {
     background-color: #f5f6fa;
     padding: 20px;
-  }
-  .bk-dialog-header {
-    padding: 15px 0;
   }
   .bk-dialog-title {
     height: 26px !important;

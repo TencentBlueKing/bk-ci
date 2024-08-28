@@ -52,6 +52,7 @@ import {
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
+    SET_ATOMS_OUTPUT_MAP,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
@@ -400,6 +401,24 @@ export default {
         }).catch((e) => {
             console.error(e)
         })
+    },
+
+    fetchAtomsOutput: async ({ commit, state, getters }) => {
+        const elements = getters.getAllElements(state.pipeline?.stages)
+        const arr = elements.map(ele => `${ele.atomCode}@${ele.version}`)
+        const data = Array.from(new Set(arr))
+        try {
+            request.post(`${STORE_API_URL_PREFIX}/user/pipeline/atom/output/info/list`, data).then(res => {
+                const map = {}
+                for (const item in res.data) {
+                    map[item] = JSON.parse(res.data[item])
+                }
+                console.log(map, 88552)
+                commit(SET_ATOMS_OUTPUT_MAP, map)
+            })
+        } catch (error) {
+            commit(SET_ATOMS_OUTPUT_MAP, {})
+        }
     },
 
     fetchAtoms: async ({ commit, state, getters }, { projectCode, category, jobType, classifyId, os, searchKey, queryProjectAtomFlag, fitOsFlag = undefined }) => {

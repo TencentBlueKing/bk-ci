@@ -3,6 +3,7 @@ import {
   ref,
   watch,
   computed,
+  onMounted
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import http from '@/http/api';
@@ -15,9 +16,6 @@ import {
   InfoBox,
   Popover
 } from 'bkui-vue';
-import {
-  onMounted
-} from '@vue/runtime-core';
 import {
   handleProjectManageNoPermission,
   RESOURCE_ACTION,

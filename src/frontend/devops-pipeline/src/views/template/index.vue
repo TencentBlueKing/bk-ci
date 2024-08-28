@@ -86,9 +86,7 @@
         },
 
         created () {
-            this.$updateTabTitle?.({
-                serverName: this.$t('pipeline')
-            })
+            this.$updateTabTitle?.()
             const { projectId, templateId } = this.$route.params
             this.$store.dispatch('requestProjectDetail', { projectId })
             this.$store.dispatch('pipelines/enableTemplatePermissionManage', projectId).then((res) => {

@@ -121,6 +121,7 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         params.enableThirdFilter = element.enableThirdFilter
         params.thirdUrl = EnvUtils.parseEnv(element.thirdUrl ?: "", variables)
         params.thirdSecretToken = EnvUtils.parseEnv(element.thirdSecretToken ?: "", variables)
+        params.skipWip = element.skipWip
         return params
     }
 

@@ -336,6 +336,7 @@ class ProcessDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val baseStep = dslContext.update(this)
                 .set(REFER_COUNT, referCount)
+                .set(UPDATE_TIME, UPDATE_TIME)
             referFlag?.let { baseStep.set(REFER_FLAG, referFlag) }
             baseStep.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version))).execute()
         }

@@ -4,7 +4,6 @@ import { getServiceAliasByPath, ifShowNotice, importScript, importStyle, updateR
 
 import cookie from 'js-cookie'
 import compilePath from '../utils/pathExp'
-import store from '../store/index'
 
 // 首页 - index
 const Index = () => import('../views/Index.vue')
@@ -19,7 +18,6 @@ const Maintaining = () => import('../views/503.vue')
 
 const UnDeploy = () => import('../views/UnDeploy.vue')
 
-const { platformInfo } = (store.state as any).platFormConfig
 Vue.use(Router)
 
 let mod: Route[] = []
@@ -98,10 +96,13 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     router.beforeEach((to, from, next) => {
         const serviceAlias = getServiceAliasByPath(to.path)
         const currentPage = window.serviceObject.serviceMap[serviceAlias]
-        if (to.name !== from.name) {
-            document.title = currentPage
-                ? `${currentPage.name} | ${platformInfo.i18n.name || platformInfo.name} | ${platformInfo.i18n.brandName || platformInfo.brandName}`
-                : `${platformInfo.i18n.name || platformInfo.name} | ${platformInfo.i18n.brandName || platformInfo.brandName}`
+        const { platformInfo } = (store.state as any).platFormConfig
+        if (to.name !== from.name && platformInfo) {
+            let platformTitle = `${platformInfo.i18n.name || platformInfo.name} | ${platformInfo.i18n.brandName || platformInfo.brandName}`
+            if (currentPage) {
+                platformTitle = `${currentPage.name} | ${platformTitle}`
+            }
+            document.title = platformTitle
         }
         window.currentPage = currentPage
         store.dispatch('updateCurrentPage', currentPage) // update currentPage

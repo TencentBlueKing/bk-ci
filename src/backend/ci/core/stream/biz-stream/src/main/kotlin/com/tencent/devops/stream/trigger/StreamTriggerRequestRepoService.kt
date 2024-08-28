@@ -90,6 +90,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
             actionSetting = null
         )!!
 
+        action.data.watcherStart("streamTriggerRequestRepoService.repoTriggerBuild")
         action.data.context.repoTrigger = RepoTrigger("", triggerPipelineList)
 
         logger.info(
@@ -139,6 +140,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
     private fun triggerPerPipeline(
         action: BaseAction
     ): Boolean {
+        action.data.watcherStart("streamTriggerRequestRepoService.triggerPerPipeline")
         logger.info(
             "StreamTriggerRequestRepoService|triggerPerPipeline" +
                 "|requestEventId|${action.data.context.requestEventId}"
