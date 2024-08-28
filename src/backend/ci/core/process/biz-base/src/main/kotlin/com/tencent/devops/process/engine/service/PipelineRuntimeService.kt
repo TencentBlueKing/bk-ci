@@ -768,7 +768,7 @@ class PipelineRuntimeService @Autowired constructor(
         // --- 第1层循环：Stage遍历处理 ---
         var afterRetryStage = false
         // #10082 针对构建容器的第三方构建机组装复用互斥信息
-        val agentReuseMutexTree = AgentReuseMutexTree(mutableListOf())
+        val agentReuseMutexTree = AgentReuseMutexTree(context.executeCount, mutableListOf())
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
             context.needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
