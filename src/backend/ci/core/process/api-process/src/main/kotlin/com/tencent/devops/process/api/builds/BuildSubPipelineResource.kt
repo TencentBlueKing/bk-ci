@@ -181,25 +181,4 @@ interface BuildSubPipelineResource {
         @QueryParam("pipelineName")
         pipelineName: String
     ): Result<List<PipelineId?>>
-
-    @Operation(summary = "校验父流水线权限代持人是否有子流水线执行权限")
-    @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/checkPermission")
-    fun checkSubPipelinePermission(
-        @Parameter(description = "用户ID", required = true)
-        @QueryParam("userId")
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "流水线ID", required = false, example = "")
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @Parameter(description = "项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        parentProjectId: String,
-        @Parameter(description = "当前流水线ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
-        parentPipelineId: String
-    )
 }
