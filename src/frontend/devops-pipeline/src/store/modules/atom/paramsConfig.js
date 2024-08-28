@@ -254,7 +254,7 @@ export const ParamComponentMap = {
     [CONTAINER_TYPE]: 'Selector',
     [ARTIFACTORY]: 'Selector',
     [SUB_PIPELINE]: 'Selector',
-    [CUSTOM_FILE]: 'VuexInput'
+    [CUSTOM_FILE]: 'FileParamInput'
 }
 
 export const BOOLEAN_LIST = [

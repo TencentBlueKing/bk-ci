@@ -136,20 +136,22 @@ class BuildEndControl @Autowired constructor(
                     buildIdLock.unlock()
                 }
 
-                val buildStartLock = PipelineBuildStartLock(redisOperation, pipelineId)
-                try {
-                    watcher.start("PipelineBuildStartLock")
-                    buildStartLock.lock()
-                    watcher.start("popNextBuild")
-                    popNextBuild(buildInfo)
-                    watcher.stop()
-                } finally {
-                    buildStartLock.unlock()
-                }
+                tryPopNextBuild(watcher, buildInfo)
             }
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher = watcher)
+        }
+    }
+
+    private fun PipelineBuildFinishEvent.tryPopNextBuild(watcher: Watcher, buildInfo: BuildInfo?) {
+        // 这个锁其实不合理，应该按 concurrencyGroup 的值来决定锁key，而不是整个pipeline，但目前这里属于保护，暂还不需要做改进
+        PipelineBuildStartLock(redisOperation, pipelineId).use { buildStartLock ->
+            watcher.start("buildStartLock")
+            if (buildStartLock.tryLock()) {
+                watcher.start("popNextBuild")
+                popNextBuild(buildInfo)
+            }
         }
     }
 

@@ -57,6 +57,7 @@ import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.webhook.pojo.code.BK_CI_RUN
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.BuildVariables
@@ -691,6 +692,7 @@ open class MarketAtomTask : ITask() {
         workspace: File,
         inputVariables: Map<String, Any>
     ) {
+//        logger.info("runtimeVariables is:$runtimeVariables") // 有敏感信息
         val inputFileFile = File(workspace, inputFile)
         inputFileFile.writeText(JsonUtil.toJson(inputVariables))
     }
@@ -805,7 +807,11 @@ open class MarketAtomTask : ITask() {
                     val contextKey = "jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"
                     env[contextKey] = value
                     // 原变量名输出只在未开启 pipeline as code 的逻辑中保留
-                    // if (buildVariables.pipelineAsCodeSettings?.enable == true) env.remove(key)
+                    if (
+                        // TODO 暂时只对stream进行拦截原key
+                        buildVariables.variables[BK_CI_RUN] == "true" &&
+                        buildVariables.pipelineAsCodeSettings?.enable == true
+                    ) env.remove(key)
                 }
 
                 TaskUtil.removeTaskId()

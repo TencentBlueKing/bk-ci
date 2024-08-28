@@ -135,6 +135,9 @@ data:
         rsaPrivateKey: |
           {{- .Values.kubernetesManager.apiserver.auth.rsaPrivateKey | nindent 10 }}
 
+    docker:
+      enable: {{ .Values.kubernetesManager.docker.enable }}
+
     {{ if .Values.kubeConfig.useKubeConfig -}}
   kubeConfig.yaml: |
     {{- .Values.kubeConfig.content | nindent 4 }}

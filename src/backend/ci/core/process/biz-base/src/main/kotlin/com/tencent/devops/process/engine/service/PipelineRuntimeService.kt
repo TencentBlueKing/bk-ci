@@ -106,6 +106,7 @@ import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
+import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
@@ -136,15 +137,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -371,7 +372,10 @@ class PipelineRuntimeService @Autowired constructor(
         startUser: List<String>?,
         updateTimeDesc: Boolean? = null,
         queryDslContext: DSLContext? = null,
-        debugVersion: Int?
+        debugVersion: Int?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
@@ -404,7 +408,10 @@ class PipelineRuntimeService @Autowired constructor(
             buildMsg = buildMsg,
             startUser = startUser,
             updateTimeDesc = updateTimeDesc,
-            debugVersion = debugVersion
+            debugVersion = debugVersion,
+            triggerAlias = triggerAlias,
+            triggerBranch = triggerBranch,
+            triggerUser = triggerUser
         )
         val result = mutableListOf<BuildHistory>()
         list.forEach {
@@ -417,43 +424,124 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildDao.updateBuildRemark(dslContext, projectId, pipelineId, buildId, remark)
     }
 
-    fun getHistoryConditionRepo(projectId: String, pipelineId: String, debugVersion: Int?): List<String> {
-        val history = pipelineBuildDao.getBuildHistoryMaterial(dslContext, projectId, pipelineId, debugVersion)
-        val materialObjList = mutableListOf<PipelineBuildMaterial>()
-        history.forEach {
-            if (!it.material.isNullOrEmpty()) {
-                materialObjList.addAll(it.material!!)
+    fun getHistoryConditionRepo(
+        projectId: String,
+        pipelineId: String,
+        debugVersion: Int?,
+        search: String?,
+        type: HistorySearchType? = HistorySearchType.MATERIAL
+    ): List<String> {
+        val aliasNames = when (type) {
+            HistorySearchType.MATERIAL -> {
+                val history = pipelineBuildDao.listHistorySearchOptions(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    debugVersion = debugVersion,
+                    type = type
+                )
+                val materialObjList = mutableListOf<PipelineBuildMaterial>()
+                history.forEach {
+                    if (!it.material.isNullOrEmpty()) {
+                        materialObjList.addAll(it.material!!)
+                    }
+                }
+                materialObjList.filter { !it.aliasName.isNullOrBlank() }
+                    .map { it.aliasName!! }
+                    .distinct()
             }
+
+            HistorySearchType.TRIGGER -> {
+                val history = pipelineBuildDao.listHistorySearchOptions(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    debugVersion = debugVersion,
+                    type = type
+                )
+                history.filter { it.webhookInfo != null && !it.webhookInfo!!.webhookAliasName.isNullOrBlank() }
+                    .map { it.webhookInfo!!.webhookAliasName!! }
+                    .distinct()
+            }
+
+            else -> emptyList()
         }
-        return materialObjList.filter { !it.aliasName.isNullOrBlank() }.map { it.aliasName!! }.distinct()
+        return if (search.isNullOrBlank()) {
+            aliasNames
+        } else {
+            aliasNames.filter { it.contains(search) }
+        }
     }
 
     fun getHistoryConditionBranch(
         projectId: String,
         pipelineId: String,
         aliasList: List<String>?,
-        debugVersion: Int? = null
+        debugVersion: Int? = null,
+        search: String?,
+        type: HistorySearchType? = HistorySearchType.MATERIAL
     ): List<String> {
-        val history = pipelineBuildDao.getBuildHistoryMaterial(dslContext, projectId, pipelineId, debugVersion)
-        val materialObjList = mutableListOf<PipelineBuildMaterial>()
-        history.forEach {
-            if (!it.material.isNullOrEmpty()) {
-                materialObjList.addAll(it.material!!)
-            }
-        }
-        val aliasNames = if (aliasList.isNullOrEmpty()) {
-            materialObjList.map { it.aliasName }
-        } else {
-            aliasList
-        }
+        val branchNames = when (type) {
+            HistorySearchType.MATERIAL -> {
+                val history = pipelineBuildDao.listHistorySearchOptions(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    debugVersion = debugVersion,
+                    type = type
+                )
+                val materialObjList = mutableListOf<PipelineBuildMaterial>()
+                history.forEach {
+                    if (!it.material.isNullOrEmpty()) {
+                        materialObjList.addAll(it.material!!)
+                    }
+                }
+                val aliasNames = if (!aliasList.isNullOrEmpty() && aliasList.first().isNotBlank()) {
+                    aliasList
+                } else {
+                    materialObjList.map { it.aliasName }
+                }
 
-        val result = mutableListOf<String>()
-        aliasNames.distinct().forEach { alias ->
-            val branchNames = materialObjList.filter { it.aliasName == alias && !it.branchName.isNullOrBlank() }
-                .map { it.branchName!! }.distinct()
-            result.addAll(branchNames)
+                val result = mutableListOf<String>()
+                aliasNames.distinct().forEach { alias ->
+                    val branchNames = materialObjList.filter {
+                        it.aliasName == alias && !it.branchName.isNullOrBlank()
+                    }.map { it.branchName!! }.distinct()
+                    result.addAll(branchNames)
+                }
+                result.distinct()
+            }
+
+            HistorySearchType.TRIGGER -> {
+                val history = pipelineBuildDao.listHistorySearchOptions(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    debugVersion = debugVersion,
+                    type = type
+                )
+                val webhookInfoList = history.filter { it.webhookInfo != null }.map { it.webhookInfo!! }
+                val aliasNames = if (!aliasList.isNullOrEmpty() && aliasList.first().isNotBlank()) {
+                    aliasList
+                } else {
+                    webhookInfoList.map { it.webhookAliasName }
+                }
+                val result = mutableListOf<String>()
+                aliasNames.distinct().forEach { alias ->
+                    val branchNames = webhookInfoList.filter {
+                        it.webhookAliasName == alias && !it.webhookBranch.isNullOrBlank()
+                    }.map { it.webhookBranch!! }.distinct()
+                    result.addAll(branchNames)
+                }
+                result.distinct()
+            }
+            else -> emptyList()
         }
-        return result.distinct()
+        return if (search.isNullOrBlank()) {
+            branchNames
+        } else {
+            branchNames.filter { it.contains(search) }
+        }
     }
 
     private fun genBuildHistory(
@@ -1491,7 +1579,11 @@ class PipelineRuntimeService @Autowired constructor(
      * 完成认领构建的任务[completeTask]
      * [endBuild]表示最后一步，当前容器要结束
      */
-    fun completeClaimBuildTask(completeTask: CompleteTask, endBuild: Boolean = false): PipelineBuildTask? {
+    fun completeClaimBuildTask(
+        completeTask: CompleteTask,
+        endBuild: Boolean = false,
+        endBuildMsg: String? = null
+    ): PipelineBuildTask? {
         val buildTask = pipelineTaskService.getBuildTask(
             projectId = completeTask.projectId,
             buildId = completeTask.buildId,
@@ -1532,7 +1624,7 @@ class PipelineRuntimeService @Autowired constructor(
                     errorCode = completeTask.errorCode ?: 0,
                     errorTypeName = completeTask.errorType?.getI18n(I18nUtil.getDefaultLocaleLanguage()),
                     executeCount = buildTask.executeCount,
-                    reason = completeTask.errorMsg
+                    reason = endBuildMsg ?: completeTask.errorMsg
                 )
             )
         }
@@ -1792,7 +1884,10 @@ class PipelineRuntimeService @Autowired constructor(
         buildMsg: String? = null,
         startUser: List<String>? = null,
         queryDslContext: DSLContext? = null,
-        debugVersion: Int? = null
+        debugVersion: Int? = null,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): Int {
         return pipelineBuildDao.count(
             dslContext = queryDslContext ?: dslContext,
@@ -1818,7 +1913,10 @@ class PipelineRuntimeService @Autowired constructor(
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
             startUser = startUser,
-            debugVersion = debugVersion
+            debugVersion = debugVersion,
+            triggerAlias = triggerAlias,
+            triggerBranch = triggerBranch,
+            triggerUser = triggerUser
         )
     }
 

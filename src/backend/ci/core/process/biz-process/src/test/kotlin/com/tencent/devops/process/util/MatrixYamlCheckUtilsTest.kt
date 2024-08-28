@@ -116,9 +116,11 @@ internal class MatrixYamlCheckUtilsTest {
 
     @Test
     fun checkYaml5() {
-        val yamlstr = JsonUtil.toJson(mapOf(
-            "strategy" to "\${{fromJSONasd(asd)}}"
-        ))
+        val yamlstr = JsonUtil.toJson(
+            mapOf(
+                "strategy" to "\${{fromJSONasd(asd)}}"
+            )
+        )
         val result = try {
             MatrixContextUtils.schemaCheck(yamlstr)
             false
@@ -131,9 +133,11 @@ internal class MatrixYamlCheckUtilsTest {
 
     @Test
     fun checkYaml6() {
-        val yamlstr = JsonUtil.toJson(mapOf(
-            "strategy" to "\${{fromJSON(asd)}}"
-        ))
+        val yamlstr = JsonUtil.toJson(
+            mapOf(
+                "strategy" to "\${{fromJSON(asd)}}"
+            )
+        )
         MatrixContextUtils.schemaCheck(yamlstr)
     }
 
@@ -168,5 +172,18 @@ internal class MatrixYamlCheckUtilsTest {
         Assertions.assertTrue(result.include == null)
         Assertions.assertTrue(result.exclude == null)
         Assertions.assertTrue(result.strategy == null)
+    }
+
+    @Test
+    fun checkYaml9() {
+        val yamlstr = MatrixPipelineInfo(
+            include = "\${{ fromJSON(FTP_DEPLOY_MODULE_LIST) }}",
+            exclude = "",
+            strategy = "\${{ fromJSON(FTP_DEPLOY_MODULE_NAMES) }}"
+        )
+        /*测试并发*/
+        List(1000) { it }.parallelStream().forEach {
+            MatrixYamlCheckUtils.checkYaml(yamlstr)
+        }
     }
 }

@@ -41,6 +41,7 @@ func InitApis(r *gin.Engine, handlers ...gin.HandlerFunc) {
 	initServiceApis(apis)
 	initIngressApis(apis)
 	initSecretApis(apis)
+	initDockerApis(apis)
 }
 
 func ok(c *gin.Context, data interface{}) {
