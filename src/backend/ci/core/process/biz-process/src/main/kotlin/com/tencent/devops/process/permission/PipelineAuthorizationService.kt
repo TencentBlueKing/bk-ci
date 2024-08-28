@@ -9,7 +9,7 @@ import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverResu
 import com.tencent.devops.common.auth.enums.ResourceAuthorizationHandoverStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.service.SubPipelineService
+import com.tencent.devops.process.service.SubPipelineRepositoryService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service
 class PipelineAuthorizationService constructor(
     val pipelinePermissionService: PipelinePermissionService,
     val authAuthorizationApi: AuthAuthorizationApi,
-    val subPipelineService: SubPipelineService
+    val subPipelineRepositoryService: SubPipelineRepositoryService
 ) {
     fun addResourceAuthorization(
         projectId: String,
@@ -54,7 +54,7 @@ class PipelineAuthorizationService constructor(
                 pipelineId = resourceCode,
                 permission = AuthPermission.EXECUTE
             )
-            val checkSubPipelinePermission = subPipelineService.checkSubPipelinePermission(
+            val checkSubPipelinePermission = subPipelineRepositoryService.checkSubPipelinePermission(
                 projectId = projectCode,
                 pipelineId = resourceCode,
                 userId = handoverTo!!,

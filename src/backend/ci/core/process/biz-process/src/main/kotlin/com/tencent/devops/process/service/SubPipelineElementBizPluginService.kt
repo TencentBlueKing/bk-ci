@@ -44,7 +44,7 @@ import org.springframework.stereotype.Service
  */
 @Service
 class SubPipelineElementBizPluginService @Autowired constructor(
-    private val subPipelineService: SubPipelineService
+    private val subPipelineRepositoryService: SubPipelineRepositoryService
 ) : IElementBizPluginService {
 
     companion object {
@@ -52,7 +52,7 @@ class SubPipelineElementBizPluginService @Autowired constructor(
     }
 
     override fun supportElement(element: Element): Boolean {
-        return subPipelineService.supportElement(element)
+        return subPipelineRepositoryService.supportElement(element)
     }
 
     override fun afterCreate(
@@ -87,7 +87,7 @@ class SubPipelineElementBizPluginService @Autowired constructor(
         )
         // 模板保存时不需要校验子流水线权限
         if (isTemplate || projectId.isNullOrBlank()) return ElementCheckResult(true)
-        return subPipelineService.checkElementPermission(
+        return subPipelineRepositoryService.checkElementPermission(
             projectId = projectId,
             stageName = stage.name ?: "",
             containerName = container.name,

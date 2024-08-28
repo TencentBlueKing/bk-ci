@@ -27,7 +27,7 @@ import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
 @Service
-class SubPipelineService @Autowired constructor(
+class SubPipelineRepositoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val pipelineResDao: PipelineResourceDao,
@@ -302,7 +302,7 @@ class SubPipelineService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(SubPipelineService::class.java)
+        private val logger = LoggerFactory.getLogger(SubPipelineRepositoryService::class.java)
         private val PIPELINE_ID_PATTERN = Pattern.compile("(p-)?[a-f\\d]{32}")
         private const val SUB_PIPELINE_EXEC_ATOM_CODE = "SubPipelineExec"
     }
