@@ -1,8 +1,9 @@
 package com.tencent.devops.remotedev.api.op
 
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ClientUpgradeComp
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeOpType
-import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeType
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeVersions
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -37,7 +38,9 @@ interface OpClientUpgrade {
     @Path("/set_current_version")
     fun setCurrentVersion(
         @QueryParam("type")
-        type: ClientUpgradeType,
+        type: ClientUpgradeComp,
+        @QueryParam("os")
+        os: OS,
         @QueryParam("version")
         version: String
     ): Result<Boolean>
@@ -47,7 +50,9 @@ interface OpClientUpgrade {
     @Path("/set_max_numb")
     fun setMaxNumber(
         @QueryParam("type")
-        type: ClientUpgradeType,
+        type: ClientUpgradeComp,
+        @QueryParam("os")
+        os: OS,
         @QueryParam("maxNumber")
         maxNumber: Int
     ): Result<Boolean>
@@ -57,7 +62,9 @@ interface OpClientUpgrade {
     @Path("/set_user_version")
     fun setUserVersion(
         @QueryParam("type")
-        type: ClientUpgradeType,
+        type: ClientUpgradeComp,
+        @QueryParam("os")
+        os: OS,
         @QueryParam("opType")
         opType: ClientUpgradeOpType,
         data: Map<String, String>
@@ -68,7 +75,9 @@ interface OpClientUpgrade {
     @Path("/set_workspace_name_version")
     fun setWorkspaceNameVersion(
         @QueryParam("type")
-        type: ClientUpgradeType,
+        type: ClientUpgradeComp,
+        @QueryParam("os")
+        os: OS,
         @QueryParam("opType")
         opType: ClientUpgradeOpType,
         data: Map<String, String>
@@ -79,7 +88,9 @@ interface OpClientUpgrade {
     @Path("/set_project_version")
     fun setProjectVersion(
         @QueryParam("type")
-        type: ClientUpgradeType,
+        type: ClientUpgradeComp,
+        @QueryParam("os")
+        os: OS,
         @QueryParam("opType")
         opType: ClientUpgradeOpType,
         data: Map<String, String>

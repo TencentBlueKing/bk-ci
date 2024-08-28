@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.filter.impl
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -44,6 +45,7 @@ class ClientVersionFilter constructor(
         private const val BK_CI_CLIENT_VERSION = "BK-CI-CLIENT-VERSION"
         private const val HEADER_IP = "x-client-ip"
         private const val HEADER_MAC_ADDRESS = "BK-CI-CLIENT-MAC"
+        private const val HEADER_MAC_OS = "BK-CI-CLIENT-OS"
         private const val BK_CI_CLIENT_START_VERSION = "BK-CI-CLIENT-START-VERSION"
 
         private fun String.format(): String {
@@ -115,7 +117,8 @@ class ClientVersionFilter constructor(
                 user = user,
                 version = version.toString(),
                 macAddress = requestContext.headers[HEADER_MAC_ADDRESS]?.get(0).toString(),
-                startVersion = requestContext.headers[BK_CI_CLIENT_START_VERSION]?.get(0) ?: ""
+                startVersion = requestContext.headers[BK_CI_CLIENT_START_VERSION]?.get(0) ?: "",
+                os = requestContext.headers[HEADER_MAC_OS]?.get(0) ?: ""
             )
         }.onFailure { logger.warn("recordClientVersion error ${it.message}", it) }
 
@@ -179,7 +182,8 @@ class ClientVersionFilter constructor(
         user: String,
         version: String,
         macAddress: String,
-        startVersion: String
+        startVersion: String,
+        os: String
     ) {
         if (!this::clientVersion.isInitialized) {
             clientVersion = clientVersionDao.fetchAll(dslContext)
@@ -204,7 +208,8 @@ class ClientVersionFilter constructor(
                 version = version.format(),
                 startVersion = startVersion.format(),
                 currentProjectIds = workspaceJoinDao.fetchProjectFromUser(dslContext, user),
-                currentWorkspaceNames = currentWorkspaceNames.toSet()
+                currentWorkspaceNames = currentWorkspaceNames.toSet(),
+                os = OS.parse(os)
             )
         } else {
             logger.warn("recordClientVersion macAddress is null")

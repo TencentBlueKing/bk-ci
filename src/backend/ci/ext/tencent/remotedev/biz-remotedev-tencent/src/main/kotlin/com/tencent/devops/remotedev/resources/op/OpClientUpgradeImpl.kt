@@ -1,10 +1,11 @@
 package com.tencent.devops.remotedev.resources.op
 
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpClientUpgrade
+import com.tencent.devops.remotedev.pojo.ClientUpgradeComp
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeOpType
-import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeType
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeVersions
 import com.tencent.devops.remotedev.pojo.clientupgrade.UpgradeVersionsData
 import com.tencent.devops.remotedev.service.clientupgrade.UpgradeProps
@@ -18,19 +19,33 @@ class OpClientUpgradeImpl @Autowired constructor(
         return Result(
             ClientUpgradeVersions(
                 parallelUpgradeCount = upgradeProps.getMaxParallelUpgradeCount(),
-                clientVersion = UpgradeVersionsData(
-                    currentVersion = upgradeProps.getClientVersion(),
-                    maxCanUpgradeNumber = upgradeProps.getClientMaxNumb(),
-                    userVersion = upgradeProps.getClientUserVersion(),
-                    workspaceNameVersion = upgradeProps.getClientWorkspaceNameVersion(),
-                    projectVersion = upgradeProps.getClientProjectVersion()
+                macosClientVersion = UpgradeVersionsData(
+                    currentVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.CLIENT, OS.MACOS),
+                    maxCanUpgradeNumber = upgradeProps.getMaxNumb(ClientUpgradeComp.CLIENT, OS.MACOS),
+                    userVersion = upgradeProps.getUserVersion(ClientUpgradeComp.CLIENT, OS.MACOS),
+                    workspaceNameVersion = upgradeProps.getWorkspaceNameVersion(ClientUpgradeComp.CLIENT, OS.MACOS),
+                    projectVersion = upgradeProps.getProjectVersion(ClientUpgradeComp.CLIENT, OS.MACOS)
                 ),
-                startVersion = UpgradeVersionsData(
-                    currentVersion = upgradeProps.getStartVersion(),
-                    maxCanUpgradeNumber = upgradeProps.getStartMaxNumb(),
-                    userVersion = upgradeProps.getStartUserVersion(),
-                    workspaceNameVersion = upgradeProps.getStartWorkspaceNameVersion(),
-                    projectVersion = upgradeProps.getStartProjectVersion()
+                winClientVersion = UpgradeVersionsData(
+                    currentVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.CLIENT, OS.WINDOWS),
+                    maxCanUpgradeNumber = upgradeProps.getMaxNumb(ClientUpgradeComp.CLIENT, OS.WINDOWS),
+                    userVersion = upgradeProps.getUserVersion(ClientUpgradeComp.CLIENT, OS.WINDOWS),
+                    workspaceNameVersion = upgradeProps.getWorkspaceNameVersion(ClientUpgradeComp.CLIENT, OS.WINDOWS),
+                    projectVersion = upgradeProps.getProjectVersion(ClientUpgradeComp.CLIENT, OS.WINDOWS)
+                ),
+                macosStartVersion = UpgradeVersionsData(
+                    currentVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.START, OS.MACOS),
+                    maxCanUpgradeNumber = upgradeProps.getMaxNumb(ClientUpgradeComp.START, OS.MACOS),
+                    userVersion = upgradeProps.getUserVersion(ClientUpgradeComp.START, OS.MACOS),
+                    workspaceNameVersion = upgradeProps.getWorkspaceNameVersion(ClientUpgradeComp.START, OS.MACOS),
+                    projectVersion = upgradeProps.getProjectVersion(ClientUpgradeComp.START, OS.MACOS)
+                ),
+                winStartVersion = UpgradeVersionsData(
+                    currentVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.START, OS.WINDOWS),
+                    maxCanUpgradeNumber = upgradeProps.getMaxNumb(ClientUpgradeComp.START, OS.WINDOWS),
+                    userVersion = upgradeProps.getUserVersion(ClientUpgradeComp.START, OS.WINDOWS),
+                    workspaceNameVersion = upgradeProps.getWorkspaceNameVersion(ClientUpgradeComp.START, OS.WINDOWS),
+                    projectVersion = upgradeProps.getProjectVersion(ClientUpgradeComp.START, OS.WINDOWS)
                 )
             )
         )
@@ -41,55 +56,43 @@ class OpClientUpgradeImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun setCurrentVersion(type: ClientUpgradeType, version: String): Result<Boolean> {
-        when (type) {
-            ClientUpgradeType.CLIENT -> upgradeProps.setClientVersion(version)
-            ClientUpgradeType.START -> upgradeProps.setStartVersion(version)
-        }
+    override fun setCurrentVersion(type: ClientUpgradeComp, os: OS, version: String): Result<Boolean> {
+        upgradeProps.setCurrentVersion(type, os, version)
         return Result(true)
     }
 
-    override fun setMaxNumber(type: ClientUpgradeType, maxNumber: Int): Result<Boolean> {
-        when (type) {
-            ClientUpgradeType.CLIENT -> upgradeProps.setClientMaxNumb(maxNumber)
-            ClientUpgradeType.START -> upgradeProps.setStartMaxNumb(maxNumber)
-        }
+    override fun setMaxNumber(type: ClientUpgradeComp, os: OS, maxNumber: Int): Result<Boolean> {
+        upgradeProps.setMaxNumb(type, os, maxNumber)
         return Result(true)
     }
 
     override fun setUserVersion(
-        type: ClientUpgradeType,
+        type: ClientUpgradeComp,
+        os: OS,
         opType: ClientUpgradeOpType,
         data: Map<String, String>
     ): Result<Boolean> {
-        when (type) {
-            ClientUpgradeType.CLIENT -> upgradeProps.setClientUserVersion(data, opType)
-            ClientUpgradeType.START -> upgradeProps.setStartUserVersion(data, opType)
-        }
+        upgradeProps.setUserVersion(type, os, data, opType)
         return Result(true)
     }
 
     override fun setWorkspaceNameVersion(
-        type: ClientUpgradeType,
+        type: ClientUpgradeComp,
+        os: OS,
         opType: ClientUpgradeOpType,
         data: Map<String, String>
     ): Result<Boolean> {
-        when (type) {
-            ClientUpgradeType.CLIENT -> upgradeProps.setClientWorkspaceNameVersion(data, opType)
-            ClientUpgradeType.START -> upgradeProps.setStartWorkspaceNameVersion(data, opType)
-        }
+        upgradeProps.setWorkspaceNameVersion(type, os, data, opType)
         return Result(true)
     }
 
     override fun setProjectVersion(
-        type: ClientUpgradeType,
+        type: ClientUpgradeComp,
+        os: OS,
         opType: ClientUpgradeOpType,
         data: Map<String, String>
     ): Result<Boolean> {
-        when (type) {
-            ClientUpgradeType.CLIENT -> upgradeProps.setClientProjectVersion(data, opType)
-            ClientUpgradeType.START -> upgradeProps.setStartProjectVersion(data, opType)
-        }
+        upgradeProps.setProjectVersion(type, os, data, opType)
         return Result(true)
     }
 }

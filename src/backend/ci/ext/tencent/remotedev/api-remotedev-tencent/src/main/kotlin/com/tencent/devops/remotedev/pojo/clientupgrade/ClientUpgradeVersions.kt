@@ -6,10 +6,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class ClientUpgradeVersions(
     @get:Schema(title = "每一次升级批次的数量")
     val parallelUpgradeCount: Int,
-    @get:Schema(title = "蓝盾客户端升级的版本信息")
-    val clientVersion: UpgradeVersionsData,
-    @get:Schema(title = "START客户端升级的版本信息")
-    val startVersion: UpgradeVersionsData
+    @get:Schema(title = "MACOS系统,蓝盾客户端升级的版本信息")
+    val macosClientVersion: UpgradeVersionsData,
+    @get:Schema(title = "WINDOWS系统,蓝盾客户端升级的版本信息")
+    val winClientVersion: UpgradeVersionsData,
+    @get:Schema(title = "MACOS系统,START客户端升级的版本信息")
+    val macosStartVersion: UpgradeVersionsData,
+    @get:Schema(title = "WINDOWS系统,START客户端升级的版本信息")
+    val winStartVersion: UpgradeVersionsData
 )
 
 data class UpgradeVersionsData(

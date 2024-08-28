@@ -15,11 +15,6 @@ data class ClientUpgradeResp(
     }
 }
 
-enum class ClientUpgradeType {
-    CLIENT,
-    START
-}
-
 enum class ClientUpgradeOpType {
     ADD,
     REMOVE,

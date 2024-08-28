@@ -3,7 +3,10 @@ package com.tencent.devops.remotedev.service.clientupgrade
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.pojo.ClientUpgradeComp
+import com.tencent.devops.remotedev.pojo.ClientUpgradeKind
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeOpType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,77 +67,49 @@ class UpgradeProps @Autowired constructor(
         return loadSetCache(CAN_UPGRADE_CLIENT_SET_KEY, isDistinguishCluster = true).contains(macAddress)
     }
 
-    fun getClientVersion() = loadCache(CURRENT_CLIENT_VERSION, isDistinguishCluster = true)
-    fun setClientVersion(version: String) {
+    fun getCurrentVersion(comp: ClientUpgradeComp, os: OS) =
+        loadCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_VERSION), isDistinguishCluster = true)
+
+    fun setCurrentVersion(comp: ClientUpgradeComp, os: OS, version: String) {
+        setUpgradeStringCache(comp, os, ClientUpgradeKind.CURRENT_VERSION, version)
+    }
+
+    fun getMaxNumb(comp: ClientUpgradeComp, os: OS) =
+        loadCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.MAX_NUMB), isDistinguishCluster = true).toIntOrNull()
+
+    fun setMaxNumb(comp: ClientUpgradeComp, os: OS, numb: Int) {
+        setUpgradeStringCache(comp, os, ClientUpgradeKind.MAX_NUMB, numb.toString())
+    }
+
+    private fun setUpgradeStringCache(comp: ClientUpgradeComp, os: OS, kind: ClientUpgradeKind, version: String) {
+        val key = genUpgradeRedisKey(comp, os, kind)
         redisOperation.set(
-            key = CURRENT_CLIENT_VERSION,
+            key = key,
             value = version,
             expiredInSecond = null,
             expired = false,
             isDistinguishCluster = true
         )
-        invalidateCache(CURRENT_CLIENT_VERSION, true)
+        invalidateCache(key, true)
     }
 
-    fun getStartVersion() = loadCache(CURRENT_START_VERSION, isDistinguishCluster = true)
-    fun setStartVersion(version: String) {
-        redisOperation.set(
-            key = CURRENT_START_VERSION,
-            value = version,
-            expiredInSecond = null,
-            expired = false,
-            isDistinguishCluster = true
-        )
-        invalidateCache(CURRENT_START_VERSION, true)
-    }
+    fun getUserVersion(comp: ClientUpgradeComp, os: OS) =
+        loadHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_USER_VERSION), true)
 
-    fun getClientMaxNumb() = loadCache(CLIENT_UPGRADE_VERSION_MAX_NUMB, isDistinguishCluster = true).toIntOrNull()
-    fun setClientMaxNumb(numb: Int) {
-        redisOperation.set(
-            key = CLIENT_UPGRADE_VERSION_MAX_NUMB,
-            value = numb.toString(),
-            expiredInSecond = null,
-            expired = false,
-            isDistinguishCluster = true
-        )
-        invalidateCache(CLIENT_UPGRADE_VERSION_MAX_NUMB, true)
-    }
+    fun setUserVersion(comp: ClientUpgradeComp, os: OS, version: Map<String, String>, opType: ClientUpgradeOpType) =
+        opHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_USER_VERSION), version, opType, true)
 
-    fun getStartMaxNumb() = loadCache(START_UPGRADE_VERSION_MAX_NUMB, isDistinguishCluster = true).toIntOrNull()
-    fun setStartMaxNumb(numb: Int) {
-        redisOperation.set(
-            key = START_UPGRADE_VERSION_MAX_NUMB,
-            value = numb.toString(),
-            expiredInSecond = null,
-            expired = false,
-            isDistinguishCluster = true
-        )
-        invalidateCache(START_UPGRADE_VERSION_MAX_NUMB, true)
-    }
+    fun getWorkspaceNameVersion(comp: ClientUpgradeComp, os: OS) =
+        loadHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_WORKSPACE_NAME_VERSION), true)
 
-    fun getClientUserVersion() = loadHashCache(CLIENT_UPGRADE_CURRENT_USER_VERSION, true)
-    fun setClientUserVersion(version: Map<String, String>, opType: ClientUpgradeOpType) =
-        opHashCache(CLIENT_UPGRADE_CURRENT_USER_VERSION, version, opType, true)
+    fun setWorkspaceNameVersion(comp: ClientUpgradeComp, os: OS, version: Map<String, String>, opType: ClientUpgradeOpType) =
+        opHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_WORKSPACE_NAME_VERSION), version, opType, true)
 
-    fun getStartUserVersion() = loadHashCache(START_UPGRADE_CURRENT_USER_VERSION, true)
-    fun setStartUserVersion(version: Map<String, String>, opType: ClientUpgradeOpType) =
-        opHashCache(START_UPGRADE_CURRENT_USER_VERSION, version, opType, true)
+    fun getProjectVersion(comp: ClientUpgradeComp, os: OS) =
+        loadHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_PROJECT_VERSION), true)
 
-    fun getClientWorkspaceNameVersion() = loadHashCache(CLIENT_UPGRADE_CURRENT_WORKSPACE_NAME_VERSION, true)
-    fun setClientWorkspaceNameVersion(version: Map<String, String>, opType: ClientUpgradeOpType) =
-        opHashCache(CLIENT_UPGRADE_CURRENT_WORKSPACE_NAME_VERSION, version, opType, true)
-
-    fun getStartWorkspaceNameVersion() = loadHashCache(START_UPGRADE_CURRENT_WORKSPACE_NAME_VERSION, true)
-    fun setStartWorkspaceNameVersion(version: Map<String, String>, opType: ClientUpgradeOpType) =
-        opHashCache(START_UPGRADE_CURRENT_WORKSPACE_NAME_VERSION, version, opType, true)
-
-    fun getClientProjectVersion() = loadHashCache(CLIENT_UPGRADE_CURRENT_PROJECT_VERSION, true)
-    fun setClientProjectVersion(version: Map<String, String>, opType: ClientUpgradeOpType) =
-        opHashCache(CLIENT_UPGRADE_CURRENT_PROJECT_VERSION, version, opType, true)
-
-    fun getStartProjectVersion() = loadHashCache(START_UPGRADE_CURRENT_PROJECT_VERSION, true)
-    fun setStartProjectVersion(version: Map<String, String>, opType: ClientUpgradeOpType) =
-        opHashCache(START_UPGRADE_CURRENT_PROJECT_VERSION, version, opType, true)
+    fun setProjectVersion(comp: ClientUpgradeComp, os: OS, version: Map<String, String>, opType: ClientUpgradeOpType) =
+        opHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_PROJECT_VERSION), version, opType, true)
 
     private fun opHashCache(
         redisKey: String,
@@ -222,31 +197,16 @@ class UpgradeProps @Autowired constructor(
         private const val CACHE_EXPIRE_MIN = 1L
         private const val CACHE_SIZE = 100L
 
-        private const val PARALLEL_UPGRADE_COUNT = "remotedev:clientupgrade:parallel.upgrade.count"
+        private const val REMOTEDEV_UPGRADE_KEY_PREFIX = "remotedev:clientupgrade"
+
+        private const val PARALLEL_UPGRADE_COUNT = "$REMOTEDEV_UPGRADE_KEY_PREFIX:parallel.upgrade.count"
         private const val DEFAULT_PARALLEL_UPGRADE_COUNT = 50
 
-        private const val CAN_UPGRADE_CLIENT_SET_KEY = "remotedev:clientupgrade:can_upgrade"
+        private const val CAN_UPGRADE_CLIENT_SET_KEY = "$REMOTEDEV_UPGRADE_KEY_PREFIX:can_upgrade"
 
-        private const val CURRENT_CLIENT_VERSION = "remotedev:clientupgrade:client.verison"
-        private const val CURRENT_START_VERSION = "remotedev:clientupgrade:start.verison"
-
-        // 升级指定数量的版本
-        private const val CLIENT_UPGRADE_VERSION_MAX_NUMB = "remotedev:clientupgrade:client.version.maxnumb"
-        private const val START_UPGRADE_VERSION_MAX_NUMB = "remotedev:clientupgrade:start.version.maxnumb"
-
-        // 升级指定用户和版本
-        private const val CLIENT_UPGRADE_CURRENT_USER_VERSION = "remotedev:clientupgrade:client.currentuser.version"
-        private const val START_UPGRADE_CURRENT_USER_VERSION = "remotedev:clientupgrade:start.currentuser.version"
-
-        // 升级指定工作空间名称和版本
-        private const val CLIENT_UPGRADE_CURRENT_WORKSPACE_NAME_VERSION =
-            "remotedev:clientupgrade:client.workspace.name.version"
-        private const val START_UPGRADE_CURRENT_WORKSPACE_NAME_VERSION =
-            "remotedev:clientupgrade:start.workspace.name.version"
-
-        // 升级指定的项目和版本
-        private const val CLIENT_UPGRADE_CURRENT_PROJECT_VERSION = "remotedev:clientupgrade:client.project.version"
-        private const val START_UPGRADE_CURRENT_PROJECT_VERSION = "remotedev:clientupgrade:start.project.version"
+        private fun genUpgradeRedisKey(comp: ClientUpgradeComp, os: OS, kind: ClientUpgradeKind): String {
+            return "$REMOTEDEV_UPGRADE_KEY_PREFIX:${comp.value}:${os.name.lowercase()}:${kind.value}"
+        }
 
         private val logger = LoggerFactory.getLogger(UpgradeProps::class.java)
     }

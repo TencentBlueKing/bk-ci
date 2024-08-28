@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TClient
@@ -18,7 +19,8 @@ class ClientDao {
         currentProjectIds: Set<String>,
         currentWorkspaceNames: Set<String>,
         version: String,
-        startVersion: String
+        startVersion: String,
+        os: OS?
     ) {
         with(TClient.T_CLIENT) {
             dslContext.insertInto(
@@ -28,14 +30,16 @@ class ClientDao {
                 CURRENT_PROJECT_IDS,
                 CURRENT_WORKSPACE_NAMES,
                 VERSION,
-                START_VERSION
+                START_VERSION,
+                OS
             ).values(
                 macAddress,
                 currentUserId,
                 JSON.json(JsonUtil.toJson(currentProjectIds, false)),
                 JSON.json(JsonUtil.toJson(currentWorkspaceNames, false)),
                 version,
-                startVersion
+                startVersion,
+                os?.name ?: ""
             ).onDuplicateKeyUpdate()
                 .set(CURRENT_USER, currentUserId)
                 .set(CURRENT_PROJECT_IDS, JSON.json(JsonUtil.toJson(currentProjectIds, false)))
@@ -43,6 +47,7 @@ class ClientDao {
                 .set(VERSION, version)
                 .set(START_VERSION, startVersion)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .set(OS, os?.name ?: "")
                 .execute()
         }
     }
