@@ -1217,7 +1217,7 @@ class TemplateFacadeService @Autowired constructor(
                 cloneTemplateSettingExist = CloneTemplateSettingExist.fromSetting(
                     setting, pipelinesWithLabels
                 ),
-                desc = templateRecord[tTemplate.DESC]
+                desc = record[tTemplate.DESC]
             )
         } else {
             null
