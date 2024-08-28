@@ -577,41 +577,6 @@ class SubPipelineStartUpService @Autowired constructor(
         return Result(data)
     }
 
-    fun checkSubPipelinePermission(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        parentProjectId: String,
-        parentPipelineId: String
-    ) {
-        val pipelineOauthUser = pipelineRepositoryService.getPipelineOauthUser(
-            projectId = parentProjectId,
-            pipelineId = parentPipelineId
-        ) ?: userId
-        logger.info(
-            "checkSubPipelinePermission userId:$userId, oauthUser:$pipelineOauthUser" +
-                    "projectId:$projectId, pipelineId:$pipelineId, " +
-                    "parentProjectId:$parentProjectId, " +
-                    "parentPipelineId:$parentPipelineId"
-        )
-        pipelinePermissionService.validPipelinePermission(
-            userId = pipelineOauthUser,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.EXECUTE,
-            message = MessageUtil.getMessageByLocale(
-                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                I18nUtil.getLanguage(userId),
-                arrayOf(
-                    userId,
-                    projectId,
-                    AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)),
-                    pipelineId
-                )
-            )
-        )
-    }
-
     fun getSubPipelineStatus(projectId: String, buildId: String): Result<SubPipelineStatus> {
         return Result(subPipelineStatusService.getSubPipelineStatus(projectId, buildId))
     }
