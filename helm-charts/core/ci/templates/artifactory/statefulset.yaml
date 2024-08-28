@@ -130,13 +130,6 @@ spec:
               ln -s {{ .Values.persistence.mountPath }}/artifactory {{ .Values.config.bkCiDataDir }}/artifactory;
               /bin/bash backend.bkci.sh;
           {{ end }}
-          lifecycle:
-            preStop:
-              exec:
-                command:
-                  - sh
-                  - '-c'
-                  - sleep 10s
           livenessProbe:
             httpGet:
               path: /management/health/livenessState
@@ -167,7 +160,7 @@ spec:
                   command:
                   - /bin/bash
                   - -c
-                  - sleep 10 && ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
+                  - sleep 20 && ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
       volumes:
         - name: storage
           {{- if and .Values.persistence.enabled (eq .Values.config.bkCiArtifactoryRealm "local") }}
