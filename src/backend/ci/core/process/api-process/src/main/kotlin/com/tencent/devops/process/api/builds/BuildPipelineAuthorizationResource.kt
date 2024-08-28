@@ -27,14 +27,16 @@
 
 package com.tencent.devops.process.api.builds
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
-import javax.ws.rs.POST
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -44,14 +46,14 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildPipelineAuthorizationResource {
     @Operation(summary = "获取流水线当前授权人")
-    @POST
-    @Path("/{projectId}/{pipelineId}/oauthUser")
+    @GET
+    @Path("handover")
     fun getPipelineAuthorization(
         @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "流水线Id", required = true)
-        @PathParam("pipelineId")
+        @Parameter(description = "当前流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String
     ): Result<String?>
 }
