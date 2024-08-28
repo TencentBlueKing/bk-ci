@@ -377,7 +377,7 @@ const { t } = useI18n();
 const route = useRoute();
 const formRef = ref(null);
 const renewalRef = ref(null);
-const projectId = computed(() => route.params?.projectCode);
+const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
 const expiredAt = ref(30);
 const isShowSlider = ref(false);
 const sliderTitle = ref();

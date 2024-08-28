@@ -11,6 +11,7 @@
                                 v-validate.initial="Object.assign({}, { max: getMaxLengthByType(i.component) }, i.rule, { required: !!i.required })"
                                 :handle-change="handleMethods"
                                 :value="element[i.key] || atomPropsModel[key]?.children[index]?.default"
+                                :disabled="disabled"
                                 v-bind="i">
                             </component>
                         </form-field>
@@ -26,6 +27,7 @@
                         :handle-change="handleMethods"
                         :value="element[key]"
                         :element="element"
+                        :disabled="disabled"
                         v-bind="obj">
                     </component>
                 </form-field>

@@ -566,6 +566,7 @@
     "canChooseList": "Selectable list",
     "choosedList": "Chosen list",
     "triggerType": "Trigger Type",
+    "triggerInfo": "Trigger Type / Trigger",
     "errorCode": "Errors",
     "remark": "Remark",
     "noBuildRecords": " No build records",
@@ -1573,5 +1574,6 @@
     "expiredTips": "No execution permission, expired"
   },
   "debugHint": "Debugging and execution do not share build numbers, but they share concurrency control. Debug records are only valid during the draft version debugging period and will be automatically cleared after the version is released.",
-  "templateRollbackBackTips": "The current pipeline is in constraint mode (template instance). You need to jump to the template to roll back the version."
+  "templateRollbackBackTips": "The current pipeline is in constraint mode (template instance). You need to jump to the template to roll back the version.",
+  "versionNotMatch": "The current version is not the latest version and cannot be executed"
 }

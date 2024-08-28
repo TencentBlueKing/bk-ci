@@ -124,6 +124,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
@@ -174,7 +175,8 @@ class PipelineBuildFacadeService(
     private val pipelineRedisService: PipelineRedisService,
     private val pipelineRetryFacadeService: PipelineRetryFacadeService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+    private val templateFacadeService: TemplateFacadeService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -666,6 +668,10 @@ class PipelineBuildFacadeService(
                 logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }
 
+            templateFacadeService.printModifiedTemplateParams(
+                projectId = projectId, pipelineId = pipelineId,
+                pipelineParams = triggerContainer.params, paramValues = values
+            )
             val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,
                 paramProperties = triggerContainer.params, paramValues = values
@@ -1974,7 +1980,8 @@ class PipelineBuildFacadeService(
         archiveFlag: Boolean? = false,
         customVersion: Int?,
         triggerAlias: List<String>?,
-        triggerBranch: List<String>?
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
@@ -2056,7 +2063,8 @@ class PipelineBuildFacadeService(
                 queryDslContext = queryDslContext,
                 debugVersion = targetDebugVersion,
                 triggerAlias = triggerAlias,
-                triggerBranch = triggerBranch
+                triggerBranch = triggerBranch,
+                triggerUser = triggerUser
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -2088,7 +2096,8 @@ class PipelineBuildFacadeService(
                 queryDslContext = queryDslContext,
                 debugVersion = targetDebugVersion,
                 triggerAlias = triggerAlias,
-                triggerBranch = triggerBranch
+                triggerBranch = triggerBranch,
+                triggerUser = triggerUser
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
@@ -2335,7 +2344,7 @@ class PipelineBuildFacadeService(
             if (BuildStatus.parse(modelDetail.status).isFinish()) {
                 logger.warn("The build $buildId of project $projectId already finished ")
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_CANCELED
+                    errorCode = ProcessMessageCode.PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_OPERATE
                 )
             }
 

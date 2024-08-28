@@ -374,7 +374,8 @@ class PipelineRuntimeService @Autowired constructor(
         queryDslContext: DSLContext? = null,
         debugVersion: Int?,
         triggerAlias: List<String>?,
-        triggerBranch: List<String>?
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
@@ -409,7 +410,8 @@ class PipelineRuntimeService @Autowired constructor(
             updateTimeDesc = updateTimeDesc,
             debugVersion = debugVersion,
             triggerAlias = triggerAlias,
-            triggerBranch = triggerBranch
+            triggerBranch = triggerBranch,
+            triggerUser = triggerUser
         )
         val result = mutableListOf<BuildHistory>()
         list.forEach {
@@ -1577,7 +1579,11 @@ class PipelineRuntimeService @Autowired constructor(
      * 完成认领构建的任务[completeTask]
      * [endBuild]表示最后一步，当前容器要结束
      */
-    fun completeClaimBuildTask(completeTask: CompleteTask, endBuild: Boolean = false): PipelineBuildTask? {
+    fun completeClaimBuildTask(
+        completeTask: CompleteTask,
+        endBuild: Boolean = false,
+        endBuildMsg: String? = null
+    ): PipelineBuildTask? {
         val buildTask = pipelineTaskService.getBuildTask(
             projectId = completeTask.projectId,
             buildId = completeTask.buildId,
@@ -1618,7 +1624,7 @@ class PipelineRuntimeService @Autowired constructor(
                     errorCode = completeTask.errorCode ?: 0,
                     errorTypeName = completeTask.errorType?.getI18n(I18nUtil.getDefaultLocaleLanguage()),
                     executeCount = buildTask.executeCount,
-                    reason = completeTask.errorMsg
+                    reason = endBuildMsg ?: completeTask.errorMsg
                 )
             )
         }
@@ -1880,7 +1886,8 @@ class PipelineRuntimeService @Autowired constructor(
         queryDslContext: DSLContext? = null,
         debugVersion: Int? = null,
         triggerAlias: List<String>?,
-        triggerBranch: List<String>?
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): Int {
         return pipelineBuildDao.count(
             dslContext = queryDslContext ?: dslContext,
@@ -1908,7 +1915,8 @@ class PipelineRuntimeService @Autowired constructor(
             startUser = startUser,
             debugVersion = debugVersion,
             triggerAlias = triggerAlias,
-            triggerBranch = triggerBranch
+            triggerBranch = triggerBranch,
+            triggerUser = triggerUser
         )
     }
 

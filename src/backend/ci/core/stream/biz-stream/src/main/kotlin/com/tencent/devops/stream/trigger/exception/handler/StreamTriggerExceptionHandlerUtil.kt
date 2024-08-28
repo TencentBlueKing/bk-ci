@@ -29,9 +29,11 @@ package com.tencent.devops.stream.trigger.exception.handler
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerThirdException
@@ -39,9 +41,12 @@ import com.tencent.devops.stream.trigger.exception.StreamTriggerThirdException
 @Suppress("ALL")
 object StreamTriggerExceptionHandlerUtil {
 
-    fun handleManualTrigger(action: () -> Unit) {
+    fun handleManualTrigger(
+        action: BaseAction,
+        f: () -> Unit
+    ) {
         try {
-            action()
+            f()
         } catch (e: Throwable) {
             val (errorCode, message) = when (e) {
                 is OauthForbiddenException -> {
@@ -81,6 +86,11 @@ object StreamTriggerExceptionHandlerUtil {
                 params = arrayOf(message ?: "None"),
                 defaultMessage = message
             )
+        } finally {
+            if (action.data.isWatcherInitialized) {
+                action.data.watcher.stop()
+                LogUtils.printCostTimeWE(action.data.watcher, warnThreshold = 1000, errorThreshold = 5000)
+            }
         }
     }
 
