@@ -90,13 +90,6 @@ spec:
                   apiVersion: v1
                   fieldPath: metadata.name
           workingDir: /data/workspace/engine
-          lifecycle:
-            preStop:
-              exec:
-                command:
-                  - sh
-                  - '-c'
-                  - sleep 10s
           livenessProbe:
             httpGet:
               path: /management/health/livenessState
@@ -125,7 +118,7 @@ spec:
                   command:
                   - /bin/bash
                   - -c
-                  - sleep 10
+                  - sleep 20
       volumes:
       - hostPath:
           path: /data
