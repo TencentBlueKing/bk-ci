@@ -76,6 +76,13 @@ spec:
             - name: monitor
               containerPort: 18080
               protocol: TCP
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - sh
+                  - '-c'
+                  - sleep 10s
           livenessProbe:
             httpGet:
               path: /management/health/liveness
