@@ -264,7 +264,7 @@ class BuildRecordContainerDao {
             val conditions = BUILD_ID.eq(buildId)
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(EXECUTE_COUNT.eq(executeCount))
+                .and(EXECUTE_COUNT.lessOrEqual(executeCount))
                 .and(MATRIX_GROUP_ID.isNotNull)
             // 获取每个最大执行次数
             val max = DSL.select(
