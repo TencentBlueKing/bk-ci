@@ -33,7 +33,6 @@ import com.tencent.devops.model.remotedev.tables.TWindowsResourceZone
 import com.tencent.devops.model.remotedev.tables.records.TWindowsResourceZoneRecord
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
-import org.jooq.Condition
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.RecordMapper

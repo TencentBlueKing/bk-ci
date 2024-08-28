@@ -29,7 +29,6 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
-import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.display
