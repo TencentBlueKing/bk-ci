@@ -579,7 +579,7 @@ class PipelineContainerService @Autowired constructor(
         container.startVMTaskSeq = startVMTaskSeq
 
         // 构建矩阵永远跟随stage重试，在需要重试的stage中，单独增加重试记录
-        if (container.matrixGroupFlag == true && !context.needSkipContainerWhenFailRetry(stage, container)) {
+        if (context.needRerunStage(stage = stage) && container.matrixGroupFlag == true) {
             container.retryFreshMatrixOption()
             cleanContainersInMatrixGroup(
                 transactionContext = dslContext,
