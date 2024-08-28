@@ -135,7 +135,7 @@ data class WebHookTriggerElementChanger(
         enableThirdFilter = data.enableThirdFilter,
         thirdUrl = data.thirdUrl,
         thirdSecretToken = data.thirdSecretToken,
-        enable = data.isElementEnable(),
+        enable = data.elementEnabled(),
         skipWip = data.skipWip
     )
 
@@ -168,7 +168,7 @@ data class WebHookTriggerElementChanger(
         includeMrAction = data.data.input.includeMrAction,
         includePushAction = data.data.input.includePushAction,
         enableThirdFilter = data.data.input.enableThirdFilter,
-        enable = data.isElementEnable(),
+        enable = data.elementEnabled(),
         skipWip = data.data.input.skipWip
     )
 
@@ -200,7 +200,7 @@ data class WebHookTriggerElementChanger(
         includeMrAction = data.includeMrAction,
         includePushAction = data.includePushAction,
         enableThirdFilter = data.enableThirdFilter,
-        enable = data.isElementEnable()
+        enable = data.elementEnabled()
     )
 
     constructor(data: CodeSVNWebHookTriggerElement) : this(
@@ -214,7 +214,7 @@ data class WebHookTriggerElementChanger(
         eventType = CodeEventType.POST_COMMIT,
         repositoryType = data.repositoryType,
         repositoryName = data.repositoryName,
-        enable = data.isElementEnable()
+        enable = data.elementEnabled()
     )
 
     constructor(data: CodeP4WebHookTriggerElement) : this(
@@ -225,7 +225,7 @@ data class WebHookTriggerElementChanger(
         eventType = data.data.input.eventType,
         repositoryType = data.data.input.repositoryType,
         repositoryName = data.data.input.repositoryName,
-        enable = data.isElementEnable()
+        enable = data.elementEnabled()
     )
 
     constructor(data: CodeGitlabWebHookTriggerElement) : this(
@@ -248,6 +248,6 @@ data class WebHookTriggerElementChanger(
         includeSourceBranchName = data.includeSourceBranchName,
         includeMrAction = data.includeMrAction,
         includePushAction = data.includePushAction,
-        enable = data.isElementEnable()
+        enable = data.elementEnabled()
     )
 }

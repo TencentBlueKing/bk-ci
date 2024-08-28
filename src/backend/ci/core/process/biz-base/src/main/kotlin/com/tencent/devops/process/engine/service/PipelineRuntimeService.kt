@@ -814,7 +814,7 @@ class PipelineRuntimeService @Autowired constructor(
                     context.containerSeq++
                     containerBuildRecords.addRecords(
                         stageId = stage.id!!,
-                        stageEnableFlag = stage.isStageEnable(),
+                        stageEnableFlag = stage.stageEnabled(),
                         container = container,
                         context = context,
                         buildStatus = null,
@@ -828,7 +828,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
-                            stageEnableFlag = stage.isStageEnable(),
+                            stageEnableFlag = stage.stageEnabled(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -841,7 +841,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
-                            stageEnableFlag = stage.isStageEnable(),
+                            stageEnableFlag = stage.stageEnabled(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,

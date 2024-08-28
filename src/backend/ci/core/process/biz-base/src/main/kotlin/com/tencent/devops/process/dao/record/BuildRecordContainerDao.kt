@@ -264,13 +264,22 @@ class BuildRecordContainerDao {
             val conditions = BUILD_ID.eq(buildId)
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(EXECUTE_COUNT.eq(executeCount))
+                .and(EXECUTE_COUNT.lessOrEqual(executeCount))
                 .and(MATRIX_GROUP_ID.isNotNull)
+            // 获取每个最大执行次数
+            val max = DSL.select(
+                CONTAINER_ID.`as`(KEY_CONTAINER_ID),
+                DSL.max(EXECUTE_COUNT).`as`(KEY_EXECUTE_COUNT)
+            ).from(this).where(conditions).groupBy(CONTAINER_ID)
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID,
                 CONTAINER_VAR, EXECUTE_COUNT, CONTAINER_TYPE, STATUS, MATRIX_GROUP_FLAG,
                 MATRIX_GROUP_ID, START_TIME, END_TIME, TIMESTAMPS
-            ).from(this).where(conditions).orderBy(CONTAINER_ID.asc()).fetch()
+            ).from(this).join(max).on(
+                CONTAINER_ID.eq(max.field(KEY_CONTAINER_ID, String::class.java))
+                    .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
+            ).where(conditions).orderBy(CONTAINER_ID.asc())
+                .fetch()
             return result.map { record ->
                 generateBuildRecordContainer(record)
             }
