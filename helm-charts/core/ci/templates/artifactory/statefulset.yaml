@@ -130,6 +130,13 @@ spec:
               ln -s {{ .Values.persistence.mountPath }}/artifactory {{ .Values.config.bkCiDataDir }}/artifactory;
               /bin/bash backend.bkci.sh;
           {{ end }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - sh
+                  - '-c'
+                  - sleep 10s
           livenessProbe:
             httpGet:
               path: /management/health/livenessState

@@ -110,6 +110,13 @@ spec:
               cp /data/workspace/backend.bkci.sh .;
               /bin/bash backend.bkci.sh;
           {{ end }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - sh
+                  - '-c'
+                  - sleep 10s
           livenessProbe:
             httpGet:
               path: /management/health/livenessState
