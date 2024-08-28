@@ -329,7 +329,7 @@ class PipelineContainerService @Autowired constructor(
                 if (ElementUtils.getTaskAddFlag(
                         element = atomElement,
                         stageEnableFlag = stage.isStageEnable(),
-                        containerEnableFlag = container.isContainerEnable(),
+                        containerEnableFlag = container.containerEnabled(),
                         originMatrixContainerFlag = ContainerUtils.isOriginMatrixContainer(container)
                     )
                 ) {
@@ -460,7 +460,7 @@ class PipelineContainerService @Autowired constructor(
                 if (newBuildFlag && ElementUtils.getTaskAddFlag(
                         element = atomElement,
                         stageEnableFlag = stage.isStageEnable(),
-                        containerEnableFlag = container.isContainerEnable(),
+                        containerEnableFlag = container.containerEnabled(),
                         originMatrixContainerFlag = ContainerUtils.isOriginMatrixContainer(container)
                     )
                 ) {

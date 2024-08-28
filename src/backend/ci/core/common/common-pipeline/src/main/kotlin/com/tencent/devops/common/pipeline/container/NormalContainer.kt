@@ -134,7 +134,7 @@ data class NormalContainer(
         return matrixContext
     }
 
-    override fun isContainerEnable(): Boolean {
+    override fun containerEnabled(): Boolean {
         return jobControlOption?.enable ?: true
     }
 
