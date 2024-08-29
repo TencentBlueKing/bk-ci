@@ -224,12 +224,8 @@
                     if (!curPage.isLoaded) {
                         this.pagination.loadedNum += res.records.length
                     }
-                    curPage.isLoaded = true
                     this.pagination.count = this.pagination.loadedNum || res.records.length
-                    if (res.hasNext
-                        && (this.pagination.current === this.pagination.cacheScrollIdList.length
-                            || this.pagination.cacheScrollIdList.some(i => i.key <= this.pagination.current))
-                    ) {
+                    if (res.hasNext && !curPage.isLoaded) {
                         this.pagination.count = this.pagination.loadedNum + 1
                         this.pagination.cacheScrollIdList.push({
                             key: this.pagination.current + 1,
@@ -237,6 +233,7 @@
                             isLoaded: false
                         })
                     }
+                    curPage.isLoaded = true
                     // 回填已经导入的节点
                     this.$nextTick(() => {
                         this.rowList.forEach(i => {
