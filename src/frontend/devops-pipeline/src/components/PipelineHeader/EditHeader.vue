@@ -274,7 +274,7 @@
                             ])))
                         })
                     } else {
-                        this.handleError({
+                        this.handleError(e, {
                             projectId,
                             resourceCode: pipelineId,
                             action: RESOURCE_ACTION.EDIT

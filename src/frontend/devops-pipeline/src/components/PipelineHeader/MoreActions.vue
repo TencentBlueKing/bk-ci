@@ -61,8 +61,8 @@
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
-        TEMPLATE_RESOURCE_ACTION,
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
@@ -150,9 +150,9 @@
                                 action: RESOURCE_ACTION.EDIT
                             }
                         },
-                        {
-                            ...(pipeline.templateId
-                                ? {
+                        ...(
+                            pipeline.templateId
+                                ? [{
                                     label: 'copyAsTemplateInstance',
                                     handler: () => this.copyAsTemplateInstance(pipeline),
                                     permissionData: {
@@ -161,12 +161,9 @@
                                         resourceCode: projectId,
                                         action: RESOURCE_ACTION.CREATE
                                     }
-                                }
-                                : {
-                                
-                                })
-                            
-                        },
+                                }]
+                                : []
+                        ),
                         {
                             label: 'newlist.copyAs',
                             handler: () => this.copyAs(pipeline),
