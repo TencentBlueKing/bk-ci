@@ -34,6 +34,11 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpH
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.DispatchBuildTaskStatusEnum
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentActionStatus
+import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
+import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
+import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
@@ -41,23 +46,20 @@ import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.WorkspaceResponse
-import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
-import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class RemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao,
-    private val remoteDevServiceFactory: RemoteDevServiceFactory
+    private val remoteDevServiceFactory: RemoteDevServiceFactory,
+    private val workspaceRedisUtils: WorkspaceRedisUtils
 ) {
 
     companion object {
@@ -218,6 +220,14 @@ class RemoteDevService @Autowired constructor(
         workspaceName: String,
         bakWorkspaceName: String?
     ) {
+        if (bakWorkspaceName != null) {
+            /*临时逻辑待后期下掉，不在我们这维护order*/
+            workspaceRedisUtils.setStartCloudOrder(
+                "SYSTEM",
+                bakWorkspaceName,
+                workspaceRedisUtils.getStartCloudOrder(workspaceName) ?: ""
+            )
+        }
         dispatchWorkspaceDao.deleteWorkspace(dslContext, workspaceName, bakWorkspaceName)
     }
 
