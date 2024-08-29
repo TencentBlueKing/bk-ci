@@ -210,8 +210,8 @@ func DoUpgradeJdk() error {
 			return
 		}
 		for _, file := range files {
-			if (strings.HasPrefix(file.Name(), "jdk17-") || file.Name() == "jdk17") &&
-				file.Name() != jdkTmpName {
+			if file.Name() != jdkTmpName && (file.Name() == "jdk17" || file.Name() == "jdk17.zip" ||
+				strings.HasPrefix(file.Name(), "jdk17-")) {
 				err = os.RemoveAll(workDir + "/" + file.Name())
 				if err != nil {
 					logs.WithError(err).Error("agentUpgrade|upgrade jdk17 remove old jdk file error")
