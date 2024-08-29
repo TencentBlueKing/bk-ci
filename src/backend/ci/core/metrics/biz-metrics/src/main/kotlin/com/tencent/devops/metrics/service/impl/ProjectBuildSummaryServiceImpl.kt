@@ -82,6 +82,7 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
     override fun saveProjectUser(
         projectId: String,
         userId: String,
+        operate: String,
         theDate: LocalDate
     ) {
         val lock = RedisLock(redisOperation, projectBuildKey(projectId), 120)
@@ -107,6 +108,13 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
                         theDate = theDate
                     )
                 }
+                projectBuildSummaryDao.saveUserOperateCount(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    userId = userId,
+                    operate = operate,
+                    theDate = theDate
+                )
             }
         }
     }
