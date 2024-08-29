@@ -26,41 +26,33 @@
  *
  */
 
-package com.tencent.devops.metrics.service
+package com.tencent.devops.metrics.listener
 
-import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
-import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
-import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
-import java.time.LocalDate
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
+import com.tencent.devops.metrics.service.ProjectBuildSummaryService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-interface ProjectBuildSummaryService {
+@Component
+class ProjectUserDailyOperateMetricsListener @Autowired constructor(
+    private val projectBuildSummaryService: ProjectBuildSummaryService
+) : Listener<ProjectUserOperateMetricsEvent> {
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProjectUserDailyOperateMetricsListener::class.java)
+    }
 
-    /**
-     * 保存项目构建数
-     */
-    fun saveProjectBuildCount(
-        projectId: String,
-        trigger: String?
-    )
-
-    /**
-     * 保存项目用户
-     */
-    fun saveProjectUser(
-        projectId: String,
-        userId: String,
-        theDate: LocalDate
-    )
-
-    /**
-     * 保存用户操作度量数据
-     */
-    fun saveProjectUserOperateMetrics(userOperateCounterData: UserOperateCounterData)
-
-    /**
-     * 获取项目活跃用户数
-     */
-    fun getProjectActiveUserCount(
-        baseQueryReq: BaseQueryReqVO
-    ): ProjectUserCountV0?
+    override fun execute(event: ProjectUserOperateMetricsEvent) {
+        try {
+            if (logger.isDebugEnabled) {
+                logger.debug("consumer project user daily operate metrics :${event.userOperateCounterData}")
+            }
+            projectBuildSummaryService.saveProjectUserOperateMetrics(
+                userOperateCounterData = event.userOperateCounterData
+            )
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to insert project user metrics data", ignored)
+        }
+    }
 }
