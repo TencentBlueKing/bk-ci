@@ -84,7 +84,7 @@ class SubPipelineRepositoryService @Autowired constructor(
      * @param userId 目标用户
      * @param permission 目标权限
      */
-    @SuppressWarnings("LongParameterList")
+    @SuppressWarnings("LongParameterList", "LongMethod")
     fun checkElementPermission(
         projectId: String,
         stageName: String,

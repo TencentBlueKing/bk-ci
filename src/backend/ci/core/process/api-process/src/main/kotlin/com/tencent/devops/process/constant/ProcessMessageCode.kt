@@ -554,4 +554,8 @@ object ProcessMessageCode {
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotSubPipelineExecutePermissionErrorTitle"
     // 没有子流水线执行权限错误消息
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE = "bkNotSubPipelineExecutePermissionErrorMessage"
+
+    // 用户[xxx] 没有如下子流水线的执行权限，重置授权失败
+    const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_RESET_ERROR_TITLE =
+        "bkNotSubPipelineExecutePermissionResetErrorTitle"
 }

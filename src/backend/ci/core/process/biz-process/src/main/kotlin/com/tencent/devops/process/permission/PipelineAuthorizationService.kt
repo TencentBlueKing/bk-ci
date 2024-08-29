@@ -69,12 +69,12 @@ class PipelineAuthorizationService constructor(
 
                 checkSubPipelinePermission.isNotEmpty() -> {
                     val failTitle = I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE,
+                        messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_RESET_ERROR_TITLE,
                         params = arrayOf(handoverTo!!)
                     )
                     val failMsg = checkSubPipelinePermission.map {
                         it.errorMessage
-                    }.joinToString(FAIL_MESSAGE_SEPARATOR)
+                    }.toSet().joinToString(FAIL_MESSAGE_SEPARATOR)
                     ResourceAuthorizationHandoverResult(
                         status = ResourceAuthorizationHandoverStatus.FAILED,
                         message = "$failTitle$FAIL_MESSAGE_SEPARATOR$failMsg"
