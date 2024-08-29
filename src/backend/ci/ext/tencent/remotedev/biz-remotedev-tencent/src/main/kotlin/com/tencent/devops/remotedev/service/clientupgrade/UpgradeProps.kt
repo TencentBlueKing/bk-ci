@@ -76,6 +76,7 @@ class UpgradeProps @Autowired constructor(
 
     fun getMaxNumb(comp: ClientUpgradeComp, os: OS) =
         loadCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.MAX_NUMB), isDistinguishCluster = true).toIntOrNull()
+            ?: MAX_UPGRADE_DEFAULT_NUMB
 
     fun setMaxNumb(comp: ClientUpgradeComp, os: OS, numb: Int) {
         setUpgradeStringCache(comp, os, ClientUpgradeKind.MAX_NUMB, numb.toString())
@@ -102,8 +103,17 @@ class UpgradeProps @Autowired constructor(
     fun getWorkspaceNameVersion(comp: ClientUpgradeComp, os: OS) =
         loadHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_WORKSPACE_NAME_VERSION), true)
 
-    fun setWorkspaceNameVersion(comp: ClientUpgradeComp, os: OS, version: Map<String, String>, opType: ClientUpgradeOpType) =
-        opHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_WORKSPACE_NAME_VERSION), version, opType, true)
+    fun setWorkspaceNameVersion(
+        comp: ClientUpgradeComp,
+        os: OS,
+        version: Map<String, String>,
+        opType: ClientUpgradeOpType
+    ) = opHashCache(
+        redisKey = genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_WORKSPACE_NAME_VERSION),
+        values = version,
+        opType = opType,
+        isDistinguishCluster = true
+    )
 
     fun getProjectVersion(comp: ClientUpgradeComp, os: OS) =
         loadHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_PROJECT_VERSION), true)
@@ -207,6 +217,8 @@ class UpgradeProps @Autowired constructor(
         private fun genUpgradeRedisKey(comp: ClientUpgradeComp, os: OS, kind: ClientUpgradeKind): String {
             return "$REMOTEDEV_UPGRADE_KEY_PREFIX:${comp.value}:${os.name.lowercase()}:${kind.value}"
         }
+
+        private const val MAX_UPGRADE_DEFAULT_NUMB = 500
 
         private val logger = LoggerFactory.getLogger(UpgradeProps::class.java)
     }
