@@ -217,7 +217,7 @@ class RbacPermissionService constructor(
                 authProjectUserMetricsService.save(
                     projectId = projectCode,
                     userId = userId,
-                    operate = action
+                    operate = useAction
                 )
             }
             return result
