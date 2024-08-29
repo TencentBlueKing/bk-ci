@@ -16,7 +16,7 @@
                 <i18n
                     tag="p"
                     path="delegation.tips3">
-                    <span class="highlight">{{ 'BK_CI_START_USER_ID' }}</span>
+                    <span class="highlight">{{ 'BK_CI_AUTHORIZER' }}</span>
                 </i18n>
                 <p class="mt20">{{ $t('delegation.tips4') }}</p>
                 <i18n
@@ -108,6 +108,25 @@
                 </bk-button>
             </span>
         </bk-dialog>
+
+        <bk-dialog
+            ext-cls="reset-auth-failed-dialog"
+            v-model="showFailedDialog"
+            width="720"
+            :show-footer="false"
+            header-position="center"
+        >
+            <div slot="header" class="reset-failed-title">
+                {{ failedArr[0] }}
+            </div>
+            <div class="reset-failed-item">
+                <template v-for="(item, index) in failedArr">
+                    <div v-if="index > 0" :key="item">
+                        {{ index }}. <span v-html="item"></span>
+                    </div>
+                </template>
+            </div>
+        </bk-dialog>
     </main>
 </template>
 
@@ -127,7 +146,9 @@
                 isLoading: false,
                 showResetDialog: false,
                 resetLoading: false,
-                resourceAuthData: {}
+                resourceAuthData: {},
+                showFailedDialog: false,
+                failedArr: []
             }
         },
         computed: {
@@ -202,10 +223,15 @@
                     this.showResetDialog = false
                     if (res?.FAILED?.length) {
                         const message = res.FAILED[0]?.handoverFailedMessage || ''
-                        this.$bkMessage({
-                            theme: 'error',
-                            message
-                        })
+                        if (message.includes('<br/>')) {
+                            this.failedArr = message.split('<br/>')
+                            this.showFailedDialog = true
+                        } else {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message
+                            })
+                        }
                     } else {
                         this.fetchResourceAuth()
                         this.$bkMessage({
@@ -322,6 +348,18 @@
             margin-top: 24px;
             .btn {
                 width: 88px;
+            }
+        }
+    }
+    .reset-auth-failed-dialog {
+        .reset-failed-title {
+            text-align: left;
+        }
+        .reset-failed-item {
+            max-height: 400px;
+            overflow: auto;
+            a {
+                color: #3A84FF;
             }
         }
     }
