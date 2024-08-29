@@ -40,5 +40,7 @@ data class ProjectUserDailyEvent(
     @get:Schema(title = "用户ID")
     val userId: String,
     @get:Schema(title = "统计日期")
-    val theDate: LocalDate
+    val theDate: LocalDate,
+    @get:Schema(title = "操作")
+    val operate: String
 ) : IMeasureEvent(projectId = projectId, pipelineId = "", buildId = "")

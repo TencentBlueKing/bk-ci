@@ -48,8 +48,10 @@ class AuthProjectUserMetricsService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(AuthProjectUserMetricsService::class.java)
+
         // 期待的用户数10w
         private const val EXPECTED_USER_COUNT = 100000
+
         // 错误率0.1%
         private const val EXPECTED_FPP = 0.001
         private val bloomFilterMap = CacheBuilder.newBuilder()
@@ -60,7 +62,8 @@ class AuthProjectUserMetricsService @Autowired constructor(
 
     fun save(
         projectId: String,
-        userId: String
+        userId: String,
+        operate: String
     ) {
         val theDate = LocalDate.now()
         try {
@@ -71,7 +74,8 @@ class AuthProjectUserMetricsService @Autowired constructor(
                     ProjectUserDailyEvent(
                         projectId = projectId,
                         userId = userId,
-                        theDate = theDate
+                        theDate = theDate,
+                        operate = operate
                     )
                 )
                 bloomFilter.put(bloomKey)

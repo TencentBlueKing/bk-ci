@@ -99,6 +99,7 @@ class PipelineBuildWebhookService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
+        private const val WEBHOOK_COMMIT_TRIGGER = "webhook_commit_trigger"
     }
 
     fun dispatchTriggerPipelines(
@@ -218,7 +219,8 @@ class PipelineBuildWebhookService @Autowired constructor(
         // 触发事件保存流水线名称
         builder.pipelineName(pipelineInfo.pipelineName)
         // 获取授权人
-        val userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId) ?: pipelineInfo.lastModifyUser
+        val userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
+            ?: pipelineInfo.lastModifyUser
         val variables = mutableMapOf<String, String>()
         val container = model.stages[0].containers[0] as TriggerContainer
         // 解析变量
@@ -448,7 +450,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                         .webhookCommitNew(projectId, webhookCommit).data
                     logger.info(
                         "$pipelineId|${buildId?.id}|webhook trigger|(${triggerElement.name}|" +
-                                "repo(${matcher.getRepoName()})"
+                            "repo(${matcher.getRepoName()})"
                     )
                     return WebhookBuildResult(result = true, pipelineInfo = pipelineInfo, buildId = buildId)
                 } catch (ignore: Exception) {
@@ -582,7 +584,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                         ProjectUserDailyEvent(
                             projectId = projectId,
                             userId = startParams[PIPELINE_START_WEBHOOK_USER_ID]!!.toString(),
-                            theDate = LocalDate.now()
+                            theDate = LocalDate.now(),
+                            operate = WEBHOOK_COMMIT_TRIGGER
                         )
                     )
                 }

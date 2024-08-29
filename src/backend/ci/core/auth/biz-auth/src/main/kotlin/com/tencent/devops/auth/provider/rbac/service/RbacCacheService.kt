@@ -200,7 +200,11 @@ class RbacCacheService constructor(
 
             val result = policyService.verifyPermissions(queryPolicyDTO)
             if (result) {
-                authUserDailyService.save(projectId = projectCode, userId = userId)
+                authUserDailyService.save(
+                    projectId = projectCode,
+                    userId = userId,
+                    operate = permission.value
+                )
             }
             return result
         } finally {
