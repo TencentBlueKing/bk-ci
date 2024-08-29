@@ -216,7 +216,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         file.outputStream().use {
             inputStream.copyTo(it)
         }
-        if (storeType != StoreTypeEnum.DEVX) {
+        if (fileName.endsWith(".zip")) {
             // 解压到指定目录
             ZipUtil.unZipFile(file, storeArchivePath, false)
         }
