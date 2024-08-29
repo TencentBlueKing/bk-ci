@@ -987,6 +987,7 @@ class PipelineRuntimeService @Autowired constructor(
                 status = context.startBuildStatus,
                 rebuild = context.retryStartTaskId.isNullOrBlank(),
                 nowTime = context.now,
+                executeCount = context.executeCount,
                 buildParameters = buildInfo.buildParameters?.let { self ->
                     val newList = self.toMutableList()
                     val retryCount = context.executeCount - 1
@@ -1407,6 +1408,7 @@ class PipelineRuntimeService @Autowired constructor(
                 taskId = firstTaskId,
                 status = startBuildStatus,
                 actionType = actionType,
+                executeCount = executeCount,
                 buildNoType = buildNoType // 该字段是需要遍历Model‘获得，不过在审核阶段为null，不影响功能逻辑。
             ), // 监控事件
             PipelineBuildMonitorEvent(
@@ -1674,7 +1676,6 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = latestRunningBuild.projectId,
                 buildId = latestRunningBuild.buildId,
                 startTime = if (latestRunningBuild.executeCount == 1) startTime else null,
-                executeCount = latestRunningBuild.executeCount,
                 debug = latestRunningBuild.debug
             )
             pipelineInfoDao.updateLatestStartTime(
