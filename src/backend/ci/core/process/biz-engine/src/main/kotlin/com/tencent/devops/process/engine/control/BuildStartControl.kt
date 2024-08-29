@@ -283,7 +283,7 @@ class BuildStartControl @Autowired constructor(
         var checkStart = true
         val concurrencyGroup = buildInfo.concurrencyGroup ?: pipelineId
         ConcurrencyGroupLock(redisOperation, projectId, concurrencyGroup).use { groupLock ->
-            if (groupLock.tryLock()) {
+            if (!groupLock.tryLock()) {
                 LOG.info("ENGINE｜$source|$buildId|$projectId|$pipelineId|$concurrencyGroup try lock fail")
                 return false // 拿不到锁返回，下一次再重试
             }
