@@ -11,18 +11,18 @@
                     show-overflow-tooltip
                 >
                     <bk-table-column :label="$t('differenceItem')" prop="difference" :width="140" />
-                    <bk-table-column :label="$t('traditionalStyle')" prop="classIc" :width="290">
+                    <bk-table-column :label="$t('traditionalStyle')" prop="classic" :width="290">
                         <template slot-scope="props">
                             <div class="label-column">
-                                <p>{{ props.row.classIc }}</p>
+                                <p>{{ props.row.classic }}</p>
                                 <p>{{ props.row.classIcExample }}</p>
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('constraintStyle')" prop="constrained">
+                    <bk-table-column :label="$t('constraintStyle')" prop="constrainedMode">
                         <template slot-scope="props">
                             <div class="label-column">
-                                <p>{{ props.row.constrained }}</p>
+                                <p>{{ props.row.constrainedMode }}</p>
                                 <p>{{ props.row.constrainedExample }}</p>
                             </div>
                         </template>
@@ -65,41 +65,41 @@
                 return [
                     {
                         difference: this.$t('expressionFormat'),
-                        classIc: this.$t('traditionalFormat'),
+                        classic: this.$t('traditionalFormat'),
                         classIcExample: this.$t('traditionalFormatExample'),
-                        constrained: this.$t('constraintFormat'),
+                        constrainedMode: this.$t('constraintFormat'),
                         constrainedExample: this.$t('constraintFormatExample')
                     },
                     {
                         difference: this.$t('quoteMode'),
-                        classIc: this.$t('traditionalQuoteMode'),
-                        constrained: this.$t('constraintQuoteMode'),
+                        classic: this.$t('traditionalQuoteMode'),
+                        constrainedMode: this.$t('constraintQuoteMode'),
                         constrainedExample: this.$t('constraintQuoteModeExample')
                     },
                     {
                         difference: this.$t('environmentVariable'),
-                        classIc: this.$t('traditionalEnvironmentVariableMode'),
-                        constrained: this.$t('constraintEnvironmentVariableMode')
+                        classic: this.$t('traditionalEnvironmentVariableMode'),
+                        constrainedMode: this.$t('constraintEnvironmentVariableMode')
                     },
                     {
                         difference: this.$t('readOnlyVariable'),
-                        classIc: this.$t('traditionalReadOnlyMode'),
-                        constrained: this.$t('constraintReadOnlyMode')
+                        classic: this.$t('traditionalReadOnlyMode'),
+                        constrainedMode: this.$t('constraintReadOnlyMode')
                     },
                     {
                         difference: this.$t('variableValueTooLong'),
-                        classIc: this.$t('traditionalValueTooLongMode'),
-                        constrained: this.$t('constraintReadOnlyMode')
+                        classic: this.$t('traditionalValueTooLongMode'),
+                        constrainedMode: this.$t('constraintReadOnlyMode')
                     },
                     {
                         difference: this.$t('variableNotFound'),
-                        classIc: this.$t('traditionalNotFoundMode'),
-                        constrained: this.$t('constraintReadOnlyMode')
+                        classic: this.$t('traditionalNotFoundMode'),
+                        constrainedMode: this.$t('constraintReadOnlyMode')
                     },
                     {
                         difference: this.$t('variableStandard'),
-                        classIc: this.$t('traditionalStandardMode'),
-                        constrained: this.$t('constraintStandardMode')
+                        classic: this.$t('traditionalStandardMode'),
+                        constrainedMode: this.$t('constraintStandardMode')
                     }
                 ]
             },
