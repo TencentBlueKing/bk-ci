@@ -43,9 +43,9 @@ import com.tencent.devops.environment.pojo.job.ccreq.CCPage
 import com.tencent.devops.environment.pojo.job.ccreq.CCRules
 import com.tencent.devops.environment.pojo.job.ccres.CCBkHost
 import com.tencent.devops.environment.pojo.job.ccres.CCHost
+import com.tencent.devops.environment.pojo.job.ccres.CCPageData
 import com.tencent.devops.environment.pojo.job.ccres.CCResp
 import com.tencent.devops.environment.pojo.job.ccres.HostBizRelation
-import com.tencent.devops.environment.pojo.job.ccres.CCPageData
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -103,8 +103,14 @@ class TencentCCService {
         var pageData: CCPageData<CCHost>
         var start = 0
         do {
-            pageData = queryCCListHostWithoutBizByInRules(
-                listOf(Constants.FIELD_BK_HOST_ID, Constants.FIELD_BK_HOST_INNERIP, Constants.FIELD_BK_SVR_ID),
+            pageData = listHostsWithoutBiz(
+                listOf(
+                    Constants.FIELD_BK_HOST_ID,
+                    Constants.FIELD_BK_CLOUD_ID,
+                    Constants.FIELD_BK_HOST_INNERIP,
+                    Constants.FIELD_BK_SVR_ID,
+                    Constants.FIELD_BK_OS_TYPE
+                ),
                 serverIdSet,
                 Constants.FIELD_BK_SVR_ID,
                 start,
@@ -116,7 +122,7 @@ class TencentCCService {
         return hostList
     }
 
-    fun <T> queryCCListHostWithoutBizByInRules(
+    fun <T> listHostsWithoutBiz(
         fields: List<String>,
         inValueList: T,
         field: String,

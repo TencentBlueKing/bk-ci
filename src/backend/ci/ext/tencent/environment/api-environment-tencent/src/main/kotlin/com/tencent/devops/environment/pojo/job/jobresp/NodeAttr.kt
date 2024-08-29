@@ -29,7 +29,7 @@ package com.tencent.devops.environment.pojo.job.jobresp
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class CCUpdateInfo(
+data class NodeAttr(
     @get:Schema(title = "节点ID")
     val nodeId: Long?,
     @get:Schema(title = "云区域ID")

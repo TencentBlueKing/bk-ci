@@ -70,8 +70,6 @@ import com.tencent.devops.environment.pojo.job.NodeAgent
 import com.tencent.devops.environment.pojo.job.ReImportCmdbNodeInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCHost
-import com.tencent.devops.environment.pojo.job.ccres.CCPageData
-import com.tencent.devops.environment.pojo.job.ccres.CCResp
 import com.tencent.devops.environment.service.cc.TencentCCService
 import com.tencent.devops.environment.service.cmdb.EsbCmdbClient
 import com.tencent.devops.environment.service.cmdb.TencentCmdbService
@@ -169,7 +167,7 @@ class CmdbNodeService @Autowired constructor(
         }
         // 2. 不在 - 重新查询节点状态：在不在CC（得到host_id）-> nodeman中查是否已经安装 -> job中查agent状态+版本号
         val nodeCCInfoList = if (mutableCmdbServerIdList.isNotEmpty()) {
-            tencentCCService.queryCCListHostWithoutBizByInRules(
+            tencentCCService.listHostsWithoutBiz(
                 listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP, FIELD_BK_SVR_ID),
                 mutableCmdbServerIdList,
                 FIELD_BK_SVR_ID
@@ -694,12 +692,11 @@ class CmdbNodeService @Autowired constructor(
         // 通过节点svrId查询：节点是否在CC中
         val serverIdToCmdbNodeMap = toAddIpToCmdbNodeMap.values.associateBy { it.serverId }
         val svrIdList = toAddIpToCmdbNodeMap.map { it.value.serverId }
-        val (svrIdQueryCCRes, inCCSvrIdList, notInCCSvrIdList) = checkNodeInCCBySvrId(svrIdList)
+        val (ccHostList, inCCSvrIdList, notInCCSvrIdList) = checkNodeInCCBySvrId(svrIdList)
         // 1. 在CC中，通过svrId查出host_id、云区域id、操作系统类型
         var queryCCInfoList: List<CCHost> = listOf()
         if (inCCSvrIdList.isNotEmpty()) {
-            val ccData = svrIdQueryCCRes.data?.info
-            queryCCInfoList = ccData?.map {
+            queryCCInfoList = ccHostList.map {
                 it.osType = getOsTypeByCCCode(it.osType)
                 it
             } ?: listOf()
@@ -711,7 +708,7 @@ class CmdbNodeService @Autowired constructor(
         }
         // 2.2 通过ip查询：多ip节点是否有ip已经在CC中 (如果多ip节点已经有ip在CC中，则本次导入去掉这个ip不导入，调用侧设置状态为NOT_IN_CC)
         val toAddIpList = toAddIpToCmdbNodeMutableMap.keys
-        val ipQueryCCRes = tencentCCService.queryCCListHostWithoutBizByInRules(
+        val ipQueryCCRes = tencentCCService.listHostsWithoutBiz(
             listOf(FIELD_BK_HOST_ID, FIELD_BK_CLOUD_ID, FIELD_BK_HOST_INNERIP, FIELD_BK_SVR_ID, FIELD_BK_OS_TYPE),
             toAddIpList,
             FIELD_BK_HOST_INNERIP
@@ -730,9 +727,8 @@ class CmdbNodeService @Autowired constructor(
         val notInCCAddSvrIdList = toAddIpToCmdbNodeMutableMap.values.map { it.serverId }
         if (notInCCSvrIdList.isNotEmpty()) {
             val addToCCResp = tencentCCService.addHostToCiBiz(notInCCAddSvrIdList)
-            val (addToCCSvrIdQueryCCRes, _, _) = checkNodeInCCBySvrId(notInCCAddSvrIdList)
-            val addToCCData = addToCCSvrIdQueryCCRes.data?.info
-            val hostIdToCCInfoMap = addToCCData?.associateBy { it.bkHostId }
+            val (ccHostList, _, _) = checkNodeInCCBySvrId(notInCCAddSvrIdList)
+            val hostIdToCCInfoMap = ccHostList.associateBy { it.bkHostId }
             val ccHostIdList = addToCCResp.data?.bkHostIds
             addToCCInfoList = ccHostIdList?.mapIndexed { index, value ->
                 CCHost(
@@ -756,12 +752,11 @@ class CmdbNodeService @Autowired constructor(
         // 通过节点svrId查询：节点是否在CC中
         val serverIdToCmdbNodeMap = toAddServerIdToCmdbNodeMap.values.associateBy { it.serverId }
         val svrIdList = toAddServerIdToCmdbNodeMap.mapNotNull { it.value.serverId }
-        val (svrIdQueryCCRes, inCCSvrIdList, notInCCSvrIdList) = checkNodeInCCBySvrId(svrIdList)
+        val (ccHostList, inCCSvrIdList, notInCCSvrIdList) = checkNodeInCCBySvrId(svrIdList)
         // 1. 在CC中，通过svrId查出host_id、云区域id、操作系统类型
         var queryCCInfoList: List<CCHost> = listOf()
         if (inCCSvrIdList.isNotEmpty()) {
-            val ccData = svrIdQueryCCRes.data?.info
-            queryCCInfoList = ccData?.map {
+            queryCCInfoList = ccHostList.map {
                 it.osType = getOsTypeByCCCode(it.osType)
                 it
             } ?: listOf()
@@ -773,7 +768,7 @@ class CmdbNodeService @Autowired constructor(
         }
         // 2.2 通过ip查询：多ip节点是否有ip已经在CC中 (如果多ip节点已经有ip在CC中，则本次导入去掉这个ip不导入，调用侧设置状态为NOT_IN_CC)
         val toAddIpList = toAddServerIdToCmdbNodeMutableMap.values.mapNotNull { it.getFirstIp() }
-        val ipQueryCCRes = tencentCCService.queryCCListHostWithoutBizByInRules(
+        val ipQueryCCRes = tencentCCService.listHostsWithoutBiz(
             listOf(FIELD_BK_HOST_ID, FIELD_BK_CLOUD_ID, FIELD_BK_HOST_INNERIP, FIELD_BK_SVR_ID, FIELD_BK_OS_TYPE),
             toAddIpList,
             FIELD_BK_HOST_INNERIP
@@ -792,9 +787,8 @@ class CmdbNodeService @Autowired constructor(
         val notInCCAddSvrIdList = toAddServerIdToCmdbNodeMutableMap.values.map { it.serverId }
         if (notInCCSvrIdList.isNotEmpty()) {
             val addToCCResp = tencentCCService.addHostToCiBiz(notInCCAddSvrIdList)
-            val (addToCCSvrIdQueryCCRes, _, _) = checkNodeInCCBySvrId(notInCCAddSvrIdList)
-            val addToCCData = addToCCSvrIdQueryCCRes.data?.info
-            val hostIdToCCInfoMap = addToCCData?.associateBy { it.bkHostId }
+            val (ccHostList, _, _) = checkNodeInCCBySvrId(notInCCAddSvrIdList)
+            val hostIdToCCInfoMap = ccHostList.associateBy { it.bkHostId }
             val ccHostIdList = addToCCResp.data?.bkHostIds
             addToCCHostList = ccHostIdList?.mapIndexed { index, value ->
                 CCHost(
@@ -814,27 +808,22 @@ class CmdbNodeService @Autowired constructor(
         return queryCCInfoList + addToCCHostList
     }
 
-    fun checkNodeInCCBySvrId(svrIdList: List<Long>):
-        Triple<CCResp<CCPageData<CCHost>>, List<Long>, List<Long>> {
-        val svrIdQueryCCRes = tencentCCService.queryCCListHostWithoutBizByInRules(
-            listOf(FIELD_BK_HOST_ID, FIELD_BK_CLOUD_ID, FIELD_BK_HOST_INNERIP, FIELD_BK_SVR_ID, FIELD_BK_OS_TYPE),
-            svrIdList,
-            FIELD_BK_SVR_ID
-        )
-        val svrIdQueryCCList = svrIdQueryCCRes.data?.info ?: listOf() // 所有在cc中的节点记录
-        val svrIdToCCResMap = svrIdQueryCCList.associateBy { it.svrId } // cc中 svrId-节点记录 映射
-
-        val inCCSvrIdList = mutableListOf<Long>() // 在CC中的节点的SvrId
-        val notInCCSvrIdList = mutableListOf<Long>() // 不在CC中的节点的SvrId
+    fun checkNodeInCCBySvrId(svrIdList: List<Long>): Triple<List<CCHost>, List<Long>, List<Long>> {
+        val ccHostList = tencentCCService.listHostByServerId(svrIdList.toSet())
+        val svrIdToCCHostMap = ccHostList.associateBy { it.svrId }
+        val inCCSvrIdList = mutableListOf<Long>()
+        val notInCCSvrIdList = mutableListOf<Long>()
         svrIdList.map {
-            if (svrIdToCCResMap.containsKey(it)) inCCSvrIdList.add(it)
-            else notInCCSvrIdList.add(it)
+            if (svrIdToCCHostMap.containsKey(it)) {
+                inCCSvrIdList.add(it)
+            } else {
+                notInCCSvrIdList.add(it)
+            }
         }
-        logger.info(
-            "[checkNodeInCCBySvrId]inCCSvrIdList: ${inCCSvrIdList.joinToString()}, " +
-                "notInCCSvrIdList: ${notInCCSvrIdList.joinToString()}"
-        )
-        return Triple(svrIdQueryCCRes, inCCSvrIdList, notInCCSvrIdList)
+        if (notInCCSvrIdList.isNotEmpty()) {
+            logger.info("notInCCSvrIdList=${notInCCSvrIdList.joinToString()}")
+        }
+        return Triple(ccHostList, inCCSvrIdList, notInCCSvrIdList)
     }
 
     fun getOsTypeByCCCode(ccCode: String?): String? {

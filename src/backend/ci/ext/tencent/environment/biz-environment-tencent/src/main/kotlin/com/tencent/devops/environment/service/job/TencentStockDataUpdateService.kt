@@ -28,11 +28,9 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
-import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
-import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
+import com.tencent.devops.environment.pojo.job.jobresp.NodeAttr
 import com.tencent.devops.environment.service.CmdbNodeService
 import com.tencent.devops.environment.service.RedisLockService
 import com.tencent.devops.environment.service.cc.TencentCCService
@@ -54,7 +52,7 @@ class TencentStockDataUpdateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val cmdbNodeDao: CmdbNodeDao,
     private val tencentCmdbService: TencentCmdbService,
-    private val tencentQueryFromCCService: TencentCCService,
+    private val tencentCCService: TencentCCService,
     private val cmdbNodeService: CmdbNodeService,
     private val redisLockService: RedisLockService
 ) {
@@ -100,34 +98,74 @@ class TencentStockDataUpdateService @Autowired constructor(
     }
 
     private fun addNodeToCCByPage(page: Int) {
-        val cmdbNodesRecords = cmdbNodeDao.getCmdbNodesHostIdNullLimit(dslContext, page, DEFAULT_PAGE_SIZE)
-        val cmdbNodeServerIdSet = cmdbNodesRecords.map { it[T_NODE_SERVER_ID] as Long }.toSet()
-        val nodeServerIdToNodesRecords = cmdbNodesRecords.associateBy { it[T_NODE_SERVER_ID] as Long }
-        val serverIdToCmdbInfoMap = tencentCmdbService.queryServerByServerId(cmdbNodeServerIdSet)
-
-        if (serverIdToCmdbInfoMap.isNotEmpty()) {
-            // 所有"部署"节点 用svrId查询在不在CC中
-            val (_, _, notInCCSvrIdList) = cmdbNodeService.checkNodeInCCBySvrId(cmdbNodeServerIdSet.toList())
-            // 不在CC中 - 通过节点svrId 添加到CC中，查出host_id和云区域id，写入db对应记录
-            if (notInCCSvrIdList.isNotEmpty()) {
-                val addToCCResp = tencentQueryFromCCService.addHostToCiBiz(notInCCSvrIdList)
-                val ccHostIdList = addToCCResp.data?.bkHostIds
-                val (notInCCSvrIdQueryCCRes, _, _) = cmdbNodeService.checkNodeInCCBySvrId(notInCCSvrIdList)
-                val svrIdQueryCCList = notInCCSvrIdQueryCCRes.data?.info // 所有刚添加到cc中的节点 cc信息
-                val hostIdToCCInfo = svrIdQueryCCList?.associateBy { it.bkHostId }
-                val addToCCInfoList = ccHostIdList?.mapIndexed { index, value ->
-                    CCUpdateInfo(
-                        nodeId = nodeServerIdToNodesRecords[serverIdToCmdbInfoMap[notInCCSvrIdList[index]]?.serverId]
-                            ?.get(T_NODE_NODE_ID) as Long,
-                        bkCloudId = hostIdToCCInfo?.get(value)?.bkCloudId?.toLong(),
-                        bkHostId = value,
-                        osType = cmdbNodeService.getOsTypeByCCCode(hostIdToCCInfo?.get(value)?.osType)
-                    )
-                }
-                if (!addToCCInfoList.isNullOrEmpty()) {
-                    cmdbNodeDao.batchUpdateHostIdAndCloudAreaIdByNodeId(dslContext, addToCCInfoList)
-                }
+        val cmdbNodeList = cmdbNodeDao.getCmdbNodesHostIdNull(page, DEFAULT_PAGE_SIZE)
+        // 1. DB中hostId为空的serverId集合
+        val cmdbNodeServerIdSet = cmdbNodeList.mapNotNull { it.serverId }.toSet()
+        if (cmdbNodeServerIdSet.isEmpty()) {
+            return
+        }
+        val serverIdToCmdbNodeMap = cmdbNodeList.associateBy { it.serverId }
+        val serverIdToCmdbServerMap = tencentCmdbService.queryServerByServerId(cmdbNodeServerIdSet)
+        if (serverIdToCmdbServerMap.isEmpty()) {
+            logger.info("NoCmdbServer|cmdbNodeServerIdSet=$cmdbNodeServerIdSet")
+            return
+        }
+        // 2. 在公司CMDB中存在的serverId集合
+        val cmdbServerIdSet = mutableSetOf<Long>()
+        // 2.1 CC导入接口仅支持非互娱机器的导入，因此先筛选出非互娱机器
+        val iegCmdbServerIdSet = mutableSetOf<Long>()
+        val notIegCmdbServerIdSet = mutableSetOf<Long>()
+        val iegDeptId = 3
+        serverIdToCmdbServerMap.forEach { (serverId, cmdbServer) ->
+            cmdbServerIdSet.add(serverId)
+            if (cmdbServer.deptId == iegDeptId) {
+                iegCmdbServerIdSet.add(serverId)
+            } else {
+                notIegCmdbServerIdSet.add(serverId)
             }
+        }
+        val notInCmdbServerIdSet = cmdbNodeServerIdSet - cmdbServerIdSet
+        if (notInCmdbServerIdSet.isNotEmpty()) {
+            logger.info("IgnoreNotInCmdbServer|notInCmdbServerIdSet=$notInCmdbServerIdSet")
+        }
+        if (iegCmdbServerIdSet.isNotEmpty()) {
+            logger.info("IgnoreIegCmdbServer|iegCmdbServerIdSet=$iegCmdbServerIdSet")
+        }
+        // 3. 查询非互娱机器在不在CC中
+        val (_, inCCSvrIdList, notInCCSvrIdList) = cmdbNodeService.checkNodeInCCBySvrId(notIegCmdbServerIdSet.toList())
+        if (notInCCSvrIdList.isEmpty()) {
+            logger.info("AllCmdbServerInCC|inCCSvrIdList=$inCCSvrIdList")
+            return
+        }
+        // 4. 将不在CC中的非互娱机器通过serverId添加到CC中
+        val addToCCResp = tencentCCService.addHostToCiBiz(notInCCSvrIdList)
+        val addedCCHostIdList = addToCCResp.data?.bkHostIds
+        // 5. 查出导入CC机器的详细信息，更新DB中对应记录的cloudId和hostId
+        val (ccHostList, _, _) = cmdbNodeService.checkNodeInCCBySvrId(cmdbServerIdSet.toList())
+        val hostIdToCCHost = ccHostList.associateBy { it.bkHostId }
+        val needToUpdateNodeAttrList = mutableListOf<NodeAttr>()
+        addedCCHostIdList?.forEachIndexed { index, hostId ->
+            val serverId = notInCCSvrIdList[index]
+            val nodeId = serverIdToCmdbNodeMap[serverId]?.nodeId
+            val ccHost = hostIdToCCHost[hostId]
+            if (ccHost == null) {
+                logger.info("NoHostInCC|serverId=$serverId|nodeId=$nodeId|hostId=$hostId")
+                return@forEachIndexed
+            }
+            needToUpdateNodeAttrList.add(
+                NodeAttr(
+                    nodeId = nodeId,
+                    bkCloudId = ccHost.bkCloudId?.toLong(),
+                    bkHostId = hostId,
+                    osType = cmdbNodeService.getOsTypeByCCCode(ccHost.osType)
+                )
+            )
+        }
+        if (needToUpdateNodeAttrList.isNotEmpty()) {
+            val affectedNum = cmdbNodeDao.batchUpdateHostIdAndCloudAreaIdByNodeId(needToUpdateNodeAttrList)
+            logger.info("CmdbNodeCloudHostIdUpdated|affectedNum=$affectedNum")
+        } else {
+            logger.info("NoCmdbNodeNeedToUpdate")
         }
     }
 
