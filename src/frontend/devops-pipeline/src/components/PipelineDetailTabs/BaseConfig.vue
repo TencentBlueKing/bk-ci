@@ -79,7 +79,7 @@
             },
             baseInfoRows () {
                 const { basicInfo } = this
-                const { inheritedDialect, projectDialect, pipelineDialect } = basicInfo?.pipelineAsCodeSettings
+                const { inheritedDialect, projectDialect, pipelineDialect } = basicInfo?.pipelineAsCodeSettings ?? {}
                 const namingConvention = inheritedDialect ? this.namingStyle[projectDialect] : this.namingStyle[pipelineDialect]
                 return [
                     {
