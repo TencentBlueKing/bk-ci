@@ -500,6 +500,7 @@ class BuildMonitorControl @Autowired constructor(
                         taskId = buildInfo.firstTaskId,
                         status = BuildStatus.RUNNING,
                         actionType = ActionType.START,
+                        executeCount = buildInfo.executeCount,
                         buildNoType = triggerContainer.buildNo?.buildNoType
                     )
                 )
