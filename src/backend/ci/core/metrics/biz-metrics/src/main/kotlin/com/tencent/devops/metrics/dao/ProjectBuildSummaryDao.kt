@@ -34,6 +34,7 @@ import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
 import com.tencent.devops.model.metrics.tables.TProjectBuildSummaryDaily
 import com.tencent.devops.model.metrics.tables.TProjectUserDaily
+import com.tencent.devops.model.metrics.tables.TProjectUserOperateDaily
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
@@ -134,6 +135,27 @@ class ProjectBuildSummaryDao {
                 .set(USER_COUNT, USER_COUNT + 1)
                 .onDuplicateKeyUpdate()
                 .set(USER_COUNT, USER_COUNT + 1)
+                .execute()
+        }
+    }
+
+    fun saveUserOperateCount(
+        dslContext: DSLContext,
+        projectId: String,
+        userId: String,
+        operate: String,
+        theDate: LocalDate
+    ) {
+        with(TProjectUserOperateDaily.T_PROJECT_USER_OPERATE_DAILY) {
+            dslContext.insertInto(this)
+                .set(PROJECT_ID, projectId)
+                .set(USER_ID, userId)
+                .set(OPERATE, operate)
+                .set(THE_DATE, theDate)
+                .set(OPERATE_COUNT, OPERATE_COUNT + 1)
+                .set(CREATE_TIME, LocalDateTime.now())
+                .onDuplicateKeyUpdate()
+                .set(OPERATE_COUNT, OPERATE_COUNT + 1)
                 .execute()
         }
     }

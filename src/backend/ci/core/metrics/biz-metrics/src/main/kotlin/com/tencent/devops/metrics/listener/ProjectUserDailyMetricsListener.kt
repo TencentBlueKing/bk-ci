@@ -50,6 +50,7 @@ class ProjectUserDailyMetricsListener @Autowired constructor(
                 projectBuildSummaryService.saveProjectUser(
                     projectId = projectId,
                     userId = userId,
+                    operate = operate,
                     theDate = theDate
                 )
             }

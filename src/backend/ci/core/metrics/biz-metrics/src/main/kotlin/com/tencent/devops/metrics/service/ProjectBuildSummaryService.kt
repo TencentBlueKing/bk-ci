@@ -48,6 +48,7 @@ interface ProjectBuildSummaryService {
     fun saveProjectUser(
         projectId: String,
         userId: String,
+        operate: String,
         theDate: LocalDate
     )
 
