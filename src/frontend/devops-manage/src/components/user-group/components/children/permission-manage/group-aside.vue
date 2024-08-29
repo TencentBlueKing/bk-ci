@@ -37,7 +37,7 @@
       </div>
       <div class="line-split" v-if="!isNotProject" />
     </template>
-    <bk-loading :loading="fetchGroupLoading">
+    <bk-loading v-if="dataLoaded" :loading="fetchGroupLoading">
       <scroll-load-list
         class="group-list"
         ref="loadList"
@@ -245,7 +245,8 @@ export default {
       fetchGroupLoading: false,
       popoverOptions: {
         zIndex: 2000
-      }
+      },
+      dataLoaded: false
     };
   },
   computed: {
@@ -276,7 +277,9 @@ export default {
   async created() {
     window.addEventListener('message', this.handleMessage);
     if (this.showSelectProject) {
-      this.getProjectList()
+      await this.getProjectList()
+    } else {
+      this.dataLoaded = true
     }
   },
 
@@ -307,6 +310,17 @@ export default {
         .get(`${this.ajaxPrefix}/project/api/user/projects/?enabled=true`)
         .then((res) => {
           this.projectList = res.data;
+          const project = this.projectList.find(i => i.projectCode === this.projectCode);
+          if (project?.managePermission === false || !/rbac/.test(project?.routerTag)) {
+            this.curProjectCode = '';
+          };
+          this.dataLoaded = true
+          this.$router.push({
+            query: {
+              ...this.$route.query,
+              projectCode: this.curProjectCode
+            }
+          })
         });
     },
     refreshList() {
