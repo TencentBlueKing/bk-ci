@@ -579,7 +579,8 @@ class RbacPermissionResourceMemberService constructor(
     override fun autoRenewal(
         projectCode: String,
         resourceType: String,
-        resourceCode: String
+        resourceCode: String,
+        validExpiredDay: Int
     ) {
         // 1、获取分级管理员或者二级管理员ID
         val managerId = authResourceService.get(
@@ -600,7 +601,7 @@ class RbacPermissionResourceMemberService constructor(
         )
         val currentTime = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
         // 预期的自动过期天数
-        val expectAutoExpiredAt = currentTime + AUTO_VALID_EXPIRED_AT
+        val expectAutoExpiredAt = currentTime + TimeUnit.DAYS.toSeconds(validExpiredDay.toLong())
         val autoRenewalMembers = mutableSetOf<String>()
         resourceGroupInfoList.forEach group@{ resourceGroup ->
             val iamGroupId = resourceGroup.relationId.toInt()

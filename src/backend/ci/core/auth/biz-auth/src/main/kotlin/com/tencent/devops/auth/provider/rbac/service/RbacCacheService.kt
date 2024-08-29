@@ -178,11 +178,11 @@ class RbacCacheService constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val actionDTO = ActionDTO()
-            actionDTO.id = RbacAuthUtils.buildAction(
+            val action = RbacAuthUtils.buildAction(
                 authPermission = permission,
                 authResourceType = AuthResourceType.PROJECT
             )
-
+            actionDTO.id = action
             val resourceNode = V2ResourceNode.builder().system(iamConfiguration.systemId)
                 .type(AuthResourceType.PROJECT.value)
                 .id(projectCode)
@@ -203,7 +203,7 @@ class RbacCacheService constructor(
                 authUserDailyService.save(
                     projectId = projectCode,
                     userId = userId,
-                    operate = permission.value
+                    operate = action
                 )
             }
             return result
