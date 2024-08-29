@@ -138,12 +138,12 @@ import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriBuilder
 
 /**
  *
@@ -632,6 +632,7 @@ class PipelineBuildFacadeService(
         try {
             val (resource, debug) = getModelAndBuildLevel(projectId, pipelineId, version)
             val model = resource.model
+
             /**
              * 验证流水线参数构建启动参数
              */
@@ -1103,13 +1104,12 @@ class PipelineBuildFacadeService(
                 params = arrayOf(userId)
             )
         }
-        val executeCount = buildInfo.executeCount ?: 1
         if (approve) {
             pipelineRuntimeService.approveTriggerReview(userId = userId, buildInfo = buildInfo)
         } else {
             pipelineRuntimeService.disapproveTriggerReview(
                 userId = userId, buildId = buildId, pipelineId = pipelineId,
-                projectId = projectId, executeCount = executeCount
+                projectId = projectId, executeCount = buildInfo.executeCount
             )
         }
         return true
