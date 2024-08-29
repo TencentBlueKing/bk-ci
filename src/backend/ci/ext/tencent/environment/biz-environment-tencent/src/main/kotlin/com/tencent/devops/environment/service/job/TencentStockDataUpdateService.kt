@@ -104,7 +104,7 @@ class TencentStockDataUpdateService @Autowired constructor(
         if (cmdbNodeServerIdSet.isEmpty()) {
             return
         }
-        val serverIdToCmdbNodeMap = cmdbNodeList.associateBy { it.serverId }
+        val serverIdToCmdbNodeMap = cmdbNodeList.groupBy { it.serverId }
         val serverIdToCmdbServerMap = tencentCmdbService.queryServerByServerId(cmdbNodeServerIdSet)
         if (serverIdToCmdbServerMap.isEmpty()) {
             logger.info("NoCmdbServer|cmdbNodeServerIdSet=$cmdbNodeServerIdSet")
@@ -146,20 +146,22 @@ class TencentStockDataUpdateService @Autowired constructor(
         val needToUpdateNodeAttrList = mutableListOf<NodeAttr>()
         addedCCHostIdList?.forEachIndexed { index, hostId ->
             val serverId = notInCCSvrIdList[index]
-            val nodeId = serverIdToCmdbNodeMap[serverId]?.nodeId
+            val nodeList = serverIdToCmdbNodeMap[serverId]
             val ccHost = hostIdToCCHost[hostId]
             if (ccHost == null) {
-                logger.info("NoHostInCC|serverId=$serverId|nodeId=$nodeId|hostId=$hostId")
+                logger.info("NoHostInCC|serverId=$serverId|hostId=$hostId")
                 return@forEachIndexed
             }
-            needToUpdateNodeAttrList.add(
-                NodeAttr(
-                    nodeId = nodeId,
-                    bkCloudId = ccHost.bkCloudId?.toLong(),
-                    bkHostId = hostId,
-                    osType = cmdbNodeService.getOsTypeByCCCode(ccHost.osType)
+            nodeList?.forEach {
+                needToUpdateNodeAttrList.add(
+                    NodeAttr(
+                        nodeId = it.nodeId,
+                        bkCloudId = ccHost.bkCloudId?.toLong(),
+                        bkHostId = hostId,
+                        osType = cmdbNodeService.getOsTypeByCCCode(ccHost.osType)
+                    )
                 )
-            )
+            }
         }
         if (needToUpdateNodeAttrList.isNotEmpty()) {
             val affectedNum = cmdbNodeDao.batchUpdateHostIdAndCloudAreaIdByNodeId(needToUpdateNodeAttrList)
