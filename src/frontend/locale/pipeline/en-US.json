@@ -1571,7 +1571,9 @@
     "resetSuc": "Reset successful",
     "authTime": "Authorization Time",
     "expired": "Expired",
-    "expiredTips": "No execution permission, expired"
+    "expiredTips": "No execution permission, expired",
+    "resetFailed": "Failed to reset authorization",
+    "confirm": "Confirm"
   },
   "debugHint": "Debugging and execution do not share build numbers, but they share concurrency control. Debug records are only valid during the draft version debugging period and will be automatically cleared after the version is released.",
   "templateRollbackBackTips": "The current pipeline is in constraint mode (template instance). You need to jump to the template to roll back the version.",
