@@ -200,7 +200,7 @@ class BuildStartControl @Autowired constructor(
                 )
                 LOG.info("ENGINE|$buildId][$source|BUILD_START_DONE|status=${buildInfo?.status}")
                 null
-            } else if (tryToStartRunBuild(buildInfo, executeCount = executeCount)) {
+            } else if (tryToStartRunBuild(buildInfo)) {
                 buildInfo
             } else {
                 null
@@ -209,7 +209,7 @@ class BuildStartControl @Autowired constructor(
     }
 
     @Suppress("LongMethod", "NestedBlockDepth")
-    private fun PipelineBuildStartEvent.tryToStartRunBuild(buildInfo: BuildInfo, executeCount: Int): Boolean {
+    private fun PipelineBuildStartEvent.tryToStartRunBuild(buildInfo: BuildInfo): Boolean {
         LOG.info("ENGINE|$buildId|$source|BUILD_START|${buildInfo.status}")
         var canStart = true
         // 已经是启动状态的，直接返回
