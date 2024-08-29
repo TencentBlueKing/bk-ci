@@ -336,7 +336,8 @@ class ExperienceDownloadService @Autowired constructor(
                     ProjectUserDailyEvent(
                         projectId = experienceRecord.projectId,
                         userId = userId,
-                        theDate = LocalDate.now()
+                        theDate = LocalDate.now(),
+                        operate = EXPERIENCE_TASK_DOWNLOAD_OPERATE
                     )
                 )
             }
@@ -518,5 +519,6 @@ class ExperienceDownloadService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceDownloadService::class.java)
+        private const val EXPERIENCE_TASK_DOWNLOAD_OPERATE = "experience_task_download"
     }
 }
