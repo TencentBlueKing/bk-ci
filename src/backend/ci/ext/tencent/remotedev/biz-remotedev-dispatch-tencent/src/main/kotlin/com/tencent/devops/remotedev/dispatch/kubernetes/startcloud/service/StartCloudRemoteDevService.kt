@@ -69,7 +69,7 @@ class StartCloudRemoteDevService @Autowired constructor(
     private val workspaceRedisUtils: WorkspaceRedisUtils,
     private val startAndBcsCommonService: StartAndBcsCommonService
 ) : RemoteDevInterface {
-    //
+
     @Value("\${startCloud.appName}")
     val contentProviderName: String = "IEG_BKCI"
 
