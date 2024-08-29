@@ -449,7 +449,8 @@ class WorkspaceService @Autowired constructor(
         }
 
         val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
-        val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
+        val defaultZoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
+        val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUsers)
             .mapValues {
                 if ((it.value["USER_NAME"] as String).isNotBlank()) {
@@ -510,7 +511,13 @@ class WorkspaceService @Autowired constructor(
                     workspaceMountType = it.workspaceMountType,
                     workspaceSystemType = it.workspaceSystemType,
                     winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
-                    zoneConfig = detail?.hostIp?.let { ip -> zoneConfig[ip.replace(Regex("[\\d\\.]+"), "")] },
+                    zoneConfig = if (detail?.hostIp != null) {
+                        /*后续直接取windows表中的zoneId，不通过ip进行解析*/
+                        val zoneId = detail.hostIp!!.substringBefore(".")
+                        specZoneConfig[zoneId] ?: defaultZoneConfig[zoneId.removeSuffixNumb()]
+                    } else {
+                        null
+                    },
                     owner = owners[it.workspaceName],
                     viewers = viewers[it.workspaceName],
                     ownerCN = taiUserCN[owners[it.workspaceName]] ?: owners[it.workspaceName],
