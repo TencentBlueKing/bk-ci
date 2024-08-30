@@ -108,6 +108,9 @@ class CheckConditionalSkipContainerCmd constructor(
         val jobControlOption = containerControlOption.jobControlOption
         val conditions = jobControlOption.customVariables ?: emptyList()
 
+        // #10751 如果设置了job不可用，则直接跳过，无需判断后续的条件
+        if (!jobControlOption.enable) return true
+
         val message = StringBuilder()
         val needSkip = if (containerControlOption.inFinallyStage) {
             skipFinallyStageJob(jobControlOption, containerContext.event.previousStageStatus, message)

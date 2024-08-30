@@ -36,6 +36,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.TestBase
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import io.mockk.every
@@ -55,6 +56,7 @@ class ControlUtilsTest : TestBase() {
     fun setup() {
         val commonConfig: CommonConfig = mockk()
         val redisOperation: RedisOperation = mockk()
+        val buildVariableService: BuildVariableService = mockk()
         every {
             commonConfig.devopsDefaultLocaleLanguage
         } returns "zh_CN"
@@ -68,6 +70,12 @@ class ControlUtilsTest : TestBase() {
         every {
             SpringContextUtil.getBean(RedisOperation::class.java)
         } returns redisOperation
+        every {
+            SpringContextUtil.getBean(buildVariableService::class.java)
+        } returns buildVariableService
+        every {
+            buildVariableService.getVariable(any(), any(), any(), any())
+        } returns ""
     }
 
     @Test

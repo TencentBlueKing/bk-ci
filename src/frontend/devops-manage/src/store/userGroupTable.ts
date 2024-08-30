@@ -61,7 +61,7 @@ export default defineStore('userGroupTable', () => {
   const route = useRoute();
   const isLoading = ref(true);
 
-  const projectId = computed(() => route.params?.projectCode as string);
+  const projectId = computed(() => (route.params?.projectCode || route.query?.projectCode) as string) ;
   const paginations = ref({})
 
   const sourceList = ref<SourceType[]>([]);
