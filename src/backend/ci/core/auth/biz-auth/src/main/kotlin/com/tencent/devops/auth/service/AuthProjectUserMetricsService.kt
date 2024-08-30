@@ -129,11 +129,10 @@ class AuthProjectUserMetricsService @Autowired constructor(
             operate = operate
         )
         synchronized(projectId.intern()) {
-            projectUserOperateMetricsMap.computeIfAbsent(projectId)
-            {
+            projectUserOperateMetricsMap.computeIfAbsent(projectId) {
                 mutableMapOf(projectUserOperateMetricsData to AtomicInteger(0))
             }
-            projectUserOperateMetricsMap[projectId]?.get(projectUserOperateMetricsData)!!.incrementAndGet()
+            projectUserOperateMetricsMap[projectId]!![projectUserOperateMetricsData]!!.incrementAndGet()
         }
     }
 

@@ -116,7 +116,7 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
     }
 
     override fun saveProjectUserOperateMetrics(
-        projectUserOperateMetricsMap: MutableMap<String, MutableMap<ProjectUserOperateMetricsData, AtomicInteger>>
+        projectUserOperateMetricsMap: Map<String, Map<ProjectUserOperateMetricsData, AtomicInteger>>
     ) {
         projectUserOperateMetricsMap.forEach { (projectId, projectUserOperateMetricsData2OperateCount) ->
             val lock = RedisLock(redisOperation, projectUserOperateKey(projectId), 120)

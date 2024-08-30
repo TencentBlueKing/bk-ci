@@ -31,12 +31,11 @@ package com.tencent.devops.common.event.pojo.measure
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicInteger
 
 @Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT)
 data class ProjectUserOperateMetricsEvent(
     @get:Schema(title = "项目用户操作度量数据")
     /*Map<projectId,<projectUserOperateMetricsData,count>>*/
-    val projectUserOperateMetricsMap: MutableMap<String, MutableMap<ProjectUserOperateMetricsData, AtomicInteger>>
+    val projectUserOperateMetricsMap: Map<String, Map<ProjectUserOperateMetricsData, AtomicInteger>>
 ) : IMeasureEvent(projectId = "", pipelineId = "", buildId = "")

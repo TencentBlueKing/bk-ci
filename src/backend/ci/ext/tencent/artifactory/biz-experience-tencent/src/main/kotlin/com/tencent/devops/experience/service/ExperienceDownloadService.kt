@@ -41,6 +41,8 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
@@ -67,6 +69,7 @@ import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicInteger
 
 @Service
 class ExperienceDownloadService @Autowired constructor(
@@ -332,12 +335,26 @@ class ExperienceDownloadService @Autowired constructor(
                 recordId = experienceRecord.id
             )
             if (experiencePublicDao.countByRecordId(dslContext = dslContext, recordId = experienceRecord.id) == 0) {
+                val projectId = experienceRecord.projectId
+                val projectUserOperateMetricsMap = mapOf(
+                    projectId to mapOf(
+                        ProjectUserOperateMetricsData(
+                            projectId = projectId,
+                            userId = userId,
+                            operate = EXPERIENCE_TASK_DOWNLOAD_OPERATE,
+                            theDate = LocalDate.now()
+                        ) to AtomicInteger(1)
+                    )
+                )
                 measureEventDispatcher.dispatch(
                     ProjectUserDailyEvent(
-                        projectId = experienceRecord.projectId,
+                        projectId = projectId,
                         userId = userId,
                         theDate = LocalDate.now(),
                         operate = EXPERIENCE_TASK_DOWNLOAD_OPERATE
+                    ),
+                    ProjectUserOperateMetricsEvent(
+                        projectUserOperateMetricsMap = projectUserOperateMetricsMap
                     )
                 )
             }
