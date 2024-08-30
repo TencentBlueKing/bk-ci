@@ -131,6 +131,8 @@ const val BK_CI_MATERIAL_ID = "BK_CI_MATERIAL_ID" // 触发材料ID
 const val BK_CI_MATERIAL_NAME = "BK_CI_MATERIAL_NAME" // 触发材料名称
 const val BK_CI_MATERIAL_URL = "BK_CI_MATERIAL_URL" // 触发材料链接
 
+const val BK_CI_AUTHORIZER = "BK_CI_AUTHORIZER" // 流水线权限代持人
+
 /**
  * 流水线设置-最大排队数量-默认值
  */

@@ -56,6 +56,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.util.BuildMsgUtils
+import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
@@ -203,7 +204,11 @@ class PipelineBuildService(
                 pipeline = pipeline,
                 projectVO = projectVO,
                 channelCode = channelCode,
-                isMobile = isMobile
+                isMobile = isMobile,
+                pipelineAuthorizer = pipelineRepositoryService.getPipelineOauthUser(
+                    projectId = pipeline.projectId,
+                    pipelineId = pipeline.pipelineId
+                )
             )
 
             val context = StartBuildContext.init(
@@ -265,7 +270,8 @@ class PipelineBuildService(
         projectVO: ProjectVO?,
         channelCode: ChannelCode,
         isMobile: Boolean,
-        debug: Boolean? = false
+        debug: Boolean? = false,
+        pipelineAuthorizer: String? = null
     ) {
         val userName = when (startType) {
             StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value
@@ -378,6 +384,15 @@ class PipelineBuildService(
                 readOnly = true
             )
         }
+        // 流水线权限代持人
+        pipelineAuthorizer?.let {
+            pipelineParamMap[BK_CI_AUTHORIZER] = BuildParameters(
+                key = BK_CI_AUTHORIZER,
+                value = it,
+                readOnly = true
+            )
+        }
+
         // 链路
         val bizId = MDC.get(TraceTag.BIZID)
         if (!bizId.isNullOrBlank()) { // 保存链路信息

@@ -55,7 +55,8 @@ class SubPipelineCallElementBizPlugin @Autowired constructor(
         element: SubPipelineCallElement,
         contextMap: Map<String, String>,
         appearedCnt: Int,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        oauthUser: String?
     ): ElementCheckResult {
         return elementBizPluginServices.find {
             it.supportElement(element)
@@ -67,7 +68,8 @@ class SubPipelineCallElementBizPlugin @Autowired constructor(
             element = element,
             contextMap = contextMap,
             appearedCnt = appearedCnt,
-            isTemplate = isTemplate
+            isTemplate = isTemplate,
+            oauthUser = oauthUser
         ) ?: ElementCheckResult(true)
     }
 
