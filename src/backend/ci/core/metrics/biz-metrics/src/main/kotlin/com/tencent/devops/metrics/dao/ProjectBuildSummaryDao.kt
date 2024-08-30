@@ -29,6 +29,7 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
@@ -39,6 +40,7 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicInteger
 
 @Repository
 class ProjectBuildSummaryDao {
@@ -141,22 +143,22 @@ class ProjectBuildSummaryDao {
 
     fun saveUserOperateCount(
         dslContext: DSLContext,
-        projectId: String,
-        userId: String,
-        operate: String,
-        theDate: LocalDate
+        projectUserOperateMetricsData2OperateCount: Map<ProjectUserOperateMetricsData, AtomicInteger>
     ) {
         with(TProjectUserOperateDaily.T_PROJECT_USER_OPERATE_DAILY) {
-            dslContext.insertInto(this)
-                .set(PROJECT_ID, projectId)
-                .set(USER_ID, userId)
-                .set(OPERATE, operate)
-                .set(THE_DATE, theDate)
-                .set(OPERATE_COUNT, OPERATE_COUNT + 1)
-                .set(CREATE_TIME, LocalDateTime.now())
-                .onDuplicateKeyUpdate()
-                .set(OPERATE_COUNT, OPERATE_COUNT + 1)
-                .execute()
+            dslContext.batch(
+                projectUserOperateMetricsData2OperateCount.map { (projectUserOperateMetricsData, operateCount) ->
+                    dslContext.insertInto(this)
+                        .set(PROJECT_ID, projectUserOperateMetricsData.projectId)
+                        .set(USER_ID, projectUserOperateMetricsData.userId)
+                        .set(OPERATE, projectUserOperateMetricsData.operate)
+                        .set(THE_DATE, projectUserOperateMetricsData.theDate)
+                        .set(OPERATE_COUNT, operateCount.get())
+                        .set(CREATE_TIME, LocalDateTime.now())
+                        .onDuplicateKeyUpdate()
+                        .set(OPERATE_COUNT, OPERATE_COUNT + operateCount.get())
+                }
+            ).execute()
         }
     }
 }

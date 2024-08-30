@@ -28,6 +28,7 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.ProjectBuildSummaryDao
@@ -41,6 +42,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDate
+import java.util.concurrent.atomic.AtomicInteger
 
 @Service
 class ProjectBuildSummaryServiceImpl @Autowired constructor(
@@ -53,6 +55,7 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectBuildSummaryServiceImpl::class.java)
         private fun projectBuildKey(key: String) = "ProjectBuild:$key"
+        private fun projectUserOperateKey(key: String) = "projectUserOperateKey:$key"
     }
 
     override fun saveProjectBuildCount(
@@ -108,13 +111,23 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
                         theDate = theDate
                     )
                 }
+            }
+        }
+    }
+
+    override fun saveProjectUserOperateMetrics(
+        projectUserOperateMetricsMap: MutableMap<String, MutableMap<ProjectUserOperateMetricsData, AtomicInteger>>
+    ) {
+        projectUserOperateMetricsMap.forEach { (projectId, projectUserOperateMetricsData2OperateCount) ->
+            val lock = RedisLock(redisOperation, projectUserOperateKey(projectId), 120)
+            lock.lock()
+            try {
                 projectBuildSummaryDao.saveUserOperateCount(
                     dslContext = dslContext,
-                    projectId = projectId,
-                    userId = userId,
-                    operate = operate,
-                    theDate = theDate
+                    projectUserOperateMetricsData2OperateCount = projectUserOperateMetricsData2OperateCount
                 )
+            } finally {
+                lock.unlock()
             }
         }
     }
