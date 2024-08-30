@@ -23,7 +23,6 @@ class ServiceRemoteDevResourceImplTest {
         redisOperation = mockk(),
         workspaceLoginService = mockk(),
         startWorkspaceService = mockk(),
-        rabbitTemplate = mockk(),
         expertSupportService = mockk(),
         devcloudService = mockk(),
         deliverControl = mockk(),
@@ -35,7 +34,8 @@ class ServiceRemoteDevResourceImplTest {
         restartWorkspaceHandler = mockk(),
         makeWorkspaceImageHandler = mockk(),
         bkConfig = bkConfig,
-        tGitService = mockk()
+        tGitService = mockk(),
+        streamBridge = mockk()
     )
 
     @Test
