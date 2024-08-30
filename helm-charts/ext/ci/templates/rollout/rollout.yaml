@@ -9,13 +9,13 @@ spec:
   objectRef:
     workloadRef:
       apiVersion: apps/v1
-      kind: Deployment
+      kind: {{ .Values.rollout.kind }}
       name: "{{ .Values.rollout.service }}-bk-ci-{{ .Values.rollout.service }}"
   steps:
   - pause: {}
-    replicas: 10%
+    replicas: 1
   {{- if .Values.rollout.mirror }}
   - pause: {}
-    replicas: 90%
+    replicas: 100%
   {{- end }}
 {{- end }}

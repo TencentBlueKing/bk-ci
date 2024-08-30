@@ -1,6 +1,8 @@
 # BCS Rollout配置
 rollout:
   enable: false
+  kind: Deployment
+  mirror: false
 
 # RBAC配置
 rbac:
