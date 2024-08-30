@@ -12,14 +12,10 @@ spec:
       kind: Deployment
       name: "{{ .Values.rollout.service }}-bk-ci-{{ .Values.rollout.service }}"
   steps:
-  - hook:
-        templateName: "bk-devops-rollout-hook"
-    pause: 
-        duration: 10s
+  - pause: {}
     replicas: 10%
-  - hook: 
-        templateName: "bk-devops-rollout-hook"
-    pause: 
-        duration: 10s
+  {{- if .Values.rollout.mirror }}
+  - pause: {}
     replicas: 90%
+  {{- end }}
 {{- end }}

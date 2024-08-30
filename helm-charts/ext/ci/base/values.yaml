@@ -1,3 +1,7 @@
+# BCS Rollout配置
+rollout:
+  enable: false
+
 # RBAC配置
 rbac:
   serviceAccount: bkci
