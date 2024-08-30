@@ -77,16 +77,6 @@
                         constrainedExample: this.$t('constraintQuoteModeExample')
                     },
                     {
-                        difference: this.$t('environmentVariable'),
-                        classic: this.$t('traditionalEnvironmentVariableMode'),
-                        constrainedMode: this.$t('constraintEnvironmentVariableMode')
-                    },
-                    {
-                        difference: this.$t('readOnlyVariable'),
-                        classic: this.$t('traditionalReadOnlyMode'),
-                        constrainedMode: this.$t('constraintReadOnlyMode')
-                    },
-                    {
                         difference: this.$t('variableValueTooLong'),
                         classic: this.$t('traditionalValueTooLongMode'),
                         constrainedMode: this.$t('constraintReadOnlyMode')

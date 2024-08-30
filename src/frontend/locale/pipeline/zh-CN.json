@@ -1596,14 +1596,6 @@
   "constraintQuoteMode": "仅支持上下文方式引用",
   "constraintQuoteModeExample": "如：${{ci.pipeline_id}}、${{variables.a}}、${{steps.get_code.outputs.a}}",
 
-  "environmentVariable": "环境变量",
-  "traditionalEnvironmentVariableMode": "流水线变量、插件输出变量会自动设置为环境变量",
-  "constraintEnvironmentVariableMode": "需要时通过在 Job/Step 上按需指定，降低环境污染风险",
-
-  "readOnlyVariable": "重置内置只读变量",
-  "traditionalReadOnlyMode": "不生效，仅警告未报错",
-  "constraintReadOnlyMode": "将报错，运行失败",
-
   "variableValueTooLong": "变量值超长",
   "traditionalValueTooLongMode": "仅警告未报错",
 

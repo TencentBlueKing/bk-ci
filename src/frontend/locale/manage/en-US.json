@@ -157,14 +157,6 @@
     "仅支持上下文方式引用": "Only Contextual Reference Supported",
     "如：${{ci.pipeline_id}}、${{variables.a}}、${{steps.get_code.outputs.a}}": "e.g., {'${{ci.pipeline_id}}'}、{'${{variables.a}}'}、{'${{steps.get_code.outputs.a}}'}",
 
-    "环境变量": "Environment Variable",
-    "流水线变量、插件输出变量会自动设置为环境变量": "Pipeline Variables and Plugin Output Variables are Automatically Set as Environment Variables",
-    "需要时通过在 Job/Step 上按需指定，降低环境污染风险": "Specify as Needed in Job/Step to Reduce Environment Pollution Risk",
-
-    "重置内置只读变量": "Reset Built-in Read-Only Variables",
-    "不生效，仅警告未报错": "Not Effective, Only Warning without Error",
-    "将报错，运行失败": "Will Cause Error and Run Failure",
-
     "变量值超长": "Variable Value Too Long",
     "仅警告未报错": "Only Warning without Error",
 

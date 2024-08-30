@@ -1595,14 +1595,6 @@
   "constraintQuoteMode": "Only Contextual Reference Supported",
   "constraintQuoteModeExample": "e.g., ${{ci.pipeline_id}}, ${{variables.a}}, ${{steps.get_code.outputs.a}}",
 
-  "environmentVariable": "Environment Variable",
-  "traditionalEnvironmentVariableMode": "Pipeline Variables and Plugin Output Variables are Automatically Set as Environment Variables",
-  "constraintEnvironmentVariableMode": "Specify as Needed in Job/Step to Reduce Environment Pollution Risk",
-
-  "readOnlyVariable": "Reset Built-in Read-Only Variables",
-  "traditionalReadOnlyMode": "Not Effective, Only Warning without Error",
-  "constraintReadOnlyMode": "Will Cause Error and Run Failure",
-
   "variableValueTooLong": "Variable Value Too Long",
   "traditionalValueTooLongMode": "Only Warning without Error",
 

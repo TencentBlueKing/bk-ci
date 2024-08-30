@@ -60,16 +60,6 @@ const namingConventionData = [
         constrainedExample: t('如：${{ci.pipeline_id}}、${{variables.a}}、${{steps.get_code.outputs.a}}'),
     },
     {
-        difference: t('环境变量'),
-        classic: t('流水线变量、插件输出变量会自动设置为环境变量'),
-        constrainedMode: t('需要时通过在 Job/Step 上按需指定，降低环境污染风险'),
-    },
-    {
-        difference: t('重置内置只读变量'),
-        classic: t('不生效，仅警告未报错'),
-        constrainedMode: t('将报错，运行失败'),
-    },
-    {
         difference: t('变量值超长'),
         classic: t('仅警告未报错'),
         constrainedMode: t('将报错，运行失败'),
