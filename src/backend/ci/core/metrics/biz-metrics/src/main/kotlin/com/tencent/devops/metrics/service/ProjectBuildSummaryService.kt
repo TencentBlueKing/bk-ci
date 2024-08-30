@@ -58,7 +58,7 @@ interface ProjectBuildSummaryService {
      * 保存用户操作度量数据
      */
     fun saveProjectUserOperateMetrics(
-        projectUserOperateMetricsMap: MutableMap<String, MutableMap<ProjectUserOperateMetricsData, AtomicInteger>>
+        projectUserOperateMetricsMap: Map<String, Map<ProjectUserOperateMetricsData, AtomicInteger>>
     )
 
     /**

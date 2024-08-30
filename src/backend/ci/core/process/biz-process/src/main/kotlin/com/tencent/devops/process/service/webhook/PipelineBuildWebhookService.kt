@@ -33,6 +33,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -78,6 +80,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDate
+import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
 
 @Suppress("ALL")
@@ -578,15 +581,13 @@ class PipelineBuildWebhookService @Autowired constructor(
                     buildId = buildId.id,
                     buildParameters = pipelineParamMap.values.toList()
                 )
+
                 // 上报项目用户度量
                 if (startParams[PIPELINE_START_WEBHOOK_USER_ID] != null) {
-                    measureEventDispatcher.dispatch(
-                        ProjectUserDailyEvent(
-                            projectId = projectId,
-                            userId = startParams[PIPELINE_START_WEBHOOK_USER_ID]!!.toString(),
-                            theDate = LocalDate.now(),
-                            operate = WEBHOOK_COMMIT_TRIGGER
-                        )
+                    uploadProjectUserMetrics(
+                        userId = startParams[PIPELINE_START_WEBHOOK_USER_ID]!!.toString(),
+                        projectId = projectId,
+                        theDate = LocalDate.now()
                     )
                 }
             }
@@ -601,5 +602,33 @@ class PipelineBuildWebhookService @Autowired constructor(
 
     private fun checkPermission(userId: String, projectId: String, pipelineId: String) {
         pipelineBuildPermissionService.checkPermission(userId = userId, projectId = projectId, pipelineId = pipelineId)
+    }
+
+    private fun uploadProjectUserMetrics(
+        userId: String,
+        projectId: String,
+        theDate: LocalDate
+    ) {
+        val projectUserOperateMetricsMap = mapOf(
+            projectId to mapOf(
+                ProjectUserOperateMetricsData(
+                    projectId = projectId,
+                    userId = userId,
+                    operate = WEBHOOK_COMMIT_TRIGGER,
+                    theDate = theDate
+                ) to AtomicInteger(1)
+            )
+        )
+        measureEventDispatcher.dispatch(
+            ProjectUserDailyEvent(
+                projectId = projectId,
+                userId = userId,
+                theDate = theDate,
+                operate = WEBHOOK_COMMIT_TRIGGER
+            ),
+            ProjectUserOperateMetricsEvent(
+                projectUserOperateMetricsMap = projectUserOperateMetricsMap
+            )
+        )
     }
 }
