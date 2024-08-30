@@ -25,18 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.service.code.filter
+package com.tencent.devops.process.pojo
 
-class SkipCiFilter(
-    private val pipelineId: String,
-    private val triggerOnMessage: String?
-) : WebhookFilter {
+import io.swagger.v3.oas.annotations.media.Schema
 
-    companion object {
-        private const val SKIP_CI = "[skip ci]"
-    }
-
-    override fun doFilter(response: WebhookFilterResponse): Boolean {
-        return triggerOnMessage?.contains(SKIP_CI) != true
-    }
-}
+@Schema(title = "流水线模型-job执行结果")
+data class BuildJobResult(
+    @get:Schema(title = "错误原因", required = false)
+    val message: String? = null
+)

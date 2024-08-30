@@ -29,7 +29,6 @@ package com.tencent.devops.worker.common.heartbeat
 
 import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -98,25 +97,15 @@ object Heartbeat {
         running = true
     }
 
-    private fun handleRemoteServiceException(e: RemoteServiceException) {
+    private fun handleRemoteServiceException(ignored: RemoteServiceException) {
 
-        if (e.httpStatus != HTTP_500 && e.responseContent.isNullOrBlank()) {
+        if (ignored.httpStatus != HTTP_500 && ignored.responseContent.isNullOrBlank()) {
             return
         }
-
-        val responseContent = e.responseContent
-        if (responseContent!!.startsWith("{") && responseContent.endsWith("}")) {
-            try {
-                val responseMap = JsonUtil.toMap(responseContent)
-                val errorCode = responseMap["errorCode"]
-                // 流水线构建结束则正常结束进程，不再重试
-                if (errorCode == 2101182) {
-                    logger.error("build end, worker exit")
-                    exitProcess(0)
-                }
-            } catch (t: Throwable) {
-                logger.warn("responseContent covert map fail", e)
-            }
+        // 流水线构建结束则正常结束进程，不再重试
+        if (ignored.errorCode == 2101182) {
+            logger.error("build end, worker exit")
+            exitProcess(0)
         }
     }
 

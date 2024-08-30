@@ -72,4 +72,9 @@ class OpAuthResourceGroupSyncResourceImpl @Autowired constructor(
         permissionResourceGroupSyncService.fixResourceGroupMember(projectId)
         return Result(true)
     }
+
+    override fun syncIamGroupMembersOfApply(): Result<Boolean> {
+        permissionResourceGroupSyncService.syncIamGroupMembersOfApply()
+        return Result(true)
+    }
 }

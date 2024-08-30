@@ -75,6 +75,11 @@ interface PermissionResourceGroupSyncService {
     fun syncIamGroupMember(projectCode: String, iamGroupId: Int)
 
     /**
+     * 同步iam组成员--用户申请加入
+     */
+    fun syncIamGroupMembersOfApply()
+
+    /**
      * 防止出现用户组表的数据已经删了，但是用户组成员表的数据未删除，导致出现不同步，调用iam接口报错问题。
      */
     fun fixResourceGroupMember(projectCode: String)

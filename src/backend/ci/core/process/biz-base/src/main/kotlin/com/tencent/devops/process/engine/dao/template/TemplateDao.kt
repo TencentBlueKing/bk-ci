@@ -525,7 +525,8 @@ class TemplateDao {
             tTemplate.UPDATE_TIME,
             tTemplate.SRC_TEMPLATE_ID,
             tTemplate.CATEGORY,
-            tTemplate.PROJECT_ID
+            tTemplate.PROJECT_ID,
+            tTemplate.DESC
         )
         if (queryModelFlag) {
             // 查询模板model内容

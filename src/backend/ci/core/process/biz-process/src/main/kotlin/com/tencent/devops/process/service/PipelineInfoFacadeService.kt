@@ -714,7 +714,11 @@ class PipelineInfoFacadeService @Autowired constructor(
                         userId = userId,
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        version = branchVersion.version,
+                        targetVersion = branchVersion.copy(
+                            model = getFixedModel(
+                                branchVersion.model, projectId, pipelineId, userId, pipelineInfo
+                            )
+                        ),
                         ignoreBase = true,
                         transactionContext = transactionContext
                     )
