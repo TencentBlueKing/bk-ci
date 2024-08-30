@@ -406,11 +406,11 @@ class WorkspaceJoinDao {
         return if (WindowsResourceZoneConfigType.DEFAULT in areas) {
             /*如果DEFAULT在查询中，则利用反查*/
             val zoneIds = stMap.filter { WindowsResourceZoneConfigType.parse(it.key) !in areas }.flatMap { it.value }
-            TWorkspaceWindows.T_WORKSPACE_WINDOWS.ZONE_ID.likeRegex(
+            TWorkspaceWindows.T_WORKSPACE_WINDOWS.ZONE_ID.notLikeRegex(
                 zoneIds.joinToString(
-                    separator = "|",
-                    prefix = "^(?!(",
-                    postfix = ")\$).+"
+                    separator = "$|^",
+                    prefix = "^",
+                    postfix = "$"
                 )
             )
         } else {
