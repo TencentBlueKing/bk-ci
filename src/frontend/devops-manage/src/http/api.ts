@@ -232,7 +232,9 @@ export default {
     const query = new URLSearchParams({
       ...params,
     }).toString();
-    return http.get(`${IAM_PERFIX}/member/${projectId}/listProjectMembers?${query}`);
+    return http.get(`${IAM_PERFIX}/member/${projectId}/listProjectMembers?${query}`, {
+      globalError: false
+    });
   },
   /**
    * 获取项目成员有权限的用户组数量

@@ -161,7 +161,13 @@ interface BuildSubPipelineResource {
         includeConst: Boolean? = true,
         @Parameter(description = "是否包含非入参", required = false, example = "")
         @QueryParam("includeNotRequired")
-        includeNotRequired: Boolean? = true
+        includeNotRequired: Boolean? = true,
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        parentProjectId: String,
+        @Parameter(description = "当前流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        parentPipelineId: String
     ): Result<List<SubPipelineStartUpInfo>>
 
     @Operation(summary = "根据流水线名称获取流水线ID")

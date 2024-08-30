@@ -11,3 +11,8 @@ data class UpdateTgitAclUserData(
     val projectId: String,
     val tgitId: Long?
 )
+
+data class DeleteTGitLinkData(
+    val projectId: String,
+    val tGitIds: Set<Long>
+)

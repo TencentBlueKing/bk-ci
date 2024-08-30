@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -36,8 +37,6 @@ import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
-import com.tencent.devops.common.websocket.enum.NotityLevel
-import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
@@ -48,6 +47,7 @@ import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.dao.ProjectNotifyDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.dao.WorkspaceNotifyHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -60,7 +60,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
-import com.tencent.devops.remotedev.pojo.start.StartMessageDataType
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
@@ -89,7 +89,9 @@ class NotifyControl @Autowired constructor(
     private val sharedDao: WorkspaceSharedDao,
     private val startWorkspaceService: StartWorkspaceService,
     private val workspaceSharedDao: WorkspaceSharedDao,
-    private val workspaceJoinDao: WorkspaceJoinDao
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val permissionService: PermissionService,
+    private val workspaceNotifyHistoryDao: WorkspaceNotifyHistoryDao
 ) {
 
     @Value("\${notice.wework:#{null}}")
@@ -117,10 +119,24 @@ class NotifyControl @Autowired constructor(
         const val WORKSPACE_BATCH_FORCE_DELETE = "WORKSPACE_BATCH_FORCE_DELETE"
     }
 
+    fun resendByUserId(
+        userId: String,
+        type: RemoteDevNotifyType
+    ) {
+        val failHistory = workspaceNotifyHistoryDao.fetchFailMessage(dslContext, userId, type)
+        failHistory.forEach { history ->
+            notify4User(
+                userIds = setOf(userId),
+                notifyType = mutableSetOf(type),
+                bodyParams = JsonUtil.to(history.bodyParams)
+            )
+            workspaceNotifyHistoryDao.updateStatus(dslContext, history.id, RemoteDevNotifyType.Status.FAIL_RESEND)
+        }
+    }
+
     fun notifyWorkspaceInfo(
         userId: String,
-        notifyData: WorkspaceNotifyData,
-        enableSendDesktop: Boolean
+        notifyData: WorkspaceNotifyData
     ) {
         val workspace = workspaceJoinDao.fetchWindowsWorkspaces(
             dslContext = dslContext,
@@ -133,28 +149,7 @@ class NotifyControl @Autowired constructor(
 
         val messageContent = "${notifyData.title}: ${notifyData.desc}"
 
-        // 分发到WS
-        workspace.forEach { ws ->
-            dispatchWebsocketPushEvent(
-                userId = ADMIN_NAME,
-                workspaceName = ws.workspaceName,
-                workspaceHost = null,
-                errorMsg = messageContent,
-                type = WebSocketActionType.WORKSPACE_NOTIFY,
-                status = true,
-                action = WorkspaceAction.NOTIFY,
-                systemType = WorkspaceSystemType.WINDOWS_GPU,
-                workspaceMountType = null,
-                ownerType = null,
-                projectId = ws.projectId
-            )
-        }
         notifyDao.add(dslContext, userId, notifyData)
-
-        // 发送消息给云桌面
-        if (!enableSendDesktop) {
-            return
-        }
 
         val userList = if (!notifyData.owner.isNullOrEmpty()) {
             notifyData.owner!!.toSet()
@@ -165,29 +160,43 @@ class NotifyControl @Autowired constructor(
             ).values.toSet()
         }
 
-        val now = LocalDateTime.now()
-        startWorkspaceService.sendMessage(
-            operator = userId,
-            userIdList = userList,
-            dataType = StartMessageDataType.MARQUEE,
-            data = Base64.getEncoder().encodeToString(messageContent.toByteArray(StandardCharsets.UTF_8)),
-            messageStartTime = now.timestampmilli(),
-            messageEndTime = now.plusDays(1).with(LocalTime.MIDNIGHT).timestampmilli()
+        // 给拥有者的客户端发送消息
+        workspace.forEach { ws ->
+            notify4User(
+                userIds = permissionService.getWorkspaceOwner(ws.workspaceName).toSet(),
+                notifyType = setOf(RemoteDevNotifyType.CLIENT_PUSH),
+                bodyParams = mutableMapOf(
+                    "operator" to userId,
+                    "workspaceName" to ws.workspaceName,
+                    "clientMsg" to messageContent,
+                    "projectId" to ws.projectId
+                )
+            )
+        }
+
+        // 给所有云桌面的owner发送云桌面-跑马灯消息
+        notify4User(
+            userIds = userList,
+            notifyType = mutableSetOf(RemoteDevNotifyType.DESKTOP_MARQUEE),
+            bodyParams = mutableMapOf("operator" to userId, "messageContent" to messageContent)
         )
 
-        // 发送邮件
+        // 给所有云桌面的owner发送邮件
         notify4User(
-            userIds = userList.toMutableSet(),
-            notifyTemplateCode = "REMOTEDEV_NOTIFY",
+            userIds = userList,
             notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-            bodyParams = mutableMapOf("title" to notifyData.title, "body" to (notifyData.desc ?: ""))
+            bodyParams = mutableMapOf(
+                "operator" to userId,
+                "title" to notifyData.title,
+                "body" to (notifyData.desc ?: ""),
+                "notifyTemplateCode" to "REMOTEDEV_NOTIFY"
+            )
         )
     }
 
     fun notify4RemoteDevManager(
         projectId: String,
         cc: MutableSet<String>,
-        notifyTemplateCode: String,
         notifyType: MutableSet<RemoteDevNotifyType>,
         bodyParams: MutableMap<String, String>
     ) {
@@ -200,7 +209,6 @@ class NotifyControl @Autowired constructor(
         notify4User(
             userIds = projectInfo.properties?.remotedevManager?.split(";")?.toMutableSet()
                 ?: mutableSetOf(),
-            notifyTemplateCode = notifyTemplateCode,
             notifyType = notifyType,
             bodyParams = bodyParams,
             cc = cc
@@ -212,7 +220,6 @@ class NotifyControl @Autowired constructor(
         workspaceName: String,
         cc: MutableSet<String>,
         projectId: String,
-        notifyTemplateCode: String,
         notifyType: MutableSet<RemoteDevNotifyType>,
         bodyParams: MutableMap<String, String>
     ) {
@@ -226,7 +233,6 @@ class NotifyControl @Autowired constructor(
             userIds = userIds,
             cc = cc,
             projectId = projectId,
-            notifyTemplateCode = notifyTemplateCode,
             notifyType = notifyType,
             bodyParams = bodyParams
         )
@@ -236,7 +242,6 @@ class NotifyControl @Autowired constructor(
         userIds: MutableSet<String>,
         cc: MutableSet<String>,
         projectId: String?,
-        notifyTemplateCode: String,
         notifyType: MutableSet<RemoteDevNotifyType>,
         bodyParams: MutableMap<String, String>
     ) {
@@ -253,7 +258,6 @@ class NotifyControl @Autowired constructor(
         }
         notify4User(
             userIds = userIds,
-            notifyTemplateCode = notifyTemplateCode,
             notifyType = notifyType,
             bodyParams = bodyParams,
             cc = cc
@@ -261,12 +265,268 @@ class NotifyControl @Autowired constructor(
     }
 
     fun notify4User(
-        userIds: MutableSet<String>,
-        notifyTemplateCode: String,
-        notifyType: MutableSet<RemoteDevNotifyType>,
+        userIds: Set<String>,
+        notifyType: Set<RemoteDevNotifyType>,
         bodyParams: MutableMap<String, String>,
         cc: MutableSet<String> = mutableSetOf()
     ) {
+        val taiUserNames = loadTaiUser(userIds, bodyParams)
+        /* 发外部邮件，需要模板配置email_type=0*/
+        if (notifyType.contains(RemoteDevNotifyType.EMAIL)) {
+            kotlin.runCatching {
+                notifyEmail(
+                    taiUserNames = taiUserNames,
+                    userIds = userIds,
+                    bodyParams = bodyParams,
+                    cc = cc
+                )
+            }.onFailure {
+                logger.warn("notifyEmail fail", it)
+            }
+        }
+
+        if (notifyType.contains(RemoteDevNotifyType.CLIENT_PUSH)) {
+            kotlin.runCatching {
+                notifyClient(
+                    bodyParams = bodyParams,
+                    userIds = userIds
+                )
+            }.onFailure {
+                logger.warn("notifyClient fail", it)
+            }
+        }
+
+        if (notifyType.contains(RemoteDevNotifyType.RTX)) {
+            kotlin.runCatching {
+                notifyRtx(
+                    userIds = userIds,
+                    bodyParams = bodyParams,
+                    cc = cc
+                )
+            }.onFailure {
+                logger.warn("notifyRtx fail", it)
+            }
+        }
+
+        if (notifyType.contains(RemoteDevNotifyType.DESKTOP_MARQUEE)) {
+            kotlin.runCatching {
+                notifyDesktop(
+                    userIds = userIds,
+                    dataType = RemoteDevNotifyType.DESKTOP_MARQUEE,
+                    bodyParams = bodyParams
+                )
+            }.onFailure {
+                logger.warn("notifyDesktop fail", it)
+            }
+        }
+
+        if (notifyType.contains(RemoteDevNotifyType.DESKTOP_COMPLEX)) {
+            kotlin.runCatching {
+                notifyDesktop(
+                    userIds = userIds,
+                    dataType = RemoteDevNotifyType.DESKTOP_COMPLEX,
+                    bodyParams = bodyParams
+                )
+            }.onFailure {
+                logger.warn("notifyDesktop fail", it)
+            }
+        }
+    }
+
+    private fun notifyDesktop(
+        userIds: Set<String>,
+        dataType: RemoteDevNotifyType,
+        bodyParams: MutableMap<String, String>
+    ) {
+        logger.info("notify4User DESKTOP|$dataType|$userIds|$bodyParams")
+        kotlin.runCatching {
+            startWorkspaceService.sendMessage(
+                operator = checkNotNull(bodyParams["operator"]),
+                userIdList = userIds,
+                dataType = dataType,
+                messageContent = Base64.getEncoder().encodeToString(
+                    checkNotNull(bodyParams["messageContent"]).toByteArray(StandardCharsets.UTF_8)
+                ),
+                messageStartTime = bodyParams["messageStartTime"]?.toLongOrNull() ?: LocalDateTime.now()
+                    .timestampmilli(),
+                messageEndTime = bodyParams["messageEndTime"]?.toLongOrNull() ?: LocalDateTime.now().plusDays(1)
+                    .with(LocalTime.MIDNIGHT).timestampmilli()
+            )
+        }.onFailure {
+            workspaceNotifyHistoryDao.add(
+                dslContext = dslContext,
+                operator = bodyParams["operator"] ?: "null",
+                userIds = userIds.joinToString(),
+                type = dataType,
+                status = RemoteDevNotifyType.Status.FAIL,
+                bodyParams = JsonUtil.toJson(bodyParams)
+            )
+        }.onSuccess {
+            workspaceNotifyHistoryDao.add(
+                dslContext = dslContext,
+                operator = bodyParams["operator"] ?: "null",
+                userIds = userIds.joinToString(),
+                type = dataType,
+                status = RemoteDevNotifyType.Status.SUCCESS,
+                bodyParams = JsonUtil.toJson(bodyParams)
+            )
+        }
+    }
+
+    private fun notifyRtx(
+        userIds: Set<String>,
+        bodyParams: MutableMap<String, String>,
+        cc: MutableSet<String>
+    ) {
+        val notifyTemplateCode = checkNotNull(bodyParams["notifyTemplateCode"])
+        logger.info("notify4User RTX|$notifyTemplateCode|$userIds|$bodyParams")
+        val receivers = userIds.plus(cc)
+        kotlin.runCatching {
+            sendNotifyMessageTemplateRequest(
+                notifyTemplateCode = notifyTemplateCode,
+                bodyParams = bodyParams,
+                notifyType = mutableSetOf(NotifyType.RTX.name),
+                receivers = receivers.toMutableSet(),
+                markdownContent = false
+            )
+        }.onFailure {
+            workspaceNotifyHistoryDao.add(
+                dslContext = dslContext,
+                operator = bodyParams["operator"] ?: "null",
+                userIds = receivers.joinToString(),
+                type = RemoteDevNotifyType.RTX,
+                status = RemoteDevNotifyType.Status.FAIL,
+                bodyParams = JsonUtil.toJson(bodyParams)
+            )
+        }.onSuccess {
+            workspaceNotifyHistoryDao.add(
+                dslContext = dslContext,
+                operator = bodyParams["operator"] ?: "null",
+                userIds = receivers.joinToString(),
+                type = RemoteDevNotifyType.RTX,
+                status = RemoteDevNotifyType.Status.SUCCESS,
+                bodyParams = JsonUtil.toJson(bodyParams)
+            )
+        }
+    }
+
+    private fun notifyClient(
+        bodyParams: MutableMap<String, String>,
+        userIds: Set<String>
+    ) {
+        val notifyTemplateCode = bodyParams["notifyTemplateCode"]
+        val res = bodyParams["clientMsg"]?.ifBlank { null } ?: getMsgFromTemplate(notifyTemplateCode, bodyParams)
+        ?: kotlin.run {
+            logger.warn("notifyClient fail with null body|$notifyTemplateCode")
+            return
+        }
+        logger.info("notify4User CLIENT_PUSH|$notifyTemplateCode|$userIds|$res")
+        val bodyJson = JsonUtil.toJson(bodyParams)
+        userIds.forEach { user ->
+            dispatchWebsocketPushEvent(
+                userId = user,
+                workspaceName = bodyParams["workspaceName"] ?: "",
+                workspaceHost = null,
+                errorMsg = res,
+                type = WebSocketActionType.WORKSPACE_NOTIFY,
+                status = true,
+                action = WorkspaceAction.NOTIFY,
+                systemType = WorkspaceSystemType.WINDOWS_GPU,
+                workspaceMountType = null,
+                ownerType = null,
+                projectId = bodyParams["projectId"] ?: ""
+            ) { result ->
+                if (result) {
+                    workspaceNotifyHistoryDao.add(
+                        dslContext = dslContext,
+                        operator = bodyParams["operator"] ?: "null",
+                        userIds = user,
+                        type = RemoteDevNotifyType.CLIENT_PUSH,
+                        status = RemoteDevNotifyType.Status.SUCCESS,
+                        bodyParams = bodyJson
+                    )
+                } else {
+                    workspaceNotifyHistoryDao.add(
+                        dslContext = dslContext,
+                        operator = bodyParams["operator"] ?: "null",
+                        userIds = user,
+                        type = RemoteDevNotifyType.CLIENT_PUSH,
+                        status = RemoteDevNotifyType.Status.FAIL,
+                        bodyParams = bodyJson
+                    )
+                }
+            }
+        }
+    }
+
+    private fun notifyEmail(
+        taiUserNames: Set<String>,
+        userIds: Set<String>,
+        bodyParams: MutableMap<String, String>,
+        cc: MutableSet<String>
+    ) {
+        // 掉接口拿真正邮件地址
+        val taiInfos = taiClient.taiUserInfo(
+            TaiUserInfoRequest(usernames = taiUserNames)
+        ).associateBy({
+            it.username
+        }, { user ->
+            user.accountEmail
+        })
+        val receivers = userIds.map { taiInfos[it] ?: it }
+        val notifyTemplateCode = checkNotNull(bodyParams["notifyTemplateCode"])
+        logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams")
+        kotlin.runCatching {
+            sendNotifyMessageTemplateRequest(
+                notifyTemplateCode = notifyTemplateCode,
+                bodyParams = bodyParams,
+                notifyType = mutableSetOf(NotifyType.EMAIL.name),
+                receivers = receivers.toMutableSet(),
+                cc = cc,
+                markdownContent = false
+            )
+        }.onFailure {
+            workspaceNotifyHistoryDao.add(
+                dslContext = dslContext,
+                operator = bodyParams["operator"] ?: "null",
+                userIds = receivers.joinToString(),
+                type = RemoteDevNotifyType.EMAIL,
+                status = RemoteDevNotifyType.Status.FAIL,
+                bodyParams = JsonUtil.toJson(bodyParams)
+            )
+        }.onSuccess {
+            workspaceNotifyHistoryDao.add(
+                dslContext = dslContext,
+                operator = bodyParams["operator"] ?: "null",
+                userIds = receivers.joinToString(),
+                type = RemoteDevNotifyType.EMAIL,
+                status = RemoteDevNotifyType.Status.SUCCESS,
+                bodyParams = JsonUtil.toJson(bodyParams)
+            )
+        }
+    }
+
+    private fun getMsgFromTemplate(
+        notifyTemplateCode: String?,
+        bodyParams: MutableMap<String, String>
+    ): String? {
+        if (notifyTemplateCode.isNullOrBlank()) return null
+        val request = NotifyMessageContextRequest(
+            templateCode = notifyTemplateCode,
+            notifyType = NotifyType.RTX,
+            bodyParams = bodyParams
+        )
+        return kotlin.runCatching {
+            client.get(ServiceNotifyMessageTemplateResource::class).getNotifyMessageByTemplate(request)
+        }.onFailure {
+            logger.warn("notify CLIENT_PUSH fail ${it.message}")
+        }.getOrNull()?.data?.body
+    }
+
+    private fun loadTaiUser(
+        userIds: Set<String>,
+        bodyParams: MutableMap<String, String>
+    ): Set<String> {
         val taiUserNames = userIds.filter { it.contains("@tai") }.toSet()
         val receiversNameWithCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUserNames)
             .mapValues {
@@ -279,69 +539,7 @@ class NotifyControl @Autowired constructor(
                 userIds.filter { !it.contains("@tai") }
             )
         bodyParams.putIfAbsent("receiversNameWithCN", receiversNameWithCN.joinToString())
-        /* 发外部邮件，需要模板配置email_type=0*/
-        if (notifyType.contains(RemoteDevNotifyType.EMAIL)) {
-            // 掉接口拿真正邮件地址
-            val taiInfos = taiClient.taiUserInfo(
-                TaiUserInfoRequest(usernames = taiUserNames)
-            ).associateBy({
-                it.username
-            }, { user ->
-                user.accountEmail
-            })
-            val receivers = userIds.map { taiInfos[it] ?: it }
-            logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams")
-            sendNotifyMessageTemplateRequest(
-                notifyTemplateCode = notifyTemplateCode,
-                bodyParams = bodyParams,
-                notifyType = mutableSetOf(NotifyType.EMAIL.name),
-                receivers = receivers.toMutableSet(),
-                cc = cc,
-                markdownContent = false
-            )
-        }
-
-        if (notifyType.contains(RemoteDevNotifyType.CLIENT_PUSH)) {
-            val request = NotifyMessageContextRequest(
-                templateCode = notifyTemplateCode,
-                notifyType = NotifyType.RTX,
-                bodyParams = bodyParams
-            )
-            val res = kotlin.runCatching {
-                client.get(ServiceNotifyMessageTemplateResource::class).getNotifyMessageByTemplate(request)
-            }.onFailure {
-                logger.warn("notify CLIENT_PUSH fail ${it.message}")
-            }.getOrNull()?.data?.body ?: kotlin.run {
-                logger.warn("notify CLIENT_PUSH fail with null body|$notifyTemplateCode")
-                return
-            }
-            logger.info("notify4User CLIENT_PUSH|$notifyTemplateCode|$userIds|$res")
-            userIds.forEach { user ->
-                dispatchWebsocketPushEvent(
-                    userId = user,
-                    workspaceName = bodyParams["workspaceName"] ?: "",
-                    workspaceHost = null,
-                    errorMsg = res,
-                    type = WebSocketActionType.WORKSPACE_NOTIFY,
-                    status = true,
-                    action = WorkspaceAction.NOTIFY,
-                    systemType = WorkspaceSystemType.WINDOWS_GPU,
-                    workspaceMountType = null,
-                    ownerType = null
-                )
-            }
-        }
-
-        if (notifyType.contains(RemoteDevNotifyType.RTX)) {
-            logger.info("notify4User RTX|$notifyTemplateCode|$userIds|$bodyParams")
-            sendNotifyMessageTemplateRequest(
-                notifyTemplateCode = notifyTemplateCode,
-                bodyParams = bodyParams,
-                notifyType = mutableSetOf(NotifyType.RTX.name),
-                receivers = userIds.plus(cc).toMutableSet(),
-                markdownContent = false
-            )
-        }
+        return taiUserNames
     }
 
     /*
@@ -354,14 +552,16 @@ class NotifyControl @Autowired constructor(
     ) {
         // 通知
         if (!weworkId.isNullOrBlank()) {
-            sendNotifyMessageTemplateRequest(
-                notifyTemplateCode = notifyTemplateCode,
-                bodyParams = bodyParams.plus(
-                    NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
-                ),
-                notifyType = setOf(NotifyType.WEWORK_GROUP.name),
-                markdownContent = false
-            )
+            kotlin.runCatching {
+                sendNotifyMessageTemplateRequest(
+                    notifyTemplateCode = notifyTemplateCode,
+                    bodyParams = bodyParams.plus(
+                        NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
+                    ),
+                    notifyType = setOf(NotifyType.WEWORK_GROUP.name),
+                    markdownContent = false
+                )
+            }
         }
     }
 
@@ -377,10 +577,11 @@ class NotifyControl @Autowired constructor(
         systemType: WorkspaceSystemType? = null,
         workspaceMountType: WorkspaceMountType? = null,
         ownerType: WorkspaceOwnerType? = null,
-        projectId: String = ""
+        projectId: String = "",
+        saveResult: (result: Boolean) -> Unit = {}
     ) {
-        webSocketDispatcher.dispatch(
-            WorkspaceWebsocketPush(
+        getWebSocketUsers(userId, workspaceName).parallelStream().forEach { user ->
+            val push = WorkspaceWebsocketPush(
                 type = type,
                 status = status ?: true,
                 anyMessage = WorkspaceResponse(
@@ -394,20 +595,15 @@ class NotifyControl @Autowired constructor(
                     projectId = projectId
                 ),
                 projectId = projectId,
-                userIds = getWebSocketUsers(userId, workspaceName),
+                userId = user,
                 redisOperation = redisOperation,
-                page = WorkspacePageBuild.buildPage(workspaceName),
-                notifyPost = NotifyPost(
-                    module = "remotedev",
-                    level = NotityLevel.LOW_LEVEL.getLevel(),
-                    message = "",
-                    dealUrl = null,
-                    code = 200,
-                    webSocketType = "IFRAME",
-                    page = WorkspacePageBuild.buildPage(workspaceName)
-                )
+                page = WorkspacePageBuild.buildPage(user)
             )
-        )
+            saveResult(push.findSession().isNotEmpty())
+            webSocketDispatcher.dispatch(
+                push
+            )
+        }
     }
 
     private fun getWebSocketUsers(operator: String, workspaceName: String): Set<String> {
@@ -447,7 +643,7 @@ class NotifyControl @Autowired constructor(
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         }.onFailure {
             logger.warn("notify WINDOWS_GPU_SAFE_INIT_FAILED fail ${it.message}")
-        }
+        }.getOrThrow()
     }
 
     fun fetchNotifyList(

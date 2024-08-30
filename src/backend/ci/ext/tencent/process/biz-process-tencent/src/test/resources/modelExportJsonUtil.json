@@ -17,8 +17,7 @@
           "version" : "1.*",
           "classType" : "manualTrigger",
           "taskAtom" : "",
-          "atomCode" : "manualTrigger",
-          "elementEnable" : true
+          "atomCode" : "manualTrigger"
         } ],
         "params" : [ {
           "id" : "apigw_cookie",
@@ -125,15 +124,13 @@
         "containerHashId" : "c-b8d7b6dde8664aeabfc25629f01d44c6",
         "executeCount" : 0,
         "matrixGroupFlag" : false,
-        "classType" : "trigger",
-        "containerEnable" : true
+        "classType" : "trigger"
       } ],
       "id" : "stage-1",
       "name" : "stage-1",
       "tag" : [ "28ee946a59f64949a74f3dee40a1bda4" ],
       "fastKill" : false,
-      "finally" : false,
-      "stageEnable" : true
+      "finally" : false
     }, {
       "containers" : [ {
         "@type" : "vmBuild",
@@ -221,8 +218,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         }, {
           "@type" : "linuxScript",
           "name" : "生成文档原材料",
@@ -256,8 +252,7 @@
           "version" : "1.*",
           "classType" : "linuxScript",
           "taskAtom" : "",
-          "atomCode" : "linuxScript",
-          "elementEnable" : true
+          "atomCode" : "linuxScript"
         }, {
           "@type" : "marketBuild",
           "name" : "归档All JSON",
@@ -302,8 +297,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         } ],
         "baseOS" : "LINUX",
         "vmNames" : [ ],
@@ -355,8 +349,7 @@
           "maxConcurrency" : 5
         },
         "nfsSwitch" : false,
-        "classType" : "vmBuild",
-        "containerEnable" : true
+        "classType" : "vmBuild"
       }, {
         "@type" : "vmBuild",
         "id" : "2",
@@ -440,8 +433,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         }, {
           "@type" : "linuxScript",
           "name" : "生成文档原材料",
@@ -475,8 +467,7 @@
           "version" : "1.*",
           "classType" : "linuxScript",
           "taskAtom" : "",
-          "atomCode" : "linuxScript",
-          "elementEnable" : true
+          "atomCode" : "linuxScript"
         }, {
           "@type" : "marketBuild",
           "name" : "归档All JSON",
@@ -521,8 +512,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         } ],
         "baseOS" : "LINUX",
         "vmNames" : [ ],
@@ -574,8 +564,7 @@
           "maxConcurrency" : 5
         },
         "nfsSwitch" : false,
-        "classType" : "vmBuild",
-        "containerEnable" : true
+        "classType" : "vmBuild"
       } ],
       "id" : "stage-2",
       "name" : "stage-2",
@@ -593,8 +582,7 @@
         "timeout" : 24,
         "markdownContent" : false,
         "notifyType" : [ "RTX" ]
-      },
-      "stageEnable" : true
+      }
     }, {
       "containers" : [ {
         "@type" : "vmBuild",
@@ -645,8 +633,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         }, {
           "@type" : "marketBuild",
           "name" : "出版本对比报告",
@@ -690,8 +677,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         } ],
         "baseOS" : "LINUX",
         "vmNames" : [ ],
@@ -753,8 +739,7 @@
           "maxConcurrency" : 5
         },
         "nfsSwitch" : false,
-        "classType" : "vmBuild",
-        "containerEnable" : true
+        "classType" : "vmBuild"
       }, {
         "@type" : "vmBuild",
         "id" : "4",
@@ -804,8 +789,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         }, {
           "@type" : "marketBuild",
           "name" : "上传网关配置",
@@ -849,8 +833,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         } ],
         "baseOS" : "LINUX",
         "vmNames" : [ ],
@@ -912,8 +895,7 @@
           "maxConcurrency" : 5
         },
         "nfsSwitch" : false,
-        "classType" : "vmBuild",
-        "containerEnable" : true
+        "classType" : "vmBuild"
       }, {
         "@type" : "vmBuild",
         "id" : "5",
@@ -963,8 +945,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         }, {
           "@type" : "marketBuild",
           "name" : "检查网关",
@@ -1008,8 +989,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         } ],
         "baseOS" : "LINUX",
         "vmNames" : [ ],
@@ -1071,8 +1051,7 @@
           "maxConcurrency" : 5
         },
         "nfsSwitch" : false,
-        "classType" : "vmBuild",
-        "containerEnable" : true
+        "classType" : "vmBuild"
       }, {
         "@type" : "vmBuild",
         "id" : "6",
@@ -1156,8 +1135,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         }, {
           "@type" : "marketBuild",
           "name" : "拉取all json",
@@ -1203,8 +1181,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         }, {
           "@type" : "marketBuild",
           "name" : "映射到开源项目的文档目录",
@@ -1242,8 +1219,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         }, {
           "@type" : "linuxScript",
           "name" : "上传内部分支",
@@ -1277,8 +1253,7 @@
           "version" : "1.*",
           "classType" : "linuxScript",
           "taskAtom" : "",
-          "atomCode" : "linuxScript",
-          "elementEnable" : true
+          "atomCode" : "linuxScript"
         }, {
           "@type" : "marketBuild",
           "name" : "提mr进行review",
@@ -1348,8 +1323,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         }, {
           "@type" : "marketBuild",
           "name" : "review 链接",
@@ -1387,8 +1361,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         } ],
         "baseOS" : "LINUX",
         "vmNames" : [ ],
@@ -1450,8 +1423,7 @@
           "maxConcurrency" : 5
         },
         "nfsSwitch" : false,
-        "classType" : "vmBuild",
-        "containerEnable" : true
+        "classType" : "vmBuild"
       } ],
       "id" : "stage-3",
       "name" : "stage-3",
@@ -1496,8 +1468,7 @@
         "timeout" : 24,
         "markdownContent" : false,
         "notifyType" : [ "RTX" ]
-      },
-      "stageEnable" : true
+      }
     }, {
       "containers" : [ {
         "@type" : "vmBuild",
@@ -1548,8 +1519,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         }, {
           "@type" : "marketBuild",
           "name" : "蓝盾openapi工具",
@@ -1593,8 +1563,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         } ],
         "baseOS" : "LINUX",
         "vmNames" : [ ],
@@ -1656,8 +1625,7 @@
           "maxConcurrency" : 5
         },
         "nfsSwitch" : false,
-        "classType" : "vmBuild",
-        "containerEnable" : true
+        "classType" : "vmBuild"
       }, {
         "@type" : "vmBuild",
         "id" : "8",
@@ -1731,8 +1699,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         }, {
           "@type" : "marketBuild",
           "name" : "拉取内部分支",
@@ -1813,8 +1780,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         }, {
           "@type" : "marketBuild",
           "name" : "拉取github分支",
@@ -1895,8 +1861,7 @@
           },
           "executeCount" : 1,
           "classType" : "marketBuild",
-          "taskAtom" : "",
-          "elementEnable" : true
+          "taskAtom" : ""
         }, {
           "@type" : "linuxScript",
           "name" : "上传外部文档到github",
@@ -1930,8 +1895,7 @@
           "version" : "1.*",
           "classType" : "linuxScript",
           "taskAtom" : "",
-          "atomCode" : "linuxScript",
-          "elementEnable" : true
+          "atomCode" : "linuxScript"
         } ],
         "baseOS" : "LINUX",
         "vmNames" : [ ],
@@ -1993,8 +1957,7 @@
           "maxConcurrency" : 5
         },
         "nfsSwitch" : false,
-        "classType" : "vmBuild",
-        "containerEnable" : true
+        "classType" : "vmBuild"
       } ],
       "id" : "stage-4",
       "name" : "stage-3",
@@ -2064,8 +2027,7 @@
         "timeout" : 24,
         "markdownContent" : false,
         "notifyType" : [ "RTX" ]
-      },
-      "stageEnable" : true
+      }
     } ],
     "labels" : [ ],
     "instanceFromTemplate" : false,

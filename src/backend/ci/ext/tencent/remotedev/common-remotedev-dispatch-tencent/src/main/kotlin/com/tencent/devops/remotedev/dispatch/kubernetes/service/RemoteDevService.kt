@@ -50,6 +50,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class RemoteDevService @Autowired constructor(
@@ -388,6 +389,18 @@ class RemoteDevService @Autowired constructor(
         mountType: WorkspaceMountType
     ): ExpandDiskValidateResp {
         return remoteDevServiceFactory.loadRemoteDevService(mountType).expandDisk(workspaceName, userId, size)
+    }
+
+    fun getLastExpandDiskStatusAndTime(
+        workspaceName: String
+    ): Pair<EnvironmentActionStatus?, LocalDateTime?> {
+        val record = dispatchWorkspaceOpHisDao.fetchLastTaskByWorkspaceName(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            action = EnvironmentAction.EXPAND_DISK
+        ) ?: return Pair(null, null)
+
+        return Pair(EnvironmentActionStatus.parse(record.status), record.updateTime)
     }
 
     fun upgradeWorkspace(event: WorkspaceOperateEvent) {

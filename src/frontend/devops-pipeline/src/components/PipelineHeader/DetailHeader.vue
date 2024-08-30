@@ -1,6 +1,6 @@
 <template>
     <div v-if="execDetail" class="pipeline-detail-header">
-        <pipeline-bread-crumb :show-record-entry="isDebugExec" :pipeline-name="pipelineInfo?.pipelineName" />
+        <pipeline-bread-crumb :show-record-entry="isDebugExec" show-build-num-switch :pipeline-name="pipelineInfo?.pipelineName" />
         <aside :class="['pipeline-detail-right-aside', {
             'is-debug-exec-detail': isDebugExec
         }]">

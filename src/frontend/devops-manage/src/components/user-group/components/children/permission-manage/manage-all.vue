@@ -80,6 +80,13 @@
       </div>
     </div>
     <bk-exception
+      v-else-if="isNotProject"
+      :description="t('请先选择项目')"
+      scene="part"
+      type="empty"
+    >
+    </bk-exception>
+    <bk-exception
       v-else
       :description="t('没有数据')"
       scene="part"
@@ -377,7 +384,8 @@ const { t } = useI18n();
 const route = useRoute();
 const formRef = ref(null);
 const renewalRef = ref(null);
-const projectId = computed(() => route.params?.projectCode);
+const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
+const isNotProject = computed(() => projectId.value === 'my-project' || !projectId.value);
 const expiredAt = ref(30);
 const isShowSlider = ref(false);
 const sliderTitle = ref();
@@ -491,7 +499,9 @@ const {
 onMounted(() => {
   init(true);
 });
-
+watch(projectId, () => {
+  init(true);
+});
 watch(searchValue, (newSearchValue) => {
   init(undefined, newSearchValue);
 });
@@ -508,7 +518,8 @@ function asideClick (item) {
   handleAsideClick(item, projectId.value);
 }
 async function refresh () {
-  getProjectMembers(projectId.value, true, searchValue.value)
+  searchValue.value = [];
+  getProjectMembers(projectId.value, true, searchValue.value);
 }
 /**
  * 移交弹窗打开时

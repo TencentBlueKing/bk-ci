@@ -328,8 +328,8 @@ class PipelineContainerService @Autowired constructor(
             resourceVersion?.let {
                 if (ElementUtils.getTaskAddFlag(
                         element = atomElement,
-                        stageEnableFlag = stage.isStageEnable(),
-                        containerEnableFlag = container.isContainerEnable(),
+                        stageEnableFlag = stage.stageEnabled(),
+                        containerEnableFlag = container.containerEnabled(),
                         originMatrixContainerFlag = ContainerUtils.isOriginMatrixContainer(container)
                     )
                 ) {
@@ -429,6 +429,17 @@ class PipelineContainerService @Autowired constructor(
         val containerElements = container.elements
         val newBuildFlag = lastTimeBuildTasks.isEmpty()
 
+        // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
+        // #10751 如果不存在需要运行的插件，则直接将container设为不启用
+        var containerEnable = false
+        containerElements.forEach { atomElement ->
+            atomElement.disableBySkipVar(variables = context.variables)
+            if (atomElement.additionalOptions?.enable != false) {
+                containerEnable = true
+            }
+        }
+        if (!containerEnable) container.setContainerEnable(false)
+
         containerElements.forEach nextElement@{ atomElement ->
             modelCheckPlugin.checkElementTimeoutVar(container, atomElement, contextMap = context.variables)
             taskSeq++ // 跳过的也要+1，Seq不需要连续性
@@ -440,9 +451,6 @@ class PipelineContainerService @Autowired constructor(
                 }
             }
 
-            // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
-            atomElement.disableBySkipVar(variables = context.variables)
-
             val status = atomElement.initStatus(
                 rerun = context.needRerunTask(stage = stage, container = container)
             )
@@ -451,8 +459,8 @@ class PipelineContainerService @Autowired constructor(
                 atomElement.status = status.name
                 if (newBuildFlag && ElementUtils.getTaskAddFlag(
                         element = atomElement,
-                        stageEnableFlag = stage.isStageEnable(),
-                        containerEnableFlag = container.isContainerEnable(),
+                        stageEnableFlag = stage.stageEnabled(),
+                        containerEnableFlag = container.containerEnabled(),
                         originMatrixContainerFlag = ContainerUtils.isOriginMatrixContainer(container)
                     )
                 ) {
@@ -571,7 +579,7 @@ class PipelineContainerService @Autowired constructor(
         container.startVMTaskSeq = startVMTaskSeq
 
         // 构建矩阵永远跟随stage重试，在需要重试的stage中，单独增加重试记录
-        if (container.matrixGroupFlag == true && !context.needSkipContainerWhenFailRetry(stage, container)) {
+        if (context.needRerunStage(stage = stage) && container.matrixGroupFlag == true) {
             container.retryFreshMatrixOption()
             cleanContainersInMatrixGroup(
                 transactionContext = dslContext,
@@ -1040,7 +1048,7 @@ class PipelineContainerService @Autowired constructor(
 //            )
 //        )
         container.elements.forEachIndexed { index, atomElement ->
-            if (context.firstTaskId.isBlank() && atomElement.isElementEnable()) {
+            if (context.firstTaskId.isBlank() && atomElement.elementEnabled()) {
                 context.firstTaskId = atomElement.findFirstTaskIdByStartType(context.startType)
             }
 

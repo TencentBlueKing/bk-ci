@@ -291,8 +291,7 @@ class ServiceRemoteDevResourceImpl(
     override fun notifyWorkspaceInfo(operator: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
         notifyControl.notifyWorkspaceInfo(
             userId = operator,
-            notifyData = notifyData,
-            enableSendDesktop = true
+            notifyData = notifyData
         )
         return Result(true)
     }
@@ -302,13 +301,17 @@ class ServiceRemoteDevResourceImpl(
         if (!ok) {
             return Result(false)
         }
-        startWorkspaceService.sendMessage(
-            operator = notifyData.operator,
-            userIdList = notifyData.userIdList,
-            dataType = notifyData.dataType,
-            data = notifyData.data,
-            messageStartTime = notifyData.messageEndTime,
-            messageEndTime = notifyData.messageEndTime
+        notifyControl.notify4User(
+            userIds = notifyData.userIdList,
+            notifyType = setOf(notifyData.dataType),
+            bodyParams = mutableMapOf(
+                "operator" to notifyData.operator,
+                "messageContent" to notifyData.data,
+                "messageStartTime" to notifyData.messageStartTime.toString(),
+                "messageEndTime" to notifyData.messageEndTime.toString(),
+                "clientMsg" to notifyData.data,
+                "notifyTemplateCode" to notifyData.notifyTemplateCode
+            )
         )
         return Result(true)
     }
@@ -653,15 +656,15 @@ class ServiceRemoteDevResourceImpl(
         // 校验签名
         // <md5(mac_addr+token)>,<appid>,<原始文件名>,<文件版本>,<修改日期>,<产品名称>,<产品版本>,<exe文件的sha1>,<当前10位时间戳>,<public key>
         val unsigned = "${sign.fingerprint}," +
-            "${sign.appId}," +
-            "${sign.fileName}," +
-            "${sign.fileVersion}," +
-            "${sign.fileUpdateTime}," +
-            "${sign.productName}," +
-            "${sign.productVersion}," +
-            "${sign.sha1}," +
-            "${sign.timestamp}," +
-            sign.publicKey
+                "${sign.appId}," +
+                "${sign.fileName}," +
+                "${sign.fileVersion}," +
+                "${sign.fileUpdateTime}," +
+                "${sign.productName}," +
+                "${sign.productVersion}," +
+                "${sign.sha1}," +
+                "${sign.timestamp}," +
+                sign.publicKey
         val realSigned = ShaUtils.hmacSha1(bkConfig.desktopSdkToken.toByteArray(), unsigned.toByteArray()).uppercase()
         if (realSigned != sign.sign) {
             throwTokenFail(desktopIP, "wrong sign", "$realSigned != ${sign.sign}")
@@ -682,6 +685,9 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun opCvm(data: OperateCvmData): Result<Boolean> {
+        if (!tGitService.checkProjectExist(data.projectId)) {
+            return Result(false)
+        }
         tGitService.addOrRemoveAclIp(
             projectId = data.projectId,
             ips = data.ipList,

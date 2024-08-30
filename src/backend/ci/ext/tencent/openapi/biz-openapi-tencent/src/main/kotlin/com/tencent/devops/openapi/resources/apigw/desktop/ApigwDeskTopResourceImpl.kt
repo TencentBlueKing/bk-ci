@@ -66,6 +66,7 @@ class ApigwDeskTopResourceImpl @Autowired constructor(private val client: Client
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspaceIp(ip = desktopIP)
     }
 
+    @SensitiveApiPermission("desktop_message_register")
     override fun messageRegister(
         appCode: String?,
         apigwType: String?,

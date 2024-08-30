@@ -291,23 +291,30 @@ class StartActionTaskContainerCmd(
             containerContext.event.actionType.isTerminate() -> { // 终止命令，需要设置失败，并返回
                 containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask // 将当前任务传给TaskControl做终止
-                buildLogPrinter.addRedLine(
-                    buildId = toDoTask.buildId,
-                    message = "Terminate Plugin[${toDoTask.taskName}]: ${containerContext.event.reason ?: "unknown"}",
-                    tag = toDoTask.taskId,
-                    containerHashId = toDoTask.containerHashId,
-                    executeCount = toDoTask.executeCount ?: 1,
-                    jobId = null,
-                    stepId = toDoTask.stepId
-                )
+                val message = "Terminate Plugin[${currentTask.taskName}]: ${containerContext.event.reason ?: "unknown"}"
+                printRedLine(currentTask, message)
             }
 
             containerContext.event.actionType.isEnd() -> { // 将当前正在运行的任务传给TaskControl做结束
                 containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask
+                val message = "Cancel Plugin[${currentTask.taskName}]: ${containerContext.event.reason ?: "unknown"}"
+                printRedLine(currentTask, message)
             }
         }
         return toDoTask
+    }
+
+    private fun printRedLine(task: PipelineBuildTask, message: String) {
+        buildLogPrinter.addRedLine(
+            buildId = task.buildId,
+            message = message,
+            tag = task.taskId,
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount ?: 1,
+            jobId = null,
+            stepId = task.stepId
+        )
     }
 
     @Suppress("LongMethod", "ComplexMethod")

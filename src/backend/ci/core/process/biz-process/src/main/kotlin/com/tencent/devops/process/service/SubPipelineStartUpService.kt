@@ -316,13 +316,13 @@ class SubPipelineStartUpService @Autowired constructor(
                     params[it.key] = BuildParameters(key = it.key, value = it.value)
                 }
             }
-            // 启动子流水线时使用子流水线的代持人身份，存量数据父流水线的最后修改人可能没有子流水线执行权限
+            // 启动子流水线时使用子流水线的代持人身份，存量数据父流水线的权限代持人可能没有子流水线执行权限
             val oauthUser = pipelineRepositoryService.getPipelineOauthUser(
                 projectId = projectId,
                 pipelineId = pipelineId
             ) ?: readyToBuildPipelineInfo.lastModifyUser
             // 校验父流水线授权人是否有子流水线执行权限
-            checkPermission(userId = parentPipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
+            checkPermission(userId = oauthUser, projectId = projectId, pipelineId = pipelineId)
             // 子流水线的调用不受频率限制
             val subBuildId = pipelineBuildService.startPipeline(
                 userId = oauthUser,
@@ -435,7 +435,7 @@ class SubPipelineStartUpService @Autowired constructor(
 
     private fun needCheckSubElement(element: Element, atomCode: String): Boolean {
         return when {
-            !element.isElementEnable() -> false
+            !element.elementEnabled() -> false
             (element is MarketBuildLessAtomElement || element is MarketBuildAtomElement) &&
                 element.getAtomCode() != atomCode -> false
             element is SubPipelineCallElement && element.subPipelineId.isBlank() -> false
@@ -465,12 +465,22 @@ class SubPipelineStartUpService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         includeConst: Boolean?,
-        includeNotRequired: Boolean?
+        includeNotRequired: Boolean?,
+        parentProjectId: String = "",
+        parentPipelineId: String = ""
     ): Result<List<SubPipelineStartUpInfo>> {
         if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
         }
-        val result = pipelineBuildFacadeService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS)
+        val oauthUser = if (parentProjectId.isNotBlank() && parentPipelineId.isNotBlank()) {
+            pipelineRepositoryService.getPipelineOauthUser(
+                projectId = parentProjectId,
+                pipelineId = parentPipelineId
+            )
+        } else {
+            userId
+        }
+        val result = pipelineBuildFacadeService.buildManualStartupInfo(oauthUser, projectId, pipelineId, ChannelCode.BS)
         val parameter = ArrayList<SubPipelineStartUpInfo>()
         val prop = result.properties.filter {
             val const = if (includeConst == false) { it.constant != true } else { true }
