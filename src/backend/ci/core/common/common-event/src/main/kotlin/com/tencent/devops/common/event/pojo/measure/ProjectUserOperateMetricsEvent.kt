@@ -26,45 +26,17 @@
  *
  */
 
-package com.tencent.devops.metrics.service
+package com.tencent.devops.common.event.pojo.measure
 
-import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
-import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
-import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicInteger
 
-interface ProjectBuildSummaryService {
-
-    /**
-     * 保存项目构建数
-     */
-    fun saveProjectBuildCount(
-        projectId: String,
-        trigger: String?
-    )
-
-    /**
-     * 保存项目用户
-     */
-    fun saveProjectUser(
-        projectId: String,
-        userId: String,
-        operate: String,
-        theDate: LocalDate
-    )
-
-    /**
-     * 保存用户操作度量数据
-     */
-    fun saveProjectUserOperateMetrics(
-        projectUserOperateMetricsMap: MutableMap<String, MutableMap<ProjectUserOperateMetricsData, AtomicInteger>>
-    )
-
-    /**
-     * 获取项目活跃用户数
-     */
-    fun getProjectActiveUserCount(
-        baseQueryReq: BaseQueryReqVO
-    ): ProjectUserCountV0?
-}
+@Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT)
+data class ProjectUserOperateMetricsEvent(
+    @get:Schema(title = "项目用户操作度量数据")
+    /*Map<projectId,<projectUserOperateMetricsData,count>>*/
+    val projectUserOperateMetricsMap: MutableMap<String, MutableMap<ProjectUserOperateMetricsData, AtomicInteger>>
+) : IMeasureEvent(projectId = "", pipelineId = "", buildId = "")
