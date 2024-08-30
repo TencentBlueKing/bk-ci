@@ -1,6 +1,6 @@
 # BCS Rollout配置
 rollout:
-  enable: false
+  enabled: false
   kind: Deployment
   mirror: false
 

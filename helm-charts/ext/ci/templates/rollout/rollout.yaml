@@ -1,4 +1,4 @@
-{{- if .Values.rollout.enable }}
+{{- if .Values.rollout.enabled }}
 apiVersion: tkex.tencent.com/v1alpha1
 kind: Rollout
 metadata:
