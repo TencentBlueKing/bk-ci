@@ -25,36 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.config
+package com.tencent.devops.environment.pojo.cmdb.resp
 
-import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ConstructorBinding
-@ConfigurationProperties(prefix = "environment")
-data class EnvironmentProperties(
-    /**
-     * APIGW相关配置
-     */
-    val apigw: ApiGwProperties,
-    /**
-     * 节点管理相关配置
-     */
-    val nodeman: NodeManProperties,
-    /**
-     * 公司CMDB相关配置
-     */
-    val cmdb: CmdbProperties,
-    /**
-     * 公司新CMDB相关配置
-     */
-    val newCmdb: NewCmdbProperties,
-    /**
-     * CC相关配置
-     */
-    val cc: CCProperties,
-    /**
-     * 查询GSE Agent状态相关配置
-     */
-    val checkAgentStatus: CheckAgentStatusProperties
+data class NewCmdbScrollPageData<T>(
+    @get:Schema(title = "结果数据列表", required = true)
+    var list: List<T>,
+    @get:Schema(title = "游标值，用该值做入参请求下一页", description = "该字段不能为null或空字符串，否则会抛出异常")
+    var scrollId: String?,
+    @get:Schema(title = "是否有下一页")
+    var hasNext: Boolean?
 )

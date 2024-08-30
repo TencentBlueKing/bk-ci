@@ -25,17 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.jobresp
+package com.tencent.devops.environment.pojo
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class CCUpdateInfo(
-    @get:Schema(title = "节点ID")
-    val nodeId: Long?,
-    @get:Schema(title = "云区域ID")
-    val bkCloudId: Long?,
-    @get:Schema(title = "主机ID")
-    val bkHostId: Long?,
-    @get:Schema(title = "操作系统类型")
-    val osType: String?
+@Schema(title = "含有scrollId的一页记录数据")
+data class ScrollIdPage<out T>(
+    @get:Schema(title = "分页游标", required = true)
+    val scrollId: String,
+    @get:Schema(title = "是否有下一页", required = true)
+    val hasNext: Boolean,
+    @get:Schema(title = "数据", required = true)
+    @BkFieldI18n
+    val records: List<T>
 )

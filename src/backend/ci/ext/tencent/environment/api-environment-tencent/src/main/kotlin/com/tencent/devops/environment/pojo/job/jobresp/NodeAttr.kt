@@ -25,36 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.config
+package com.tencent.devops.environment.pojo.job.jobresp
 
-import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ConstructorBinding
-@ConfigurationProperties(prefix = "environment")
-data class EnvironmentProperties(
-    /**
-     * APIGW相关配置
-     */
-    val apigw: ApiGwProperties,
-    /**
-     * 节点管理相关配置
-     */
-    val nodeman: NodeManProperties,
-    /**
-     * 公司CMDB相关配置
-     */
-    val cmdb: CmdbProperties,
-    /**
-     * 公司新CMDB相关配置
-     */
-    val newCmdb: NewCmdbProperties,
-    /**
-     * CC相关配置
-     */
-    val cc: CCProperties,
-    /**
-     * 查询GSE Agent状态相关配置
-     */
-    val checkAgentStatus: CheckAgentStatusProperties
+data class NodeAttr(
+    @get:Schema(title = "节点ID")
+    val nodeId: Long?,
+    @get:Schema(title = "云区域ID")
+    val bkCloudId: Long?,
+    @get:Schema(title = "主机ID")
+    val bkHostId: Long?,
+    @get:Schema(title = "操作系统类型")
+    val osType: String?
 )

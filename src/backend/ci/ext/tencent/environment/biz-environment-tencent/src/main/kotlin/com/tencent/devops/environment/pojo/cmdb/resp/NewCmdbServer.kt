@@ -28,40 +28,56 @@
 package com.tencent.devops.environment.pojo.cmdb.resp
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.environment.pojo.CmdbNode
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class NewCmdbDataIns(
+data class NewCmdbServer(
+    @get:Schema(title = "服务器ID")
+    val serverId: Long,
     @get:Schema(title = "主负责人")
     val maintainer: String?,
     @get:Schema(title = "备份负责人(多个人用;分隔)")
     val maintainerBak: String?,
-    @get:Schema(title = "服务器ID")
-    val serverId: Long,
-    @get:Schema(title = "操作系统名称")
-    val osName: String?,
-    @get:Schema(title = "主机名称")
-    val hostName: String?,
     @get:Schema(title = "运维部门ID")
     @JsonProperty("maintenanceDepartmentId")
     val departmentId: Int?,
-    @get:Schema(title = "服务器的内网Ipv4地址列表(多个用;分隔)")
-    val innerServerIpv4: List<InnerServerIpInfo>?
+    @get:Schema(title = "主机名称")
+    val hostName: String?,
+    @get:Schema(title = "操作系统名称")
+    val osName: String?,
+    @get:Schema(title = "服务器的内网Ipv4地址列表")
+    val innerServerIpv4: List<NewCmdbInnerServerIpv4>?
 ) {
-    /**
-     * 用于定时更新(当有变更时)：节点主备负责人、操作系统名称
-     */
-    constructor(
-        serverId: Long,
-        maintainer: String?,
-        maintainerBak: String?,
-        osName: String?
-    ) : this(
-        serverId = serverId,
-        maintainer = maintainer,
-        maintainerBak = maintainerBak,
-        osName = osName,
-        hostName = null,
-        departmentId = null,
-        innerServerIpv4 = null
-    )
+
+    fun getFirstIp(): String? {
+        return innerServerIpv4?.get(0)?.ip
+    }
+
+    fun hasOperator(userId: String): Boolean {
+        return maintainer == userId
+    }
+
+    fun hasBakOperator(userId: String): Boolean {
+        val bakMaintainerSet = maintainerBak?.split(";")?.toSet()
+        return bakMaintainerSet != null && bakMaintainerSet.contains(userId)
+    }
+
+    private fun getDisplayIp(): String? {
+        if (innerServerIpv4 == null) {
+            return null
+        }
+        return innerServerIpv4.joinToString(";") { it.ip }
+    }
+
+    fun toCmdbNode(): CmdbNode {
+        return CmdbNode(
+            name = hostName ?: "",
+            serverId = serverId,
+            operator = maintainer ?: "",
+            bakOperator = maintainerBak ?: "",
+            ip = getFirstIp() ?: "",
+            displayIp = getDisplayIp() ?: "",
+            osName = osName ?: ""
+        )
+    }
 }

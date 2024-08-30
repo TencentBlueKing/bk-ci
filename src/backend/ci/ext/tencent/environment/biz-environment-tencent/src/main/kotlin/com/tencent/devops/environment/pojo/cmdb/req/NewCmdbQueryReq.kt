@@ -29,11 +29,11 @@ package com.tencent.devops.environment.pojo.cmdb.req
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class NewCmdbQueryInfoReq<T>(
+data class NewCmdbQueryReq(
     @get:Schema(title = "")
     val resultColumn: List<String>,
     @get:Schema(title = "")
-    val condition: NewCmdbCondition<T>,
+    val condition: NewCmdbCondition,
     @get:Schema(title = "每页大小，取值<201")
     val size: Int?,
     @get:Schema(title = "分页游标")

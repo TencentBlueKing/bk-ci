@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.pojo.cmdb.common
 
+import com.tencent.devops.environment.pojo.cmdb.resp.NewCmdbServer
 import com.tencent.devops.environment.pojo.cmdb.resp.RawCmdbNode
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -30,6 +31,26 @@ data class CmdbServerDTO(
                 osName = rawCmdbNode.osName
             )
         }
+
+        fun fromNewCmdbServer(newCmdbServer: NewCmdbServer): CmdbServerDTO {
+            val bakOperatorList = newCmdbServer.maintainerBak?.split(";")?.toList()
+            val lanIpList = newCmdbServer.innerServerIpv4?.map { it.ip }?.toList()
+            val firstIp = newCmdbServer.getFirstIp()
+            return CmdbServerDTO(
+                serverId = newCmdbServer.serverId,
+                ip = firstIp ?: "",
+                operator = newCmdbServer.maintainer ?: "",
+                bakOperatorList = bakOperatorList,
+                lanIpList = lanIpList,
+                deptId = newCmdbServer.departmentId,
+                hostName = newCmdbServer.hostName,
+                osName = newCmdbServer.osName
+            )
+        }
+    }
+
+    private fun hasOperator(userId: String): Boolean {
+        return operator == userId
     }
 
     private fun hasBakOperator(userId: String): Boolean {
@@ -40,7 +61,7 @@ data class CmdbServerDTO(
      * 当前用户是否为该机器的运维负责人或备份负责人
      */
     fun hasOperatorOrBak(userId: String): Boolean {
-        return operator == userId || hasBakOperator(userId)
+        return hasOperator(userId) || hasBakOperator(userId)
     }
 
     /**

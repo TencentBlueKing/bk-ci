@@ -25,36 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.config
+package com.tencent.devops.environment.pojo
 
-import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ConstructorBinding
-@ConfigurationProperties(prefix = "environment")
-data class EnvironmentProperties(
-    /**
-     * APIGW相关配置
-     */
-    val apigw: ApiGwProperties,
-    /**
-     * 节点管理相关配置
-     */
-    val nodeman: NodeManProperties,
-    /**
-     * 公司CMDB相关配置
-     */
-    val cmdb: CmdbProperties,
-    /**
-     * 公司新CMDB相关配置
-     */
-    val newCmdb: NewCmdbProperties,
-    /**
-     * CC相关配置
-     */
-    val cc: CCProperties,
-    /**
-     * 查询GSE Agent状态相关配置
-     */
-    val checkAgentStatus: CheckAgentStatusProperties
+@Schema(title = "查询用户名下CMDB服务器请求体")
+data class ListUserCmdbNodesReq(
+
+    @get:Schema(title = "项目ID", required = true)
+    val projectId: String,
+
+    @get:Schema(title = "true 时为备份负责人，false 时为主负责人", required = true)
+    val bakOperator: Boolean,
+
+    @get:Schema(title = "分页游标，不传默认为0", required = false)
+    val scrollId: String = "0",
+
+    @get:Schema(title = "每页多少条，最大200，不传默认100", required = false)
+    val pageSize: Int = 100,
+
+    @get:Schema(title = "指定IP，最多500个，不传表示不根据IP过滤", required = false)
+    val ips: List<String>? = null
+
 )
