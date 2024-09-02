@@ -201,7 +201,6 @@ class WorkspaceXlsxExportService @Autowired constructor(
         ).header("Content-disposition", "attachment;filename=InstanceManagement.xlsx")
             .build()
     }
-
     companion object {
         private val titleList =
             listOf("项目ID", "实例名称", "状态", "云桌面ID", "系统类型", "机型", "逻辑区域", "城市", "创建人", "拥有者", "共享人")
