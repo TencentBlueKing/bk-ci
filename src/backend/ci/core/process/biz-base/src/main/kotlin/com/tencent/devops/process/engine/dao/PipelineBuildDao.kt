@@ -268,7 +268,6 @@ class PipelineBuildDao {
         } else normal
     }
 
-
     fun countAllBuildWithStatus(
         dslContext: DSLContext,
         projectId: String,
