@@ -257,4 +257,9 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         upgradeWorkspaceHandler.upgradeWorkspace(userId, projectId, workspaceName, upgradeReq)
         return Result(true)
     }
+
+    override fun applyViewRecord(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        workspaceRecordService.approvalRecordView(projectId = projectId, user = userId, workspaceName = workspaceName)
+        return Result(true)
+    }
 }

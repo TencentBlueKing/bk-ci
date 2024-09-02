@@ -547,4 +547,16 @@ interface ServiceRemoteDevResource {
         @QueryParam("ip")
         ip: String
     ): Result<CheckWorkspaceRecordData>
+
+    @Operation(summary = "检查用户是否有产看当前工作空间录像的权限")
+    @GET
+    @Path("/check_user_view_workspace_record_permission")
+    fun checkUserViewWorkspacePermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }

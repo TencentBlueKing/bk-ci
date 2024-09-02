@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
+import com.tencent.devops.remotedev.dao.WorkspaceRecordUserApprovalDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.service.client.RemotedevBkRepoClient
 import org.jooq.DSLContext
@@ -12,7 +13,9 @@ class WorkspaceRecordService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val startAppLinkDao: ProjectStartAppLinkDao,
-    private val remotedevBkRepoClient: RemotedevBkRepoClient
+    private val workspaceRecordUserApprovalDao: WorkspaceRecordUserApprovalDao,
+    private val remotedevBkRepoClient: RemotedevBkRepoClient,
+    private val bkItsmService: BKItsmService
 ) {
 
     fun enableRecord(
@@ -47,6 +50,39 @@ class WorkspaceRecordService @Autowired constructor(
                 workspaceName = workspaceName,
                 userId = enableUser
             )
+        )
+    }
+
+    // 审批流程 -> leader -> 安全
+    fun approvalRecordView(
+        projectId: String,
+        user: String,
+        workspaceName: String
+    ) {
+        bkItsmService.createRecordView(projectId = projectId, userId = user, workspaceName = workspaceName)
+    }
+
+    fun approvalRecordViewCallback(
+        projectId: String,
+        userId: String,
+        workspaceName: String
+    ) {
+        workspaceRecordUserApprovalDao.addOrUpdateApproval(
+            dslContext = dslContext,
+            projectId = projectId,
+            user = userId,
+            workspaceName = workspaceName
+        )
+    }
+
+    fun checkWorkspaceUserApproval(
+        workspaceName: String,
+        userId: String
+    ): Boolean {
+        return workspaceRecordUserApprovalDao.checkApproval(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            user = userId
         )
     }
 }

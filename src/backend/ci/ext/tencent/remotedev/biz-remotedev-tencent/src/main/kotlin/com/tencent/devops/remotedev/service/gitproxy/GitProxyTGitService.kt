@@ -128,7 +128,7 @@ class GitProxyTGitService @Autowired constructor(
         val resultArray = result.filter { it.value.second }.map { Pair(it.key, it.value) }
         resultArray.chunked(20).forEachIndexed { index, chunk ->
             // 关联项目，不符合要求的自动踢出去
-            bkitsmService.createTicket(
+            bkitsmService.createLinkTicket(
                 projectId = projectId,
                 userId = userId,
                 tData = chunk.associate { it.first to it.second },

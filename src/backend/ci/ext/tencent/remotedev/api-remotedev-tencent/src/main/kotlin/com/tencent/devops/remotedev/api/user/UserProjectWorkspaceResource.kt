@@ -323,4 +323,19 @@ interface UserProjectWorkspaceResource {
         @Parameter(description = "请求报文", required = true)
         upgradeReq: WorkspaceUpgradeReq
     ): Result<Boolean>
+
+    @Operation(summary = "申请查看当前工作空间录屏")
+    @POST
+    @Path("/workspace/{workspaceName}/apply_view_record")
+    fun applyViewRecord(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @PathParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }

@@ -728,4 +728,8 @@ class ServiceRemoteDevResourceImpl(
         )
         return Result(CheckWorkspaceRecordData(enable, address))
     }
+
+    override fun checkUserViewWorkspacePermission(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(workspaceRecordService.checkWorkspaceUserApproval(workspaceName = workspaceName, userId = userId))
+    }
 }
