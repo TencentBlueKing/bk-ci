@@ -42,11 +42,12 @@ class WorkspaceRecordUserApprovalDao {
     fun checkApproval(
         dslContext: DSLContext,
         workspaceName: String,
-        user: String
+        user: String,
+        expiredDays: Long
     ): Boolean {
         with(TWorkspaceRecordUserApproval.T_WORKSPACE_RECORD_USER_APPROVAL) {
             return dslContext.selectCount().from(this).where(WORKSPACE_NAME.eq(workspaceName)).and(USER.eq(user))
-                .and(UPDATE_TIME.greaterThan(LocalDateTime.now().minusDays(7)))
+                .and(UPDATE_TIME.greaterThan(LocalDateTime.now().minusDays(expiredDays)))
                 .fetchOne(0, Long::class.java)!! > 0
         }
     }

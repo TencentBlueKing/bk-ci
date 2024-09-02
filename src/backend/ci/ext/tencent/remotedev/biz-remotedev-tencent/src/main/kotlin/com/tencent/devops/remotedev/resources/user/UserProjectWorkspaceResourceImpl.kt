@@ -259,6 +259,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun applyViewRecord(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        permissionService.checkUserProjectManager(userId, projectId)
         workspaceRecordService.approvalRecordView(projectId = projectId, user = userId, workspaceName = workspaceName)
         return Result(true)
     }

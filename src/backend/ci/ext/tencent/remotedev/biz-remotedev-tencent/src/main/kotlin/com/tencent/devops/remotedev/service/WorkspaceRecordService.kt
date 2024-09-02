@@ -1,6 +1,10 @@
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
+import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceRecordUserApprovalDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.service.client.RemotedevBkRepoClient
@@ -11,9 +15,11 @@ import org.springframework.stereotype.Service
 @Service
 class WorkspaceRecordService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val startAppLinkDao: ProjectStartAppLinkDao,
     private val workspaceRecordUserApprovalDao: WorkspaceRecordUserApprovalDao,
+    private val workspaceDao: WorkspaceDao,
     private val remotedevBkRepoClient: RemotedevBkRepoClient,
     private val bkItsmService: BKItsmService
 ) {
@@ -59,6 +65,10 @@ class WorkspaceRecordService @Autowired constructor(
         user: String,
         workspaceName: String
     ) {
+        workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(workspaceName)
+        )
         bkItsmService.createRecordView(projectId = projectId, userId = user, workspaceName = workspaceName)
     }
 
@@ -82,7 +92,13 @@ class WorkspaceRecordService @Autowired constructor(
         return workspaceRecordUserApprovalDao.checkApproval(
             dslContext = dslContext,
             workspaceName = workspaceName,
-            user = userId
+            user = userId,
+            expiredDays = redisOperation.get(REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS)?.toLongOrNull() ?: 7L
         )
+    }
+
+    companion object {
+        private const val REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS =
+            "remotedev:worksapce.user.approval.expiredDays"
     }
 }
