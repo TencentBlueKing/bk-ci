@@ -29,6 +29,22 @@ class CmdbServerDTOTest {
         assertThat(cmdbServerDTO.getBakOperatorStrLessThanMaxLength()).endsWith("user123456")
         assertThat(cmdbServerDTO.getOsNameLessThanMaxLength()!!.length).isEqualTo(128)
         assertThat(cmdbServerDTO.getOsNameLessThanMaxLength()).endsWith("01234567")
+        // 单个备份负责人长度就超出限制
+        cmdbServerDTO = CmdbServerDTO(
+            serverId = 1L,
+            ip = "127.0.0.1",
+            operator = "user1",
+            bakOperatorList = listOf(
+                "user123456user123456user123456user123456user123456user123456user123456user123456user123456" +
+                    "user123456user123456user123456user123456user123456user123456user123456user123456user123456" +
+                    "user123456user123456user123456user123456user123456user123456user123456user123456user123456"
+            ),
+            lanIpList = emptyList(),
+            deptId = null,
+            hostName = null,
+            osName = null
+        )
+        assertThat(cmdbServerDTO.getBakOperatorStrLessThanMaxLength()).isEqualTo("")
         // 2.不被截断
         cmdbServerDTO = CmdbServerDTO(
             serverId = 1L,

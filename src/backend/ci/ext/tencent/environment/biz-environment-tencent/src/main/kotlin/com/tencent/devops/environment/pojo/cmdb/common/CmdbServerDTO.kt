@@ -99,7 +99,12 @@ data class CmdbServerDTO(
             bakOperatorStr = bakOperatorStr.substring(0, maxLength)
             if (firstCharAfterMaxLength != ';') {
                 val lastIndex = bakOperatorStr.lastIndexOf(";")
-                bakOperatorStr = bakOperatorStr.substring(0, lastIndex)
+                if (lastIndex != -1) {
+                    bakOperatorStr = bakOperatorStr.substring(0, lastIndex)
+                } else {
+                    // 单个备份负责人长度超过maxLength
+                    return ""
+                }
             }
         }
         return bakOperatorStr
