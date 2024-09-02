@@ -43,7 +43,7 @@ class ClientDao {
             ).onDuplicateKeyUpdate()
                 .set(CURRENT_USER, currentUserId)
                 .set(CURRENT_PROJECT_IDS, JSON.json(JsonUtil.toJson(currentProjectIds, false)))
-                .set(CURRENT_WORKSPACE_NAMES, JSON.json(JsonUtil.toJson(currentProjectIds, false)))
+                .set(CURRENT_WORKSPACE_NAMES, JSON.json(JsonUtil.toJson(currentWorkspaceNames, false)))
                 .set(VERSION, version)
                 .set(START_VERSION, startVersion)
                 .set(UPDATE_TIME, LocalDateTime.now())
