@@ -66,6 +66,7 @@ class WorkspaceNotifyHistoryDao {
                 .and(TYPE.eq(type.name))
                 .and(STATUS.eq(RemoteDevNotifyType.Status.FAIL.name))
                 .orderBy(CREATED_TIME.asc())
+                .limit(100)
                 .fetch()
         }
     }

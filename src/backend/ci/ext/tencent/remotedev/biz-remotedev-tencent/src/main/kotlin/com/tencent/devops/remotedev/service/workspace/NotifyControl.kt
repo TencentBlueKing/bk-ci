@@ -124,7 +124,12 @@ class NotifyControl @Autowired constructor(
         type: RemoteDevNotifyType
     ) {
         val failHistory = workspaceNotifyHistoryDao.fetchFailMessage(dslContext, userId, type)
+        val limit = LocalDateTime.now().plusDays(-3)
         failHistory.forEach { history ->
+            if (history.createdTime < limit) {
+                workspaceNotifyHistoryDao.updateStatus(dslContext, history.id, RemoteDevNotifyType.Status.FAIL_EXPIRED)
+                return
+            }
             notify4User(
                 userIds = setOf(userId),
                 notifyType = mutableSetOf(type),
