@@ -45,7 +45,7 @@ import java.util.stream.Collectors
 @Primary
 @Service
 class WechatServiceImpl @Autowired constructor(
-    private val wechatNotifyDao: WechatNotifyDao,
+    private val wechatNotifyDao: WechatNotifyDao
 ) : WechatService {
 
     override fun sendMqMsg(message: WechatNotifyMessage) {
