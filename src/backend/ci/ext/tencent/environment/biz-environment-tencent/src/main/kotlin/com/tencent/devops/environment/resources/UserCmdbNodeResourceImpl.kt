@@ -28,21 +28,27 @@
 package com.tencent.devops.environment.resources
 
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserCmdbNodeResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.CmdbNode
+import com.tencent.devops.environment.pojo.ListUserCmdbNodesReq
+import com.tencent.devops.environment.pojo.ScrollIdPage
 import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
 import com.tencent.devops.environment.pojo.job.ImportCmdbNodeInfo
 import com.tencent.devops.environment.pojo.job.ReImportCmdbNodeInfo
 import com.tencent.devops.environment.service.CmdbNodeService
+import com.tencent.devops.environment.service.cmdb.impl.ImportCmdbNodeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserCmdbNodeResourceImpl @Autowired constructor(
-    private val cmdbNodeService: CmdbNodeService
+    private val cmdbNodeService: CmdbNodeService,
+    private val importCmdbNodeService: ImportCmdbNodeService
 ) : UserCmdbNodeResource {
 
     override fun listUserCmdbNodesNew(
@@ -63,6 +69,33 @@ class UserCmdbNodeResourceImpl @Autowired constructor(
                 ips = ips ?: listOf()
             )
         )
+    }
+
+    override fun listUserCmdbNodesWithScrollId(
+        userId: String,
+        req: ListUserCmdbNodesReq
+    ): Result<ScrollIdPage<CmdbNode>> {
+        checkListUserCmdbNodesReq(req)
+        return Result(
+            importCmdbNodeService.listUserCmdbNodes(
+                userId = userId,
+                projectId = req.projectId,
+                bakOperator = req.bakOperator,
+                scrollId = req.scrollId,
+                pageSize = req.pageSize,
+                ips = req.ips
+            )
+        )
+    }
+
+    private fun checkListUserCmdbNodesReq(req: ListUserCmdbNodesReq) {
+        val maxIpNum = 500
+        if (req.ips != null && req.ips!!.size > maxIpNum) {
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_INPUT_TOO_MANY_IP,
+                params = arrayOf(maxIpNum.toString())
+            )
+        }
     }
 
     @AuditEntry(actionId = ActionId.ENV_NODE_CREATE)

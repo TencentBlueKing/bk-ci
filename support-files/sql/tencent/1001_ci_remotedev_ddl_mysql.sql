@@ -432,6 +432,22 @@ CREATE TABLE IF NOT EXISTS `T_CLIENT_VERSION` (
     KEY `idx_version` (`VERSION`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端版本控制';
 
+CREATE TABLE IF NOT EXISTS `T_CLIENT` (
+	`MAC_ADDRESS` varchar(64)  NOT NULL COMMENT 'MAC地址',
+	`CURRENT_USER` varchar(128)  NOT NULL COMMENT '当前使用用户',
+    `CURRENT_WORKSPACE_NAMES` json NOT NULL COMMENT '当前用户所属的工作空间名称列表',
+    `CURRENT_PROJECT_IDS` json NOT NULL COMMENT '当前机器所属的蓝盾项目ID列表',
+	`VERSION` varchar(16)  NOT NULL COMMENT '客户端版本',
+    `OS` varchar(16)  NOT NULL COMMENT '客户端系统',
+	`START_VERSION` varchar(64)  NOT NULL COMMENT 'START 版本',
+    `CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+	`UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '最近更新时间',
+    PRIMARY KEY (`MAC_ADDRESS`),
+    KEY `T_CLIENT_VERSION_IDX`  (`VERSION`),
+    KEY `T_CLIENT_START_VERSION_IDX` (`START_VERSION`),
+    KEY `T_CLIENT_UPDATE_TIME_IDX` (`UPDATE_TIME`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端信息';
+
 -- ----------------------------
 -- Table structure for T_REMOTEDEV_CVM 云研发CVM
 -- ----------------------------
@@ -643,6 +659,21 @@ create table IF NOT EXISTS T_WORKSPACE_LABELS
     KEY `IDX_LABEL` (`LABEL`)
 )
     comment '工作空间标签表' charset = utf8;
+	
+CREATE TABLE `T_WORKSPACE_NOTIFY_HISTORY`
+(
+    ID             bigint auto_increment
+        primary key,
+    `BIZ_ID`       varchar(64) NOT NULL COMMENT '会话ID，同一批次的通知，BIZ_ID 会一样',
+    `OPERATOR`     varchar(64) NOT NULL DEFAULT '' COMMENT '操作人',
+    `USER_IDS`        varchar(64) NOT NULL DEFAULT '' COMMENT '接收人',
+    `TYPE`         varchar(32) NOT NULL DEFAULT '' COMMENT '通知类型',
+    `STATUS`       varchar(32) NOT NULL COMMENT '通知状态',
+    `BODY_PARAMS`   text        NOT NULL COMMENT '描述内容',
+    `CREATED_TIME` timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    KEY `uni_1` (`BIZ_ID`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='云桌面消息通知历史'
 
 -- ----------------------------
 -- Table structure for T_DISPATCH_WORKSPACE_OP_HIS

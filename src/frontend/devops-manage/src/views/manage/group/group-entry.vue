@@ -9,6 +9,7 @@
 
 <script lang="ts">
 import PermissionMain from '@/components/user-group/components/permission-main.vue';
+import tools from '@/utils/tools';
 import { Message } from 'bkui-vue';
 import { useI18n } from 'vue-i18n';
 
@@ -27,7 +28,8 @@ export default {
 
   computed: {
     projectCode() {
-      return this.$route.params.projectCode || this.$route.query.projectCode;
+      return this.$route.params.projectCode || this.$route.query.projectCode || tools.getCookie('X-DEVOPS-PROJECT-ID') || '';
+      
     },
   },
 

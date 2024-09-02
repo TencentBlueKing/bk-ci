@@ -485,7 +485,6 @@ class ExpertSupportService @Autowired constructor(
             userIds = mutableSetOf(operator),
             cc = cc,
             projectId = null,
-            notifyTemplateCode = "REMOTEDEV_EXPAND_DISK_DONE",
             notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
             bodyParams = mutableMapOf(
                 "projectId" to projectId,
@@ -493,6 +492,7 @@ class ExpertSupportService @Autowired constructor(
                 "taskStatus" to (taskInfo.status?.name ?: ""),
                 "taskLogs" to taskInfo.logs.joinToString(";"),
                 "host" to (workspace.hostIp ?: ""),
+                "notifyTemplateCode" to "REMOTEDEV_EXPAND_DISK_DONE",
                 "dsize" to dSize
             )
         )

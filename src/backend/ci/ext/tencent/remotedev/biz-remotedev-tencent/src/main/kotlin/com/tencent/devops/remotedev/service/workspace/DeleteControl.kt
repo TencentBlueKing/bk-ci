@@ -202,12 +202,12 @@ class DeleteControl @Autowired constructor(
                 workspaceName = workspace.workspaceName,
                 cc = mutableSetOf(workspace.createUserId),
                 projectId = workspace.projectId,
-                notifyTemplateCode = NotifyControl.WORKSPACE_FORCE_DELETE,
                 notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                 bodyParams = mutableMapOf(
                     "cgsIp" to (windowsInfo?.hostIp ?: ""),
                     "userId" to userIds.joinToString(),
-                    "projectId" to (workspace.projectId)
+                    "projectId" to (workspace.projectId),
+                    "notifyTemplateCode" to NotifyControl.WORKSPACE_FORCE_DELETE
                 )
             )
         }
@@ -281,11 +281,11 @@ class DeleteControl @Autowired constructor(
                 userIds = mutableSetOf(user),
                 cc = cc,
                 projectId = null,
-                notifyTemplateCode = NotifyControl.WORKSPACE_BATCH_FORCE_DELETE,
                 notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                 bodyParams = mutableMapOf(
                     "userId" to user,
                     "rtxTable" to rtxTable,
+                    "notifyTemplateCode" to NotifyControl.WORKSPACE_BATCH_FORCE_DELETE,
                     "emailTable" to emailTable
                 )
             )

@@ -46,6 +46,10 @@ data class EnvironmentProperties(
      */
     val cmdb: CmdbProperties,
     /**
+     * 公司新CMDB相关配置
+     */
+    val newCmdb: NewCmdbProperties,
+    /**
      * CC相关配置
      */
     val cc: CCProperties,

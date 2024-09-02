@@ -102,9 +102,11 @@ data class TriggerContainer(
 
     override fun fetchMatrixContext(): Map<String, String>? = null
 
-    override fun isContainerEnable(): Boolean {
+    override fun containerEnabled(): Boolean {
         return true
     }
+
+    override fun setContainerEnable(enable: Boolean) = Unit
 
     override fun transformCompatibility() {
         super.transformCompatibility()

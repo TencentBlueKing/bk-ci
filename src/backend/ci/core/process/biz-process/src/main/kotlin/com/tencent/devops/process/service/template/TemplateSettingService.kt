@@ -4,8 +4,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
-import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.service.PipelineInfoExtService
@@ -13,7 +11,6 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
-import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -110,31 +107,22 @@ class TemplateSettingService @Autowired constructor(
         return setting.copy(version = settingVersion)
     }
 
-    fun insertTemplateSetting(
+    fun saveDefaultTemplateSetting(
         context: DSLContext,
         userId: String,
         projectId: String,
         templateId: String,
-        pipelineName: String,
-        isTemplate: Boolean
+        templateName: String
     ): PipelineSetting {
-        val failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
-        val failType = failNotifyTypes.split(",").filter { i -> i.isNotBlank() }
-            .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
-        val failSubscription = Subscription(
-            types = failType,
-            groups = emptySet(),
-            users = "\${{ci.actor}}",
-            content = NotifyTemplateUtils.getCommonShutdownFailureContent()
-        )
-        val setting = PipelineSetting.defaultSetting(
-            projectId = projectId, pipelineId = templateId, pipelineName = pipelineName,
-            maxPipelineResNum = null, failSubscription = failSubscription
+        val defaultSetting = templateCommonService.getDefaultSetting(
+            projectId = projectId,
+            templateId = templateId,
+            templateName = templateName
         )
         return saveTemplatePipelineSetting(
             context = context,
             userId = userId,
-            setting = setting
+            setting = defaultSetting
         )
     }
 

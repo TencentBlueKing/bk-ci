@@ -293,8 +293,7 @@ class ServiceRemoteDevResourceImpl(
     override fun notifyWorkspaceInfo(operator: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
         notifyControl.notifyWorkspaceInfo(
             userId = operator,
-            notifyData = notifyData,
-            enableSendDesktop = true
+            notifyData = notifyData
         )
         return Result(true)
     }
@@ -304,13 +303,17 @@ class ServiceRemoteDevResourceImpl(
         if (!ok) {
             return Result(false)
         }
-        startWorkspaceService.sendMessage(
-            operator = notifyData.operator,
-            userIdList = notifyData.userIdList,
-            dataType = notifyData.dataType,
-            data = notifyData.data,
-            messageStartTime = notifyData.messageEndTime,
-            messageEndTime = notifyData.messageEndTime
+        notifyControl.notify4User(
+            userIds = notifyData.userIdList,
+            notifyType = setOf(notifyData.dataType),
+            bodyParams = mutableMapOf(
+                "operator" to notifyData.operator,
+                "messageContent" to notifyData.data,
+                "messageStartTime" to notifyData.messageStartTime.toString(),
+                "messageEndTime" to notifyData.messageEndTime.toString(),
+                "clientMsg" to notifyData.data,
+                "notifyTemplateCode" to notifyData.notifyTemplateCode
+            )
         )
         return Result(true)
     }

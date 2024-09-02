@@ -212,7 +212,9 @@ class WindowsResourceConfigService @Autowired constructor(
         return res
     }
 
-    fun getAllZone(): List<WindowsResourceZoneConfig> {
+    fun getAllZone(
+        type: WindowsResourceZoneConfigType = WindowsResourceZoneConfigType.DEFAULT
+    ): List<WindowsResourceZoneConfig> {
         logger.info("get all windows resource zone")
         return windowsResourceZoneDao.fetchAll(dslContext, true)
     }
@@ -267,7 +269,9 @@ class WindowsResourceConfigService @Autowired constructor(
         ).firstOrNull { it.zoneShortName.startsWith(zoneId) }
     }
 
-    fun getAllSpecZoneShortName() = windowsResourceZoneDao.fetchAllSpec(dslContext).map { it.zoneShortName }
+    fun getAllSpecZone() = windowsResourceZoneDao.fetchAllSpec(dslContext)
+
+    fun getAllSpecZoneShortName() = getAllSpecZone().map { it.zoneShortName }
 
     // 新增windows硬件资源配置
     fun addWindowsResource(windowsResourceConfig: WindowsResourceTypeConfig): Boolean {
