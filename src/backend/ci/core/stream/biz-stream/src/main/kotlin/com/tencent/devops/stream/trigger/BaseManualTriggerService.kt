@@ -103,6 +103,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
             triggerBuildReq = triggerBuildReq
         )
 
+        action.data.watcherStart("baseManualTriggerService.triggerBuild")
         val buildPipeline = gitPipelineResourceDao.getPipelineById(
             dslContext = dslContext,
             gitProjectId = action.data.getGitProjectId().toLong(),
@@ -250,7 +251,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
         )
 
         var buildId: BuildId? = null
-        StreamTriggerExceptionHandlerUtil.handleManualTrigger {
+        StreamTriggerExceptionHandlerUtil.handleManualTrigger(action) {
             buildId = trigger(action, originYaml, triggerBuildReq)
         }
         return buildId
@@ -262,6 +263,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
         originYaml: String,
         triggerBuildReq: TriggerBuildReq
     ): BuildId? {
+        action.data.watcherStart("baseManualTriggerService.trigger")
         val yamlReplaceResult = streamYamlTrigger.prepareCIBuildYaml(action)!!
         val parsedYaml = if (action.metaData.streamObjectKind.needInput()) {
             YamlCommonUtils.toYamlNotNull(

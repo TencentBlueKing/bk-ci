@@ -103,6 +103,7 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_LIST_NODE_NOT_IN_CC_OR_CMDB = "2105053" // 环境管理: 节点中的[{0}]不在CC/CMDB中
     const val ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT = "2105054" // 环境管理: 请求的job实例不属于当前项目或已过期(超过一个月)
     const val ERROR_FAIL_TO_CREATE_AGENT_INSTALL_TASK = "2105055" // 环境管理: 创建Agent安装任务失败：{0}
+    const val ERROR_INPUT_TOO_MANY_IP = "2105056" // 环境管理: 输入的IP数量不可超过{0}
 
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器

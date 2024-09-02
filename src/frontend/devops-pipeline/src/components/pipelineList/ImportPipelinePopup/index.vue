@@ -124,9 +124,9 @@
                 })
             },
             async updatePipeline (result, newPipelineName) {
+                const { templateId, instanceFromTemplate, ...restModel } = result.model
                 const pipeline = {
-                    ...result.model,
-                    instanceFromTemplate: false,
+                    ...restModel,
                     name: newPipelineName
                 }
                 try {

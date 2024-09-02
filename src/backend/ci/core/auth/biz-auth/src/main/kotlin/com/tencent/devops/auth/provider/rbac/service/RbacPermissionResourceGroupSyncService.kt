@@ -51,6 +51,7 @@ import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupApplyRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -175,6 +176,9 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             val limit = 100
             var offset = 0
             val startEpoch = System.currentTimeMillis()
+            val finalRecordIdsOfTimeOut = mutableListOf<Long>()
+            val finalRecordsOfPending = mutableListOf<TAuthResourceGroupApplyRecord>()
+            val finalRecordsOfSuccess = mutableListOf<TAuthResourceGroupApplyRecord>()
             do {
                 logger.info("sync members of apply | start")
                 val records = authResourceGroupApplyDao.list(
@@ -197,35 +201,38 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                         false
                     }
                 }
-                if (recordIdsOfTimeOut.isNotEmpty()) {
-                    authResourceGroupApplyDao.batchUpdate(
-                        dslContext = dslContext,
-                        ids = recordIdsOfTimeOut,
-                        applyToGroupStatus = ApplyToGroupStatus.TIME_OUT
-                    )
-                }
-                if (recordsOfPending.isNotEmpty()) {
-                    authResourceGroupApplyDao.batchUpdate(
-                        dslContext = dslContext,
-                        ids = recordsOfPending.map { it.id },
-                        applyToGroupStatus = ApplyToGroupStatus.PENDING
-                    )
-                }
-                if (recordsOfSuccess.isNotEmpty()) {
-                    recordsOfSuccess.forEach {
-                        syncIamGroupMember(
-                            projectCode = it.projectCode,
-                            iamGroupId = it.iamGroupId
-                        )
-                    }
-                    authResourceGroupApplyDao.batchUpdate(
-                        dslContext = dslContext,
-                        ids = recordsOfSuccess.map { it.id },
-                        applyToGroupStatus = ApplyToGroupStatus.SUCCEED
-                    )
-                }
+                finalRecordIdsOfTimeOut.addAll(recordIdsOfTimeOut)
+                finalRecordsOfPending.addAll(recordsOfPending)
+                finalRecordsOfSuccess.addAll(recordsOfSuccess)
                 offset += limit
             } while (records.size == limit)
+            if (finalRecordIdsOfTimeOut.isNotEmpty()) {
+                authResourceGroupApplyDao.batchUpdate(
+                    dslContext = dslContext,
+                    ids = finalRecordIdsOfTimeOut,
+                    applyToGroupStatus = ApplyToGroupStatus.TIME_OUT
+                )
+            }
+            if (finalRecordsOfPending.isNotEmpty()) {
+                authResourceGroupApplyDao.batchUpdate(
+                    dslContext = dslContext,
+                    ids = finalRecordsOfPending.map { it.id },
+                    applyToGroupStatus = ApplyToGroupStatus.PENDING
+                )
+            }
+            if (finalRecordsOfSuccess.isNotEmpty()) {
+                finalRecordsOfSuccess.forEach {
+                    syncIamGroupMember(
+                        projectCode = it.projectCode,
+                        iamGroupId = it.iamGroupId
+                    )
+                }
+                authResourceGroupApplyDao.batchUpdate(
+                    dslContext = dslContext,
+                    ids = finalRecordsOfSuccess.map { it.id },
+                    applyToGroupStatus = ApplyToGroupStatus.SUCCEED
+                )
+            }
             logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync members of apply")
         }
     }

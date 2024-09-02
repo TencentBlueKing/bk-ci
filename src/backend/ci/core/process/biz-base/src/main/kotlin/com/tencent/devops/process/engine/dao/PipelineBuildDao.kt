@@ -211,7 +211,7 @@ class PipelineBuildDao {
                 .set(QUEUE_TIME, retryInfo.nowTime)
                 .set(STATUS, retryInfo.status.ordinal)
                 .set(CONCURRENCY_GROUP, retryInfo.concurrencyGroup)
-
+                .set(EXECUTE_COUNT, retryInfo.executeCount)
             retryInfo.buildParameters?.let {
                 update.set(BUILD_PARAMETERS, JsonUtil.toJson(it, formatted = false))
             }
@@ -227,7 +227,7 @@ class PipelineBuildDao {
                 .set(QUEUE_TIME, retryInfo.nowTime)
                 .set(STATUS, retryInfo.status.ordinal)
                 .set(CONCURRENCY_GROUP, retryInfo.concurrencyGroup)
-
+                .set(EXECUTE_COUNT, retryInfo.executeCount)
             retryInfo.buildParameters?.let {
                 update.set(BUILD_PARAMETERS, JsonUtil.toJson(it, formatted = false))
             }
@@ -579,14 +579,12 @@ class PipelineBuildDao {
         projectId: String,
         buildId: String,
         startTime: LocalDateTime?,
-        executeCount: Int?,
         debug: Boolean?
     ) {
         if (debug != true) {
             with(T_PIPELINE_BUILD_HISTORY) {
                 val update = dslContext.update(this).set(STATUS, BuildStatus.RUNNING.ordinal)
                 startTime?.let { update.set(START_TIME, startTime) }
-                executeCount?.let { update.set(EXECUTE_COUNT, executeCount) }
                 update.setNull(ERROR_INFO)
                 update.setNull(EXECUTE_TIME)
                 update.where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId))).execute()
@@ -595,7 +593,6 @@ class PipelineBuildDao {
             with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
                 val update = dslContext.update(this).set(STATUS, BuildStatus.RUNNING.ordinal)
                 startTime?.let { update.set(START_TIME, startTime) }
-                executeCount?.let { update.set(EXECUTE_COUNT, executeCount) }
                 update.setNull(ERROR_INFO)
                 update.setNull(EXECUTE_TIME)
                 update.where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId))).execute()
@@ -1916,7 +1913,7 @@ class PipelineBuildDao {
                         JsonUtil.getObjectMapper().readValue(self) as List<FileInfo>
                     },
                     retryFlag = t.isRetry,
-                    executeCount = t.executeCount,
+                    executeCount = t.executeCount ?: 1,
                     executeTime = t.executeTime ?: 0,
                     concurrencyGroup = t.concurrencyGroup,
                     webhookType = t.webhookType,
@@ -1975,7 +1972,7 @@ class PipelineBuildDao {
                         JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
                     },
                     retryFlag = t.isRetry,
-                    executeCount = t.executeCount,
+                    executeCount = t.executeCount ?: 1,
                     executeTime = t.executeTime ?: 0,
                     concurrencyGroup = t.concurrencyGroup,
                     webhookType = t.webhookType,

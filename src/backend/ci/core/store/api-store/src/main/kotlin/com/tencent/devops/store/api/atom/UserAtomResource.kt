@@ -49,6 +49,7 @@ import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
@@ -206,4 +207,12 @@ interface UserAtomResource {
         @Parameter(description = "卸载插件请求包体", required = true)
         unInstallReq: UnInstallReq
     ): Result<Boolean>
+
+    @Operation(summary = "批量获取插件输出信息")
+    @POST
+    @Path("/output/info/list")
+    fun getAtomOutputInfos(
+        @Parameter(description = "插件信息集合，格式：插件标识@版本号", required = true)
+        atomInfos: Set<String>
+    ): Result<Map<String, String>?>
 }

@@ -321,6 +321,27 @@ class BuildRecordTaskDao {
         }
     }
 
+    fun flushEndTimeWhenRetry(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int
+    ) {
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            dslContext.update(this)
+                .setNull(END_TIME)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                        .and(TASK_ID.eq(taskId))
+                ).execute()
+        }
+    }
+
     class BuildRecordTaskJooqMapper : RecordMapper<TPipelineBuildRecordTaskRecord, BuildRecordTask> {
         override fun map(record: TPipelineBuildRecordTaskRecord?): BuildRecordTask? {
             return record?.run {

@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
@@ -132,7 +133,9 @@ interface BuildJobResource {
         vmSeqId: String,
         @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String
+        vmName: String,
+        @Parameter(description = "执行结果", required = false)
+        result: BuildJobResult? = null
     ): Result<Boolean>
 
     @Operation(summary = "Job超时触发")
