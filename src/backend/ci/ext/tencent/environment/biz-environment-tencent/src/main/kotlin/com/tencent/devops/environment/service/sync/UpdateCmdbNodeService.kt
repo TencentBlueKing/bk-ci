@@ -114,8 +114,8 @@ class UpdateCmdbNodeService @Autowired constructor(
                     nodeIp = oldCmdbNode.nodeIp,
                     serverId = newCmdbServer?.serverId,
                     operator = newCmdbServer?.operator,
-                    bakOperator = newCmdbServer?.getBakOperatorStr(),
-                    osName = newCmdbServer?.osName
+                    bakOperator = newCmdbServer?.getBakOperatorStrLessThanMaxLength(),
+                    osName = newCmdbServer?.getOsNameLessThanMaxLength()
                 )
             } else null
         }
