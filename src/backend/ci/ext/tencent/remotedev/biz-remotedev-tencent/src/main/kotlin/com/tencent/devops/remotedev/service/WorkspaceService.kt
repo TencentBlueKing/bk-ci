@@ -66,6 +66,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
@@ -448,7 +449,8 @@ class WorkspaceService @Autowired constructor(
         }
 
         val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
-        val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
+        val defaultZoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
+        val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUsers)
             .mapValues {
                 if ((it.value["USER_NAME"] as String).isNotBlank()) {
@@ -509,7 +511,13 @@ class WorkspaceService @Autowired constructor(
                     workspaceMountType = it.workspaceMountType,
                     workspaceSystemType = it.workspaceSystemType,
                     winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
-                    zoneConfig = detail?.hostIp?.let { ip -> zoneConfig[ip.replace(Regex("[\\d\\.]+"), "")] },
+                    zoneConfig = if (detail?.hostIp != null) {
+                        /*后续直接取windows表中的zoneId，不通过ip进行解析*/
+                        val zoneId = detail.hostIp!!.substringBefore(".")
+                        specZoneConfig[zoneId] ?: defaultZoneConfig[zoneId.removeSuffixNumb()]
+                    } else {
+                        null
+                    },
                     owner = owners[it.workspaceName],
                     viewers = viewers[it.workspaceName],
                     ownerCN = taiUserCN[owners[it.workspaceName]] ?: owners[it.workspaceName],
@@ -713,7 +721,9 @@ class WorkspaceService @Autowired constructor(
             } else it.key
         }
         val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
-        val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
+        val defaultZoneConfig = windowsResourceConfigService.getAllZone(WindowsResourceZoneConfigType.DEFAULT)
+            .associateBy { it.zoneShortName }
+        val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
             dslContext,
@@ -732,8 +742,10 @@ class WorkspaceService @Autowired constructor(
                     shared.type == WorkspaceShared.AssignType.OWNER
                 }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null
                 val hostIp = windowsWorkspace[it.workspaceName]?.hostIp
-                val zone = if (it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
-                    hostIp?.let { ip -> zoneConfig[ip.replace(Regex("[\\d\\.]+"), "")] }
+                val zone = if (hostIp != null && it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
+                    /*后续直接取windows表中的zoneId，不通过ip进行解析*/
+                    val zoneId = hostIp.substringBefore(".")
+                    specZoneConfig[zoneId] ?: defaultZoneConfig[zoneId.removeSuffixNumb()]
                 } else {
                     null
                 }
