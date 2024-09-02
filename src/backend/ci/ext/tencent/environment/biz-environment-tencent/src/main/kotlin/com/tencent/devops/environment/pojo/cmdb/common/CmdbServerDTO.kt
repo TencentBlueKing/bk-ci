@@ -3,6 +3,7 @@ package com.tencent.devops.environment.pojo.cmdb.common
 import com.tencent.devops.environment.pojo.cmdb.resp.NewCmdbServer
 import com.tencent.devops.environment.pojo.cmdb.resp.RawCmdbNode
 import io.swagger.v3.oas.annotations.media.Schema
+import org.slf4j.LoggerFactory
 
 @Schema(title = "公司CMDB机器信息")
 data class CmdbServerDTO(
@@ -16,6 +17,7 @@ data class CmdbServerDTO(
     val osName: String?
 ) {
     companion object {
+        private val logger = LoggerFactory.getLogger(CmdbServerDTO::class.java)
 
         fun fromRawCmdbNode(rawCmdbNode: RawCmdbNode): CmdbServerDTO {
             val bakOperatorList = rawCmdbNode.bakOperator.split(";").toList()
@@ -80,5 +82,46 @@ data class CmdbServerDTO(
             return ""
         }
         return bakOperatorList.joinToString(";")
+    }
+
+    /**
+     * 获取备份负责人字符串，如果超过256个字符，则截取拼接后不超过256个字符的前N个备份负责人组成字符串
+     */
+    fun getBakOperatorStrLessThanMaxLength(): String {
+        if (bakOperatorList.isNullOrEmpty()) {
+            return ""
+        }
+        val maxLength = 256
+        var bakOperatorStr = bakOperatorList.joinToString(";")
+        if (bakOperatorStr.length > maxLength) {
+            logger.info("bakOperatorTruncated|maxLength=$maxLength|rawBakOperatorStr=$bakOperatorStr")
+            val firstCharAfterMaxLength = bakOperatorStr[maxLength]
+            bakOperatorStr = bakOperatorStr.substring(0, maxLength)
+            if (firstCharAfterMaxLength != ';') {
+                val lastIndex = bakOperatorStr.lastIndexOf(";")
+                if (lastIndex != -1) {
+                    bakOperatorStr = bakOperatorStr.substring(0, lastIndex)
+                } else {
+                    // 单个备份负责人长度超过maxLength
+                    return ""
+                }
+            }
+        }
+        return bakOperatorStr
+    }
+
+    /**
+     * 获取操作系统名称，如果超过128个字符，则截取前128个字符
+     */
+    fun getOsNameLessThanMaxLength(): String? {
+        if (osName.isNullOrEmpty()) {
+            return osName
+        }
+        val maxLength = 128
+        if (osName.length > maxLength) {
+            logger.info("osNameTruncated|maxLength=$maxLength|rawOsName=$osName")
+            return osName.substring(0, maxLength)
+        }
+        return osName
     }
 }
