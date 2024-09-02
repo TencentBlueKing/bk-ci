@@ -246,7 +246,7 @@ class BuildStartControl @Autowired constructor(
                     buildInfo = buildInfo,
                     setting = setting,
                     executeCount = executeCount,
-                    limitCount = 0
+                    limitCount = 1
                 )
             }
 
@@ -398,7 +398,7 @@ class BuildStartControl @Autowired constructor(
         if (checkStart) {
             val runningCount = pipelineRuntimeService.getRunningBuildCount(projectId, pipelineId)
 
-            if (runningCount > limitCount) {
+            if (runningCount >= limitCount) {
                 // 需要重新入队等待
                 pipelineRuntimeService.updateBuildInfoStatus2Queue(
                     projectId = projectId, buildId = buildId, oldStatus = BuildStatus.QUEUE_CACHE,
