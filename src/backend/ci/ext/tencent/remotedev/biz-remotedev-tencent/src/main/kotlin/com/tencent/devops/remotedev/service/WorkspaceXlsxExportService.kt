@@ -105,7 +105,8 @@ class WorkspaceXlsxExportService @Autowired constructor(
                 when (type) {
                     WindowsResourceZoneConfigType.DEVCLOUD -> "DevCloud"
                     WindowsResourceZoneConfigType.CSIG_USE -> "CSIG离岸专区"
-                    else -> "IEG离岸专区"
+                    WindowsResourceZoneConfigType.DEFAULT, WindowsResourceZoneConfigType.INTERNAL_USE -> "IEG离岸专区"
+                    else -> ""
                 }
             })
 
@@ -175,7 +176,8 @@ class WorkspaceXlsxExportService @Autowired constructor(
                 when (type) {
                     WindowsResourceZoneConfigType.DEVCLOUD -> "DevCloud"
                     WindowsResourceZoneConfigType.CSIG_USE -> "CSIG离岸专区"
-                    else -> "IEG离岸专区"
+                    WindowsResourceZoneConfigType.DEFAULT, WindowsResourceZoneConfigType.INTERNAL_USE -> "IEG离岸专区"
+                    else -> ""
                 }
             })
             row.createCell(6).setCellValue(record.zoneConfig?.zone)
