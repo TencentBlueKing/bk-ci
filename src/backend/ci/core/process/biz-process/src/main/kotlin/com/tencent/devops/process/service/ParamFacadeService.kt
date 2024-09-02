@@ -507,8 +507,8 @@ class ParamFacadeService @Autowired constructor(
         projectId: String,
         repoHashId: String,
         repositoryType: RepositoryType = RepositoryType.ID
-    ) = "/process/api/user/buildParam/$projectId/$repoHashId/refs?search={words}&" +
-            "repositoryType=${repositoryType.name}"
+    ) = "/process/api/user/buildParam/$projectId/repository/refs?search={words}&" +
+            "repositoryType=${repositoryType.name}&repositoryId=$repoHashId"
 
     companion object {
         private val logger = LoggerFactory.getLogger(ParamFacadeService::class.java)

@@ -186,13 +186,13 @@ interface UserBuildParametersResource {
 
     @Operation(summary = "构建表单查询分支/Tag变量")
     @GET
-    @Path("/{projectId}/{repositoryId}/refs")
+    @Path("/{projectId}/repository/refs")
     fun listRepoRefs(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "repo hash id", required = true)
-        @PathParam("repositoryId")
+        @QueryParam("repositoryId")
         repositoryId: String,
         @Parameter(description = "代码库请求类型", required = false)
         @QueryParam("repositoryType")
