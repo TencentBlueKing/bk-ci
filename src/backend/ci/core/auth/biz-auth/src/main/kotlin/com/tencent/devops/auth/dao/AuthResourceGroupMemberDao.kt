@@ -375,7 +375,7 @@ class AuthResourceGroupMemberDao {
                 .fetch().map {
                     ResourceMemberInfo(
                         id = it.value1(),
-                        name = it.value1(),
+                        name = it.value2(),
                         type = it.value3()
                     )
                 }
