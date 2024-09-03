@@ -39,7 +39,7 @@ function doUninstallRcLocal()
 function uninstallRcLocal()
 {
   print_zh "卸载rc.local上的Agent相关服务" "uninstall agent service with rc.local"
-  doUninstallRcLocal()
+  doUninstallRcLocal
   cd ${workspace}
   chmod +x *.sh
   ${workspace}/stop.sh
@@ -49,7 +49,7 @@ function uninstallSystemd()
 {
   print_zh "卸载Systemd上的Agent相关服务" "uninstall agent service with systemd"
   # 兼容旧数据
-  doUninstallRcLocal()
+  doUninstallRcLocal
   systemctl stop $service_name
   systemctl disable $service_name
   local SERVICE_FILE="/etc/systemd/system/${service_name}.service"
@@ -64,9 +64,9 @@ function uninstallAgentService()
 {
   print_zh "卸载可能存在的Agent相关服务" "uninstall agent service"
   if exists systemctl; then
-    uninstallSystemd()
+    uninstallSystemd
   else
-    uninstallRcLocal()
+    uninstallRcLocal
   fi
   print_zh "Agent服务 $service_name 卸载完成" "$service_name service has been uninstalled"
 }

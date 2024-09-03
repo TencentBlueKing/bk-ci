@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -28,6 +29,20 @@ const (
 type JdkType struct {
 	Jdk8  JdkVersionType
 	Jdk17 JdkVersionType
+	// 升级次数
+	upgradeTime int32
+}
+
+func (j *JdkType) AddUpgradeTime() {
+	atomic.AddInt32(&j.upgradeTime, 1)
+}
+
+func (j *JdkType) CheckUpgradeTime() bool {
+	if atomic.LoadInt32(&j.upgradeTime) >= JdkMaxUpgradeTime {
+		logs.Warnf("JDK upgrade times have exceeded the maximum of %d times, not upgraded", JdkMaxUpgradeTime)
+		return false
+	}
+	return true
 }
 
 // JdkVersionType jdk版本信息缓存

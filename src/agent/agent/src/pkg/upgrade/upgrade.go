@@ -51,19 +51,16 @@ var DockerFileMd5 struct {
 	Md5         string
 }
 
-type upgradeChangeItem struct {
-	AgentChanged     bool
-	WorkAgentChanged bool
-	JdkChanged       bool
-	DockerInitFile   bool
+// 升级分为两个阶段，下载和升级，每个阶段都可能存在不升级的情况，这里用一个对象保证生命周期统一
+type upgradeItems struct {
+	Agent          bool
+	Worker         bool
+	Jdk            bool
+	DockerInitFile bool
 }
 
-func (u upgradeChangeItem) checkNoChange() bool {
-	if !u.AgentChanged && !u.WorkAgentChanged && !u.JdkChanged && !u.DockerInitFile {
-		return true
-	}
-
-	return false
+func (u *upgradeItems) NoChange() bool {
+	return !u.Agent && !u.Worker && !u.Jdk && !u.DockerInitFile
 }
 
 // AgentUpgrade 升级主逻辑
@@ -78,7 +75,18 @@ func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 		}
 	}()
 
-	if !upgradeItem.Agent && !upgradeItem.Worker && !upgradeItem.Jdk && !upgradeItem.DockerInitFile {
+	upItems := &upgradeItems{
+		Agent:          upgradeItem.Agent,
+		Worker:         upgradeItem.Worker,
+		Jdk:            upgradeItem.Jdk,
+		DockerInitFile: upgradeItem.DockerInitFile,
+	}
+	// 检查JDK是否超过最大升级次数
+	if upItems.Jdk && !third_components.Jdk.CheckUpgradeTime() {
+		upItems.Jdk = false
+	}
+
+	if upItems.NoChange() {
 		return
 	} else {
 		// 如果同时还领取了构建任务那么这次的升级取消
@@ -110,14 +118,16 @@ func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 		return
 	}
 
-	logs.Infof("agentUpgrade|download upgrade files start %+v", upgradeItem)
-	changeItems := downloadUpgradeFiles(upgradeItem)
-	if changeItems.checkNoChange() {
+	// 下载升级文件
+	logs.Infof("agentUpgrade|download upgrade files start %+v", upItems)
+	downloadUpgradeFiles(upItems)
+	if upItems.NoChange() {
 		return
 	}
 
-	logs.Infof("agentUpgrade|download upgrade files done %+v", changeItems)
-	err := DoUpgradeOperation(changeItems)
+	// 升级逻辑
+	logs.Infof("agentUpgrade|download upgrade files done %+v", upItems)
+	err := DoUpgradeOperation(upItems)
 	if err != nil {
 		logs.WithError(err).Error("agentUpgrade|do upgrade operation failed")
 	} else {
@@ -170,38 +180,26 @@ func SyncDockerInitFileMd5() error {
 }
 
 // downloadUpgradeFiles 下载升级文件
-func downloadUpgradeFiles(item *api.UpgradeItem) upgradeChangeItem {
+func downloadUpgradeFiles(item *upgradeItems) {
 	workDir := systemutil.GetWorkDir()
 	upgradeDir := systemutil.GetUpgradeDir()
 	_ = os.MkdirAll(upgradeDir, os.ModePerm)
 
-	result := upgradeChangeItem{}
-
-	if !item.Agent {
-		result.AgentChanged = false
-	} else {
-		result.AgentChanged = downloadUpgradeAgent(workDir, upgradeDir)
+	if item.Agent {
+		item.Agent = downloadUpgradeAgent(workDir, upgradeDir)
 	}
 
-	if !item.Worker {
-		result.WorkAgentChanged = false
-	} else {
-		result.WorkAgentChanged = downloadUpgradeWorker(workDir, upgradeDir)
+	if item.Worker {
+		item.Worker = downloadUpgradeWorker(workDir, upgradeDir)
 	}
 
-	if !item.Jdk {
-		result.JdkChanged = false
-	} else {
-		result.JdkChanged = downloadUpgradeJdk(upgradeDir)
+	if item.Jdk {
+		item.Jdk = downloadUpgradeJdk(upgradeDir)
 	}
 
-	if !item.DockerInitFile {
-		result.DockerInitFile = false
-	} else {
-		result.DockerInitFile = downloadUpgradeDockerInit(upgradeDir)
+	if item.DockerInitFile {
+		item.DockerInitFile = downloadUpgradeDockerInit(upgradeDir)
 	}
-
-	return result
 }
 
 func downloadUpgradeAgent(workDir, upgradeDir string) (agentChanged bool) {

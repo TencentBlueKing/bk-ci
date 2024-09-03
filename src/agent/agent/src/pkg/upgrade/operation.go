@@ -119,14 +119,14 @@ func runUpgrader(action string) error {
 }
 
 // DoUpgradeOperation 调用升级程序
-func DoUpgradeOperation(changeItems upgradeChangeItem) error {
-	logs.Info("agentUpgrade|start upgrade, agent changed: ", changeItems.AgentChanged,
-		", work agent changed: ", changeItems.WorkAgentChanged,
-		", jdk agent changed: ", changeItems.JdkChanged,
-		", docker init file changed: ", changeItems.DockerInitFile,
+func DoUpgradeOperation(upItems *upgradeItems) error {
+	logs.Info("agentUpgrade|start upgrade, agent changed: ", upItems.Agent,
+		", work agent changed: ", upItems.Worker,
+		", jdk agent changed: ", upItems.Jdk,
+		", docker init file changed: ", upItems.DockerInitFile,
 	)
 
-	if changeItems.JdkChanged {
+	if upItems.Jdk {
 		err := DoUpgradeJdk()
 		if err != nil {
 			return err
@@ -135,7 +135,7 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 		logs.Info("agentUpgrade|jdk not changed, skip agent upgrade")
 	}
 
-	if changeItems.WorkAgentChanged {
+	if upItems.Worker {
 		logs.Info("agentUpgrade|work agent changed, replace work agent file")
 		_, err := fileutil.CopyFile(
 			systemutil.GetUpgradeDir()+"/"+config.WorkAgentFile,
@@ -152,7 +152,7 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 		logs.Info("agentUpgrade|worker not changed, skip agent upgrade")
 	}
 
-	if changeItems.AgentChanged {
+	if upItems.Agent {
 		logs.Info("agentUpgrade|agent changed, start upgrader")
 		err := runUpgrader(config.ActionUpgrade)
 		if err != nil {
@@ -162,7 +162,7 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 		logs.Info("agentUpgrade|agent not changed, skip agent upgrade")
 	}
 
-	if changeItems.DockerInitFile {
+	if upItems.DockerInitFile {
 		logs.Info("agentUpgrade|docker init file changed, replace docker init file")
 		_, err := fileutil.CopyFile(
 			systemutil.GetUpgradeDir()+"/"+config.DockerInitFile,
@@ -188,6 +188,7 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 
 func DoUpgradeJdk() error {
 	logs.Info("agentUpgrade|jdk changed, replace jdk file")
+	defer third_components.Jdk.AddUpgradeTime()
 
 	workDir := systemutil.GetWorkDir()
 
