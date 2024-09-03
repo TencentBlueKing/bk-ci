@@ -94,8 +94,9 @@ class DevxHandleBuildResultService @Autowired constructor(
         val baseEnvMap = mutableMapOf<String, TStoreBaseEnvRecord>()
         baseEnvRecords?.forEach { baseEnvRecord ->
             val osName = baseEnvRecord.osName
-            keys.add("${osName}_signResult")
-            baseEnvMap[osName] = baseEnvRecord
+            val osArch = baseEnvRecord.osArch
+            keys.add("${osName}_${osArch}_signResult")
+            baseEnvMap["${osName}_${osArch}"] = baseEnvRecord
         }
         // 批量获取key在构建变量表的值
         val varMap = if (keys.isNotEmpty()) {
@@ -150,8 +151,9 @@ class DevxHandleBuildResultService @Autowired constructor(
             val filedNames = key.split("_")
             // 获取操作系统名称
             val osName = filedNames[0]
+            val osArch = filedNames[1]
             val signMap = JsonUtil.toMap(value)
-            val baseEnvRecord = baseEnvMap[osName]
+            val baseEnvRecord = baseEnvMap["${osName}_${osArch}"]
             baseEnvRecord?.let {
                 doStoreSignBus(
                     signMap = signMap,
