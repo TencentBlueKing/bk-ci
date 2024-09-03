@@ -27,6 +27,7 @@
 
 package com.tencent.devops.experience.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
@@ -83,7 +84,8 @@ class ExperienceDownloadService @Autowired constructor(
     private val experienceBaseService: ExperienceBaseService,
     private val experiencePushService: ExperiencePushService,
     private val client: Client,
-    private val measureEventDispatcher: MeasureEventDispatcher
+    private val measureEventDispatcher: MeasureEventDispatcher,
+    private val objectMapper: ObjectMapper
 ) {
     fun checkVersion(userId: String, platform: Int, params: List<CheckVersionParam>): List<CheckVersionVO> {
         val experienceRecordIds = if (params.isEmpty()) {
@@ -343,18 +345,17 @@ class ExperienceDownloadService @Autowired constructor(
                             userId = userId,
                             operate = EXPERIENCE_TASK_DOWNLOAD_OPERATE,
                             theDate = LocalDate.now()
-                        ) to AtomicInteger(1)
+                        ) to 1
                     )
                 )
                 measureEventDispatcher.dispatch(
                     ProjectUserDailyEvent(
                         projectId = projectId,
                         userId = userId,
-                        theDate = LocalDate.now(),
-                        operate = EXPERIENCE_TASK_DOWNLOAD_OPERATE
+                        theDate = LocalDate.now()
                     ),
                     ProjectUserOperateMetricsEvent(
-                        projectUserOperateMetricsMap = projectUserOperateMetricsMap
+                        projectUserOperateMetricsMapStr = objectMapper.writeValueAsString(projectUserOperateMetricsMap)
                     )
                 )
             }
