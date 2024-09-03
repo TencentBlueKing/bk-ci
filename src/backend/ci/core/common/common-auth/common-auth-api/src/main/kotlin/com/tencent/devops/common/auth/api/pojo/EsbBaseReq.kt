@@ -27,8 +27,6 @@
 
 package com.tencent.devops.common.auth.api.pojo
 
-import com.tencent.devops.common.api.util.JsonUtil
-
 @Suppress("ALL")
 abstract class EsbBaseReq(
     open var bk_app_code: String,

@@ -26,8 +26,6 @@
  */
 package com.tencent.devops.notify.blueking.sdk.pojo
 
-import com.tencent.devops.common.api.util.JsonUtil
-
 @Suppress("ALL")
 abstract class ApiReq(
     open var bk_app_code: String?,
