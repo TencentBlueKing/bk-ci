@@ -30,17 +30,17 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: download frontend
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v4.1.7
       with:
         name: frontend
         path: src/frontend/frontend
     - name: download agent
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v4.1.7
       with:
         name: agent
         path: src/agent/agent/bin/
     - name: download backend
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v4.1.7
       with:
         name: backend-jar
         path: src/backend/ci/release
@@ -61,17 +61,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: download frontend
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4.1.7
         with:
           name: frontend
           path: src/frontend/frontend
       - name: download agent
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4.1.7
         with:
           name: agent
           path: src/agent/agent/bin/
       - name: download bkci
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4.1.7
         with:
           name: backend-docker
           path: src/backend/ci/release
@@ -131,12 +131,12 @@ jobs:
     needs: [package-zip, package-helm]
     steps:
     - name: download bkci-slim
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v4.1.7
       with:
         name: bkci-slim
         path: ./
     - name: download bkci-chart
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v4.1.7
       with:
         name: bkci-chart
         path: ./
