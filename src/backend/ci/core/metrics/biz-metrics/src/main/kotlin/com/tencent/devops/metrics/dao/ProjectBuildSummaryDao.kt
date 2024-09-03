@@ -146,22 +146,31 @@ class ProjectBuildSummaryDao {
         projectUserOperateMetricsData2OperateCount: Map<String, Int>
     ) {
         with(TProjectUserOperateDaily.T_PROJECT_USER_OPERATE_DAILY) {
-            dslContext.batch(
-                projectUserOperateMetricsData2OperateCount.map { (projectUserOperateMetricsDataKey, operateCount) ->
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                USER_ID,
+                OPERATE,
+                THE_DATE,
+                OPERATE_COUNT,
+                CREATE_TIME
+            ).also { insert ->
+                projectUserOperateMetricsData2OperateCount.forEach { (projectUserOperateMetricsDataKey, operateCount) ->
                     val projectUserOperateMetricsData = ProjectUserOperateMetricsData.build(
                         projectUserOperateMetricsKey = projectUserOperateMetricsDataKey
                     )
-                    dslContext.insertInto(this)
-                        .set(PROJECT_ID, projectUserOperateMetricsData.projectId)
-                        .set(USER_ID, projectUserOperateMetricsData.userId)
-                        .set(OPERATE, projectUserOperateMetricsData.operate)
-                        .set(THE_DATE, projectUserOperateMetricsData.theDate)
-                        .set(OPERATE_COUNT, operateCount)
-                        .set(CREATE_TIME, LocalDateTime.now())
-                        .onDuplicateKeyUpdate()
+                    insert.values(
+                        projectUserOperateMetricsData.projectId,
+                        projectUserOperateMetricsData.userId,
+                        projectUserOperateMetricsData.operate,
+                        projectUserOperateMetricsData.theDate,
+                        operateCount,
+                        LocalDateTime.now()
+                    ).onDuplicateKeyUpdate()
                         .set(OPERATE_COUNT, OPERATE_COUNT + operateCount)
+                        .execute()
                 }
-            ).execute()
+            }
         }
     }
 }
