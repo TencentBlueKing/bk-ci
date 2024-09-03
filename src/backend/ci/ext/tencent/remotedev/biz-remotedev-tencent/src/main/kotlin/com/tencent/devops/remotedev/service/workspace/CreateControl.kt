@@ -375,7 +375,7 @@ class CreateControl @Autowired constructor(
             workspaceSystemType = systemType,
             ownerType = ownerType,
             winConfigId = windowsConfig.id?.toInt(),
-            imageId = workspaceCreate.imageId,
+            imageId = workspaceCreate.imageCosFile,
             zoneId = zoneId
         )
 
