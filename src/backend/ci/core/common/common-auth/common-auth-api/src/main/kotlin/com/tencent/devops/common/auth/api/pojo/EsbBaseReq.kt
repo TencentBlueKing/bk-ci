@@ -36,5 +36,14 @@ abstract class EsbBaseReq(
     open var bk_username: String,
     open val bk_token: String = ""
 ) {
-    fun toMap() = mapOf("X-Bkapi-Authorization" to JsonUtil.toJson(this).replace("\\s".toRegex(), ""))
+    fun toMap(): Map<String, String> {
+        return mapOf(
+            "X-Bkapi-Authorization" to """{
+            "bk_app_code":"$bk_app_code",
+            "bk_app_secret":"$bk_app_secret",
+            "bk_username":"$bk_username",
+            "bk_token":"$bk_token"
+            }""".trimIndent().replace("\\s".toRegex(), "")
+        )
+    }
 }
