@@ -119,16 +119,8 @@ class RebuildWorkspaceHandler @Autowired constructor(
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).tryLock().use {
-            // 异常状态的允许直接重装，进行中的不允许。
-            if (workspace.status.checkException()) {
-                workspaceCommon.fixUnexpectedStatus(
-                    status = workspace.status,
-                    userId = userId,
-                    workspaceName = workspaceName,
-                    mountType = workspace.workspaceMountType
-                )
-            }
-            if (workspaceCommon.notOk2doNextAction(workspace)) {
+            // 异常状态的允许直接重装，准备中的不允许。
+            if (workspace.status.workspaceInitializing()) {
                 logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
