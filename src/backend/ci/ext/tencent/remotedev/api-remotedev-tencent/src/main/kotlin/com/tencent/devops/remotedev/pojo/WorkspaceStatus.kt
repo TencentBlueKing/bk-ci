@@ -106,7 +106,7 @@ enum class WorkspaceStatus {
 
     fun checkDistributing() = this == DISTRIBUTING
 
-    fun workspaceInitializing() = checkDelivering() || this == PREPARING
+    fun workspaceInitializing() = checkDelivering()
 
     fun checkUpgrading() = this == UPGRADING
 
