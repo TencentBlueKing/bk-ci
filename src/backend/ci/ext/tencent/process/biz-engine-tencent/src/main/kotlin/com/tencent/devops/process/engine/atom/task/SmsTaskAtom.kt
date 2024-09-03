@@ -47,6 +47,7 @@ import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PROJECT_NAME
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -63,6 +64,8 @@ class SmsTaskAtom @Autowired constructor(
         return JsonUtil.mapTo(task.taskParams, SendSmsNotifyElement::class.java)
     }
 
+    private val logger = LoggerFactory.getLogger(SmsTaskAtom::class.java)
+
     override fun execute(
         task: PipelineBuildTask,
         param: SendSmsNotifyElement,
@@ -70,6 +73,7 @@ class SmsTaskAtom @Autowired constructor(
     ): AtomResponse {
         val buildId = task.buildId
         val taskId = task.taskId
+        logger.warn("Deprecated_Plugin|SmsTaskAtom|${task.projectId}|${task.pipelineId}")
         if (param.receivers.isEmpty()) {
             buildLogPrinter.addRedLine(
                 buildId = buildId,
