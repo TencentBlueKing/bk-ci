@@ -324,7 +324,8 @@ class PipelineBuildStageDao {
                     executeCount = executeCount ?: 1,
                     controlOption = controlOption,
                     checkIn = checkInOption,
-                    checkOut = checkOutOption
+                    checkOut = checkOutOption,
+                    stageIdForUser = stageIdForUser
                 )
             }
         }

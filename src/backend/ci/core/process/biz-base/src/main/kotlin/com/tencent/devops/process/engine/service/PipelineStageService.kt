@@ -45,6 +45,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -268,12 +269,23 @@ class PipelineStageService @Autowired constructor(
                 action = ManualReviewAction.PROCESS, params = reviewRequest?.reviewParams,
                 suggest = reviewRequest?.suggest
             )
-            if (success != true) return false
+            if (success == null) return false
             stageBuildRecordService.stageReview(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount,
                 controlOption = controlOption!!,
                 checkIn = checkIn, checkOut = checkOut
+            )
+            val index = checkIn?.reviewGroups?.indexOf(success)
+            val stageIdForUser = stageIdForUser ?: VMUtils.genStageIdForUser(seq)
+            buildVariableService.batchUpdateVariable(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                variables = mapOf(
+                    "stages.$stageIdForUser.check-in.flow.$index.operator" to userId,
+                    "stages.$stageIdForUser.check-in.flow.$index.result" to (reviewRequest?.suggest ?: "")
+                )
             )
             JooqUtils.retryWhenDeadLock {
                 // #4531 stage先保持暂停，如果没有其他需要审核的审核组则可以启动stage，否则直接返回

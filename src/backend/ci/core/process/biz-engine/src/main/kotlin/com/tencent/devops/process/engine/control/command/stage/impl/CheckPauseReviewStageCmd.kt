@@ -27,7 +27,10 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
@@ -50,7 +53,9 @@ import org.springframework.stereotype.Service
 @Service
 class CheckPauseReviewStageCmd(
     private val buildVariableService: BuildVariableService,
-    private val pipelineStageService: PipelineStageService
+    private val pipelineStageService: PipelineStageService,
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
@@ -92,6 +97,9 @@ class CheckPauseReviewStageCmd(
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_PAUSE|${event.stageId}")
 
                 stage.checkIn?.parseReviewVariables(commandContext.variables, commandContext.pipelineAsCodeEnabled)
+                if (stage.checkIn != null) {
+                    checkReviewGroup(event.projectId, stage.checkIn!!)
+                }
                 pipelineStageService.pauseStageNotify(
                     userId = event.userId,
                     triggerUserId = commandContext.variables[PIPELINE_START_USER_NAME] ?: event.userId,
@@ -113,6 +121,29 @@ class CheckPauseReviewStageCmd(
         }
     }
 
+    private fun checkReviewGroup(projectId: String, check: StagePauseCheck) {
+        val projectRoleUsers = authProjectApi.getProjectGroupAndUserList(
+            serviceCode = pipelineAuthServiceCode,
+            projectCode = projectId
+        ).associateBy { it.roleName }
+        check.reviewGroups?.forEach { group ->
+            if (group.status != null) {
+                return@forEach
+            }
+            if (group.reviewers.find { it in projectRoleUsers.keys } == null) {
+                return@forEach
+            }
+            val realReviewer = group.reviewers.toMutableSet()
+            group.reviewers.forEach { reviewer ->
+                if (projectRoleUsers[reviewer] != null) {
+                    realReviewer.addAll(projectRoleUsers[reviewer]!!.userIdList)
+                    realReviewer.remove(reviewer)
+                }
+            }
+            group.reviewers = realReviewer.toList()
+        }
+    }
+
     private fun qualityCheckInAndBreak(
         event: PipelineBuildStageEvent,
         commandContext: StageContext,
@@ -131,10 +162,12 @@ class CheckPauseReviewStageCmd(
             event.source == BS_QUALITY_PASS_STAGE -> {
                 qualityCheckInPass(commandContext)
             }
+
             event.source == BS_QUALITY_ABORT_STAGE || event.actionType.isEnd() -> {
                 qualityCheckInFailed(commandContext)
                 needBreak = true
             }
+
             else -> {
                 val checkStatus = pipelineStageService.checkStageQuality(
                     event = event,
@@ -146,11 +179,13 @@ class CheckPauseReviewStageCmd(
                     BuildStatus.QUALITY_CHECK_PASS -> {
                         qualityCheckInPass(commandContext)
                     }
+
                     BuildStatus.QUALITY_CHECK_WAIT -> {
                         // #5246 如果设置了把关人则卡在运行状态等待审核
                         qualityCheckInNeedReview(commandContext)
                         needBreak = true
                     }
+
                     else -> {
                         // #4732 优先判断是否能通过质量红线检查
                         qualityCheckInFailed(commandContext)

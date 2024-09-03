@@ -96,7 +96,7 @@ data class StagePauseCheck(
         groupId: String? = null,
         params: List<ManualReviewParam>? = null,
         suggest: String? = null
-    ): Boolean {
+    ): StageReviewGroup? {
         val group = getReviewGroupById(groupId)
         if (group != null && group.status == null) {
             group.status = action.name
@@ -110,9 +110,9 @@ data class StagePauseCheck(
             } else if (action == ManualReviewAction.ABORT) {
                 status = BuildStatus.REVIEW_ABORT.name
             }
-            return true
+            return group
         }
-        return false
+        return null
     }
 
     /**
