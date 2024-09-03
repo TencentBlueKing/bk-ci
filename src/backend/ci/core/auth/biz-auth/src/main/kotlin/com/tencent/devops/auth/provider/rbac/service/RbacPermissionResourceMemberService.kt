@@ -253,11 +253,16 @@ class RbacPermissionResourceMemberService constructor(
                 queryTemplate = true
             )
         )
+
         // 获取模板下成员
-        val groupMembersFromTemplate = listMembersFromTemplate(
-            projectCode = projectMembersQueryConditionDTO.projectCode,
-            iamTemplateIds = recordsWithTemplate.map { it.id.toInt() }
-        )
+        val groupMembersFromTemplate = if (recordsWithTemplate.isNotEmpty()) {
+            listMembersFromTemplate(
+                projectCode = projectMembersQueryConditionDTO.projectCode,
+                iamTemplateIds = recordsWithTemplate.map { it.id.toInt() }
+            )
+        } else {
+            emptyList()
+        }
 
         val allGroupMembers = groupMembersFromDirect.apply {
             groupMembersFromDirect.addAll(groupMembersFromTemplate)
@@ -364,7 +369,7 @@ class RbacPermissionResourceMemberService constructor(
             memberId = memberId,
             iamTemplateIds = iamTemplateId,
             iamGroupIds = iamGroupIdsByConditions,
-            expiredAt = expiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) }
+            expiredAt = expiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
         )
         val memberGroupCountList = mutableListOf<MemberGroupCountWithPermissionsVo>()
         // 项目排在第一位
@@ -1508,7 +1513,7 @@ class RbacPermissionResourceMemberService constructor(
             iamTemplateIds = iamTemplateIds,
             resourceType = resourceType,
             iamGroupIds = iamGroupIds,
-            expiredAt = expiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) }
+            expiredAt = expiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
         )[resourceType] ?: 0L
         val resourceGroupMembers = authResourceGroupMemberDao.listMemberGroupDetail(
             dslContext = dslContext,
@@ -1517,7 +1522,7 @@ class RbacPermissionResourceMemberService constructor(
             iamTemplateIds = iamTemplateIds,
             resourceType = resourceType,
             iamGroupIds = iamGroupIds,
-            expiredAt = expiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+            expiredAt = expiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) },
             offset = start,
             limit = limit
         )
