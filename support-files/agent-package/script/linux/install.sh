@@ -105,6 +105,7 @@ After=network.target
 Type=forking
 ExecStart=$workspace/start.sh
 ExecStop=$workspace/stop.sh
+WorkingDirectory=$workspace
 PrivateTmp=true
 
 [Install]
@@ -149,14 +150,21 @@ function uninstallSystemd()
   print_zh "卸载Systemd上的Agent相关服务" "uninstall agent service with systemd"
   # 兼容旧数据
   doUninstallRcLocal
-  systemctl stop $service_name
-  systemctl disable $service_name
+  if systemctl list-unit-files | grep -q "^${service_name}"; then
+    if systemctl is-active --quiet $service_name; then
+      systemctl stop $service_name
+    fi
+    if systemctl is-enabled --quiet $service_name; then
+      systemctl disable $service_name
+    fi
+    if systemctl is-failed --quiet $service_name; then
+      systemctl reset-failed $service_name
+    fi
+  fi
   local SERVICE_FILE="/etc/systemd/system/${service_name}.service"
   if [ -f "$SERVICE_FILE" ]; then
-    rm "$SERVICE_FILE"
+    rm -f "$SERVICE_FILE"
   fi
-  systemctl daemon-reload
-  systemctl reset-failed $service_name
 }
 
 function uninstallAgentService()
