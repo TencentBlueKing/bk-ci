@@ -143,7 +143,7 @@ class ProjectBuildSummaryDao {
 
     fun saveUserOperateCount(
         dslContext: DSLContext,
-        projectUserOperateMetricsData2OperateCount: Map<ProjectUserOperateMetricsData, AtomicInteger>
+        projectUserOperateMetricsData2OperateCount: Map<ProjectUserOperateMetricsData, Int>
     ) {
         with(TProjectUserOperateDaily.T_PROJECT_USER_OPERATE_DAILY) {
             dslContext.batch(
@@ -153,10 +153,10 @@ class ProjectBuildSummaryDao {
                         .set(USER_ID, projectUserOperateMetricsData.userId)
                         .set(OPERATE, projectUserOperateMetricsData.operate)
                         .set(THE_DATE, projectUserOperateMetricsData.theDate)
-                        .set(OPERATE_COUNT, operateCount.get())
+                        .set(OPERATE_COUNT, operateCount)
                         .set(CREATE_TIME, LocalDateTime.now())
                         .onDuplicateKeyUpdate()
-                        .set(OPERATE_COUNT, OPERATE_COUNT + operateCount.get())
+                        .set(OPERATE_COUNT, OPERATE_COUNT + operateCount)
                 }
             ).execute()
         }

@@ -85,7 +85,6 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
     override fun saveProjectUser(
         projectId: String,
         userId: String,
-        operate: String,
         theDate: LocalDate
     ) {
         val lock = RedisLock(redisOperation, projectBuildKey(projectId), 120)
@@ -116,7 +115,7 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
     }
 
     override fun saveProjectUserOperateMetrics(
-        projectUserOperateMetricsMap: Map<String, Map<ProjectUserOperateMetricsData, AtomicInteger>>
+        projectUserOperateMetricsMap: Map<String, Map<ProjectUserOperateMetricsData, Int>>
     ) {
         projectUserOperateMetricsMap.forEach { (projectId, projectUserOperateMetricsData2OperateCount) ->
             val lock = RedisLock(redisOperation, projectUserOperateKey(projectId), 120)

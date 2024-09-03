@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.webhook
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -98,7 +99,8 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val measureEventDispatcher: MeasureEventDispatcher,
     private val pipelineBuildPermissionService: PipelineBuildPermissionService,
-    private val pipelineYamlService: PipelineYamlService
+    private val pipelineYamlService: PipelineYamlService,
+    private val objectMapper: ObjectMapper
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
@@ -623,11 +625,10 @@ class PipelineBuildWebhookService @Autowired constructor(
             ProjectUserDailyEvent(
                 projectId = projectId,
                 userId = userId,
-                theDate = theDate,
-                operate = WEBHOOK_COMMIT_TRIGGER
+                theDate = theDate
             ),
             ProjectUserOperateMetricsEvent(
-                projectUserOperateMetricsMap = projectUserOperateMetricsMap
+                projectUserOperateMetricsMapStr = objectMapper.writeValueAsString(projectUserOperateMetricsMap)
             )
         )
     }

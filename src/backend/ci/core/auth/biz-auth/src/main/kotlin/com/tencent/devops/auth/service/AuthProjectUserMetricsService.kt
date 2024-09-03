@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
 import com.google.common.hash.BloomFilter
 import com.google.common.hash.Funnels
@@ -43,12 +44,12 @@ import java.nio.charset.Charset
 import java.time.LocalDate
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 
 @Service
 @Suppress("UnstableApiUsage")
 class AuthProjectUserMetricsService @Autowired constructor(
-    private val measureEventDispatcher: MeasureEventDispatcher
+    private val measureEventDispatcher: MeasureEventDispatcher,
+    private val objectMapper: ObjectMapper
 ) {
 
     companion object {
@@ -65,7 +66,7 @@ class AuthProjectUserMetricsService @Autowired constructor(
             .build<LocalDate, BloomFilter<String>>()
 
         private val projectUserOperateMetricsMap =
-            mutableMapOf<String/*projectId*/, MutableMap<ProjectUserOperateMetricsData, AtomicInteger>/*projectUserOperateMetricsKey,count*/>()
+            mutableMapOf<String/*projectId*/, MutableMap<ProjectUserOperateMetricsData, Int>/*projectUserOperateMetricsKey,count*/>()
 
         private val executorService = Executors.newFixedThreadPool(5)
     }
@@ -85,8 +86,7 @@ class AuthProjectUserMetricsService @Autowired constructor(
                         ProjectUserDailyEvent(
                             projectId = projectId,
                             userId = userId,
-                            theDate = theDate,
-                            operate = operate
+                            theDate = theDate
                         )
                     )
                     bloomFilter.put(bloomKey)
@@ -130,17 +130,19 @@ class AuthProjectUserMetricsService @Autowired constructor(
         )
         synchronized(projectId.intern()) {
             projectUserOperateMetricsMap.computeIfAbsent(projectId) {
-                mutableMapOf(projectUserOperateMetricsData to AtomicInteger(0))
+                mutableMapOf(projectUserOperateMetricsData to 0)
             }
-            projectUserOperateMetricsMap[projectId]!![projectUserOperateMetricsData]!!.incrementAndGet()
+            projectUserOperateMetricsMap[projectId]!![projectUserOperateMetricsData]!!.inc()
         }
     }
 
     @Scheduled(initialDelay = 20000, fixedDelay = 20000)
     private fun uploadProjectUserOperateMetrics() {
+        val projectUserOperateMetricsMapStr = objectMapper.writeValueAsString(projectUserOperateMetricsMap)
+        logger.debug("upload project user operate metrics :$projectUserOperateMetricsMapStr")
         measureEventDispatcher.dispatch(
             ProjectUserOperateMetricsEvent(
-                projectUserOperateMetricsMap = projectUserOperateMetricsMap
+                projectUserOperateMetricsMapStr = projectUserOperateMetricsMapStr
             )
         )
         projectUserOperateMetricsMap.clear()
