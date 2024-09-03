@@ -32,7 +32,6 @@ dependencies {
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api(project(":core:common:common-codecc"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":ext:tencent:common:common-job"))
     api(project(":core:process:biz-engine"))
     api(project(":ext:tencent:process:biz-base-tencent"))
     api(project(":ext:tencent:artifactory:api-experience-tencent")) // 版本体验依赖
