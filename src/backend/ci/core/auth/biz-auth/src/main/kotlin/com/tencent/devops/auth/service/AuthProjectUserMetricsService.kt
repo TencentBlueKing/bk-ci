@@ -66,7 +66,7 @@ class AuthProjectUserMetricsService @Autowired constructor(
             .build<LocalDate, BloomFilter<String>>()
 
         private val projectUserOperateMetricsMap =
-            mutableMapOf<String/*projectId*/, MutableMap<ProjectUserOperateMetricsData, Int>/*projectUserOperateMetricsKey,count*/>()
+            mutableMapOf<String/*projectId*/, MutableMap<String, Int>/*projectUserOperateMetricsKey,count*/>()
 
         private val executorService = Executors.newFixedThreadPool(5)
     }
@@ -122,17 +122,16 @@ class AuthProjectUserMetricsService @Autowired constructor(
         operate: String,
         theDate: LocalDate
     ) {
-        val projectUserOperateMetricsData = ProjectUserOperateMetricsData(
+        val projectUserOperateMetricsKey = ProjectUserOperateMetricsData(
             projectId = projectId,
             userId = userId,
             theDate = theDate,
             operate = operate
-        )
+        ).getProjectUserOperateMetricsKey()
+
         synchronized(projectId.intern()) {
-            projectUserOperateMetricsMap.computeIfAbsent(projectId) {
-                mutableMapOf(projectUserOperateMetricsData to 0)
-            }
-            projectUserOperateMetricsMap[projectId]!![projectUserOperateMetricsData]!!.inc()
+            projectUserOperateMetricsMap.getOrPut(projectId) { mutableMapOf() }
+                .compute(projectUserOperateMetricsKey) { _, count -> (count ?: 0) + 1 }
         }
     }
 
@@ -142,7 +141,7 @@ class AuthProjectUserMetricsService @Autowired constructor(
         logger.debug("upload project user operate metrics :$projectUserOperateMetricsMapStr")
         measureEventDispatcher.dispatch(
             ProjectUserOperateMetricsEvent(
-                projectUserOperateMetricsMapStr = projectUserOperateMetricsMapStr
+                projectUserOperateMetricsMap = projectUserOperateMetricsMap
             )
         )
         projectUserOperateMetricsMap.clear()

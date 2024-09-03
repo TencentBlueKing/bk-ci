@@ -143,11 +143,14 @@ class ProjectBuildSummaryDao {
 
     fun saveUserOperateCount(
         dslContext: DSLContext,
-        projectUserOperateMetricsData2OperateCount: Map<ProjectUserOperateMetricsData, Int>
+        projectUserOperateMetricsData2OperateCount: Map<String, Int>
     ) {
         with(TProjectUserOperateDaily.T_PROJECT_USER_OPERATE_DAILY) {
             dslContext.batch(
-                projectUserOperateMetricsData2OperateCount.map { (projectUserOperateMetricsData, operateCount) ->
+                projectUserOperateMetricsData2OperateCount.map { (projectUserOperateMetricsDataKey, operateCount) ->
+                    val projectUserOperateMetricsData = ProjectUserOperateMetricsData.build(
+                        projectUserOperateMetricsKey = projectUserOperateMetricsDataKey
+                    )
                     dslContext.insertInto(this)
                         .set(PROJECT_ID, projectUserOperateMetricsData.projectId)
                         .set(USER_ID, projectUserOperateMetricsData.userId)

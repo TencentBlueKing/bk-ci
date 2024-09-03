@@ -617,7 +617,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     userId = userId,
                     operate = WEBHOOK_COMMIT_TRIGGER,
                     theDate = theDate
-                ) to AtomicInteger(1)
+                ).getProjectUserOperateMetricsKey() to 1
             )
         )
         measureEventDispatcher.dispatch(
@@ -627,7 +627,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                 theDate = theDate
             ),
             ProjectUserOperateMetricsEvent(
-                projectUserOperateMetricsMapStr = objectMapper.writeValueAsString(projectUserOperateMetricsMap)
+                projectUserOperateMetricsMap = projectUserOperateMetricsMap
             )
         )
     }

@@ -38,9 +38,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class ProjectUserDailyOperateMetricsListener @Autowired constructor(
-    private val projectBuildSummaryService: ProjectBuildSummaryService,
-    private val objectMapper: ObjectMapper
+    class ProjectUserDailyOperateMetricsListener @Autowired constructor(
+    private val projectBuildSummaryService: ProjectBuildSummaryService
 ) : Listener<ProjectUserOperateMetricsEvent> {
 
     companion object {
@@ -49,9 +48,9 @@ class ProjectUserDailyOperateMetricsListener @Autowired constructor(
 
     override fun execute(event: ProjectUserOperateMetricsEvent) {
         try {
-            logger.debug("consumer project user daily operate metrics :${event.projectUserOperateMetricsMapStr}")
+            logger.debug("consumer project user daily operate metrics :${event.projectUserOperateMetricsMap}")
             projectBuildSummaryService.saveProjectUserOperateMetrics(
-                projectUserOperateMetricsMap = objectMapper.readValue(event.projectUserOperateMetricsMapStr)
+                projectUserOperateMetricsMap = event.projectUserOperateMetricsMap
             )
         } catch (ignored: Throwable) {
             logger.warn("Fail to insert project user metrics data", ignored)
