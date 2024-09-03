@@ -33,9 +33,9 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import io.swagger.v3.oas.annotations.media.Schema
 import java.util.concurrent.atomic.AtomicInteger
 
-@Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT)
+@Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT, routeKey = MQ.ROUTE_PROJECT_USER_DAILY_OPERATE_METRICS)
 data class ProjectUserOperateMetricsEvent(
     @get:Schema(title = "项目用户操作度量数据")
     /*Map<projectId,<projectUserOperateMetricsData,count>>*/
-    val projectUserOperateMetricsMap: Map<String, Map<ProjectUserOperateMetricsData, AtomicInteger>>
+    val projectUserOperateMetricsMapStr: String
 ) : IMeasureEvent(projectId = "", pipelineId = "", buildId = "")

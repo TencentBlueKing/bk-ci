@@ -29,9 +29,7 @@
 package com.tencent.devops.metrics.listener
 
 import com.tencent.devops.common.event.listener.Listener
-import com.tencent.devops.common.event.pojo.measure.IMeasureEvent
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
-import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
 import com.tencent.devops.metrics.service.ProjectBuildSummaryService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,29 +38,21 @@ import org.springframework.stereotype.Component
 @Component
 class ProjectUserDailyMetricsListener @Autowired constructor(
     private val projectBuildSummaryService: ProjectBuildSummaryService
-) : Listener<IMeasureEvent> {
+) : Listener<ProjectUserDailyEvent> {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectUserDailyMetricsListener::class.java)
     }
 
-    override fun execute(event: IMeasureEvent) {
+    override fun execute(event: ProjectUserDailyEvent) {
         try {
-            when (event) {
-                is ProjectUserDailyEvent -> with(event) {
-                    projectBuildSummaryService.saveProjectUser(
-                        projectId = projectId,
-                        userId = userId,
-                        operate = operate,
-                        theDate = theDate
-                    )
-                }
-
-                is ProjectUserOperateMetricsEvent -> with(event) {
-                    projectBuildSummaryService.saveProjectUserOperateMetrics(
-                        projectUserOperateMetricsMap = projectUserOperateMetricsMap
-                    )
-                }
+            with(event) {
+                logger.debug("consumer project user daily metrics event|$event")
+                projectBuildSummaryService.saveProjectUser(
+                    projectId = projectId,
+                    userId = userId,
+                    theDate = theDate
+                )
             }
         } catch (ignored: Throwable) {
             logger.warn("Fail to insert project user metrics data", ignored)
