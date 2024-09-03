@@ -211,7 +211,7 @@ unzip_jdk
 os=`uname`
 print_zh "机器系统: $os" "OS: $os"
 arch1=`uname -m`
-print_zh "机器架构: $os" "ARCH: ${arch1}"
+print_zh "机器架构: $arch1" "ARCH: ${arch1}"
 print_zh "检查jdk17版本" "check java17 version"
 jdk17/bin/java -version
 print_zh "检查jdk8版本" "check java version"
