@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -37,6 +38,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -252,7 +254,7 @@ class PipelineRepositoryService constructor(
         var canElementSkip = false
         run lit@{
             triggerContainer.elements.forEach {
-                if (it is ManualTriggerElement && it.isElementEnable()) {
+                if (it is ManualTriggerElement && it.elementEnabled()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
                     return@lit
@@ -338,8 +340,12 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode,
         yamlInfo: PipelineYamlVo? = null
     ): List<PipelineModelTask> {
-
-        val metaSize = modelCheckPlugin.checkModelIntegrity(model, projectId, userId)
+        val metaSize = modelCheckPlugin.checkModelIntegrity(
+            model = model,
+            projectId = projectId,
+            userId = userId,
+            oauthUser = getPipelineOauthUser(projectId, pipelineId)
+        )
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
 
@@ -1382,7 +1388,7 @@ class PipelineRepositoryService constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int,
+        targetVersion: PipelineResourceVersion,
         ignoreBase: Boolean? = false,
         transactionContext: DSLContext? = null
     ): PipelineResourceVersion {
@@ -1398,9 +1404,9 @@ class PipelineRepositoryService constructor(
             ) ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                params = arrayOf(version.toString())
+                params = arrayOf(pipelineId)
             )
-            // 删除草稿并获取最新版本用于版本计算
+            // 删除草稿并获取最新版本用于版本号计算
             pipelineResourceVersionDao.clearDraftVersion(
                 dslContext = context,
                 projectId = projectId,
@@ -1411,17 +1417,6 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId
             ) ?: releaseResource
-            // 获取目标的版本用于更新草稿
-            val targetVersion = pipelineResourceVersionDao.getVersionResource(
-                dslContext = context,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version
-            ) ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
-                params = arrayOf(version.toString())
-            )
 
             // 计算版本号
             val now = LocalDateTime.now()
@@ -2127,5 +2122,18 @@ class PipelineRepositoryService constructor(
             pipelineId = pipelineId,
             locked = locked
         )
+    }
+
+    fun getPipelineOauthUser(projectId: String, pipelineId: String): String? {
+        return try {
+            client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
+                projectId = projectId,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceCode = pipelineId
+            ).data
+        } catch (ignored: Exception) {
+            logger.info("get pipeline oauth user fail", ignored)
+            null
+        }?.handoverFrom
     }
 }

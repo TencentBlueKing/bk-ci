@@ -21,7 +21,8 @@ import {
     BACKEND_API_URL_PREFIX,
     FETCH_ERROR,
     PROCESS_API_URL_PREFIX,
-    STORE_API_URL_PREFIX
+    STORE_API_URL_PREFIX,
+    AUTH_URL_PREFIX
 } from '@/store/constants'
 import ajax from '@/utils/request'
 
@@ -414,6 +415,14 @@ const actions = {
     // 重新触发事件
     reTriggerEvent (_, { projectId, detailId }) {
         return ajax.post(`${triggerPrefix}/${projectId}/${detailId}/replay`)
+    },
+    getResourceAuthorization (_, { projectId, resourceType, resourceCode }) {
+        return ajax.get(`${AUTH_URL_PREFIX}/user/auth/authorization/${projectId}/${resourceType}/getResourceAuthorization?resourceCode=${resourceCode}`)
+            .then(res => res.data)
+    },
+    resetPipelineAuthorization (_, { projectId, params }) {
+        return ajax.post(`${AUTH_URL_PREFIX}/user/auth/authorization/${projectId}/resetResourceAuthorization`, params)
+            .then(res => res.data)
     }
 }
 

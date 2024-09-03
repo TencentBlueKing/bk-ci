@@ -31,8 +31,10 @@ package com.tencent.devops.auth.pojo.enum
 enum class AuthMigrateStatus(val value: Int) {
     // 迁移中
     PENDING(0),
+
     // 迁移成功
     SUCCEED(1),
+
     // 迁移失败
     FAILED(2);
 }
