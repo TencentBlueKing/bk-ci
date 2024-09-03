@@ -8,6 +8,7 @@ import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
@@ -34,6 +35,11 @@ interface PermissionResourceMemberService {
 
     fun getProjectMemberCount(projectCode: String): ResourceMemberCountVO
 
+    /**
+     *  之所以将简单查询接口抽成单独方法，是因为该方法只用于查询用户名称/部门名称等，
+    一方面，该方法职责比较单一；另一方面，该接口需要连表查询到授权资源表中授权人。
+    复杂查询虽然需要查询各种权限，但是不需要关联授权资源表。
+     * */
     fun listProjectMembers(
         projectCode: String,
         memberType: String?,
@@ -45,20 +51,32 @@ interface PermissionResourceMemberService {
     ): SQLPage<ResourceMemberInfo>
 
     /**
+     * 根据复杂条件进行搜索，用于用户管理界面
+     * */
+    fun listProjectMembersByComplexConditions(
+        projectMembersQueryConditionReq: ProjectMembersQueryConditionReq
+    ): SQLPage<ResourceMemberInfo>
+
+    /**
      * 获取用户有权限的用户组数量
      * */
     fun getMemberGroupsCount(
         projectCode: String,
-        memberId: String
+        memberId: String,
+        groupName: String?,
+        expiredAt: Long?
     ): List<MemberGroupCountWithPermissionsVo>
 
-    // 查询成员所在资源用户组详情，直接加入+通过用户组（模板）加入
-    @Suppress("LongParameterList")
+    /**
+     * 查询成员所在资源用户组详情，直接加入+通过用户组（模板）加入
+     * */
     fun getMemberGroupsDetails(
         projectId: String,
         memberId: String,
         resourceType: String?,
         iamGroupIds: List<Int>? = null,
+        groupName: String? = null,
+        expiredAt: Long? = null,
         start: Int?,
         limit: Int?
     ): SQLPage<GroupDetailsInfoVo>

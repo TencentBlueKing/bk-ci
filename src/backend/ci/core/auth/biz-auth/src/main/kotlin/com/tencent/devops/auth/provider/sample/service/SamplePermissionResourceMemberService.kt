@@ -10,6 +10,7 @@ import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
@@ -173,9 +174,17 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         return SQLPage(count = 0, records = emptyList())
     }
 
+    override fun listProjectMembersByComplexConditions(
+        projectMembersQueryConditionReq: ProjectMembersQueryConditionReq
+    ): SQLPage<ResourceMemberInfo> {
+        return SQLPage(count = 0, records = emptyList())
+    }
+
     override fun getMemberGroupsCount(
         projectCode: String,
-        memberId: String
+        memberId: String,
+        groupName: String?,
+        expiredAt: Long?
     ): List<MemberGroupCountWithPermissionsVo> {
         return emptyList()
     }
@@ -185,6 +194,8 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         memberId: String,
         resourceType: String?,
         iamGroupIds: List<Int>?,
+        groupName: String?,
+        expiredAt: Long?,
         start: Int?,
         limit: Int?
     ): SQLPage<GroupDetailsInfoVo> {

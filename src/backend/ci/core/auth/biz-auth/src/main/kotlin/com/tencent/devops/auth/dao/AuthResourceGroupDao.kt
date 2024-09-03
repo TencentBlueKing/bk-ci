@@ -252,12 +252,30 @@ class AuthResourceGroupDao {
     fun listIamGroupIdsByConditions(
         dslContext: DSLContext,
         projectCode: String,
-        iamGroupIds: List<String>
+        iamGroupIds: List<String>? = null,
+        groupName: String? = null,
+        iamTemplateIds: List<Int>? = null
     ): List<Int> {
         return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
             dslContext.select(RELATION_ID).from(this)
                 .where(PROJECT_CODE.eq(projectCode))
-                .and(RELATION_ID.`in`(iamGroupIds))
+                .let {
+                    if (!iamGroupIds.isNullOrEmpty())
+                        it.and(RELATION_ID.`in`(iamGroupIds))
+                    else it
+                }
+                .let {
+                    if (groupName != null)
+                        it.and(GROUP_NAME.like("%$groupName%"))
+                    else
+                        it
+                }
+                .let {
+                    if (!iamTemplateIds.isNullOrEmpty())
+                        it.and(IAM_TEMPLATE_ID.`in`(iamTemplateIds))
+                    else
+                        it
+                }
                 .fetch().map { it.value1().toInt() }
         }
     }

@@ -30,6 +30,7 @@ package com.tencent.devops.auth.dao
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
+import com.tencent.devops.auth.pojo.dto.ProjectMembersQueryConditionDTO
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.model.auth.tables.TAuthResourceAuthorization
 import com.tencent.devops.model.auth.tables.TAuthResourceGroupMember
@@ -362,6 +363,59 @@ class AuthResourceGroupMemberDao {
             }
     }
 
+    fun listProjectMembersByComplexConditions(
+        dslContext: DSLContext,
+        projectMembersQueryConditionDTO: ProjectMembersQueryConditionDTO
+    ): List<ResourceMemberInfo> {
+        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            dslContext.select(MEMBER_ID, MEMBER_NAME, MEMBER_TYPE).from(this)
+                .where(buildProjectMembersByComplexConditions(projectMembersQueryConditionDTO))
+                .groupBy(MEMBER_ID)
+                .orderBy(MEMBER_ID)
+                .fetch().map {
+                    ResourceMemberInfo(
+                        id = it.value1(),
+                        name = it.value1(),
+                        type = it.value3()
+                    )
+                }
+        }
+    }
+
+    fun buildProjectMembersByComplexConditions(
+        projectMembersQueryConditionDTO: ProjectMembersQueryConditionDTO
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            with(projectMembersQueryConditionDTO) {
+                conditions.add(PROJECT_CODE.eq(projectCode))
+                if (queryTemplate == false) {
+                    conditions.add(MEMBER_TYPE.notEqual(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
+                } else {
+                    conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
+                }
+                if (memberType != null) {
+                    conditions.add(MEMBER_TYPE.eq(memberType))
+                }
+                if (userName != null) {
+                    conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.USER)))
+                    conditions.add(MEMBER_ID.like("%$userName%").or(MEMBER_NAME.like("%$userName%")))
+                }
+                if (deptName != null) {
+                    conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)))
+                    conditions.add(MEMBER_NAME.like("%$deptName%"))
+                }
+                if (expiredTime != null) {
+                    conditions.add(EXPIRED_TIME.le(expiredTime))
+                }
+                if (!iamGroupIds.isNullOrEmpty()) {
+                    conditions.add(IAM_GROUP_ID.`in`(iamGroupIds))
+                }
+            }
+        }
+        return conditions
+    }
+
     fun countProjectMember(
         dslContext: DSLContext,
         projectCode: String
@@ -458,12 +512,12 @@ class AuthResourceGroupMemberDao {
     fun listGroupMember(
         dslContext: DSLContext,
         projectCode: String,
-        iamGroupId: Int
+        iamGroupIds: List<Int>
     ): List<AuthResourceGroupMember> {
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
-                .and(IAM_GROUP_ID.eq(iamGroupId))
+                .and(IAM_GROUP_ID.`in`(iamGroupIds))
                 .fetch().map {
                     convert(it)
                 }
@@ -479,14 +533,16 @@ class AuthResourceGroupMemberDao {
         memberId: String,
         iamTemplateIds: List<String>,
         resourceType: String? = null,
-        iamGroupIds: List<Int>? = null
+        iamGroupIds: List<Int>? = null,
+        expiredAt: LocalDateTime? = null
     ): Map<String, Long> {
         val conditions = buildMemberGroupCondition(
             projectCode = projectCode,
             memberId = memberId,
             iamTemplateIds = iamTemplateIds,
             resourceType = resourceType,
-            iamGroupIds = iamGroupIds
+            iamGroupIds = iamGroupIds,
+            expiredAt = expiredAt
         )
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             val select = dslContext.select(RESOURCE_TYPE, count())
@@ -507,6 +563,7 @@ class AuthResourceGroupMemberDao {
         iamTemplateIds: List<String>,
         resourceType: String? = null,
         iamGroupIds: List<Int>? = null,
+        expiredAt: LocalDateTime? = null,
         offset: Int? = null,
         limit: Int? = null
     ): List<AuthResourceGroupMember> {
@@ -515,7 +572,8 @@ class AuthResourceGroupMemberDao {
             memberId = memberId,
             iamTemplateIds = iamTemplateIds,
             resourceType = resourceType,
-            iamGroupIds = iamGroupIds
+            iamGroupIds = iamGroupIds,
+            expiredAt = expiredAt
         )
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             dslContext.selectFrom(this)
@@ -532,7 +590,8 @@ class AuthResourceGroupMemberDao {
         memberId: String,
         iamTemplateIds: List<String>,
         resourceType: String? = null,
-        iamGroupIds: List<Int>? = null
+        iamGroupIds: List<Int>? = null,
+        expiredAt: LocalDateTime? = null
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
@@ -552,7 +611,10 @@ class AuthResourceGroupMemberDao {
                     )
             )
             resourceType?.let { conditions.add(RESOURCE_TYPE.eq(resourceType)) }
-            iamGroupIds?.let { conditions.add(IAM_GROUP_ID.`in`(iamGroupIds)) }
+            expiredAt?.let { conditions.add(EXPIRED_TIME.le(expiredAt)) }
+            if (!iamGroupIds.isNullOrEmpty()) {
+                conditions.add(IAM_GROUP_ID.`in`(iamGroupIds))
+            }
         }
         return conditions
     }
