@@ -37,7 +37,7 @@ data class ProjectMembersQueryConditionDTO(
             iamGroupIds: List<Int>?
         ): ProjectMembersQueryConditionDTO {
             return with(projectMembersQueryConditionReq) {
-                val expiredTime = expiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) }
+                val expiredTime = expiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
                 val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
                 ProjectMembersQueryConditionDTO(
                     projectCode = projectCode,
