@@ -29,6 +29,7 @@
         },
         props: {
             showRecordEntry: Boolean,
+            showBuildNumSwitch: Boolean,
             pipelineName: String,
             isLoading: Boolean,
             showPacTag: {
@@ -90,7 +91,7 @@
                                 : []
                         ),
                         ...(
-                            this.$route.name === 'pipelinesDetail'
+                            this.showBuildNumSwitch
                                 ? [{
                                     slot: BuildNumSwitcher,
                                     slotProps: {

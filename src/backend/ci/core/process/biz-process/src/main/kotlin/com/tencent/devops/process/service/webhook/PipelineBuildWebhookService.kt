@@ -238,7 +238,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         val failedMatchElements = mutableListOf<PipelineTriggerFailedMatchElement>()
         // 寻找代码触发原子
         container.elements.forEach elements@{ element ->
-            if (!element.isElementEnable() || element !is WebHookTriggerElement) {
+            if (!element.elementEnabled() || element !is WebHookTriggerElement) {
                 logger.info("Trigger element is disable, can not start pipeline")
                 return@elements
             }
@@ -413,7 +413,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
         val triggerElementMap =
             container.elements.filterIsInstance<WebHookTriggerElement>()
-                .filter { it.isElementEnable() }
+                .filter { it.elementEnabled() }
                 .associateBy { it.id }
         val failedMatchElements = mutableListOf<PipelineTriggerFailedMatchElement>()
         taskIds.forEach { taskId ->

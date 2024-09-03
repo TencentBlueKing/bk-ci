@@ -211,7 +211,7 @@ const TOOLTIPS_CONTENT = {
   UNIQUE_OWNER: t('唯一拥有者，不可移出。请添加新的拥有者后再移出'),
   TEMPLATE: t('通过用户组加入，不可直接移出。如需调整，请编辑用户组')
 }
-const projectId = computed(() => route.params?.projectCode);
+const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
 const tableList = computed(() => props.data.map(item => ({
     ...item,
     unableMessage: getUnableMessage(item),
