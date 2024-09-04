@@ -29,16 +29,4 @@ data class ProjectUserOperateMetricsData(
     fun getProjectUserOperateMetricsKey(): String {
         return "key:$projectId:$userId:$operate:$theDate"
     }
-
-    override fun equals(other: Any?): Boolean {
-        if (other is ProjectUserOperateMetricsData) {
-            return other.projectId == projectId && other.userId == userId &&
-                other.theDate == theDate && other.operate == operate
-        }
-        return super.equals(other)
-    }
-
-    override fun hashCode(): Int {
-        return getProjectUserOperateMetricsKey().hashCode()
-    }
 }

@@ -28,7 +28,6 @@
 
 package com.tencent.devops.metrics.service.impl
 
-import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.ProjectBuildSummaryDao
@@ -42,7 +41,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDate
-import java.util.concurrent.atomic.AtomicInteger
 
 @Service
 class ProjectBuildSummaryServiceImpl @Autowired constructor(

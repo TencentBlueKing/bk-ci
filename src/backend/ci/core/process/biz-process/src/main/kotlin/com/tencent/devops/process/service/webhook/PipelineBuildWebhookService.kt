@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service.webhook
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -81,7 +80,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDate
-import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
 
 @Suppress("ALL")
@@ -99,8 +97,7 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val measureEventDispatcher: MeasureEventDispatcher,
     private val pipelineBuildPermissionService: PipelineBuildPermissionService,
-    private val pipelineYamlService: PipelineYamlService,
-    private val objectMapper: ObjectMapper
+    private val pipelineYamlService: PipelineYamlService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
@@ -611,25 +608,29 @@ class PipelineBuildWebhookService @Autowired constructor(
         projectId: String,
         theDate: LocalDate
     ) {
-        val projectUserOperateMetricsMap = mapOf(
-            projectId to mapOf(
-                ProjectUserOperateMetricsData(
+        try {
+            val projectUserOperateMetricsMap = mapOf(
+                projectId to mapOf(
+                    ProjectUserOperateMetricsData(
+                        projectId = projectId,
+                        userId = userId,
+                        operate = WEBHOOK_COMMIT_TRIGGER,
+                        theDate = theDate
+                    ).getProjectUserOperateMetricsKey() to 1
+                )
+            )
+            measureEventDispatcher.dispatch(
+                ProjectUserDailyEvent(
                     projectId = projectId,
                     userId = userId,
-                    operate = WEBHOOK_COMMIT_TRIGGER,
                     theDate = theDate
-                ).getProjectUserOperateMetricsKey() to 1
+                ),
+                ProjectUserOperateMetricsEvent(
+                    projectUserOperateMetricsMap = projectUserOperateMetricsMap
+                )
             )
-        )
-        measureEventDispatcher.dispatch(
-            ProjectUserDailyEvent(
-                projectId = projectId,
-                userId = userId,
-                theDate = theDate
-            ),
-            ProjectUserOperateMetricsEvent(
-                projectUserOperateMetricsMap = projectUserOperateMetricsMap
-            )
-        )
+        } catch (ignored: Exception) {
+            logger.error("save auth user metrics", ignored)
+        }
     }
 }

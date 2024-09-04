@@ -40,7 +40,6 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicInteger
 
 @Repository
 class ProjectBuildSummaryDao {

@@ -28,11 +28,9 @@
 
 package com.tencent.devops.metrics.service
 
-import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
 import java.time.LocalDate
-import java.util.concurrent.atomic.AtomicInteger
 
 interface ProjectBuildSummaryService {
 
@@ -57,7 +55,7 @@ interface ProjectBuildSummaryService {
      * 保存用户操作度量数据
      */
     fun saveProjectUserOperateMetrics(
-        projectUserOperateMetricsMap: Map<String, Map<String, Int>>
+        projectUserOperateMetricsMap: Map<String/*projectId*/, Map<String, Int>/*projectUserOperateMetricsKey,count*/>
     )
 
     /**
