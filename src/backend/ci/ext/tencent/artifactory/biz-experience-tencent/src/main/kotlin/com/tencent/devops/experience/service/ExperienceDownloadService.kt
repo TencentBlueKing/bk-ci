@@ -70,7 +70,6 @@ import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicInteger
 
 @Service
 class ExperienceDownloadService @Autowired constructor(
