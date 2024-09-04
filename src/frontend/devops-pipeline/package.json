@@ -47,7 +47,6 @@
         "yaml": "^2.3.2"
     },
     "devDependencies": {
-        "@babel/runtime": "^7.15.4",
         "@babel/core": "^7.15.8",
         "@babel/eslint-parser": "^7.15.8",
         "@babel/plugin-proposal-class-properties": "^7.14.5",
@@ -64,6 +63,7 @@
         "@babel/plugin-transform-runtime": "^7.15.8",
         "@babel/preset-env": "^7.15.8",
         "@babel/preset-react": "^7.16.0",
+        "@babel/runtime": "^7.15.4",
         "@vue/babel-preset-jsx": "^1.2.4",
         "@webpack-cli/serve": "^1.7.0",
         "add-asset-html-webpack-plugin": "^5.0.2",
@@ -71,6 +71,7 @@
         "babel-loader": "^8.2.2",
         "babel-plugin-transform-vue-jsx": "^4.0.1",
         "copy-webpack-plugin": "9.0.1",
+        "cross-env": "^7.0.3",
         "css-loader": "^6.4.0",
         "css-minimizer-webpack-plugin": "^4.2.1",
         "eslint": "^7.3.1",
@@ -84,14 +85,14 @@
         "eslint-plugin-vue": "^6.2.2",
         "html-webpack-plugin": "^5.3.2",
         "mini-css-extract-plugin": "2.4.2",
+        "nx": "19.5.1",
         "sass": "^1.42.1",
         "sass-loader": "^12.1.0",
         "style-loader": "^3.3.1",
         "terser-webpack-plugin": "^5.3.6",
         "vue-loader": "~15.10.0",
         "vue-style-loader": "^3.0.3",
-        "webpack": "~5.76.1",
-        "nx": "19.5.1"
+        "webpack": "~5.76.1"
     },
     "nx": {
         "targets": {

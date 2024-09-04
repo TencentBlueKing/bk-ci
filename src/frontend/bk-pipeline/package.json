@@ -34,6 +34,7 @@
     "babel-loader": "^8.2.2",
     "babel-plugin-transform-vue-jsx": "^4.0.1",
     "copy-webpack-plugin": "9.0.1",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.4.0",
     "css-minimizer-webpack-plugin": "^4.2.1",
     "eslint": "^7.3.1",

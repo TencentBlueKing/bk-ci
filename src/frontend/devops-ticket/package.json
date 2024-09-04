@@ -9,11 +9,12 @@
     "vuex-class": "^0.3.0"
   },
   "devDependencies": {
-    "@babel/runtime": "^7.15.4",
     "@babel/plugin-syntax-jsx": "^7.16.0",
     "@babel/preset-react": "^7.16.0",
+    "@babel/runtime": "^7.15.4",
     "@vue/babel-preset-jsx": "^1.2.4",
     "babel-loader": "^8.2.2",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.4.0",
     "css-minimizer-webpack-plugin": "^4.2.1",
     "eslint": "^7.3.1",
