@@ -1435,3 +1435,5 @@ scm:
     maxReplicas: 3
     targetCPU: 80
     targetMemory: 80
+  hostPath:
+    enabled: false
