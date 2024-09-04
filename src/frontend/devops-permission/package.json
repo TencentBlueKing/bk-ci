@@ -59,6 +59,10 @@
   "nx": {
     "targets": {
       "public:master": {
+        "inputs": [
+          "{workspaceRoot}/locale/permission/*.json",
+          "{projectRoot}"
+        ],
         "outputs": [
           "{workspaceRoot}/frontend/permission"
         ]

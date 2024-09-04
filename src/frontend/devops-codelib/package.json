@@ -65,6 +65,10 @@
   "nx": {
     "targets": {
       "public:master": {
+        "inputs": [
+          "{workspaceRoot}/locale/codelib/*.json",
+          "{projectRoot}"
+        ],
         "outputs": [
           "{workspaceRoot}/frontend/codelib"
         ]

@@ -58,6 +58,10 @@
   "nx": {
     "targets": {
       "public:master": {
+        "inputs": [
+          "{workspaceRoot}/locale/turbo/*.json",
+          "{projectRoot}"
+        ],
         "outputs": [
           "{workspaceRoot}/frontend/turbo"
         ]
