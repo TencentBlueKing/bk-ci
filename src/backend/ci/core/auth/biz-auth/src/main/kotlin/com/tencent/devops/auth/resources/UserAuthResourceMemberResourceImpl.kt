@@ -172,14 +172,16 @@ class UserAuthResourceMemberResourceImpl(
         projectId: String,
         memberId: String,
         groupName: String?,
-        expiredAt: Long?
+        minExpiredAt: Long?,
+        maxExpiredAt: Long?
     ): Result<List<MemberGroupCountWithPermissionsVo>> {
         return Result(
             permissionResourceMemberService.getMemberGroupsCount(
                 projectCode = projectId,
                 memberId = memberId,
                 groupName = groupName,
-                expiredAt = expiredAt
+                minExpiredAt = minExpiredAt,
+                maxExpiredAt = maxExpiredAt
             )
         )
     }

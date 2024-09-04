@@ -64,7 +64,8 @@ interface PermissionResourceMemberService {
         projectCode: String,
         memberId: String,
         groupName: String?,
-        expiredAt: Long?
+        minExpiredAt: Long?,
+        maxExpiredAt: Long?
     ): List<MemberGroupCountWithPermissionsVo>
 
     /**
@@ -76,7 +77,8 @@ interface PermissionResourceMemberService {
         resourceType: String?,
         iamGroupIds: List<Int>? = null,
         groupName: String? = null,
-        expiredAt: Long? = null,
+        minExpiredAt: Long? = null,
+        maxExpiredAt: Long? = null,
         start: Int?,
         limit: Int?
     ): SQLPage<GroupDetailsInfoVo>

@@ -33,6 +33,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/auth/resource/member/{projectId}/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("LongParameterList")
 interface UserAuthResourceMemberResource {
     @GET
     @Path("/listProjectMembers")
@@ -196,8 +197,11 @@ interface UserAuthResourceMemberResource {
         @QueryParam("groupName")
         @Parameter(description = "用户组名称")
         groupName: String?,
-        @QueryParam("expiredAt")
-        @Parameter(description = "过期时间")
-        expiredAt: Long?
+        @QueryParam("minExpiredAt")
+        @Parameter(description = "最小过期时间")
+        minExpiredAt: Long?,
+        @QueryParam("maxExpiredAt")
+        @Parameter(description = "最大过期时间")
+        maxExpiredAt: Long?
     ): Result<List<MemberGroupCountWithPermissionsVo>>
 }

@@ -20,8 +20,10 @@ data class ProjectMembersQueryConditionDTO(
     val groupName: String?,
     @get:Schema(title = "用户组Id")
     val iamGroupIds: List<Int>?,
-    @get:Schema(title = "过期时间")
-    val expiredTime: LocalDateTime?,
+    @get:Schema(title = "最小过期时间")
+    val minExpiredTime: LocalDateTime?,
+    @get:Schema(title = "最大过期时间")
+    val maxExpiredTime: LocalDateTime?,
     @get:Schema(title = "离职标识")
     val departedFlag: Boolean? = false,
     @get:Schema(title = "是否查询模板")
@@ -37,7 +39,8 @@ data class ProjectMembersQueryConditionDTO(
             iamGroupIds: List<Int>?
         ): ProjectMembersQueryConditionDTO {
             return with(projectMembersQueryConditionReq) {
-                val expiredTime = expiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
+                val minExpiredTime = minExpiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
+                val maxExpiredTime = maxExpiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
                 val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
                 ProjectMembersQueryConditionDTO(
                     projectCode = projectCode,
@@ -46,7 +49,8 @@ data class ProjectMembersQueryConditionDTO(
                     deptName = deptName,
                     groupName = groupName,
                     iamGroupIds = iamGroupIds,
-                    expiredTime = expiredTime,
+                    minExpiredTime = minExpiredTime,
+                    maxExpiredTime = maxExpiredTime,
                     departedFlag = departedFlag,
                     limit = limit.limit,
                     offset = limit.offset

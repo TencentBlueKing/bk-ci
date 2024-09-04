@@ -184,7 +184,8 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         projectCode: String,
         memberId: String,
         groupName: String?,
-        expiredAt: Long?
+        minExpiredAt: Long?,
+        maxExpiredAt: Long?
     ): List<MemberGroupCountWithPermissionsVo> {
         return emptyList()
     }
@@ -195,7 +196,8 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         resourceType: String?,
         iamGroupIds: List<Int>?,
         groupName: String?,
-        expiredAt: Long?,
+        minExpiredAt: Long?,
+        maxExpiredAt: Long?,
         start: Int?,
         limit: Int?
     ): SQLPage<GroupDetailsInfoVo> {

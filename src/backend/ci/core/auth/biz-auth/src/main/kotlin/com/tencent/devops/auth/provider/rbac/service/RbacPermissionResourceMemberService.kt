@@ -341,7 +341,8 @@ class RbacPermissionResourceMemberService constructor(
         projectCode: String,
         memberId: String,
         groupName: String?,
-        expiredAt: Long?
+        minExpiredAt: Long?,
+        maxExpiredAt: Long?
     ): List<MemberGroupCountWithPermissionsVo> {
         // 查询项目下包含该成员的组列表
         val projectGroupIds = authResourceGroupMemberDao.listResourceGroupMember(
@@ -369,7 +370,8 @@ class RbacPermissionResourceMemberService constructor(
             memberId = memberId,
             iamTemplateIds = iamTemplateId,
             iamGroupIds = iamGroupIdsByConditions,
-            expiredAt = expiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
+            minExpiredAt = minExpiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) },
+            maxExpiredAt = maxExpiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
         )
         val memberGroupCountList = mutableListOf<MemberGroupCountWithPermissionsVo>()
         // 项目排在第一位
@@ -1437,7 +1439,8 @@ class RbacPermissionResourceMemberService constructor(
         resourceType: String?,
         iamGroupIds: List<Int>?,
         groupName: String?,
-        expiredAt: Long?,
+        minExpiredAt: Long?,
+        maxExpiredAt: Long?,
         start: Int?,
         limit: Int?
     ): SQLPage<GroupDetailsInfoVo> {
@@ -1453,7 +1456,8 @@ class RbacPermissionResourceMemberService constructor(
             memberId = memberId,
             resourceType = resourceType,
             iamGroupIds = iamGroupIdsByConditions,
-            expiredAt = expiredAt,
+            minExpiredAt = minExpiredAt,
+            maxExpiredAt = maxExpiredAt,
             start = start,
             limit = limit
         )
@@ -1497,7 +1501,8 @@ class RbacPermissionResourceMemberService constructor(
         memberId: String,
         resourceType: String? = null,
         iamGroupIds: List<Int>? = null,
-        expiredAt: Long? = null,
+        minExpiredAt: Long? = null,
+        maxExpiredAt: Long? = null,
         start: Int? = null,
         limit: Int? = null
     ): Pair<Long, List<AuthResourceGroupMember>> {
@@ -1506,6 +1511,8 @@ class RbacPermissionResourceMemberService constructor(
             projectCode = projectCode,
             memberId = memberId
         )
+        val minExpiredTime = minExpiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
+        val maxExpiredTime = maxExpiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
         val count = authResourceGroupMemberDao.countMemberGroup(
             dslContext = dslContext,
             projectCode = projectCode,
@@ -1513,7 +1520,8 @@ class RbacPermissionResourceMemberService constructor(
             iamTemplateIds = iamTemplateIds,
             resourceType = resourceType,
             iamGroupIds = iamGroupIds,
-            expiredAt = expiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
+            minExpiredAt = minExpiredTime,
+            maxExpiredAt = maxExpiredTime
         )[resourceType] ?: 0L
         val resourceGroupMembers = authResourceGroupMemberDao.listMemberGroupDetail(
             dslContext = dslContext,
@@ -1522,7 +1530,8 @@ class RbacPermissionResourceMemberService constructor(
             iamTemplateIds = iamTemplateIds,
             resourceType = resourceType,
             iamGroupIds = iamGroupIds,
-            expiredAt = expiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) },
+            minExpiredAt = minExpiredTime,
+            maxExpiredAt = maxExpiredTime,
             offset = start,
             limit = limit
         )
