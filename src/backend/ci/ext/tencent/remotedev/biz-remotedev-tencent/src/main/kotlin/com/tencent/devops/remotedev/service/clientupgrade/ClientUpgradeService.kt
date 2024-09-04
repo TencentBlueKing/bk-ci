@@ -137,11 +137,14 @@ class ClientUpgradeService @Autowired constructor(
         record: TClientRecord,
         props: UpgradeDynamicProps
     ): String? {
-        // 为空的上报版本不参与比较
+        // 为空的上报版本不参与比较，start除外
         val version = when (upgradeComp) {
             ClientUpgradeComp.START -> record.startVersion
             ClientUpgradeComp.CLIENT -> record.version
-        }.trim().ifBlank { return null }
+        }.trim()
+        if (version.isBlank() && upgradeComp == ClientUpgradeComp.CLIENT) {
+            return null
+        }
 
         // 根据用户升级版本
         val currentUser = record.currentUser
