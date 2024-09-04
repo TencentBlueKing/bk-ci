@@ -44,5 +44,6 @@ data class AuthResourceInfo(
     val createUser: String,
     val updateUser: String,
     val createTime: LocalDateTime,
-    val updateTime: LocalDateTime
+    val updateTime: LocalDateTime,
+    val iamGradeManagerId: String? = null
 )
