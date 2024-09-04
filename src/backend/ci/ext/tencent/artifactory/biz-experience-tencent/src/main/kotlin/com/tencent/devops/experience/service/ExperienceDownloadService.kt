@@ -189,10 +189,10 @@ class ExperienceDownloadService @Autowired constructor(
         val url = if (path.endsWith(".ipa", true)) {
             val tail = ttl?.let { "&ttl=$ttl" } ?: ""
             "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories" +
-                    "/$projectId/$artifactoryType/filePlist" +
-                    "?experienceHashId=$experienceHashId&path=${
-                        URLEncoder.encode(path, Charsets.UTF_8.toString()).replace("+", "%20")
-                    }&x-devops-project-id=$projectId$tail"
+                "/$projectId/$artifactoryType/filePlist" +
+                "?experienceHashId=$experienceHashId&path=${
+                    URLEncoder.encode(path, Charsets.UTF_8.toString()).replace("+", "%20")
+                }&x-devops-project-id=$projectId$tail"
         } else {
             client.get(ServiceArtifactoryResource::class)
                 .externalUrl(
@@ -295,7 +295,7 @@ class ExperienceDownloadService @Autowired constructor(
     fun getQrCodeUrl(experienceHashId: String): String {
         val url =
             "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +
-                    "?flag=experienceDetail&experienceId=$experienceHashId"
+                "?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
     }
@@ -345,7 +345,7 @@ class ExperienceDownloadService @Autowired constructor(
                             userId = userId,
                             operate = EXPERIENCE_TASK_DOWNLOAD_OPERATE,
                             theDate = LocalDate.now()
-                        ) to 1
+                        ).getProjectUserOperateMetricsKey() to 1
                     )
                 )
                 measureEventDispatcher.dispatch(
@@ -355,7 +355,7 @@ class ExperienceDownloadService @Autowired constructor(
                         theDate = LocalDate.now()
                     ),
                     ProjectUserOperateMetricsEvent(
-                        projectUserOperateMetricsMapStr = objectMapper.writeValueAsString(projectUserOperateMetricsMap)
+                        projectUserOperateMetricsMap = projectUserOperateMetricsMap
                     )
                 )
             }
@@ -503,10 +503,10 @@ class ExperienceDownloadService @Autowired constructor(
 
         val scheme = if (platform == "ANDROID") {
             "bkdevopsapp://bkdevopsapp/app/experience/expDetail/" +
-                    HashUtil.encodeLongId(experiencePublicRecord.recordId)
+                HashUtil.encodeLongId(experiencePublicRecord.recordId)
         } else {
             "bkdevopsapp://app/experience/expDetail/" +
-                    HashUtil.encodeLongId(experiencePublicRecord.id)
+                HashUtil.encodeLongId(experiencePublicRecord.id)
         }
 
         val shortUrlRequest = CreateShortUrlRequest(
