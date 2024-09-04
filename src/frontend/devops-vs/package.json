@@ -26,6 +26,7 @@
     "babel-helper-vue-jsx-merge-props": "^2.0.3",
     "babel-loader": "^8.2.2",
     "babel-plugin-transform-vue-jsx": "^4.0.1",
+    "cross-env": "^7.0.3",
     "css-loader": "^0.28.11",
     "eslint": "^7.3.1",
     "eslint-config-standard": "^16.0.3",
@@ -41,9 +42,9 @@
     "sass": "^1.42.1",
     "sass-loader": "^12.1.0",
     "style-loader": "^0.23.0",
+    "vue-loader": "15.10.1",
     "vue-property-decorator": "^6.0.0",
     "vue-style-loader": "^3.0.3",
-    "vue-loader": "15.10.1",
     "webpack": "^5.76.1"
   },
   "scripts": {

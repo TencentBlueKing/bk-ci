@@ -27,8 +27,10 @@
     "@babel/runtime": "^7.24.7",
     "babel-loader": "^8.2.2",
     "babel-preset-peer-bk": "0.0.2",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.11.0",
     "css-minimizer-webpack-plugin": "^4.2.1",
+    "eslint-plugin-vue": "^9.27.0",
     "mini-css-extract-plugin": "^2.9.0",
     "postcss": "~8.4.16",
     "postcss-import": "^15.0.0",
@@ -43,8 +45,7 @@
     "style-loader": "^4.0.0",
     "svg-inline-loader": "^0.8.2",
     "vue-loader": "~15.10.0",
-    "webpack": "~5.76.1",
-    "eslint-plugin-vue": "^9.27.0"
+    "webpack": "~5.76.1"
   },
   "peerDependencies": {
     "axios": "0.28.0",
