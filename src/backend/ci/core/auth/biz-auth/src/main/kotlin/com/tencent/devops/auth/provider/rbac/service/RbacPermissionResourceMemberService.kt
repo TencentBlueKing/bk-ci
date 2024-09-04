@@ -611,11 +611,14 @@ class RbacPermissionResourceMemberService constructor(
             }
             val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(iamGroupId, pageInfoDTO).results
             groupMemberInfoList.forEach member@{ member ->
-                // 已过期或者要半年后才过期的,不自动过期
+                // 已过期或者小于自动续期范围内的不做续期
                 if (member.expiredAt < currentTime ||
                     member.expiredAt > expectAutoExpiredAt
-                ) return@member
-
+                ) {
+                    val dataTime = DateTimeUtil.convertTimestampToLocalDateTime(member.expiredAt)
+                    logger.info("Group member does not need to be renewed|$iamGroupId|$member|$dataTime")
+                    return@member
+                }
                 // 自动续期时间由半年+随机天数,防止同一时间同时过期
                 val expiredTime = currentTime + AUTO_RENEWAL_EXPIRED_AT +
                     TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180))
