@@ -27,7 +27,6 @@
 
 package com.tencent.devops.experience.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
