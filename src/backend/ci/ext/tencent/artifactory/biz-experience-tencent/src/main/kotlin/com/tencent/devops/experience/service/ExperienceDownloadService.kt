@@ -83,8 +83,7 @@ class ExperienceDownloadService @Autowired constructor(
     private val experienceBaseService: ExperienceBaseService,
     private val experiencePushService: ExperiencePushService,
     private val client: Client,
-    private val measureEventDispatcher: MeasureEventDispatcher,
-    private val objectMapper: ObjectMapper
+    private val measureEventDispatcher: MeasureEventDispatcher
 ) {
     fun checkVersion(userId: String, platform: Int, params: List<CheckVersionParam>): List<CheckVersionVO> {
         val experienceRecordIds = if (params.isEmpty()) {
