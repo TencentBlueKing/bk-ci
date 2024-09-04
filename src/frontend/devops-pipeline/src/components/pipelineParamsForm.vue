@@ -120,7 +120,7 @@
                                 ...restParam,
                                 ...param.payload,
                                 multiSelect: param.type === 'MULTIPLE',
-                                value: param.type === 'MULTIPLE' ? param.value.split(',') : param.value
+                                value: param.type === 'MULTIPLE' ? this.paramValues?.[param.id]?.split(',') : this.paramValues[param.id]
                             }
                         } else {
                             restParam = {
