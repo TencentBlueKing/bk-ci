@@ -39,7 +39,6 @@
                         ...this.$route.params,
                         version: this.pipelineInfo?.version
                     })
-                    debugger
                     this.pipelineName = res?.modelAndSetting?.model?.name ?? '--'
                 } catch (error) {
                     console.error(error)
