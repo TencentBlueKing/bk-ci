@@ -89,6 +89,10 @@
   },
   "nx": {
     "targets": {
+      "inputs": [
+        "{workspaceRoot}/locale/console/*.json",
+        "{projectRoot}"
+      ],
       "public:master": {
         "outputs": [
           "{workspaceRoot}/frontend/console"

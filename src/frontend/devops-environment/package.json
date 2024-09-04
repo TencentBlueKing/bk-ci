@@ -72,6 +72,10 @@
   "license": "ISC",
   "nx": {
     "targets": {
+      "inputs": [
+        "{workspaceRoot}/locale/environment/*.json",
+        "{projectRoot}"
+      ],
       "public:master": {
         "outputs": [
           "{workspaceRoot}/frontend/environment"
