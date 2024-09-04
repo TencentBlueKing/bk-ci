@@ -826,7 +826,7 @@
                     const res = await this.requestPipelinesHistory({
                         projectId,
                         pipelineId,
-                        ...(this.isDebug ? { version } : {})
+                        isDebug: this.isDebug
                     })
                     this.setHistoryPageStatus({
                         count: res.count
