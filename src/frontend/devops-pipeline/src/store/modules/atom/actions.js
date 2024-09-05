@@ -785,7 +785,11 @@ export default {
     },
 
     praiseAi ({ commit }, { projectId, pipelineId, buildId, tag, executeCount, score }) {
-        return request.post(`/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}`, { params: { taskId: tag, executeCount, score } })
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=${score}`
+        if (executeCount) {
+            url += `&executeCount=${executeCount}`
+        }
+        return request.post(url)
     },
 
     getLogAIMessage ({ commit }, { projectId, pipelineId, buildId, tag, executeCount, refresh, callBack }) {
