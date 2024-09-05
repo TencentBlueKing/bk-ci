@@ -95,8 +95,7 @@ class SubPipelineStartUpService @Autowired constructor(
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineUrlBean: PipelineUrlBean,
-    private val templateFacadeService: TemplateFacadeService
-    private val pipelineUrlBean: PipelineUrlBean,
+    private val templateFacadeService: TemplateFacadeService,
     private val subPipelineRefService: SubPipelineRefService
 ) {
 

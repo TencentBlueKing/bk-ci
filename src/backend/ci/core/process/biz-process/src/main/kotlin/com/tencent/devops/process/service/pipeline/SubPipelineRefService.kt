@@ -27,19 +27,12 @@
 
 package com.tencent.devops.process.service.pipeline
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
-import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -49,10 +42,9 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_SUB_PIPELINE_CI
 import com.tencent.devops.process.dao.SubPipelineRefDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
-import com.tencent.devops.process.engine.dao.PipelineResourceDao
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
+import com.tencent.devops.process.service.SubPipelineRepositoryService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -66,15 +58,12 @@ import java.util.regex.Pattern
 class SubPipelineRefService @Autowired constructor(
     private val dslContext: DSLContext,
     private val modelTaskDao: PipelineModelTaskDao,
-    private val pipelineResDao: PipelineResourceDao,
-    private val objectMapper: ObjectMapper,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineRepositoryService: PipelineRepositoryService,
-    private val subPipelineRefDao: SubPipelineRefDao
+    private val subPipelineRefDao: SubPipelineRefDao,
+    private val subPipelineService: SubPipelineRepositoryService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineRefService::class.java)
-        private val pattern = Pattern.compile("(p-)?[a-f\\d]{32}")
         private val SUB_PIPELINE_ATOM_CODES = listOf("SubPipelineExec", "subPipelineCall")
     }
 
@@ -153,18 +142,7 @@ class SubPipelineRefService @Autowired constructor(
 
     fun updateSubPipelineRef(userId: String, projectId: String, pipelineId: String) {
         logger.info("update sub pipeline ref|$userId|$projectId|$pipelineId")
-        val model: Model?
-        val modelString = pipelineResDao.getLatestVersionModelString(dslContext, projectId, pipelineId)
-        if (modelString.isNullOrBlank()) {
-            logger.warn("model not found: [$userId|$projectId|$pipelineId]")
-            return
-        }
-        try {
-            model = objectMapper.readValue(modelString, Model::class.java)
-        } catch (ignored: Exception) {
-            logger.warn("parse process($pipelineId) model fail", ignored)
-            return
-        }
+        val model = subPipelineService.getModel(projectId, pipelineId) ?: return
         // 渠道
         val channel = pipelineInfoDao.getPipelineInfo(
             dslContext = dslContext,
@@ -192,6 +170,7 @@ class SubPipelineRefService @Autowired constructor(
                     )
                 }
             }
+            logger.info("analysis sub pipeline ref|$subPipelineRefList")
 
             dslContext.transaction { configuration ->
                 val transaction = DSL.using(configuration)
@@ -200,7 +179,7 @@ class SubPipelineRefService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId
                 )
-                val targetRefs = subPipelineRefList.associateBy { "${it.pipelineId}_${it.taskId}" }
+                val targetRefs = subPipelineRefList.associateBy { "${it.pipelineId}_${it.element.id}" }
                 val needDeleteIds = existsRefs.filter { !targetRefs.containsKey("${it.pipelineId}_${it.taskId}") }
                     .map { it.id }
                 // 删除无效数据
@@ -225,16 +204,16 @@ class SubPipelineRefService @Autowired constructor(
         subPipelineRefList: MutableList<SubPipelineRef>,
         contextMap: Map<String, String>
     ) {
-        if (!stage.isStageEnable()) {
+        if (!stage.stageEnabled()) {
             return
         }
         stage.containers.forEach c@{ container ->
-            if (container is TriggerContainer || !container.isContainerEnable()) {
+            if (container is TriggerContainer || !container.containerEnabled()) {
                 return@c
             }
             container.elements.forEach { element ->
-                if (element.isElementEnable()) {
-                    getSubPipelineInfo(
+                if (element.elementEnabled()) {
+                    subPipelineService.getSubPipelineInfo(
                         element = element,
                         projectId = projectId,
                         contextMap = contextMap
@@ -244,8 +223,7 @@ class SubPipelineRefService @Autowired constructor(
                                 pipelineId = pipelineId,
                                 projectId = projectId,
                                 pipelineName = pipelineName,
-                                taskId = element.id ?: "",
-                                taskName = element.name,
+                                element = element,
                                 stageName = stage.name ?: "",
                                 containerName = container.name,
                                 subProjectId = it.first,
@@ -256,135 +234,7 @@ class SubPipelineRefService @Autowired constructor(
                         )
                     }
                 }
-            }
-        }
-    }
 
-    fun getSubPipelineInfo(
-        element: Element,
-        projectId: String,
-        contextMap: Map<String, String>
-    ): Triple<String, String, String>? = when (element) {
-        is SubPipelineCallElement -> {
-            resolveSubPipelineCall(
-                projectId = projectId,
-                element = element,
-                contextMap = contextMap
-            )
-        }
-
-        is MarketBuildAtomElement -> {
-            resolveSubPipelineExec(
-                projectId = projectId,
-                inputMap = element.data["input"] as Map<String, Any>,
-                contextMap = contextMap
-            )
-        }
-
-        is MarketBuildLessAtomElement -> {
-            resolveSubPipelineExec(
-                projectId = projectId,
-                inputMap = element.data["input"] as Map<String, Any>,
-                contextMap = contextMap
-            )
-        }
-
-        else -> null
-    }
-
-    private fun resolveSubPipelineCall(
-        projectId: String,
-        element: SubPipelineCallElement,
-        contextMap: Map<String, String>
-    ): Triple<String, String, String>? {
-        val subPipelineType = element.subPipelineType ?: SubPipelineType.ID
-        val subPipelineId = element.subPipelineId
-        val subPipelineName = element.subPipelineName
-        return getSubPipelineInfo(
-            projectId = projectId,
-            subProjectId = projectId,
-            subPipelineType = subPipelineType,
-            subPipelineId = subPipelineId,
-            subPipelineName = subPipelineName,
-            contextMap = contextMap
-        )
-    }
-
-    private fun resolveSubPipelineExec(
-        projectId: String,
-        inputMap: Map<String, Any>,
-        contextMap: Map<String, String>
-    ): Triple<String, String, String>? {
-        val subProjectId = inputMap.getOrDefault("projectId", projectId).toString()
-        val subPipelineTypeStr = inputMap.getOrDefault("subPipelineType", "ID")
-        val subPipelineName = inputMap["subPipelineName"]?.toString()
-        val subPipelineId = inputMap["subPip"]?.toString()
-        val subPipelineType = when (subPipelineTypeStr) {
-            "ID" -> SubPipelineType.ID
-            "NAME" -> SubPipelineType.NAME
-            else -> return null
-        }
-        return getSubPipelineInfo(
-            projectId = projectId,
-            subProjectId = subProjectId,
-            subPipelineType = subPipelineType,
-            subPipelineId = subPipelineId,
-            subPipelineName = subPipelineName,
-            contextMap = contextMap
-        )
-    }
-
-    private fun getSubPipelineInfo(
-        projectId: String,
-        subProjectId: String,
-        subPipelineType: SubPipelineType,
-        subPipelineId: String?,
-        subPipelineName: String?,
-        contextMap: Map<String, String>
-    ): Triple<String, String, String>? {
-        return when (subPipelineType) {
-            SubPipelineType.ID -> {
-                if (subPipelineId.isNullOrBlank()) {
-                    return null
-                }
-                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
-                    projectId = subProjectId, pipelineId = subPipelineId
-                ) ?: run {
-                    logger.info(
-                        "sub-pipeline not found|projectId:$projectId|subPipelineType:$subPipelineType|" +
-                                "subProjectId:$subProjectId|subPipelineId:$subPipelineId"
-                    )
-                    return null
-                }
-                Triple(subProjectId, subPipelineId, pipelineInfo.pipelineName)
-            }
-
-            SubPipelineType.NAME -> {
-                if (subPipelineName.isNullOrBlank()) {
-                    return null
-                }
-                val finalSubProjectId = EnvUtils.parseEnv(subProjectId, contextMap)
-                var finalSubPipelineName = EnvUtils.parseEnv(subPipelineName, contextMap)
-                var finalSubPipelineId = pipelineRepositoryService.listPipelineIdByName(
-                    projectId = finalSubProjectId,
-                    pipelineNames = setOf(finalSubPipelineName),
-                    filterDelete = true
-                )[finalSubPipelineName]
-                // 流水线名称直接使用流水线ID代替
-                if (finalSubPipelineId.isNullOrBlank() && pattern.matcher(finalSubPipelineName).matches()) {
-                    finalSubPipelineId = finalSubPipelineName
-                    finalSubPipelineName = pipelineRepositoryService.getPipelineInfo(
-                        projectId = finalSubProjectId, pipelineId = finalSubPipelineName
-                    )?.pipelineName ?: ""
-                }
-                if (finalSubPipelineId.isNullOrBlank() || finalSubPipelineName.isEmpty()) {
-                    logger.info(
-                        "sub-pipeline not found|projectId:$projectId|subPipelineType:$subPipelineType|" +
-                                "subProjectId:$subProjectId|subPipelineName:$subPipelineName"
-                    )
-                    return null
-                }
-                Triple(finalSubProjectId, finalSubPipelineId, finalSubPipelineName)
             }
         }
     }
@@ -394,14 +244,15 @@ class SubPipelineRefService @Autowired constructor(
         rootPipelineKey: String,
         existsPipeline: HashMap<String, SubPipelineRef>
     ): ElementCheckResult {
-        with(subPipelineRef) {
+        with(subPipelineRef){
+            logger.info("check circular dependency|subPipelineRef[$this]|existsPipeline[$existsPipeline]")
             val pipelineRefKey = "${subProjectId}_$subPipelineId"
             if (existsPipeline.contains(pipelineRefKey)) {
                 logger.warn("subPipeline does not allow loop calls|projectId:$subProjectId|pipelineId:$subPipelineId")
                 val parentPipelineRef = existsPipeline[pipelineRefKey]!!
                 val (msgCode, params) = when {
                     // [当前流水线] -> [当前流水线]
-                    "${projectId}_$pipelineId" == rootPipelineKey -> {
+                     "${projectId}_$pipelineId" == rootPipelineKey -> {
                         BK_CURRENT_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to emptyArray<String>()
                     }
                     // [其他流水线] -> [当前流水线]
@@ -447,15 +298,18 @@ class SubPipelineRefService @Autowired constructor(
                     pipelineId = it.pipelineId,
                     pipelineName = it.pipelineName,
                     channel = it.channel,
-                    taskId = it.taskId,
-                    taskName = it.taskName,
+                    element = EmptyElement(
+                        id = it.taskId,
+                        name = it.taskName
+                    ),
                     stageName = it.stageName,
                     containerName = it.containerName,
                     subPipelineId = it.subPipelineId,
                     subProjectId = it.subProjectId,
-                    subPipelineName = it.subPipelineName
+                    subPipelineName = it.subPipelineName ?: ""
                 )
             }
+            logger.info("check circular dependency|subRefList[$subRefList]")
             if (subRefList.isEmpty()) return ElementCheckResult(true)
             subRefList.forEach {
                 val exist = HashMap(existsPipeline)
@@ -463,7 +317,7 @@ class SubPipelineRefService @Autowired constructor(
                 logger.info(
                     "callPipelineStartup|" +
                             "supProjectId:${it.subProjectId},subPipelineId:${it.subPipelineId}," +
-                            "subElementId:${it.taskId},parentProjectId:${it.projectId}," +
+                            "subElementId:${it.element.id},parentProjectId:${it.projectId}," +
                             "parentPipelineId:${it.pipelineId}"
                 )
                 val checkResult = checkCircularDependency(

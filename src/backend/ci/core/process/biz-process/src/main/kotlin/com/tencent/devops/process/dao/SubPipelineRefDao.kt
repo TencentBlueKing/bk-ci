@@ -46,43 +46,42 @@ class SubPipelineRefDao {
         }
 
         with(TPipelineSubRef.T_PIPELINE_SUB_REF) {
-            dslContext.batch(
-                subPipelineRefList.map {
-                    dslContext.insertInto(
-                        this,
-                        PROJECT_ID,
-                        PIPELINE_ID,
-                        PIPELINE_NAME,
-                        CHANNEL,
-                        STAGE_NAME,
-                        CONTAINER_NAME,
-                        TASK_ID,
-                        TASK_NAME,
-                        SUB_PROJECT_ID,
-                        SUB_PIPELINE_ID,
-                        SUB_PIPELINE_NAME
-                    ).values(
-                        it.projectId,
-                        it.pipelineId,
-                        it.pipelineName,
-                        it.channel,
-                        it.stageName,
-                        it.containerName,
-                        it.taskId,
-                        it.taskName,
-                        it.subProjectId,
-                        it.subPipelineId,
-                        it.subPipelineName
-                    ).onDuplicateKeyUpdate()
-                        .set(STAGE_NAME, it.stageName)
-                        .set(CONTAINER_NAME, it.containerName)
-                        .set(TASK_NAME, it.taskName)
-                        .set(PIPELINE_NAME, it.pipelineName)
-                        .set(SUB_PROJECT_ID, it.subProjectId)
-                        .set(SUB_PIPELINE_ID, it.subPipelineId)
-                        .set(SUB_PIPELINE_NAME, it.subPipelineName)
-                }
-            ).execute()
+            subPipelineRefList.forEach {
+                dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    PIPELINE_ID,
+                    PIPELINE_NAME,
+                    CHANNEL,
+                    STAGE_NAME,
+                    CONTAINER_NAME,
+                    TASK_ID,
+                    TASK_NAME,
+                    SUB_PROJECT_ID,
+                    SUB_PIPELINE_ID,
+                    SUB_PIPELINE_NAME
+                ).values(
+                    it.projectId,
+                    it.pipelineId,
+                    it.pipelineName,
+                    it.channel,
+                    it.stageName,
+                    it.containerName,
+                    it.element.id,
+                    it.element.name,
+                    it.subProjectId,
+                    it.subPipelineId,
+                    it.subPipelineName
+                ).onDuplicateKeyUpdate()
+                    .set(STAGE_NAME, it.stageName)
+                    .set(CONTAINER_NAME, it.containerName)
+                    .set(TASK_NAME, it.element.name)
+                    .set(PIPELINE_NAME, it.pipelineName)
+                    .set(SUB_PROJECT_ID, it.subProjectId)
+                    .set(SUB_PIPELINE_ID, it.subPipelineId)
+                    .set(SUB_PIPELINE_NAME, it.subPipelineName)
+                    .execute()
+            }
         }
     }
 

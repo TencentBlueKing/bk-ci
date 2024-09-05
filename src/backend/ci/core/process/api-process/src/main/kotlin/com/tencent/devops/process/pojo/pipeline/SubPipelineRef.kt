@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "子流水线依赖信息")
@@ -39,10 +41,8 @@ data class SubPipelineRef(
     val projectId: String,
     @get:Schema(title = "流水线项目渠道", required = true)
     val channel: String,
-    @get:Schema(title = "插件ID", required = true)
-    val taskId: String,
-    @get:Schema(title = "插件名称", required = true)
-    val taskName: String,
+    @get:Schema(title = "插件", required = true)
+    val element: Element,
     @get:Schema(title = "stage名称", required = true)
     val stageName: String,
     @get:Schema(title = "容器名称", required = true)
@@ -58,15 +58,18 @@ data class SubPipelineRef(
     @get:Schema(title = "插件启用状态", required = true)
     val elementEnable: Boolean = true,
     @get:Schema(title = "是否为模板流水线", required = true)
-    val isTemplate: Boolean = false
+    val isTemplate: Boolean = false,
+    @get:Schema(title = "父流水线授权用户", required = true)
+    val oauthUser: String? = null,
+    @get:Schema(title = "上下文参数", required = false)
+    val contextMap: Map<String, String> = emptyMap()
 ) {
     constructor(projectId: String, pipelineId: String, subPipelineId: String, subProjectId: String) : this(
         pipelineId = pipelineId,
         pipelineName = "",
         projectId = projectId,
         channel = "",
-        taskId = "",
-        taskName = "",
+        element = EmptyElement(),
         stageName = "",
         containerName = "",
         subPipelineId = subPipelineId,

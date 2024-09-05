@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -35,6 +34,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.process.engine.atom.plugin.IElementBizPluginService
+import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
+import com.tencent.devops.process.service.pipeline.SubPipelineRefService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -44,7 +45,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class SubPipelineElementBizPluginService @Autowired constructor(
-    private val subPipelineRepositoryService: SubPipelineRepositoryService
+    private val subPipelineRepositoryService: SubPipelineRepositoryService,
+    private val subPipelineRefService: SubPipelineRefService
 ) : IElementBizPluginService {
 
     companion object {
@@ -89,21 +91,86 @@ class SubPipelineElementBizPluginService @Autowired constructor(
         oauthUser: String?,
         pipelineId: String
     ): ElementCheckResult {
-        logger.info(
-            "check the sub-pipeline permissions when deploying pipeline|projectId:$projectId|" +
-                    "element:${element.id}|contextMap:$contextMap|appearedCnt:$appearedCnt|isTemplate:$isTemplate|" +
-                    "oauthUser:$oauthUser|userId:$userId"
-        )
-        // 模板保存时不需要校验子流水线权限
-        if (isTemplate || projectId.isNullOrBlank()) return ElementCheckResult(true)
-        return subPipelineRepositoryService.checkElementPermission(
-            projectId = projectId,
-            stageName = stage.name ?: "",
-            containerName = container.name,
+        if (projectId.isNullOrBlank()) return ElementCheckResult(true)
+
+        val (subProjectId, subPipelineId, subPipelineName) = subPipelineRepositoryService.getSubPipelineInfo(
             element = element,
-            contextMap = contextMap,
-            permission = AuthPermission.EXECUTE,
-            userId = oauthUser ?: userId
-        ) ?: ElementCheckResult(true)
+            projectId = projectId,
+            contextMap = contextMap
+        ) ?: return ElementCheckResult(true)
+        val subPipelineRef = SubPipelineRef(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineName = "",
+            subProjectId = subProjectId,
+            subPipelineId = subPipelineId,
+            subPipelineName = subPipelineName,
+            element = element,
+            containerName = container.name,
+            stageName = stage.name ?: "",
+            channel = ChannelCode.BS.name,
+            userId = userId,
+            elementEnable = enableElement(stage, container, element),
+            isTemplate = isTemplate,
+            oauthUser = oauthUser
+        )
+        logger.info("start check sub pipeline element|$subPipelineRef")
+        return subPipelineRef.check(
+            listOf(
+                this::checkPermission,
+                this::checkCircularDependency
+            )
+        )
     }
+
+    fun SubPipelineRef.check(
+        list: List<(SubPipelineRef) -> ElementCheckResult>
+    ): ElementCheckResult {
+        list.forEach {
+            val invoke = it.invoke(this)
+            if (!invoke.result) {
+                return invoke
+            }
+        }
+        return ElementCheckResult(true)
+    }
+
+    fun checkPermission(subPipelineRef: SubPipelineRef): ElementCheckResult {
+        with(subPipelineRef) {
+            logger.info(
+                "check the sub-pipeline permissions when deploying pipeline|projectId:$projectId|" +
+                        "element:${element.id}|contextMap:$contextMap|isTemplate:$isTemplate|" +
+                        "oauthUser:$oauthUser|userId:$userId"
+            )
+            // 模板保存时不需要校验子流水线权限
+            if (isTemplate) return ElementCheckResult(true)
+            return subPipelineRepositoryService.checkElementPermission(
+                projectId = projectId,
+                stageName = stageName,
+                containerName = containerName,
+                element = element,
+                contextMap = contextMap,
+                permission = com.tencent.devops.common.auth.api.AuthPermission.EXECUTE,
+                userId = oauthUser ?: userId
+            ) ?: ElementCheckResult(true)
+        }
+    }
+
+    fun checkCircularDependency(subPipelineRef: SubPipelineRef): ElementCheckResult {
+        with(subPipelineRef) {
+            if (!elementEnable) return ElementCheckResult(true)
+            val startTime = System.currentTimeMillis()
+            val rootPipelineKey = "${projectId}_$pipelineId"
+            val checkResult = subPipelineRefService.checkCircularDependency(
+                subPipelineRef = this,
+                rootPipelineKey = rootPipelineKey,
+                existsPipeline = HashMap(mapOf(rootPipelineKey to this))
+            )
+            logger.info("finish check circular dependency|${System.currentTimeMillis() - startTime} ms")
+            return checkResult
+        }
+    }
+
+    private fun enableElement(stage: Stage, container: Container, element: Element) =
+        stage.stageEnabled() && container.containerEnabled() && element.elementEnabled()
 }
