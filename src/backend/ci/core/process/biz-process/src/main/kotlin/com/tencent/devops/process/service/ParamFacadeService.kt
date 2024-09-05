@@ -452,32 +452,19 @@ class ParamFacadeService @Autowired constructor(
         )
         val replaceKey = "{words}"
         val repoHashIdReplaceKey = "{repoNameWords}"
-        val branchOptions = when (formProperty.scmType) {
-            ScmType.CODE_SVN -> {
-                codeService.getSvnDirectories(
-                    projectId = projectId,
-                    repositoryConfig = codeService.getRepositoryConfig(
-                        repoHashId = null,
-                        repoName = formProperty.defaultValue.toString()
-                    ),
-                    relativePath = formProperty.relativePath
-                )
-            }
-
-            ScmType.CODE_GIT -> {
-                codeService.getGitRefs(
-                    projectId = projectId,
-                    repositoryConfig = codeService.getRepositoryConfig(
-                        repoHashId = null,
-                        repoName = formProperty.defaultValue.toString()
-                    ),
-                )
-            }
-
-            else -> {
-                emptyList()
-            }
-        }.map { BuildFormValue(it, it) }
+        val repositoryConfig = codeService.getRepositoryConfig(
+            repoName = formProperty.defaultValue.toString(),
+            repoHashId = null
+        )
+        val branchOptions = try {
+            codeService.getRepoRefs(
+                projectId = projectId,
+                repositoryConfig = repositoryConfig
+            ).map { BuildFormValue(it, it) }
+        } catch (e: Exception) {
+            logger.warn("projectId:$projectId,repoConfig:$repositoryConfig add repo refs error", e)
+            listOf()
+        }
         return copyFormProperty(
             property = formProperty,
             options = fixDefaultOptions(options = codeLibOptions, defaultValue = formProperty.defaultValue.toString()),
@@ -490,7 +477,8 @@ class ParamFacadeService @Autowired constructor(
                 projectId = projectId,
                 repoHashId = repoHashIdReplaceKey,
                 repositoryType = RepositoryType.NAME
-            )
+            ),
+            defaultBranch = formProperty.defaultBranch
         )
     }
 

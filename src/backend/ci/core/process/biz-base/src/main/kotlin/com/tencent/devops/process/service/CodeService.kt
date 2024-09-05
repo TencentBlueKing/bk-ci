@@ -170,6 +170,39 @@ class CodeService @Autowired constructor(
         }
     }
 
+    fun getRepoRefs(projectId: String, repositoryConfig: RepositoryConfig): List<String> {
+        val repository = client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+            repositoryType = repositoryConfig.repositoryType
+        ).data ?: throw NotFoundException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = GIT_NOT_FOUND,
+                params = arrayOf(repositoryConfig.getRepositoryId())
+            )
+        )
+        return when (repository.getScmType()) {
+            ScmType.CODE_SVN -> {
+                getSvnDirectories(
+                    projectId = projectId,
+                    repositoryConfig = repositoryConfig,
+                    relativePath = null
+                )
+            }
+
+            ScmType.CODE_GIT, ScmType.CODE_TGIT, ScmType.CODE_GITLAB, ScmType.GITHUB -> {
+                getGitRefs(
+                    projectId = projectId,
+                    repositoryConfig = repositoryConfig,
+                )
+            }
+
+            else -> {
+                emptyList()
+            }
+        }
+    }
+
     private fun getSvnCredential(
         projectId: String,
         repository: CodeSvnRepository
