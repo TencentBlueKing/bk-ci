@@ -18,6 +18,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkManagerCheck
+import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.web.RestResource
 
 @RestResource
@@ -38,7 +39,7 @@ class UserAuthResourceMemberResourceImpl(
         val hasVisitPermission = permissionService.validateUserResourcePermission(
             userId = userId,
             resourceType = AuthResourceType.PROJECT.value,
-            action = AuthPermission.VISIT.value,
+            action = RbacAuthUtils.buildAction(AuthPermission.VISIT, AuthResourceType.PROJECT),
             projectCode = projectId
         )
         return if (!hasVisitPermission) {
