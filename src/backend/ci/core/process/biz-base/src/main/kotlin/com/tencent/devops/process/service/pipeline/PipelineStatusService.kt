@@ -75,7 +75,9 @@ class PipelineStatusService(
             buildTaskCountList.filter { it.value2() == BuildStatus.SUCCEED.ordinal }.sumOf { it.value3() }
 
         // 获取触发方式
-        val buildInfo = pipelineBuildDao.getBuildInfo(dslContext, projectId, pipelineBuildSummary.latestBuildId)
+        val buildInfo = pipelineBuildDao.getUserBuildInfo(
+            dslContext, projectId, pipelineBuildSummary.latestBuildId
+        )
 
         // todo还没想好与Pipeline结合，减少这部分的代码，收归一处
         return PipelineStatus(
