@@ -259,13 +259,11 @@ class SensitiveApiServiceImpl @Autowired constructor(
                 params = arrayOf("$storeType:$storeCode:$version")
             )
             val baseEnvRecord = storeBaseEnvQueryDao.getBaseEnvsByStoreId(
-                dslContext = dslContext,
-                storeId = storeId,
-                osName = osName,
-                osArch = osArch
-            )?.getOrNull(0) ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf("$osName:$osArch")
+                dslContext = dslContext, storeId = storeId, osName = osName, osArch = osArch
+            )?.getOrNull(0) ?: storeBaseEnvQueryDao.getDefaultBaseEnvInfo(
+                dslContext = dslContext, storeId = storeId, osName = osName
+            ) ?: storeBaseEnvQueryDao.getDefaultBaseEnvInfo(dslContext, storeId) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf("$osName:$osArch")
             )
             val dbFileShaContent = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
                 dslContext = dslContext,
