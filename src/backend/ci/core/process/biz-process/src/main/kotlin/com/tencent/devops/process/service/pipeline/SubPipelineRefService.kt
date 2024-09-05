@@ -233,7 +233,6 @@ class SubPipelineRefService @Autowired constructor(
                         )
                     }
                 }
-
             }
         }
     }
