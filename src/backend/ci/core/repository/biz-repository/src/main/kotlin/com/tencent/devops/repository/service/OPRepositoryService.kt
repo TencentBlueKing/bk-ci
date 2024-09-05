@@ -348,7 +348,11 @@ class OPRepositoryService @Autowired constructor(
         val limit = 100
         logger.info("OPRepositoryService:begin updateCodeGithubProjectId")
         do {
-            val repoRecords = codeGithubDao.getAllRepo(dslContext, limit, offset)
+            val repoRecords = codeGithubDao.getAllRepo(
+                dslContext = dslContext,
+                limit = limit,
+                offset = offset
+            )
             val repoSize = repoRecords?.size
             logger.info("repoSize:$repoSize")
             val repositoryIds = repoRecords?.map { it.repositoryId } ?: ArrayList()

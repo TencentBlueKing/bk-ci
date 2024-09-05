@@ -36,4 +36,14 @@ interface PermissionResourceValidateService {
         projectCode: String,
         permissionBatchValidateDTO: PermissionBatchValidateDTO
     ): Map<String, Boolean>
+
+    /**
+     * 是否有资源管理员权限
+     */
+    fun hasManagerPermission(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean
 }

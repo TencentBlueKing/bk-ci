@@ -79,6 +79,7 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
         contextMap: Map<String, String>,
         appearedCnt: Int,
         isTemplate: Boolean,
+        oauthUser: String?,
         pipelineId: String
     ) = ElementCheckResult(true)
 }

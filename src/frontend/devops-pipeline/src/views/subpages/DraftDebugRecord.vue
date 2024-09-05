@@ -1,5 +1,15 @@
 <template>
-    <BuildHistoryTab is-debug :pipeline-version="pipelineVersion" />
+    <div class="draft-debug-record-box">
+        <bk-alert
+            class="draft-debug-record-hint"
+            :title="$t('debugHint')"
+        ></bk-alert>
+        <BuildHistoryTab
+            class="draft-debug-history-tab"
+            is-debug
+            :pipeline-version="pipelineVersion"
+        />
+    </div>
 </template>
 
 <script>
@@ -18,5 +28,15 @@
 </script>
 
 <style lang="scss">
-
+    .draft-debug-record-box {
+        display: flex;
+        flex-direction: column;
+        .draft-debug-record-hint {
+            flex-shrink: 0;
+        }
+        .draft-debug-history-tab {
+            flex: 1;
+            overflow: hidden;
+        }
+    }
 </style>

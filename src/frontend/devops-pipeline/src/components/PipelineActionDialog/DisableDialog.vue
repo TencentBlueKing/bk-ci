@@ -7,10 +7,12 @@
         @cancel="handleCancel"
     >
         <div class="disable-pipeline-dialog">
-            <i :class="['bk-icon disable-pipeline-warning-icon', {
-                'icon-exclamation': !lock,
-                'icon-check-1': lock
-            }]"></i>
+            <i
+                :class="['bk-icon disable-pipeline-warning-icon', {
+                    'icon-exclamation': !lock,
+                    'icon-check-1': lock
+                }]"
+            ></i>
             <h3>{{ $t(lock ? 'enablePipelineConfirmTips' : 'disablePipelineConfirmTips') }}</h3>
             <p v-if="!lock">
                 {{ $t(pacEnabled ? 'disablePacPipelineConfirmDesc' : 'disablePipelineConfirmDesc') }}
@@ -18,10 +20,18 @@
             <p v-else>
                 {{ $t(pacEnabled ? 'enablePacPipelineConfirmDesc' : 'enablePipelineConfirmDesc') }}
             </p>
-            <pre class="disable-pac-code" v-if="pacEnabled">{{ disablePipelineYaml }}<copy-icon :value="disablePipelineYaml" /></pre>
+            <pre
+                class="disable-pac-code"
+                v-if="pacEnabled"
+            >{{ disablePipelineYaml }}<copy-icon :value="disablePipelineYaml" /></pre>
         </div>
         <footer slot="footer">
-            <bk-button v-if="!pacEnabled" :loading="disabling" theme="primary" @click="disablePipeline">
+            <bk-button
+                v-if="!pacEnabled"
+                :loading="disabling"
+                theme="primary"
+                @click="disablePipeline"
+            >
                 {{ $t(lock ? 'enable' : 'disable') }}
             </bk-button>
             <bk-button @click="handleCancel">
@@ -98,14 +108,15 @@
         height: 42px;
         background: #FFE8C3;
         color: #FF9C01;
-        &.icon-check-1 {
-            background: #e5f6ea;
-            color: #3fc06d;
-        }
         align-items: center;
         justify-content: center;
         border-radius: 50%;
         font-size: 26px;
+        &.icon-check-1 {
+            background: #e5f6ea;
+            color: #3fc06d;
+        }
+
     }
     .disable-pac-code {
         position: relative;

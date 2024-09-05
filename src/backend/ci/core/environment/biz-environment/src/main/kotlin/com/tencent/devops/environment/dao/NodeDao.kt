@@ -236,6 +236,20 @@ class NodeDao {
         }
     }
 
+    fun countByNodeType(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeType: NodeType
+    ): Long {
+        with(TNode.T_NODE) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_TYPE.`in`(nodeType.name))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
     fun getByDisplayName(
         dslContext: DSLContext,
         projectId: String,
@@ -353,7 +367,13 @@ class NodeDao {
         }
     }
 
-    fun listNodesByType(dslContext: DSLContext, projectId: String, nodeType: String): List<TNodeRecord> {
+    fun listNodesByType(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeType: String,
+        limit: Int? = null,
+        offset: Int? = null
+    ): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
                 .where(NODE_TYPE.eq(nodeType))
@@ -361,6 +381,7 @@ class NodeDao {
                 .and(NODE_STATUS.ne(NodeStatus.CREATING.name))
                 .and(NODE_STATUS.ne(NodeStatus.DELETING.name))
                 .and(NODE_STATUS.ne(NodeStatus.DELETED.name))
+                .let { if (limit != null && offset != null) it.limit(limit).offset(offset) else it }
                 .fetch()
         }
     }

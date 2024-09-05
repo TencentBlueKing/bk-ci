@@ -49,6 +49,7 @@ import {
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
+    SET_ATOMS_OUTPUT_MAP,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
@@ -209,6 +210,12 @@ export default {
         })
         return state
     },
+    [SET_ATOMS_OUTPUT_MAP]: (state, atomsOutputMap) => {
+        Object.assign(state, {
+            atomsOutputMap
+        })
+        return state
+    },
     [SET_ATOM_MODAL_FETCHING]: (state, fetchingAtmoModal) => {
         Object.assign(state, {
             fetchingAtmoModal
@@ -274,7 +281,8 @@ export default {
                     ? {
                         pauseBeforeExec: true
                     }
-                    : {}
+                    : {
+                    }
             }
         } else {
             const diffRes = diffAtomVersions(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)
@@ -353,7 +361,16 @@ export default {
             containers: [],
             checkIn: { timeout: 24 },
             checkOut: { timeout: 24 },
-            finally: insertStageIsFinally === true || undefined
+            finally: insertStageIsFinally === true || undefined,
+            stageControlOption: {
+                enable: true,
+                runCondition: 'AFTER_LAST_FINISHED',
+                customCondition: '',
+                customVariables: [{ key: 'param1', value: '' }],
+                manualTrigger: false,
+                triggerUsers: [],
+                timeout: 24
+            }
         })
         return state
     },

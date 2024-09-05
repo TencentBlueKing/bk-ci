@@ -90,6 +90,7 @@ open class DefaultModelCheckPlugin constructor(
         projectId: String?,
         userId: String,
         isTemplate: Boolean,
+        oauthUser: String?,
         pipelineId: String
     ): Int {
         var metaSize = 0
@@ -179,6 +180,7 @@ open class DefaultModelCheckPlugin constructor(
                 atomInputParamList = atomInputParamList,
                 elementCheckResults = elementCheckResults,
                 isTemplate = isTemplate,
+                oauthUser = oauthUser,
                 pipelineId = pipelineId
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
@@ -257,6 +259,7 @@ open class DefaultModelCheckPlugin constructor(
         atomInputParamList: MutableList<StoreParam>,
         elementCheckResults: MutableList<ElementCheckResult>,
         isTemplate: Boolean,
+        oauthUser: String?,
         pipelineId: String
     ): Int /* MetaSize*/ {
         var metaSize = 0
@@ -307,6 +310,7 @@ open class DefaultModelCheckPlugin constructor(
                     contextMap = contextMap,
                     elementCheckResults = elementCheckResults,
                     isTemplate = isTemplate,
+                    oauthUser = oauthUser,
                     pipelineId = pipelineId
                 )
             }
@@ -325,6 +329,7 @@ open class DefaultModelCheckPlugin constructor(
         contextMap: Map<String, String>,
         elementCheckResults: MutableList<ElementCheckResult>,
         isTemplate: Boolean,
+        oauthUser: String?,
         pipelineId: String
     ) {
         val eCnt = elementCnt.computeIfPresent(element.getAtomCode()) { _, oldValue -> oldValue + 1 }
@@ -338,6 +343,7 @@ open class DefaultModelCheckPlugin constructor(
             contextMap = contextMap,
             appearedCnt = eCnt,
             isTemplate = isTemplate,
+            oauthUser = oauthUser,
             pipelineId = pipelineId
         )
         if (elementCheckResult?.result == false) {

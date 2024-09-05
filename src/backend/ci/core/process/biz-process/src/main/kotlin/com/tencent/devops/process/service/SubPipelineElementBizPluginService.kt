@@ -32,17 +32,9 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.atom.plugin.IElementBizPluginService
-import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
-import com.tencent.devops.process.service.pipeline.SubPipelineRefService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -52,19 +44,15 @@ import org.springframework.stereotype.Service
  */
 @Service
 class SubPipelineElementBizPluginService @Autowired constructor(
-    private val pipelinePermissionService: PipelinePermissionService,
-    private val subPipelineRefService: SubPipelineRefService
+    private val subPipelineRepositoryService: SubPipelineRepositoryService
 ) : IElementBizPluginService {
 
     companion object {
-        private const val SUB_PIPELINE_EXEC_ATOM_CODE = "SubPipelineExec"
         private val logger = LoggerFactory.getLogger(SubPipelineElementBizPluginService::class.java)
     }
 
     override fun supportElement(element: Element): Boolean {
-        return element is SubPipelineCallElement ||
-                (element is MarketBuildAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE) ||
-                (element is MarketBuildLessAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE)
+        return subPipelineRepositoryService.supportElement(element)
     }
 
     override fun afterCreate(
@@ -98,105 +86,24 @@ class SubPipelineElementBizPluginService @Autowired constructor(
         contextMap: Map<String, String>,
         appearedCnt: Int,
         isTemplate: Boolean,
+        oauthUser: String?,
         pipelineId: String
     ): ElementCheckResult {
-        if (projectId.isNullOrBlank()) return ElementCheckResult(true)
-
-        val (subProjectId, subPipelineId, subPipelineName) = subPipelineRefService.getSubPipelineInfo(
-            element = element,
+        logger.info(
+            "check the sub-pipeline permissions when deploying pipeline|projectId:$projectId|" +
+                    "element:${element.id}|contextMap:$contextMap|appearedCnt:$appearedCnt|isTemplate:$isTemplate|" +
+                    "oauthUser:$oauthUser|userId:$userId"
+        )
+        // 模板保存时不需要校验子流水线权限
+        if (isTemplate || projectId.isNullOrBlank()) return ElementCheckResult(true)
+        return subPipelineRepositoryService.checkElementPermission(
             projectId = projectId,
-            contextMap = contextMap
-        ) ?: return ElementCheckResult(true)
-        val subPipelineRef = SubPipelineRef(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            pipelineName = "",
-            subProjectId = subProjectId,
-            subPipelineId = subPipelineId,
-            subPipelineName = subPipelineName,
-            taskId = element.id ?: "",
-            containerName = container.name,
             stageName = stage.name ?: "",
-            taskName = element.name ?: "",
-            channel = ChannelCode.BS.name,
-            userId = userId,
-            elementEnable = enableElement(stage, container, element),
-            isTemplate = isTemplate
-        )
-        logger.info("start check sub pipeline element|$subPipelineRef")
-        return subPipelineRef.check(
-            listOf(
-                this::checkPermission,
-                this::checkCircularDependency
-            )
-        )
+            containerName = container.name,
+            element = element,
+            contextMap = contextMap,
+            permission = AuthPermission.EXECUTE,
+            userId = oauthUser ?: userId
+        ) ?: ElementCheckResult(true)
     }
-
-    fun SubPipelineRef.check(
-        list: List<(SubPipelineRef) -> ElementCheckResult>
-    ): ElementCheckResult {
-        list.forEach {
-            val invoke = it.invoke(this)
-            if (!invoke.result) {
-                return invoke
-            }
-        }
-        return ElementCheckResult(true)
-    }
-
-    fun checkPermission(subPipelineRef: SubPipelineRef): ElementCheckResult {
-        with(subPipelineRef) {
-            // 模板保存时不需要校验子流水线权限
-            if (isTemplate) return ElementCheckResult(true)
-            logger.info(
-                "check the sub-pipeline permissions when deploying pipeline|" +
-                        "project:$projectId|elementId:$taskId|userId:$userId|" +
-                        "subProjectId:$subProjectId|subPipelineId:$subPipelineId"
-            )
-            // 校验流水线修改人是否有子流水线执行权限
-            val checkPermission = pipelinePermissionService.checkPipelinePermission(
-                userId = userId,
-                projectId = subProjectId,
-                pipelineId = subPipelineId,
-                permission = AuthPermission.EXECUTE
-            )
-            val pipelinePermissionUrl =
-                "/console/pipeline/$subProjectId/$subPipelineId/history"
-            return if (checkPermission) {
-                ElementCheckResult(true)
-            } else {
-                ElementCheckResult(
-                    result = false,
-                    errorTitle = I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE,
-                        params = arrayOf(userId)
-                    ),
-                    errorMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE,
-                        params = arrayOf(
-                            stageName, containerName, taskName, pipelinePermissionUrl, subPipelineName
-                        )
-                    )
-                )
-            }
-        }
-    }
-
-    fun checkCircularDependency(subPipelineRef: SubPipelineRef): ElementCheckResult {
-        with(subPipelineRef) {
-            if (!elementEnable) return ElementCheckResult(true)
-            val startTime = System.currentTimeMillis()
-            val rootPipelineKey = "${projectId}_$pipelineId"
-            val checkResult = subPipelineRefService.checkCircularDependency(
-                subPipelineRef = this,
-                rootPipelineKey = rootPipelineKey,
-                existsPipeline = HashMap(mapOf(rootPipelineKey to this))
-            )
-            logger.info("finish check circular dependency|${System.currentTimeMillis() - startTime} ms")
-            return checkResult
-        }
-    }
-
-    private fun enableElement(stage: Stage, container: Container, element: Element) =
-        stage.isStageEnable() && container.isContainerEnable() && element.isElementEnable()
 }

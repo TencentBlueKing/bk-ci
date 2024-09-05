@@ -11,6 +11,7 @@ import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthI18nConstants.ACTION_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.AuthResourceGroupApplyDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.ApplyJoinGroupFormDataInfo
@@ -25,6 +26,7 @@ import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthRedirectGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.GroupUserService
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionService
@@ -62,7 +64,9 @@ class RbacPermissionApplyService @Autowired constructor(
     val client: Client,
     val authResourceCodeConverter: AuthResourceCodeConverter,
     val permissionService: PermissionService,
-    val itsmService: ItsmService
+    val itsmService: ItsmService,
+    val deptService: DeptService,
+    val authResourceGroupApplyDao: AuthResourceGroupApplyDao
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -89,7 +93,8 @@ class RbacPermissionApplyService @Autowired constructor(
     ): ManagerRoleGroupVO {
         logger.info("RbacPermissionApplyService|listGroups:searchGroupInfo=$searchGroupInfo")
         verifyProjectRouterTag(projectId)
-
+        // 校验新用户信息是否同步完成
+        isUserExists(userId)
         val projectInfo = authResourceService.get(
             projectCode = projectId,
             resourceType = AuthResourceType.PROJECT.value,
@@ -145,6 +150,17 @@ class RbacPermissionApplyService @Autowired constructor(
             count = managerRoleGroupVO.count,
             results = groupInfoList
         )
+    }
+
+    private fun isUserExists(userId: String) {
+        // 校验新用户信息是否同步完成
+        val userExists = deptService.getUserInfo(userId = "admin", name = userId) != null
+        if (!userExists) {
+            logger.warn("user($userId) does not exist")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_USER_INFORMATION_NOT_SYNCED
+            )
+        }
     }
 
     private fun buildBkIamPath(
@@ -334,6 +350,11 @@ class RbacPermissionApplyService @Autowired constructor(
                 .reason(applyJoinGroupInfo.reason).build()
             logger.info("apply to join group: iamApplicationDTO=$iamApplicationDTO")
             v2ManagerService.createRoleGroupApplicationV2(iamApplicationDTO)
+            // 记录单据，用于同步用户组
+            authResourceGroupApplyDao.batchCreate(
+                dslContext = dslContext,
+                applyJoinGroupInfo = applyJoinGroupInfo
+            )
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,

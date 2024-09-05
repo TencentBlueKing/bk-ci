@@ -22,6 +22,7 @@ export const PROCESS_API_URL_PREFIX = 'process/api'
 export const TICKET_API_URL_PREFIX = 'ticket/api'
 export const STORE_API_URL_PREFIX = 'store/api'
 
+export const SET_CODELIB_TYPES = 'SET_CODELIB_TYPES'
 export const FETCH_ERROR = 'FETCH_ERROR'
 export const SET_CODELIBS_MUTATION = 'SET_CODELIBS_MUTATION'
 export const SET_TICKETS_MUTATION = 'SET_TICKETS_MUTATION'
