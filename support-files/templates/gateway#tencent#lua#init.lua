@@ -101,6 +101,7 @@ config = {
     bkci = { host = "__BK_CI_FQDN__", port = 80 },
     kubernetes = {
         domain = "__BK_CI_KUBERNETES_DOMAIN__",
+        devnetDomain = "__BK_CI_KUBERNETES_DEVNET_DOMAIN__",
         switchAll = __BK_CI_KUBERNETES_SWITCH_ALL__,
         useForceHeader = __BK_CI_KUBERNETES_USE_FORCE_HEADER__,
         tags = { "rbac", "gray", "prod-v3", "stream-gray", "stream", "rbac-gray", "prod", "devx", "auto" },
