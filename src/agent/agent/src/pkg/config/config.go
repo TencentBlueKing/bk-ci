@@ -111,6 +111,8 @@ type AgentEnv struct {
 	HostName         string
 	AgentVersion     string
 	AgentInstallPath string
+	// WinTask 启动windows进程的组件如 服务/执行计划
+	WinTask string
 }
 
 func (e *AgentEnv) GetAgentIp() string {
@@ -164,6 +166,7 @@ func LoadAgentEnv() {
 	GAgentEnv.HostName = systemutil.GetHostName()
 	GAgentEnv.OsName = systemutil.GetOsName()
 	GAgentEnv.AgentVersion = DetectAgentVersion()
+	GAgentEnv.WinTask = GetWinTaskType()
 }
 
 // DetectAgentVersion 检测Agent版本

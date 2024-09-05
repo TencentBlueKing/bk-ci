@@ -10,10 +10,6 @@ import (
 
 // 用来处理一些Agent使用的第三方组件信息
 
-// JdkMaxUpgradeTime JDK最大升级次数默认为3，升级超过这个次数还没成功那么就不再进行升级
-// 超过这个次数不是JDK版本有问题就是机器有问题无法查看JDK版本
-const JdkMaxUpgradeTime = 3
-
 // Init 初始化第三方组件
 // 需要在日志初始化后
 func Init() error {
@@ -50,7 +46,6 @@ func initOb() error {
 			}),
 			vNum: jdk17,
 		},
-		upgradeTime: 0,
 	}
 
 	Worker = &WorkerType{
