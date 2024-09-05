@@ -1813,8 +1813,8 @@ class PipelineBuildDao {
                     material = t.material?.let {
                         val list = JsonUtil.getObjectMapper().readValue(it) as List<PipelineBuildMaterial>
                         list.sortedWith { o1, o2 ->
-                            val (mainRepo1, createTime1) = (o1.mainRepo ?: false) to (o2.createTime ?: 0)
-                            val (mainRepo2, createTime2) = (o1.mainRepo ?: false) to (o2.createTime ?: 0)
+                            val (mainRepo1, createTime1) = (o1.mainRepo ?: false) to (o1.createTime ?: 0)
+                            val (mainRepo2, createTime2) = (o2.mainRepo ?: false) to (o2.createTime ?: 0)
                             when {
                                 mainRepo1 == mainRepo2 -> createTime2.compareTo(createTime1)
                                 else -> mainRepo2.compareTo(mainRepo1)
