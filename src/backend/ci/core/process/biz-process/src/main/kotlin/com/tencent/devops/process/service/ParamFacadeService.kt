@@ -456,13 +456,22 @@ class ParamFacadeService @Autowired constructor(
             ScmType.CODE_SVN -> {
                 codeService.getSvnDirectories(
                     projectId = projectId,
-                    repoHashId = formProperty.repoHashId,
+                    repositoryConfig = codeService.getRepositoryConfig(
+                        repoHashId = null,
+                        repoName = formProperty.defaultValue.toString()
+                    ),
                     relativePath = formProperty.relativePath
                 )
             }
 
             ScmType.CODE_GIT -> {
-                codeService.getGitRefs(projectId = projectId, repoHashId = formProperty.repoHashId)
+                codeService.getGitRefs(
+                    projectId = projectId,
+                    repositoryConfig = codeService.getRepositoryConfig(
+                        repoHashId = null,
+                        repoName = formProperty.defaultValue.toString()
+                    ),
+                )
             }
 
             else -> {
