@@ -54,7 +54,7 @@ class UserAuthResourceMemberResourceImpl(
     ): Result<SQLPage<ResourceMemberInfo>> {
         return Result(
             permissionResourceMemberService.listProjectMembersByComplexConditions(
-                projectMembersQueryConditionReq = projectMembersQueryConditionReq
+                conditionReq = projectMembersQueryConditionReq
             )
         )
     }

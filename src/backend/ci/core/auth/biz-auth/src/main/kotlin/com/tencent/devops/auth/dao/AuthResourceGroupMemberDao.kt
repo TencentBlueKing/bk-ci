@@ -390,28 +390,34 @@ class AuthResourceGroupMemberDao {
             with(projectMembersQueryConditionDTO) {
                 conditions.add(PROJECT_CODE.eq(projectCode))
                 if (queryTemplate == false) {
+                    // 非查询模板时的条件
                     conditions.add(MEMBER_TYPE.notEqual(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
+                    memberType?.let { type -> conditions.add(MEMBER_TYPE.eq(type)) }
+                    userName?.let { name ->
+                        conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.USER)))
+                        conditions.add(MEMBER_ID.like("%$name%").or(MEMBER_NAME.like("%$name%")))
+                    }
+                    deptName?.let { name ->
+                        conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)))
+                        conditions.add(MEMBER_NAME.like("%$name%"))
+                    }
                 } else {
+                    // 查询模板时的条件
                     conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
                 }
-                if (memberType != null) {
-                    conditions.add(MEMBER_TYPE.eq(memberType))
+
+                minExpiredTime?.let { minTime ->
+                    // 添加最小过期时间条件
+                    conditions.add(EXPIRED_TIME.ge(minTime))
                 }
-                if (userName != null) {
-                    conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.USER)))
-                    conditions.add(MEMBER_ID.like("%$userName%").or(MEMBER_NAME.like("%$userName%")))
+
+                maxExpiredTime?.let { maxTime ->
+                    // 添加最大过期时间条件
+                    conditions.add(EXPIRED_TIME.le(maxTime))
                 }
-                if (deptName != null) {
-                    conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)))
-                    conditions.add(MEMBER_NAME.like("%$deptName%"))
-                }
-                if (minExpiredTime != null) {
-                    conditions.add(EXPIRED_TIME.ge(minExpiredTime))
-                }
-                if (maxExpiredTime != null) {
-                    conditions.add(EXPIRED_TIME.le(maxExpiredTime))
-                }
+
                 if (!iamGroupIds.isNullOrEmpty()) {
+                    // 添加IAM组ID条件
                     conditions.add(IAM_GROUP_ID.`in`(iamGroupIds))
                 }
             }
@@ -515,12 +521,26 @@ class AuthResourceGroupMemberDao {
     fun listGroupMember(
         dslContext: DSLContext,
         projectCode: String,
-        iamGroupIds: List<Int>
+        iamGroupIds: List<Int>,
+        memberType: String? = null,
+        userName: String? = null,
+        deptName: String? = null
     ): List<AuthResourceGroupMember> {
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_CODE.eq(projectCode))
+            conditions.add(IAM_GROUP_ID.`in`(iamGroupIds))
+            memberType?.let { type -> conditions.add(MEMBER_TYPE.eq(type)) }
+            userName?.let { name ->
+                conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.USER)))
+                conditions.add(MEMBER_ID.like("%$name%").or(MEMBER_NAME.like("%$name%")))
+            }
+            deptName?.let { name ->
+                conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)))
+                conditions.add(MEMBER_NAME.like("%$name%"))
+            }
             dslContext.selectFrom(this)
-                .where(PROJECT_CODE.eq(projectCode))
-                .and(IAM_GROUP_ID.`in`(iamGroupIds))
+                .where(conditions)
                 .fetch().map {
                     convert(it)
                 }

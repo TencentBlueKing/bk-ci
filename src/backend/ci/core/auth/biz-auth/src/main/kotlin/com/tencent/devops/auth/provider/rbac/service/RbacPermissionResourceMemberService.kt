@@ -206,87 +206,97 @@ class RbacPermissionResourceMemberService constructor(
     }
 
     override fun listProjectMembersByComplexConditions(
-        projectMembersQueryConditionReq: ProjectMembersQueryConditionReq
+        conditionReq: ProjectMembersQueryConditionReq
     ): SQLPage<ResourceMemberInfo> {
-        logger.info("list project members by complex conditions:$projectMembersQueryConditionReq")
+        logger.info("list project members by complex conditions: $conditionReq")
 
-        with(projectMembersQueryConditionReq) {
-            if (!userName.isNullOrEmpty() && !deptName.isNullOrEmpty()) {
-                return SQLPage(count = 0, records = emptyList())
-            }
-            val isComplexQuery = projectMembersQueryConditionReq.isComplexQuery()
-            // 简单查询
-            if (!isComplexQuery) {
-                return listProjectMembers(
-                    projectCode = projectCode,
-                    memberType = memberType,
-                    userName = userName,
-                    deptName = deptName,
-                    departedFlag = departedFlag,
-                    page = page,
-                    pageSize = pageSize
-                )
-            }
+        // 不允许同时查询部门名称和用户名称
+        if (conditionReq.userName != null && conditionReq.deptName != null) {
+            return SQLPage(count = 0, records = emptyList())
         }
 
-        // 该方法后期可进行扩展，根据用户组名称，操作，资源类型，组策略查询出对应的组ID，传递用户组表进行查询。
-        val iamGroupIdsByCondition = queryIamGroupIdsByConditions(
-            projectCode = projectMembersQueryConditionReq.projectCode,
-            groupName = projectMembersQueryConditionReq.groupName
-        )
-        logger.info("list project members by complex conditions:$projectMembersQueryConditionReq")
-        val projectMembersQueryConditionDTO = ProjectMembersQueryConditionDTO.build(
-            projectMembersQueryConditionReq = projectMembersQueryConditionReq,
-            iamGroupIds = iamGroupIdsByCondition
-        )
-
-        // 获取用户直接加入组的记录
-        val groupMembersFromDirect = authResourceGroupMemberDao.listProjectMembersByComplexConditions(
-            dslContext = dslContext,
-            projectMembersQueryConditionDTO = projectMembersQueryConditionDTO
-        ).toMutableList()
-
-        // 获取通过模板加入组的记录
-        val recordsWithTemplate = authResourceGroupMemberDao.listProjectMembersByComplexConditions(
-            dslContext = dslContext,
-            projectMembersQueryConditionDTO = projectMembersQueryConditionDTO.copy(
-                queryTemplate = true
+        // 简单查询直接返回结果
+        if (!conditionReq.isComplexQuery()) {
+            return listProjectMembers(
+                projectCode = conditionReq.projectCode,
+                memberType = conditionReq.memberType,
+                userName = conditionReq.userName,
+                deptName = conditionReq.deptName,
+                departedFlag = conditionReq.departedFlag,
+                page = conditionReq.page,
+                pageSize = conditionReq.pageSize
             )
-        )
+        }
 
-        // 获取模板下成员
-        val groupMembersFromTemplate = if (recordsWithTemplate.isNotEmpty()) {
-            listMembersFromTemplate(
-                projectCode = projectMembersQueryConditionDTO.projectCode,
-                iamTemplateIds = recordsWithTemplate.map { it.id.toInt() }
-            )
+        // 处理复杂查询条件
+        val iamGroupIdsByCondition = if (conditionReq.groupName != null) {
+            queryIamGroupIdsByConditions(
+                projectCode = conditionReq.projectCode,
+                groupName = conditionReq.groupName
+            ).takeIf { it.isNotEmpty() } ?: return SQLPage(0, emptyList())
         } else {
             emptyList()
         }
 
-        val allGroupMembers = groupMembersFromDirect.apply {
-            groupMembersFromDirect.addAll(groupMembersFromTemplate)
-        }.distinctBy { it.id }
-            .sortedWith(compareBy({ it.type }, { it.id }))
-
-        // 内存中分页
-        val limit = projectMembersQueryConditionDTO.offset
-        val offset = projectMembersQueryConditionDTO.limit
-        val startIndex = projectMembersQueryConditionDTO.offset.coerceAtLeast(0)
-        val endIndex = (limit + offset).coerceAtMost(allGroupMembers.size)
-        val finalGroupMembers = allGroupMembers.subList(startIndex, endIndex)
-
-        // 不查询离职相关信息，防止调用用户管理接口，响应慢
-        if (projectMembersQueryConditionDTO.departedFlag == false) {
-            return SQLPage(
-                count = allGroupMembers.size.toLong(),
-                records = finalGroupMembers
-            )
-        }
-        return SQLPage(
-            count = allGroupMembers.size.toLong(),
-            records = addDepartedFlagToMembers(finalGroupMembers)
+        val conditionDTO = ProjectMembersQueryConditionDTO.build(
+            conditionReq, iamGroupIdsByCondition
         )
+
+        // 获取用户直接加入组的记录和通过模板加入组的记录
+        val (groupMembersFromDirect, groupMembersFromTemplate) = getGroupMembers(
+            projectMembersQueryConditionDTO = conditionDTO
+        )
+
+        // 合并并去重
+        val allGroupMembers = (groupMembersFromDirect + groupMembersFromTemplate)
+            .distinctBy { it.id }.sortedWith(compareBy({ it.type }, { it.id }))
+
+        // 内存分页
+        val (count, records) = paginateResults(
+            allGroupMembers = allGroupMembers,
+            projectMembersQueryConditionDTO = conditionDTO
+        )
+
+        // 添加离职标志
+        return if (conditionDTO.departedFlag == false) {
+            SQLPage(count, records)
+        } else {
+            SQLPage(count, addDepartedFlagToMembers(records))
+        }
+    }
+
+    private fun getGroupMembers(
+        projectMembersQueryConditionDTO: ProjectMembersQueryConditionDTO
+    ): Pair<List<ResourceMemberInfo>, List<ResourceMemberInfo>> {
+        val groupMembersFromDirect = authResourceGroupMemberDao.listProjectMembersByComplexConditions(
+            dslContext = dslContext,
+            projectMembersQueryConditionDTO = projectMembersQueryConditionDTO.copy(queryTemplate = false)
+        ).toMutableList()
+        val recordsWithTemplate = authResourceGroupMemberDao.listProjectMembersByComplexConditions(
+            dslContext = dslContext,
+            projectMembersQueryConditionDTO = projectMembersQueryConditionDTO.copy(queryTemplate = true)
+        )
+        val groupMembersFromTemplate = if (recordsWithTemplate.isNotEmpty()) {
+            listMembersFromTemplate(
+                projectCode = projectMembersQueryConditionDTO.projectCode,
+                iamTemplateIds = recordsWithTemplate.map { it.id.toInt() },
+                projectMembersQueryConditionDTO = projectMembersQueryConditionDTO
+            )
+        } else {
+            emptyList()
+        }
+        return Pair(groupMembersFromDirect, groupMembersFromTemplate)
+    }
+
+    private fun paginateResults(
+        allGroupMembers: List<ResourceMemberInfo>,
+        projectMembersQueryConditionDTO: ProjectMembersQueryConditionDTO
+    ): Pair<Long, List<ResourceMemberInfo>> {
+        val limit = projectMembersQueryConditionDTO.limit
+        val offset = projectMembersQueryConditionDTO.offset
+        val startIndex = offset.coerceAtLeast(0)
+        val endIndex = (limit + offset).coerceAtMost(allGroupMembers.size)
+        return Pair(allGroupMembers.size.toLong(), allGroupMembers.subList(startIndex, endIndex))
     }
 
     /**
@@ -316,7 +326,8 @@ class RbacPermissionResourceMemberService constructor(
     // 获取模板下成员
     private fun listMembersFromTemplate(
         projectCode: String,
-        iamTemplateIds: List<Int>
+        iamTemplateIds: List<Int>,
+        projectMembersQueryConditionDTO: ProjectMembersQueryConditionDTO
     ): List<ResourceMemberInfo> {
         val iamGroupIdsFromTemplate = authResourceGroupDao.listIamGroupIdsByConditions(
             dslContext = dslContext,
@@ -327,7 +338,10 @@ class RbacPermissionResourceMemberService constructor(
         return authResourceGroupMemberDao.listGroupMember(
             dslContext = dslContext,
             projectCode = projectCode,
-            iamGroupIds = iamGroupIdsFromTemplate
+            iamGroupIds = iamGroupIdsFromTemplate,
+            memberType = projectMembersQueryConditionDTO.memberType,
+            userName = projectMembersQueryConditionDTO.userName,
+            deptName = projectMembersQueryConditionDTO.deptName
         ).map {
             ResourceMemberInfo(
                 id = it.memberId,

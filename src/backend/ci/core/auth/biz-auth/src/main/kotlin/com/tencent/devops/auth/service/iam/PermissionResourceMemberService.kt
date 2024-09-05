@@ -54,7 +54,7 @@ interface PermissionResourceMemberService {
      * 根据复杂条件进行搜索，用于用户管理界面
      * */
     fun listProjectMembersByComplexConditions(
-        projectMembersQueryConditionReq: ProjectMembersQueryConditionReq
+        conditionReq: ProjectMembersQueryConditionReq
     ): SQLPage<ResourceMemberInfo>
 
     /**
