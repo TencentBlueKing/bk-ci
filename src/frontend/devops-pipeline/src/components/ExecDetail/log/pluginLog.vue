@@ -12,7 +12,15 @@
                 <li class="more-button" @click="downloadLog">{{ $t("downloadLog") }}</li>
             </template>
         </bk-log-search>
-        <bk-log class="bk-log" ref="scroll" @tag-change="tagChange"></bk-log>
+        <bk-log
+            class="bk-log"
+            ref="scroll"
+            @tag-change="tagChange"
+            @praise-ai="praiseAi"
+            @down-praise-ai="downPraiseAi"
+            @load-ai-message="loadAiMessage"
+            @reload-ai-message="reloadAiMessage"
+        />
     </section>
 </template>
 
@@ -144,8 +152,48 @@
                 'getInitLog',
                 'getAfterLog',
                 'getLogStatus',
-                'getDownloadLogFromArtifactory'
+                'getDownloadLogFromArtifactory',
+                'praiseAi',
+                'getLogAIMessage'
             ]),
+
+            praiseAi () {
+                this.praiseAi({
+                    ...this.postData,
+                    score: true
+                })
+            },
+
+            downPraiseAi () {
+                this.praiseAi({
+                    ...this.postData,
+                    score: false
+                })
+            },
+
+            loadAiMessage (item) {
+                item.aiMessage = ''
+                this.getLogAIMessage({
+                    ...this.postData,
+                    refresh: false,
+                    callBack (val) {
+                        item.aiMessage += val
+                        this.$refs.scroll.setSingleLogData(item)
+                    }
+                })
+            },
+
+            reloadAiMessage (item) {
+                item.aiMessage = ''
+                this.getLogAIMessage({
+                    ...this.postData,
+                    refresh: true,
+                    callBack (val) {
+                        item.aiMessage += val
+                        this.$refs.scroll.setSingleLogData(item)
+                    }
+                })
+            },
 
             getLog () {
                 const id = hashID()

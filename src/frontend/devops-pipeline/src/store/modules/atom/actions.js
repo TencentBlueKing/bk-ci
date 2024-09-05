@@ -784,6 +784,33 @@ export default {
         })
     },
 
+    praiseAi ({ commit }, { projectId, pipelineId, buildId, tag, executeCount, score }) {
+        return request.post(`/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&executeCount=${executeCount}&score=${score}`)
+    },
+
+    getLogAIMessage ({ commit }, { projectId, pipelineId, buildId, tag, executeCount, refresh, callBack }) {
+        window.fetch(`/misc/api/user/gpt/script_error_analysis/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&executeCount=${executeCount}&refresh=${refresh}`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(async (response) => {
+            const reader = response.body
+                .pipeThrough(new window.TextDecoderStream())
+                .getReader()
+            while (true) {
+                try {
+                    const { value, done } = await reader.read()
+                    if (done) break
+                    callBack(value)
+                } catch (error) {
+                    console.error(error.message || error)
+                    break
+                }
+            }
+        })
+    },
+
     getMacSysVersion () {
         return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
     },
