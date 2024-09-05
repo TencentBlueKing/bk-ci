@@ -28,6 +28,8 @@
 package agent
 
 import (
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
@@ -47,6 +49,9 @@ import (
 
 func Run(isDebug bool) {
 	config.Init(isDebug)
+	if err := third_components.Init(); err != nil {
+		systemutil.ExitProcess(1)
+	}
 
 	// 初始化国际化
 	i18n.InitAgentI18n()
