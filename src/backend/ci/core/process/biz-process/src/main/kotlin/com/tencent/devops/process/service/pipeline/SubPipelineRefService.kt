@@ -51,7 +51,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.regex.Pattern
 
 @Suppress("ALL")
 @Service
@@ -244,7 +243,7 @@ class SubPipelineRefService @Autowired constructor(
         rootPipelineKey: String,
         existsPipeline: HashMap<String, SubPipelineRef>
     ): ElementCheckResult {
-        with(subPipelineRef){
+        with(subPipelineRef) {
             logger.info("check circular dependency|subPipelineRef[$this]|existsPipeline[$existsPipeline]")
             val pipelineRefKey = "${subProjectId}_$subPipelineId"
             if (existsPipeline.contains(pipelineRefKey)) {
@@ -252,7 +251,7 @@ class SubPipelineRefService @Autowired constructor(
                 val parentPipelineRef = existsPipeline[pipelineRefKey]!!
                 val (msgCode, params) = when {
                     // [当前流水线] -> [当前流水线]
-                     "${projectId}_$pipelineId" == rootPipelineKey -> {
+                    "${projectId}_$pipelineId" == rootPipelineKey -> {
                         BK_CURRENT_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to emptyArray<String>()
                     }
                     // [其他流水线] -> [当前流水线]
