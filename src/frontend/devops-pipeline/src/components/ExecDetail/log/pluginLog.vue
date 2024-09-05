@@ -16,10 +16,10 @@
             class="bk-log"
             ref="scroll"
             @tag-change="tagChange"
-            @praise-ai="praiseAi"
-            @down-praise-ai="downPraiseAi"
-            @load-ai-message="loadAiMessage"
-            @reload-ai-message="reloadAiMessage"
+            @praise-ai="handlePraiseAi"
+            @down-praise-ai="handleDownPraiseAi"
+            @load-ai-message="handleLoadAiMessage"
+            @reload-ai-message="handleReloadAiMessage"
         />
     </section>
 </template>
@@ -157,21 +157,21 @@
                 'getLogAIMessage'
             ]),
 
-            praiseAi () {
+            handlePraiseAi () {
                 this.praiseAi({
                     ...this.postData,
                     score: true
                 })
             },
 
-            downPraiseAi () {
+            handleDownPraiseAi () {
                 this.praiseAi({
                     ...this.postData,
                     score: false
                 })
             },
 
-            loadAiMessage (item) {
+            handleLoadAiMessage (item) {
                 item.aiMessage = ''
                 this.getLogAIMessage({
                     ...this.postData,
@@ -183,7 +183,7 @@
                 })
             },
 
-            reloadAiMessage (item) {
+            handleReloadAiMessage (item) {
                 item.aiMessage = ''
                 this.getLogAIMessage({
                     ...this.postData,
