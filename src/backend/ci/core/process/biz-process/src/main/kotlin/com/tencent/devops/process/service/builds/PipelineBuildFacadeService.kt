@@ -1978,7 +1978,7 @@ class PipelineBuildFacadeService(
         startUser: List<String>? = null,
         updateTimeDesc: Boolean? = null,
         archiveFlag: Boolean? = false,
-        customVersion: Int?,
+        debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
         triggerUser: List<String>?
@@ -2016,26 +2016,6 @@ class PipelineBuildFacadeService(
                     permission = AuthPermission.VIEW
                 )
             }
-            // 如果请求的参数是草稿版本的版本号，则返回调试记录，如果是当前正式版本则返回正式记录
-            // 否则按版本查询返回空数据
-            val customResource = pipelineRepositoryService.getPipelineResourceVersion(
-                projectId = projectId, pipelineId = pipelineId,
-                version = customVersion, includeDraft = true
-            )
-            val targetDebugVersion = if (customResource?.status == VersionStatus.COMMITTING) {
-                customVersion
-            } else if (customResource?.version == pipelineInfo.version) {
-                null
-            } else {
-                return BuildHistoryPage(
-                    page = pageNotNull,
-                    pageSize = limit,
-                    count = 0,
-                    records = emptyList(),
-                    hasDownloadPermission = false,
-                    pipelineVersion = pipelineInfo.version
-                )
-            }
 
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
                 projectId = projectId,
@@ -2061,7 +2041,7 @@ class PipelineBuildFacadeService(
                 buildMsg = buildMsg,
                 startUser = startUser,
                 queryDslContext = queryDslContext,
-                debugVersion = targetDebugVersion,
+                debug = debug,
                 triggerAlias = triggerAlias,
                 triggerBranch = triggerBranch,
                 triggerUser = triggerUser
@@ -2094,7 +2074,7 @@ class PipelineBuildFacadeService(
                 startUser = startUser,
                 updateTimeDesc = updateTimeDesc,
                 queryDslContext = queryDslContext,
-                debugVersion = targetDebugVersion,
+                debug = debug,
                 triggerAlias = triggerAlias,
                 triggerBranch = triggerBranch,
                 triggerUser = triggerUser
