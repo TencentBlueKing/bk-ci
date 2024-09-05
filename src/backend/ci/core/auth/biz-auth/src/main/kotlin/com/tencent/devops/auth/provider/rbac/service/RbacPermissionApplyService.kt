@@ -11,6 +11,7 @@ import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthI18nConstants.ACTION_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.AuthResourceGroupApplyDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.ApplyJoinGroupFormDataInfo
@@ -64,7 +65,8 @@ class RbacPermissionApplyService @Autowired constructor(
     val authResourceCodeConverter: AuthResourceCodeConverter,
     val permissionService: PermissionService,
     val itsmService: ItsmService,
-    val deptService: DeptService
+    val deptService: DeptService,
+    val authResourceGroupApplyDao: AuthResourceGroupApplyDao
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -348,6 +350,11 @@ class RbacPermissionApplyService @Autowired constructor(
                 .reason(applyJoinGroupInfo.reason).build()
             logger.info("apply to join group: iamApplicationDTO=$iamApplicationDTO")
             v2ManagerService.createRoleGroupApplicationV2(iamApplicationDTO)
+            // 记录单据，用于同步用户组
+            authResourceGroupApplyDao.batchCreate(
+                dslContext = dslContext,
+                applyJoinGroupInfo = applyJoinGroupInfo
+            )
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,

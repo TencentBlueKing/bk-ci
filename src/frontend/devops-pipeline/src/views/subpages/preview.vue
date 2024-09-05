@@ -279,6 +279,7 @@
                 }
             }
         },
+
         mounted () {
             if (this.$route.params.version || this.pipelineInfo?.releaseVersion) {
                 this.init()
@@ -327,17 +328,17 @@
                         ...p,
                         isChanged: p.defaultValue !== p.value,
                         readOnly: false,
-                        label: `${p.id}(${p.name || p.id})`
+                        label: `${p.id}${p.name ? `(${p.name})` : ''}`
                     }))
                     this.versionParamList = startupInfo.properties.filter(p => allVersionKeyList.includes(p.id))
                     this.buildList = startupInfo.properties.filter(p => p.propertyType === 'BUILD')
                     this.constantParams = startupInfo.properties.filter(p => p.constant).map(p => ({
                         ...p,
-                        label: `${p.id}(${p.name || p.id})`
+                        label: `${p.id}${p.name ? `(${p.name})` : ''}`
                     }))
                     this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
-                        label: `${p.id}(${p.name || p.id})`
+                        label: `${p.id}${p.name ? `(${p.name})` : ''}`
                     }))
                     this.getParamsValue(values)
                     this.setExecuteParams({

@@ -102,7 +102,9 @@ data class CodeGitWebHookTriggerElement(
     @get:Schema(title = "第三方应用地址")
     val thirdUrl: String? = null,
     @get:Schema(title = "第三方应用鉴权token")
-    val thirdSecretToken: String? = null
+    val thirdSecretToken: String? = null,
+    @get:Schema(title = "跳过WIP")
+    val skipWip: Boolean? = false
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitWebHookTrigger"

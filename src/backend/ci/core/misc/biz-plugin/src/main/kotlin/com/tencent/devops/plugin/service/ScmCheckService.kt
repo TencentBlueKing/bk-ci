@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.utils.QualityUtils
@@ -79,7 +80,8 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         targetUrl: String,
         context: String,
         description: String,
-        targetBranch: List<String>? = null
+        targetBranch: List<String>? = null,
+        channelCode: ChannelCode
     ): String {
         with(event) {
             logger.info("Project($$projectId) add git commit($commitId) commit check.")
@@ -132,7 +134,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                     startTime = startTime,
                     eventStatus = status,
                     triggerType = triggerType,
-                    scmType = repo.getScmType()
+                    channelCode = channelCode
                 ),
                 targetBranch = targetBranch
             )
@@ -197,7 +199,8 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         startedAt: LocalDateTime?,
         conclusion: String?,
         completedAt: LocalDateTime?,
-        pipelineName: String
+        pipelineName: String,
+        channelCode: ChannelCode
     ) {
         logger.info("Project($projectId) update github commit($commitId) check runs")
 
@@ -226,7 +229,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                     startTime = startedAt?.timestampmilli() ?: 0L,
                     eventStatus = status,
                     triggerType = StartType.WEB_HOOK.name,
-                    scmType = ScmType.GITHUB
+                    channelCode = channelCode
                 )
             )
         )

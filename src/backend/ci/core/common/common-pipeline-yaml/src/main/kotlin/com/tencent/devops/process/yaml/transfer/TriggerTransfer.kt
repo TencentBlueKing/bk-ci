@@ -160,7 +160,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     repositoryName = triggerOn.repoName,
                     enableThirdFilter = !mr.custom?.url.isNullOrBlank(),
                     thirdUrl = mr.custom?.url,
-                    thirdSecretToken = mr.custom?.credentials
+                    thirdSecretToken = mr.custom?.credentials,
+                    skipWip = mr.skipWip
                 ).checkTriggerElementEnable(mr.enable).apply {
                     version = "2.*"
                 }
@@ -296,7 +297,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     custom = if (git.enableThirdFilter == true) CustomFilter(
                         url = git.thirdUrl,
                         credentials = git.thirdSecretToken
-                    ) else null
+                    ) else null,
+                    skipWip = git.skipWip
                 )
                 CodeEventType.MERGE_REQUEST_ACCEPT ->
                     throw PipelineTransferException(
@@ -463,7 +465,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             ),
                             eventType = CodeEventType.MERGE_REQUEST,
                             repositoryType = repositoryType,
-                            repositoryName = triggerOn.repoName
+                            repositoryName = triggerOn.repoName,
+                            skipWip = mr.skipWip
                         )
                     )
                 ).checkTriggerElementEnable(mr.enable).apply {
