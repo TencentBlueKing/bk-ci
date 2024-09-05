@@ -256,5 +256,7 @@
     "同步成功": "Sync successfully",
     "XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？": "All permissions of {0} have expired, no need for transfer. Are you sure you want to remove the user and clean up the expired permissions?",
     "确定": "Confirm",
-    "请选择项目": "Please select a project"
+    "请选择项目": "Please select a project",
+    "过期时间": "Expiration Time",
+    "用户组名称": "User Group Name"
 }
