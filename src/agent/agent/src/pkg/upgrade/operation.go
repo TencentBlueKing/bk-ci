@@ -188,7 +188,6 @@ func DoUpgradeOperation(upItems *upgradeItems) error {
 
 func DoUpgradeJdk() error {
 	logs.Info("agentUpgrade|jdk changed, replace jdk file")
-	defer third_components.Jdk.AddUpgradeTime()
 
 	workDir := systemutil.GetWorkDir()
 

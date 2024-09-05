@@ -81,10 +81,6 @@ func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 		Jdk:            upgradeItem.Jdk,
 		DockerInitFile: upgradeItem.DockerInitFile,
 	}
-	// 检查JDK是否超过最大升级次数
-	if upItems.Jdk && !third_components.Jdk.CheckUpgradeTime() {
-		upItems.Jdk = false
-	}
 
 	if upItems.NoChange() {
 		return

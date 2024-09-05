@@ -70,7 +70,7 @@ const (
 
 // DoUpgradeAgent 升级agent
 // 1、通过service启动的daemon因为go本身内部注册了daemon导致权限模型有些未知问题，无法更新daemon后启动，只能更新agent
-// 2、通过执行计划启动的daemon因为具有登录态，可以直接执行脚本拉起
+// 2、通过执行计划启动的daemon因为具有登录态，可以直接执行脚本拉起，如果执行计划存在问题，则无法拉起，需要使用 1 中的方式更新
 // 3、用户双击启动的daemon和service一样，无法更新daemon，只能更新agent
 func DoUpgradeAgent() error {
 	logs.Info("start upgrade agent")
