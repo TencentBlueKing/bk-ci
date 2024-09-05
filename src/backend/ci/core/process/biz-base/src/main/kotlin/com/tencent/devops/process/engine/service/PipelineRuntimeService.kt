@@ -219,8 +219,24 @@ class PipelineRuntimeService @Autowired constructor(
         }
     }
 
-    fun getBuildInfo(projectId: String, buildId: String, queryDslContext: DSLContext? = null): BuildInfo? {
-        return pipelineBuildDao.getBuildInfo(queryDslContext ?: dslContext, projectId, buildId)
+    /**
+     * 查询BuildInfo，根据是否为runtime运行时判断是否需要排除已删除的调试构建
+     * @param projectId: 项目Id
+     * @param buildId: 构建Id
+     * @param queryDslContext: 事务上下文
+     * @param runtime: 运行时调用，默认都可以查到完整构建中的查询
+     */
+    fun getBuildInfo(
+        projectId: String,
+        buildId: String,
+        queryDslContext: DSLContext? = null,
+        runtime: Boolean? = true
+    ): BuildInfo? {
+        return if (runtime == false) {
+            pipelineBuildDao.getUserBuildInfo(queryDslContext ?: dslContext, projectId, buildId)
+        } else {
+            pipelineBuildDao.getBuildInfo(queryDslContext ?: dslContext, projectId, buildId)
+        }
     }
 
     fun getBuildInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo? {
