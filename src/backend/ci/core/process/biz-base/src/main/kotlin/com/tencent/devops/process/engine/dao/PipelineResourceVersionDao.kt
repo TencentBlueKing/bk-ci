@@ -138,7 +138,10 @@ class PipelineResourceVersionDao {
             } else {
                 // 非新的逻辑请求则保持旧逻辑
                 if (includeDraft != true) where.and(
-                    STATUS.ne(VersionStatus.COMMITTING.name)
+                    (
+                        STATUS.ne(VersionStatus.COMMITTING.name)
+                            .and(STATUS.ne(VersionStatus.DELETE.name))
+                        )
                         .or(STATUS.isNull)
                 )
                 where.orderBy(VERSION.desc()).limit(1)
@@ -162,7 +165,10 @@ class PipelineResourceVersionDao {
             } else {
                 // 非新的逻辑请求则保持旧逻辑
                 if (includeDraft != true) query.and(
-                    STATUS.ne(VersionStatus.COMMITTING.name)
+                    (
+                        STATUS.ne(VersionStatus.COMMITTING.name)
+                            .and(STATUS.ne(VersionStatus.DELETE.name))
+                        )
                         .or(STATUS.isNull)
                 )
                 query.orderBy(VERSION.desc()).limit(1)
@@ -217,6 +223,7 @@ class PipelineResourceVersionDao {
         pipelineId: String
     ): PipelineResourceVersion? {
         with(T_PIPELINE_RESOURCE_VERSION) {
+            // 这里只需要返回当前VERSION数字最大的记录，不需要关心版本状态
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .orderBy(VERSION.desc()).limit(1)

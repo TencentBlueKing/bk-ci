@@ -216,23 +216,30 @@ class PipelineRepositoryVersionService(
             description = description
         )
         val result = mutableListOf<PipelineVersionSimple>()
-        result.addAll(
-            pipelineResourceVersionDao.listPipelineVersion(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineInfo = pipelineInfo,
-                creator = creator,
-                description = description,
-                versionName = versionName,
-                includeDraft = includeDraft,
-                excludeVersion = excludeVersion,
-                offset = offset,
-                limit = limit
-            )
-        )
+        pipelineResourceVersionDao.listPipelineVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineInfo = pipelineInfo,
+            creator = creator,
+            description = description,
+            versionName = versionName,
+            includeDraft = includeDraft,
+            excludeVersion = excludeVersion,
+            offset = offset,
+            limit = limit
+        ).forEach { version ->
+            version.baseVersion?.let { baseVersion ->
+                version.baseVersionName = pipelineResourceVersionDao.getPipelineVersionSimple(
+                    dslContext, projectId, pipelineId, baseVersion
+                )?.versionName
+            }
+            result.add(version)
+        }
+
         // #8161 当过滤草稿时查到空结果是正常的，只在不过滤草稿时兼容老数据的版本表无记录
-        if (result.isEmpty() && pipelineInfo.latestVersionStatus?.isNotReleased() != true) {
+        val noSearch = versionName.isNullOrBlank() && creator.isNullOrBlank() && description.isNullOrBlank()
+        if (result.isEmpty() && pipelineInfo.latestVersionStatus?.isNotReleased() != true && noSearch) {
             pipelineResourceDao.getReleaseVersionResource(
                 dslContext, projectId, pipelineId
             )?.let { record ->
