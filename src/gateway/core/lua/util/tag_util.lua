@@ -132,6 +132,11 @@ function _M:get_tag(ns_config)
         end
     end
 
+    -- DEVNET区域对tag的转换
+    if ngx.var.devops_region == 'DEVNET' and not tag.find(tag, '^ieg-codeccsvr-bkci-') then
+        tag = 'ieg-codeccsvr-bkci-' .. tag
+    end
+
     -- 设置tag到http请求头
     self:set_header(tag)
 
