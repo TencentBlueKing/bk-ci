@@ -48,7 +48,7 @@ function download_agent()
       echo "fail to use curl to download the agent, use wget"
       wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"
     fi
-  elif exists wget; then
+    elif exists wget; then
     wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"
   else
     echo "curl & wget command don't exist, download fail"
@@ -90,7 +90,7 @@ function uninstallAgentService()
     echo "remove run at load"
     rm -f ~/Library/LaunchAgents/$(getServiceName).plist
   fi
-
+  
   cd $workspace
   chmod +x *.sh
   ${workspace}/stop.sh
@@ -104,7 +104,7 @@ function installAgentService()
     echo "add run at load with user $user"
     addRunAtLoad
   fi
-
+  
   cd $workspace
   chmod +x *.sh
   ${workspace}/start.sh
@@ -113,44 +113,44 @@ function installAgentService()
 
 function writeSSHConfig()
 {
-    config_file=$HOME/.ssh/config
-    if [[ ! -d $HOME/.ssh ]];then
-        mkdir -p $HOME/.ssh
+  config_file=$HOME/.ssh/config
+  if [[ ! -d $HOME/.ssh ]];then
+    mkdir -p $HOME/.ssh
+  fi
+  
+  if [[ -f ${config_file} ]];then
+    
+    if [[ $(cat ${config_file}| grep "\-svn.tencent.com"  | wc -l) -lt 1 ]];then
+      echo "" >> ${config_file}
+      echo "Host *-svn.tencent.com" >> ${config_file}
+      echo "StrictHostKeyChecking no" >> ${config_file}
+      echo "Port 22" >> $config_file
     fi
-
-    if [[ -f ${config_file} ]];then
-
-        if [[ $(cat ${config_file}| grep "\-svn.tencent.com"  | wc -l) -lt 1 ]];then
-            echo "" >> ${config_file}
-            echo "Host *-svn.tencent.com" >> ${config_file}
-            echo "StrictHostKeyChecking no" >> ${config_file}
-            echo "Port 22" >> $config_file
-        fi
-        if [[ $(cat ${config_file}| grep "\-scm.tencent.com"  | wc -l) -lt 1 ]];then
-            echo "" >> ${config_file}
-            echo "Host *-scm.tencent.com" >> ${config_file}
-            echo "StrictHostKeyChecking no" >> ${config_file}
-            echo "Port 22" >> ${config_file}
-        fi
-        if [[ $(cat $config_file| grep "\-cd1.tencent.com"  | wc -l) -lt 1 ]];then
-            echo "" >> ${config_file}
-            echo "Host *-cd1.tencent.com" >> ${config_file}
-            echo "StrictHostKeyChecking no" >> ${config_file}
-            echo "Port 22" >> ${config_file}
-        fi
-        if [[ $(cat ${config_file}| grep "Host git.code.oa.com"  | wc -l) -lt 1 ]];then
-            echo "" >> ${config_file}
-            echo "Host git.code.oa.com" >> ${config_file}
-            echo "StrictHostKeyChecking no" >> ${config_file}
-            echo "Port 22" >> ${config_file}
-        fi
-        if [[ $(cat ${config_file}| grep "Host git.woa.com"  | wc -l) -lt 1 ]];then
-            echo "" >> ${config_file}
-            echo "Host git.woa.com" >> ${config_file}
-            echo "StrictHostKeyChecking no" >> ${config_file}
-            echo "Port 22" >> ${config_file}
-        fi
-    else
+    if [[ $(cat ${config_file}| grep "\-scm.tencent.com"  | wc -l) -lt 1 ]];then
+      echo "" >> ${config_file}
+      echo "Host *-scm.tencent.com" >> ${config_file}
+      echo "StrictHostKeyChecking no" >> ${config_file}
+      echo "Port 22" >> ${config_file}
+    fi
+    if [[ $(cat $config_file| grep "\-cd1.tencent.com"  | wc -l) -lt 1 ]];then
+      echo "" >> ${config_file}
+      echo "Host *-cd1.tencent.com" >> ${config_file}
+      echo "StrictHostKeyChecking no" >> ${config_file}
+      echo "Port 22" >> ${config_file}
+    fi
+    if [[ $(cat ${config_file}| grep "Host git.code.oa.com"  | wc -l) -lt 1 ]];then
+      echo "" >> ${config_file}
+      echo "Host git.code.oa.com" >> ${config_file}
+      echo "StrictHostKeyChecking no" >> ${config_file}
+      echo "Port 22" >> ${config_file}
+    fi
+    if [[ $(cat ${config_file}| grep "Host git.woa.com"  | wc -l) -lt 1 ]];then
+      echo "" >> ${config_file}
+      echo "Host git.woa.com" >> ${config_file}
+      echo "StrictHostKeyChecking no" >> ${config_file}
+      echo "Port 22" >> ${config_file}
+    fi
+  else
       cat > ${config_file} <<EOF
 Host *-svn.tencent.com
 StrictHostKeyChecking no
@@ -168,8 +168,9 @@ Host git.woa.com
 StrictHostKeyChecking no
 Port 22
 EOF
-      chmod 600 ${config_file}
-    fi
+    chmod 600 ${config_file}
+  fi
+  echo "write ssh config done"
 }
 
 # ----------------------------------
@@ -202,7 +203,7 @@ jdk17/Contents/Home/bin/java -version
 echo "check java version"
 jdk/Contents/Home/bin/java -version
 
-echo "check and write ssh config"
+echo "check if write ssh config"
 writeSSHConfig
 
 uninstallAgentService
