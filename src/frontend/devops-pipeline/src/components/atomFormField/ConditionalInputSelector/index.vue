@@ -28,6 +28,7 @@
             v-validate.initial="Object.assign({}, { required: !!curComponent.required })"
             :handle-change="handleChange"
             :value="element[curComponent.key]"
+            :disabled="disabled"
             v-bind="curComponent"
         >
         </component>
@@ -35,8 +36,8 @@
 </template>
 
 <script>
-    import VuexInput from '@/components/atomFormField/VuexInput'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import VuexInput from '@/components/atomFormField/VuexInput'
     import atomFieldMixin from '../atomFieldMixin'
     export default {
         name: 'conditional-input-selector',

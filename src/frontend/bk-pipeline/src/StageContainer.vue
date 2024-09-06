@@ -57,10 +57,10 @@
 </template>
 
 <script>
-    import MatrixGroup from './MatrixGroup'
+    import CruveLine from './CruveLine'
     import Job from './Job'
     import Logo from './Logo'
-    import CruveLine from './CruveLine'
+    import MatrixGroup from './MatrixGroup'
     import {
         getOuterHeight
     } from './util'
@@ -116,6 +116,9 @@
             },
             showLastCruveLine () {
                 return (this.stageIndex !== this.stageLength - 1 || this.reactiveData.editable) && !this.isFinallyStage
+            },
+            showLeftCruveLine () {
+                return (this.reactiveData.editable && !this.isTriggerStage) || this.stageIndex > 0
             },
             jobComponentName () {
                 return this.isMatrix ? MatrixGroup : Job

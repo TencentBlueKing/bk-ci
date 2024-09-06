@@ -19,6 +19,12 @@ data class WorkspaceShared(
 ) {
     enum class AssignType {
         OWNER,
-        VIEWER
+        VIEWER;
+
+        companion object {
+            fun parse(value: String): AssignType {
+                return values().find { it.name == value } ?: VIEWER
+            }
+        }
     }
 }

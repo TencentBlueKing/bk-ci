@@ -373,15 +373,14 @@
 </template>
 
 <script>
-    import { debounce } from '@/utils/index'
     import { imageStatusList } from '@/store/constants'
+    import { debounce } from '@/utils/index'
     import status from './status'
 
     export default {
         components: {
             status
         },
-
         data () {
             return {
                 imageStatusList,

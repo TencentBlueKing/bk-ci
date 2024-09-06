@@ -309,9 +309,9 @@ class ContainerTransfer @Autowired(required = false) constructor(
     }
 
     private fun makeJobTimeout(controlOption: JobControlOption?): String? {
-        return controlOption?.timeoutVar.nullIfDefault(
+        return (controlOption?.timeoutVar ?: controlOption?.timeout?.toString()).nullIfDefault(
             VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES.toString()
-        ) ?: controlOption?.timeout.nullIfDefault(VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES)?.toString()
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -426,8 +426,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 null
             },
             timeoutMinutes = if (resource.queueEnable) {
-                resource.timeoutVar.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES.toString())
-                    ?: resource.timeout.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES)?.toString()
+                (resource.timeoutVar ?: resource.timeout.toString())
+                    .nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES.toString())
             } else {
                 null
             }

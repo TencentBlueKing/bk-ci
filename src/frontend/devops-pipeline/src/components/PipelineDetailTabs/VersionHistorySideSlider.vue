@@ -91,13 +91,20 @@
                         </template>
                     </bk-table-column>
                     <bk-table-column
-                        :width="222"
+                        :width="280"
                         :label="$t('operate')"
                     >
                         <div
                             slot-scope="props"
                             class="pipeline-history-version-operate"
                         >
+                            <bk-button
+                                v-if="props.row.isDraft"
+                                text
+                                @click="goDebugRecords"
+                            >
+                                {{ $t('draftExecRecords') }}
+                            </bk-button>
                             <rollback-entry
                                 v-if="props.row.canRollback"
                                 :has-permission="canEdit"
@@ -337,6 +344,11 @@
             clearFilter (refresh = true) {
                 this.filterKeys = []
                 refresh && this.queryVersionList()
+            },
+            goDebugRecords () {
+                this.$router.push({
+                    name: 'draftDebugRecord'
+                })
             }
         }
     }

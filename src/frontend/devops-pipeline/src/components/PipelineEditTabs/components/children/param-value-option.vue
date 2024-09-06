@@ -1,5 +1,64 @@
 <template>
     <section class="bk-form-item">
+        <form-field
+            :hide-colon="true"
+            v-if="isCodelibParam(param.type)"
+            :label="$t('editPage.codelibParams')"
+            :is-error="errors.has(`pipelineParam.scmType`)"
+            :error-msg="errors.first(`pipelineParam.scmType`)"
+        >
+            <selector
+                :disabled="disabled"
+                :list="codeTypeList"
+                :handle-change="(name, value) => handleCodeTypeChange(name, value)"
+                name="scmType"
+                placeholder=""
+                :value="param.scmType"
+                :clearable="false"
+            ></selector>
+        </form-field>
+        <form-field
+            :hide-colon="true"
+            v-if="isGitParam(param.type)"
+            :label="$t('editPage.gitRepo')"
+            :required="true"
+            :is-error="errors.has(`pipelineParam.repoHashId`)"
+            :error-msg="errors.first(`pipelineParam.repoHashId`)"
+        >
+            <request-selector
+                v-bind="getRepoOption('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT')"
+                :disabled="disabled"
+                name="repoHashId"
+                :value="param.repoHashId"
+                :handle-change="handleChange"
+                v-validate="'required'"
+                :data-vv-scope="'pipelineParam'"
+                replace-key="{keyword}"
+                :search-url="getSearchUrl()"
+            >
+            </request-selector>
+        </form-field>
+        <form-field
+            :hide-colon="true"
+            v-if="isSvnParam(param.type)"
+            :label="$t('editPage.svnParams')"
+            :required="true"
+            :is-error="errors.has(`pipelineParam.repoHashId`)"
+            :error-msg="errors.first(`pipelineParam.repoHashId`)"
+        >
+            <request-selector
+                v-bind="getRepoOption('CODE_SVN')"
+                :disabled="disabled"
+                name="repoHashId"
+                :value="param.repoHashId"
+                :handle-change="handleChange"
+                v-validate="'required'"
+                :data-vv-scope="'pipelineParam'"
+                :replace-key="param.replaceKey"
+                :search-url="param.searchUrl"
+            >
+            </request-selector>
+        </form-field>
         <select-type-param
             v-if="isSelectorParam(param.type)"
             :param="param"
@@ -7,7 +66,7 @@
             :handle-update-payload="handleUpdatePayload"
             :reset-default-val="handleResetDefaultVal"
         />
-        
+
         <form-field
             :hide-colon="true"
             :label="valueRequired ? $t('newui.pipelineParam.constValue') : $t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
@@ -52,15 +111,14 @@
                 name="defaultValue"
                 :list="boolList"
                 :disabled="disabled"
-                    
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
+                :handle-change="handleChange"
                 :value="param.defaultValue"
             >
             </enum-input>
             <vuex-input
-                v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isFileParam(param.type) || isArtifactoryParam(param.type)"
+                v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type)"
                 :disabled="disabled"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
+                :handle-change="handleChange"
                 name="defaultValue"
                 v-validate="{ required: valueRequired }"
                 :data-vv-scope="'pipelineParam'"
@@ -68,10 +126,18 @@
                 :placeholder="$t('editPage.defaultValueTips')"
                 :value="param.defaultValue"
             />
+            <file-param-input
+                v-if="isFileParam(param.type)"
+                name="defaultValue"
+                :required="valueRequired"
+                :disabled="disabled"
+                :value="param.defaultValue"
+                :handle-change="handleChange"
+            />
             <vuex-textarea
                 v-if="isTextareaParam(param.type)"
                 :disabled="disabled"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
+                :handle-change="handleChange"
                 name="defaultValue"
                 v-validate="{ required: valueRequired }"
                 :data-vv-scope="'pipelineParam'"
@@ -88,7 +154,7 @@
                 v-validate="{ required: valueRequired }"
                 :data-vv-scope="'pipelineParam'"
                 :value="param.defaultValue"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
+                :handle-change="handleChange"
             >
             </request-selector>
             <request-selector
@@ -101,7 +167,7 @@
                 v-validate="{ required: valueRequired }"
                 :data-vv-scope="'pipelineParam'"
                 :value="param.defaultValue"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
+                :handle-change="handleChange"
                 :replace-key="param.replaceKey"
                 :search-url="param.searchUrl"
             >
@@ -115,28 +181,7 @@
                 v-validate="{ required: valueRequired }"
                 :data-vv-scope="'pipelineParam'"
                 :value="param.defaultValue"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
-                :replace-key="param.replaceKey"
-                :search-url="param.searchUrl"
-            >
-            </request-selector>
-        </form-field>
-
-        <form-field
-            :hide-colon="true"
-            v-if="isSvnParam(param.type)"
-            :label="$t('editPage.svnParams')"
-            :is-error="errors.has(`repoHashId`)"
-            :error-msg="errors.first(`pipelineParam.repoHashId`)"
-        >
-            <request-selector
-                v-bind="getRepoOption('CODE_SVN')"
-                :disabled="disabled"
-                name="repoHashId"
-                :value="param.repoHashId"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
-                v-validate="'required'"
-                :data-vv-scope="'pipelineParam'"
+                :handle-change="handleChange"
                 :replace-key="param.replaceKey"
                 :search-url="param.searchUrl"
             >
@@ -147,61 +192,23 @@
             :hide-colon="true"
             v-if="isSvnParam(param.type)"
             :label="$t('editPage.relativePath')"
-            :is-error="errors.has(`relativePath`)"
+            :is-error="errors.has(`pipelineParam.relativePath`)"
             :error-msg="errors.first(`pipelineParam.relativePath`)"
         >
             <vuex-input
                 :disabled="disabled"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
+                :handle-change="handleChange"
                 name="relativePath"
                 :placeholder="$t('editPage.relativePathTips')"
                 :value="param.relativePath"
             ></vuex-input>
         </form-field>
 
-        <form-field
-            :hide-colon="true"
-            v-if="isGitParam(param.type)"
-            :label="$t('editPage.gitRepo')"
-            :is-error="errors.has(`repoHashId`)"
-            :error-msg="errors.first(`pipelineParam.repoHashId`)"
-        >
-            <request-selector
-                v-bind="getRepoOption('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT')"
-                :disabled="disabled"
-                name="repoHashId"
-                :value="param.repoHashId"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
-                v-validate="'required'"
-                :data-vv-scope="'pipelineParam'"
-                replace-key="{keyword}"
-                :search-url="getSearchUrl()"
-            >
-            </request-selector>
-        </form-field>
-
-        <form-field
-            :hide-colon="true"
-            v-if="isCodelibParam(param.type)"
-            :label="$t('editPage.codelibParams')"
-            :is-error="errors.has(`scmType`)"
-            :error-msg="errors.first(`pipelineParam.scmType`)"
-        >
-            <selector
-                :disabled="disabled"
-                :list="codeTypeList"
-                :handle-change="(name, value) => handleCodeTypeChange(name, value)"
-                name="scmType"
-                placeholder=""
-                :value="param.scmType"
-            ></selector>
-        </form-field>
-
         <template v-if="isBuildResourceParam(param.type)">
             <form-field
                 :hide-colon="true"
                 :label="$t('editPage.buildEnv')"
-                :is-error="errors.has(`os`)"
+                :is-error="errors.has(`pipelineParam.os`)"
                 :error-msg="errors.first(`pipelineParam.os`)"
             >
                 <selector
@@ -218,7 +225,7 @@
             <form-field
                 :hide-colon="true"
                 :label="$t('editPage.addMetaData')"
-                :is-error="errors.has(`buildType`)"
+                :is-error="errors.has(`pipelineParam.buildType`)"
                 :error-msg="errors.first(`pipelineParam.buildType`)"
             >
                 <selector
@@ -234,49 +241,78 @@
             </form-field>
         </template>
 
-        <form-field
-            :hide-colon="true"
-            v-if="isFileParam(param.type)"
-        >
-            <file-param-input
-                :file-path="param.defaultValue"
-            ></file-param-input>
-        </form-field>
+        <template v-if="isArtifactoryParam(param.type)">
+            <form-field
+                :hide-colon="true"
+                :label="$t('editPage.filterRule')"
+                :is-error="errors.has(`pipelineParam.glob`)"
+                :error-msg="errors.first(`pipelineParam.glob`)"
+            >
+                <vuex-input
+                    :disabled="disabled"
+                    :handle-change="handleChange"
+                    name="glob"
+                    :data-vv-scope="'pipelineParam'"
+                    :placeholder="$t('editPage.filterRuleTips')"
+                    :value="param.glob"
+                ></vuex-input>
+            </form-field>
+
+            <form-field
+                :hide-colon="true"
+                :label="$t('metaData')"
+                :is-error="errors.has(`pipelineParam.properties`)"
+                :error-msg="errors.first(`pipelineParam.properties`)"
+            >
+                <key-value-normal
+                    :disabled="disabled"
+                    name="properties"
+                    :data-vv-scope="'pipelineParam'"
+                    :is-metadata-var="true"
+                    :add-btn-text="$t('editPage.addMetaData')"
+                    :value="getProperties(param)"
+                    :handle-change="
+                        (name, value) => handleProperties(name, value)
+                    "
+                ></key-value-normal>
+            </form-field>
+        </template>
     </section>
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import SelectTypeParam from './select-type-param'
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import FileParamInput from '@/components/FileParamInput'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+    import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import RequestSelector from '@/components/atomFormField/RequestSelector'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import Selector from '@/components/atomFormField/Selector'
-    import FileParamInput from '@/components/FileParamInput'
     import validMixins from '@/components/validMixins'
+    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, STORE_API_URL_PREFIX } from '@/store/constants'
     import {
-        isTextareaParam,
-        isStringParam,
-        isBooleanParam,
-        isBuildResourceParam,
-        isEnumParam,
-        isMultipleParam,
-        isCodelibParam,
-        isSvnParam,
-        isGitParam,
-        isArtifactoryParam,
-        isSubPipelineParam,
-        isFileParam,
-        getRepoOption,
-        getParamsDefaultValueLabel,
-        getParamsDefaultValueLabelTips,
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
+        getParamsDefaultValueLabel,
+        getParamsDefaultValueLabelTips,
+        getRepoOption,
+        isArtifactoryParam,
+        isBooleanParam,
+        isBuildResourceParam,
+        isCodelibParam,
+        isEnumParam,
+        isFileParam,
+        isGitParam,
+        isMultipleParam,
+        isStringParam,
+        isSubPipelineParam,
+        isSvnParam,
+        isTextareaParam,
         SUB_PIPELINE_OPTION
     } from '@/store/modules/atom/paramsConfig'
-    import { STORE_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import { mapGetters } from 'vuex'
+    import SelectTypeParam from './select-type-param'
 
     const BOOLEAN = [
         {
@@ -298,7 +334,8 @@
             Selector,
             VuexTextarea,
             RequestSelector,
-            FileParamInput
+            FileParamInput,
+            KeyValueNormal
         },
         mixins: [validMixins],
         props: {
@@ -401,11 +438,11 @@
             handleBuildResourceChange (name, value, param) {
                 const resetBuildType = name === 'os' ? { buildType: this.getBuildTypeList(value)[0].type } : {}
 
-                this.handleUpdateParam('containerType', Object.assign({
+                this.handleChange('containerType', Object.assign({
                     ...param.containerType,
                     [name]: value
                 }, resetBuildType))
-                this.handleUpdateParam('defaultValue', '')
+                this.handleChange('defaultValue', '')
             },
             setSelectorDefaultVal ({ type, defaultValue = '' }) {
                 if (typeof this.param.defaultValue === 'string' && (isMultipleParam(this.param.type) || isEnumParam(this.param.type))) { // 选项清除时，修改对应的默认值
@@ -415,7 +452,7 @@
                     } else {
                         this.selectDefautVal = dv.join(',')
                     }
-                    this.handleUpdateParam('defaultValue', dv.join(','))
+                    this.handleChange('defaultValue', dv.join(','))
                 }
             },
             transformOpt (opts) {
@@ -438,8 +475,8 @@
             },
 
             handleCodeTypeChange (name, value) {
-                this.handleUpdateParam(name, value)
-                this.handleUpdateParam('defaultValue', '')
+                this.handleChange(name, value)
+                this.handleChange('defaultValue', '')
             },
 
             getCodeUrl (type) {
@@ -462,17 +499,17 @@
                 } else {
                     this.selectDefautVal = ''
                 }
-                this.handleUpdateParam('defaultValue', '')
+                this.handleChange('defaultValue', '')
             },
             handleUpdateOptions (key, val) {
                 this.handleChange(key, val)
                 this.transformOpt(val)
-                
+
                 // 选项变更后，重制默认值
                 const { param } = this
                 if (typeof param.defaultValue === 'string' && (isMultipleParam(param.type) || isEnumParam(param.type))) { // 选项清除时，修改对应的默认值
                     const dv = param.defaultValue.split(',').filter(v => param.options.map(k => k.key).includes(v))
-                    this.handleUpdateParam('defaultValue', dv.join(','))
+                    this.handleChange('defaultValue', dv.join(','))
                 }
                 this.setSelectorDefaultVal(this.param)
             },
@@ -481,10 +518,26 @@
                 if (isMultipleParam(this.param.type)) {
                     value = value.join(',')
                 }
-                this.handleUpdateParam(key, value)
-            },
-            handleUpdateParam (key, value) {
                 this.handleChange(key, value)
+            },
+            getProperties (param) {
+                try {
+                    return Object.keys(param.properties).map((item) => {
+                        return {
+                            key: item,
+                            value: param.properties[item]
+                        }
+                    })
+                } catch (e) {
+                    return []
+                }
+            },
+            handleProperties (key, value) {
+                const properties = {}
+                value.forEach((val) => {
+                    properties[val.key] = val.value
+                })
+                this.handleChange(key, properties)
             }
         }
     }

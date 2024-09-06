@@ -31,7 +31,7 @@ import com.tencent.devops.environment.constant.T_NODE_HOST_ID
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.job.jobreq.Host
-import com.tencent.devops.environment.service.cc.TencentQueryFromCCService
+import com.tencent.devops.environment.service.cc.TencentCCService
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Service
 class CmdbNodeAction @Autowired constructor(
     private val dslContext: DSLContext,
     private val cmdbNodeDao: CmdbNodeDao,
-    private val tencentQueryFromCCService: TencentQueryFromCCService
+    private val tencentQueryFromCCService: TencentCCService
 ) : NodeAction {
     @Value("\${environment.cc.bkBizScopeId:}")
     private val bkBizScopeId = ""

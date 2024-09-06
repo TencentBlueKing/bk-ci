@@ -25,6 +25,7 @@
 
         @Action getAnnouncement
         @Action setAnnouncement
+        @Action getPlatformPreData
 
         @Watch('fetchError')
         handleFetchError (e) {
@@ -38,6 +39,7 @@
         }
 
         async created () {
+            this.getPlatformPreData()
             const announce = await this.getAnnouncement()
             if (announce && announce.id) {
                 this.setAnnouncement(announce)

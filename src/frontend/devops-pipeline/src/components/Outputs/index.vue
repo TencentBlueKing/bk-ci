@@ -244,8 +244,8 @@
             IframeReport,
             ExtMenu,
             CopyToCustomRepoDialog,
-            // ArtifactsList
             OutputQrcode,
+            // ArtifactsList
             ArtifactDownloadButton
         },
         props: {

@@ -39,4 +39,11 @@ interface AtomPropService {
     fun getAtomProps(
         atomCodes: Set<String>
     ): Map<String, AtomProp>?
+
+    /**
+     * 获取插件输出信息
+     * @param atomInfos 插件信息集合，格式：插件标识@版本号
+     * @return 插件输出信息集合，格式：key-插件标识@版本号， value-插件输出对象
+     */
+    fun getAtomOutputInfos(atomInfos: Set<String>): Map<String, String>?
 }

@@ -160,7 +160,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     repositoryName = triggerOn.repoName,
                     enableThirdFilter = !mr.custom?.url.isNullOrBlank(),
                     thirdUrl = mr.custom?.url,
-                    thirdSecretToken = mr.custom?.credentials
+                    thirdSecretToken = mr.custom?.credentials,
+                    skipWip = mr.skipWip
                 ).checkTriggerElementEnable(mr.enable).apply {
                     version = "2.*"
                 }
@@ -296,11 +297,13 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     custom = if (git.enableThirdFilter == true) CustomFilter(
                         url = git.thirdUrl,
                         credentials = git.thirdSecretToken
-                    ) else null
+                    ) else null,
+                    skipWip = git.skipWip
                 )
                 CodeEventType.MERGE_REQUEST_ACCEPT ->
                     throw PipelineTransferException(
-                        errorCode = CommonMessageCode.MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER
+                        errorCode = CommonMessageCode.MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER,
+                        params = arrayOf(git.name)
                     )
 
                 CodeEventType.REVIEW -> nowExist.review = ReviewRule(
@@ -462,7 +465,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             ),
                             eventType = CodeEventType.MERGE_REQUEST,
                             repositoryType = repositoryType,
-                            repositoryName = triggerOn.repoName
+                            repositoryName = triggerOn.repoName,
+                            skipWip = mr.skipWip
                         )
                     )
                 ).checkTriggerElementEnable(mr.enable).apply {
@@ -764,7 +768,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeGitlabWebHookTriggerElement(
-                    name = push.name ?: "Gitlab变更触发",
+                    name = push.name ?: "Gitlab事件触发",
                     branchName = push.branches.nonEmptyOrNull()?.join(),
                     excludeBranchName = push.branchesIgnore.nonEmptyOrNull()?.join(),
                     includePaths = push.paths.nonEmptyOrNull()?.join(),
@@ -774,10 +778,15 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
                     eventType = CodeEventType.PUSH,
-                    // todo action
+                    includeMrAction = push.action ?: listOf(
+                        TGitPushActionType.PUSH_FILE.value,
+                        TGitPushActionType.NEW_BRANCH.value
+                    ),
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
-                ).checkTriggerElementEnable(push.enable)
+                ).checkTriggerElementEnable(push.enable).apply {
+                    version = "2.*"
+                }
             )
         }
 
@@ -799,7 +808,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.mr?.let { mr ->
             elementQueue.add(
                 CodeGitlabWebHookTriggerElement(
-                    name = mr.name ?: "Gitlab变更触发",
+                    name = mr.name ?: "Gitlab事件触发",
                     branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
                     excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
                     includeSourceBranchName = mr.sourceBranches.nonEmptyOrNull()?.join(),
@@ -811,11 +820,17 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     block = mr.blockMr,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
-                    // todo action
+                    includeMrAction = mr.action ?: listOf(
+                        TGitMrEventAction.OPEN.value,
+                        TGitMrEventAction.REOPEN.value,
+                        TGitMrEventAction.PUSH_UPDATE.value
+                    ),
                     eventType = CodeEventType.MERGE_REQUEST,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
-                ).checkTriggerElementEnable(mr.enable)
+                ).checkTriggerElementEnable(mr.enable).apply {
+                    version = "2.*"
+                }
             )
         }
     }

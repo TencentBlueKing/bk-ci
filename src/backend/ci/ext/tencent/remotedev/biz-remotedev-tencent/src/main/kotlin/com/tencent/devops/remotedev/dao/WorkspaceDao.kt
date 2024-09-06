@@ -53,7 +53,6 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
-import org.jooq.Record2
 import org.jooq.RecordMapper
 import org.jooq.Result
 import org.jooq.TableField
@@ -291,21 +290,6 @@ class WorkspaceDao {
         }
     }
 
-    fun fetchCreators(
-        dslContext: DSLContext,
-        status: WorkspaceStatus,
-        systemType: WorkspaceSystemType = WorkspaceSystemType.WINDOWS_GPU,
-        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
-    ): List<Record2<String, String>> {
-        with(TWorkspace.T_WORKSPACE) {
-            return dslContext.select(CREATOR, NAME).from(this)
-                .where(STATUS.eq(status.ordinal))
-                .and(SYSTEM_TYPE.eq(systemType.name))
-                .and(OWNER_TYPE.eq(ownerType.name))
-                .fetch()
-        }
-    }
-
     fun fetchAnyWorkspace(
         dslContext: DSLContext,
         userId: String? = null,
@@ -328,40 +312,6 @@ class WorkspaceDao {
             return dslContext.selectFrom(this)
                 .where(condition)
                 .fetchAny(workspaceMapper)
-        }
-    }
-
-    fun fetchWorkspace(
-        dslContext: DSLContext,
-        userId: String? = null,
-        status: WorkspaceStatus? = null,
-        mountType: WorkspaceMountType? = null,
-        projectId: String? = null,
-        systemType: WorkspaceSystemType? = null,
-        notDeleted: Boolean? = false,
-        ownerType: WorkspaceOwnerType? = null
-    ): List<WorkspaceRecord>? {
-        with(TWorkspace.T_WORKSPACE) {
-            val condition = mixCondition(
-                userId = userId,
-                status = status,
-                mountType = mountType,
-                projectId = projectId,
-                systemType = systemType,
-                ownerType = ownerType
-            )
-
-            if (notDeleted == true) {
-                condition.add(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-            }
-
-            if (condition.isEmpty()) {
-                return null
-            }
-
-            return dslContext.selectFrom(this)
-                .where(condition)
-                .fetch(workspaceMapper)
         }
     }
 
@@ -591,32 +541,6 @@ class WorkspaceDao {
         }
     }
 
-    fun updateWorkspaceUsageTime(
-        workspaceName: String,
-        usageTime: Int,
-        dslContext: DSLContext
-    ) {
-        with(TWorkspace.T_WORKSPACE) {
-            dslContext.update(this)
-                .set(USAGE_TIME, USAGE_TIME + usageTime)
-                .where(NAME.eq(workspaceName))
-                .execute()
-        }
-    }
-
-    fun updateWorkspaceSleepingTime(
-        workspaceName: String,
-        sleepTime: Int,
-        dslContext: DSLContext
-    ) {
-        with(TWorkspace.T_WORKSPACE) {
-            dslContext.update(this)
-                .set(SLEEPING_TIME, SLEEPING_TIME + sleepTime)
-                .where(NAME.eq(workspaceName))
-                .execute()
-        }
-    }
-
     fun bakWorkspace(
         dslContext: DSLContext,
         workspaceName: String,
@@ -705,9 +629,9 @@ class WorkspaceDao {
                     createTime = createTime,
                     updateTime = updateTime,
                     lastStatusUpdateTime = lastStatusUpdateTime,
-                    workspaceMountType = WorkspaceMountType.valueOf(workspaceMountType),
-                    workspaceSystemType = WorkspaceSystemType.valueOf(systemType),
-                    ownerType = WorkspaceOwnerType.valueOf(ownerType),
+                    workspaceMountType = WorkspaceMountType.parse(workspaceMountType),
+                    workspaceSystemType = WorkspaceSystemType.parse(systemType),
+                    ownerType = WorkspaceOwnerType.parse(ownerType),
                     remark = remark,
                     labels = labels?.let { self ->
                         JsonUtil.getObjectMapper().readValue(self) as List<String>
@@ -746,13 +670,13 @@ class WorkspaceDao {
                 updateTime = record.getOrNull(TWorkspace.T_WORKSPACE.UPDATE_TIME) as LocalDateTime?
                     ?: LocalDateTime.now(),
                 lastStatusUpdateTime = record.getOrNull(TWorkspace.T_WORKSPACE.LAST_STATUS_UPDATE_TIME) as LocalDateTime?,
-                workspaceMountType = WorkspaceMountType.valueOf(
+                workspaceMountType = WorkspaceMountType.parse(
                     record.getOrNull(TWorkspace.T_WORKSPACE.WORKSPACE_MOUNT_TYPE) as String? ?: "START"
                 ),
-                workspaceSystemType = WorkspaceSystemType.valueOf(
+                workspaceSystemType = WorkspaceSystemType.parse(
                     record.getOrNull(TWorkspace.T_WORKSPACE.SYSTEM_TYPE) as String? ?: "WINDOWS_GPU"
                 ),
-                ownerType = WorkspaceOwnerType.valueOf(
+                ownerType = WorkspaceOwnerType.parse(
                     record.getOrNull(TWorkspace.T_WORKSPACE.OWNER_TYPE) as String? ?: "PROJECT"
                 ),
                 remark = record.getOrNull(TWorkspace.T_WORKSPACE.REMARK) as String?,

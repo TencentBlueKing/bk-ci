@@ -72,4 +72,11 @@ interface CodeRepositoryService<T> {
     fun getGitFileTree(projectId: String, userId: String, record: TRepositoryRecord): List<GitFileInfo>
 
     fun getPacRepository(externalId: String): TRepositoryRecord?
+
+    fun addResourceAuthorization(
+        projectId: String,
+        userId: String,
+        repositoryId: Long,
+        repository: T
+    )
 }

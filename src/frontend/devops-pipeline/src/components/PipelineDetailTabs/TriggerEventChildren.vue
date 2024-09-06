@@ -26,7 +26,7 @@
                 ></em>
                 <em
                     v-bk-overflow-tips
-                    v-else
+                    v-else-if="Array.isArray(event.reasonDetailList)"
                     v-html="event.reasonDetailList.join(' | ')"
                 ></em>
             </p>

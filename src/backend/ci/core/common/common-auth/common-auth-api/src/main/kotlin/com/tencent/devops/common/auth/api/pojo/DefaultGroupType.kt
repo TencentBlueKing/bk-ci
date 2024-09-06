@@ -42,7 +42,8 @@ enum class DefaultGroupType(
     TESTER("tester", "测试人员"), // 测试人员
     PM("pm", "产品人员"), // 产品人员
     QC("qc", "质量管理员"), // 质量管理员
-    VIEWER("viewer", "查看项目权限组"); // 查看项目权限组
+    VIEWER("viewer", "查看项目权限组"), // 查看项目权限组
+    CUSTOM("custom", "用户自定义组"); // 用户自定义组
 
     companion object {
         fun get(value: String): DefaultGroupType {

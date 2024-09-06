@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
@@ -110,16 +111,16 @@ object EngineService {
         }
     }
 
-    fun endBuild(variables: Map<String, String>, buildId: String = "") {
+    fun endBuild(variables: Map<String, String>, buildId: String = "", result: BuildJobResult) {
         var retryCount = 0
-        val result = HttpRetryUtils.retry {
+        val retryResult = HttpRetryUtils.retry {
             if (retryCount > 0) {
                 logger.warn("retry|time=$retryCount|endBuild")
                 sleepInterval(retryCount)
             }
-            buildApi.endTask(variables, buildId, retryCount++)
+            buildApi.endTask(variables = variables, envBuildId = buildId, retryCount = retryCount++, result = result)
         }
-        if (result.isNotOk()) {
+        if (retryResult.isNotOk()) {
             throw RemoteServiceException("Failed to end build task")
         }
     }

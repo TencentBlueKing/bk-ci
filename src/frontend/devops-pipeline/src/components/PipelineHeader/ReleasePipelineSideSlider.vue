@@ -54,7 +54,7 @@
                     />
                 </aside>
                 <aside
-                    v-if="releaseParams.enablePac"
+                    v-if="releaseParams.enablePac && hasPacSupportScmTypeList"
                     class="release-pipeline-pac-conf-rightside"
                 >
                     <label for="enablePac">
@@ -240,7 +240,7 @@
                 class="pac-oauth-enable"
                 v-bkloading="{ isLoading: refreshing }"
             >
-                <header>
+                <header v-if="hasPacSupportScmTypeList">
                     <bk-button
                         :loading="oauthing"
                         :disabled="oauthing"
@@ -265,7 +265,7 @@
                 </header>
                 <p
                     class="pac-oauth-tips"
-                    v-html="$t('oauthPacTips')"
+                    v-html="$t(hasPacSupportScmTypeList ? 'oauthPacTips' : 'withoutOauthCodelib')"
                 ></p>
             </div>
         </section>
@@ -361,6 +361,7 @@
         computed: {
             ...mapState('atom', [
                 'pipelineInfo',
+                'pipeline',
                 'pipelineSetting'
             ]),
             ...mapState('pipelines', ['isManage']),
@@ -427,6 +428,17 @@
                         ? 'PUSH_BRANCH_AND_REQUEST_MERGE'
                         : 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
                 ]
+            },
+            hasPacSupportScmTypeList () {
+                return this.pacSupportScmTypeList?.length > 0
+            },
+            canManualStartup () {
+                try {
+                    const manualAtom = this.pipeline?.stages?.[0]?.containers[0]?.elements?.find(e => e.atomCode === 'manualTrigger')
+                    return manualAtom?.additionalOptions?.enable
+                } catch (error) {
+                    return false
+                }
             }
         },
         watch: {
@@ -506,10 +518,10 @@
                         })
                     ])
 
-                    this.releaseParams.scmType = this.pacSupportScmTypeList[0]?.id
                     const newReleaseVersion = results[enablePac ? 1 : 0]
                     this.newReleaseVersionName = newReleaseVersion?.newVersionName || '--'
-                    if (enablePac) {
+                    if (enablePac && this.hasPacSupportScmTypeList) {
+                        this.releaseParams.scmType = this.pacSupportScmTypeList[0]?.id
                         this.$nextTick(() => {
                             this.fetchPacEnableCodelibList(true)
                             if (this.isDraftBaseBranchVersion) {
@@ -619,6 +631,7 @@
                                 : null
                         }
                     })
+
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         ...(!targetAction || targetAction === 'COMMIT_TO_MASTER'
                             ? {
@@ -629,7 +642,9 @@
                                 versionNum,
                                 baseVersion: version,
                                 baseVersionName: versionName,
-                                latestVersionStatus: VERSION_STATUS_ENUM.RELEASED
+                                latestVersionStatus: VERSION_STATUS_ENUM.RELEASED,
+                                pipelineName: this.pipelineName,
+                                canManualStartup: this.canManualStartup
                             }
                             : {}),
                         ...(

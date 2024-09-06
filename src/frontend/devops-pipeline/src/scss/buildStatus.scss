@@ -19,6 +19,7 @@
 
 @mixin build-status () {
     &.QUEUE,
+    &.QUEUE_CACHE,
     &.RUNNING,
     &.REVIEWING,
     &.PREPARE_ENV,
@@ -27,15 +28,14 @@
     &.TRIGGER_REVIEWING {
        background-color: $primaryColor
     }
-    
+
     &.UNEXEC {
         background-color: $fontWeightColor;
     }
-    
+
     &.CANCELED,
     &.REVIEW_ABORT,
     &.TRY_FINALLY,
-    &.QUEUE_CACHE,
     &.SKIP {
         background-color: $cancelColor;
     }
@@ -53,9 +53,9 @@
        background-color: $successColor;
     }
 }
- 
- 
- 
- 
+
+
+
+
 
 

@@ -46,6 +46,7 @@
                         :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
                         :value="element[key]"
                         :element="element"
+                        :disabled="disabled"
                         v-bind="obj"
                     >
                     </component>
@@ -119,8 +120,8 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
     export default {
         name: 'code-git-web-hook-trigger',
         mixins: [atomMixin, validMixins],

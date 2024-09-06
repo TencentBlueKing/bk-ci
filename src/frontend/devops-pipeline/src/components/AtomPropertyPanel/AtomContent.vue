@@ -196,7 +196,6 @@
                     />
                     <div class="atom-option">
                         <atom-option
-                            v-if="element['@type'] !== 'manualTrigger'"
                             :element-index="elementIndex"
                             :atom-props-model="atom.atomModal.props"
                             :container-index="containerIndex"

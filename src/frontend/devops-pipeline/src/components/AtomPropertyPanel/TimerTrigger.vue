@@ -16,7 +16,7 @@
                     type="checkbox"
                     :disabled="disabled"
                     :checked="isShowBasicRule"
-                    style="margin-left: auto;"
+                    style="margin-left:auto;"
                 />
             </header>
             <div slot="content">
@@ -71,7 +71,9 @@
                         :value="advanceValue"
                         :placeholder="$t('editPage.crontabExpression')"
                         v-validate.initial="{ 'required': advance }"
-                    ></vuex-textarea>
+                        :disabled="disabled"
+                    >
+                    </vuex-textarea>
                 </form-field>
             </div>
         </accordion>

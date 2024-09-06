@@ -24,6 +24,7 @@
                                 v-validate.initial="Object.assign({}, { max: getMaxLengthByType(i.component) }, i.rule, { required: !!i.required })"
                                 :handle-change="i.key === 'eventType' ? handleBlockEnable : handleMethods"
                                 :value="element[i.key] || atomPropsModel[key]?.children[index]?.default"
+                                :disabled="disabled"
                                 v-bind="i"
                             >
                             </component>
@@ -46,9 +47,9 @@
                         :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
                         :value="element[key]"
                         :element="element"
+                        :disabled="disabled"
                         v-bind="obj"
-                    >
-                    </component>
+                    />
                 </form-field>
             </template>
         </template>
@@ -56,8 +57,8 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
     export default {
         name: 'code-git-lab-hook-trigger',
         mixins: [atomMixin, validMixins],

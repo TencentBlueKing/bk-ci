@@ -87,6 +87,32 @@ class WorkspaceRedisUtils @Autowired constructor(
         return "dispatchkubernetes:remotedev-ws-host-$clusterId-$devCloudAppId"
     }
 
+    @Deprecated("临时逻辑待后期下掉，不在我们这维护order")
+    fun setStartCloudOrder(userId: String, workspaceName: String, orderId: String) {
+        logger.info("User $userId hset(${startCloudOrderKey()}) $workspaceName")
+        redisOperation.hset(
+            key = startCloudOrderKey(),
+            hashKey = workspaceName,
+            values = orderId
+        )
+    }
+
+    @Deprecated("临时逻辑待后期下掉，不在我们这维护order")
+    fun getStartCloudOrder(workspaceName: String): String? {
+        return redisOperation.hget(startCloudOrderKey(), workspaceName)
+    }
+
+    @Deprecated("临时逻辑待后期下掉，不在我们这维护order")
+    fun deleteStartCloudOrder(workspaceName: String) {
+        logger.info("hdelete(${startCloudOrderKey()}) $workspaceName")
+        redisOperation.hdelete(startCloudOrderKey(), workspaceName)
+    }
+
+    @Deprecated("临时逻辑待后期下掉，不在我们这维护order")
+    private fun startCloudOrderKey(): String {
+        return "dispatchkubernetes:startcloud:order"
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceRedisUtils::class.java)
         private val EXPIRED_SECOND = TimeUnit.DAYS.toSeconds(1)

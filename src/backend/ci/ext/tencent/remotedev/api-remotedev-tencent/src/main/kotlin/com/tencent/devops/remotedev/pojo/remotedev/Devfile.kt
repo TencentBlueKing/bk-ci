@@ -1,41 +1,10 @@
 package com.tencent.devops.remotedev.pojo.remotedev
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "devfile 定义处")
 data class Devfile(
-    @get:Schema(title = "定义devfile的版本")
-    @Deprecated("LINUX 待删除")
-    val version: String = "",
-    @get:Schema(title = "定义在工作区的git配置键值对。")
-    @Deprecated("LINUX 待删除")
-    val envs: Map<String, String>? = null,
-    @JsonProperty("runs-on")
-    @get:Schema(title = "定义用于工作区的docker镜像")
-    @Deprecated("LINUX 待删除")
-    val runsOn: RunsOn? = null,
-    @get:Schema(title = "配置vscode")
-    @Deprecated("LINUX 待删除")
-    val vscode: DevfileVscode? = null,
-    @get:Schema(title = "配置需要监听的端口信息")
-    @Deprecated("LINUX 待删除")
-    val ports: List<DevfilePorts>? = null,
-    @get:Schema(title = "用来指定工作空间声明周期命令")
-    @Deprecated("LINUX 待删除")
-    val commands: DevfileCommands? = null,
-    @get:Schema(title = "DEVOPS_REMOTING_GIT_EMAIL 配置")
-    @Deprecated("LINUX 待删除")
-    var gitEmail: String? = null,
-    @get:Schema(title = "DEVOPS_REMOTING_DOTFILE_REPO dotfiles仓库地址")
-    @Deprecated("LINUX 待删除")
-    var dotfileRepo: String? = null,
-    @get:Schema(title = "指定用户在连接到容器时应打开的默认路径")
-    @Deprecated("LINUX 待删除")
-    var workspaceFolder: String? = null,
     @get:Schema(title = "申请云桌面时指定的区域")
     val zoneId: String? = null,
     @get:Schema(title = "申请云桌面时指定的机型:L、XL等")
@@ -51,50 +20,8 @@ data class Devfile(
     @get:Schema(title = "离岸专区 or dev cloud 专区？")
     val quotaType: QuotaType? = null
 ) {
-
     fun checkWorkspaceAutomaticCorrection() = uid != null && environmentUid != null
-    fun checkWorkspaceMountType(): WorkspaceMountType {
-        if (runsOn?.poolName == JobRunsOnType.WINDOWS_LATEST.type && runsOn.agentSelector?.contains("gpu") == true) {
-            return WorkspaceMountType.START
-        }
-        return WorkspaceMountType.DEVCLOUD
-    }
-
-    fun checkWorkspaceSystemType(): WorkspaceSystemType {
-        if (runsOn?.poolName == JobRunsOnType.WINDOWS_LATEST.type && runsOn.agentSelector?.contains("gpu") == true) {
-            return WorkspaceSystemType.WINDOWS_GPU
-        }
-        return WorkspaceSystemType.LINUX
-    }
 }
-//
-// data class DevfileImage(
-//    @get:Schema(title = "定义公共镜像")
-//    val publicImage: String?,
-//    @get:Schema(title = "定义用户镜像")
-//    val file: String?,
-//    @get:Schema(title = "imagePullCertificate")
-//    val imagePullCertificate: ImagePullCertificate? = null
-// )
-
-data class RunsOn(
-    @get:Schema(title = "self-hosted")
-    @JsonProperty("self-hosted")
-    val selfHosted: Boolean? = null,
-    @get:Schema(title = "pool-name")
-    @JsonProperty("pool-name")
-    var poolName: String = JobRunsOnType.DOCKER.type,
-    val container: Container? = null,
-    @get:Schema(title = "agent-selector")
-    @JsonProperty("agent-selector")
-    val agentSelector: List<String>? = null,
-    val workspace: String? = null,
-    val xcode: String? = null,
-    @get:Schema(title = "queue-timeout-minutes")
-    @JsonProperty("queue-timeout-minutes")
-    val queueTimeoutMinutes: Int? = null,
-    val needs: Map<String, String>? = null
-)
 
 data class Container(
     var image: String,

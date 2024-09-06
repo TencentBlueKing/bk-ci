@@ -134,7 +134,8 @@
         },
         computed: {
             ...mapState('atom', [
-                'editingElementPos'
+                'editingElementPos',
+                'atomsOutputMap'
             ]),
             ...mapGetters('atom', [
                 'getStage',
@@ -174,7 +175,12 @@
                     if (stage) {
                         (stage.containers || []).forEach((container, containerIndex) => {
                             (container.elements || []).forEach((element, elementIndex) => {
-                                if (element?.data?.output && typeof (element?.data?.output) && Object.keys(element?.data?.output).length) {
+                                // 从api获取的output信息
+                                const apiOutput = this.atomsOutputMap[`${element.atomCode}@${element.version}`] || {}
+                                // 从model解析的output信息
+                                const modelOutput = element?.data?.output || {}
+                                if (Object.keys(modelOutput).length || Object.keys(apiOutput).length) {
+                                    const realOutput = Object.keys(apiOutput).length > 0 ? apiOutput : modelOutput
                                     list.push({
                                         id: element.id,
                                         location: {
@@ -188,9 +194,9 @@
                                         stepId: element.stepId,
                                         stepName: element.name,
                                         envPrefix: `jobs.${container.jobId}.steps.${element.stepId}.outputs.`,
-                                        params: Object.keys(element.data.output).map(item => ({
+                                        params: Object.keys(realOutput).map(item => ({
                                             name: item,
-                                            desc: ''
+                                            desc: realOutput[item]?.description
                                         }))
                                     })
                                 }
@@ -215,9 +221,13 @@
                 }))
             }
         },
+        created () {
+            this.fetchAtomsOutput()
+        },
         methods: {
             ...mapActions('atom', [
-                'updateAtom'
+                'updateAtom',
+                'fetchAtomsOutput'
             ]),
             async handleUpdateStepId () {
                 const valid = await this.$validator.validate('step.*')

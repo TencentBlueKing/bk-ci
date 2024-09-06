@@ -83,7 +83,7 @@ object ModelUtils {
 
     fun canManualStartup(triggerContainer: TriggerContainer): Boolean {
         triggerContainer.elements.forEach {
-            if (it is ManualTriggerElement && it.isElementEnable()) {
+            if (it is ManualTriggerElement && it.elementEnabled()) {
                 return true
             }
         }
@@ -92,7 +92,7 @@ object ModelUtils {
 
     fun canRemoteStartup(triggerContainer: TriggerContainer): Boolean {
         triggerContainer.elements.forEach {
-            if (it is RemoteTriggerElement && it.isElementEnable()) {
+            if (it is RemoteTriggerElement && it.elementEnabled()) {
                 return true
             }
         }
@@ -101,7 +101,7 @@ object ModelUtils {
 
     fun stageNeedPause(triggerContainer: TriggerContainer): Boolean {
         triggerContainer.elements.forEach {
-            if (it is RemoteTriggerElement && it.isElementEnable()) {
+            if (it is RemoteTriggerElement && it.elementEnabled()) {
                 return true
             }
         }

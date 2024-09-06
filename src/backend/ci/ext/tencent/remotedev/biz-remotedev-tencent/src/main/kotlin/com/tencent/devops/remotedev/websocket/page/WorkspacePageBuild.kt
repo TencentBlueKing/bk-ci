@@ -28,8 +28,8 @@
 package com.tencent.devops.remotedev.websocket.page
 
 object WorkspacePageBuild {
-    fun buildPage(workspaceName: String): String {
-        return "/remotedev/workspace/$workspaceName"
+    fun buildPage(userId: String): String {
+        return "/remotedev_desktop/$userId"
     }
 
     fun instanceManage(projectId: String): String {

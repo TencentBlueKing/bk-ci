@@ -29,7 +29,6 @@ package com.tencent.devops.process.service.app
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.Property
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.pipeline.AppModelDetail
@@ -63,22 +62,37 @@ class AppBuildService @Autowired constructor(
         // 查web端数据
         var beginTime = System.currentTimeMillis()
         val modelDetail =
-            pipelineBuildFacadeService.getBuildDetail(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
+            pipelineBuildFacadeService.getBuildDetail(
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                channelCode,
+                checkPermission
+            )
         val buildStatusWithVars =
-            pipelineBuildFacadeService.getBuildStatusWithVars(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
+            pipelineBuildFacadeService.getBuildStatusWithVars(
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                channelCode,
+                checkPermission
+            )
         logger.info("Get web-side data ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
 
         // 文件个数、版本
-        val files = client.get(ServiceArtifactoryResource::class)
-            .search(userId, projectId, null, null, listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)))
-            .data
+        val files = client.get(ServiceArtifactoryResource::class).search(
+            userId = userId,
+            projectId = projectId,
+            page = null,
+            pageSize = null,
+            searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId))
+        ).data
         val packageVersion = StringBuilder()
-        files?.records?.forEach {
-            val singlePackageVersion =
-                client.get(ServiceArtifactoryResource::class).show(userId, projectId, it.artifactoryType, it.path)
-                    .data?.meta?.get(ARCHIVE_PROPS_APP_VERSION)?.toString()
-            if (!singlePackageVersion.isNullOrBlank()) packageVersion.append(singlePackageVersion).append(";")
+        files?.records?.filterNot { it.appVersion.isNullOrBlank() }?.forEach {
+            packageVersion.append(it.appVersion).append(";")
         }
         logger.info("Query the number and version of the file: ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
@@ -103,7 +117,7 @@ class AppBuildService @Autowired constructor(
             buildNum = modelDetail.buildNum,
             cancelUserId = modelDetail.cancelUserId,
             fileCount = files?.records?.size ?: 0,
-            packageVersion = packageVersion.toString().removeSuffix(";"),
+            packageVersion = packageVersion.toString(),
             pipelineId = pipelineId,
             pipelineVersion = version,
             pipelineName = name,

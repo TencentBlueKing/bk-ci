@@ -29,7 +29,7 @@
                         @click="toggle(block.id)"
                         class="pipeline-group-classify-header"
                         :style="`top: ${block.stickyTop}`"
-                        :key="block.title"
+                        :key="block.id"
                     >
                         <i
                             :class="['devops-icon', 'pipeline-group-item-icon', {

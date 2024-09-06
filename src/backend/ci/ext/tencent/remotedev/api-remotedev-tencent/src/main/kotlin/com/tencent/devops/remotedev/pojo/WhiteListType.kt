@@ -38,4 +38,10 @@ enum class WhiteListType {
     API,
     // 限制访问云桌面
     WINDOWS_GPU;
+
+    companion object {
+        fun parse(value: String): WhiteListType {
+            return values().find { it.name == value } ?: API
+        }
+    }
 }

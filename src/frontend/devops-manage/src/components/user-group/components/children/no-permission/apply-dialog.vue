@@ -13,12 +13,12 @@
       label-width="100"
     >
       <bk-form-item
-        :label="$t('userGroupName')"
+        :label="t('userGroupName')"
       >
         <span>{{ groupName }}</span>
       </bk-form-item>
       <bk-form-item
-        :label="$t('applicationPeriod')"
+        :label="t('applicationPeriod')"
         property="expireTime"
         required
         error-display-type="normal"
@@ -39,7 +39,7 @@
             v-show="currentActive !== 'custom'"
             @click="handleChangCustom"
           >
-            {{ $t('custom') }}
+            {{ t('custom') }}
           </bk-button>
           <bk-input
             v-model="customTime"
@@ -54,7 +54,7 @@
           >
             <template v-slot:append>
               <div class="group-text">
-                {{ $t('day') }}
+                {{ t('day') }}
               </div>
             </template>
           </bk-input>
@@ -62,15 +62,15 @@
       </bk-form-item>
       <bk-form-item
         v-if="type === 'renewal'"
-        :label="$t('expirationTime')"
+        :label="t('expirationTime')"
       >
-        <span class="expired">{{ expiredDisplay }}{{ $t('day')}}</span>
+        <span class="expired">{{ expiredDisplay }}{{ t('day')}}</span>
         <img class="arrows-icon" src="../../../svg/arrows-right.svg?inline">
-        <span class="new-expired">{{ newExpiredDisplay }}{{ $t('day')}}</span>
+        <span class="new-expired">{{ newExpiredDisplay }}{{ t('day')}}</span>
       </bk-form-item>
       <bk-form-item
         v-else
-        :label="$t('reason')"
+        :label="t('reason')"
         property="reason"
         required
         error-display-type="normal"
@@ -91,13 +91,13 @@
         :loading="isLoading"
         @click="handleConfirm"
       >
-        {{ $t('confirm') }}
+        {{ t('confirm') }}
       </bk-button>
       <bk-button
         :loading="isLoading"
         @click="handleCancel"
       >
-        {{ $t('cancel') }}
+        {{ t('cancel') }}
       </bk-button>
     </template>
   </permission-dialog>
@@ -106,6 +106,7 @@
 import ajax from '../../../ajax/index';
 import PermissionDialog from '../../widget-components/dialog'
 import { Message } from 'bkui-vue';
+import { useI18n } from 'vue-i18n';
 
 export default {
   components: {
@@ -141,6 +142,7 @@ export default {
   },
   emits: ['update:show'],
   data() {
+    const { t } = useI18n();
     return {
       isLoading: false,
       pagination: {
@@ -155,10 +157,10 @@ export default {
       },
       currentActive: 2592000,
       timeFilters: {
-        2592000: this.$t('oneMonth'),
-        7776000: this.$t('threeMonth'),
-        15552000: this.$t('sixMonth'),
-        31104000: this.$t('twelveMonth'),
+        2592000: this.t('oneMonth'),
+        7776000: this.t('threeMonth'),
+        15552000: this.t('sixMonth'),
+        31104000: this.t('twelveMonth'),
       },
       rules: {
         expireTime: [
@@ -169,18 +171,19 @@ export default {
               }
               return this.currentActive !== 'custom';
             },
-            message: this.$t('selectPeriod'),
+            message: this.t('selectPeriod'),
             trigger: 'blur',
           },
         ],
         reason: [
           {
             required: true,
-            message: this.$t('fillReason'),
+            message: this.t('fillReason'),
             trigger: 'blur',
           },
         ],
       },
+      t,
     };
   },
   computed: {
@@ -276,7 +279,7 @@ export default {
           .then(() => {
             Message({
               theme: 'success',
-              message: this.$t('applySuccess'),
+              message: this.t('applySuccess'),
             });
           })
           .catch((err) => {
@@ -302,7 +305,7 @@ export default {
         .then(() => {
           Message({
             theme: 'success',
-            message: this.$t('applySuccess'),
+            message: this.t('applySuccess'),
           });
         })
         .catch((err) => {

@@ -61,7 +61,7 @@ data class QualityGateInElement(
         taskVar[QualityGateInElement::version.name] = version
         taskVar[KEY_TASK_ATOM] = getTaskAtom()
         taskVar[QualityGateInElement::classType.name] = getClassType()
-        taskVar[KEY_ELEMENT_ENABLE] = isElementEnable()
+        taskVar[KEY_ELEMENT_ENABLE] = elementEnabled()
         interceptTask?.let {
             taskVar[QualityGateInElement::interceptTask.name] = it
         }

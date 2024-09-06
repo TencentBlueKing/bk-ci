@@ -32,12 +32,14 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.CmdbNode
+import com.tencent.devops.environment.pojo.ListUserCmdbNodesReq
+import com.tencent.devops.environment.pojo.ScrollIdPage
 import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
 import com.tencent.devops.environment.pojo.job.ImportCmdbNodeInfo
 import com.tencent.devops.environment.pojo.job.ReImportCmdbNodeInfo
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -53,6 +55,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserCmdbNodeResource {
 
+    @Deprecated("改用listUserCmdbNodesWithScrollId接口，所有环境切换至新CMDB后该接口可删除")
     @Operation(summary = "获取用户CMDB节点")
     @POST
     @Path("/listUserCmdbNodesNew")
@@ -75,6 +78,17 @@ interface UserCmdbNodeResource {
         @Parameter(description = "指定IP", required = false)
         ips: List<String>?
     ): Result<Page<CmdbNode>>
+
+    @Operation(summary = "获取用户名下CMDB节点")
+    @POST
+    @Path("/listUserCmdbNodesWithScrollId")
+    fun listUserCmdbNodesWithScrollId(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "获取用户名下CMDB节点请求体", required = true)
+        req: ListUserCmdbNodesReq
+    ): Result<ScrollIdPage<CmdbNode>>
 
     @Operation(summary = "导入CMDB节点")
     @POST

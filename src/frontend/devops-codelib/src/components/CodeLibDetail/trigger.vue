@@ -27,8 +27,7 @@
                     <div class="event-name">
                         <img
                             class="logo"
-                            :src="`https:${row.atomLogo}`"
-                            alt=""
+                            :src="row.atomLogo"
                         >
                         {{ row.eventTypeDesc }}
                     </div>

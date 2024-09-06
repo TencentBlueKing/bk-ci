@@ -1,179 +1,170 @@
 <template>
-    <bread-crumb :value="breadCrumbPath">
-        <template v-if="!isLoading">
-            <bread-crumb-item
-                v-for="(crumb, index) in breadCrumbs"
-                :key="index"
-                v-bind="crumb"
-            >
-                <slot v-if="index === breadCrumbs.length - 1"></slot>
-            </bread-crumb-item>
-        </template>
-        <i
-            v-else
-            class="devops-icon icon-circle-2-1 spin-icon"
-        />
-    </bread-crumb>
+    <aside class="pipeline-bread-crumb-aside">
+        <bk-breadcrumb
+            class="pipeline-bread-crumb"
+            separator-class="devops-icon icon-angle-right"
+            :back-router="manageRoute"
+        >
+            <template #prefix>
+                <span class="devops-icon icon-pipeline"></span>
+            </template>
+            <template v-if="!isLoading">
+                <bk-breadcrumb-item
+                    v-for="(crumb, index) in breadCrumbs"
+                    :key="index"
+                    :to="crumb.to"
+                >
+                    <component
+                        v-if="crumb.slot"
+                        :is="crumb.slot"
+                        v-bind="crumb.slotProps"
+                    />
+                    <span v-else>{{ crumb.title }}</span>
+                </bk-breadcrumb-item>
+            </template>
+            <i
+                v-else
+                class="devops-icon icon-circle-2-1 spin-icon"
+            />
+        </bk-breadcrumb>
+        <span
+            v-if="!!$slots.default"
+            class="gap-line"
+        >|</span>
+        <slot></slot>
+    </aside>
 </template>
 
 <script>
-    import BreadCrumb from '@/components/BreadCrumb'
-    import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
-    import { RESOURCE_ACTION } from '@/utils/permission'
-    import { debounce } from '@/utils/util'
-    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { mapGetters, mapState } from 'vuex'
+    import BuildNumSwitcher from './BuildNumSwitcher'
+    import PipelineNameCrumbItem from './PipelineNameCrumbItem'
 
     export default {
         components: {
-            BreadCrumb,
-            BreadCrumbItem
+            PipelineNameCrumbItem,
+            BuildNumSwitcher
         },
         props: {
             showRecordEntry: Boolean,
+            showBuildNumSwitch: Boolean,
             pipelineName: String,
-            isLoading: Boolean
+            isLoading: Boolean,
+            showPacTag: {
+                type: Boolean,
+                default: true
+            }
         },
         data () {
             return {
                 pipelineListSearching: false,
-                pipelineList: [],
-                breadCrumbPath: []
+                pipelineList: []
             }
         },
         computed: {
             ...mapState('atom', [
                 'pipelineSetting',
-                'pipelineInfo'
+                'pipelineInfo',
+                'execDetail'
             ]),
             ...mapGetters({
-                pipelineHistoryViewable: 'atom/pipelineHistoryViewable'
+                pipelineHistoryViewable: 'atom/pipelineHistoryViewable',
+                pacEnabled: 'atom/pacEnabled'
             }),
+            yamlInfo () {
+                return this.pipelineInfo?.yamlInfo
+            },
+            manageRoute () {
+                return {
+                    name: 'PipelineManageList'
+                }
+            },
             breadCrumbs () {
                 return [{
-                    icon: 'pipeline',
-                    selectedValue: this.$t('pipeline'),
-                    to: {
-                        name: 'PipelineManageList'
-                    }
-                }, this.$route.name === 'pipelineImportEdit'
-                    ? {
-                        selectedValue: this.pipelineSetting?.pipelineName ?? '--'
-                    }
-                    : {
-                        paramId: 'pipelineId',
-                        paramName: 'pipelineName',
-                        selectedValue: this.pipelineName ?? this.pipelineSetting?.pipelineName ?? '--',
-                        records: this.pipelineList,
-                        showTips: true,
-                        tipsName: 'switch_pipeline_hint',
-                        tipsContent: this.$t('subpage.switchPipelineTooltips'),
-                        to: ['pipelinesHistory'].includes(this.$route.name) || !this.pipelineHistoryViewable
-                            ? null
+                            title: this.$t('pipeline'),
+                            to: this.manageRoute
+                        }, this.$route.name === 'pipelineImportEdit'
+                            ? {
+                                title: this.pipelineSetting?.pipelineName ?? '--'
+                            }
                             : {
-                                name: 'pipelinesHistory',
-                                params: {
-                                    ...this.$route.params,
-                                    type: 'history',
-                                    version: this.pipelineInfo?.releaseVersion
+                                slot: PipelineNameCrumbItem,
+                                slotProps: {
+                                    pipelineName: this.pipelineName ?? this.pipelineInfo?.pipelineName ?? '--',
+                                    showPacTag: this.showPacTag
                                 }
                             },
-                        handleSelected: this.doSelectPipeline,
-                        searching: this.pipelineListSearching,
-                        handleSearch: debounce(this.handleSearchPipeline, 1000)
-                    }, ...(this.showRecordEntry
-                    ? [{
-                        selectedValue: this.$t('draftExecRecords'),
-                        to: {
-                            name: 'draftDebugRecord',
-                            params: {
-                                ...this.$route.params,
-                                version: this.pipelineInfo?.version
-                            }
-                        }
-                    }]
-                    : []), {
-                    selectedValue: ''
-                }]
+                        ...(
+                            this.showRecordEntry
+                                ? [{
+                                    title: this.$t('draftExecRecords'),
+                                    to: {
+                                        name: 'draftDebugRecord'
+                                    }
+                                }]
+                                : []
+                        ),
+                        ...(
+                            this.showBuildNumSwitch
+                                ? [{
+                                    slot: BuildNumSwitcher,
+                                    slotProps: {
+                                        isDebug: this.showRecordEntry,
+                                        latestBuildNum: this.execDetail?.latestBuildNum ?? 1,
+                                        currentBuildNum: this.execDetail?.buildNum ?? 1,
+                                        version: this.pipelineInfo?.[this.showRecordEntry ? 'version' : 'releaseVersion']
+                                    }
+
+                                }]
+                                : []
+                        )
+                ]
             }
         },
+        // <build-num-switcher v-bind="buildNumConf" />
         watch: {
             'pipelineInfo.pipelineName': {
                 handler (val) {
-                    const title = val ? `${val} | ${this.$t('pipeline')}` : this.$t('documentTitlePipeline')
+                    const title = val ? `${val} | ${this.$t('pipeline')}` : ''
                     this.$updateTabTitle?.(title)
                 },
                 immediate: true
             }
-        },
-        created () {
-            this.fetchPipelineList()
-        },
-        methods: {
-            ...mapActions({
-                searchPipelineList: 'pipelines/searchPipelineList'
-            }),
-            async fetchPipelineList () {
-                const { projectId, pipelineId } = this.$route.params
-                try {
-                    const list = await this.search()
-
-                    this.pipelineList = this.generatePipelineList(list)
-                } catch (err) {
-                    this.handleError(err, {
-                        projectId,
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.VIEW
-                    })
-                }
-            },
-            async doSelectPipeline (pipelineId, cur) {
-                try {
-                    const { $route } = this
-                    const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
-
-                    this.$router.push({
-                        name,
-                        params: {
-                            projectId: $route.params.projectId,
-                            pipelineId
-                        }
-                    })
-                    // 清空搜索
-                    const list = await this.search()
-                    this.pipelineList = this.generatePipelineList(list)
-                } catch (error) {
-                    this.handleError(error, {
-                        projectId: this.$route.params.projectId,
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.VIEW
-                    })
-                }
-            },
-            async handleSearchPipeline (value) {
-                if (this.pipelineListSearching) return
-                this.pipelineListSearching = true
-
-                const list = await this.search(value)
-                this.pipelineList = this.generatePipelineList(list, this.pipelineInfo)
-                this.pipelineListSearching = false
-            },
-            search (searchName = '') {
-                return this.searchPipelineList({
-                    projectId: this.$route.params.projectId,
-                    searchName
-                })
-            },
-            generatePipelineList (list, curPipeline) {
-                return curPipeline
-                    ? [
-                        {
-                            pipelineId: curPipeline.pipelineId,
-                            pipelineName: curPipeline.pipelineName
-                        },
-                        ...list.filter(item => item.pipelineId !== curPipeline.pipelineId)
-                    ]
-                    : list
-            }
         }
     }
 </script>
+
+<style lang="scss">
+.pipeline-bread-crumb-aside {
+    display: grid;
+    grid-auto-flow: column;
+    align-items: center;
+    grid-gap: 16px;
+    font-size: 14px;
+    .gap-line {
+        color: #DCDEE5;
+    }
+    .pipeline-bread-crumb {
+        .bk-breadcrumb-item {
+            display: flex;
+            align-items: center;
+            color: #313238;
+        }
+        .devops-icon.icon-angle-right {
+            color: #DCDEE5;
+            margin: 0 8px;
+            font-size: 12px;
+        }
+        .devops-icon.icon-pipeline {
+            font-size: 16px;
+            color: #63656E;
+            font-weight: 700;
+        }
+        .build-num-switcher-wrapper {
+            display: grid;
+            grid-auto-flow: column;
+            grid-gap: 6px;
+        }
+    }
+}
+</style>

@@ -72,7 +72,12 @@ class MetricsCacheService @Autowired constructor(
         cache.addPropertyChangeListener { change: PropertyChangeEvent ->
             when {
                 change is ObservableMap.PropertyAddedEvent && this::addFunction.isInitialized -> {
-                    addFunction(change.propertyName, change.newValue as MetricsUserPO)
+                    kotlin.runCatching {
+                        addFunction(change.propertyName, change.newValue as MetricsUserPO)
+                    }.onFailure {
+                        logger.error("cache error while adding " + change.propertyName, it)
+                        removeCache(change.propertyName)
+                    }
                 }
 
                 change is ObservableMap.PropertyUpdatedEvent && this::updateFunction.isInitialized -> {
@@ -84,7 +89,9 @@ class MetricsCacheService @Autowired constructor(
                 }
 
                 change is ObservableMap.PropertyRemovedEvent && this::removeFunction.isInitialized -> {
-                    removeFunction(change.propertyName, change.oldValue as MetricsUserPO)
+                    if (change.oldValue != null) {
+                        removeFunction(change.propertyName, change.oldValue as MetricsUserPO)
+                    }
                 }
             }
         }

@@ -74,7 +74,6 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceVarResource
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.SetContextVarData
 import com.tencent.devops.process.pojo.VmInfo
@@ -128,7 +127,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     )
                 }
 
-                buildByAgentId(dispatchMessage, dispatchType.copy(displayName = agentId, agentType = AgentType.ID))
+                buildByAgentId(dispatchMessage, dispatchType.copy(displayName = agentId))
             }
 
             is ThirdPartyAgentEnvDispatchType -> {
@@ -342,18 +341,21 @@ class ThirdPartyDispatchService @Autowired constructor(
                     } catch (e: Exception) {
                         logger.error("inQueue|doAgentInQueue|error", e)
                     }
-                } else if (redisOperation.get(lockKey) != null) {
-                    // 没有复用逻辑的需要检查下如果这个机器剩一个可调度空间且有复用锁那么不能进行调度
-                    val checkRes = if (dockerInfo != null) {
-                        ((agent.dockerParallelTaskCount ?: 4) -
-                                thirdPartyAgentBuildService.getDockerRunningBuilds(agent.agentId)) <= 1
-                    } else {
-                        ((agent.parallelTaskCount ?: 4) -
-                                thirdPartyAgentBuildService.getRunningBuilds(agent.agentId)) <= 1
-                    }
-                    if (checkRes) {
-                        logAgentReuse(lockKey, dispatchMessage, agent)
-                        return false
+                } else {
+                    val lockedBuildId = redisOperation.get(lockKey)
+                    if (!lockedBuildId.isNullOrBlank() && lockedBuildId != event.buildId) {
+                        // 没有复用逻辑的需要检查下如果这个机器剩一个可调度空间且有复用锁那么不能进行调度
+                        val checkRes = if (dockerInfo != null) {
+                            ((agent.dockerParallelTaskCount ?: 4) -
+                                    thirdPartyAgentBuildService.getDockerRunningBuilds(agent.agentId)) <= 1
+                        } else {
+                            ((agent.parallelTaskCount ?: 4) -
+                                    thirdPartyAgentBuildService.getRunningBuilds(agent.agentId)) <= 1
+                        }
+                        if (checkRes) {
+                            logAgentReuse(lockKey, dispatchMessage, agent)
+                            return false
+                        }
                     }
                 }
 
@@ -433,24 +435,14 @@ class ThirdPartyDispatchService @Autowired constructor(
                 HomeHostUtil.getHost(
                     commonConfig.devopsHostGateway!!
                 )
-            }/console/pipeline/${dispatchMessage.event.projectId}/$pipelineId/detail/${dispatchMessage.event.buildId}"
+            }/console/pipeline/${dispatchMessage.event.projectId}/$pipelineId/detail/$lockedBuildId"
             if (lockedBuildId != dispatchMessage.event.buildId) {
-                I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_LOCKED,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ) + ": $linkTip<a target='_blank' href='$link'>" +
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = ProcessMessageCode.BK_CLICK,
-                            language = I18nUtil.getDefaultLocaleLanguage()
-                        ) + "</a>"
+                "$linkTip<a target='_blank' href='$link'>$lockedBuildId</a>"
             } else {
-                I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_CURRENT,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ) + ": $linkTip"
+                linkTip
             }
         } ?: ""
-        log(
+        logWarn(
             dispatchMessage.event,
             I18nUtil.getCodeLanMessage(
                 messageCode = AGENT_REUSE_MUTEX_REDISPATCH,
@@ -787,7 +779,7 @@ class ThirdPartyDispatchService @Autowired constructor(
             logger.warn(
                 "buildByEnvId|{} has singleNodeConcurrency {} but env {}|job {} null",
                 dispatchMessage.event.buildId,
-                dispatchMessage.event.allNodeConcurrency,
+                dispatchMessage.event.singleNodeConcurrency,
                 envId,
                 dispatchMessage.event.jobId
             )
@@ -1133,13 +1125,13 @@ class ThirdPartyDispatchService @Autowired constructor(
             dockerRunningCnt: Int
         ): Boolean {
             return if (dockerBuilder) {
-                agent.dockerParallelTaskCount != null &&
+                (agent.dockerParallelTaskCount == 0) || (agent.dockerParallelTaskCount != null &&
                         agent.dockerParallelTaskCount!! > 0 &&
-                        agent.dockerParallelTaskCount!! > dockerRunningCnt
+                        agent.dockerParallelTaskCount!! > dockerRunningCnt)
             } else {
-                agent.parallelTaskCount != null &&
+                (agent.parallelTaskCount == 0) || (agent.parallelTaskCount != null &&
                         agent.parallelTaskCount!! > 0 &&
-                        agent.parallelTaskCount!! > runningCnt
+                        agent.parallelTaskCount!! > runningCnt)
             }
         }
     }

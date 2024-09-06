@@ -54,16 +54,25 @@ if x_ckey ~= nil then
     }
 elseif x_credentialKey ~= nil then
     local staff_info_new = itloginUtil:get_staff_info_new(x_credentialKey)
+    local avatars = "https://" .. config.externalHost .. "/avatars/" .. staff_info_new.EnglishName
+    local departmentName = staff_info_new.DepartmentName
+    local email = staff_info_new.EnglishName .. '@tencent.com'
+    if staff_info_new.IsOuter then
+        staff_info_new.EnglishName = staff_info_new.EnglishName .. "@bkci"
+        avatars = "https://bkdevops.qq.com/app/download/devops_app.png"
+        departmentName = "outer"
+        email = ""
+    end
     result = {
         status = 0,
         data = {
             englishName = staff_info_new.EnglishName,
             chineseName = staff_info_new.ChineseName,
-            avatars = "https://" .. config.externalHost .. "/avatars/" .. staff_info_new.EnglishName,
+            avatars = avatars,
             departmentId = staff_info_new.DepartmentId,
             staffId = staff_info_new.StaffId,
-            departmentName = staff_info_new.DepartmentName,
-            email = staff_info_new.EnglishName .. '@tencent.com'
+            departmentName = departmentName,
+            email = email
         }
     }
 else
@@ -82,4 +91,3 @@ else
     }
 end
 ngx.say(json.encode(result))
-

@@ -42,7 +42,7 @@
                         </bk-link>
                     </div>
                 </template>
-                
+
                 <template>
                     <div
                         class="env-import-entry cursor-pointer"
@@ -193,7 +193,7 @@
             return {
                 isLoading: false,
                 isFocus: false,
-                
+
                 nodeList: []
             }
         },
@@ -273,7 +273,7 @@
             ]),
             handleSelect (name, value) {
                 const node = this.nodeList.find(item => item.id === value)
-                const sharedId = node && node.sharedProjectId ? node.sharedProjectId : ''
+                const sharedId = node?.sharedProjectId
                 this.handleChange(name, value, sharedId)
             },
             handleBlur () {
@@ -337,7 +337,7 @@
     .container-node-selector {
 
         .alias-name-select {
-            
+
             .abnormal-tip {
                 color: $dangerColor;
             }

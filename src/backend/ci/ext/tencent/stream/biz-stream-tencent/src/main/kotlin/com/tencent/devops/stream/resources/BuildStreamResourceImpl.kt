@@ -28,12 +28,17 @@
 package com.tencent.devops.stream.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.repository.api.ServiceStreamResource
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.stream.api.BuildStreamResource
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
 @RestResource
-class BuildStreamResourceImpl : BuildStreamResource {
+class BuildStreamResourceImpl @Autowired constructor(private val client: Client) : BuildStreamResource {
 
     @Value("\${gitci.v2GitUrl:#{null}}")
     private val v2GitUrl: String? = null
@@ -48,5 +53,17 @@ class BuildStreamResourceImpl : BuildStreamResource {
             gateway
         }
         return Result(result)
+    }
+
+    override fun getToken(projectId: String, buildId: String): Result<GitToken?> {
+        val buildInfo = client.get(ServiceBuildResource::class).serviceBasic(
+            projectId, buildId
+        )
+        if (buildInfo.data?.status?.isRunning() == true) {
+            return client.get(ServiceStreamResource::class).getToken(
+                projectId.removePrefix("git_")
+            )
+        }
+        return Result(null)
     }
 }
