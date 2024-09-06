@@ -117,7 +117,7 @@
 - [新增] Worker杀掉当前进程父进程导致Agent误报 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10362)
 - [新增] Agent启动时对相同Id不同IP的重复安装做告警 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10264)
 - [新增] Agent清理进程为worker兜底 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10234)
-##### stream
+##### Stream
 - [新增] [stream] 优化大仓触发耗时 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10861)
 - [新增] [stream] 优化触发流程，减少触发时长 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10753)
 - [新增] stream开启CI时，必填组织架构和运营产品 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10231)
