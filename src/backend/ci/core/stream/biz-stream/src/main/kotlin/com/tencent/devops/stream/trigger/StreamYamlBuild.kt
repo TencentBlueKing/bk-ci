@@ -155,6 +155,7 @@ class StreamYamlBuild @Autowired constructor(
         yamlTransferData: YamlTransferData?,
         manualInputs: Map<String, String>?
     ): BuildId? {
+        action.data.watcherStart("streamYamlBuild.gitStartBuild")
         logger.info(
             "StreamYamlBuild|gitStartBuild" +
                 "|eventId|${action.data.context.requestEventId}|action|${action.format()}"
@@ -325,6 +326,7 @@ class StreamYamlBuild @Autowired constructor(
         yamlTransferData: YamlTransferData?,
         manualInputs: Map<String, String>?
     ): BuildId? {
+        action.data.watcherStart("streamYamlBuild.startBuildPipeline")
         logger.info(
             "StreamYamlBuild|startBuildPipeline" +
                 "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
@@ -404,6 +406,7 @@ class StreamYamlBuild @Autowired constructor(
 
         // 判断是否更新最后修改人
         val updateLastModifyUser = action.needUpdateLastModifyUser(pipeline.filePath)
+        action.data.watcherStart("streamYamlBuild.savePipeline.StreamBuildLock")
         StreamBuildLock(
             redisOperation = redisOperation,
             gitProjectId = action.data.getGitProjectId().toLong(),

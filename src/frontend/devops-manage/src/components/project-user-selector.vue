@@ -28,7 +28,7 @@ const route = useRoute();
 const emits = defineEmits(['change', 'removeAll']);
 const userList = ref([]);
 const tagInputRef = ref(null);
-const projectId = computed(() => route.params?.projectCode);
+const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
 const searchKeyArr = computed(() => ['id', 'name']);
 const searchValue = ref();
 

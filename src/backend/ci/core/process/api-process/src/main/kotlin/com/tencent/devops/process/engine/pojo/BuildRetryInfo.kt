@@ -36,5 +36,6 @@ data class BuildRetryInfo(
     var nowTime: LocalDateTime,
     var status: BuildStatus,
     var buildParameters: List<BuildParameters>?,
-    var concurrencyGroup: String?
+    var concurrencyGroup: String?,
+    val executeCount: Int
 )

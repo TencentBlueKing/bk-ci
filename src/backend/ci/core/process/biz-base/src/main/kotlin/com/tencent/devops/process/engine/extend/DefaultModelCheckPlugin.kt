@@ -89,7 +89,8 @@ open class DefaultModelCheckPlugin constructor(
         model: Model,
         projectId: String?,
         userId: String,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        oauthUser: String?
     ): Int {
         var metaSize = 0
         // 检查流水线名称
@@ -177,7 +178,8 @@ open class DefaultModelCheckPlugin constructor(
                 contextMap = contextMap,
                 atomInputParamList = atomInputParamList,
                 elementCheckResults = elementCheckResults,
-                isTemplate = isTemplate
+                isTemplate = isTemplate,
+                oauthUser = oauthUser
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
                 AtomUtils.checkModelAtoms(
@@ -254,7 +256,8 @@ open class DefaultModelCheckPlugin constructor(
         contextMap: Map<String, String>,
         atomInputParamList: MutableList<StoreParam>,
         elementCheckResults: MutableList<ElementCheckResult>,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        oauthUser: String?
     ): Int /* MetaSize*/ {
         var metaSize = 0
         containers.forEach { container ->
@@ -303,7 +306,8 @@ open class DefaultModelCheckPlugin constructor(
                     atomInputParamList = atomInputParamList,
                     contextMap = contextMap,
                     elementCheckResults = elementCheckResults,
-                    isTemplate = isTemplate
+                    isTemplate = isTemplate,
+                    oauthUser = oauthUser
                 )
             }
         }
@@ -320,7 +324,8 @@ open class DefaultModelCheckPlugin constructor(
         atomInputParamList: MutableList<StoreParam>,
         contextMap: Map<String, String>,
         elementCheckResults: MutableList<ElementCheckResult>,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        oauthUser: String?
     ) {
         val eCnt = elementCnt.computeIfPresent(element.getAtomCode()) { _, oldValue -> oldValue + 1 }
             ?: elementCnt.computeIfAbsent(element.getAtomCode()) { 1 } // 第一次时出现1次
@@ -332,7 +337,8 @@ open class DefaultModelCheckPlugin constructor(
             element = element,
             contextMap = contextMap,
             appearedCnt = eCnt,
-            isTemplate = isTemplate
+            isTemplate = isTemplate,
+            oauthUser = oauthUser
         )
         if (elementCheckResult?.result == false) {
             elementCheckResults.add(elementCheckResult)
