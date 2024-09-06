@@ -72,7 +72,6 @@
 - [新增] 日志复制出来的空格异常 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10540)
 - [新增] 流水线版本描述，增加长度限制 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10520)
 - [新增] 构建详情页面，版本号hover可以展示对应的版本描述 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10524)
-
 ##### 代码库
 - [新增] 关联工蜂代码库时，支持开启 Pipeline as Code 模式 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8115)
 - [新增] 代码库优化一期功能点 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9347)
@@ -97,7 +96,6 @@
 ##### 项目管理
 - [新增] 项目查看页面运营产品未显示名称问题优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10668)
 - [新增] 新增项目级事件回调 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10146)
-##### 凭证管理
 ##### 研发商店
 - [新增] 支持插件开发者设置默认的超时时间和默认的失败时的策略 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10019)
 - [新增] 新增修改研发商店组件初始化项目的接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10126)
@@ -107,7 +105,7 @@
 - [新增] 整合微拓展资源调度能力 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10122)
 ##### 日志服务
 - [新增] Log的Service接口补充subtag 查询条件 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10536)
-##### 构建机
+##### 调度
 - [新增] 优化dockerhost dockerRun容器日志获取接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10811)
 - [新增] kubernetes-manager 支持docker inspect image [链接](http://github.com/TencentBlueKing/bk-ci/issues/8862)
 - [新增] 构建环境Agent并发上限为0不生效 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10740)
@@ -210,15 +208,15 @@
 - [修复] [社区]上架失败&流水线执行页面白屏问题[v2.1.0+] [链接](http://github.com/TencentBlueKing/bk-ci/issues/10357)
 - [修复] 研发商店通用接口国际化配置调整 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10640)
 - [修复] 开源版插件升级版本未刷新LATEST_TEST_FLAG标识状态 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10701)
-##### 构建机
+##### 调度
 - [修复] 无编译环境构建机执行带审核插件的矩阵job问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10599)
-- [修复] Agent复用时取消后不能退出队列 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10589)
+- [修复] 重试重新调度导致复用无法解锁 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10675)
 ##### Agent
 - [修复] 修复arm64mac进程无法清理的问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10252)
 - [修复] Agent复用在流水线重试的场景下存在问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10877)
 - [修复] agent没有区域信息时默认没有bkrepo的网关 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10778)
 - [修复] Agent复用同级节点时跳过了复用锁 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10795)
-- [修复] 重试重新调度导致复用无法解锁 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10675)
+- [修复] Agent复用时取消后不能退出队列 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10589)
 ##### 其他
 - [修复] 2.1版本process服务启动失败 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10271)
 - [修复] 同步差异代码 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10319)
