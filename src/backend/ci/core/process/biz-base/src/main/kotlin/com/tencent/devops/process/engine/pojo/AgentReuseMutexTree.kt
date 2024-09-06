@@ -40,7 +40,7 @@ data class AgentReuseMutexTree(
         return addNode(
             jobId = container.jobId,
             dispatchType = dispatchType,
-            // TODO: 需要dependOn复用树
+            // 逻辑上可能需要dependOn复用树
             existDep = (container.jobControlOption?.dependOnId?.contains(reuseId) == true) ||
                 (container.jobControlOption?.dependOnName == reuseId),
             stageIndex = stageIndex,
