@@ -94,7 +94,7 @@ class DevxHandleBuildResultService @Autowired constructor(
         val baseEnvMap = mutableMapOf<String, TStoreBaseEnvRecord>()
         baseEnvRecords?.forEach { baseEnvRecord ->
             val osName = baseEnvRecord.osName
-            val osArch = baseEnvRecord.osArch
+            val osArch = baseEnvRecord.osArch ?: ""
             keys.add("${osName}_${osArch}_signResult")
             baseEnvMap["${osName}_${osArch}"] = baseEnvRecord
         }
@@ -193,7 +193,7 @@ class DevxHandleBuildResultService @Autowired constructor(
                         id = UUIDUtil.generate(),
                         envId = baseEnvRecord.id,
                         storeId = baseEnvRecord.storeId,
-                        fieldName = "${KEY_FILE_SHA_CONTENT}_$fileName",
+                        fieldName = "${KEY_FILE_SHA_CONTENT}_${fileName.substringAfterLast("/")}",
                         fieldValue = shaContent.toString(),
                         creator = userId,
                         modifier = userId

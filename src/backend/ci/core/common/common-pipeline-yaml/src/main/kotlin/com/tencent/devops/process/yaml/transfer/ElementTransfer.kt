@@ -563,9 +563,10 @@ class ElementTransfer @Autowired(required = false) constructor(
             else -> element.transferYaml(transferCache.getAtomDefaultValue(uses))
         }?.apply {
             this.enable = element.isElementEnable().nullIfDefault(true)
-            this.timeoutMinutes = element.additionalOptions?.timeoutVar.nullIfDefault(
-                VariableDefault.DEFAULT_TASK_TIME_OUT.toString()
-            ) ?: element.additionalOptions?.timeout.nullIfDefault(VariableDefault.DEFAULT_TASK_TIME_OUT)?.toString()
+            this.timeoutMinutes =
+                (element.additionalOptions?.timeoutVar ?: element.additionalOptions?.timeout?.toString()).nullIfDefault(
+                    VariableDefault.DEFAULT_TASK_TIME_OUT.toString()
+                )
 
             this.continueOnError = when {
                 element.additionalOptions?.manualSkip == true -> Step.ContinueOnErrorType.MANUAL_SKIP.alis

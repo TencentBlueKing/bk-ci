@@ -100,7 +100,6 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
 
     companion object {
         private const val KEY_OS_RUN_INFO = "osRunInfo"
-        private const val KEY_CHECK_REPEAT_FILE_NAME_FLAG = "checkRepeatFileNameFlag"
     }
 
     @Value("\${store.devx.sign.windows.supportFileTypes:exe}")
@@ -206,12 +205,12 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 // 暂时只支持windows操作系统的exe软件包签名
                 val osArch = baseEnvRecord.osArch ?: ""
                 val pkgPath = baseEnvRecord.pkgPath
-                val signatureFileKey = getSignatureFileKey(osName, osArch)
+                val signatureFileKey = getSignatureFileKey()
                 val signFilePaths = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
                     dslContext = dslContext,
                     envId = baseEnvRecord.id,
                     fieldName = signatureFileKey
-                )?.getOrNull(0)?.fieldValue
+                )?.getOrNull(0)?.fieldValue ?: "[]"
                 val fileType = pkgPath.substringAfterLast(".")
                 val signFlag = windowsSupportFileTypes.split(",").contains(fileType)
                 osRunInfos?.add("$osName:$osArch:$pkgPath:$signFilePaths:$signFlag")
@@ -222,8 +221,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             KEY_STORE_TYPE to StoreTypeEnum.getStoreType(baseRecord.storeType.toInt()),
             KEY_VERSION to baseRecord.version,
             KEY_PROJECT_ID to storeInnerPipelineConfig.innerPipelineProject,
-            KEY_OS_RUN_INFO to if (!osRunInfos.isNullOrEmpty()) JsonUtil.toJson(osRunInfos!!) else "[]",
-            KEY_CHECK_REPEAT_FILE_NAME_FLAG to "true"
+            KEY_OS_RUN_INFO to if (!osRunInfos.isNullOrEmpty()) JsonUtil.toJson(osRunInfos!!) else "[]"
         )
     }
 
@@ -241,44 +239,57 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         storeCode: String,
         version: String,
         osName: String?,
-        osArch: String?
+        osArch: String?,
+        queryConfigFileFlag: Boolean?
     ): List<StorePkgEnvInfo> {
-        val baseRecord = storeBaseQueryDao.getComponent(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            version = version,
-            storeType = storeType
-        )
         val storePkgEnvInfos = mutableListOf<StorePkgEnvInfo>()
-        val baseEnvRecords = if (baseRecord != null) {
-            storeBaseEnvQueryDao.getBaseEnvsByStoreId(
-                dslContext = dslContext,
-                storeId = baseRecord.id,
-                osName = osName,
-                osArch = osArch
-            )
+        if (queryConfigFileFlag == true) {
+            val filePath = URLEncoder.encode("$storeCode/$version/$CONFIG_JSON_NAME", Charsets.UTF_8.name())
+            val configJsonStr =
+                client.get(ServiceArchiveComponentPkgResource::class).getFileContent(StoreTypeEnum.DEVX, filePath).data
+            if (configJsonStr.isNullOrBlank()) {
+                storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
+                return storePkgEnvInfos
+            }
+            val bkConfigInfo = JsonUtil.to(configJsonStr, BkConfigInfo::class.java)
+            val osDefaultEnvNumMap = mutableMapOf<String, Int>()
+            bkConfigInfo.os.forEach { osConfigInfo ->
+                storePkgEnvInfos.add(createStorePkgEnvInfoFromConfig(osConfigInfo))
+                // 统计每种操作系统默认环境配置数量
+                val defaultFlag = osConfigInfo.defaultFlag
+                val configOsName = osConfigInfo.osName
+                val increaseDefaultEnvNum = if (defaultFlag) 1 else 0
+                if (osDefaultEnvNumMap.containsKey(configOsName)) {
+                    osDefaultEnvNumMap[configOsName] = osDefaultEnvNumMap[configOsName]!! + increaseDefaultEnvNum
+                } else {
+                    osDefaultEnvNumMap[configOsName] = increaseDefaultEnvNum
+                }
+            }
+            osDefaultEnvNumMap.forEach { (osName, defaultEnvNum) ->
+                // 判断每种操作系统默认环境配置是否有且只有1个
+                if (defaultEnvNum != 1) {
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID,
+                        params = arrayOf(CONFIG_JSON_NAME, osName, defaultEnvNum.toString())
+                    )
+                }
+            }
         } else {
-            null
-        }
-        when {
-            !baseEnvRecords.isNullOrEmpty() -> {
+            val baseRecord = storeBaseQueryDao.getComponent(
+                dslContext = dslContext, storeCode = storeCode, version = version, storeType = storeType
+            )
+            val baseEnvRecords = if (baseRecord != null) {
+                storeBaseEnvQueryDao.getBaseEnvsByStoreId(
+                    dslContext = dslContext, storeId = baseRecord.id, osName = osName, osArch = osArch
+                )
+            } else {
+                null
+            }
+            if (!baseEnvRecords.isNullOrEmpty()) {
                 baseEnvRecords.forEach { baseEnvRecord ->
                     storePkgEnvInfos.add(createStorePkgEnvInfo(baseEnvRecord))
                 }
-            }
-            osName.isNullOrBlank() && osArch.isNullOrBlank() -> {
-                val filePath = URLEncoder.encode("$storeCode/$version/$CONFIG_JSON_NAME", "UTF-8")
-                val configJsonStr = client.get(ServiceArchiveComponentPkgResource::class).getFileContent(StoreTypeEnum.DEVX, filePath).data
-                if (!configJsonStr.isNullOrBlank()) {
-                    val bkConfigInfo = JsonUtil.to(configJsonStr, BkConfigInfo::class.java)
-                    bkConfigInfo.os.forEach { osConfigInfo ->
-                        storePkgEnvInfos.add(createStorePkgEnvInfoFromConfig(osConfigInfo))
-                    }
-                } else {
-                    storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
-                }
-            }
-            else -> {
+            } else {
                 storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
             }
         }
@@ -316,7 +327,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         val configOsArch = osConfigInfo.osArch ?: ""
         var extEnvInfo: Map<String, Any>? = null
         osConfigInfo.signature?.originFilePaths?.let {
-            val signatureFileKey = getSignatureFileKey(configOsName, configOsArch)
+            val signatureFileKey = getSignatureFileKey()
             extEnvInfo = mapOf(signatureFileKey to JsonUtil.toJson(it))
         }
         return StorePkgEnvInfo(
@@ -328,8 +339,8 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         )
     }
 
-    private fun getSignatureFileKey(osName: String, osArch: String): String {
-        return "${osName}_${osArch}_${OsConfigInfo::signature::name}_${SignatureConfigInfo::originFilePaths::name}"
+    private fun getSignatureFileKey(): String {
+        return "${OsConfigInfo::signature.name}_${SignatureConfigInfo::originFilePaths.name}"
     }
 
     override fun getReleaseProcessItems(
