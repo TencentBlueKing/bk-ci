@@ -434,7 +434,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         } else {
             runtimeVersion
         }
-        val atomBusHandleService = AtomBusHandleFactory.createAtomBusHandleService(language)
         if (null != osList) {
             val osDefaultEnvNumMap = mutableMapOf<String, Int>()
             osList.forEach { osExecutionInfoMap ->
@@ -487,7 +486,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 if (defaultEnvNum != 1) {
                     throw ErrorCodeException(
                         errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID,
-                        params = arrayOf(osName, defaultEnvNum.toString())
+                        params = arrayOf(TASK_JSON_NAME, osName, defaultEnvNum.toString())
                     )
                 }
             }
