@@ -102,14 +102,15 @@ class ThirdPartyDispatchService @Autowired constructor(
         when (dispatchMessage.event.dispatchType) {
             is ThirdPartyAgentIDDispatchType -> {
                 val dispatchType = dispatchMessage.event.dispatchType as ThirdPartyAgentIDDispatchType
+                // 没有复用逻辑的直接调度
                 if (!dispatchType.agentType.isReuse()) {
                     buildByAgentId(dispatchMessage, dispatchType)
                     return
                 }
-                // 只要是复用就先拿一下上下文，可能存在同stage但又先后的情况
+                // 只要是复用就先拿一下上下文，可能存在同stage但被复用的已经跑完了
                 val agentId = dispatchMessage.getAgentReuseContextVar(dispatchType.displayName)
 
-                // 是复用，但是和被复用对象在同一stage且先后顺序未知
+                // 是复用，但是和被复用对象在同一stage且先后顺序未知，且被复用对象还没有跑完，这里拿复用对象的资源调度
                 if (dispatchType.reusedInfo != null && agentId.isNullOrBlank()) {
                     dispatchType.displayName = dispatchType.reusedInfo!!.value
                     buildByAgentId(dispatchMessage, dispatchType)
@@ -127,7 +128,13 @@ class ThirdPartyDispatchService @Autowired constructor(
                     )
                 }
 
-                buildByAgentId(dispatchMessage, dispatchType.copy(displayName = agentId))
+                // 到了这里就剩两种
+                // 1、绝对复用有先后区别
+                // 2、先后顺序未知，但是客观上被复用对象先跑完了，就按照绝对复用处理
+                buildByAgentId(
+                    dispatchMessage,
+                    dispatchType.copy(displayName = agentId, agentType = AgentType.REUSE_JOB_ID, reusedInfo = null)
+                )
             }
 
             is ThirdPartyAgentEnvDispatchType -> {
