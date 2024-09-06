@@ -258,5 +258,9 @@
     "确定": "Confirm",
     "请选择项目": "Please select a project",
     "过期时间": "Expiration Time",
-    "用户组名称": "User Group Name"
+    "用户组名称": "User Group Name",
+    "未来 X 小时": "Next {0} Hours",
+    "未来 X 天": "Next {0} Days",
+    "过去 X 小时": "Last {0} Hours",
+    "过去 X 天": "Last {0} Days"
 }

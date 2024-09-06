@@ -454,20 +454,44 @@ const searchGroup = computed(() => ({
 }));
 const commonUseList = ref([
   {
-    id: ['(now-1d/d)-24h', '(now-1d/d)'],
-    name: '近 24 小时',
+    id: ['now', 'now+24h'],
+    name: t('未来 X 小时', [24]),
+  },
+  {
+    id: ['now', 'now+7d'],
+    name: t('未来 X 天', [7]),
+  },
+  {
+    id: ['now', 'now+15d'],
+    name: t('未来 X 天', [15]),
+  },
+  {
+    id: ['now', 'now+30d'],
+    name: t('未来 X 天', [30]),
+  },
+  {
+    id: ['now', 'now+60d'],
+    name: t('未来 X 天', [60]),
+  },
+  {
+    id: ['now-24h', 'now'],
+    name: t('过去 X 小时', [24]),
   },
   {
     id: ['now-7d', 'now'],
-    name: '近 7 天',
+    name: t('过去 X 天', [7]),
   },
   {
     id: ['now-15d', 'now'],
-    name: '近 15 天',
+    name: t('过去 X 天', [15]),
   },
   {
     id: ['now-30d', 'now'],
-    name: '近 30 天',
+    name: t('过去 X 天', [30]),
+  },
+  {
+    id: ['now-60d', 'now'],
+    name: t('过去 X 天', [60]),
   },
 ]);
 const manageAsideRef = ref(null);
@@ -549,6 +573,7 @@ function handleSearch (value) {
   init(undefined, searchGroup.value);
 }
 function handleValueChange (value, info) {
+  console.log(value,'/////');
   searchExpiredAt.value = value;
   expiredAtList.value = info;
 }
