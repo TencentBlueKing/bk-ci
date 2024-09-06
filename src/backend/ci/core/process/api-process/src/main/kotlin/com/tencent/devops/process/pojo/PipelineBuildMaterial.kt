@@ -52,5 +52,7 @@ data class PipelineBuildMaterial(
     @get:Schema(title = "是否为源材料主仓库", required = false)
     val mainRepo: Boolean? = false,
     @get:Schema(title = "提交时间", required = false)
-    val createTime: Long? = System.currentTimeMillis() / 1000
+    val createTime: Long? = System.currentTimeMillis() / 1000,
+    @get:Schema(title = "插件ID", required = false)
+    val taskId: String? = null
 )

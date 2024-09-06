@@ -45,23 +45,38 @@ class PipelineBuildMaterialService @Autowired constructor(
     fun saveBuildMaterial(
         buildId: String,
         projectId: String,
-        pipelineBuildMaterials: List<PipelineBuildMaterial>
+        pipelineBuildMaterials: List<PipelineBuildMaterial>,
+        taskId: String?
     ): Int {
-        var newPipelineBuildMaterials = pipelineBuildMaterials
-        val pipelineBuildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
+        val materialList = mutableListOf<PipelineBuildMaterial>()
+        val pipelineBuildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId) ?: return 0
         // 如果找不到构建历史或重试时，不做原材料写入
-        if (pipelineBuildHistoryRecord == null ||
-            pipelineBuildHistoryRecord.executeCount?.let { it > 1 } == true
-        ) {
+        logger.info("save build material|buildId=$buildId|taskId=$taskId|${pipelineBuildMaterials.size}")
+        val material = pipelineBuildHistoryRecord.material
+        // 重试操作，如果源材料为空且第一次执行的源材料包含空TaskId，则不保存，否则会出现重复数据
+        val containsEmptyTaskId = material?.find { it.taskId.isNullOrBlank() } != null || taskId.isNullOrBlank()
+        if (pipelineBuildHistoryRecord.executeCount?.let { it > 1 } == true && containsEmptyTaskId) {
+            logger.info("skip save build material")
             return 0
         }
-        val material = pipelineBuildHistoryRecord.material
+        val existTaskIds = material?.mapNotNull { it.taskId } ?: listOf()
         if (!material.isNullOrEmpty()) {
-            newPipelineBuildMaterials = newPipelineBuildMaterials.plus(material)
+            materialList.addAll(material)
+            // 不包含空taskId，则需要过滤掉空taskId
+            if (!containsEmptyTaskId) {
+                pipelineBuildMaterials.forEach {
+                    if (!existTaskIds.contains(taskId)) {
+                        materialList.add(it.copy(taskId = taskId))
+                    }
+                }
+            } else {
+                materialList.addAll(pipelineBuildMaterials.map { it.copy(taskId = taskId) })
+            }
+        } else {
+            materialList.addAll(pipelineBuildMaterials.map { it.copy(taskId = taskId) })
         }
 
-        val materials = JsonUtil.toJson(newPipelineBuildMaterials, formatted = false)
-        logger.info("BuildId: $buildId save material size: ${newPipelineBuildMaterials.size}")
+        val materials = JsonUtil.toJson(materialList, formatted = false)
         pipelineBuildDao.updateBuildMaterial(
             dslContext = dslContext,
             projectId = projectId,
