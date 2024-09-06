@@ -235,8 +235,9 @@ func trimJdk17VersionList(versionOutputString string) []string {
 }
 
 const (
-	macosJdkBinPath   = "/Contents/Home/bin/java"
-	noMacosJdkBinPath = "/bin/java"
+	macosJdkBinPath = "/Contents/Home/bin/java"
+	linuxJdkBinPath = "/bin/java"
+	winJdkBinPath   = "/bin/java.exe"
 )
 
 // GetJava 获取本地java路径，区分版本
@@ -245,14 +246,18 @@ func (j *JdkVersionType) GetJava() string {
 	case jdk8:
 		if systemutil.IsMacos() {
 			return config.GAgentConfig.JdkDirPath + macosJdkBinPath
+		} else if systemutil.IsWindows() {
+			return config.GAgentConfig.JdkDirPath + winJdkBinPath
 		} else {
-			return config.GAgentConfig.JdkDirPath + noMacosJdkBinPath
+			return config.GAgentConfig.JdkDirPath + linuxJdkBinPath
 		}
 	default:
 		if systemutil.IsMacos() {
 			return config.GAgentConfig.Jdk17DirPath + macosJdkBinPath
+		} else if systemutil.IsWindows() {
+			return config.GAgentConfig.Jdk17DirPath + winJdkBinPath
 		} else {
-			return config.GAgentConfig.Jdk17DirPath + noMacosJdkBinPath
+			return config.GAgentConfig.Jdk17DirPath + linuxJdkBinPath
 		}
 	}
 }
