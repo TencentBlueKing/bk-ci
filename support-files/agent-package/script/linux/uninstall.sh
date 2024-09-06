@@ -22,9 +22,6 @@ function uninstallRcLocal()
 {
   echo "uninstall agent service $service_name on rc.local"
   doUninstallRcLocal
-  cd $workspace
-  chmod +x *.sh
-  ${workspace}/stop.sh
 }
 
 function uninstallSystemd()
@@ -57,6 +54,9 @@ function uninstallAgentService()
   else
     uninstallRcLocal
   fi
+  cd $workspace
+  chmod +x *.sh
+  ${workspace}/stop.sh
   echo "service $service_name has been uninstalled"
 }
 
