@@ -398,7 +398,7 @@ class AuthResourceGroupMemberDao {
                 .where(buildProjectMembersByComplexConditions(conditionDTO))
                 .groupBy(MEMBER_ID)
                 .orderBy(MEMBER_ID)
-                .fetchOne(0, Long::class.java)!!
+                .fetchOne(0, Long::class.java) ?: 0L
         }
     }
 
