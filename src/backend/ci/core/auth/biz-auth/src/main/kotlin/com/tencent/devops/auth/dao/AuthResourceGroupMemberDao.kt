@@ -365,13 +365,20 @@ class AuthResourceGroupMemberDao {
 
     fun listProjectMembersByComplexConditions(
         dslContext: DSLContext,
-        projectMembersQueryConditionDTO: ProjectMembersQueryConditionDTO
+        conditionDTO: ProjectMembersQueryConditionDTO
     ): List<ResourceMemberInfo> {
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             dslContext.select(MEMBER_ID, MEMBER_NAME, MEMBER_TYPE).from(this)
-                .where(buildProjectMembersByComplexConditions(projectMembersQueryConditionDTO))
+                .where(buildProjectMembersByComplexConditions(conditionDTO))
                 .groupBy(MEMBER_ID)
                 .orderBy(MEMBER_ID)
+                .let {
+                    if (conditionDTO.limit != null && conditionDTO.offset != null) {
+                        it.offset(conditionDTO.offset).limit(conditionDTO.limit)
+                    } else {
+                        it
+                    }
+                }
                 .fetch().map {
                     ResourceMemberInfo(
                         id = it.value1(),
@@ -379,6 +386,19 @@ class AuthResourceGroupMemberDao {
                         type = it.value3()
                     )
                 }
+        }
+    }
+
+    fun countProjectMembersByComplexConditions(
+        dslContext: DSLContext,
+        conditionDTO: ProjectMembersQueryConditionDTO
+    ): Long {
+        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            dslContext.select(countDistinct(MEMBER_ID)).from(this)
+                .where(buildProjectMembersByComplexConditions(conditionDTO))
+                .groupBy(MEMBER_ID)
+                .orderBy(MEMBER_ID)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -390,34 +410,22 @@ class AuthResourceGroupMemberDao {
             with(projectMembersQueryConditionDTO) {
                 conditions.add(PROJECT_CODE.eq(projectCode))
                 if (queryTemplate == false) {
-                    // 非查询模板时的条件
                     conditions.add(MEMBER_TYPE.notEqual(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
-                    memberType?.let { type -> conditions.add(MEMBER_TYPE.eq(type)) }
-                    userName?.let { name ->
-                        conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.USER)))
-                        conditions.add(MEMBER_ID.like("%$name%").or(MEMBER_NAME.like("%$name%")))
-                    }
-                    deptName?.let { name ->
-                        conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)))
-                        conditions.add(MEMBER_NAME.like("%$name%"))
-                    }
                 } else {
-                    // 查询模板时的条件
                     conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
                 }
-
-                minExpiredTime?.let { minTime ->
-                    // 添加最小过期时间条件
-                    conditions.add(EXPIRED_TIME.ge(minTime))
+                memberType?.let { type -> conditions.add(MEMBER_TYPE.eq(type)) }
+                userName?.let { name ->
+                    conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.USER)))
+                    conditions.add(MEMBER_ID.like("%$name%").or(MEMBER_NAME.like("%$name%")))
                 }
-
-                maxExpiredTime?.let { maxTime ->
-                    // 添加最大过期时间条件
-                    conditions.add(EXPIRED_TIME.le(maxTime))
+                deptName?.let { name ->
+                    conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)))
+                    conditions.add(MEMBER_NAME.like("%$name%"))
                 }
-
+                minExpiredTime?.let { minTime -> conditions.add(EXPIRED_TIME.ge(minTime)) }
+                maxExpiredTime?.let { maxTime -> conditions.add(EXPIRED_TIME.le(maxTime)) }
                 if (!iamGroupIds.isNullOrEmpty()) {
-                    // 添加IAM组ID条件
                     conditions.add(IAM_GROUP_ID.`in`(iamGroupIds))
                 }
             }
@@ -513,38 +521,6 @@ class AuthResourceGroupMemberDao {
             conditions.add(memberName.like("%$deptName%"))
         }
         return conditions
-    }
-
-    /**
-     * 查询组下所有成员
-     */
-    fun listGroupMember(
-        dslContext: DSLContext,
-        projectCode: String,
-        iamGroupIds: List<Int>,
-        memberType: String? = null,
-        userName: String? = null,
-        deptName: String? = null
-    ): List<AuthResourceGroupMember> {
-        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_CODE.eq(projectCode))
-            conditions.add(IAM_GROUP_ID.`in`(iamGroupIds))
-            memberType?.let { type -> conditions.add(MEMBER_TYPE.eq(type)) }
-            userName?.let { name ->
-                conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.USER)))
-                conditions.add(MEMBER_ID.like("%$name%").or(MEMBER_NAME.like("%$name%")))
-            }
-            deptName?.let { name ->
-                conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)))
-                conditions.add(MEMBER_NAME.like("%$name%"))
-            }
-            dslContext.selectFrom(this)
-                .where(conditions)
-                .fetch().map {
-                    convert(it)
-                }
-        }
     }
 
     /**

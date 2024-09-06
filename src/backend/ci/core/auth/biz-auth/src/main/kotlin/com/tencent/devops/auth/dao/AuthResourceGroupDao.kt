@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.pojo.AuthResourceGroup
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.model.auth.tables.TAuthResourceGroup
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
 import org.jooq.DSLContext
@@ -271,9 +272,10 @@ class AuthResourceGroupDao {
                         it
                 }
                 .let {
-                    if (!iamTemplateIds.isNullOrEmpty())
+                    if (!iamTemplateIds.isNullOrEmpty()) {
+                        it.and(RESOURCE_TYPE.eq(AuthResourceType.PROJECT.value))
                         it.and(IAM_TEMPLATE_ID.`in`(iamTemplateIds))
-                    else
+                    } else
                         it
                 }
                 .fetch().map { it.value1().toInt() }

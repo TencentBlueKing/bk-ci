@@ -11,27 +11,27 @@ data class ProjectMembersQueryConditionDTO(
     @get:Schema(title = "项目ID")
     val projectCode: String,
     @get:Schema(title = "成员类型")
-    val memberType: String?,
+    val memberType: String? = null,
     @get:Schema(title = "用户名称")
-    val userName: String?,
+    val userName: String? = null,
     @get:Schema(title = "部门名称")
-    val deptName: String?,
+    val deptName: String? = null,
     @get:Schema(title = "用户组名称")
-    val groupName: String?,
+    val groupName: String? = null,
     @get:Schema(title = "用户组Id")
-    val iamGroupIds: List<Int>?,
+    val iamGroupIds: List<Int>? = null,
     @get:Schema(title = "最小过期时间")
-    val minExpiredTime: LocalDateTime?,
+    val minExpiredTime: LocalDateTime? = null,
     @get:Schema(title = "最大过期时间")
-    val maxExpiredTime: LocalDateTime?,
+    val maxExpiredTime: LocalDateTime? = null,
     @get:Schema(title = "离职标识")
     val departedFlag: Boolean? = false,
     @get:Schema(title = "是否查询模板")
     val queryTemplate: Boolean? = false,
     @get:Schema(title = "限制")
-    val limit: Int,
+    val limit: Int? = null,
     @get:Schema(title = "起始值")
-    val offset: Int
+    val offset: Int? = null
 ) {
     companion object {
         fun build(
