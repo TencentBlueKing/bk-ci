@@ -89,6 +89,7 @@ ExecStart=$workspace/start.sh
 ExecStop=$workspace/stop.sh
 WorkingDirectory=$workspace
 PrivateTmp=true
+KillMode=process
 
 [Install]
 WantedBy=multi-user.target
@@ -179,7 +180,7 @@ cd $workspace
 
 echo "check if the install package(agent.zip) exists"
 if [[ ! -f "agent.zip" ]]; then
-  echo "install package does not exist. Start download"
+  echo "install package does not exist. start download"
   initArch
   echo "download Agent arch: $ARCH"
   download_agent

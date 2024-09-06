@@ -146,7 +146,7 @@ jdk17/Contents/Home/bin/java -version
 echo "check java version"
 jdk/Contents/Home/bin/java -version
 
-echo "check and write ssh config"
+echo "check if write ssh config"
 writeSSHConfig
 
 uninstallAgentService
