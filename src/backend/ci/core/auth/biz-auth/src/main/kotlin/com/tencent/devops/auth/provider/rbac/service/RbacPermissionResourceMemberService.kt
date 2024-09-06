@@ -372,7 +372,8 @@ class RbacPermissionResourceMemberService constructor(
             iamGroupIds = projectGroupIds
         ).filter { it.iamTemplateId != null }
             .map { it.iamTemplateId.toString() }
-        // 根据条件进行筛选
+
+        // 后续改造，根据操作/资源类型/资源实例进行筛选，只需要扩展该方法即可
         val iamGroupIdsByConditions = queryIamGroupIdsByConditions(
             projectCode = projectCode,
             groupName = groupName
@@ -1458,6 +1459,7 @@ class RbacPermissionResourceMemberService constructor(
         start: Int?,
         limit: Int?
     ): SQLPage<GroupDetailsInfoVo> {
+        // 后续改造，根据操作/资源类型/资源实例进行筛选，只需要扩展该方法即可
         // 根据查询条件查询得到iam组id
         val iamGroupIdsByConditions = queryIamGroupIdsByConditions(
             projectCode = projectId,
