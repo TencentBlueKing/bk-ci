@@ -75,6 +75,7 @@ function installRcLocal()
   ${workspace}/start.sh
 }
 
+# no using systemd KillMode, will affect Agent self-upgrade
 function installSystemd()
 {
   echo "install agent service with systemd"
@@ -89,7 +90,7 @@ ExecStart=$workspace/start.sh
 ExecStop=$workspace/stop.sh
 WorkingDirectory=$workspace
 PrivateTmp=true
-KillMode=process
+KillMode=none
 
 [Install]
 WantedBy=multi-user.target
@@ -131,7 +132,7 @@ function uninstallRcLocal()
 function uninstallSystemd()
 {
   echo "uninstall agent service $service_name on systemd"
-  # 兼容旧数据
+  # compatible with old data
   doUninstallRcLocal
   if systemctl list-unit-files | grep -q "^${service_name}"; then
     if systemctl is-active --quiet $service_name; then
