@@ -1108,6 +1108,17 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     webSocketDispatcher.dispatch(
                         websocketService.buildDetailMessage(projectId, "")
                     )
+                } else {
+                    // 在IP没变的情况下版本可能变化，这里单独更新下版本
+                    if (!startInfo.masterVersion.isNullOrBlank() &&
+                        agentRecord.masterVersion != startInfo.masterVersion
+                    ) {
+                        nodeDao.updateDevopsAgentVersionByNodeId(
+                            dslContext = dslContext,
+                            nodeId = agentRecord.nodeId,
+                            agentVersion = startInfo.masterVersion!!
+                        )
+                    }
                 }
             }
         }
