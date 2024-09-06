@@ -96,7 +96,10 @@ interface ServiceStoreArchiveResource {
         osName: String? = null,
         @Parameter(description = "操作系统架构", required = false)
         @QueryParam("osArch")
-        osArch: String? = null
+        osArch: String? = null,
+        @Parameter(description = "是否从配置文件获取环境信息标识", required = false)
+        @QueryParam("queryConfigFileFlag")
+        queryConfigFileFlag: Boolean? = false
     ): Result<List<StorePkgEnvInfo>>
 
     @Operation(summary = "更新组件执行包相关信息")

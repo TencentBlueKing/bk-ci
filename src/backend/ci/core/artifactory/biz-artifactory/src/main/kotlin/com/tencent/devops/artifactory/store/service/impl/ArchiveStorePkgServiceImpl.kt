@@ -112,7 +112,8 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 userId = userId,
                 storeType = storeType,
                 storeCode = storeCode,
-                version = version
+                version = version,
+                queryConfigFileFlag = true
             ).data
             storePkgEnvInfos?.forEach { storePkgEnvInfo ->
                 var pkgLocalPath = storePkgEnvInfo.pkgLocalPath
