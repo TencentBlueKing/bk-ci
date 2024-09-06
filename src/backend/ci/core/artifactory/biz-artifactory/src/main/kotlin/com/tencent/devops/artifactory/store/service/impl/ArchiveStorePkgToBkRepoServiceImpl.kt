@@ -63,7 +63,7 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         if (signFilePaths.isNullOrEmpty() && storeType == StoreTypeEnum.DEVX) {
             signFilePaths = mutableListOf(disposition.fileName)
             // 如果压缩包内没有配置签名文件则把已解压的文件删除
-            File(storeArchivePath).walk().filter { it.name != disposition.fileName }.forEach { file ->
+            File(storeArchivePath).listFiles()?.filter { it.name != disposition.fileName }?.forEach { file ->
                 file.deleteRecursively()
             }
         }
