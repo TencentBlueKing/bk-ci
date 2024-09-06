@@ -483,7 +483,7 @@ class ParamFacadeService @Autowired constructor(
     }
 
     private fun getCodeLibSearchUrl(projectId: String, permission: Permission?, scmType: String?): String {
-        val url = StringBuilder("/process/api/user/buildParam/repository/$projectId/aliasName?")
+        val url = StringBuilder("/process/api/user/buildParam/repository/$projectId/aliasName?aliasName={words}")
         if (permission != null) {
             url.append("permission=${permission.name}")
         }
