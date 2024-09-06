@@ -14,7 +14,7 @@
         "public:external": "cross-env NODE_ENV=external npm run public --"
     },
     "dependencies": {
-        "@blueking/log": "2.2.0-beta.8",
+        "@blueking/log": "2.2.0-beta.10",
         "@blueking/search-select": "0.0.1-beta.2",
         "@icon-cool/bk-icon-devops": "^0.2.1",
         "axios": "^0.28.0",

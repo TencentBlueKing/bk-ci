@@ -173,24 +173,26 @@
 
             handleLoadAiMessage (item) {
                 item.aiMessage = ''
+                const scrollRef = this.$refs.scroll
                 this.getLogAIMessage({
                     ...this.postData,
                     refresh: false,
                     callBack (val) {
                         item.aiMessage += val
-                        this.$refs.scroll.setSingleLogData(item)
+                        scrollRef.setSingleLogData(item)
                     }
                 })
             },
 
             handleReloadAiMessage (item) {
                 item.aiMessage = ''
+                const scrollRef = this.$refs.scroll
                 this.getLogAIMessage({
                     ...this.postData,
                     refresh: true,
                     callBack (val) {
                         item.aiMessage += val
-                        this.$refs.scroll.setSingleLogData(item)
+                        scrollRef.setSingleLogData(item)
                     }
                 })
             },
