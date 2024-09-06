@@ -798,24 +798,28 @@ export default {
             url += `&executeCount=${executeCount}`
         }
         window.fetch(url, {
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            method: 'post'
         }).then(async (response) => {
-            const reader = response.body
-                .pipeThrough(new window.TextDecoderStream())
-                .getReader()
-            while (true) {
-                try {
-                    const { value, done } = await reader.read()
-                    if (done) break
-                    callBack(value)
-                } catch (error) {
-                    console.error(error.message || error)
-                    break
+            const reader = response.body.getReader()
+            const decoder = new TextDecoder()
+
+            const readChunk = () => {
+                return reader.read().then(appendChunks)
+            }
+
+            const appendChunks = (result) => {
+                const chunk = decoder.decode(result.value || new Uint8Array(), {
+                    stream: !result.done
+                })
+                if (chunk) {
+                    callBack(chunk)
+                }
+                if (!result.done) {
+                    readChunk()
                 }
             }
+
+            readChunk()
         })
     },
 
