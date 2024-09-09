@@ -272,8 +272,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             version = version,
             normalStatusList = normalStatusList,
             atomCode = atomCode,
-            projectCode = projectCode,
-            queryTestFlag = buildingFlag
+            projectCode = projectCode
         )
         val atomDefaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
         val atomBaseInfoRecord = marketAtomEnvInfoDao.getProjectAtomBaseInfo(
@@ -420,34 +419,37 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         version: String,
         normalStatusList: List<Byte>,
         atomCode: String,
-        projectCode: String,
-        queryTestFlag: Boolean
+        projectCode: String
     ): List<Byte>? {
-        var atomStatusList: List<Byte>? = null
-        if (atomStatus != null) {
+        return if (atomStatus != null) {
             mutableListOf(atomStatus)
         } else {
-            if (VersionUtils.isLatestVersion(version)) {
-                atomStatusList = normalStatusList.toMutableList()
-                val releaseCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode, version)
-                if (releaseCount > 0) {
-                    // 如果当前大版本内还有已发布的版本，则xx.latest只对应最新已发布的版本
-                    atomStatusList = mutableListOf(AtomStatusEnum.RELEASED.status.toByte())
+            normalStatusList.toMutableList().apply {
+                if (VersionUtils.isLatestVersion(version)) {
+                    val releaseCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode, version)
+                    if (releaseCount > 0) {
+                        // 如果当前大版本内还有已发布的版本，则xx.latest只对应最新已发布的版本
+                        this.clear()
+                        this.add(AtomStatusEnum.RELEASED.status.toByte())
+                    }
                 }
-                val flag = queryTestFlag ||
-                    storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
+                val flag =
+                    projectCode == storeInnerPipelineConfig.innerPipelineProject || storeProjectRelDao.isTestProjectCode(
+                        dslContext = dslContext,
+                        storeCode = atomCode,
+                        storeType = StoreTypeEnum.ATOM,
+                        projectCode = projectCode
+                    )
                 if (flag) {
-                    // 原生项目或者调试项目有权查处于测试中、审核中的插件
-                    atomStatusList.addAll(
+                    // 初始化项目或者调试项目有权查处于测试中、审核中的插件
+                    this.addAll(
                         listOf(
-                            AtomStatusEnum.TESTING.status.toByte(),
-                            AtomStatusEnum.AUDITING.status.toByte()
+                            AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.AUDITING.status.toByte()
                         )
                     )
                 }
             }
         }
-        return atomStatusList
     }
 
     /**
