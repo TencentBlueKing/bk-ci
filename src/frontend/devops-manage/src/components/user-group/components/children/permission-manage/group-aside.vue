@@ -368,11 +368,22 @@ export default {
     async handleCreateGroup() {
       if (this.isNotProject) return
       this.activeTab = '';
-      const res = await http.getResource({
-        projectCode: this.curProjectCode,
-        resourceType: this.resourceType,
-        resourceCode: this.curProjectCode});
-      this.$emit('create-group', res.iamGradeManagerId);
+      try {
+        const res = await http.getResource({
+          projectCode: this.curProjectCode,
+          resourceType: this.resourceType,
+          resourceCode: this.curProjectCode});
+          if(res) {
+            const role_id = res.iamGradeManagerId;
+            this.$emit('create-group', role_id);
+          }
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
+      }
+      
     },
     handleCloseManage() {
       this.isClosing = true;
@@ -425,7 +436,7 @@ export default {
       } catch (error) {
         Message({
           theme: 'error',
-          message: err.message
+          message: error.message
         });
       }
     },
@@ -435,7 +446,7 @@ export default {
       } catch (error) {
         Message({
           theme: 'error',
-          message: err.message
+          message: error.message
         });
       }
     },
