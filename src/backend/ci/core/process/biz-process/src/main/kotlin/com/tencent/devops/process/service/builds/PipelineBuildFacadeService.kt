@@ -358,7 +358,8 @@ class PipelineBuildFacadeService(
             permission = AuthPermission.VIEW
         )
         val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
-        return pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, queryDslContext)
+        val parameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, queryDslContext)
+        return mergeRepoRefParams(parameters)
     }
 
     fun retry(
@@ -2777,5 +2778,39 @@ class PipelineBuildFacadeService(
             }
             checkManualReviewParamOut(item.valueType, item, value)
         }
+    }
+
+    /**
+     * 处理RepoRef参数
+     * 将xxx.repo-name 和 xxx.branch 合并为 xxx=repo-name@branch
+     */
+    private fun mergeRepoRefParams(parameters: List<BuildParameters>): List<BuildParameters> {
+        val repoRefParams =
+            parameters.filter { it.valueType == BuildFormPropertyType.REPO_REF }
+                .groupBy { it.relKey }
+                .mapValues {
+                    val associate = it.value.associateBy { param -> param.key }
+                    val repoName = associate["${it.key}.repo-name"]
+                    val branch = associate["${it.key}.branch"]
+                    if (repoName == null || branch == null) {
+                        logger.warn("Invalid data detected, skipping|key[${it.key}]")
+                        null
+                    } else {
+                        BuildParameters(
+                            key = it.key ?: "",
+                            value = "${repoName.value}@${branch.value}",
+                            valueType = BuildFormPropertyType.REPO_REF,
+                            desc = repoName.desc,
+                            readOnly = repoName.readOnly,
+                            relKey = it.key
+                        )
+                    }
+
+                }.map { it.value }
+                .filterNotNull()
+        val list = parameters.filter { it.valueType != BuildFormPropertyType.REPO_REF }
+            .toMutableList()
+        list.addAll(repoRefParams)
+        return list
     }
 }
