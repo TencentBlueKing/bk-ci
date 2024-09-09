@@ -49,6 +49,7 @@ interface IElementBizPluginService {
         element: Element,
         contextMap: Map<String, String>,
         appearedCnt: Int,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        oauthUser: String?
     ): ElementCheckResult
 }

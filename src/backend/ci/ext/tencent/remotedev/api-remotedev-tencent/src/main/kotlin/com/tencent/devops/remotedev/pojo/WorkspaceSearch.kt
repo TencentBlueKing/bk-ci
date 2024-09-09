@@ -66,7 +66,9 @@ data class WorkspaceSearch(
     @get:Schema(title = "是否模糊匹配，可以关闭，查询会更快。")
     val onFuzzyMatch: Boolean = true,
     @get:Schema(title = "是否匹配owner类型")
-    val workspaceOwnerType: List<WorkspaceOwnerType>? = null
+    val workspaceOwnerType: List<WorkspaceOwnerType>? = null,
+    @get:Schema(title = "逻辑区域")
+    val logicalArea: List<WindowsResourceZoneConfigType>? = null
 ) {
     fun onlyNeedCheckWorkspace() = !needCheckWindows() && !needCheckShared() && expertSupId.isNullOrEmpty()
 

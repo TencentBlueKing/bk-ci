@@ -34,6 +34,11 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpH
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.DispatchBuildTaskStatusEnum
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentActionStatus
+import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
+import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
+import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
@@ -41,10 +46,7 @@ import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.WorkspaceResponse
-import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
-import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -56,7 +58,8 @@ class RemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao,
-    private val remoteDevServiceFactory: RemoteDevServiceFactory
+    private val remoteDevServiceFactory: RemoteDevServiceFactory,
+    private val workspaceRedisUtils: WorkspaceRedisUtils
 ) {
 
     companion object {
@@ -217,6 +220,14 @@ class RemoteDevService @Autowired constructor(
         workspaceName: String,
         bakWorkspaceName: String?
     ) {
+        if (bakWorkspaceName != null) {
+            /*临时逻辑待后期下掉，不在我们这维护order*/
+            workspaceRedisUtils.setStartCloudOrder(
+                "SYSTEM",
+                bakWorkspaceName,
+                workspaceRedisUtils.getStartCloudOrder(workspaceName) ?: ""
+            )
+        }
         dispatchWorkspaceDao.deleteWorkspace(dslContext, workspaceName, bakWorkspaceName)
     }
 
@@ -388,6 +399,18 @@ class RemoteDevService @Autowired constructor(
         mountType: WorkspaceMountType
     ): ExpandDiskValidateResp {
         return remoteDevServiceFactory.loadRemoteDevService(mountType).expandDisk(workspaceName, userId, size)
+    }
+
+    fun getLastExpandDiskStatusAndTime(
+        workspaceName: String
+    ): Pair<EnvironmentActionStatus?, LocalDateTime?> {
+        val record = dispatchWorkspaceOpHisDao.fetchLastTaskByWorkspaceName(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            action = EnvironmentAction.EXPAND_DISK
+        ) ?: return Pair(null, null)
+
+        return Pair(EnvironmentActionStatus.parse(record.status), record.updateTime)
     }
 
     fun upgradeWorkspace(event: WorkspaceOperateEvent) {

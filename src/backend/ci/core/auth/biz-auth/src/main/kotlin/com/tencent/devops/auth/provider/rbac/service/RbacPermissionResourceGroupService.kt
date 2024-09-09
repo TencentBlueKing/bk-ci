@@ -135,7 +135,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 projectCode = projectId,
                 resourceType = resourceType,
                 resourceCode = resourceCode
-            ).associateBy { it.relationId.toInt() }
+            ).associateBy { it.relationId }
             val iamGroupInfoVoList = iamGroupInfoList.map {
                 val resourceGroup = resourceGroupMap[it.id]
                 val defaultGroup = resourceGroup?.defaultGroup ?: false

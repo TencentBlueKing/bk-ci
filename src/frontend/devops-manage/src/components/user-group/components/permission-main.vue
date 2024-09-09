@@ -4,9 +4,9 @@
     v-bkloading="{ isLoading }"
   >
     <template v-if="!isLoading">
-      <template v-if="isEnablePermission">
+      <template v-if="isEnablePermission || showSelectProject">
         <permission-manage
-          v-if="hasPermission"
+          v-if="hasPermission || showSelectProject"
           :show-create-group="showCreateGroup"
           :resource-type="resourceType"
           :resource-code="resourceCode"
@@ -90,7 +90,11 @@ export default {
       errorCode: 0
     };
   },
-
+  computed: {
+    showSelectProject () {
+      return location.search.includes('showSelectProject=true')
+    }
+  },
   created() {
     this.initStatus();
   },

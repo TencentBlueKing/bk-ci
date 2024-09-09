@@ -11,7 +11,7 @@ import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.pojo.start.StartMessageDataType
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.startcloud.StartMessageRegisterCondition
 import com.tencent.devops.remotedev.pojo.startcloud.StartMessageRegisterData
 import com.tencent.devops.remotedev.pojo.startcloud.StartMessageRegisterReq
@@ -157,8 +157,8 @@ class StartWorkspaceService @Autowired constructor(
     fun sendMessage(
         operator: String,
         userIdList: Set<String>,
-        dataType: StartMessageDataType,
-        data: String,
+        dataType: RemoteDevNotifyType,
+        messageContent: String,
         messageStartTime: Long,
         messageEndTime: Long
     ) {
@@ -166,7 +166,7 @@ class StartWorkspaceService @Autowired constructor(
         val dataStr = Base64.getEncoder().encodeToString(
             JsonUtil.getObjectMapper(false).writeValueAsBytes(
                 StartMessageRegisterData(
-                    dataType.value, data
+                    dataType.getDesktopType(), messageContent
                 )
             )
         )

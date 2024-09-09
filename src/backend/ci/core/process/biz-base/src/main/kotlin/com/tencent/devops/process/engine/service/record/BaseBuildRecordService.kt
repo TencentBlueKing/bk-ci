@@ -242,7 +242,7 @@ open class BaseBuildRecordService(
         executeCount: Int
     ) {
         val userId = startUser
-            ?: pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)?.startUser
+            ?: pipelineBuildDao.getUserBuildInfo(dslContext, projectId, buildId)?.startUser
             ?: return
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(

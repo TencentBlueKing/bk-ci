@@ -377,13 +377,6 @@ class WorkspaceCommon @Autowired constructor(
             workspaceName = workspaceName
         )
         if (lastHistory?.startTime != null) {
-            workspaceDao.updateWorkspaceUsageTime(
-                workspaceName = workspaceName,
-                usageTime = Duration.between(
-                    lastHistory.startTime, LocalDateTime.now()
-                ).seconds.toInt(),
-                dslContext = transactionContext
-            )
             workspaceHistoryDao.updateWorkspaceHistory(
                 dslContext = transactionContext,
                 id = lastHistory.id,
@@ -543,11 +536,11 @@ class WorkspaceCommon @Autowired constructor(
                     workspaceName = workspaceName,
                     cc = mutableSetOf(operator),
                     projectId = projectId,
-                    notifyTemplateCode = WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                     bodyParams = mutableMapOf(
                         "workspaceName" to workspaceName,
                         "cgsId" to cgsId,
+                        "notifyTemplateCode" to WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
                         "userId" to it.userId
                     )
                 )

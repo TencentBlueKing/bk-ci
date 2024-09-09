@@ -20,6 +20,7 @@
 import DefineParam from '@/components/AtomFormComponent/DefineParam'
 import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
 import SelectInput from '@/components/AtomFormComponent/SelectInput'
+import SubParameter from '@/components/AtomFormComponent/SubParameter'
 import Tips from '@/components/AtomFormComponent/Tips'
 import TipsSimple from '@/components/AtomFormComponent/TipsSimple'
 import NotifyType from '@/components/AtomFormComponent/notifyType'
@@ -113,7 +114,8 @@ const atomMixin = {
         ConditionalInputSelector,
         EnumButton,
         TipsSimple,
-        Tips
+        Tips,
+        SubParameter
     },
     computed: {
         ...mapGetters('atom', [

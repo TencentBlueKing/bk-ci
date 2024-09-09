@@ -138,7 +138,7 @@ class WindowsResourceZoneDao {
                     zone = zone,
                     zoneShortName = shortName,
                     description = description,
-                    type = WindowsResourceZoneConfigType.valueOf(type)
+                    type = WindowsResourceZoneConfigType.parse(type)
                 )
             }
         }

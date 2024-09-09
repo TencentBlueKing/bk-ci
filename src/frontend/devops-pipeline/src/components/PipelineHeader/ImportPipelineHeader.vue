@@ -167,7 +167,7 @@
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px 0 0;
+  padding: 0 14px;
   align-self: stretch;
   height: 48px;
   flex-shrink: 0;

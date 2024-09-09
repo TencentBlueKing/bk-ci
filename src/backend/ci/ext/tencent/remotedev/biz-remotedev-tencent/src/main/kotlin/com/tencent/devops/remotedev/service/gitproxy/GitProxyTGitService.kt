@@ -1023,6 +1023,16 @@ class GitProxyTGitService @Autowired constructor(
         }
     }
 
+    fun checkProjectExist(projectId: String): Boolean {
+        projectTGitLinkDao.fetch(dslContext, projectId, null).ifEmpty { return false }
+        return true
+    }
+
+    fun deleteRepos(projectId: String, tGitIds: Set<Long>): Boolean {
+        projectTGitLinkDao.deleteIds(dslContext, projectId, tGitIds)
+        return true
+    }
+
     private fun String.removeHttpPrefix() = this.removePrefix("https://").removePrefix("http://")
 
     private fun updateTGitLock(tGitId: Long): RedisLock =

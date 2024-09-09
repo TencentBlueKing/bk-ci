@@ -1,19 +1,16 @@
 package com.tencent.devops.environment.service.cmdb.impl
 
-import com.tencent.devops.environment.service.cmdb.EsbCmdbClient
-import com.tencent.devops.environment.pojo.cmdb.resp.CmdbServerPage
 import com.tencent.devops.environment.pojo.cmdb.common.CmdbServerDTO
+import com.tencent.devops.environment.pojo.cmdb.resp.CmdbServerPage
+import com.tencent.devops.environment.service.cmdb.EsbCmdbClient
 import com.tencent.devops.environment.service.cmdb.TencentCmdbService
 import org.slf4j.LoggerFactory
 import org.slf4j.helpers.MessageFormatter
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 /**
  * 对接公司老CMDB的实现类
  */
-@Service
-class TencentCmdbServiceImpl @Autowired constructor(
+class TencentCmdbServiceImpl(
     private val esbCmdbClient: EsbCmdbClient
 ) : TencentCmdbService {
 

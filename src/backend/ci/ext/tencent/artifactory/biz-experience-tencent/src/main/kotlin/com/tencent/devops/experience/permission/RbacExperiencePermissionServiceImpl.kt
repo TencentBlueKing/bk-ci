@@ -6,8 +6,8 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
+import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.experience.dao.ExperienceDao
@@ -231,6 +231,18 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
             projectCode = projectId,
             resourceType = RbacAuthUtils.extResourceType(AuthResourceType.EXPERIENCE_GROUP),
             resourceCode = HashUtil.encodeLongId(groupId)
+        )
+    }
+
+    override fun deleteExperienceResource(
+        projectId: String,
+        experienceId: Long
+    ) {
+        client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
+            token = tokenService.getSystemToken(),
+            projectCode = projectId,
+            resourceType = RbacAuthUtils.extResourceType(AuthResourceType.EXPERIENCE_TASK_NEW),
+            resourceCode = HashUtil.encodeLongId(experienceId)
         )
     }
 

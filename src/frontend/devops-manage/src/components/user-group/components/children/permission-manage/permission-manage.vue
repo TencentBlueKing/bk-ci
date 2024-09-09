@@ -12,15 +12,17 @@
       @change-group-detail-tab="handleChangeGroupDetailTab"
     />
     <iam-iframe
-      v-if="path"
+      v-if="path && !isAllMember"
       :path="path"
     />
+    <ManageAll v-else />
   </section>
 </template>
 
 <script>
 import GroupAside from './group-aside.vue';
 import IamIframe from './iam-Iframe.vue';
+import ManageAll from './manage-all.vue';
 
 export default {
   name: 'permission-manage',
@@ -28,6 +30,7 @@ export default {
   components: {
     GroupAside,
     IamIframe,
+    ManageAll,
   },
 
   props: {
@@ -60,6 +63,7 @@ export default {
       path: '',
       activeIndex: '',
       tabName: '',
+      isAllMember: false,
     };
   },
 
@@ -68,10 +72,16 @@ export default {
       this.tabName = payload;
     },
     handleChooseGroup(payload) {
-      this.path = `user-group-detail/${payload.groupId}?role_id=${payload.managerId}&tab=${this.tabName}`;
+      if (!payload.projectMemberGroup) {
+        this.isAllMember = false;
+        this.path = `user-group-detail/${payload.groupId}?role_id=${payload.managerId}&tab=${this.tabName}`;
+      } else {
+        this.isAllMember = true;
+      }
     },
     handleCreateGroup() {
       this.activeIndex = '';
+      this.isAllMember = false;
       this.path = 'create-user-group';
     },
     handleCloseManage() {

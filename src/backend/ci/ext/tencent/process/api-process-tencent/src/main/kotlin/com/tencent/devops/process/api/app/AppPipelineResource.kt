@@ -140,15 +140,18 @@ interface AppPipelineResource {
         @Parameter(description = "分支", required = false)
         @QueryParam("materialBranch")
         materialBranch: List<String>?,
-        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
-        @QueryParam("version")
-        customVersion: Int?,
+        @Parameter(description = "指定调试数据", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = null,
         @Parameter(description = "触发代码库", required = false)
         @QueryParam("triggerAlias")
         triggerAlias: List<String>?,
         @Parameter(description = "触发分支", required = false)
         @QueryParam("triggerBranch")
-        triggerBranch: List<String>?
+        triggerBranch: List<String>?,
+        @Parameter(description = "触发人", required = false)
+        @QueryParam("triggerUser")
+        triggerUser: List<String>? = null
     ): Result<Page<AppPipelineHistory>>
 
     @Operation(summary = "获取流水线构建中的查询条件-分支")

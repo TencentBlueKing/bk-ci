@@ -41,8 +41,8 @@ import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
-import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
@@ -212,7 +212,9 @@ class WindowsResourceConfigService @Autowired constructor(
         return res
     }
 
-    fun getAllZone(): List<WindowsResourceZoneConfig> {
+    fun getAllZone(
+        type: WindowsResourceZoneConfigType = WindowsResourceZoneConfigType.DEFAULT
+    ): List<WindowsResourceZoneConfig> {
         logger.info("get all windows resource zone")
         return windowsResourceZoneDao.fetchAll(dslContext, true)
     }
@@ -255,7 +257,21 @@ class WindowsResourceConfigService @Autowired constructor(
         ).firstOrNull { it.id == windowsZone.id }
     }
 
-    fun getAllSpecZoneShortName() = windowsResourceZoneDao.fetchAllSpec(dslContext).map { it.zoneShortName }
+    fun getAvailableZone(
+        zoneId: String,
+        type: WindowsResourceZoneConfigType
+    ): WindowsResourceZoneConfig? {
+        logger.info("get windows resource config zone type $type")
+        return windowsResourceZoneDao.fetchAll(
+            dslContext = dslContext,
+            withUnavailable = true,
+            type = type
+        ).firstOrNull { it.zoneShortName.startsWith(zoneId) }
+    }
+
+    fun getAllSpecZone() = windowsResourceZoneDao.fetchAllSpec(dslContext)
+
+    fun getAllSpecZoneShortName() = getAllSpecZone().map { it.zoneShortName }
 
     // 新增windows硬件资源配置
     fun addWindowsResource(windowsResourceConfig: WindowsResourceTypeConfig): Boolean {
@@ -522,7 +538,7 @@ class WindowsResourceConfigService @Autowired constructor(
             windowsZone = windowsZone,
             windowsConfig = windowsConfig,
             newNum = newNum,
-            quotaType = QuotaType.parse(ownerType)
+            quotaType = QuotaType.parse(windowsZone.type)
         )
     }
 }

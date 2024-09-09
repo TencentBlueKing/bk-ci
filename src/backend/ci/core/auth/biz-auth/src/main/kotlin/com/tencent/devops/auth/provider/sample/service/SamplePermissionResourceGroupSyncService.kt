@@ -49,5 +49,7 @@ class SamplePermissionResourceGroupSyncService : PermissionResourceGroupSyncServ
 
     override fun syncIamGroupMember(projectCode: String, iamGroupId: Int) = Unit
 
+    override fun syncIamGroupMembersOfApply() = Unit
+
     override fun fixResourceGroupMember(projectCode: String) = Unit
 }
