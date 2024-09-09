@@ -127,6 +127,7 @@ class UpgradeProps @Autowired constructor(
         opType: ClientUpgradeOpType,
         isDistinguishCluster: Boolean
     ) {
+        logger.info("opHashCache: $redisKey, $values, $opType")
         when (opType) {
             ClientUpgradeOpType.ADD -> {
                 redisOperation.hmset(redisKey, values, isDistinguishCluster)
