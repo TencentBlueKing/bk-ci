@@ -420,7 +420,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         normalStatusList: List<Byte>,
         atomCode: String,
         projectCode: String
-    ): List<Byte>? {
+    ): List<Byte> {
         return if (atomStatus != null) {
             mutableListOf(atomStatus)
         } else {
