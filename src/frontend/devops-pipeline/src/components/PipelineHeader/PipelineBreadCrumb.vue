@@ -18,9 +18,9 @@
 </template>
 
 <script>
-    import PipelineNameCrumbItem from './PipelineNameCrumbItem'
-    import BuildNumSwitcher from './BuildNumSwitcher'
     import { mapGetters, mapState } from 'vuex'
+    import BuildNumSwitcher from './BuildNumSwitcher'
+    import PipelineNameCrumbItem from './PipelineNameCrumbItem'
 
     export default {
         components: {
@@ -81,11 +81,7 @@
                                 ? [{
                                     title: this.$t('draftExecRecords'),
                                     to: {
-                                        name: 'draftDebugRecord',
-                                        params: {
-                                            ...this.$route.params,
-                                            version: this.pipelineInfo?.version
-                                        }
+                                        name: 'draftDebugRecord'
                                     }
                                 }]
                                 : []
