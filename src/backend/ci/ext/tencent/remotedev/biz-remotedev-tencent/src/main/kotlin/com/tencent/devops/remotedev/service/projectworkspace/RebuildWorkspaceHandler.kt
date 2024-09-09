@@ -158,7 +158,15 @@ class RebuildWorkspaceHandler @Autowired constructor(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                     workspace.status,
                     WorkspaceStatus.REBUILDING
-                )
+                ) + if (rebuildReq.formatDataDisk == true) {
+                    ", 格式化数据盘: " + rebuildReq.formatDataDisk.toString()
+                } else {
+                    ""
+                } + if (rebuildReq.removeOwner == true) {
+                    ", 清空拥有者: " + rebuildReq.removeOwner.toString()
+                } else {
+                    ""
+                }
             )
 
             // 保存些需要回调才能使用的参数，有配置了参数才进行保存
