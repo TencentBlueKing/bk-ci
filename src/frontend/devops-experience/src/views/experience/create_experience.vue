@@ -282,12 +282,12 @@
                     { id: 4, name: '社交' }
                 ],
                 noticeTypeList: [
-                    // {
-                    //     name: '蓝盾App Push消息',
-                    //     value: 'PUSH',
-                    //     isChecked: true,
-                    //     placeholder: '只有安装了蓝盾App的用户，Push消息才能触达。'
-                    // },
+                    {
+                        name: '蓝盾App Push消息',
+                        value: 'PUSH',
+                        isChecked: true,
+                        placeholder: '只有安装了蓝盾App的用户，Push消息才能触达。'
+                    },
                     { name: '企业微信', value: 'RTX', isChecked: false },
                     { name: '邮件', value: 'EMAIL', isChecked: false }
                 ],
@@ -418,8 +418,7 @@
                 if (!this.isEdit) {
                     this.requestGroupList()
                     this.noticeTypeList.forEach(item => {
-                        // item.isChecked = item.value === 'PUSH'
-                        item.isChecked = false
+                        item.isChecked = item.value === 'PUSH'
                     })
                     this.metaList = []
                     this.query.initDate = ''
