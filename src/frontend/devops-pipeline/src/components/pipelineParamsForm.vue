@@ -27,6 +27,31 @@
                     :placeholder="param.placeholder"
                     :is-diff-param="highlightChangedParam && param.isChanged"
                 />
+                <RequestSelector
+                    v-if="param.type === 'REPO_REF'"
+                    :class="{
+                        'is-diff-param': highlightChangedParam && param.isChanged
+                    }"
+                    v-validate="{ required: param.required }"
+                    param-id="key"
+                    param-value="value"
+                    v-bind="Object.assign(
+                        {},
+                        {
+                            id: undefined,
+                            name: `${param.name + '.'}branch`,
+                            value: param.branchValue,
+                            searchUrl: getSearchBranchUrl(param),
+                            replaceKey: param.branchReplaceKey,
+                            disabled: disabled,
+                            placeholder: param.placeholder,
+                            isDiffParam: highlightChangedParam && param.isChanged,
+                            handleChange: handleUpdateRepoBranch
+                        },
+                        getBranchOption(param.value)
+                    )"
+                    :key="param.value"
+                />
             </section>
             <span
                 v-if="!errors.has('devops' + param.name)"
@@ -47,7 +72,7 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
-    import FileParamInput from '@/components/FileParamInput'
+    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import {
         BOOLEAN,
         BOOLEAN_LIST,
@@ -67,8 +92,12 @@
         STRING,
         SUB_PIPELINE,
         SVN_TAG,
-        TEXTAREA
+        TEXTAREA,
+        REPO_REF,
+        getBranchOption,
+        isRepoParam
     } from '@/store/modules/atom/paramsConfig'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
 
     export default {
 
@@ -162,13 +191,15 @@
                         component: this.getParamComponentType(param),
                         name: param.id,
                         required: param.valueNotEmpty,
-                        value: this.paramValues[param.id],
+                        value: isRepoParam(param.type) ? this.paramValues[`${param.id + '.'}repo-name`] : this.paramValues[param.id],
+                        branchValue: isRepoParam(param.type) ? this.paramValues[`${param.id + '.'}branch`] : '',
                         ...restParam
                     }
                 })
             }
         },
         methods: {
+            getBranchOption,
             getParamComponentType (param) {
                 if (isRemoteType(param)) {
                     return 'request-selector'
@@ -187,6 +218,15 @@
                     case param.type === CODE_LIB:
                     case param.type === CONTAINER_TYPE:
                     case param.type === SUB_PIPELINE:
+                    case param.type === REPO_REF:
+                        return param.options
+                    default:
+                        return []
+                }
+            },
+            getCodeRepoOpt (param) {
+                switch (true) {
+                    case param.type === REPO_REF:
                         return param.options
                     default:
                         return []
@@ -202,16 +242,27 @@
             getParamByName (name) {
                 return this.paramList.find(param => `devops${param.name}` === name)
             },
-
+            handleUpdateRepoBranch (name, value) {
+                this.handleParamChange(name, value)
+            },
             handleParamUpdate (name, value) {
                 const param = this.getParamByName(name)
                 if (isMultipleParam(param.type)) { // 复选框，需要将数组转化为逗号隔开的字符串
                     value = Array.isArray(value) ? value.join(',') : ''
                 }
-                this.handleParamChange(param.name, value)
+                if (isRepoParam(param.type)) {
+                    this.handleParamChange(`${param.name + '.'}repo-name`, value)
+                    this.handleParamChange(`${param.name + '.'}branch`, '')
+                } else {
+                    this.handleParamChange(param.name, value)
+                }
             },
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1
+            },
+
+            getSearchBranchUrl (param) {
+                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/${this.$route.params.projectId}/repository/refs?search={words}&repositoryType=NAME&repositoryId=${param.value}`
             }
         }
     }

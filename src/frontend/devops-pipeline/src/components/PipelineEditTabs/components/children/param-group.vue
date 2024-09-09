@@ -70,7 +70,13 @@
                                             v-if="param.readOnly"
                                             class="read-only"
                                         >{{ $t('readonlyParams') }}</span>
-                                        <span class="default-value">{{ param.defaultValue || '--' }}</span>
+                                        <span class="default-value" v-bk-overflow-tips>
+                                            {{
+                                                param.type === 'REPO_REF'
+                                                    ? `${param.defaultValue} @ ${param?.defaultBranch}`
+                                                    : param.defaultValue || '--'
+                                            }}
+                                        </span>
                                     </div>
                                     <div
                                         v-if="editable"
@@ -81,7 +87,7 @@
                                             @click.stop
                                         >
                                             <i
-                                                @click.stop="handleCopy(bkVarWrapper('variables.' + param.id))"
+                                                @click.stop="handleCopy(param)"
                                                 class="bk-icon icon-copy"
                                             ></i>
                                             <bk-popconfirm
@@ -118,7 +124,7 @@
 
 <script>
     import vueDraggable from 'vuedraggable'
-    import { bkVarWrapper, copyToClipboard } from '@/utils/util'
+    import { bkVarWrapper, bkVarRepoRefWrapper, copyToClipboard } from '@/utils/util'
     export default {
         components: {
             vueDraggable
@@ -173,7 +179,12 @@
         },
         methods: {
             bkVarWrapper,
-            handleCopy (con) {
+            bkVarRepoRefWrapper,
+            handleCopy (param) {
+                const { id, type } = param
+                const con = type === 'REPO_REF'
+                    ? this.bkVarRepoRefWrapper()
+                    : this.bkVarWrapper('variables.' + id)
                 copyToClipboard(con)
                 this.$bkMessage({
                     theme: 'success',

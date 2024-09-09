@@ -1046,7 +1046,13 @@
     "alwaysPull": "Always pull on each run",
     "ifNotPresent": "Pull only if not present locally",
     "enableDockerTips": "When using this feature, please ensure that the build machine has Docker installed, and that the user running the third-party build agent has the necessary permissions to operate Docker.",
-    "enabledPrivileged": "Enable Privileged Mode"
+    "enabledPrivileged": "Enable Privileged Mode",
+    "repoName": "Code Repositories (repo-name)",
+    "branchName": "Branch (branch)",
+    "repoNameTips": "",
+    "branchNameTips": "Branch",
+    "selectRepoTips": "Please select a repository",
+    "selectBranchTips": "Please select a branch"
   },
   "storeMap": {
     "textarea": "Textarea",
@@ -1060,6 +1066,7 @@
     "enum": "Radio",
     "multiple": "Checkbox",
     "checkbox": "Checkbox Confirmation Box",
+    "reporef": "Code repository and Branch",
     "svntag": "SVN branch or TAG",
     "gitref": "GIT branch or TAG",
     "codelib": "Code repository",

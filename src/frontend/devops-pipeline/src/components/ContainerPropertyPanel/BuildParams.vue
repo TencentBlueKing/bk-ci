@@ -133,122 +133,124 @@
                                                 :value="param.id"
                                             />
                                         </bk-form-item>
-                                        <bk-form-item
-                                            v-if="!isFileParam(param.type)"
-                                            label-width="auto"
-                                            class="flex-col-span-1"
-                                            :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
-                                            :required="isBooleanParam(param.type)"
-                                            :is-error="errors.has(`param-${param.id}.defaultValue`)"
-                                            :error-msg="errors.first(`param-${param.id}.defaultValue`)"
-                                            :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)"
-                                        >
-                                            <selector
-                                                style="max-width: 250px"
-                                                :popover-min-width="250"
-                                                v-if="isSelectorParam(param.type)"
-                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
-                                                :list="transformOpt(param.options)"
-                                                :multi-select="isMultipleParam(param.type)"
-                                                name="defaultValue"
-                                                :data-vv-scope="`param-${param.id}`"
-                                                :placeholder="$t('editPage.defaultValueTips')"
-                                                :disabled="disabled"
-                                                show-select-all
-                                                :key="param.type"
-                                                :value="getSelectorDefaultVal(param)"
+                                        <template v-if="!isRepoParam(param.type)">
+                                            <bk-form-item
+                                                v-if="!isFileParam(param.type)"
+                                                label-width="auto"
+                                                class="flex-col-span-1"
+                                                :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
+                                                :required="isBooleanParam(param.type)"
+                                                :is-error="errors.has(`param-${param.id}.defaultValue`)"
+                                                :error-msg="errors.first(`param-${param.id}.defaultValue`)"
+                                                :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)"
                                             >
-                                            </selector>
-                                            <enum-input
-                                                v-if="isBooleanParam(param.type)"
-                                                name="defaultValue"
-                                                :list="boolList"
-                                                :disabled="disabled"
-                                                :data-vv-scope="`param-${param.id}`"
-                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
-                                                :value="param.defaultValue"
+                                                <selector
+                                                    style="max-width: 250px"
+                                                    :popover-min-width="250"
+                                                    v-if="isSelectorParam(param.type)"
+                                                    :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                                    :list="transformOpt(param.options)"
+                                                    :multi-select="isMultipleParam(param.type)"
+                                                    name="defaultValue"
+                                                    :data-vv-scope="`param-${param.id}`"
+                                                    :placeholder="$t('editPage.defaultValueTips')"
+                                                    :disabled="disabled"
+                                                    show-select-all
+                                                    :key="param.type"
+                                                    :value="getSelectorDefaultVal(param)"
+                                                >
+                                                </selector>
+                                                <enum-input
+                                                    v-if="isBooleanParam(param.type)"
+                                                    name="defaultValue"
+                                                    :list="boolList"
+                                                    :disabled="disabled"
+                                                    :data-vv-scope="`param-${param.id}`"
+                                                    :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                                    :value="param.defaultValue"
+                                                >
+                                                </enum-input>
+                                                <vuex-input
+                                                    v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type)"
+                                                    :disabled="disabled"
+                                                    :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                                    name="defaultValue"
+                                                    :click-unfold="true"
+                                                    :data-vv-scope="`param-${param.id}`"
+                                                    :placeholder="$t('editPage.defaultValueTips')"
+                                                    :value="param.defaultValue"
+                                                />
+                                                <vuex-textarea
+                                                    v-if="isTextareaParam(param.type)"
+                                                    :click-unfold="true"
+                                                    :hover-unfold="true"
+                                                    :disabled="disabled"
+                                                    :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                                    name="defaultValue"
+                                                    :data-vv-scope="`param-${param.id}`"
+                                                    :placeholder="$t('editPage.defaultValueTips')"
+                                                    :value="param.defaultValue"
+                                                />
+                                                <request-selector
+                                                    v-if="isCodelibParam(param.type)"
+                                                    style="max-width: 250px"
+                                                    :popover-min-width="250"
+                                                    :url="getCodeUrl(param.scmType)"
+                                                    v-bind="codelibOption"
+                                                    :disabled="disabled"
+                                                    name="defaultValue"
+                                                    :value="param.defaultValue"
+                                                    :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                                    :data-vv-scope="`param-${param.id}`"
+                                                ></request-selector>
+                                                <request-selector
+                                                    v-if="isBuildResourceParam(param.type)"
+                                                    style="max-width: 250px"
+                                                    :popover-min-width="250"
+                                                    :url="getBuildResourceUrl(param.containerType)"
+                                                    param-id="name"
+                                                    :disabled="disabled"
+                                                    name="defaultValue"
+                                                    :value="param.defaultValue"
+                                                    :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                                    :data-vv-scope="`param-${param.id}`"
+                                                    :replace-key="param.replaceKey"
+                                                    :search-url="param.searchUrl"
+                                                ></request-selector>
+                                                <request-selector
+                                                    v-if="isSubPipelineParam(param.type)"
+                                                    style="max-width: 250px"
+                                                    :popover-min-width="250"
+                                                    v-bind="subPipelineOption"
+                                                    :disabled="disabled"
+                                                    name="defaultValue"
+                                                    :value="param.defaultValue"
+                                                    :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                                    :data-vv-scope="`param-${param.id}`"
+                                                    :replace-key="param.replaceKey"
+                                                    :search-url="param.searchUrl"
+                                                ></request-selector>
+                                            </bk-form-item>
+    
+                                            <bk-form-item
+                                                v-else
+                                                label-width="auto"
+                                                :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
+                                                :required="isBooleanParam(param.type)"
+                                                :is-error="errors.has(`param-${param.id}.defaultValue`)"
+                                                :error-msg="errors.first(`param-${param.id}.defaultValue`)"
+                                                :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)"
                                             >
-                                            </enum-input>
-                                            <vuex-input
-                                                v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type)"
-                                                :disabled="disabled"
-                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
-                                                name="defaultValue"
-                                                :click-unfold="true"
-                                                :data-vv-scope="`param-${param.id}`"
-                                                :placeholder="$t('editPage.defaultValueTips')"
-                                                :value="param.defaultValue"
-                                            />
-                                            <vuex-textarea
-                                                v-if="isTextareaParam(param.type)"
-                                                :click-unfold="true"
-                                                :hover-unfold="true"
-                                                :disabled="disabled"
-                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
-                                                name="defaultValue"
-                                                :data-vv-scope="`param-${param.id}`"
-                                                :placeholder="$t('editPage.defaultValueTips')"
-                                                :value="param.defaultValue"
-                                            />
-                                            <request-selector
-                                                v-if="isCodelibParam(param.type)"
-                                                style="max-width: 250px"
-                                                :popover-min-width="250"
-                                                :url="getCodeUrl(param.scmType)"
-                                                v-bind="codelibOption"
-                                                :disabled="disabled"
-                                                name="defaultValue"
-                                                :value="param.defaultValue"
-                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
-                                                :data-vv-scope="`param-${param.id}`"
-                                            ></request-selector>
-                                            <request-selector
-                                                v-if="isBuildResourceParam(param.type)"
-                                                style="max-width: 250px"
-                                                :popover-min-width="250"
-                                                :url="getBuildResourceUrl(param.containerType)"
-                                                param-id="name"
-                                                :disabled="disabled"
-                                                name="defaultValue"
-                                                :value="param.defaultValue"
-                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
-                                                :data-vv-scope="`param-${param.id}`"
-                                                :replace-key="param.replaceKey"
-                                                :search-url="param.searchUrl"
-                                            ></request-selector>
-                                            <request-selector
-                                                v-if="isSubPipelineParam(param.type)"
-                                                style="max-width: 250px"
-                                                :popover-min-width="250"
-                                                v-bind="subPipelineOption"
-                                                :disabled="disabled"
-                                                name="defaultValue"
-                                                :value="param.defaultValue"
-                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
-                                                :data-vv-scope="`param-${param.id}`"
-                                                :replace-key="param.replaceKey"
-                                                :search-url="param.searchUrl"
-                                            ></request-selector>
-                                        </bk-form-item>
-
-                                        <bk-form-item
-                                            v-else
-                                            label-width="auto"
-                                            :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
-                                            :required="isBooleanParam(param.type)"
-                                            :is-error="errors.has(`param-${param.id}.defaultValue`)"
-                                            :error-msg="errors.first(`param-${param.id}.defaultValue`)"
-                                            :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)"
-                                        >
-                                            <file-param-input
-                                                name="defaultValue"
-                                                v-bind="param"
-                                                :required="valueRequired"
-                                                :disabled="disabled"
-                                                :value="param.defaultValue"
-                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
-                                            />
-                                        </bk-form-item>
+                                                <file-param-input
+                                                    name="defaultValue"
+                                                    v-bind="param"
+                                                    :required="valueRequired"
+                                                    :disabled="disabled"
+                                                    :value="param.defaultValue"
+                                                    :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                                />
+                                            </bk-form-item>
+                                        </template>
                                     </div>
 
                                     <bk-form-item
@@ -323,9 +325,51 @@
                                             :data-vv-scope="`param-${param.id}`"
                                             v-validate.initial="'required'"
                                             replace-key="{keyword}"
-                                            :search-url="getSearchUrl()"
+                                            :search-url="getSearchUrl('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT')"
                                         ></request-selector>
                                     </bk-form-item>
+                                    
+                                    <template v-if="isRepoParam(param.type)">
+                                        <bk-form-item
+                                            label-width="auto"
+                                            v-if="isRepoParam(param.type)"
+                                            :label="$t('editPage.repoName')"
+                                            :is-error="errors.has(`param-${param.id}.defaultValue`)"
+                                            :error-msg="errors.first(`param-${param.id}.defaultValue`)"
+                                        >
+                                            <request-selector
+                                                v-bind="getRepoOption('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT,CODE_SVN', 'aliasName')"
+                                                :disabled="disabled"
+                                                name="defaultValue"
+                                                :value="param.defaultValue"
+                                                :handle-change="(name, value) => handleChangeCodeRepo(name, value, index)"
+                                                :data-vv-scope="`param-${param.id}`"
+                                                v-validate.initial="'required'"
+                                                replace-key="{keyword}"
+                                                :search-url="getSearchUrl('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT,CODE_SVN')"
+                                            ></request-selector>
+                                        </bk-form-item>
+                                        <bk-form-item
+                                            label-width="auto"
+                                            v-if="isRepoParam(param.type)"
+                                            :label="$t('editPage.branchName')"
+                                            :is-error="errors.has(`param-${param.id}.defaultBranch`)"
+                                            :error-msg="errors.first(`param-${param.id}.defaultBranch`)"
+                                            :key="param.defaultValue"
+                                        >
+                                            <request-selector
+                                                v-bind="getBranchOption(param.defaultValue)"
+                                                :disabled="disabled || !param.defaultValue"
+                                                name="defaultBranch"
+                                                :value="param.defaultBranch"
+                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                                :data-vv-scope="`param-${param.id}`"
+                                                v-validate.initial="'required'"
+                                                replace-key="{keyword}"
+                                                :search-url="getSearchBranchUrl(param)"
+                                            ></request-selector>
+                                        </bk-form-item>
+                                    </template>
 
                                     <bk-form-item
                                         label-width="auto"
@@ -415,7 +459,7 @@
 </template>
 
 <script>
-    import FileParamInput from '@/components/FileParamInput'
+    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import Accordion from '@/components/atomFormField/Accordion'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import EnumInput from '@/components/atomFormField/EnumInput'
@@ -434,6 +478,7 @@
         getParamsDefaultValueLabel,
         getParamsDefaultValueLabelTips,
         getRepoOption,
+        getBranchOption,
         isBooleanParam,
         isBuildResourceParam,
         isCodelibParam,
@@ -444,7 +489,8 @@
         isStringParam,
         isSubPipelineParam,
         isSvnParam,
-        isTextareaParam
+        isTextareaParam,
+        isRepoParam
     } from '@/store/modules/atom/paramsConfig'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { deepCopy } from '@/utils/util'
@@ -593,13 +639,17 @@
             isBuildResourceParam,
             isSubPipelineParam,
             isFileParam,
+            isRepoParam,
             getParamsDefaultValueLabel,
             getParamsDefaultValueLabelTips,
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
             },
-            getRepoOption (type) {
-                return getRepoOption(type)
+            getRepoOption (type, paramId) {
+                return getRepoOption(type, paramId)
+            },
+            getBranchOption (repositoryId) {
+                return getBranchOption(repositoryId)
             },
             getBuildTypeList (os) {
                 return this.getBuildResourceTypeList(os)
@@ -655,7 +705,13 @@
                     console.log('update error', e)
                 }
             },
-
+            handleChangeCodeRepo (key, value, paramIndex) {
+                const param = this.globalParams[paramIndex]
+                Object.assign(param, {
+                    [key]: value,
+                    defaultBranch: ''
+                })
+            },
             handleUpdateParam (key, value, paramIndex) {
                 try {
                     const param = this.globalParams[paramIndex]
@@ -771,8 +827,12 @@
                 return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
             },
 
-            getSearchUrl () {
-                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
+            getSearchUrl (type) {
+                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=${type}&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
+            },
+            
+            getSearchBranchUrl (param) {
+                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/${this.$route.params.projectId}/repository/refs?search={keyword}&repositoryType=NAME&repositoryId=${param.defaultValue}`
             },
 
             handleChange (params) {
