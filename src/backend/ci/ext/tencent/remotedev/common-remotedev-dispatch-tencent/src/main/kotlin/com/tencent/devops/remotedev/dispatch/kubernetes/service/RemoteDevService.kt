@@ -337,8 +337,12 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun rebuildWorkspace(event: WorkspaceOperateEvent): Boolean {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .rebuildWorkspace(event.userId, event.workspaceName, event.imageCosFile ?: "")
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType).rebuildWorkspace(
+            userId = event.userId,
+            workspaceName = event.workspaceName,
+            imageCosFile = event.imageCosFile ?: "",
+            formatDataDisk = event.formatDataDisk
+        )
         val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .waitTaskFinish(event.userId, taskId, event.type)
 

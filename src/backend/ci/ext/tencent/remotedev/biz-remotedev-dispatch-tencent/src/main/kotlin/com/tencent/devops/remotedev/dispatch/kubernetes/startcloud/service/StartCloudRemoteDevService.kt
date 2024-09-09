@@ -161,14 +161,20 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
-    override fun rebuildWorkspace(userId: String, workspaceName: String, imageCosFile: String): String {
+    override fun rebuildWorkspace(
+        userId: String,
+        workspaceName: String,
+        imageCosFile: String,
+        formatDataDisk: Boolean?
+    ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.REBUILD,
             workspaceName = workspaceName,
             environmentOperate = EnvironmentOperate(
                 uid = getEnvironmentUid(workspaceName),
-                image = imageCosFile
+                image = imageCosFile,
+                formatDataDisk = formatDataDisk
             )
         )
 
