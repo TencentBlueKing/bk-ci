@@ -128,7 +128,7 @@ data class BuildRecordContainer(
                 if (buildStatus == BuildStatus.SKIP && !ElementUtils.getTaskAddFlag(
                         element = element,
                         stageEnableFlag = stageEnableFlag,
-                        containerEnableFlag = container.isContainerEnable(),
+                        containerEnableFlag = container.containerEnabled(),
                         originMatrixContainerFlag = container.fetchGroupContainers() != null
                     )
                 ) {

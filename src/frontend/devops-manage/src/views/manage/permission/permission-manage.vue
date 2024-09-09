@@ -89,10 +89,11 @@
       </div>
     </div>
     <bk-dialog
+      esc-close="reset-dialog"
       :is-show="showResetDialog"
       :key="resourceType"
       theme="primary"
-      :width="640"
+      :width="740"
       :title="t('批量重置')"
       @closed="dialogClose"
     >
@@ -117,18 +118,6 @@
               :key="showResetDialog"
             >
             </project-user-selector>
-            <!-- <bk-tag-input
-              class="manage-user-selector"
-              clearable
-              :placeholder="t('输入授权人，选中回车进行校验')"
-              :search-key="['id', 'name']"
-              save-key="name"
-              allow-create
-              :list="userList"
-              @input="handleInputUserName"
-              @change="handleChangeName"
-              @removeAll="handleClearName">
-            </bk-tag-input> -->
           </bk-form-item>
         </bk-form>
 
@@ -140,7 +129,9 @@
           <div class="failed-tips">
             <div class="manage-icon manage-icon-warning-circle-fill warning-icon"></div>
             <i18n-t keypath="检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权" tag="div">
-              <span class="tips-count">{{ failedCount }}</span><span class="tips-text">{{ t('前往处理') }}</span><span class="tips-text">{{ t('继续重置其余') }}</span><span class="tips-text">{{ searchName }}</span><span class="tips-text">{{ t('授权') }}</span>
+              <span class="tips-count">
+                {{ failedCount }}</span><span class="tips-text">{{ t('前往处理') }}</span><span class="tips-text">{{ t('继续重置其余') }}</span><span class="tips-text">{{ searchName }}</span><span class="tips-text">{{ t('授权') }}
+              </span>
             </i18n-t>
           </div>
           <bk-table
@@ -148,12 +139,39 @@
             :data="resetTableData"
             :pagination="resetTablePagination"
             :border="['outer', 'row']"
-            show-overflow-tooltip
           >
-            <bk-table-column :label="searchName" width="200" prop="resourceName" />
-            <bk-table-column :label="t('失败原因')" prop="handoverFailedMessage">
+            <bk-table-column :label="searchName" width="200" prop="resourceName" show-overflow-tooltip />
+            <bk-table-column :label="t('失败原因')" prop="handoverFailedMessage" show-overflow-tooltip>
               <template v-slot="{ row }">
-                <span class="failed-msg" v-html="row.handoverFailedMessage"></span>
+                <template v-if="row?.failedArr?.length">
+                  <div class="failed-wrapper">
+                    <div
+                      v-for="(item, index) in row.failedArr" :key="item" class="failed-item failed-msg" v-html="item"
+                      v-show="(index <= 2 && !row.isExpand) || row.isExpand"
+                    />
+                    <div
+                        v-if="row.failedArr.length > 3 && !row.isExpand"
+                        class="failed-item failed-msg"
+                    >
+                        ...
+                    </div>
+                    <div 
+                      class="failed-item failed-msg expand-btn"
+                      v-if="row.failedArr.length > 3"
+                      text
+                      @click="row.isExpand = !row.isExpand"
+                    >
+                      {{ row.isExpand ? t('收起') : t('展开') }}
+                    </div>
+                  </div>
+                </template>
+                <template v-else>
+                    <span
+                      class="failed-msg"
+                      v-html="row.handoverFailedMessage"
+                    >
+                    </span>
+                </template>
               </template>
             </bk-table-column>
           </bk-table>
@@ -510,7 +528,13 @@ async function handleCheckReset () {
     if (!resetFormData.value.name) return // 点击input输入框清空按钮，会触发失焦事件
     failedCount.value = res['FAILED']?.length || 0
     if (failedCount.value) {
-      resetTableData.value = res['FAILED']
+      resetTableData.value = res['FAILED']?.map(i => {
+        return {
+          ...i,
+          failedArr: i.handoverFailedMessage.includes('<br/>') ? i.handoverFailedMessage.split('<br/>') : [],
+          isExpand: false
+        }
+      })
       resetTablePagination.value.count = failedCount.value
     }
     isResetFailure.value = !!failedCount.value;
@@ -793,6 +817,20 @@ function handleChangeName ({ list }) {
   .content-btn-search {
     .bk-search-select-container {
       background: #fff;
+    }
+  }
+  .reset-dialog {
+    max-height: 800px;
+  }
+  .failed-wrapper {
+    padding: 10px 0;
+    .failed-item {
+      line-height: 20px;
+      text-wrap: wrap;
+    }
+    .expand-btn {
+      color: #3A84FF;
+      cursor: pointer;
     }
   }
   .failed-msg {
