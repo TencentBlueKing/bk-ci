@@ -906,6 +906,12 @@ class WorkspaceService @Autowired constructor(
 
         val sharedList = workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
 
+        val currentLoginUser = if (winInfo != null) {
+            startWorkspaceService.loginUsers(setOf(winInfo.hostIp)).values.flatten().toSet()
+        } else {
+            null
+        }
+
         return WorkspaceDetail(
             workspaceId = workspace.workspaceId,
             workspaceName = workspaceName,
@@ -928,7 +934,8 @@ class WorkspaceService @Autowired constructor(
             creator = workspace.createUserId,
             createTime = workspace.createTime.timestamp(),
             imageId = winInfo?.imageId,
-            remark = workspace.remark
+            remark = workspace.remark,
+            currentLoginUser = currentLoginUser
         )
     }
 
