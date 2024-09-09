@@ -485,6 +485,7 @@ class AuthResourceGroupMemberDao {
             .from(tResourceGroupMember)
             .where(tResourceGroupMember.PROJECT_CODE.eq(projectCode))
             .and(tResourceGroupMember.MEMBER_TYPE.notEqual(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
+            .groupBy(tResourceGroupMember.MEMBER_ID)
             .unionAll(
                 dslContext.select(
                     tResourceAuthorization.HANDOVER_FROM.`as`("MEMBER_ID"),
@@ -493,6 +494,7 @@ class AuthResourceGroupMemberDao {
                 )
                     .from(tResourceAuthorization)
                     .where(tResourceAuthorization.PROJECT_CODE.eq(projectCode))
+                    .groupBy(tResourceAuthorization.HANDOVER_FROM)
             )
             .asTable(TABLE_NAME)
     }
