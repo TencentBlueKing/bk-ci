@@ -133,7 +133,11 @@ function _M:get_tag(ns_config)
     end
 
     -- DEVNET区域对tag的转换
-    if ngx.var.project ~= 'codecc' and ngx.var.devops_region == 'DEVNET' and not tag.find(tag, '^ieg-codeccsvr-bkci-') then
+    local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
+    if in_container and ngx.var.project ~= 'codecc' and ngx.var.devops_region == 'DEVNET' and not tag.find(tag, '^ieg-codeccsvr-bkci-') then
+        if string.find(tag, '^kubernetes-') then
+            tag = string.sub(tag, 12)
+        end
         tag = 'ieg-codeccsvr-bkci-' .. tag
     end
 
