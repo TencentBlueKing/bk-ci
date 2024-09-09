@@ -396,8 +396,6 @@ class AuthResourceGroupMemberDao {
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             dslContext.select(countDistinct(MEMBER_ID)).from(this)
                 .where(buildProjectMembersByComplexConditions(conditionDTO))
-                .groupBy(MEMBER_ID)
-                .orderBy(MEMBER_ID)
                 .fetchOne(0, Long::class.java) ?: 0L
         }
     }
