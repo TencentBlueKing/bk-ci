@@ -181,7 +181,6 @@ interface PermissionResourceMemberService {
         expiredAt: Long
     ): Boolean
 
-    @Suppress("LongParameterList")
     fun batchAddResourceGroupMembers(
         projectCode: String,
         iamGroupId: Int,
