@@ -104,14 +104,11 @@ interface ServiceStoreArchiveResource {
 
     @Operation(summary = "更新组件执行包相关信息")
     @PUT
-    @Path("/components/{storeId}/pkg/info/update")
+    @Path("/component/pkg/info/update")
     fun updateComponentPkgInfo(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件ID", required = true)
-        @PathParam("storeId")
-        storeId: String,
         @Parameter(description = "组件包相关信息修改请求报文体", required = true)
         storePkgInfoUpdateRequest: StorePkgInfoUpdateRequest
     ): Result<Boolean>

@@ -120,9 +120,20 @@ class StoreArchiveServiceImpl @Autowired constructor(
 
     override fun updateComponentPkgInfo(
         userId: String,
-        storeId: String,
         storePkgInfoUpdateRequest: StorePkgInfoUpdateRequest
     ): Boolean {
+        val storeCode = storePkgInfoUpdateRequest.storeCode
+        val version = storePkgInfoUpdateRequest.version
+        val storeType = storePkgInfoUpdateRequest.storeType
+        val storeId = storeBaseQueryDao.getComponentId(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            version = version,
+            storeType = storeType
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf("$storeType:$storeCode:$version")
+        )
         val storePkgEnvRequests = storePkgInfoUpdateRequest.storePkgEnvInfos
         val storeBaseEnvDataPOs: MutableList<StoreBaseEnvDataPO> = mutableListOf()
         var storeBaseEnvExtDataPOs: MutableList<StoreBaseEnvExtDataPO>? = null
