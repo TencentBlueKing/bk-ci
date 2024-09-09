@@ -54,7 +54,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
 @Service
-@Suppress("LongParameterList", "ReturnCount")
+@Suppress("LongParameterList", "ReturnCount", "ComplexMethod")
 class PipelineRepositoryVersionService(
     private val dslContext: DSLContext,
     private val pipelineResourceDao: PipelineResourceDao,
