@@ -254,7 +254,7 @@ class PipelineRepositoryService constructor(
         var canElementSkip = false
         run lit@{
             triggerContainer.elements.forEach {
-                if (it is ManualTriggerElement && it.isElementEnable()) {
+                if (it is ManualTriggerElement && it.elementEnabled()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
                     return@lit
@@ -340,8 +340,12 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode,
         yamlInfo: PipelineYamlVo? = null
     ): List<PipelineModelTask> {
-
-        val metaSize = modelCheckPlugin.checkModelIntegrity(model, projectId, userId)
+        val metaSize = modelCheckPlugin.checkModelIntegrity(
+            model = model,
+            projectId = projectId,
+            userId = userId,
+            oauthUser = getPipelineOauthUser(projectId, pipelineId)
+        )
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
 

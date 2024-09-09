@@ -404,37 +404,41 @@ class BuildEndControl @Autowired constructor(
     }
 
     private fun PipelineBuildFinishEvent.startNextBuild(watcher: Watcher, sLock: RedisLock, pop: () -> BuildInfo?) {
-        watcher.start("tryLock_${sLock.javaClass.simpleName}")
-        if (!sLock.tryLock()) {
-            return
-        }
-        watcher.start("popNextBuild")
-        val nextBuild = pop()
-        if (nextBuild == null) {
-            LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|$pipelineId no queue build!")
-            return
-        }
+        sLock.use {
+            if (!sLock.tryLock()) {
+                // 寻找下一个构建时失败，通常是遇到并发锁正在被使用，所以新的构建依然会被选出运行，不需要依赖这里重试，可直接放弃返回
+                LOG.info("tryLock ${sLock.javaClass.simpleName} fail and ignored")
+                return
+            }
+            watcher.start("startNextBuild")
+            val nextBuild = pop()
+            if (nextBuild == null) {
+                LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|$pipelineId no queue build!")
+                return
+            }
 
-        LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|next build: ${nextBuild.buildId} ${nextBuild.status}")
-        val model = pipelineBuildDetailService.getBuildModel(nextBuild.projectId, nextBuild.buildId)
-            ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                params = arrayOf(nextBuild.buildId)
+            LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|next build: ${nextBuild.buildId} ${nextBuild.status}")
+            val model = pipelineBuildDetailService.getBuildModel(nextBuild.projectId, nextBuild.buildId)
+                ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                    params = arrayOf(nextBuild.buildId)
+                )
+            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildStartEvent(
+                    source = "build_finish_$buildId",
+                    projectId = nextBuild.projectId,
+                    pipelineId = nextBuild.pipelineId,
+                    userId = nextBuild.startUser,
+                    buildId = nextBuild.buildId,
+                    taskId = nextBuild.firstTaskId,
+                    status = nextBuild.status,
+                    actionType = ActionType.START,
+                    executeCount = nextBuild.executeCount,
+                    buildNoType = triggerContainer.buildNo?.buildNoType
+                )
             )
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildStartEvent(
-                source = "build_finish_$buildId",
-                projectId = nextBuild.projectId,
-                pipelineId = nextBuild.pipelineId,
-                userId = nextBuild.startUser,
-                buildId = nextBuild.buildId,
-                taskId = nextBuild.firstTaskId,
-                status = nextBuild.status,
-                actionType = ActionType.START,
-                buildNoType = triggerContainer.buildNo?.buildNoType
-            )
-        )
+        }
     }
 
     // 设置流水线执行耗时

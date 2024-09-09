@@ -79,6 +79,7 @@ interface ElementBizPlugin<T : Element> {
         element: T,
         contextMap: Map<String, String>,
         appearedCnt: Int,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        oauthUser: String?
     ): ElementCheckResult
 }
