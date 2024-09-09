@@ -365,10 +365,14 @@ export default {
       this.curGroupIndex = this.groupList.findIndex(item => item.groupId === group.groupId);
       this.$emit('choose-group', group);
     },
-    handleCreateGroup() {
+    async handleCreateGroup() {
       if (this.isNotProject) return
       this.activeTab = '';
-      this.$emit('create-group');
+      const res = await http.getResource({
+        projectCode: this.curProjectCode,
+        resourceType: this.resourceType,
+        resourceCode: this.curProjectCode});
+      this.$emit('create-group', res.iamGradeManagerId);
     },
     handleCloseManage() {
       this.isClosing = true;
