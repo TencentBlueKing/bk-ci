@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.user.UserBkRepoStaticResource
 import com.tencent.devops.artifactory.constant.BKREPO_STATIC_PROJECT_ID
+import com.tencent.devops.artifactory.constant.DATE_FORMAT_YYYY_MM_DD
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
@@ -38,11 +39,15 @@ import com.tencent.devops.common.web.RestResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @RestResource
 class UserBkRepoStaticResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) : UserBkRepoStaticResource {
+
+
 
     override fun uploadStaticFile(
         userId: String,
@@ -50,14 +55,22 @@ class UserBkRepoStaticResourceImpl @Autowired constructor(
         disposition: FormDataContentDisposition,
         type: String?
     ): Result<String?> {
+
         val fileName = disposition.fileName
         val index = fileName.lastIndexOf(".")
         val fileSuffix = fileName.substring(index + 1)
         val filePathSb = StringBuilder("file/")
+        //pref-10919  对文件上传接口的文件存储路径进行调整   文件存储路径由原来的如png/xxx.png的规则调整为按文件类型和天存储（规则如：png/20240906/xxx.png）
+        val today = LocalDate.now()
+        val formatter  = DateTimeFormatter.ofPattern(DATE_FORMAT_YYYY_MM_DD )
+        val nowTime = today.format(formatter)
+        val baseUrl="$nowTime/${UUIDUtil.generate()}.$fileSuffix"
         val filePath = if (type.isNullOrBlank()) {
-            filePathSb.append(fileSuffix)
+           // filePathSb.append(fileSuffix)
+            filePathSb.append(baseUrl)
         } else {
-            filePathSb.append("${type.lowercase()}/$fileSuffix")
+           // filePathSb.append("${type.lowercase()}/$fileSuffix")
+            filePathSb.append("${type.lowercase()}/").append(baseUrl)
         }
         filePathSb.append("/${UUIDUtil.generate()}.$fileSuffix")
         val url = archiveFileService.uploadFile(
@@ -71,4 +84,7 @@ class UserBkRepoStaticResourceImpl @Autowired constructor(
         )
         return Result(url)
     }
+
+
+    
 }

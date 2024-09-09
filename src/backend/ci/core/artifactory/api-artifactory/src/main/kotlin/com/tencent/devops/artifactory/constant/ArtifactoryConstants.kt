@@ -44,3 +44,7 @@ const val REPO_NAME_IMAGE = "image"
 const val REPO_NAME_REPORT = "report"
 const val REPO_NAME_PLUGIN = "plugin"
 const val REPO_NAME_STATIC = "static"
+
+
+//时间格式化
+const val DATE_FORMAT_YYYY_MM_DD = "yyyyMMdd"
