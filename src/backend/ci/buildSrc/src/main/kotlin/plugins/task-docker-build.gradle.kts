@@ -1,3 +1,5 @@
+import gradle.kotlin.dsl.accessors._65b623254b230e20bedeab439d343b4d.jib
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -42,8 +44,6 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         } + "bkci-" + service + ":" + toImageTag
     }
 
-    val configNamespace = System.getProperty("config.namespace")
-
     val jvmFlagList = System.getProperty("jvmFlags.file")?.let { File(it).readLines() } ?: emptyList()
 
     val finalJvmFlags = mutableListOf(
@@ -75,7 +75,6 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         "-Dspring.main.allow-circular-references=true",
         "-Dspring.cloud.kubernetes.config.sources[0].name=config-bk-ci-common",
         "-Dspring.cloud.kubernetes.config.sources[1].name=config-bk-ci-$service",
-        "-Dspring.cloud.kubernetes.config.namespace=$configNamespace",
         "-Dspring.cloud.kubernetes.discovery.all-namespaces=true",
         "-Dspring.cloud.kubernetes.config.includeProfileSpecificSources=false",
         "-Dio.undertow.legacy.cookie.ALLOW_HTTP_SEPARATORS_IN_V0=true",
