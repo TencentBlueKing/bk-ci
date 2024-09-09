@@ -215,6 +215,9 @@ class PipelineRepositoryVersionService(
             creator = creator,
             description = description
         )
+
+        // 草稿单独提出来排序，其他版本后插入结果
+        val others = mutableListOf<PipelineVersionSimple>()
         val result = mutableListOf<PipelineVersionSimple>()
         pipelineResourceVersionDao.listPipelineVersion(
             dslContext = dslContext,
@@ -229,13 +232,20 @@ class PipelineRepositoryVersionService(
             offset = offset,
             limit = limit
         ).forEach { version ->
-            version.baseVersion?.let { baseVersion ->
-                version.baseVersionName = pipelineResourceVersionDao.getPipelineVersionSimple(
-                    dslContext, projectId, pipelineId, baseVersion
-                )?.versionName
+            // 在列表页面需要填补草稿版本的基准版本，并将排序调整到最前
+            // 由于草稿没有发布时间，因此会和历史版本一样排序到后面
+            if (version.status == VersionStatus.COMMITTING) {
+                result.add(version)
+                version.baseVersion?.let { baseVersion ->
+                    version.baseVersionName = pipelineResourceVersionDao.getPipelineVersionSimple(
+                        dslContext, projectId, pipelineId, baseVersion
+                    )?.versionName
+                }
+            } else {
+                others.add(version)
             }
-            result.add(version)
         }
+        result.addAll(others)
 
         // #8161 当过滤草稿时查到空结果是正常的，只在不过滤草稿时兼容老数据的版本表无记录
         val noSearch = versionName.isNullOrBlank() && creator.isNullOrBlank() && description.isNullOrBlank()
