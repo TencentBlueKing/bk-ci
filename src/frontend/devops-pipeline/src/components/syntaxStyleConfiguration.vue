@@ -71,12 +71,6 @@
                         constrainedExample: this.$t('constraintFormatExample')
                     },
                     {
-                        difference: this.$t('quoteMode'),
-                        classic: this.$t('traditionalQuoteMode'),
-                        constrainedMode: this.$t('constraintQuoteMode'),
-                        constrainedExample: this.$t('constraintQuoteModeExample')
-                    },
-                    {
                         difference: this.$t('variableValueTooLong'),
                         classic: this.$t('traditionalValueTooLongMode'),
                         constrainedMode: this.$t('constraintReadOnlyMode')

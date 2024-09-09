@@ -1592,11 +1592,6 @@
   "constraintFormat": "Only Double Curly Braces Supported to Avoid System Assignment Issues in Bash Scripts",
   "constraintFormatExample": "e.g., ${{variables.var}}",
 
-  "quoteMode": "Quote Mode",
-  "traditionalQuoteMode": "Direct Variable Name or Contextual Reference",
-  "constraintQuoteMode": "Only Contextual Reference Supported",
-  "constraintQuoteModeExample": "e.g., ${{ci.pipeline_id}}, ${{variables.a}}, ${{steps.get_code.outputs.a}}",
-
   "variableValueTooLong": "Variable Value Too Long",
   "traditionalValueTooLongMode": "Only Warning without Error",
 

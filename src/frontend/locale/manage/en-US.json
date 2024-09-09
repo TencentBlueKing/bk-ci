@@ -152,11 +152,6 @@
     "仅支持双花括号，避免出现 bash 脚本变量在执行前被系统赋值的问题": "Only Double Curly Braces Supported to Avoid System Assignment Issues in Bash Scripts",
     "如：${{variables.var}}": "e.g., {'${{variables.var}}'}",
 
-    "引用方式": "Quote Mode",
-    "直接引用变量名或上下文方式引用": "Direct Variable Name or Contextual Reference",
-    "仅支持上下文方式引用": "Only Contextual Reference Supported",
-    "如：${{ci.pipeline_id}}、${{variables.a}}、${{steps.get_code.outputs.a}}": "e.g., {'${{ci.pipeline_id}}'}、{'${{variables.a}}'}、{'${{steps.get_code.outputs.a}}'}",
-
     "变量值超长": "Variable Value Too Long",
     "仅警告未报错": "Only Warning without Error",
 

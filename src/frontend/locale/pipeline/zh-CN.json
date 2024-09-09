@@ -1593,11 +1593,6 @@
   "constraintFormat": "仅支持双花括号，避免出现 bash 脚本变量在执行前被系统赋值的问题",
   "constraintFormatExample": "如：${{variables.var}}",
 
-  "quoteMode": "引用方式",
-  "traditionalQuoteMode": "直接引用变量名或上下文方式引用",
-  "constraintQuoteMode": "仅支持上下文方式引用",
-  "constraintQuoteModeExample": "如：${{ci.pipeline_id}}、${{variables.a}}、${{steps.get_code.outputs.a}}",
-
   "variableValueTooLong": "变量值超长",
   "traditionalValueTooLongMode": "仅警告未报错",
 
