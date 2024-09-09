@@ -65,11 +65,10 @@ class ServiceStoreArchiveResourceImpl @Autowired constructor(
 
     override fun updateComponentPkgInfo(
         userId: String,
-        storeId: String,
         storePkgInfoUpdateRequest: StorePkgInfoUpdateRequest
     ): Result<Boolean> {
         return Result(
-            storeArchiveService.updateComponentPkgInfo(userId, storeId, storePkgInfoUpdateRequest)
+            storeArchiveService.updateComponentPkgInfo(userId, storePkgInfoUpdateRequest)
         )
     }
 
