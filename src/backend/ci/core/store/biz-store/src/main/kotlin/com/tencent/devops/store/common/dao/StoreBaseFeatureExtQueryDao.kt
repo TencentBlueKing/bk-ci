@@ -70,4 +70,20 @@ class StoreBaseFeatureExtQueryDao {
                 .fetch()
         }
     }
+
+    fun queryStoreCodeByFieldName(
+        dslContext: DSLContext,
+        fieldName: String,
+        page: Int,
+        pageSize: Int
+    ): Result<TStoreBaseFeatureExtRecord> {
+        with(TStoreBaseFeatureExt.T_STORE_BASE_FEATURE_EXT) {
+            return dslContext.selectFrom(this)
+                .where(FIELD_NAME.eq(fieldName))
+                .groupBy(STORE_CODE, STORE_TYPE)
+                .orderBy(CREATE_TIME, ID)
+                .limit((page - 1) * pageSize, pageSize)
+                .fetch()
+        }
+    }
 }
