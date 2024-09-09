@@ -68,6 +68,8 @@ data class PipelineVersionSimple(
     val debugBuildId: String? = null,
     @get:Schema(title = "该版本的来源版本（空时一定为主路径）", required = false)
     val baseVersion: Int? = null,
+    @get:Schema(title = "基准版本的版本名称")
+    var baseVersionName: String? = null,
     @get:Schema(title = "当前最新正式版本标识", required = false)
     var latestReleasedFlag: Boolean? = false
 )
