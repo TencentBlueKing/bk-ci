@@ -29,4 +29,8 @@ data class ProjectMembersQueryConditionReq(
     fun isComplexQuery(): Boolean {
         return groupName != null || minExpiredAt != null || maxExpiredAt != null
     }
+
+    fun isNeedToQueryIamGroupIds(): Boolean {
+        return groupName != null
+    }
 }

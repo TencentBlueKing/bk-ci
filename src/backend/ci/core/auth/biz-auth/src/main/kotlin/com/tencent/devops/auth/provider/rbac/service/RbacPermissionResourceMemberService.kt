@@ -228,19 +228,21 @@ class RbacPermissionResourceMemberService constructor(
         }
 
         // 处理复杂查询条件
-        val isNeedToQueryIamGroupIds = conditionReq.groupName != null
-        val iamGroupIdsByCondition = if (isNeedToQueryIamGroupIds) {
+        val iamGroupIdsByCondition = if (conditionReq.isNeedToQueryIamGroupIds()) {
             queryIamGroupIdsByConditions(
                 projectCode = conditionReq.projectCode,
                 groupName = conditionReq.groupName
-            ).takeIf { it.isNotEmpty() } ?: return SQLPage(0, emptyList())
+            )
         } else {
             emptyList()
         }.toMutableList()
 
-        val conditionDTO = ProjectMembersQueryConditionDTO.build(
-            conditionReq, iamGroupIdsByCondition
-        )
+        if (conditionReq.isNeedToQueryIamGroupIds() && iamGroupIdsByCondition.isEmpty()) {
+            return SQLPage(0, emptyList())
+        }
+
+        val conditionDTO = ProjectMembersQueryConditionDTO.build(conditionReq, iamGroupIdsByCondition)
+
         if (iamGroupIdsByCondition.isNotEmpty()) {
             // 根据用户组Id查询出对应用户组中的人员模板成员
             val iamTemplateIds = authResourceGroupMemberDao.listProjectMembersByComplexConditions(
