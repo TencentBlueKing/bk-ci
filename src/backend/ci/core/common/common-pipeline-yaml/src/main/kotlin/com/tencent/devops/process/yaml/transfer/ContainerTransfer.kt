@@ -415,11 +415,11 @@ class ContainerTransfer @Autowired(required = false) constructor(
     }
 
     private fun getMutexYaml(resource: MutexGroup?): Mutex? {
-        if (resource?.mutexGroupName.isNullOrBlank()) {
+        if (resource?.mutexGroupName.isNullOrBlank() || resource?.enable != true) {
             return null
         }
         return Mutex(
-            label = resource?.mutexGroupName!!,
+            label = resource.mutexGroupName!!,
             queueLength = if (resource.queueEnable) {
                 resource.queue
             } else {
