@@ -34,7 +34,52 @@
                 v-validate="'required'"
                 :data-vv-scope="'pipelineParam'"
                 replace-key="{keyword}"
-                :search-url="getSearchUrl()"
+                :search-url="getSearchUrl('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT')"
+            >
+            </request-selector>
+        </form-field>
+        <form-field
+            :hide-colon="true"
+            v-if="isRepoParam(param.type)"
+            :label="$t('editPage.repoName')"
+            :desc="$t('editPage.repoNameTips')"
+            :required="true"
+            :is-error="errors.has(`pipelineParam.defaultValue`)"
+            :error-msg="errors.first(`pipelineParam.defaultValue`)"
+        >
+            <request-selector
+                v-bind="getRepoOption('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT,CODE_SVN', 'aliasName')"
+                :disabled="disabled"
+                name="defaultValue"
+                :value="param.defaultValue"
+                :handle-change="(name, value) => handleChangeCodeRepo(name, value)"
+                v-validate="'required'"
+                :data-vv-scope="'pipelineParam'"
+                replace-key="{keyword}"
+                :search-url="getSearchUrl('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT,CODE_SVN')"
+            >
+            </request-selector>
+        </form-field>
+        <form-field
+            :hide-colon="true"
+            v-if="isRepoParam(param.type)"
+            :label="$t('editPage.branchName')"
+            :desc="$t('editPage.branchNameTips')"
+            :required="true"
+            :is-error="errors.has(`pipelineParam.defaultBranch`)"
+            :error-msg="errors.first(`pipelineParam.defaultBranch`)"
+            :key="param.defaultValue"
+        >
+            <request-selector
+                v-bind="getBranchOption(param.defaultValue)"
+                :disabled="disabled || !param.defaultValue"
+                name="defaultBranch"
+                :value="param.defaultBranch"
+                :handle-change="handleChange"
+                v-validate="'required'"
+                :data-vv-scope="'pipelineParam'"
+                replace-key="{keyword}"
+                :search-url="getSearchBranchUrl()"
             >
             </request-selector>
         </form-field>
@@ -68,6 +113,7 @@
         />
 
         <form-field
+            v-if="!isRepoParam(param.type)"
             :hide-colon="true"
             :label="valueRequired ? $t('newui.pipelineParam.constValue') : $t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
             :required="valueRequired"
@@ -282,7 +328,7 @@
 
 <script>
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import FileParamInput from '@/components/FileParamInput'
+    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
@@ -297,6 +343,7 @@
         getParamsDefaultValueLabel,
         getParamsDefaultValueLabelTips,
         getRepoOption,
+        getBranchOption,
         isArtifactoryParam,
         isBooleanParam,
         isBuildResourceParam,
@@ -309,7 +356,8 @@
         isSubPipelineParam,
         isSvnParam,
         isTextareaParam,
-        SUB_PIPELINE_OPTION
+        SUB_PIPELINE_OPTION,
+        isRepoParam
     } from '@/store/modules/atom/paramsConfig'
     import { mapGetters } from 'vuex'
     import SelectTypeParam from './select-type-param'
@@ -414,6 +462,7 @@
             isArtifactoryParam,
             isSubPipelineParam,
             isFileParam,
+            isRepoParam,
             getParamsDefaultValueLabel,
             getParamsDefaultValueLabelTips,
             isSelectorParam (type) {
@@ -429,8 +478,11 @@
                 }
                 this.remoteParamOption = remoteOpion
             },
-            getRepoOption (type) {
-                return getRepoOption(type)
+            getRepoOption (type, paramId) {
+                return getRepoOption(type, paramId)
+            },
+            getBranchOption (name) {
+                return getBranchOption(name)
             },
             getBuildTypeList (os) {
                 return this.getBuildResourceTypeList(os)
@@ -483,9 +535,11 @@
                 type = type || 'CODE_GIT'
                 return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
             },
-
-            getSearchUrl () {
-                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
+            getSearchUrl (type) {
+                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=${type}&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
+            },
+            getSearchBranchUrl () {
+                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/${this.$route.params.projectId}/repository/refs?search={keyword}&repositoryType=NAME&repositoryId=${this.param.defaultValue}`
             },
             handleUpdatePayload (key, val) {
                 this.handleChange(key, val)
@@ -538,6 +592,10 @@
                     properties[val.key] = val.value
                 })
                 this.handleChange(key, properties)
+            },
+            handleChangeCodeRepo (key, value) {
+                this.handleChange(key, value)
+                this.handleChange('defaultBranch', '')
             }
         }
     }

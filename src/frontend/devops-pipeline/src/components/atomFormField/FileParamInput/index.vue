@@ -52,7 +52,7 @@
 
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput'
-    import FileUpload from '@/components/FileUpload'
+    import FileUpload from '@/components/atomFormField/FileUpload'
     export default {
         components: {
             VuexInput,
