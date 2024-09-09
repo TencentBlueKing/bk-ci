@@ -260,8 +260,8 @@ class PipelineBuildFacadeService(
                 } else if (param.defaultValue is Boolean) {
                     realValue?.toString()?.toBoolean()
                 } else if (param.type == BuildFormPropertyType.REPO_REF) {
-                    param.value = latestParamsMap["${param.id}.repo-name"]?.toString() ?: param.defaultValue.toString()
                     param.branch = latestParamsMap["${param.id}.branch"]?.toString() ?: param.defaultBranch.toString()
+                    latestParamsMap["${param.id}.repo-name"]?.toString() ?: param.defaultValue.toString()
                 } else {
                     realValue
                 } ?: param.defaultValue
