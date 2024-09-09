@@ -101,7 +101,7 @@
                     {
                         key: 'namingConvention',
                         value: namingConvention ?? '--',
-                        grayDesc: ` ( ${this.$t('inheritedProject')} )`
+                        grayDesc: inheritedDialect ? ` ( ${this.$t('inheritedProject')} )` : ''
                     },
                     {
                         key: 'modificationDetail',
