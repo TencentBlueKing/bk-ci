@@ -42,13 +42,10 @@ end
 if service_name == "dispatch-docker" or service_name == "dispatch-kubernetes" then
     service_name = "dispatch"
 elseif service_name == "image" or service_name == "monitoring" or service_name == "plugin"
--- TODO 等PAC发完生产再打开
--- or service_name == 'lambda' or service_name == 'support' or service_name == 'prebuild'
-then
+    or service_name == 'lambda' or service_name == 'support' or service_name == 'prebuild' then
     service_name = "misc"
-    -- TODO 等PAC发完生产再打开
-    -- elseif service_name == "experience" then
-    --     service_name = "artifactory"
+elseif service_name == "experience" then
+    service_name = "artifactory"
 end
 
 -- 获取灰度设置
@@ -83,14 +80,6 @@ local target = loadBalanceUtil:getTarget(devops_tag, service_name, cache_tail, n
 if target == nil then
     if target == nil then
         ngx.exit(503)
-    end
-end
-
--- TODO 临时逻辑 , 给灰度experience使用, 等PAC发完生产再删掉
-local prefix = "experience-bk-ci-experience"
-if string.sub(target, 1, string.len(prefix)) == prefix then
-    if string.find(target, "rbac%-gray") ~= nil or string.find(target, "test%-rbac") ~= nil or string.find(target, "dev%-rbac") ~= nil then
-        target = string.gsub(target, "experience", "artifactory")
     end
 end
 
