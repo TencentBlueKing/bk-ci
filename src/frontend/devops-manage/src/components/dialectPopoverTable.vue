@@ -54,12 +54,6 @@ const namingConventionData = [
         constrainedExample: t('如：${{variables.var}}'),
     },
     {
-        difference: t('引用方式'),
-        classic: t('直接引用变量名或上下文方式引用'),
-        constrainedMode: t('仅支持上下文方式引用'),
-        constrainedExample: t('如：${{ci.pipeline_id}}、${{variables.a}}、${{steps.get_code.outputs.a}}'),
-    },
-    {
         difference: t('变量值超长'),
         classic: t('仅警告未报错'),
         constrainedMode: t('将报错，运行失败'),
