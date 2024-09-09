@@ -74,7 +74,8 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                         valueType = param.type,
                         readOnly = param.readOnly,
                         desc = param.desc,
-                        defaultValue = param.defaultValue
+                        defaultValue = param.defaultValue,
+                        relKey = key
                     )
                     paramsMap[branchKey] = BuildParameters(
                         key = branchKey,
@@ -82,7 +83,8 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                         valueType = param.type,
                         readOnly = param.readOnly,
                         desc = param.desc,
-                        defaultValue = param.defaultBranch
+                        defaultValue = param.defaultBranch,
+                        relKey = key
                     )
                     return@forEach
                 }

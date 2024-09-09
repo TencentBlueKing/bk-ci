@@ -45,5 +45,7 @@ data class BuildParameters(
     @get:Schema(title = "默认值", required = false)
     var defaultValue: Any? = null,
     @get:Schema(title = "元素对应代码库", required = false)
-    var repoHashId: String? = null
+    var repoHashId: String? = null,
+    @get:Schema(title = "实际参数名（REPO_REF 类型变量会拆分成两个变量）", required = false)
+    var relKey: String? = null
 )

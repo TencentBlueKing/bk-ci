@@ -90,6 +90,8 @@ data class BuildFormProperty(
     val valueNotEmpty: Boolean? = false,
     @get:Schema(title = "页面所需内容，后台仅保存，不做处理", required = false)
     val payload: Any? = null,
+    @get:Schema(title = "上次构建的分支取值", required = false)
+    var branch: String? = null,
     @get:Schema(title = "默认分支", required = false)
     var defaultBranch: String? = null,
     @get:Schema(title = "分支搜索url, 当是下拉框选项时，列表值从url获取不再从option获取", required = false)
