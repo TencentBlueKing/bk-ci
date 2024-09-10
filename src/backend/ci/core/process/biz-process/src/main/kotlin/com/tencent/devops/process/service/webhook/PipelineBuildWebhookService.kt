@@ -581,6 +581,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     buildId = buildId.id,
                     buildParameters = pipelineParamMap.values.toList()
                 )
+
                 // 上报项目用户度量
                 if (startParams[PIPELINE_START_WEBHOOK_USER_ID] != null) {
                     uploadProjectUserMetrics(
