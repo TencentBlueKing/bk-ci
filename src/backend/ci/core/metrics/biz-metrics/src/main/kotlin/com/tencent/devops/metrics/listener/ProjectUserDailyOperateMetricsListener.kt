@@ -26,19 +26,33 @@
  *
  */
 
-package com.tencent.devops.common.event.pojo.measure
+package com.tencent.devops.metrics.listener
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDate
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
+import com.tencent.devops.metrics.service.ProjectBuildSummaryService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-@Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT, routeKey = MQ.ROUTE_PROJECT_USER_DAILY_METRICS)
-data class ProjectUserDailyEvent(
-    @get:Schema(title = "项目ID")
-    override val projectId: String,
-    @get:Schema(title = "用户ID")
-    val userId: String,
-    @get:Schema(title = "统计日期")
-    val theDate: LocalDate
-) : IMeasureEvent(projectId = projectId, pipelineId = "", buildId = "")
+@Component
+class ProjectUserDailyOperateMetricsListener @Autowired constructor(
+    private val projectBuildSummaryService: ProjectBuildSummaryService
+) : Listener<ProjectUserOperateMetricsEvent> {
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProjectUserDailyOperateMetricsListener::class.java)
+    }
+
+    override fun execute(event: ProjectUserOperateMetricsEvent) {
+        try {
+            if (logger.isDebugEnabled) {
+                logger.debug("consumer project user daily operate metrics :${event.userOperateCounterData}")
+            }
+            projectBuildSummaryService.saveProjectUserOperateMetrics(
+                userOperateCounterData = event.userOperateCounterData
+            )
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to insert project user metrics data", ignored)
+        }
+    }
+}

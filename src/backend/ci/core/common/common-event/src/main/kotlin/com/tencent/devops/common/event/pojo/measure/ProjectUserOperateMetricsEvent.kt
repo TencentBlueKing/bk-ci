@@ -31,14 +31,9 @@ package com.tencent.devops.common.event.pojo.measure
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDate
 
-@Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT, routeKey = MQ.ROUTE_PROJECT_USER_DAILY_METRICS)
-data class ProjectUserDailyEvent(
-    @get:Schema(title = "项目ID")
-    override val projectId: String,
-    @get:Schema(title = "用户ID")
-    val userId: String,
-    @get:Schema(title = "统计日期")
-    val theDate: LocalDate
-) : IMeasureEvent(projectId = projectId, pipelineId = "", buildId = "")
+@Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT, routeKey = MQ.ROUTE_PROJECT_USER_DAILY_OPERATE_METRICS)
+data class ProjectUserOperateMetricsEvent(
+    @get:Schema(title = "项目用户操作度量数据")
+    val userOperateCounterData: UserOperateCounterData
+) : IMeasureEvent(projectId = "", pipelineId = "", buildId = "")

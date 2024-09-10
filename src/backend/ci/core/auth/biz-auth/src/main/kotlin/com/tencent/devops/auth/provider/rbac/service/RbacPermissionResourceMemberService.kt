@@ -695,7 +695,8 @@ class RbacPermissionResourceMemberService constructor(
     override fun autoRenewal(
         projectCode: String,
         resourceType: String,
-        resourceCode: String
+        resourceCode: String,
+        validExpiredDay: Int
     ) {
         // 1、获取分级管理员或者二级管理员ID
         val managerId = authResourceService.get(
@@ -716,7 +717,7 @@ class RbacPermissionResourceMemberService constructor(
         )
         val currentTime = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
         // 预期的自动过期天数
-        val expectAutoExpiredAt = currentTime + AUTO_VALID_EXPIRED_AT
+        val expectAutoExpiredAt = currentTime + TimeUnit.DAYS.toSeconds(validExpiredDay.toLong())
         val autoRenewalMembers = mutableSetOf<String>()
         resourceGroupInfoList.forEach group@{ resourceGroup ->
             val iamGroupId = resourceGroup.relationId.toInt()
@@ -726,11 +727,14 @@ class RbacPermissionResourceMemberService constructor(
             }
             val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(iamGroupId, pageInfoDTO).results
             groupMemberInfoList.forEach member@{ member ->
-                // 已过期或者要半年后才过期的,不自动过期
+                // 已过期或者小于自动续期范围内的不做续期
                 if (member.expiredAt < currentTime ||
                     member.expiredAt > expectAutoExpiredAt
-                ) return@member
-
+                ) {
+                    val dataTime = DateTimeUtil.convertTimestampToLocalDateTime(member.expiredAt)
+                    logger.info("Group member does not need to be renewed|$iamGroupId|$member|$dataTime")
+                    return@member
+                }
                 // 自动续期时间由半年+随机天数,防止同一时间同时过期
                 val expiredTime = currentTime + AUTO_RENEWAL_EXPIRED_AT +
                     TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180))

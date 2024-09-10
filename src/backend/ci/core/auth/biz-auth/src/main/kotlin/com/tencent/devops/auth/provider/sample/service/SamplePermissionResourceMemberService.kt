@@ -62,7 +62,8 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
     override fun autoRenewal(
         projectCode: String,
         resourceType: String,
-        resourceCode: String
+        resourceCode: String,
+        validExpiredDay: Int
     ) = Unit
 
     override fun renewalGroupMember(

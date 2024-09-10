@@ -135,7 +135,8 @@ interface PermissionResourceMemberService {
     fun autoRenewal(
         projectCode: String,
         resourceType: String,
-        resourceCode: String
+        resourceCode: String,
+        validExpiredDay: Int
     )
 
     // 需审批版本
