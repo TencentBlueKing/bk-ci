@@ -230,13 +230,12 @@ class TemplateFacadeService @Autowired constructor(
                 version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data,
                 desc = template.desc
             )
-            templateSettingService.insertTemplateSetting(
+            templateSettingService.saveDefaultTemplateSetting(
                 context = context,
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
-                pipelineName = template.name,
-                isTemplate = true
+                templateName = template.name
             )
             pipelineTemplatePermissionService.createResource(
                 userId = userId,
@@ -324,13 +323,12 @@ class TemplateFacadeService @Autowired constructor(
                     setting = setting
                 )
             } else {
-                templateSettingService.insertTemplateSetting(
+                templateSettingService.saveDefaultTemplateSetting(
                     context = context,
                     userId = userId,
                     projectId = projectId,
                     templateId = newTemplateId,
-                    isTemplate = true,
-                    pipelineName = copyTemplateReq.templateName
+                    templateName = copyTemplateReq.templateName
                 )
             }
 
@@ -366,7 +364,7 @@ class TemplateFacadeService @Autowired constructor(
         )
 
         val template = pipelineResourceDao.getLatestVersionModelString(
-                dslContext, projectId, saveAsTemplateReq.pipelineId
+            dslContext, projectId, saveAsTemplateReq.pipelineId
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -413,13 +411,12 @@ class TemplateFacadeService @Autowired constructor(
                     setting = setting
                 )
             } else {
-                templateSettingService.insertTemplateSetting(
+                templateSettingService.saveDefaultTemplateSetting(
                     context = context,
                     userId = userId,
                     projectId = projectId,
                     templateId = templateId,
-                    pipelineName = saveAsTemplateReq.templateName,
-                    isTemplate = true
+                    templateName = saveAsTemplateReq.templateName
                 )
             }
             ActionAuditContext.current().setInstanceId(templateId).setInstanceName(saveAsTemplateReq.templateName)
@@ -1220,7 +1217,8 @@ class TemplateFacadeService @Autowired constructor(
                 stages = model.stages,
                 cloneTemplateSettingExist = CloneTemplateSettingExist.fromSetting(
                     setting, pipelinesWithLabels
-                )
+                ),
+                desc = record[tTemplate.DESC]
             )
         } else {
             null
@@ -1596,13 +1594,17 @@ class TemplateFacadeService @Autowired constructor(
                             setting = setting
                         )
                     } else {
-                        templateSettingService.insertTemplateSetting(
-                            context = context,
-                            userId = userId,
+                        val defaultSetting = templateCommonService.getDefaultSetting(
                             projectId = projectId,
                             templateId = pipelineId,
-                            pipelineName = pipelineName,
-                            isTemplate = false
+                            templateName = pipelineName
+                        )
+                        pipelineSettingFacadeService.saveSetting(
+                            context = context,
+                            userId = userId,
+                            projectId = defaultSetting.projectId,
+                            pipelineId = defaultSetting.pipelineId,
+                            setting = defaultSetting
                         )
                     }
                     addRemoteAuth(instanceModel, projectId, pipelineId, userId)
@@ -1786,17 +1788,6 @@ class TemplateFacadeService @Autowired constructor(
         )
 
         instanceModel.templateId = templateId
-        pipelineInfoFacadeService.editPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = templateInstanceUpdate.pipelineId,
-            model = instanceModel,
-            // TODO #9145 修改流水线实例时的yaml覆盖逻辑
-            yaml = null,
-            channelCode = ChannelCode.BS,
-            checkPermission = true,
-            checkTemplate = false
-        )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             templatePipelineDao.update(
@@ -1847,6 +1838,17 @@ class TemplateFacadeService @Autowired constructor(
                     )
                 }
             }
+            pipelineInfoFacadeService.editPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = templateInstanceUpdate.pipelineId,
+                model = instanceModel,
+                // TODO #9145 修改流水线实例时的yaml覆盖逻辑
+                yaml = null,
+                channelCode = ChannelCode.BS,
+                checkPermission = true,
+                checkTemplate = false
+            )
         }
     }
 
@@ -2114,6 +2116,7 @@ class TemplateFacadeService @Autowired constructor(
                     /**
                      * 1. 比较类型， 如果类型变了就直接用模板
                      * 2. 如果类型相同，下拉选项替换成模板的（要保存用户之前的默认值）
+                     * 3. 如果模版由常量改成变量,则流水线常量也应该改成变量
                      */
                     if (pipeline.type != template.type) {
                         result.add(template)
@@ -2121,6 +2124,7 @@ class TemplateFacadeService @Autowired constructor(
                         pipeline.options = template.options
                         pipeline.required = template.required
                         pipeline.desc = template.desc
+                        pipeline.constant = template.constant
                         result.add(pipeline)
                     }
                     return@outside
@@ -2477,13 +2481,12 @@ class TemplateFacadeService @Autowired constructor(
                 templateId = templateId,
                 templateName = templateName
             )
-            templateSettingService.insertTemplateSetting(
+            templateSettingService.saveDefaultTemplateSetting(
                 context = context,
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
-                isTemplate = true,
-                pipelineName = templateName
+                templateName = templateName
             )
             projectTemplateMap[projectId] = templateId
         }

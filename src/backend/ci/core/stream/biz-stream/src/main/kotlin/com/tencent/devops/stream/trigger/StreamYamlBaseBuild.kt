@@ -341,6 +341,7 @@ class StreamYamlBaseBuild @Autowired constructor(
             gitRequestEventDao.updateChangeYamlList(dslContext, action.data.context.requestEventId!!, forkMrYamlList)
         }
 
+        action.data.watcherStart("streamYamlBaseBuild.startBuild.StreamBuildLock")
         // 修改流水线并启动构建，需要加锁保证事务性
         val buildLock = StreamBuildLock(
             redisOperation = redisOperation,
@@ -471,6 +472,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         gitBuildId: Long,
         yamlTransferData: YamlTransferData?
     ) {
+        action.data.watcherStart("streamYamlBaseBuild.afterStartBuild")
         try {
             val event = gitRequestEventDao.getWithEvent(
                 dslContext = dslContext, id = action.data.context.requestEventId!!
@@ -480,8 +482,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 projectCode = action.getProjectCode(),
                 event = event,
                 gitProjectId = action.data.getGitProjectId().toLong(),
-                messageType = UserMessageType.ONLY_SUCCESS,
-                isSave = true
+                messageType = UserMessageType.ONLY_SUCCESS
             )
 
             if (action is StreamRepoTriggerAction) {

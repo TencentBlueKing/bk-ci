@@ -138,7 +138,7 @@ class TPASingleQueueService @Autowired constructor(
             }
         } else {
             val lockedBuildId = redisOperation.get(lockKey)
-            if (!lockedBuildId.isNullOrBlank()) {
+            if (!lockedBuildId.isNullOrBlank() && lockedBuildId != data.buildId) {
                 // 没有复用逻辑的需要检查下如果这个机器剩一个可调度空间且有复用锁那么不能进行调度
                 // 判断当前复用锁有没有任务已经在跑，如果已经在跑那么不管，如果没有跑那么要留一个给复用调度
                 val checkRes = if (data.dispatchType.dockerInfo != null) {

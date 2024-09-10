@@ -135,7 +135,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     )
                 }
 
-                buildByAgentId(dispatchMessage, dispatchType.copy(displayName = agentId, agentType = AgentType.ID))
+                buildByAgentId(dispatchMessage, dispatchType.copy(displayName = agentId))
             }
 
             is ThirdPartyAgentEnvDispatchType -> {

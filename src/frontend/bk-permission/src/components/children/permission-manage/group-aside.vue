@@ -16,11 +16,14 @@
         >
           <span class="group-name" :title="group.name">{{ group.name }}</span>
           <div class="num-box" v-for="item in groupCountField" :key="item">
-            <i :class="{
-              'group-icon manage-icon manage-icon-user-shape': item === 'userCount',
-              'group-icon manage-icon manage-icon-organization': item === 'departmentCount',
-              'active': activeTab === group.groupId
-            }" />
+            <i
+              :class="['group-icon', 'manage-icon', {
+                'manage-icon-user-shape': item === 'userCount',
+                'manage-icon-user-template': item === 'templateCount',
+                'manage-icon-organization': item === 'departmentCount',
+                'active': activeTab === group.groupId
+              }]"
+            />
             <div class="group-num">{{ group[item] }}</div>
           </div>
           <bk-popover
@@ -191,6 +194,14 @@ export default {
       groupCountField: ['userCount', 'departmentCount'],
     };
   },
+  computed: {
+    groupCountField () {
+      if (this.resourceType === 'pipeline') {
+        return ['userCount', 'templateCount', 'departmentCount']
+      }
+      return ['userCount', 'departmentCount']
+    },
+  },
   watch: {
     activeIndex(newVal) {
       this.activeTab = this.groupList[newVal]?.groupId || '';
@@ -310,7 +321,7 @@ export default {
     },
     async syncGroupIAM(groupId){
       try {
-        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupMember`)
+        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupMember`);
       } catch (error) {
         Message({
           theme: 'error',

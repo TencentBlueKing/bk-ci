@@ -44,7 +44,6 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
@@ -73,7 +72,6 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineBuildMaintainFacadeService: PipelineBuildMaintainFacadeService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val engineVMBuildService: EngineVMBuildService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val containerBuildRecordService: ContainerBuildRecordService
@@ -83,7 +81,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId, it must not empty.")
         }
         return Result(
-            pipelineBuildDetailService.getBuildDetailPipelineId(projectId, buildId)
+            pipelineRuntimeService.getBuildInfo(projectId, buildId)?.pipelineId
                 ?: throw ParamBlankException("Invalid buildId, please check if projectId & buildId are related")
         )
     }
@@ -389,7 +387,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildMsg: String?,
         startUser: List<String>?,
         archiveFlag: Boolean?,
-        customVersion: Int?,
+        debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
         triggerUser: List<String>?
@@ -426,7 +424,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             startUser = startUser?.filter { it.isNotBlank() },
             updateTimeDesc = updateTimeDesc,
             archiveFlag = archiveFlag,
-            customVersion = customVersion,
+            debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
             triggerUser = triggerUser
