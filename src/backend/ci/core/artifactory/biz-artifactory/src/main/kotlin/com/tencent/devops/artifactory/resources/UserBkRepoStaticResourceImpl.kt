@@ -72,7 +72,7 @@ class UserBkRepoStaticResourceImpl @Autowired constructor(
            // filePathSb.append("${type.lowercase()}/$fileSuffix")
             filePathSb.append("${type.lowercase()}/").append(baseUrl)
         }
-        filePathSb.append("/${UUIDUtil.generate()}.$fileSuffix")
+       // filePathSb.append("/${UUIDUtil.generate()}.$fileSuffix")
         val url = archiveFileService.uploadFile(
             userId = userId,
             inputStream = inputStream,
