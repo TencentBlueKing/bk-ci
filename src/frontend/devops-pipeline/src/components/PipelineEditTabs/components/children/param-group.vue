@@ -142,7 +142,7 @@
             handleCopy (param) {
                 const { id, type } = param
                 const con = type === 'REPO_REF'
-                    ? this.bkVarRepoRefWrapper()
+                    ? this.bkVarRepoRefWrapper(id)
                     : this.bkVarWrapper('variables.' + id)
                 copyToClipboard(con)
                 this.$bkMessage({
