@@ -54,7 +54,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
 @Service
-@Suppress("LongParameterList", "ReturnCount")
+@Suppress("LongParameterList", "ReturnCount", "ComplexMethod")
 class PipelineRepositoryVersionService(
     private val dslContext: DSLContext,
     private val pipelineResourceDao: PipelineResourceDao,
@@ -215,24 +215,41 @@ class PipelineRepositoryVersionService(
             creator = creator,
             description = description
         )
+
+        // 草稿单独提出来排序，其他版本后插入结果
+        val others = mutableListOf<PipelineVersionSimple>()
         val result = mutableListOf<PipelineVersionSimple>()
-        result.addAll(
-            pipelineResourceVersionDao.listPipelineVersion(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineInfo = pipelineInfo,
-                creator = creator,
-                description = description,
-                versionName = versionName,
-                includeDraft = includeDraft,
-                excludeVersion = excludeVersion,
-                offset = offset,
-                limit = limit
-            )
-        )
+        pipelineResourceVersionDao.listPipelineVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineInfo = pipelineInfo,
+            creator = creator,
+            description = description,
+            versionName = versionName,
+            includeDraft = includeDraft,
+            excludeVersion = excludeVersion,
+            offset = offset,
+            limit = limit
+        ).forEach { version ->
+            // 在列表页面需要填补草稿版本的基准版本，并将排序调整到最前
+            // 由于草稿没有发布时间，因此会和历史版本一样排序到后面
+            if (version.status == VersionStatus.COMMITTING) {
+                result.add(version)
+                version.baseVersion?.let { baseVersion ->
+                    version.baseVersionName = pipelineResourceVersionDao.getPipelineVersionSimple(
+                        dslContext, projectId, pipelineId, baseVersion
+                    )?.versionName
+                }
+            } else {
+                others.add(version)
+            }
+        }
+        result.addAll(others)
+
         // #8161 当过滤草稿时查到空结果是正常的，只在不过滤草稿时兼容老数据的版本表无记录
-        if (result.isEmpty() && pipelineInfo.latestVersionStatus?.isNotReleased() != true) {
+        val noSearch = versionName.isNullOrBlank() && creator.isNullOrBlank() && description.isNullOrBlank()
+        if (result.isEmpty() && pipelineInfo.latestVersionStatus?.isNotReleased() != true && noSearch) {
             pipelineResourceDao.getReleaseVersionResource(
                 dslContext, projectId, pipelineId
             )?.let { record ->

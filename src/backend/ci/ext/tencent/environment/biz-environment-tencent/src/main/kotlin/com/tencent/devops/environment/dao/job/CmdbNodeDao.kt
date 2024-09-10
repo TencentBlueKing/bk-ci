@@ -40,20 +40,20 @@ import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
 import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
 import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.dto.CmdbNodeDTO
+import com.tencent.devops.environment.pojo.dto.CmdbNodeStatusDTO
 import com.tencent.devops.environment.pojo.dto.NodeUpdateAttrDTO
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.job.AgentVersionInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import com.tencent.devops.environment.pojo.job.jobreq.Host
-import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
+import com.tencent.devops.environment.pojo.job.jobresp.NodeAttr
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record2
 import org.jooq.Record3
-import org.jooq.Record4
 import org.jooq.Record5
 import org.jooq.Record7
 import org.jooq.Result
@@ -104,13 +104,12 @@ class CmdbNodeDao @Autowired constructor(
     }
 
     fun batchUpdateHostIdAndCloudAreaIdByNodeId(
-        dslContext: DSLContext,
-        nodeCCUpdateInfoList: List<CCUpdateInfo>
-    ) {
+        nodeNodeAttrList: List<NodeAttr>
+    ): Int {
         with(TNode.T_NODE) {
-            val batchUpdate = dslContext.batch(
-                nodeCCUpdateInfoList.map {
-                    dslContext.update(this)
+            val batchUpdate = defaultDSLContext.batch(
+                nodeNodeAttrList.map {
+                    defaultDSLContext.update(this)
                         .set(HOST_ID, it.bkHostId)
                         .set(CLOUD_AREA_ID, it.bkCloudId)
                         .set(OS_TYPE, it.osType)
@@ -118,7 +117,8 @@ class CmdbNodeDao @Autowired constructor(
                         .where(NODE_ID.eq(it.nodeId))
                 }
             )
-            batchUpdate.execute()
+            val affectedNumArr = batchUpdate.execute()
+            return affectedNumArr.sum()
         }
     }
 
@@ -468,22 +468,31 @@ class CmdbNodeDao @Autowired constructor(
 
     // -------------------------------get node record(s)-------------------------------
 
-    fun getCmdbNodesByServerIdAndProjectId(
-        dslContext: DSLContext,
+    fun listCmdbNodeStatusByProjectIdAndServerId(
         projectId: String,
-        nodeServerIdList: List<Long>
-    ): Result<Record4<Long, String, String, Long>> {
+        serverIds: Collection<Long>
+    ): List<CmdbNodeStatusDTO> {
         with(TNode.T_NODE) {
-            return dslContext.select(
-                NODE_ID.`as`(T_NODE_NODE_ID),
-                NODE_IP.`as`(T_NODE_NODE_IP),
-                NODE_STATUS.`as`(T_NODE_NODE_STATUS),
-                SERVER_ID.`as`(T_NODE_SERVER_ID)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(buildCmdbNodeTypeCondition())
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(SERVER_ID.`in`(serverIds))
+            val records = defaultDSLContext.select(
+                NODE_ID,
+                NODE_IP,
+                SERVER_ID,
+                NODE_STATUS
             ).from(this)
-                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
-                .and(SERVER_ID.`in`(nodeServerIdList))
-                .and(PROJECT_ID.eq(projectId))
+                .where(conditions)
                 .fetch()
+            return records.map { record ->
+                CmdbNodeStatusDTO(
+                    record.get(NODE_ID),
+                    record.get(NODE_IP),
+                    record.get(SERVER_ID),
+                    record.get(NODE_STATUS)
+                )
+            }
         }
     }
 
@@ -622,22 +631,31 @@ class CmdbNodeDao @Autowired constructor(
         }
     }
 
-    fun getCmdbNodesHostIdNullLimit(
-        dslContext: DSLContext,
+    fun getCmdbNodesHostIdNull(
         page: Int,
         pageSize: Int
-    ): Result<Record3<String, Long, Long>> {
+    ): List<CmdbNodeDTO> {
         with(TNode.T_NODE) {
-            return dslContext.select(
-                NODE_IP.`as`(T_NODE_NODE_IP),
-                NODE_ID.`as`(T_NODE_NODE_ID),
-                SERVER_ID.`as`(T_NODE_SERVER_ID)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(buildCmdbNodeTypeCondition())
+            conditions.add(SERVER_ID.isNotNull)
+            conditions.add(HOST_ID.isNull)
+            val records = defaultDSLContext.select(
+                NODE_ID,
+                NODE_IP,
+                SERVER_ID
             ).from(this)
-                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
-                .and(SERVER_ID.isNotNull)
-                .and(HOST_ID.isNull)
-                .limit(pageSize).offset((page - 1) * pageSize)
+                .where(conditions)
+                .offset((page - 1) * pageSize)
+                .limit(pageSize)
                 .fetch()
+            return records.map {
+                CmdbNodeDTO(
+                    nodeId = it.get(NODE_ID),
+                    nodeIp = it.get(NODE_IP),
+                    serverId = it.get(SERVER_ID)
+                )
+            }
         }
     }
 

@@ -25,15 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.cmdb.resp
+package com.tencent.devops.environment.pojo
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class NewCmdbData(
-    @get:Schema(title = "结果主机列表", required = true)
-    var list: List<NewCmdbDataIns>,
-    @get:Schema(title = "游标值，用该值做入参请求下一页", description = "该字段不能为null或空字符串，否则会抛出异常")
-    var scrollId: String?,
-    @get:Schema(title = "是否有下一页（最后一页还是true，要再请求一次到list为空列表才为false）")
-    var hasNext: Boolean?
+@Schema(title = "含有scrollId的一页记录数据")
+data class ScrollIdPage<out T>(
+    @get:Schema(title = "分页游标", required = true)
+    val scrollId: String,
+    @get:Schema(title = "是否有下一页", required = true)
+    val hasNext: Boolean,
+    @get:Schema(title = "数据", required = true)
+    @BkFieldI18n
+    val records: List<T>
 )

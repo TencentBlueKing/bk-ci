@@ -63,7 +63,7 @@ data class BuildInfo(
     val debug: Boolean,
     @Deprecated("后续只用executeCount做判断")
     val retryFlag: Boolean? = null,
-    val executeCount: Int? = 1,
+    val executeCount: Int = 1,
     var concurrencyGroup: String? = null,
     val webhookType: String?,
     val webhookInfo: WebhookInfo? = null,

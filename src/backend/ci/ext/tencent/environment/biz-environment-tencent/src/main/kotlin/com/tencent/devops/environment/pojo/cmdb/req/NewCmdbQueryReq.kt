@@ -25,17 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.jobresp
+package com.tencent.devops.environment.pojo.cmdb.req
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class CCUpdateInfo(
-    @get:Schema(title = "节点ID")
-    val nodeId: Long?,
-    @get:Schema(title = "云区域ID")
-    val bkCloudId: Long?,
-    @get:Schema(title = "主机ID")
-    val bkHostId: Long?,
-    @get:Schema(title = "操作系统类型")
-    val osType: String?
+data class NewCmdbQueryReq(
+    @get:Schema(title = "")
+    val resultColumn: List<String>,
+    @get:Schema(title = "")
+    val condition: NewCmdbCondition,
+    @get:Schema(title = "每页大小，取值<201")
+    val size: Int?,
+    @get:Schema(title = "分页游标")
+    val scrollId: String?
 )

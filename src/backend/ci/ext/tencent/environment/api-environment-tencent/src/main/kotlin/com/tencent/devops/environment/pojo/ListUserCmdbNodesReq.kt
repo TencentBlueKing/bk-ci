@@ -25,17 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.cmdb.req
+package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class NewCmdbQueryInfoReq<T>(
-    @get:Schema(title = "")
-    val resultColumn: List<String>,
-    @get:Schema(title = "")
-    val condition: NewCmdbCondition<T>,
-    @get:Schema(title = "每页大小，取值<201")
-    val size: Int?,
-    @get:Schema(title = "分页游标")
-    val scrollId: String?
+@Schema(title = "查询用户名下CMDB服务器请求体")
+data class ListUserCmdbNodesReq(
+
+    @get:Schema(title = "项目ID", required = true)
+    val projectId: String,
+
+    @get:Schema(title = "true 时为备份负责人，false 时为主负责人", required = true)
+    val bakOperator: Boolean,
+
+    @get:Schema(title = "分页游标，不传默认为0", required = false)
+    val scrollId: String = "0",
+
+    @get:Schema(title = "每页多少条，最大200，不传默认100", required = false)
+    val pageSize: Int = 100,
+
+    @get:Schema(title = "指定IP，最多500个，不传表示不根据IP过滤", required = false)
+    val ips: List<String>? = null
+
 )

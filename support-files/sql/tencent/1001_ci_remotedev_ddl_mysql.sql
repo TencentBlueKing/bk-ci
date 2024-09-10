@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
     `RESOURCE_ID` varchar(32) NOT NULL DEFAULT '' COMMENT '最长32位字符串， 用于后续调度时传给start sdk',
     `HOST_IP` varchar(64) NOT NULL DEFAULT '' COMMENT '云桌面IP',
     `MAC_ADDRESS` varchar(64) NOT NULL DEFAULT '' COMMENT 'mac地址',
-    `IMAGE_ID` varchar(32) default '' not null comment '镜像唯一标识',
+    `IMAGE_ID` varchar(256) default '' not null comment '镜像唯一标识',
     `ZONE_ID` varchar(32) default '' null comment '地域id',
     `CUR_LAUNCH_ID` int(11) NULL COMMENT '根据项目区分的计费id',
     `REGION_ID` int(11) NULL COMMENT '云区域ID',
@@ -430,6 +430,22 @@ CREATE TABLE IF NOT EXISTS `T_CLIENT_VERSION` (
     UNIQUE `ukey`(`IP`,`USER`),
     KEY `idx_version` (`VERSION`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端版本控制';
+
+CREATE TABLE IF NOT EXISTS `T_CLIENT` (
+	`MAC_ADDRESS` varchar(64)  NOT NULL COMMENT 'MAC地址',
+	`CURRENT_USER` varchar(128)  NOT NULL COMMENT '当前使用用户',
+    `CURRENT_WORKSPACE_NAMES` json NOT NULL COMMENT '当前用户所属的工作空间名称列表',
+    `CURRENT_PROJECT_IDS` json NOT NULL COMMENT '当前机器所属的蓝盾项目ID列表',
+	`VERSION` varchar(16)  NOT NULL COMMENT '客户端版本',
+    `OS` varchar(16)  NOT NULL COMMENT '客户端系统',
+	`START_VERSION` varchar(64)  NOT NULL COMMENT 'START 版本',
+    `CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+	`UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '最近更新时间',
+    PRIMARY KEY (`MAC_ADDRESS`),
+    KEY `T_CLIENT_VERSION_IDX`  (`VERSION`),
+    KEY `T_CLIENT_START_VERSION_IDX` (`START_VERSION`),
+    KEY `T_CLIENT_UPDATE_TIME_IDX` (`UPDATE_TIME`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端信息';
 
 -- ----------------------------
 -- Table structure for T_REMOTEDEV_CVM 云研发CVM

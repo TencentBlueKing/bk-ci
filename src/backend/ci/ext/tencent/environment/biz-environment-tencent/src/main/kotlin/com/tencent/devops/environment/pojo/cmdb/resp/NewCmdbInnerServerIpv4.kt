@@ -24,42 +24,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.utils
 
-import com.tencent.devops.common.redis.RedisOperation
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+package com.tencent.devops.environment.pojo.cmdb.resp
 
-@Component
-class StartCloudRedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation
-) {
+import io.swagger.v3.oas.annotations.media.Schema
 
-    /*-------------------------*/
-    fun setStartCloudOrder(userId: String, workspaceName: String, orderId: String) {
-        logger.info("User $userId hset(${startCloudOrderKey()}) $workspaceName")
-        redisOperation.hset(
-            key = startCloudOrderKey(),
-            hashKey = workspaceName,
-            values = orderId
-        )
-    }
-
-    fun getStartCloudOrder(workspaceName: String): String? {
-        return redisOperation.hget(startCloudOrderKey(), workspaceName)
-    }
-
-    fun deleteStartCloudOrder(workspaceName: String) {
-        logger.info("hdelete(${startCloudOrderKey()}) $workspaceName")
-        redisOperation.hdelete(startCloudOrderKey(), workspaceName)
-    }
-
-    private fun startCloudOrderKey(): String {
-        return "dispatchkubernetes:startcloud:order"
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(StartCloudRedisUtils::class.java)
-    }
-}
+data class NewCmdbInnerServerIpv4(
+    @get:Schema(title = "IP地址")
+    val ip: String
+)
