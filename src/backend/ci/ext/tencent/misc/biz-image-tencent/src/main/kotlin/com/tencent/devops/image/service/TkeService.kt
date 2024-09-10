@@ -35,6 +35,7 @@ import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -251,17 +252,23 @@ class TkeService @Autowired constructor(
                                 "dockerFile" to "",
                                 "moduleId" to pushImageParam.cmdbId,
                                 "isGpu" to 0,
-                                "imageUrl" to "$repoName/${pushImageParam.userName}/${pushImageParam.targetImageName.removePrefix(
-                                    "/"
-                                )}",
+                                "imageUrl" to "$repoName/${pushImageParam.userName}/${
+                                    pushImageParam.targetImageName.removePrefix(
+                                        "/"
+                                    )
+                                }",
                                 "codeUrl" to pushImageParam.codeUrl
                             )
                         )
                     )
                 )
             )
+            val headerStr = JsonUtil.toJson(
+                mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
+            ).replace("\\s".toRegex(), "")
             val requestBody = ObjectMapper().writeValueAsString(requestData)
             val request = Request.Builder().url(url).post(RequestBody.create(JSON, requestBody))
+                .addHeader("X-Bkapi-Authorization", headerStr)
                 .addHeader("apikey", apiKey).build()
             logger.info("[${pushImageParam.buildId}]|requestUrl: $url")
             logger.info("[${pushImageParam.buildId}]|requestBody: $requestBody")

@@ -107,11 +107,7 @@
                 'togglePropertyPanel'
             ]),
             getIsEnable (row) {
-                if (row.additionalOptions) {
-                    return row.additionalOptions.enable
-                } else {
-                    return true
-                }
+                return row?.additionalOptions?.enable ?? true
             },
             handleUpdateOptions (index, key, val) {
                 const element = this.triggerList[index]
@@ -120,7 +116,6 @@
                 this.handleAtomChange(index, 'additionalOptions', options)
             },
             handleAtomChange (index, key, val) {
-                console.log(index, key, val)
                 const element = this.triggerList[index]
                 this.updateAtom({
                     element: element,

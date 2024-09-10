@@ -43,8 +43,6 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.Worksp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateBasicBody
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.utils.StartCloudRedisUtils
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
@@ -68,15 +66,11 @@ class StartCloudRemoteDevService @Autowired constructor(
     private val workspaceClient: WorkspaceStartCloudClient,
     private val workspaceBcsClient: WorkspaceBcsClient,
     private val workspaceRedisUtils: WorkspaceRedisUtils,
-    private val startCloudRedisUtils: StartCloudRedisUtils,
     private val startAndBcsCommonService: StartAndBcsCommonService
 ) : RemoteDevInterface {
-    //
+
     @Value("\${startCloud.appName}")
     val contentProviderName: String = "IEG_BKCI"
-
-//    @Value("\${startCloud.curLaunchId}")
-//    val curLaunchId: Int = 980007
 
     override fun createWorkspace(
         userId: String,
@@ -92,20 +86,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                 ""
             }
             // 迁移orderId
-            startCloudRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
+            workspaceRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
             return CreateWorkspaceRes(event.devFile.environmentUid!!, event.devFile.uid!!, 0, "")
-        }
-
-        kotlin.runCatching {
-            workspaceClient.createUser(
-                userId,
-                EnvironmentUserCreate(userId, contentProviderName, checkNotNull(event.appName))
-            )
-        }.onFailure {
-            logger.warn("create user failed.|${it.message}")
-            if (it is WorkspaceDispatchException) {
-                throw it
-            }
         }
 
         // 生产创建start资源的订单号
@@ -135,7 +117,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         )
 
         // 创建成功后保存pipelineId
-        startCloudRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
+        workspaceRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
 
         return CreateWorkspaceRes(res.environmentUid, res.taskUid, 0, "")
     }
@@ -210,7 +192,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 uid = getEnvironmentUid(workspaceName),
                 appName = gameId,
                 userId = userId,
-                pipelineId = startCloudRedisUtils.getStartCloudOrder(workspaceName)
+                pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName)
             )
         )
         return resp.taskUid
@@ -231,7 +213,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 uid = getEnvironmentUid(workspaceName),
                 appName = gameId,
                 userId = userId,
-                pipelineId = startCloudRedisUtils.getStartCloudOrder(workspaceName),
+                pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName),
                 cgsId = cgsId
             ),
             actionMsg = imageId
@@ -316,7 +298,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 )
                 return DispatchBuildTaskStatus(
                     DispatchBuildTaskStatusEnum.FAILED,
-                    "DevCloud任务超时（10min）"
+                    "任务超时($timeout)"
                 )
             }
 
@@ -340,16 +322,6 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     override fun expandDisk(workspaceName: String, userId: String, size: String): ExpandDiskValidateResp {
         return startAndBcsCommonService.expandDisk(userId, workspaceName, size)
-    }
-
-    fun refreshStartCloudOrderId(userId: String): Boolean {
-        logger.info("$userId refresh startCloud orderId.")
-        val startCloudWorkspaceList = dispatchWorkspaceDao.getStartCloudWorkspaceInfo(dslContext)
-        startCloudWorkspaceList.forEach {
-            startCloudRedisUtils.setStartCloudOrder(userId, it.workspaceName, it.taskId)
-        }
-
-        return true
     }
 
     private fun getEnvironmentUid(workspaceName: String): String {

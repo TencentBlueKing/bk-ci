@@ -35,7 +35,6 @@ class GithubTransferService @Autowired constructor(
     companion object {
         private const val DEFAULT_GITHUB_PER_PAGE = 100
         private const val DEFAULT_PAGE = 1
-        private const val DEFAULT_PAGE_SIZE = 30
     }
 
     override fun isOAuth(

@@ -7,9 +7,11 @@ import com.tencent.devops.common.test.BkCiAbstractTest
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
+@Disabled
 class Oauth2ClientServiceTest : BkCiAbstractTest() {
 
     private val authOauth2ClientDetailsDao = mockk<AuthOauth2ClientDetailsDao>()

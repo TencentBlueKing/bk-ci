@@ -47,22 +47,30 @@ data class WorkspaceDetail(
     val usageTime: Long,
     @get:Schema(title = "休眠时间（秒）")
     val sleepingTime: Long,
-    @get:Schema(title = "CPU 核心数")
-    @Deprecated("LINUX 待删除")
-    val cpu: Int = 0,
-    @get:Schema(title = "内存大小（MB）")
-    @Deprecated("LINUX 待删除")
-    val memory: Int = 0,
-    @get:Schema(title = "存储空间大小（GB）")
-    @Deprecated("LINUX 待删除")
-    val disk: Int = 0,
-    @get:Schema(title = "yaml 配置内容")
-    @Deprecated("LINUX 待删除")
-    val yaml: String? = null,
     @get:Schema(title = "操作系统类型")
     val systemType: WorkspaceSystemType,
     @get:Schema(title = "挂载平台类型")
     val workspaceMountType: WorkspaceMountType,
     @get:Schema(title = "工作空间归属")
-    val ownerType: WorkspaceOwnerType
+    val ownerType: WorkspaceOwnerType,
+    @get:Schema(title = "内网IP")
+    val ip: String?,
+    @get:Schema(title = "Mac地址")
+    val macAddress: String?,
+    @get:Schema(title = "机型")
+    val machineType: String?,
+    @get:Schema(title = "地域")
+    val region: String?,
+    @get:Schema(title = "拥有者")
+    val owner: Set<String>,
+    @get:Schema(title = "共享人")
+    val sharedUsers: Set<String>,
+    @get:Schema(title = "创建人")
+    val creator: String,
+    @get:Schema(title = "创建时间")
+    val createTime: Long,
+    @get:Schema(title = "镜像ID")
+    val imageId: String?,
+    @get:Schema(title = "工作空间备注")
+    val remark: String?
 )

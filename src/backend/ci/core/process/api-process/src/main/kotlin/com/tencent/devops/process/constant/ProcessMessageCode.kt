@@ -287,10 +287,10 @@ object ProcessMessageCode {
     const val ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE = "2101176" // 模版下存在无权限的插件
     const val PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL = "2101177" // 流水线编排数量非法
     const val MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL = "2101178" // 最大并发数量非法
-    const val PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_CANCELED = "2101179" // 流水线: 流水线构建已结束，不能取消
-    const val GET_PIPELINE_ATOM_INFO_NO_PERMISSION = "2101180" // 无权访问插件{0}的流水线信息，请联系组件管理员
-    const val GROUP_IS_EXIST = "2101181" // 分组({0})已存在/group ({0}) is already exist
-    const val GROUP_LABEL_IS_EXIST = "2101182" // 分组标签({0})已存在/group label ({0}) is already exist
+    const val GET_PIPELINE_ATOM_INFO_NO_PERMISSION = "2101179" // 无权访问插件{0}的流水线信息，请联系组件管理员
+    const val GROUP_IS_EXIST = "2101180" // 分组({0})已存在/group ({0}) is already exist
+    const val GROUP_LABEL_IS_EXIST = "2101181" // 分组标签({0})已存在/group label ({0}) is already exist
+    const val PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_OPERATE = "2101182" // 流水线: 流水线构建已结束，不能操作
     const val ERROR_NO_PERMISSION_OPERATION_TEMPLATE = "2101183" // 用户没有操作模板的权限
 
     const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID = "2101184" // 流水线版本[{0}]不存在
@@ -334,6 +334,11 @@ object ProcessMessageCode {
     const val ERROR_TASK_NOT_ALLOWED_TO_BE_SKIPPED = "2101221" // task不允许被跳过
     const val ERROR_INCORRECT_NOTIFICATION_TYPE = "2101230" // 通知类型配置不正确，请检查
     const val ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT = "2101231" // 通知内容为空，请检查
+    const val ERROR_AGENT_REUSE_MUTEX_JOB_NULL = "2101232" // {0}使用流水线构建机复用互斥组需要声明具体的JobId，不能为空
+    // 流水线构建机复用互斥组节点 {0} 复用的 {1} 不存在，或非第三方构建机节点
+    const val ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE = "2101233"
+    // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点调度类型不同，AgentId和AgentEnv不能互相复用
+    const val ERROR_AGENT_REUSE_MUTEX_DEP_ERROR = "2101234"
     const val ERROR_YAML_PUSH_CREATE_BRANCH = "2101235" // 创建分支失败: {0}
     const val ERROR_YAML_PUSH_CREATE_BRANCH_NO_PERMISSION = "2101236" // 用户{0}没有代码库{1}的创建分支权限
     const val ERROR_YAML_PUSH_CREATE_FILE = "2101237" // 创建文件失败: {0}
@@ -343,12 +348,6 @@ object ProcessMessageCode {
     const val ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION = "2101241" // 工蜂仓库({0})不存在或没有权限访问
     const val ERROR_TGIT_SERVER_EXCEPTION = "2101242" // 工蜂服务异常
 
-    const val ERROR_AGENT_REUSE_MUTEX_JOB_NULL = "2101232" // {0}使用流水线构建机复用互斥组需要声明具体的JobId，不能为空
-    // 流水线构建机复用互斥组节点 {0} 复用的 {1} 不存在，或非第三方构建机节点
-    const val ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE = "2101233"
-    // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点调度类型不同，AgentId和AgentEnv不能互相复用
-    const val ERROR_AGENT_REUSE_MUTEX_DEP_ERROR = "2101234"
-
     const val ERROR_TIMER_TRIGGER_SVN_BRANCH_NOT_EMPTY = "2101243" // 定时触发SVN分支不能为空
     const val ERROR_PIPELINE_ELEMENT_CHECK_FAILED = "2101244" // 流水线有效性校验失败
     const val ERROR_TIMER_TRIGGER_REPO_NOT_FOUND = "2101245" // 定时触发代码库不存在
@@ -356,13 +355,12 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY = "2101247" // 流水线定时触发分支为空
     const val ERROR_PIPELINE_TIMER_BRANCH_NO_CHANGE = "2101248" // 定时触发分支{0}代码没有变更
     const val ERROR_PIPELINE_TIMER_BRANCH_NOT_FOUND = "2101249" // 定时触发分支{0}不存在
-    const val ERROR_PIPELINE_TIMER_BRANCH_UNKNOWN = "2101252" // 定时触发分支{0}未知错误
-
     const val ERROR_PIPELINE_JOB_ID_FORMAT = "2101250" // 流水线Job:{0}的jobId为空或长度超过{1}位
     const val ERROR_PIPELINE_JOB_CONTROL_NODECURR = "2101251" // 流水线Job:{0}的单节点或总结点并发配置需要为小于1000的正整数
-
+    const val ERROR_PIPELINE_TIMER_BRANCH_UNKNOWN = "2101252" // 定时触发分支{0}未知错误
     const val ERROR_PIPELINE_CONDITION_EXPRESSION_TOO_LONG = "2101253" // 自定义条件表达式{0}的长度超过{1}位
     const val ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY = "2101254" // 构建启动参数如果必填，不能为空
+    const val ERROR_REPEATEDLY_START_VM = "2101255" // 重复启动构建机，当前构建机的状态为：{0}
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -554,4 +552,8 @@ object ProcessMessageCode {
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotSubPipelineExecutePermissionErrorTitle"
     // 没有子流水线执行权限错误消息
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE = "bkNotSubPipelineExecutePermissionErrorMessage"
+
+    // 用户[xxx] 没有如下子流水线的执行权限，重置授权失败
+    const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_RESET_ERROR_TITLE =
+        "bkNotSubPipelineExecutePermissionResetErrorTitle"
 }

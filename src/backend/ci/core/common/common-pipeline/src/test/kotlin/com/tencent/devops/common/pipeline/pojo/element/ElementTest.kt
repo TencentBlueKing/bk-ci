@@ -127,15 +127,15 @@ class ElementTest {
     }
 
     @Test
-    fun isElementEnable() {
+    fun elementEnabled() {
         val element = ManualTriggerElement()
-        assertTrue(element.isElementEnable())
+        assertTrue(element.elementEnabled())
         element.additionalOptions = null
-        assertTrue(element.isElementEnable())
+        assertTrue(element.elementEnabled())
         element.additionalOptions = elementAdditionalOptions(enable = true)
-        assertTrue(element.isElementEnable())
+        assertTrue(element.elementEnabled())
         element.additionalOptions = elementAdditionalOptions(enable = false)
-        assertFalse(element.isElementEnable())
+        assertFalse(element.elementEnabled())
     }
 
     @Test

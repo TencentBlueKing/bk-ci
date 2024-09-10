@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
@@ -50,7 +49,6 @@ import org.springframework.stereotype.Service
 
 @Service
 class ImageManageService @Autowired constructor(
-    private val client: Client,
     private val dslContext: DSLContext,
     private val imageManageDao: ImageManageDao,
     private val windowsResourceZoneDao: WindowsResourceZoneDao,
@@ -62,12 +60,13 @@ class ImageManageService @Autowired constructor(
     }
 
     // 获取工作空间模板
-    fun getProjectImageList(projectId: String): List<ProjectImage> {
+    fun getProjectImageList(projectId: String, imageId: String?): List<ProjectImage> {
         logger.info("ImageManageService|getProjectImageList|projectId|$projectId")
         val result = mutableListOf<ProjectImage>()
         imageManageDao.queryImageList(
             projectId = projectId,
-            dslContext = dslContext
+            dslContext = dslContext,
+            imageId = imageId
         ).forEach {
             val sourceCgsZoneShortName = it.sourceCgsZone.replace(Regex("[^a-zA-Z]"), "")
             val sourceCgsZoneName = windowsResourceZoneDao.fetchAny(dslContext, sourceCgsZoneShortName)

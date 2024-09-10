@@ -34,5 +34,7 @@ data class Pagination<out T>(
     @get:Schema(title = "是否有下一页", required = true)
     val hasNext: Boolean,
     @get:Schema(title = "数据", required = true)
-    val records: List<T>
+    val records: List<T>,
+    @get:Schema(title = "总记录行数", required = false)
+    val count: Long? = null
 )

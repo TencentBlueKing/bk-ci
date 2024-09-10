@@ -42,10 +42,10 @@ import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.dto.NodeUpdateAttrDTO
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.AgentVersion
-import com.tencent.devops.environment.pojo.job.ccres.CCInfo
-import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
+import com.tencent.devops.environment.pojo.job.ccres.CCHost
+import com.tencent.devops.environment.pojo.job.jobresp.NodeAttr
 import com.tencent.devops.environment.service.CmdbNodeService
-import com.tencent.devops.environment.service.cc.TencentQueryFromCCService
+import com.tencent.devops.environment.service.cc.TencentCCService
 import com.tencent.devops.environment.service.cmdb.TencentCmdbService
 import com.tencent.devops.environment.service.gseagent.GSEAgentService
 import com.tencent.devops.environment.service.job.QueryAgentStatusService
@@ -64,7 +64,7 @@ class UpdateCmdbNodeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val cmdbNodeDao: CmdbNodeDao,
     private val tencentCmdbService: TencentCmdbService,
-    private val tencentQueryFromCCService: TencentQueryFromCCService,
+    private val tencentQueryFromCCService: TencentCCService,
     private val cmdbNodeService: CmdbNodeService,
     private val queryAgentStatusService: QueryAgentStatusService
 ) {
@@ -114,8 +114,8 @@ class UpdateCmdbNodeService @Autowired constructor(
                     nodeIp = oldCmdbNode.nodeIp,
                     serverId = newCmdbServer?.serverId,
                     operator = newCmdbServer?.operator,
-                    bakOperator = newCmdbServer?.getBakOperatorStr(),
-                    osName = newCmdbServer?.osName
+                    bakOperator = newCmdbServer?.getBakOperatorStrLessThanMaxLength(),
+                    osName = newCmdbServer?.getOsNameLessThanMaxLength()
                 )
             } else null
         }
@@ -181,13 +181,13 @@ class UpdateCmdbNodeService @Autowired constructor(
         val nodeServerIdList = nodeRecords.mapNotNull { it[T_NODE_SERVER_ID] as? Long }.toSet()
         // 通过serverId查询 CC信息
         val nodeCCInfoListFromServerId = if (nodeServerIdList.isNotEmpty()) {
-            tencentQueryFromCCService.queryCCListHostWithoutBizByInRules(
+            tencentQueryFromCCService.listHostsWithoutBiz(
                 listOf(FIELD_BK_HOST_INNERIP, FIELD_BK_HOST_ID, FIELD_BK_CLOUD_ID, FIELD_BK_OS_TYPE, FIELD_BK_SVR_ID),
                 nodeServerIdList,
                 FIELD_BK_SVR_ID
             ).data?.info
         } else null
-        var serverIdToCCInfoMap: Map<Long?, CCInfo> = mapOf()
+        var serverIdToCCInfoMap: Map<Long?, CCHost> = mapOf()
         if (!nodeCCInfoListFromServerId.isNullOrEmpty()) {
             // serverId - cc记录 map
             serverIdToCCInfoMap = nodeCCInfoListFromServerId.associateBy { it.svrId }
@@ -218,7 +218,7 @@ class UpdateCmdbNodeService @Autowired constructor(
                         it[T_NODE_OS_TYPE] as? String == cmdbNodeService.getOsTypeByCCCode(ccInfo?.osType)
                 }.takeIf { it.isNotEmpty() }?.map {
                     val ccInfo = serverIdToCCInfoMap[it[T_NODE_SERVER_ID] as Long]
-                    CCUpdateInfo(
+                    NodeAttr(
                         nodeId = it[T_NODE_NODE_ID] as Long,
                         bkCloudId = ccInfo?.bkCloudId?.toLong(),
                         bkHostId = ccInfo?.bkHostId,
@@ -230,7 +230,7 @@ class UpdateCmdbNodeService @Autowired constructor(
                         "[checkDeployNodesIsInCCByPage]nodeUpdateInfoList: ${nodeUpdateInfoList?.joinToString()}"
                     )
                 if (!nodeUpdateInfoList.isNullOrEmpty()) {
-                    cmdbNodeDao.batchUpdateHostIdAndCloudAreaIdByNodeId(dslContext, nodeUpdateInfoList)
+                    cmdbNodeDao.batchUpdateHostIdAndCloudAreaIdByNodeId(nodeUpdateInfoList)
                 }
             }
         }
@@ -251,4 +251,12 @@ class UpdateCmdbNodeService @Autowired constructor(
         else
             NodeStatus.NOT_INSTALLED.name
     }
+}
+
+fun main() {
+    val map = LinkedHashMap<Long?, String>()
+    map[1] = "1"
+    map[null] = "2"
+    println("hello world")
+    println(map)
 }

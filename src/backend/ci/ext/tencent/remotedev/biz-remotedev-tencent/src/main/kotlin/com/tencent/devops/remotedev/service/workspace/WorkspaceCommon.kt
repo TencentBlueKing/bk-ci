@@ -41,7 +41,6 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDailyCgsdataDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -72,7 +71,6 @@ import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.BKCCService
-import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -100,8 +98,6 @@ class WorkspaceCommon @Autowired constructor(
     private val sharedDao: WorkspaceSharedDao,
     private val client: Client,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
-    private val remoteDevSettingService: RemoteDevSettingService,
     private val redisCache: RedisCacheService,
     private val profile: Profile,
     @Lazy
@@ -125,7 +121,7 @@ class WorkspaceCommon @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceCommon::class.java)
-        private const val DEFAULT_WAIT_TIME = 60
+        const val DEFAULT_WAIT_TIME = 300
         private const val REPOID = "lsync"
         private const val LOCALDRIVER = "L"
         private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
@@ -242,6 +238,15 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.RESTARTING
             }
 
+            workspaceInfo.status == EnvStatusEnum.starting -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.STARTING)
+                return WorkspaceStatus.STARTING
+            }
+            workspaceInfo.status == EnvStatusEnum.stopping -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.STOPPING)
+                return WorkspaceStatus.STOPPING
+            }
+
             workspaceInfo.status == EnvStatusEnum.rebuilding -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.REBUILDING)
                 return WorkspaceStatus.REBUILDING
@@ -250,6 +255,10 @@ class WorkspaceCommon @Autowired constructor(
             workspaceInfo.status == EnvStatusEnum.upgrading -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.UPGRADING)
                 return WorkspaceStatus.UPGRADING
+            }
+            workspaceInfo.status == EnvStatusEnum.copying -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.MAKING_IMAGE)
+                return WorkspaceStatus.MAKING_IMAGE
             }
 
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
@@ -368,13 +377,6 @@ class WorkspaceCommon @Autowired constructor(
             workspaceName = workspaceName
         )
         if (lastHistory?.startTime != null) {
-            workspaceDao.updateWorkspaceUsageTime(
-                workspaceName = workspaceName,
-                usageTime = Duration.between(
-                    lastHistory.startTime, LocalDateTime.now()
-                ).seconds.toInt(),
-                dslContext = transactionContext
-            )
             workspaceHistoryDao.updateWorkspaceHistory(
                 dslContext = transactionContext,
                 id = lastHistory.id,
@@ -414,32 +416,6 @@ class WorkspaceCommon @Autowired constructor(
             return false
         }
         return true
-    }
-
-    fun getSystemOperator(workspaceOwner: String, mountType: WorkspaceMountType): String =
-        when (mountType) {
-            WorkspaceMountType.START -> workspaceOwner
-            else -> ADMIN_NAME
-        }
-
-    fun checkWorkspaceAvailability(
-        userId: String,
-        type: WorkspaceMountType,
-        ownerType: WorkspaceOwnerType
-    ) {
-        when {
-//            --story=116722016 【个人云桌面续期优化】去掉个人云桌面体验时长的限制
-//            type == WorkspaceMountType.START && ownerType == WorkspaceOwnerType.PERSONAL -> {
-//                val timeLeft = remoteDevSettingService.userWinTimeLeft(userId)
-//                if (timeLeft <= 0) {
-//                    throw ErrorCodeException(
-//                        errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE_WIN_GPU.errorCode
-//                    )
-//                }
-//            }
-
-            else -> {}
-        }
     }
 
     fun syncStartCloudResourceList(): List<EnvironmentResourceData> {
@@ -560,11 +536,11 @@ class WorkspaceCommon @Autowired constructor(
                     workspaceName = workspaceName,
                     cc = mutableSetOf(operator),
                     projectId = projectId,
-                    notifyTemplateCode = WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                     bodyParams = mutableMapOf(
                         "workspaceName" to workspaceName,
                         "cgsId" to cgsId,
+                        "notifyTemplateCode" to WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
                         "userId" to it.userId
                     )
                 )
@@ -676,10 +652,6 @@ class WorkspaceCommon @Autowired constructor(
         operator: String
     ) {
         updateLastHistory(dslContext, workspace.workspaceName, operator)
-        if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
-            remoteDevSettingService.computeWinUsageTime(userId = workspace.createUserId)
-        }
-
         // 个人云桌面即使关机也需要计费
         if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU &&
             workspace.ownerType == WorkspaceOwnerType.PERSONAL

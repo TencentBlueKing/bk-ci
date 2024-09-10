@@ -245,7 +245,7 @@ object DateTimeUtil {
      */
     fun formatDay(mss: Long): String {
         if (mss == 0L) return "0"
-        return (mss / (1000 * 60 * 60 * 24)).toString()
+        return ((mss / (1000 * 60 * 60 * 24)) + 1).toString()
     }
 
     /**
