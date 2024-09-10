@@ -110,19 +110,7 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
             } else {
                 val path = file.path.removePrefix(prefix)
                 logger.debug("uploadLocalFile fileName=${file.name}|path=$path")
-                val uploadRepoName = when {
-                    signFilePaths.isNullOrEmpty() -> repoName
-                    else -> {
-                        val signFilePath = signFilePaths.firstOrNull { path.endsWith(it) }
-                        // 需要签名的文件先上传到临时仓库，待签名完成后再上传到正式仓库
-                        if (signFilePath != null) {
-                            signFilePaths.remove(signFilePath)
-                            "$repoName-tmp"
-                        } else {
-                            repoName
-                        }
-                    }
-                }
+                val uploadRepoName = getUploadRepoName(signFilePaths, repoName, path)
                 bkRepoClient.uploadLocalFile(
                     userId = BKREPO_DEFAULT_USER,
                     projectId = getBkRepoProjectId(storeType),
@@ -136,6 +124,27 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
                 )
             }
         }
+    }
+
+    private fun getUploadRepoName(
+        signFilePaths: MutableList<String>?,
+        repoName: String,
+        path: String
+    ): String {
+        val uploadRepoName = when {
+            signFilePaths.isNullOrEmpty() -> repoName
+            else -> {
+                val signFilePath = signFilePaths.firstOrNull { path.endsWith(it) }
+                // 需要签名的文件先上传到临时仓库，待签名完成后再上传到正式仓库
+                if (signFilePath != null) {
+                    signFilePaths.remove(signFilePath)
+                    "$repoName-tmp"
+                } else {
+                    repoName
+                }
+            }
+        }
+        return uploadRepoName
     }
 
     override fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum): String {
