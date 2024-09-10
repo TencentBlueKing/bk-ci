@@ -49,7 +49,7 @@ jobs:
         version="$(basename $GITHUB_REF)"
         echo "version=$version" >> $GITHUB_OUTPUT
         ci_ms_wip="sign,monitoring" ci_pkg_dir=/dev/shm/ci ./scripts/packager-ci.sh "$version" bkci-slim.tar.gz
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: bkci-slim
         path: bkci-slim.tar.gz
@@ -120,7 +120,7 @@ jobs:
         version="$(basename $GITHUB_REF)"
         helm package . --version $version --app-version $version
         mv bk-ci-$version.tgz bk-ci-charts.tgz
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: bkci-chart
         path: helm-charts/core/ci/bk-ci-charts.tgz
