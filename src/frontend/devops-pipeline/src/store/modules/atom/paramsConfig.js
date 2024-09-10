@@ -270,7 +270,7 @@ export const ParamComponentMap = {
     [ARTIFACTORY]: 'Selector',
     [SUB_PIPELINE]: 'Selector',
     [CUSTOM_FILE]: 'FileParamInput',
-    [REPO_REF]: 'Selector'
+    [REPO_REF]: 'CodeRepoSelector'
 }
 
 export const BOOLEAN_LIST = [

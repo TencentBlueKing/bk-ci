@@ -65,6 +65,7 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
+    import CodeRepoSelector from '@/components/atomFormField/CodeRepoSelector'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
@@ -105,7 +106,8 @@
             VuexTextarea,
             FormField,
             metadataList,
-            FileParamInput
+            FileParamInput,
+            CodeRepoSelector
         },
         props: {
             disabled: {
@@ -245,6 +247,7 @@
                 const param = this.getParamByName(name)
                 if (isMultipleParam(param.type)) { // 复选框，需要将数组转化为逗号隔开的字符串
                     value = Array.isArray(value) ? value.join(',') : ''
+                    this.handleParamChange(param.name, value)
                 }
                 if (isRepoParam(param.type)) {
                     this.handleParamChange(`${param.name + '.'}repo-name`, value)
