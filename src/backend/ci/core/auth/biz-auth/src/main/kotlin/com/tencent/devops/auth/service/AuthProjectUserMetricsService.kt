@@ -28,7 +28,6 @@
 
 package com.tencent.devops.auth.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
 import com.google.common.hash.BloomFilter
 import com.google.common.hash.Funnels
@@ -49,8 +48,7 @@ import java.util.concurrent.TimeUnit
 @Service
 @Suppress("UnstableApiUsage")
 class AuthProjectUserMetricsService @Autowired constructor(
-    private val measureEventDispatcher: MeasureEventDispatcher,
-    private val objectMapper: ObjectMapper
+    private val measureEventDispatcher: MeasureEventDispatcher
 ) {
     private val userOperateCounterData = UserOperateCounterData()
 
