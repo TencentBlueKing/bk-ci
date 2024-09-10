@@ -54,7 +54,6 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectBuildSummaryServiceImpl::class.java)
         private fun projectBuildKey(key: String) = "ProjectBuild:$key"
-        private fun projectUserOperateKey(key: String) = "projectUserOperateKey:$key"
     }
 
     override fun saveProjectBuildCount(

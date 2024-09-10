@@ -67,9 +67,6 @@ class AuthProjectUserMetricsService @Autowired constructor(
             .expireAfterWrite(1, TimeUnit.DAYS)
             .build<LocalDate, BloomFilter<String>>()
 
-        private val projectUserOperateMetricsMap =
-            mutableMapOf<String/*projectId*/, MutableMap<String, Int>/*projectUserOperateMetricsKey,count*/>()
-
         private val executorService = Executors.newFixedThreadPool(5)
     }
 
@@ -135,9 +132,8 @@ class AuthProjectUserMetricsService @Autowired constructor(
 
     @Scheduled(initialDelay = 20000, fixedDelay = 20000)
     private fun uploadProjectUserOperateMetrics() {
-        val projectUserOperateMetricsMapStr = objectMapper.writeValueAsString(projectUserOperateMetricsMap)
         if (logger.isDebugEnabled) {
-            logger.debug("upload project user operate metrics :$projectUserOperateMetricsMapStr")
+            logger.debug("upload project user operate metrics :$userOperateCounterData")
         }
         measureEventDispatcher.dispatch(
             ProjectUserOperateMetricsEvent(
