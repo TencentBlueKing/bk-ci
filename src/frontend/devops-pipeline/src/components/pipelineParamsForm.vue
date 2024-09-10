@@ -73,6 +73,7 @@
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
     import FileParamInput from '@/components/atomFormField/FileParamInput'
+    import CodeRepoSelector from '@/components/atomFormField/CodeRepoSelector'
     import {
         BOOLEAN,
         BOOLEAN_LIST,
@@ -109,7 +110,8 @@
             VuexTextarea,
             FormField,
             metadataList,
-            FileParamInput
+            FileParamInput,
+            CodeRepoSelector
         },
         props: {
             disabled: {
@@ -249,6 +251,7 @@
                 const param = this.getParamByName(name)
                 if (isMultipleParam(param.type)) { // 复选框，需要将数组转化为逗号隔开的字符串
                     value = Array.isArray(value) ? value.join(',') : ''
+                    this.handleParamChange(param.name, value)
                 }
                 if (isRepoParam(param.type)) {
                     this.handleParamChange(`${param.name + '.'}repo-name`, value)
