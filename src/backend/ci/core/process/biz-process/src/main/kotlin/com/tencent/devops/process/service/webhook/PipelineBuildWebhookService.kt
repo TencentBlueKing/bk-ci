@@ -622,7 +622,9 @@ class PipelineBuildWebhookService @Autowired constructor(
                     theDate = theDate
                 ),
                 ProjectUserOperateMetricsEvent(
-                    userOperateCounterData = UserOperateCounterData().apply { this.increment(projectUserOperateMetricsKey) }
+                    userOperateCounterData = UserOperateCounterData().apply {
+                        this.increment(projectUserOperateMetricsKey)
+                    }
                 )
             )
         } catch (ignored: Exception) {
