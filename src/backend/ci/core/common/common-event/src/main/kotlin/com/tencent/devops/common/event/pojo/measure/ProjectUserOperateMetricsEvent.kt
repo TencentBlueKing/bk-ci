@@ -35,5 +35,5 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT, routeKey = MQ.ROUTE_PROJECT_USER_DAILY_OPERATE_METRICS)
 data class ProjectUserOperateMetricsEvent(
     @get:Schema(title = "项目用户操作度量数据")
-    val projectUserOperateMetricsMap: Map<String/*projectId*/, Map<String, Int>/*projectUserOperateMetricsKey,count*/>
+    val userOperateCounterData: UserOperateCounterData
 ) : IMeasureEvent(projectId = "", pipelineId = "", buildId = "")

@@ -45,9 +45,11 @@ class ProjectUserDailyOperateMetricsListener @Autowired constructor(
 
     override fun execute(event: ProjectUserOperateMetricsEvent) {
         try {
-            logger.debug("consumer project user daily operate metrics :${event.projectUserOperateMetricsMap}")
+            if (logger.isDebugEnabled) {
+                logger.debug("consumer project user daily operate metrics :${event.userOperateCounterData}")
+            }
             projectBuildSummaryService.saveProjectUserOperateMetrics(
-                projectUserOperateMetricsMap = event.projectUserOperateMetricsMap
+                userOperateCounterData = event.userOperateCounterData
             )
         } catch (ignored: Throwable) {
             logger.warn("Fail to insert project user metrics data", ignored)

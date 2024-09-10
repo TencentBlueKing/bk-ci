@@ -35,6 +35,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispat
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
+import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -609,16 +610,12 @@ class PipelineBuildWebhookService @Autowired constructor(
         theDate: LocalDate
     ) {
         try {
-            val projectUserOperateMetricsMap = mapOf(
-                projectId to mapOf(
-                    ProjectUserOperateMetricsData(
-                        projectId = projectId,
-                        userId = userId,
-                        operate = WEBHOOK_COMMIT_TRIGGER,
-                        theDate = theDate
-                    ).getProjectUserOperateMetricsKey() to 1
-                )
-            )
+            val projectUserOperateMetricsKey = ProjectUserOperateMetricsData(
+                projectId = projectId,
+                userId = userId,
+                operate = WEBHOOK_COMMIT_TRIGGER,
+                theDate = theDate
+            ).getProjectUserOperateMetricsKey()
             measureEventDispatcher.dispatch(
                 ProjectUserDailyEvent(
                     projectId = projectId,
@@ -626,7 +623,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     theDate = theDate
                 ),
                 ProjectUserOperateMetricsEvent(
-                    projectUserOperateMetricsMap = projectUserOperateMetricsMap
+                    userOperateCounterData = UserOperateCounterData().apply { this.increment(projectUserOperateMetricsKey) }
                 )
             )
         } catch (ignored: Exception) {
