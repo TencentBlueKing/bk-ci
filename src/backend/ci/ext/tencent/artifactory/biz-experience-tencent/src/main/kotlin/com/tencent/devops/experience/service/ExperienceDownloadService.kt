@@ -43,6 +43,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispat
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
+import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
@@ -335,16 +336,12 @@ class ExperienceDownloadService @Autowired constructor(
             )
             if (experiencePublicDao.countByRecordId(dslContext = dslContext, recordId = experienceRecord.id) == 0) {
                 val projectId = experienceRecord.projectId
-                val projectUserOperateMetricsMap = mapOf(
-                    projectId to mapOf(
-                        ProjectUserOperateMetricsData(
-                            projectId = projectId,
-                            userId = userId,
-                            operate = EXPERIENCE_TASK_DOWNLOAD_OPERATE,
-                            theDate = LocalDate.now()
-                        ).getProjectUserOperateMetricsKey() to 1
-                    )
-                )
+                val projectUserOperateMetricsKey = ProjectUserOperateMetricsData(
+                    projectId = projectId,
+                    userId = userId,
+                    operate = EXPERIENCE_TASK_DOWNLOAD_OPERATE,
+                    theDate = LocalDate.now()
+                ).getProjectUserOperateMetricsKey()
                 measureEventDispatcher.dispatch(
                     ProjectUserDailyEvent(
                         projectId = projectId,
@@ -352,7 +349,7 @@ class ExperienceDownloadService @Autowired constructor(
                         theDate = LocalDate.now()
                     ),
                     ProjectUserOperateMetricsEvent(
-                        projectUserOperateMetricsMap = projectUserOperateMetricsMap
+                        userOperateCounterData = UserOperateCounterData().apply { this.increment(projectUserOperateMetricsKey) }
                     )
                 )
             }
