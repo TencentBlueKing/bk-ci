@@ -48,4 +48,11 @@ data class BuildParameters(
     var repoHashId: String? = null,
     @get:Schema(title = "实际参数名（REPO_REF 类型变量会拆分成两个变量）", required = false)
     var relKey: String? = null
-)
+) {
+    companion object {
+        private const val REPO_REF_SUFFIX_BRANCH = ".branch"
+        private const val REPO_REF_SUFFIX_REPO_NAME = ".repo-name"
+
+        fun getRepoRefVariableName(key: String) = Pair("$key$REPO_REF_SUFFIX_REPO_NAME", "$key$REPO_REF_SUFFIX_BRANCH")
+    }
+}

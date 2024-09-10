@@ -66,8 +66,7 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
 //            }
                 param.type == BuildFormPropertyType.REPO_REF -> {
                     // 新的变量类型，需手动插入值
-                    val repoNameKey = "$key.repo-name"
-                    val branchKey = "$key.branch"
+                    val (repoNameKey, branchKey) = BuildParameters.getRepoRefVariableName(key)
                     paramsMap[repoNameKey] = BuildParameters(
                         key = repoNameKey,
                         value = paramValues[repoNameKey] ?: param.defaultValue ?: "",
