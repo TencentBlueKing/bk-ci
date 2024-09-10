@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.pojo.AuthResourceGroup
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.model.auth.tables.TAuthResourceGroup
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
 import org.jooq.DSLContext
@@ -252,12 +253,31 @@ class AuthResourceGroupDao {
     fun listIamGroupIdsByConditions(
         dslContext: DSLContext,
         projectCode: String,
-        iamGroupIds: List<String>
+        iamGroupIds: List<String>? = null,
+        groupName: String? = null,
+        iamTemplateIds: List<Int>? = null
     ): List<Int> {
         return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
             dslContext.select(RELATION_ID).from(this)
                 .where(PROJECT_CODE.eq(projectCode))
-                .and(RELATION_ID.`in`(iamGroupIds))
+                .let {
+                    if (!iamGroupIds.isNullOrEmpty())
+                        it.and(RELATION_ID.`in`(iamGroupIds))
+                    else it
+                }
+                .let {
+                    if (groupName != null)
+                        it.and(GROUP_NAME.like("%$groupName%"))
+                    else
+                        it
+                }
+                .let {
+                    if (!iamTemplateIds.isNullOrEmpty()) {
+                        it.and(RESOURCE_TYPE.eq(AuthResourceType.PROJECT.value))
+                        it.and(IAM_TEMPLATE_ID.`in`(iamTemplateIds))
+                    } else
+                        it
+                }
                 .fetch().map { it.value1().toInt() }
         }
     }
