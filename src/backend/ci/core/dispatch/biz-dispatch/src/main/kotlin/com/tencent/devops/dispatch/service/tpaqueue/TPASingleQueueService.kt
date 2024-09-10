@@ -172,7 +172,13 @@ class TPASingleQueueService @Autowired constructor(
         saveAgentInfoToBuildDetail(data, agent)
 
         logger.info("${data.buildId}|START_AGENT_BY_ID|j(${data.vmSeqId})|agent=${agent.agentId}")
-        commonUtil.logI18n(data, BK_SCHEDULING_SELECTED_AGENT, arrayOf(agent.hostname, agent.ip))
+        commonUtil.logWithAgentUrl(
+            data = data,
+            messageCode = BK_SCHEDULING_SELECTED_AGENT,
+            param = arrayOf(agent.hostname, agent.ip),
+            nodeHashId = agent.nodeId,
+            agentHashId = agent.agentId
+        )
         return true
     }
 

@@ -200,7 +200,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                         workspace = dispatchType.workspace,
                         agentType = AgentType.REUSE_JOB_ID,
                         dockerInfo = dispatchType.dockerInfo,
-                        reusedInfo = dispatchType.reusedInfo
+                        reusedInfo = null
                     )
                 )
                 return
@@ -494,11 +494,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         agents: List<ThirdPartyAgent>,
         envId: Long?
     ) {
-        ThirdPartyAgentEnvLock(
-            redisOperation,
-            dispatchMessage.event.projectId,
-            dispatchType.envName
-        ).use { redisLock ->
+        ThirdPartyAgentEnvLock(redisOperation, dispatchMessage.event.projectId, dispatchType.envName).use { redisLock ->
             val lock = redisLock.tryLock(timeout = 5000) // # 超时尝试锁定，防止环境过热锁定时间过长，影响其他环境构建
             if (lock) {
                 // 判断是否有 jobEnv 的限制，检查全集群限制
