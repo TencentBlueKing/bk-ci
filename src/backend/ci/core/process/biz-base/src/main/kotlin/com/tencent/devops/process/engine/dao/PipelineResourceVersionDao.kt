@@ -77,8 +77,9 @@ class PipelineResourceVersionDao {
             val modelStr = JsonUtil.toJson(model, formatted = false)
             val createTime = LocalDateTime.now()
             val releaseTime = createTime.takeIf {
-                // 发布时间根据版本转为RELEASED状态为准，默认也是发布
-                versionStatus == VersionStatus.RELEASED || versionStatus == null
+                // 发布时间根据版本转为RELEASED状态为准，默认和新增分支版本也记录为发布时间
+                versionStatus == VersionStatus.RELEASED ||
+                    versionStatus == VersionStatus.BRANCH || versionStatus == null
             }
             return dslContext.insertInto(this)
                 .set(PROJECT_ID, projectId)
