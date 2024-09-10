@@ -60,7 +60,6 @@ class StreamEventService @Autowired constructor(
     private val gitCheckService: GitCheckService,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val websocketService: StreamWebsocketService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
     private val userMessageConsumer: UserMessageConsumer
@@ -176,19 +175,13 @@ class StreamEventService @Autowired constructor(
             branch = branch
         )
 
-        if (saveUserMessage(
-                userId = userId,
-                projectCode = projectCode,
-                event = event,
-                gitProjectId = gitProjectId,
-                messageType = UserMessageType.REQUEST
-            )
-        ) {
-            websocketService.pushNotifyWebsocket(
-                userId,
-                GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
-            )
-        }
+        saveUserMessage(
+            userId = userId,
+            projectCode = projectCode,
+            event = event,
+            gitProjectId = gitProjectId,
+            messageType = UserMessageType.REQUEST
+        )
         return messageId
     }
 
