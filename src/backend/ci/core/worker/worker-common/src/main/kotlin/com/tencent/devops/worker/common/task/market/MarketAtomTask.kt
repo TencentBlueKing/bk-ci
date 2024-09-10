@@ -268,10 +268,9 @@ open class MarketAtomTask : ITask() {
         var javaPath = runtimeJdkPath
         if (atomJdkVersion != runtimeJdkVersion) {
             if (jdk8Path.isNullOrBlank()) {
-                LoggerService.addErrorLine(
-                    "plugin need jdk version 8 but not found, use worker jdk version $runtimeJdkVersion"
-                )
+                LoggerService.addWarnLine("plugin need jdk8 but not found, use worker jdk version $runtimeJdkVersion")
             } else {
+                LoggerService.addDebugLine("worker jdk version $runtimeJdkVersion, but plugin use jdk8")
                 javaPath = jdk8Path
             }
         }
