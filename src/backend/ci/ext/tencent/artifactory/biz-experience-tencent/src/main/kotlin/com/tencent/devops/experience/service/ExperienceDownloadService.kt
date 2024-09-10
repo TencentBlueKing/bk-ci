@@ -349,7 +349,9 @@ class ExperienceDownloadService @Autowired constructor(
                         theDate = LocalDate.now()
                     ),
                     ProjectUserOperateMetricsEvent(
-                        userOperateCounterData = UserOperateCounterData().apply { this.increment(projectUserOperateMetricsKey) }
+                        userOperateCounterData = UserOperateCounterData().apply {
+                            this.increment(projectUserOperateMetricsKey)
+                        }
                     )
                 )
             }
