@@ -7,6 +7,7 @@ import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
@@ -41,6 +42,19 @@ class UserAuthResourceMemberResourceImpl(
                 departedFlag = departedFlag ?: false,
                 page = page,
                 pageSize = pageSize
+            )
+        )
+    }
+
+    @BkManagerCheck
+    override fun listProjectMembersByCondition(
+        userId: String,
+        projectId: String,
+        projectMembersQueryConditionReq: ProjectMembersQueryConditionReq
+    ): Result<SQLPage<ResourceMemberInfo>> {
+        return Result(
+            permissionResourceMemberService.listProjectMembersByComplexConditions(
+                conditionReq = projectMembersQueryConditionReq
             )
         )
     }
@@ -156,12 +170,18 @@ class UserAuthResourceMemberResourceImpl(
     override fun getMemberGroupCount(
         userId: String,
         projectId: String,
-        memberId: String
+        memberId: String,
+        groupName: String?,
+        minExpiredAt: Long?,
+        maxExpiredAt: Long?
     ): Result<List<MemberGroupCountWithPermissionsVo>> {
         return Result(
             permissionResourceMemberService.getMemberGroupsCount(
                 projectCode = projectId,
-                memberId = memberId
+                memberId = memberId,
+                groupName = groupName,
+                minExpiredAt = minExpiredAt,
+                maxExpiredAt = maxExpiredAt
             )
         )
     }
