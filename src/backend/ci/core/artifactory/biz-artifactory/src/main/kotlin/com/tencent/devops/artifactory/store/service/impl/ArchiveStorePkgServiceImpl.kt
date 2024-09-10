@@ -35,6 +35,7 @@ import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.artifactory.store.service.ArchiveStorePkgService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.STATIC
+import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -42,6 +43,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
+import com.tencent.devops.store.pojo.common.CONFIG_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
@@ -106,13 +108,18 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 version = version
             )
             val storeArchivePath = buildStoreArchivePath(storeType, storeCode, version)
-            storePkgEnvInfos = client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(
-                userId = userId,
-                storeType = storeType,
-                storeCode = storeCode,
-                version = version,
-                queryConfigFileFlag = true
-            ).data
+            val bkConfigJsonFile = File(storeArchivePath, CONFIG_JSON_NAME)
+            storePkgEnvInfos = if (bkConfigJsonFile.exists()) {
+                client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(
+                    userId = userId,
+                    storeType = storeType,
+                    storeCode = storeCode,
+                    version = version,
+                    queryConfigFileFlag = true
+                ).data
+            } else {
+                listOf(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
+            }
             storePkgEnvInfos?.forEach { storePkgEnvInfo ->
                 var pkgLocalPath = storePkgEnvInfo.pkgLocalPath
                 if (storeType == StoreTypeEnum.ATOM && storePkgEnvInfo.target.isNullOrBlank() &&
