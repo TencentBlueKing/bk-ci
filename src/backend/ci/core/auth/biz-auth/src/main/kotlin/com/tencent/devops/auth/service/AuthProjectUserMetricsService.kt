@@ -36,6 +36,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispat
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
+import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -51,6 +52,7 @@ class AuthProjectUserMetricsService @Autowired constructor(
     private val measureEventDispatcher: MeasureEventDispatcher,
     private val objectMapper: ObjectMapper
 ) {
+    private val userOperateCounterData = UserOperateCounterData()
 
     companion object {
         private val logger = LoggerFactory.getLogger(AuthProjectUserMetricsService::class.java)
@@ -128,22 +130,20 @@ class AuthProjectUserMetricsService @Autowired constructor(
             theDate = theDate,
             operate = operate
         ).getProjectUserOperateMetricsKey()
-
-        synchronized(projectId.intern()) {
-            projectUserOperateMetricsMap.getOrPut(projectId) { mutableMapOf() }
-                .compute(projectUserOperateMetricsKey) { _, count -> (count ?: 0) + 1 }
-        }
+        userOperateCounterData.increment(projectUserOperateMetricsKey)
     }
 
     @Scheduled(initialDelay = 20000, fixedDelay = 20000)
     private fun uploadProjectUserOperateMetrics() {
         val projectUserOperateMetricsMapStr = objectMapper.writeValueAsString(projectUserOperateMetricsMap)
-        logger.debug("upload project user operate metrics :$projectUserOperateMetricsMapStr")
+        if (logger.isDebugEnabled) {
+            logger.debug("upload project user operate metrics :$projectUserOperateMetricsMapStr")
+        }
         measureEventDispatcher.dispatch(
             ProjectUserOperateMetricsEvent(
-                projectUserOperateMetricsMap = projectUserOperateMetricsMap
+                userOperateCounterData = userOperateCounterData
             )
         )
-        projectUserOperateMetricsMap.clear()
+        userOperateCounterData.reset()
     }
 }
