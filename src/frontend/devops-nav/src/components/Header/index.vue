@@ -105,7 +105,6 @@
                 v-if="!isInIframe"
                 theme="light navigation-message"
                 placement="bottom"
-                trigger="hover"
                 :arrow="false"
                 ref="popoverRef"
                 :on-hide="handleHide"
@@ -128,7 +127,6 @@
             <bk-popover
                 theme="light navigation-message"
                 placement="bottom"
-                trigger="hover"
                 :arrow="false"
                 ref="popoverRef"
                 :on-hide="handleHide"

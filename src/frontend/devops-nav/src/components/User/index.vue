@@ -2,7 +2,6 @@
     <bk-popover
         theme="light navigation-message"
         placement="bottom"
-        trigger="click"
         :arrow="false"
         ref="popoverRef"
         :on-hide="handleHide"
