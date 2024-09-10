@@ -275,13 +275,14 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 poolName = transferCache.getThirdPartyAgent(
                     poolType = JobRunsOnPoolType.ENV_ID,
                     userId = userId,
-                    projectId = envProjectId ?: projectId,
+                    projectId = envProjectId?.ifBlank { null } ?: projectId,
                     value = poolName
                 ) ?: throw PipelineTransferException(
                     CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
                     arrayOf("envId: $poolName")
                 )
             }
+
             JobRunsOnPoolType.AGENT_REUSE_JOB.name -> {
                 nodeName = null
                 poolName = null
