@@ -216,10 +216,8 @@ class PipelineRepositoryVersionService(
             description = description
         )
         // 草稿单独提出来放在第一页，其他版本后插入结果
-        var fixedLimit = limit
         val result = mutableListOf<PipelineVersionSimple>()
         if (includeDraft != false && offset == 0) {
-            fixedLimit -= 1
             pipelineResourceVersionDao.getDraftVersionResource(
                 dslContext = dslContext,
                 projectId = projectId,
