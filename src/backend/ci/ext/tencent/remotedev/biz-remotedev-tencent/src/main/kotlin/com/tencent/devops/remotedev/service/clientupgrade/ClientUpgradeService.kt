@@ -39,7 +39,7 @@ class ClientUpgradeService @Autowired constructor(
         return ClientUpgradeResp(clientVersion, startVersion)
     }
 
-    @Scheduled(initialDelay = 60 * 1000L, fixedDelay = 5 * 60 * 1000L)
+    @Scheduled(initialDelay = 10 * 1000L, fixedDelay = 30 * 1000L)
     fun updateCanUpgradeClients() {
         val watcher = Watcher("updateCanUpgradeClients")
         logger.debug("updateCanUpgradeClients start")
@@ -60,7 +60,7 @@ class ClientUpgradeService @Autowired constructor(
             }
 
             watcher.start("listCanUpdateClients")
-            val canUpgradeClients = listCanUpgradeClients(maxParallelCount)?.ifEmpty { return } ?: return
+            val canUpgradeClients = listCanUpgradeClients(maxParallelCount).ifEmpty { return }
 
             watcher.start("setCanUpgradeClients")
             upgradeProps.setCanUpgradeClients(canUpgradeClients)
@@ -106,14 +106,14 @@ class ClientUpgradeService @Autowired constructor(
         // 设置当前符合版本的个数
         val clientMaxNumber = upgradeProps.getMaxNumb(ClientUpgradeComp.CLIENT, os)
         var clientCanUpgradeNumb: Int? = null
-        if (clientMaxNumber != null && clientCurrentVersion.isNotBlank()) {
+        if (clientCurrentVersion.isNotBlank()) {
             val count = clientDao.fetchVersionCount(dslContext, clientCurrentVersion)
             clientCanUpgradeNumb = (clientMaxNumber - count).let { if (it < 0) 0 else it }
         }
 
         val startMaxNumber = upgradeProps.getMaxNumb(ClientUpgradeComp.START, os)
         var startCanUpgradeNumb: Int? = null
-        if (startMaxNumber != null && startCurrentVersion.isNotBlank()) {
+        if (startCurrentVersion.isNotBlank()) {
             val count = clientDao.fetchStartVersionCount(dslContext, startCurrentVersion)
             startCanUpgradeNumb = (startMaxNumber - count).let { if (it < 0) 0 else it }
         }
