@@ -35,7 +35,7 @@
                         {},
                         {
                             id: undefined,
-                            name: `${param.name + '.'}branch`,
+                            name: `${param.name}.branch`,
                             value: param.branchValue,
                             searchUrl: getSearchBranchUrl(param),
                             replaceKey: param.branchReplaceKey,
@@ -189,8 +189,8 @@
                         component: this.getParamComponentType(param),
                         name: param.id,
                         required: param.valueNotEmpty,
-                        value: isRepoParam(param.type) ? this.paramValues[`${param.id + '.'}repo-name`] : this.paramValues[param.id],
-                        branchValue: isRepoParam(param.type) ? this.paramValues[`${param.id + '.'}branch`] : '',
+                        value: isRepoParam(param.type) ? this.paramValues[`${param.id}.repo-name`] : this.paramValues[param.id],
+                        branchValue: isRepoParam(param.type) ? this.paramValues[`${param.id}.branch`] : '',
                         ...restParam
                     }
                 })
@@ -250,8 +250,8 @@
                     this.handleParamChange(param.name, value)
                 }
                 if (isRepoParam(param.type)) {
-                    this.handleParamChange(`${param.name + '.'}repo-name`, value)
-                    this.handleParamChange(`${param.name + '.'}branch`, '')
+                    this.handleParamChange(`${param.name}.repo-name`, value)
+                    this.handleParamChange(`${param.name}.branch`, '')
                 } else {
                     this.handleParamChange(param.name, value)
                 }

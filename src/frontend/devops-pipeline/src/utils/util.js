@@ -638,8 +638,8 @@ export function getParamsValuesMap (params = [], valueKey = 'defaultValue', init
     return params.reduce((values, param) => {
         if (param.id) {
             if (param.type === 'REPO_REF') {
-                values[`${param.id + '.'}repo-name`] = initValues[param.id] ?? param[valueKey]
-                values[`${param.id + '.'}branch`] = initValues[param.id] ?? (valueKey === 'value' ? param.branch : param.defaultBranch)
+                values[`${param.id}.repo-name`] = initValues[param.id] ?? param[valueKey]
+                values[`${param.id}.branch`] = initValues[param.id] ?? (valueKey === 'value' ? param.branch : param.defaultBranch)
             } else {
                 values[param.id] = initValues[param.id] ?? param[valueKey]
             }
