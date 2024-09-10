@@ -59,6 +59,8 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
             val bkConfigJsonMap = JsonUtil.toMap(bkConfigJsonFile.readText())
             val osInfos = bkConfigJsonMap[KEY_OS] as? List<Map<String, Any>>
             signFilePaths = osInfos?.map { it[KEY_PACKAGE_PATH] as String }?.toMutableList()
+            // 删除原压缩包
+            File(storeArchivePath, disposition.fileName).deleteRecursively()
         }
         if (signFilePaths.isNullOrEmpty() && storeType == StoreTypeEnum.DEVX) {
             signFilePaths = mutableListOf(disposition.fileName)
