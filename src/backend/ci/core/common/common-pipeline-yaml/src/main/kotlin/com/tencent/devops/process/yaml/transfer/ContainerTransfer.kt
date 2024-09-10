@@ -29,6 +29,8 @@ package com.tencent.devops.process.yaml.transfer
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.TRANSFER_ERROR_CHECK_AGENT_ID_FAILED
+import com.tencent.devops.common.api.constant.CommonMessageCode.TRANSFER_ERROR_CHECK_ENV_ID_FAILED
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
@@ -48,6 +50,7 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.utils.TransferUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_JOB_MAX_QUEUE_MINUTES
@@ -267,7 +270,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
                     value = nodeName
                 ) ?: throw PipelineTransferException(
                     CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
-                    arrayOf("agentId: $nodeName")
+                    arrayOf(I18nUtil.getCodeLanMessage(TRANSFER_ERROR_CHECK_AGENT_ID_FAILED) + ": $nodeName")
                 )
             }
 
@@ -279,7 +282,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
                     value = poolName
                 ) ?: throw PipelineTransferException(
                     CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
-                    arrayOf("envId: $poolName")
+                    arrayOf(I18nUtil.getCodeLanMessage(TRANSFER_ERROR_CHECK_ENV_ID_FAILED) + ": $poolName")
                 )
             }
 
