@@ -96,7 +96,7 @@ class DevxHandleBuildResultService @Autowired constructor(
             val osName = baseEnvRecord.osName
             val osArch = baseEnvRecord.osArch ?: ""
             keys.add("${osName}_${osArch}_signResult")
-            baseEnvMap["${osName}_${osArch}"] = baseEnvRecord
+            baseEnvMap["${osName}_$osArch"] = baseEnvRecord
         }
         // 批量获取key在构建变量表的值
         val varMap = if (keys.isNotEmpty()) {
@@ -153,7 +153,7 @@ class DevxHandleBuildResultService @Autowired constructor(
             val osName = filedNames[0]
             val osArch = filedNames[1]
             val signMap = JsonUtil.toMap(value)
-            val baseEnvRecord = baseEnvMap["${osName}_${osArch}"]
+            val baseEnvRecord = baseEnvMap["${osName}_$osArch"]
             baseEnvRecord?.let {
                 doStoreSignBus(
                     signMap = signMap,
