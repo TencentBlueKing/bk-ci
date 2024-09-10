@@ -105,7 +105,7 @@
                 v-if="!isInIframe"
                 theme="light navigation-message"
                 placement="bottom"
-                trigger="click"
+                trigger="hover"
                 :arrow="false"
                 ref="popoverRef"
                 :on-hide="handleHide"
@@ -128,7 +128,7 @@
             <bk-popover
                 theme="light navigation-message"
                 placement="bottom"
-                trigger="click"
+                trigger="hover"
                 :arrow="false"
                 ref="popoverRef"
                 :on-hide="handleHide"
@@ -139,7 +139,7 @@
                 <template slot="content">
                     <li class="bkci-dropdown-item" @click.stop="goToDocs">{{ $t('documentation') }}</li>
                     <li class="bkci-dropdown-item" @click.stop="goToFeedBack">{{ $t('feedback') }}</li>
-                    <li class="bkci-dropdown-item" @click.stop="goToGithubSource">{{ $t('community') }}</li>
+                    <li class="bkci-dropdown-item" @click.stop="goToGithubSource">{{ $t('openSource') }}</li>
                 </template>
             </bk-popover>
             <User
@@ -198,14 +198,14 @@
         isShowTooltip: boolean = true
         langs: Array<any> = [
             {
-                icon: 'english',
-                name: 'English',
-                id: 'en-US'
-            },
-            {
                 icon: 'chinese',
                 name: '中文',
                 id: 'zh-CN'
+            },
+            {
+                icon: 'english',
+                name: 'English',
+                id: 'en-US'
             }
         ]
  
