@@ -14,10 +14,10 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import atomEdit from '@/components/manage/detail/atom-detail/edit.vue'
     import imageEdit from '@/components/manage/detail/image-detail/edit.vue'
     import serviceEdit from '@/components/manage/detail/service-detail/edit.vue'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {

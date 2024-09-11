@@ -205,9 +205,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import labelList from '@/components/labelList.vue'
     import api from '@/api'
+    import labelList from '@/components/labelList.vue'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {

@@ -128,7 +128,7 @@
                             </template>
                         </bk-table-column>
                         <bk-table-column
-                            :label="$t('状态')"
+                            :label="$t('quality.状态')"
                             prop="interceptResult"
                             width="150"
                         >
@@ -145,7 +145,7 @@
                             </template>
                         </bk-table-column>
                         <bk-table-column
-                            :label="$t('实际审核人')"
+                            :label="$t('quality.实际审核人')"
                             prop="qualityRuleBuildHisOpt"
                             width="100"
                         >

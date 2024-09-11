@@ -25,8 +25,8 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
     export default {
         name: 'sendRTXNotify',
         mixins: [atomMixin, validMixins],

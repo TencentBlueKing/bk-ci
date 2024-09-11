@@ -54,8 +54,8 @@
 </template>
 
 <script>
-    import commentRate from '../comment-rate'
     import { DEFAULT_LOGO_URL } from '@/utils/'
+    import commentRate from '../comment-rate'
     import atom from './atom.vue'
 
     export default {

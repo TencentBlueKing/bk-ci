@@ -52,9 +52,9 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
     export default {
         name: 'build-script',
         mixins: [atomMixin, validMixins],

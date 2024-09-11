@@ -16,7 +16,7 @@
         />
         <template v-if="containerIndex === 0">
             <cruve-line
-                v-if="reactiveData.editable && !isTriggerStage"
+                v-if="showLeftCruveLine"
                 class="first-connect-line connect-line left"
                 :width="58"
                 :height="60"
@@ -32,7 +32,7 @@
         </template>
         <template v-if="containerIndex !== containerLength - 1">
             <cruve-line
-                v-if="reactiveData.editable && !isTriggerStage"
+                v-if="showLeftCruveLine"
                 :straight="true"
                 :width="58"
                 :height="cruveHeight"

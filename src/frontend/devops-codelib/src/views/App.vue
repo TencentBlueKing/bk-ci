@@ -5,9 +5,7 @@
                 size="32"
                 :name="logo"
             />
-            <span>
-                {{ title }}
-            </span>
+            <span>{{ title }}</span>
         </header>
         <main>
             <router-view />

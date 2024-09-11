@@ -49,19 +49,19 @@
 
 <script>
     import api from '@/api'
-    import { mapActions, mapGetters } from 'vuex'
-    import ideInfo from '../../components/common/detail-info/ide'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import { mapActions, mapGetters } from 'vuex'
     import atomInfo from '../../components/common/detail-info/atom'
-    import templateInfo from '../../components/common/detail-info/template'
+    import ideInfo from '../../components/common/detail-info/ide'
     import imageInfo from '../../components/common/detail-info/image'
     import serviceInfo from '../../components/common/detail-info/service'
-    import detailScore from '../../components/common/detailTab/detailScore'
+    import templateInfo from '../../components/common/detail-info/template'
     import codeSection from '../../components/common/detailTab/codeSection'
-    import yamlDetail from '../../components/common/detailTab/yamlDetail'
+    import detailScore from '../../components/common/detailTab/detailScore'
+    import errorCodeDetail from '../../components/common/detailTab/errorCodeDetail'
     import outputDetail from '../../components/common/detailTab/outputDetail'
     import qualityDetail from '../../components/common/detailTab/qualityDetail'
-    import errorCodeDetail from '../../components/common/detailTab/errorCodeDetail'
+    import yamlDetail from '../../components/common/detailTab/yamlDetail'
 
     export default {
         components: {

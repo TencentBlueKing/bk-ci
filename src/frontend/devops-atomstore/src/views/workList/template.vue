@@ -305,10 +305,10 @@
 </template>
 
 <script>
-    import { getQueryString, debounce } from '@/utils/index'
     import formTips from '@/components/common/formTips/index'
-    import status from './status'
     import { templateStatusList } from '@/store/constants'
+    import { debounce, getQueryString } from '@/utils/index'
+    import status from './status'
 
     export default {
         components: {

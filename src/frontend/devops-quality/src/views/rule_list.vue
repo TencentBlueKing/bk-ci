@@ -401,8 +401,8 @@
     import imageEmpty from '@/components/common/imageEmpty'
     import effectivePipeline from '@/components/devops/effective-pipeline'
     import effectiveRange from '@/components/devops/effective-range'
-    import { convertTime, getQueryString } from '@/utils/util'
     import { RULE_RESOURCE_ACTION, RULE_RESOURCE_TYPE } from '@/utils/permission.js'
+    import { convertTime, getQueryString } from '@/utils/util'
 
     export default {
         components: {

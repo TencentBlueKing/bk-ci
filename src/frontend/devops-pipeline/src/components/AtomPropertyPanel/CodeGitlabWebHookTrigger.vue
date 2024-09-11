@@ -26,8 +26,7 @@
                                 :value="element[i.key] || atomPropsModel[key]?.children[index]?.default"
                                 :disabled="disabled"
                                 v-bind="i"
-                            >
-                            </component>
+                            />
                         </form-field>
                     </template>
                 </form-field-group>

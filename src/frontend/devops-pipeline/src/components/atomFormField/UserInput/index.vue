@@ -1,15 +1,31 @@
 <template>
-    <div class="devops-staff-selector" @click="toEdit">
+    <div
+        class="devops-staff-selector"
+        @click="toEdit"
+    >
         <div :class="['devops-staff-input', { 'active': isEdit, 'disabled': disabled }]">
-            <span class="placeholder" v-if="!isEdit && !value.length && !curInsertVal.length">{{ placeholder }}</span>
-            <div class="tag-list" :class="!value.length ? 'no-item' : ''">
-                <div class="select-editor" ref="selectEditor">
-                    <span class="tag-info"
+            <span
+                class="placeholder"
+                v-if="!isEdit && !value.length && !curInsertVal.length"
+            >{{ placeholder }}</span>
+            <div
+                class="tag-list"
+                :class="!value.length ? 'no-item' : ''"
+            >
+                <div
+                    class="select-editor"
+                    ref="selectEditor"
+                >
+                    <span
+                        class="tag-info"
                         v-for="(entry, index) in value"
                         :key="index"
                         @click="selectInfo($event, entry)"
                     >{{ entry }}</span>
-                    <input type="text" ref="staffInput" id="staffInput"
+                    <input
+                        type="text"
+                        ref="staffInput"
+                        id="staffInput"
                         class="form-input"
                         autocomplete="off"
                         :name="name"
@@ -17,7 +33,8 @@
                         @input="input"
                         @keydown="keydown"
                         @paste="paste"
-                        @blur="hideAll" />
+                        @blur="hideAll"
+                    />
                 </div>
             </div>
         </div>

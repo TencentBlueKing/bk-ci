@@ -4,7 +4,6 @@
         :title="title"
         :value="value"
         @change="handleSwitch"
-        ref="checkbox"
     >
         {{ text ? text : $t('editPage.checkOrNot') }}
         <bk-popover

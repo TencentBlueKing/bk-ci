@@ -2,7 +2,7 @@
     <section class="detail-title">
         <img
             class="detail-pic atom-logo"
-            :src="detail.logoUrl || defaultUrl"
+            :src="detail.logoUrl"
         >
         <hgroup class="store-item-detail detail-info-group">
             <h3>{{ detail.name }}</h3>
@@ -94,7 +94,6 @@
 </template>
 
 <script>
-    import { DEFAULT_LOGO_URL } from '@/utils'
     import commentRate from '../comment-rate'
 
     export default {
@@ -113,13 +112,7 @@
         props: {
             detail: Object
         },
-
-        data () {
-            return {
-                defaultUrl: DEFAULT_LOGO_URL
-            }
-        },
-
+        
         computed: {
             starWidth () {
                 const integer = Math.floor(this.detail.score)

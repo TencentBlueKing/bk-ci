@@ -178,9 +178,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {

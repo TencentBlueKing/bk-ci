@@ -55,7 +55,7 @@
 </template>
 
 <script>
-    import { mapActions, mapState, mapGetters } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import ContainerContent from './ContainerContent'
 
     export default {

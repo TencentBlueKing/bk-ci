@@ -215,8 +215,7 @@
                     @click="confirmFn"
                     :disabled="nodeSelectConf.unselected"
                 >
-                    {{ nodeSelectConf.importText
-                    }}
+                    {{ nodeSelectConf.importText }}
                 </bk-button>
                 <bk-button
                     theme="default"

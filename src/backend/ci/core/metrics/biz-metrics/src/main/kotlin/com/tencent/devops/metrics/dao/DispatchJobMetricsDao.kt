@@ -76,6 +76,7 @@ class DispatchJobMetricsDao {
             ).from(this)
                 .where(PROJECT_ID.eq(dispatchJobReq.projectId))
                 .and(CREATE_TIME.between(startDateTime, endDateTime))
+                .and(CHANNEL_CODE.eq("BS"))
                 .groupBy(PROJECT_ID, JOB_TYPE)
                 .asTable("subQuery")
 

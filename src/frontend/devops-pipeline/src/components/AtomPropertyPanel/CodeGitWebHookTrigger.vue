@@ -48,8 +48,7 @@
                         :element="element"
                         :disabled="disabled"
                         v-bind="obj"
-                    >
-                    </component>
+                    />
                 </form-field>
             </template>
         </template>

@@ -71,6 +71,9 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         projectId: String,
         resourceType: String,
         memberId: String,
+        groupName: String?,
+        minExpiredAt: Long?,
+        maxExpiredAt: Long?,
         start: Int,
         limit: Int
     ): Result<SQLPage<GroupDetailsInfoVo>> {
@@ -79,6 +82,9 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
                 projectId = projectId,
                 resourceType = resourceType,
                 memberId = memberId,
+                groupName = groupName,
+                minExpiredAt = minExpiredAt,
+                maxExpiredAt = maxExpiredAt,
                 start = start,
                 limit = limit
             )

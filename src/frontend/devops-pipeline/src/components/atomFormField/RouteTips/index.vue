@@ -6,7 +6,7 @@
     >
         <div class="tips-icon">
             <i
-                class="devops-icon icon-info-circle-shape"
+                class="bk-icon icon-info-circle-shape"
                 :style="!pathTips ? 'margin: 15px 13px;' : ''"
             ></i>
         </div>

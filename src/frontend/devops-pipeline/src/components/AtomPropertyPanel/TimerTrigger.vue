@@ -72,8 +72,7 @@
                         :placeholder="$t('editPage.crontabExpression')"
                         v-validate.initial="{ 'required': advance }"
                         :disabled="disabled"
-                    >
-                    </vuex-textarea>
+                    />
                 </form-field>
             </div>
         </accordion>

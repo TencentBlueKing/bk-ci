@@ -30,8 +30,7 @@
             :value="element[curComponent.key]"
             :disabled="disabled"
             v-bind="curComponent"
-        >
-        </component>
+        />
     </div>
 </template>
 

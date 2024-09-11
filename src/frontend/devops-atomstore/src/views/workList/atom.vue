@@ -80,8 +80,8 @@
                 <bk-table-column
                     :label="$t('store.修改时间')"
                     prop="updateTime"
-                    show-overflow-tooltip
                     width="150"
+                    show-overflow-tooltip
                 ></bk-table-column>
                 <bk-table-column
                     :label="$t('store.操作')"
@@ -257,11 +257,10 @@
                                     {{ $t('store.项目不能为空') }}
                                 </div>
                             </div>
-                            
                             <bk-popover
                                 class="info-circle-icon"
                                 placement="right"
-                                width="400"
+                                max-width="400"
                             >
                                 <i class="devops-icon icon-info-circle"></i>
                                 <template slot="content">

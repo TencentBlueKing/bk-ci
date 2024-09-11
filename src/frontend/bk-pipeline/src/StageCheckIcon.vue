@@ -3,14 +3,14 @@
         :class="{
             'stage-check-icon': true,
             'pointer': true,
-            [reviewStatausIcon]: true,
+            [reviewStatusIcon]: true,
             'is-readonly-check-icon': !isExecDetail && !editable
         }"
         v-bk-tooltips.top="reviewTooltip"
         @click.stop="handleStageCheckIn"
     >
         <Logo
-            :name="reviewStatausIcon"
+            :name="reviewStatusIcon"
             size="28"
         />
         <span
@@ -21,13 +21,13 @@
 </template>
 
 <script>
-    import { eventBus } from './util'
+    import {
+        STAGE_CHECK,
+        STATUS_MAP
+    } from './constants'
     import { localeMixins } from './locale'
     import Logo from './Logo'
-    import {
-        STATUS_MAP,
-        STAGE_CHECK
-    } from './constants'
+    import { eventBus } from './util'
     export default {
         name: 'stage-check-icon',
         components: {
@@ -87,7 +87,7 @@
                 }
                 return txt
             },
-            reviewStatausIcon () {
+            reviewStatusIcon () {
                 const { stageCheck = {} } = this
                 try {
                     if (stageCheck.isReviewError) return 'review-error'

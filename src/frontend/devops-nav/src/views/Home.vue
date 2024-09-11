@@ -150,15 +150,27 @@
         </div>
         <section class="devops-home-footer">
             <template v-if="hasSharedResUrl">
-                <p class="item" v-html="platformInfo.i18n.footerInfoHTML" />
+                <p
+                    class="item"
+                    v-html="platformInfo.i18n.footerInfoHTML"
+                />
                 <p class="bkci-copyright">{{ platformInfo.footerCopyrightContent }}</p>
             </template>
             <template v-else>
                 <section class="devops-home-footer">
                     <div class="item">
-                        <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">{{ $t('technicalSupport') }}</a> |
-                        <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('communityForum') }}</a> |
-                        <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('ProductOfficialWebsite') }}</a>
+                        <a
+                            href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true"
+                            target="_blank"
+                        >{{ $t('technicalSupport') }}</a> |
+                        <a
+                            href="https://bk.tencent.com/s-mart/community/"
+                            target="_blank"
+                        >{{ $t('communityForum') }}</a> |
+                        <a
+                            href="https://bk.tencent.com/index/"
+                            target="_blank"
+                        >{{ $t('ProductOfficialWebsite') }}</a>
                     </div>
                     <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved {{ BK_CI_VERSION.trim() }}</p>
                 </section>
@@ -170,13 +182,13 @@
 
 <script lang="ts">
     import { isAbsoluteUrl, urlJoin } from '@/utils/util'
-import Vue from 'vue'
-import { Component } from 'vue-property-decorator'
-import { Action, Getter, State } from 'vuex-class'
-import { Accordion, AccordionItem } from '../components/Accordion/index'
-import ConsultTools from '../components/ConsultTools/index.vue'
-import Logo from '../components/Logo/index.vue'
-import NavBox from '../components/NavBox/index.vue'
+    import Vue from 'vue'
+    import { Component } from 'vue-property-decorator'
+    import { Action, Getter, State } from 'vuex-class'
+    import { Accordion, AccordionItem } from '../components/Accordion/index'
+    import ConsultTools from '../components/ConsultTools/index.vue'
+    import Logo from '../components/Logo/index.vue'
+    import NavBox from '../components/NavBox/index.vue'
 
     @Component({
         components: {

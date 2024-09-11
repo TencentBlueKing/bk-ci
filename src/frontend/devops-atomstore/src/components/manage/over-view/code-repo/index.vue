@@ -22,7 +22,7 @@
                     <i class="bk-icon icon-info-circle"></i>
                 </span>
                 <span
-                    @click="code.tool.click()"
+                    @click="code.tool.click"
                     class="item-tool-label item-link"
                     :title="code.tool.title"
                 >{{ code.tool.label }}</span>

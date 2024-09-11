@@ -117,8 +117,8 @@
 <script>
     import { mapActions, mapGetters } from 'vuex'
     import animatedInteger from '../animatedInteger'
-    import commentRate from '../comment-rate'
     import comment from '../comment'
+    import commentRate from '../comment-rate'
     import commentDialog from '../comment/commentDialog.vue'
     import mediaList from '../mediaList/index'
 

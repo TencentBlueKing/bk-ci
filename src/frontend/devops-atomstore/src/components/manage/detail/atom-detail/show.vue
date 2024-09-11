@@ -25,7 +25,7 @@
                     <span>{{ detail.classifyName || '--' }}</span>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.适用Job类型：') }}</span>
+                    <span class="detail-label">{{ $t('store.适用机器类型：') }}</span>
                     <div v-if="detail.os">
                         {{ jobTypeMap[detail.jobType] }}
                         <span v-if="detail.jobType === 'AGENT'">（

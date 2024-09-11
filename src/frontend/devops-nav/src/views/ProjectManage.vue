@@ -270,7 +270,6 @@
     } from '@/utils/permission'
     import { mapActions } from 'vuex'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
-
     const PROJECT_SORT_FILED = {
         projectName: 'PROJECT_NAME',
         englishName: 'ENGLISH_NAME'

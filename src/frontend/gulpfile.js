@@ -30,7 +30,7 @@ const argv = yargs.alias({
     lsVersion: 'localStorage version',
     type: 'bkdevops version 【ee | tencent】'
 }).argv
-const { dist, env, lsVersion, type, scope } = argv
+const { dist, env, lsVersion, scope } = argv
 
 const svgSpriteConfig = {
     mode: {
@@ -155,8 +155,8 @@ async function execAsync () {
     
     return new Promise((resolve, reject) => {
         const scopeStr = getScopeStr(scope)
-        const cmd = scopeStr ? `run-many -t public:master ${scopeStr}`: `affected -t public:master `
-        console.log('gulp cmd: ', cmd, cmd.split(' '));
+        const cmd = scopeStr ? `run-many -t public:master ${scopeStr}` : 'affected -t public:master '
+        console.log('gulp cmd: ', cmd, cmd.split(' '))
         const { spawn } = require('node:child_process')
         const spawnCmd = spawn('pnpm', [
             'exec',
@@ -173,10 +173,10 @@ async function execAsync () {
         })
         
         spawnCmd.on('close', (code) => {
-            console.log(`child process exited with code ${code}`);
+            console.log(`child process exited with code ${code}`)
             spinner.succeed('Finished building bk-ci frontend project')
             resolve()
-        }); 
+        })
     })
 }
   
