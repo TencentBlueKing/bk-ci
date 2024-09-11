@@ -23,11 +23,36 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.job.api.pojo
+package com.tencent.devops.metrics.listener
 
-data class Step(
-    val stepId: Int,
-    val stepExt: StepExt
-)
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
+import com.tencent.devops.metrics.service.ProjectBuildSummaryService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
+
+@Component
+class ProjectUserDailyOperateMetricsListener @Autowired constructor(
+    private val projectBuildSummaryService: ProjectBuildSummaryService
+) : Listener<ProjectUserOperateMetricsEvent> {
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProjectUserDailyOperateMetricsListener::class.java)
+    }
+
+    override fun execute(event: ProjectUserOperateMetricsEvent) {
+        try {
+            if (logger.isDebugEnabled) {
+                logger.debug("consumer project user daily operate metrics :${event.userOperateCounterData}")
+            }
+            projectBuildSummaryService.saveProjectUserOperateMetrics(
+                userOperateCounterData = event.userOperateCounterData
+            )
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to insert project user metrics data", ignored)
+        }
+    }
+}
