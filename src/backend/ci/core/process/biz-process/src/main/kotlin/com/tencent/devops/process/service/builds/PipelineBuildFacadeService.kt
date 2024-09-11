@@ -124,6 +124,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
@@ -137,12 +138,12 @@ import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriBuilder
 
 /**
  *
@@ -174,7 +175,8 @@ class PipelineBuildFacadeService(
     private val pipelineRedisService: PipelineRedisService,
     private val pipelineRetryFacadeService: PipelineRetryFacadeService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+    private val templateFacadeService: TemplateFacadeService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -234,7 +236,7 @@ class PipelineBuildFacadeService(
         var useLatestParameters = false
         run lit@{
             triggerContainer.elements.forEach {
-                if (it is ManualTriggerElement && it.isElementEnable()) {
+                if (it is ManualTriggerElement && it.elementEnabled()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
                     useLatestParameters = it.useLatestParameters ?: false
@@ -651,6 +653,7 @@ class PipelineBuildFacadeService(
         try {
             val (resource, debug) = getModelAndBuildLevel(projectId, pipelineId, version)
             val model = resource.model
+
             /**
              * 验证流水线参数构建启动参数
              */
@@ -666,7 +669,7 @@ class PipelineBuildFacadeService(
                 var canRemoteStartup = false
                 run lit@{
                     triggerContainer.elements.forEach {
-                        if (it is RemoteTriggerElement && it.isElementEnable()) {
+                        if (it is RemoteTriggerElement && it.elementEnabled()) {
                             canRemoteStartup = true
                             return@lit
                         }
@@ -687,6 +690,10 @@ class PipelineBuildFacadeService(
                 logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }
 
+            templateFacadeService.printModifiedTemplateParams(
+                projectId = projectId, pipelineId = pipelineId,
+                pipelineParams = triggerContainer.params, paramValues = values
+            )
             val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,
                 paramProperties = triggerContainer.params, paramValues = values
@@ -750,7 +757,14 @@ class PipelineBuildFacadeService(
             return if (targetResource.status == VersionStatus.COMMITTING) {
                 Pair(targetResource, true)
             } else {
-                Pair(targetResource, false)
+                val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                ) ?: throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+                )
+                Pair(releaseVersion, false)
             }
         }
     }
@@ -1111,13 +1125,12 @@ class PipelineBuildFacadeService(
                 params = arrayOf(userId)
             )
         }
-        val executeCount = buildInfo.executeCount ?: 1
         if (approve) {
             pipelineRuntimeService.approveTriggerReview(userId = userId, buildInfo = buildInfo)
         } else {
             pipelineRuntimeService.disapproveTriggerReview(
                 userId = userId, buildId = buildId, pipelineId = pipelineId,
-                projectId = projectId, executeCount = executeCount
+                projectId = projectId, executeCount = buildInfo.executeCount
             )
         }
         return true
@@ -1986,9 +1999,10 @@ class PipelineBuildFacadeService(
         startUser: List<String>? = null,
         updateTimeDesc: Boolean? = null,
         archiveFlag: Boolean? = false,
-        customVersion: Int?,
+        debug: Boolean?,
         triggerAlias: List<String>?,
-        triggerBranch: List<String>?
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
@@ -2023,26 +2037,6 @@ class PipelineBuildFacadeService(
                     permission = AuthPermission.VIEW
                 )
             }
-            // 如果请求的参数是草稿版本的版本号，则返回调试记录，如果是当前正式版本则返回正式记录
-            // 否则按版本查询返回空数据
-            val customResource = pipelineRepositoryService.getPipelineResourceVersion(
-                projectId = projectId, pipelineId = pipelineId,
-                version = customVersion, includeDraft = true
-            )
-            val targetDebugVersion = if (customResource?.status == VersionStatus.COMMITTING) {
-                customVersion
-            } else if (customResource?.version == pipelineInfo.version) {
-                null
-            } else {
-                return BuildHistoryPage(
-                    page = pageNotNull,
-                    pageSize = limit,
-                    count = 0,
-                    records = emptyList(),
-                    hasDownloadPermission = false,
-                    pipelineVersion = pipelineInfo.version
-                )
-            }
 
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
                 projectId = projectId,
@@ -2068,9 +2062,10 @@ class PipelineBuildFacadeService(
                 buildMsg = buildMsg,
                 startUser = startUser,
                 queryDslContext = queryDslContext,
-                debugVersion = targetDebugVersion,
+                debug = debug,
                 triggerAlias = triggerAlias,
-                triggerBranch = triggerBranch
+                triggerBranch = triggerBranch,
+                triggerUser = triggerUser
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -2100,9 +2095,10 @@ class PipelineBuildFacadeService(
                 startUser = startUser,
                 updateTimeDesc = updateTimeDesc,
                 queryDslContext = queryDslContext,
-                debugVersion = targetDebugVersion,
+                debug = debug,
                 triggerAlias = triggerAlias,
-                triggerBranch = triggerBranch
+                triggerBranch = triggerBranch,
+                triggerUser = triggerUser
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
@@ -2349,7 +2345,7 @@ class PipelineBuildFacadeService(
             if (BuildStatus.parse(modelDetail.status).isFinish()) {
                 logger.warn("The build $buildId of project $projectId already finished ")
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_CANCELED
+                    errorCode = ProcessMessageCode.PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_OPERATE
                 )
             }
 

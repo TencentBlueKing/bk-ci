@@ -17,11 +17,12 @@
                 </bk-checkbox-group>
             </bk-form-item>
             <bk-form-item :label="$t('settings.additionUser')">
-                <staff-input
+                <user-input
+                    name="additionUser"
                     :handle-change="(name, value) => subscription.users = value.join(',')"
                     :value="subscription.users.split(',').filter(Boolean)"
                     :placeholder="$t('settings.additionUserPlaceholder')">
-                </staff-input>
+                </user-input>
             </bk-form-item>
             <bk-form-item property="content" :label="$t('settings.noticeContent')" error-display-type="normal" :required="true">
                 <bk-input
@@ -40,7 +41,7 @@
                     :value="subscription.detailFlag">
                 </atom-checkbox>
             </bk-form-item>
-            
+
             <template v-if="subscription.types.includes('WEWORK_GROUP')">
                 <bk-form-item :label="$t('settings.groupIdLabel')">
                     <group-id-selector
@@ -68,15 +69,15 @@
 </template>
 
 <script>
-    import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
-    import StaffInput from '@/components/atomFormField/StaffInput'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
+    import UserInput from '@/components/atomFormField/UserInput/index.vue'
     export default {
         name: 'notify-setting',
         components: {
             GroupIdSelector,
-            StaffInput,
-            AtomCheckbox
+            AtomCheckbox,
+            UserInput
         },
         props: {
             subscription: Object,

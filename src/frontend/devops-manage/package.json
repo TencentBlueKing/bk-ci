@@ -22,13 +22,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bk-permission": "^0.0.28",
-    "bkui-vue": "0.0.1-beta.456",
+    "axios": "0.28.0",
+    "bk-permission": "^0.1.0",
+    "bkui-vue": "2.0.1-beta.42",
     "dayjs": "^1.11.2",
     "pinia": "^2.0.23",
     "vue": "^3.2.41",
     "vue-i18n": "^9.1.10",
-    "vue-router": "^4.1.6"
+    "vue-router": "^4.1.6",
+    "lodash.throttle": "^4.1.1",
+    "@blueking/date-picker": "2.0.0-beta.26",
+    "@icon-cool/bk-icon-bk-biz-components": "0.0.4"
   },
   "devDependencies": {
     "@blueking/babel-preset-bk": "^2.1.0-beta7",
@@ -45,6 +49,8 @@
     "postcss-preset-env": "^7.8.2",
     "postcss-simple-vars": "^7.0.0",
     "postcss-url": "^10.1.3",
-    "typescript": "^4.8.4"
+    "typescript": "^4.8.4",
+    "less": "^4.2.0",
+    "less-loader": "^12.2.0"
   }
 }

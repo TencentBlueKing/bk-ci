@@ -345,14 +345,17 @@ interface AppPipelineBuildResource {
         @Parameter(description = "构建信息", required = false)
         @QueryParam("buildMsg")
         buildMsg: String?,
-        @Parameter(description = "查看指定版本调试数据", required = false, example = "false")
-        @QueryParam("version")
-        customVersion: Int? = null,
+        @Parameter(description = "指定调试数据", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = null,
         @Parameter(description = "触发代码库", required = false)
         @QueryParam("triggerAlias")
         triggerAlias: List<String>?,
         @Parameter(description = "触发分支", required = false)
         @QueryParam("triggerBranch")
-        triggerBranch: List<String>?
+        triggerBranch: List<String>?,
+        @Parameter(description = "触发人", required = false)
+        @QueryParam("triggerUser")
+        triggerUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>>
 }

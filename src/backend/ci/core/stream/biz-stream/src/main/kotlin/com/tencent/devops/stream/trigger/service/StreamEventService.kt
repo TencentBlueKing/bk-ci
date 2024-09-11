@@ -28,21 +28,18 @@
 package com.tencent.devops.stream.trigger.service
 
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
-import com.tencent.devops.stream.dao.StreamUserMessageDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.message.UserMessageType
 import com.tencent.devops.stream.service.StreamGitProjectInfoCache
 import com.tencent.devops.stream.service.StreamWebsocketService
 import com.tencent.devops.stream.trigger.actions.BaseAction
-import com.tencent.devops.stream.trigger.pojo.StreamMessageSaveLock
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.toGitState
 import com.tencent.devops.stream.trigger.service.GitCheckService.Companion.GIT_COMMIT_CHECK_NONE_TARGET_BRANCH
@@ -59,15 +56,14 @@ import org.springframework.stereotype.Service
 @Service
 class StreamEventService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val redisOperation: RedisOperation,
     private val streamGitConfig: StreamGitConfig,
     private val gitCheckService: GitCheckService,
-    private val userMessageDao: StreamUserMessageDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val websocketService: StreamWebsocketService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val streamGitProjectInfoCache: StreamGitProjectInfoCache
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val userMessageConsumer: UserMessageConsumer
 ) {
     // 触发检查错误,未涉及版本解析
     fun saveTriggerNotBuildEvent(
@@ -180,26 +176,12 @@ class StreamEventService @Autowired constructor(
             branch = branch
         )
 
-        // eventId只用保存一次，先查询一次，如果没有在去修改
         if (saveUserMessage(
                 userId = userId,
                 projectCode = projectCode,
                 event = event,
                 gitProjectId = gitProjectId,
-                messageType = UserMessageType.REQUEST,
-                isSave = false // 只update
-            )
-        ) {
-            return messageId
-        }
-
-        if (saveUserMessage(
-                userId = userId,
-                projectCode = projectCode,
-                event = event,
-                gitProjectId = gitProjectId,
-                messageType = UserMessageType.REQUEST,
-                isSave = true
+                messageType = UserMessageType.REQUEST
             )
         ) {
             websocketService.pushNotifyWebsocket(
@@ -215,52 +197,26 @@ class StreamEventService @Autowired constructor(
         projectCode: String,
         event: GitRequestEvent,
         gitProjectId: Long,
-        messageType: UserMessageType,
-        isSave: Boolean = true
+        messageType: UserMessageType
     ): Boolean {
-        val messageTitle = if (isSave) lazy {
-            val checkRepoHookTrigger = gitProjectId != event.gitProjectId
-            val realEvent = if (checkRepoHookTrigger) {
-                // 当gitProjectId与event的不同时，说明是远程仓库触发的
-                val pathWithNamespace = streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                    gitProjectId = event.gitProjectId,
-                    useAccessToken = true,
-                    userId = userId
-                )?.pathWithNamespace
-                GitCommonUtils.checkAndGetRepoBranch(event, pathWithNamespace)
-            } else event
-            StreamTriggerMessageUtils.getEventMessageTitle(realEvent, checkRepoHookTrigger)
-        } else null
-
-        val saveLock = StreamMessageSaveLock(redisOperation, userId, projectCode, event.id.toString())
-        saveLock.use {
-            saveLock.lock()
-            val exist = userMessageDao.getMessageExist(dslContext, projectCode, userId, event.id.toString())
-            if (isSave) {
-                if (exist != null) {
-                    return false
-                }
-                userMessageDao.save(
-                    dslContext = dslContext,
-                    projectId = projectCode,
-                    userId = userId,
-                    messageType = messageType,
-                    messageId = event.id.toString(),
-                    messageTitle = messageTitle?.value ?: ""
-                )
-            } else {
-                if (exist == null || exist.messageType == messageType.name) {
-                    return false
-                }
-                userMessageDao.updateMessageType(
-                    dslContext = dslContext,
-                    projectId = projectCode,
-                    userId = userId,
-                    messageId = event.id.toString(),
-                    messageType = messageType
-                )
-            }
-        }
+        val checkRepoHookTrigger = gitProjectId != event.gitProjectId
+        val realEvent = if (checkRepoHookTrigger) {
+            // 当gitProjectId与event的不同时，说明是远程仓库触发的
+            val pathWithNamespace = streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                gitProjectId = event.gitProjectId,
+                useAccessToken = true,
+                userId = userId
+            )?.pathWithNamespace
+            GitCommonUtils.checkAndGetRepoBranch(event, pathWithNamespace)
+        } else event
+        val messageTitle = StreamTriggerMessageUtils.getEventMessageTitle(realEvent, checkRepoHookTrigger)
+        userMessageConsumer.addData(
+            projectId = projectCode,
+            userId = userId,
+            messageType = messageType,
+            messageId = event.id.toString(),
+            messageTitle = messageTitle
+        )
         return true
     }
 

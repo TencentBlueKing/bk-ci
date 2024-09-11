@@ -27,13 +27,18 @@
 
 package com.tencent.devops.environment.service
 
+import com.tencent.bk.sdk.iam.dto.callback.response.BaseDataResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationResponse
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
+import com.tencent.devops.common.auth.callback.ListResourcesAuthorizationDTO
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
+import com.tencent.devops.environment.pojo.enums.NodeType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -95,7 +100,8 @@ class AuthNodeService @Autowired constructor(
             projectId = projectId,
             offset = offset,
             limit = limit,
-            displayName = keyword)
+            displayName = keyword
+        )
         val result = SearchInstanceInfo()
         if (nodeInfos?.records == null) {
             logger.info("$projectId There are no nodes under the project")
@@ -110,6 +116,46 @@ class AuthNodeService @Autowired constructor(
         }
         logger.info("entityInfo $entityInfo, count ${nodeInfos?.count}")
         return result.buildSearchInstanceResult(entityInfo, nodeInfos.count)
+    }
+
+    fun listNodeAuthorization(
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        token: String
+    ): ListResourcesAuthorizationDTO {
+        authTokenApi.checkToken(token)
+        val nodeInfosAndCount = nodeService.getNodeInfosAndCountByType(
+            projectId = projectId,
+            nodeType = NodeType.CMDB,
+            limit = limit,
+            offset = offset
+        )
+        val nodeList = nodeInfosAndCount.first
+        val count = nodeInfosAndCount.second
+
+        val data = BaseDataResponseDTO<ResourceAuthorizationResponse>()
+        val result = ListResourcesAuthorizationDTO(data)
+        if (nodeList.isEmpty()) {
+            logger.info("$projectId There is no assembly line under the project")
+            return result.buildResourcesAuthorizationListResult()
+        }
+        val entityInfos = mutableListOf<ResourceAuthorizationResponse>()
+        nodeList.map {
+            val entity = ResourceAuthorizationResponse(
+                projectCode = projectId,
+                resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
+                resourceName = it.displayName!!,
+                resourceCode = it.nodeHashId,
+                handoverTime = it.lastModifyTime!!,
+                handoverFrom = it.createdUser
+            )
+            entityInfos.add(entity)
+        }
+        logger.info("entityInfo $entityInfos, count $count")
+        data.result = entityInfos
+        data.count = count
+        return result.buildResourcesAuthorizationListResult()
     }
 
     companion object {
