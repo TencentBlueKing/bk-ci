@@ -710,7 +710,7 @@ export function bkVarWrapper (name) {
 }
 
 export function bkVarRepoRefWrapper (name) {
-    return '${{variables. ' + name + '.repo-name}}@${{variables.' + name + '.branch}}'
+    return '${{variables.' + name + '.repo-name}}@${{variables.' + name + '.branch}}'
 }
 
 export const toolbars = {
