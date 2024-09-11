@@ -325,11 +325,11 @@ object MQ {
     const val QUEUE_AUTH_RESOURCE_GROUP_MODIFY = "q.auth.resource.group.modify"
 
     const val EXCHANGE_PROJECT_USER_DAILY_FANOUT = "e.metrics.project.user.daily.fanout"
-    const val QUEUE_PROJECT_USER_DAILY_METRICS = "q.metrics.project.user.daily.queue"
+    const val QUEUE_PROJECT_USER_DAILY_METRICS = "q.metrics.project.user.daily.new.queue"
 
     const val EXCHANGE_PROJECT_USER_DAILY_OPERATE = "e.metrics.project.user.daily.operate.exchange"
-    const val QUEUE_PROJECT_USER_DAILY_OPERATE_METRICS = "q.metrics.project.user.daily.operate.queue"
-    const val ROUTE_PROJECT_USER_DAILY_OPERATE_METRICS = "r.metrics.project.user.daily.operate"
+    const val QUEUE_PROJECT_USER_DAILY_OPERATE_METRICS = "q.metrics.project.user.daily.operate.new.queue"
+    const val ROUTE_PROJECT_USER_DAILY_OPERATE_METRICS = "r.metrics.project.user.daily.new.operate"
 
     // 项目启用同步组和成员事件
     const val QUEUE_PROJECT_ENABLED_SYNC_GROUP_AND_MEMBER = "q.project.enabled.sync.group.and.member"
