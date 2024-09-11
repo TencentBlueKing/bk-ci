@@ -149,6 +149,11 @@ object MQ {
     const val ROUTE_AGENT_SHUTDOWN = "r.engine.pipeline.agent.shutdown"
     const val QUEUE_AGENT_SHUTDOWN = "q.engine.pipeline.agent.shutdown"
 
+    // 第三方 AGENT 排队消息队列 ====================================
+    const val EXCHANGE_THIRD_PARTY_AGENT_QUEUE = "e.dispatch.tp.agent.queue"
+    const val ROUTE_THIRD_PARTY_AGENT_QUEUE = "r.dispatch.tp.agent.queue"
+    const val QUEUE_THIRD_PARTY_AGENT_QUEUE = "q.dispatch.tp.agent.queue"
+
     // 无构建环境的Docker构建机启停消息队列 ====================================
     const val EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT = "e.engine.pipeline.bl.agent"
     const val ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH = "r.engine.pipeline.bl.agent.dispatch.startup"
