@@ -27,4 +27,4 @@ dependencies:
   repository: file://./local_chart/kubernetes-management
   version: 0.0.45
 digest: sha256:1e5313e309a3f09f8c465311bc8ff656add7ab3fa98fd0631c37b10549e78ac3
-generated: "2024-09-10T17:38:20.94026202+08:00"
+generated: "2024-09-11T14:55:12.239205972+08:00"
