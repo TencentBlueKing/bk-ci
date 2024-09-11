@@ -245,7 +245,7 @@ open class BaseBuildDetailService constructor(
     }
 
     private fun pipelineDetailChangeEvent(projectId: String, buildId: String) {
-        val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
+        val pipelineBuildInfo = pipelineBuildDao.getUserBuildInfo(dslContext, projectId, buildId)
         if (pipelineBuildInfo?.channelCode == ChannelCode.GIT) pipelineEventDispatcher.dispatch(
             // 异步转发，解耦核心
             // TODO stream内部和开源前端未更新前，保持推送

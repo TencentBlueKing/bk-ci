@@ -80,7 +80,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         private val syncExecutorService = Executors.newFixedThreadPool(5)
         private val syncProjectsExecutorService = Executors.newFixedThreadPool(10)
         private val syncResourceMemberExecutorService = Executors.newFixedThreadPool(50)
-        private const val MAX_NUMBER_OF_CHECKS = 120
+        private const val MAX_NUMBER_OF_CHECKS = 1440
     }
 
     override fun syncByCondition(projectConditionDTO: ProjectConditionDTO) {
@@ -186,6 +186,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     limit = limit,
                     offset = offset
                 )
+                // 检查60天内的申请的单据
                 val recordIdsOfTimeOut = records.filter { it.numberOfChecks >= MAX_NUMBER_OF_CHECKS }.map { it.id }
                 val (recordsOfSuccess, recordsOfPending) = records.filterNot {
                     recordIdsOfTimeOut.contains(it.id)
