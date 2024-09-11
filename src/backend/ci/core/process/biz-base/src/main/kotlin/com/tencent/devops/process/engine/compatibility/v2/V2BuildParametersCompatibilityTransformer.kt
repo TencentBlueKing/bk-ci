@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory
 
 open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibilityTransformer {
 
+    @SuppressWarnings("ComplexMethod")
     override fun parseTriggerParam(
         userId: String,
         projectId: String,
