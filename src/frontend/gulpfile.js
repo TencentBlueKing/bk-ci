@@ -19,7 +19,7 @@ const argv = yargs.alias({
 }).default({
     dist: 'frontend',
     env: 'master',
-    lsVersion: 'dev',
+    lsVersion: 'dev'
 }).describe({
     dist: 'build output dist directory',
     env: 'environment [dev, test, master, external]',
@@ -28,6 +28,7 @@ const argv = yargs.alias({
     base: 'base file path'
 }).argv
 const { dist, env, lsVersion, scope, head = 'HEAD', base = 'master' } = argv
+console.log(env, head, base)
 const svgSpriteConfig = {
     mode: {
         symbol: true
@@ -86,14 +87,9 @@ task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
 task('build', series(cb => {
     const spinner = new Ora('building bk-ci frontend project').start()
     const scopeStr = getScopeStr(scope)
-    const envConfMap = {
-        dist,
-        // version: type,
-        lsVersion
-    }
     
-    const cmd = scopeStr ? `run-many -t public:master ${scopeStr}`: `affected -t public:master`
-    console.log('gulp cmd: ', cmd, cmd.split(' '));
+    const cmd = scopeStr ? `run-many -t public:master ${scopeStr}` : 'affected -t public:master'
+    console.log('gulp cmd: ', cmd, cmd.split(' '))
     const { spawn } = require('node:child_process')
     const spawnCmd = spawn('pnpm', [
         'exec',
@@ -110,15 +106,14 @@ task('build', series(cb => {
     })
       
     spawnCmd.on('close', (code) => {
-        console.log(`child process exited with code ${code}`);
+        console.log(`child process exited with code ${code}`)
         if (code) {
             spinner.fail('Failed building bk-ci frontend project')
             process.exit(1)
-            return;
         }
         spinner.succeed('Finished building bk-ci frontend project')
         cb()
-    }); 
+    })
 }, (cb) => {
     try {
         const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(`${dist}/assets_bundle.json`, 'utf8')}`
@@ -134,7 +129,6 @@ task('build', series(cb => {
     }
     cb()
 }, (cb) => {
-
     ['console', 'pipeline'].map(prefix => {
         const dir = path.join(dist, prefix)
         const spriteNameGlob = `${prefix === 'console' ? 'devops' : 'pipeline'}_sprite-*.js`
@@ -155,7 +149,7 @@ task('build', series(cb => {
             removeComments: true,
             minifyJS: true
         }))
-        .pipe(dest(dir))
+            .pipe(dest(dir))
     })
     cb()
 }))
