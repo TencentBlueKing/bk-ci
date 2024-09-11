@@ -33,11 +33,16 @@ import com.google.common.hash.BloomFilter
 import com.google.common.hash.Funnels
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
+import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.nio.charset.Charset
 import java.time.LocalDate
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -45,39 +50,53 @@ import java.util.concurrent.TimeUnit
 class AuthProjectUserMetricsService @Autowired constructor(
     private val measureEventDispatcher: SampleEventDispatcher
 ) {
+    private val userOperateCounterData = UserOperateCounterData()
 
     companion object {
         private val logger = LoggerFactory.getLogger(AuthProjectUserMetricsService::class.java)
+
         // 期待的用户数10w
         private const val EXPECTED_USER_COUNT = 100000
+
         // 错误率0.1%
         private const val EXPECTED_FPP = 0.001
         private val bloomFilterMap = CacheBuilder.newBuilder()
             .maximumSize(2)
             .expireAfterWrite(1, TimeUnit.DAYS)
             .build<LocalDate, BloomFilter<String>>()
+
+        private val executorService = Executors.newFixedThreadPool(5)
     }
 
     fun save(
         projectId: String,
-        userId: String
+        userId: String,
+        operate: String
     ) {
-        val theDate = LocalDate.now()
-        try {
-            val bloomKey = "${projectId}_$userId"
-            val bloomFilter = getBloomFilter(theDate)
-            if (!bloomFilter.mightContain(bloomKey)) {
-                measureEventDispatcher.dispatch(
-                    ProjectUserDailyEvent(
-                        projectId = projectId,
-                        userId = userId,
-                        theDate = theDate
+        executorService.execute {
+            val theDate = LocalDate.now()
+            try {
+                val bloomKey = "${projectId}_$userId"
+                val bloomFilter = getBloomFilter(theDate)
+                if (!bloomFilter.mightContain(bloomKey)) {
+                    measureEventDispatcher.dispatch(
+                        ProjectUserDailyEvent(
+                            projectId = projectId,
+                            userId = userId,
+                            theDate = theDate
+                        )
                     )
+                    bloomFilter.put(bloomKey)
+                }
+                saveProjectUserOperateMetrics(
+                    projectId = projectId,
+                    userId = userId,
+                    operate = operate,
+                    theDate = theDate
                 )
-                bloomFilter.put(bloomKey)
+            } catch (ignored: Throwable) {
+                logger.error("save auth user error", ignored)
             }
-        } catch (ignored: Throwable) {
-            logger.error("save auth user error", ignored)
         }
     }
 
@@ -92,5 +111,33 @@ class AuthProjectUserMetricsService @Autowired constructor(
             bloomFilterMap.put(theDate, bloomFilter)
         }
         return bloomFilter!!
+    }
+
+    private fun saveProjectUserOperateMetrics(
+        projectId: String,
+        userId: String,
+        operate: String,
+        theDate: LocalDate
+    ) {
+        val projectUserOperateMetricsKey = ProjectUserOperateMetricsData(
+            projectId = projectId,
+            userId = userId,
+            theDate = theDate,
+            operate = operate
+        ).getProjectUserOperateMetricsKey()
+        userOperateCounterData.increment(projectUserOperateMetricsKey)
+    }
+
+    @Scheduled(initialDelay = 20000, fixedDelay = 20000)
+    private fun uploadProjectUserOperateMetrics() {
+        if (logger.isDebugEnabled) {
+            logger.debug("upload project user operate metrics :$userOperateCounterData")
+        }
+        measureEventDispatcher.dispatch(
+            ProjectUserOperateMetricsEvent(
+                userOperateCounterData = userOperateCounterData
+            )
+        )
+        userOperateCounterData.reset()
     }
 }

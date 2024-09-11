@@ -32,12 +32,14 @@ import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEven
 import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsEvent
 import com.tencent.devops.common.event.pojo.measure.LabelChangeMetricsBroadCastEvent
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.metrics.listener.BuildEndMetricsDataReportListener
 import com.tencent.devops.metrics.listener.DispatchJobMetricsListener
 import com.tencent.devops.metrics.listener.LabelChangeMetricsDataSyncListener
 import com.tencent.devops.metrics.listener.ProjectUserDailyMetricsListener
+import com.tencent.devops.metrics.listener.ProjectUserOperateMetricsListener
 import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
@@ -70,4 +72,9 @@ class MetricsListenerConfiguration {
     fun metricsProjectUserDailyConsumer(
         @Autowired projectUserDailyMetricsListener: ProjectUserDailyMetricsListener
     ) = ScsConsumerBuilder.build<ProjectUserDailyEvent> { projectUserDailyMetricsListener.execute(it) }
+
+    @EventConsumer
+    fun metricsProjectUserOperateMetricsConsumer(
+        @Autowired projectUserOperateMetricsListener: ProjectUserOperateMetricsListener
+    ) = ScsConsumerBuilder.build<ProjectUserOperateMetricsEvent> { projectUserOperateMetricsListener.execute(it) }
 }

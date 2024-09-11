@@ -221,7 +221,7 @@ export default {
   },
 
   /**
-   * 获取项目下全体成员
+   * 获取项目下全体成员(简单查询)
    */
   async getProjectMembers(projectId: string, params?: any) {
     const query = new URLSearchParams({
@@ -232,17 +232,31 @@ export default {
     });
   },
   /**
+   * 获取项目下全体成员(复杂查询)
+   */
+  async getProjectMembersByCondition(projectId: string, params: any) {
+    return http.post(`${IAM_PERFIX}/member/${projectId}/listProjectMembersByCondition`, {
+      ...params,
+      globalError: false
+    });
+  },
+  /**
    * 获取项目成员有权限的用户组数量
    */
-  async getMemberGroups(projectId: string, memberId: string) {
-    return http.get(`${IAM_PERFIX}/member/${projectId}/getMemberGroupCount?memberId=${memberId}`);
+  async getMemberGroups(projectId: string, params: any) {
+    const query = new URLSearchParams({
+      ...params,
+    }).toString();
+    return http.get(`${IAM_PERFIX}/member/${projectId}/getMemberGroupCount?${query}`);
   },
   /**
    * 获取项目成员有权限的用户组
    */
-  async getMemberGroupsDetails(params) {
-    const { projectId, resourceType, memberId, start, limit } = params;
-    return http.get(`${IAM_PERFIX}/group/${projectId}/${resourceType}/getMemberGroupsDetails?start=${start}&limit=${limit}&memberId=${memberId}`);
+  async getMemberGroupsDetails(projectId: string, resourceType: string, params: any) {
+    const query = new URLSearchParams({
+      ...params,
+    }).toString();
+    return http.get(`${IAM_PERFIX}/group/${projectId}/${resourceType}/getMemberGroupsDetails?${query}`);
   },
   /**
    * 批量续期组成员权限--无需进行审批

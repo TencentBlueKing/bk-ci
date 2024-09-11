@@ -60,6 +60,8 @@ data class PipelineAgentStartupEvent(
     val ignoreEnvAgentIds: Set<String>? = null,
     val singleNodeConcurrency: Int? = null,
     val allNodeConcurrency: Int? = null,
+    // 用来计算 dispatch 排队过程中的耗时
+    var dispatchQueueStartTimeMilliSecond: Long? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0
 ) : IPipelineEvent(

@@ -108,6 +108,9 @@ object StreamBinding {
     const val PIPELINE_AGENT_SHUTDOWN = "engine.pipeline.agent.shutdown"
     const val PIPELINE_AGENT_DEMOTE_SHUTDOWN = "engine.pipeline.agent.shutdown.demote"
 
+    // AGENT 构建排队消息队列 ====================================
+    const val DISPATCH_AGENT_QUEUE = "dispatch.tp.agent.queue"
+
     // 无构建环境的Docker构建机启停消息队列 ====================================
     const val BUILD_LESS_AGENT_STARTUP_DISPATCH = "engine.pipeline.bl.agent.dispatch.startup"
     const val BUILD_LESS_AGENT_SHUTDOWN_DISPATCH = "engine.pipeline.bl.agent.dispatch.shutdown"
@@ -178,6 +181,7 @@ object StreamBinding {
     const val METRICS_STATISTIC_TURBO_DAILY = "metrics.statistic.turbo.daily"
     const val METRICS_STATISTIC_CODE_CHECK_DAILY = "metrics.statistic.code.check.daily"
     const val METRICS_PROJECT_USER_DAILY = "metrics.project.user.daily.fanout"
+    const val METRICS_PROJECT_USER_OPERATE_DAILY = "metrics.project.user.operate.daily.fanout"
     const val METRICS_DISPATCH_JOB = "metrics.dispatch.job.daily.exchange.fanout"
 
     const val PIPELINE_STREAM_ENABLED = "engine.pipeline.stream.enabled"

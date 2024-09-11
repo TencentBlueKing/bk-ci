@@ -365,10 +365,25 @@ export default {
       this.curGroupIndex = this.groupList.findIndex(item => item.groupId === group.groupId);
       this.$emit('choose-group', group);
     },
-    handleCreateGroup() {
+    async handleCreateGroup() {
       if (this.isNotProject) return
       this.activeTab = '';
-      this.$emit('create-group');
+      try {
+        const res = await http.getResource({
+          projectCode: this.curProjectCode,
+          resourceType: this.resourceType,
+          resourceCode: this.curProjectCode});
+          if(res) {
+            const role_id = res.iamGradeManagerId;
+            this.$emit('create-group', role_id);
+          }
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
+      }
+      
     },
     handleCloseManage() {
       this.isClosing = true;
@@ -421,7 +436,7 @@ export default {
       } catch (error) {
         Message({
           theme: 'error',
-          message: err.message
+          message: error.message
         });
       }
     },
@@ -431,7 +446,7 @@ export default {
       } catch (error) {
         Message({
           theme: 'error',
-          message: err.message
+          message: error.message
         });
       }
     },
