@@ -324,7 +324,7 @@ object MQ {
     const val ROUTE_AUTH_RESOURCE_GROUP_MODIFY = "r.auth.resource.group.modify"
     const val QUEUE_AUTH_RESOURCE_GROUP_MODIFY = "q.auth.resource.group.modify"
 
-    const val EXCHANGE_PROJECT_USER_DAILY_FANOUT = "e.metrics.project.user.daily.exchange.fanout"
+    const val EXCHANGE_PROJECT_USER_DAILY_FANOUT = "e.metrics.project.user.daily.fanout"
     const val QUEUE_PROJECT_USER_DAILY_METRICS = "q.metrics.project.user.daily.queue"
 
     const val EXCHANGE_PROJECT_USER_DAILY_OPERATE = "e.metrics.project.user.daily.operate.exchange"
