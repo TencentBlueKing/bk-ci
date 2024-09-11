@@ -2819,7 +2819,6 @@ class PipelineBuildFacadeService(
                             relKey = it.key
                         )
                     }
-
                 }.map { it.value }
                 .filterNotNull()
         val list = parameters.filter { it.valueType != BuildFormPropertyType.REPO_REF }

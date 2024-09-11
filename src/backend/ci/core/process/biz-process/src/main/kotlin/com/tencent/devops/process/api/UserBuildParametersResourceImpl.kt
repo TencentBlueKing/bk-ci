@@ -240,7 +240,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         projectId: String,
         repositoryConfig: RepositoryConfig,
         search: String?
-    ) : List<String>{
+    ): List<String> {
         val result = mutableListOf<String>()
         val branches = scmProxyService.listBranches(
             projectId = projectId,

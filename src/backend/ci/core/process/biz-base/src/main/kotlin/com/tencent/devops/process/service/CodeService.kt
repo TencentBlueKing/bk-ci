@@ -193,7 +193,7 @@ class CodeService @Autowired constructor(
             ScmType.CODE_GIT, ScmType.CODE_TGIT, ScmType.CODE_GITLAB, ScmType.GITHUB -> {
                 getGitRefs(
                     projectId = projectId,
-                    repositoryConfig = repositoryConfig,
+                    repositoryConfig = repositoryConfig
                 )
             }
 
