@@ -92,6 +92,15 @@ interface UserAuthResourceGroupResource {
         @QueryParam("memberId")
         @Parameter(description = "组织ID/成员ID")
         memberId: String,
+        @QueryParam("groupName")
+        @Parameter(description = "用户组名称")
+        groupName: String?,
+        @QueryParam("minExpiredAt")
+        @Parameter(description = "最小过期时间")
+        minExpiredAt: Long?,
+        @QueryParam("maxExpiredAt")
+        @Parameter(description = "最大过期时间")
+        maxExpiredAt: Long?,
         @Parameter(description = "起始位置,从0开始")
         @QueryParam("start")
         start: Int,

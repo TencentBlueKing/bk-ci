@@ -6,6 +6,7 @@ import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
@@ -32,6 +33,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/auth/resource/member/{projectId}/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("LongParameterList")
 interface UserAuthResourceMemberResource {
     @GET
     @Path("/listProjectMembers")
@@ -62,6 +64,20 @@ interface UserAuthResourceMemberResource {
         @Parameter(description = "每页多少条")
         @QueryParam("pageSize")
         pageSize: Int
+    ): Result<SQLPage<ResourceMemberInfo>>
+
+    @POST
+    @Path("/listProjectMembersByCondition")
+    @Operation(summary = "根据条件获取项目下全体成员")
+    fun listProjectMembersByCondition(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "查询条件", required = true)
+        projectMembersQueryConditionReq: ProjectMembersQueryConditionReq
     ): Result<SQLPage<ResourceMemberInfo>>
 
     @PUT
@@ -177,6 +193,15 @@ interface UserAuthResourceMemberResource {
         projectId: String,
         @QueryParam("memberId")
         @Parameter(description = "组织ID/成员ID")
-        memberId: String
+        memberId: String,
+        @QueryParam("groupName")
+        @Parameter(description = "用户组名称")
+        groupName: String?,
+        @QueryParam("minExpiredAt")
+        @Parameter(description = "最小过期时间")
+        minExpiredAt: Long?,
+        @QueryParam("maxExpiredAt")
+        @Parameter(description = "最大过期时间")
+        maxExpiredAt: Long?
     ): Result<List<MemberGroupCountWithPermissionsVo>>
 }

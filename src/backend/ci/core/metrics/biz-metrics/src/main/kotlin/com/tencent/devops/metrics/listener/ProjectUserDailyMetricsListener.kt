@@ -47,6 +47,9 @@ class ProjectUserDailyMetricsListener @Autowired constructor(
     override fun execute(event: ProjectUserDailyEvent) {
         try {
             with(event) {
+                if (logger.isDebugEnabled) {
+                    logger.debug("consumer project user daily metrics event|$event")
+                }
                 projectBuildSummaryService.saveProjectUser(
                     projectId = projectId,
                     userId = userId,

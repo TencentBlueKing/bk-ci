@@ -205,10 +205,14 @@ class PipelineBuildService(
                 projectVO = projectVO,
                 channelCode = channelCode,
                 isMobile = isMobile,
-                pipelineAuthorizer = pipelineRepositoryService.getPipelineOauthUser(
-                    projectId = pipeline.projectId,
-                    pipelineId = pipeline.pipelineId
-                )
+                pipelineAuthorizer = if (pipeline.channelCode == ChannelCode.BS) {
+                    pipelineRepositoryService.getPipelineOauthUser(
+                        projectId = pipeline.projectId,
+                        pipelineId = pipeline.pipelineId
+                    )
+                } else {
+                    null
+                }
             )
 
             val context = StartBuildContext.init(
