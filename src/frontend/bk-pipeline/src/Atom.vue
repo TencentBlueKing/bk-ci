@@ -313,7 +313,7 @@
                 try {
                     return (
                         this.atom.status === 'SKIP'
-                        || !this.atom.additionalOptions.enable
+                        || this.atom.additionalOptions?.enable === false
                         || this.containerDisabled
                     )
                 } catch (error) {
@@ -353,7 +353,7 @@
             },
             atomStatusCls () {
                 try {
-                    if (this.atom.additionalOptions && this.atom.additionalOptions.enable === false) {
+                    if (this.atom.additionalOptions?.enable === false) {
                         return STATUS_MAP.DISABLED
                     }
                     return this.atomStatus

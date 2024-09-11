@@ -4,7 +4,7 @@
         v-bkloading="{ isLoading }"
     >
         <filter-bar
-            @query="handlePageChange(1)"
+            @query="handlePageChange"
         />
         <bk-exception
             class="no-build-history-exception"
@@ -69,6 +69,7 @@
         <div
             class="bkdevops-build-history-table-wrapper"
             ref="tableBox"
+            :style="{ height: `${tableHeight}px` }"
             v-else
         >
             <bk-table
@@ -587,7 +588,8 @@
                 buildHistories: [],
                 stoping: {},
                 isLoading: false,
-                tableColumnKeys: initSortedColumns
+                tableColumnKeys: initSortedColumns,
+                tableHeight: null
             }
         },
         computed: {
@@ -788,23 +790,14 @@
                 deep: true
             }
         },
-        created () {
-            if (this.$route.query) {
-                this.setHistoryPageStatus({
-                    page: this.$route.query?.page ? parseInt(this.$route.query?.page, 10) : 1,
-                    pageSize: this.$route.query?.pageSize ? parseInt(this.$route.query?.pageSize, 10) : 20
-                })
-            }
-            if (this.routePipelineVersion) {
-                this.requestHistory()
-            }
-        },
         mounted () {
             webSocketMessage.installWsMessage(this.requestHistory)
+            window.addEventListener('resize', this.updateTableHeight)
         },
 
         beforeDestroy () {
             webSocketMessage.unInstallWsMessage()
+            window.removeEventListener('resize', this.updateTableHeight)
         },
 
         methods: {
@@ -814,6 +807,9 @@
                 'setHistoryPageStatus',
                 'resetHistoryFilterCondition'
             ]),
+            updateTableHeight () {
+                this.tableHeight = this.$refs.tableBox.offsetHeight
+            },
             handleColumnChange (columns) {
                 this.tableColumnKeys = columns
                 this.$refs.tableSetting.$parent.instance?.hide()
@@ -837,7 +833,7 @@
                     const res = await this.requestPipelinesHistory({
                         projectId,
                         pipelineId,
-                        ...(this.isDebug ? { version } : {})
+                        isDebug: this.isDebug
                     })
                     this.setHistoryPageStatus({
                         count: res.count
@@ -1413,6 +1409,8 @@
 }
 .build-artifact-list-ul {
     border-top: 1px solid #EAEBF0;
+    max-height: 100vh / 3;
+    overflow: auto;
     > li {
         height: 38px;
         display: flex;

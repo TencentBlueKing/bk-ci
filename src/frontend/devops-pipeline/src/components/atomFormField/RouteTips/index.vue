@@ -53,7 +53,7 @@
                 style="margin-top: 10px"
             >
                 <span
-                    class="tips-route normal-route"
+                    class="tips-route"
                     style="margin-left: 15px"
                 >{{ $t('editPage.githubAppTips') }}
                     <a
@@ -145,14 +145,10 @@
                     font-size: 12px;
                     width: calc(100% - 133px);
                     overflow: hidden;
-                    text-overflow:ellipsis;
+                    text-overflow: ellipsis;
                     white-space: nowrap;
-                    overflow: hidden;
                     vertical-align: middle;
                     padding-bottom: 3px;
-                }
-                .normal-route {
-                    white-space:normal;
                     .link {
                         color: $primaryColor;
                     }

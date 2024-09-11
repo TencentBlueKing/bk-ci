@@ -215,5 +215,7 @@ data class CodeTGitWebHookTriggerInput(
     @get:Schema(title = "push事件action")
     val includePushAction: List<String>? = null,
     @get:Schema(title = "是否启用第三方过滤")
-    val enableThirdFilter: Boolean? = false
+    val enableThirdFilter: Boolean? = false,
+    @get:Schema(title = "跳过WIP")
+    val skipWip: Boolean? = false
 )

@@ -331,7 +331,6 @@
             },
             async handleSave (groupIndex) {
                 this.btnIsdisable = false
-                debugger
                 const params = {
                     projectId: this.projectId,
                     name: this.labelValue

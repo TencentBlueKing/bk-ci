@@ -108,14 +108,15 @@
         height: 42px;
         background: #FFE8C3;
         color: #FF9C01;
-        &.icon-check-1 {
-            background: #e5f6ea;
-            color: #3fc06d;
-        }
         align-items: center;
         justify-content: center;
         border-radius: 50%;
         font-size: 26px;
+        &.icon-check-1 {
+            background: #e5f6ea;
+            color: #3fc06d;
+        }
+
     }
     .disable-pac-code {
         position: relative;

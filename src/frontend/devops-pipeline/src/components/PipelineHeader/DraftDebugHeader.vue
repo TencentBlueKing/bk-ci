@@ -4,7 +4,9 @@
         class="pipeline-draft-debug-header"
     >
         <pipeline-bread-crumb :pipeline-name="pipelineName">
-            {{ $t('draftExecRecords') }}
+            <span>
+                {{ $t('draftExecRecords') }}
+            </span>
         </pipeline-bread-crumb>
     </div>
     <i
@@ -15,7 +17,7 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     export default {
         components: {
@@ -27,6 +29,9 @@
                 isLoading: false
             }
         },
+        computed: {
+            ...mapState('atom', ['pipelineInfo'])
+        },
         created () {
             this.init()
         },
@@ -37,7 +42,10 @@
             async init () {
                 try {
                     this.isLoading = true
-                    const res = await this.fetchPipelineByVersion(this.$route.params)
+                    const res = await this.fetchPipelineByVersion({
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.version
+                    })
                     this.pipelineName = res?.modelAndSetting?.model?.name ?? '--'
                 } catch (error) {
                     console.error(error)
@@ -57,6 +65,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 24px 0 14px;
+    font-size: 14px;
     .pipeline-draft-version {
         display: flex;
         align-items: center;

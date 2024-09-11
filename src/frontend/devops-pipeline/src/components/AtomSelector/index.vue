@@ -21,6 +21,7 @@
                         right-icon="icon-search"
                         :value="searchKey"
                         @input="handleClear"
+                        @right-icon-click="handleSearch"
                         @enter="handleSearch"
                     ></bk-input>
                 </header>

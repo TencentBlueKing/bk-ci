@@ -3,6 +3,10 @@
         class="pipeline-execute-preview"
         v-bkloading="{ isLoading }"
     >
+        <bk-alert
+            v-if="isDebugPipeline"
+            :title="$t('debugHint')"
+        ></bk-alert>
         <template v-if="!isDebugPipeline && buildList.length">
             <header
                 :class="['params-collapse-trigger', {
@@ -275,6 +279,7 @@
                 }
             }
         },
+
         mounted () {
             if (this.$route.params.version || this.pipelineInfo?.releaseVersion) {
                 this.init()
@@ -322,12 +327,19 @@
                     this.paramList = startupInfo.properties.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
                         isChanged: p.defaultValue !== p.value,
-                        readOnly: false
+                        readOnly: false,
+                        label: `${p.id}${p.name ? `(${p.name})` : ''}`
                     }))
                     this.versionParamList = startupInfo.properties.filter(p => allVersionKeyList.includes(p.id))
                     this.buildList = startupInfo.properties.filter(p => p.propertyType === 'BUILD')
-                    this.constantParams = startupInfo.properties.filter(p => p.constant)
-                    this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD')
+                    this.constantParams = startupInfo.properties.filter(p => p.constant).map(p => ({
+                        ...p,
+                        label: `${p.id}${p.name ? `(${p.name})` : ''}`
+                    }))
+                    this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
+                        ...p,
+                        label: `${p.id}${p.name ? `(${p.name})` : ''}`
+                    }))
                     this.getParamsValue(values)
                     this.setExecuteParams({
                         pipelineId: this.pipelineId,
@@ -549,7 +561,7 @@ $header-height: 36px;
     height: 100%;
     display: flex;
     flex-direction: column;
-    margin: 24px 24px 0 24px;
+    margin: 24px 24px 12px 24px;
     box-shadow: 0 2px 2px 0 #00000026;
     overflow: auto !important;
     background-color: white;

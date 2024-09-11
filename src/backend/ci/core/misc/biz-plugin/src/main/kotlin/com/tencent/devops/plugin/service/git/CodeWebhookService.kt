@@ -79,7 +79,6 @@ import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @Service
 @Suppress("ALL")
@@ -232,7 +231,7 @@ class CodeWebhookService @Autowired constructor(
                                     repositoryConfig = repositoryConfig,
                                     commitId = commitId,
                                     status = status,
-                                    startedAt = null,
+                                    startedAt = (event.startTime ?: 0L) / 1000, // 毫秒 -> 秒
                                     conclusion = conclusion,
                                     completedAt = LocalDateTime.now().timestamp(),
                                     userId = event.userId,
@@ -408,9 +407,9 @@ class CodeWebhookService @Autowired constructor(
                 logger.warn("Build($buildId) number is null")
                 return
             }
+            val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
+            val targetUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
 
-            val serverHost = HomeHostUtil.innerServerHost()
-            val targetUrl = "$serverHost/console/pipeline/$projectId/$pipelineId/detail/$buildId"
             val description = when (state) {
                 GIT_COMMIT_CHECK_STATE_PENDING -> "Your pipeline [$pipelineName] is running"
                 GIT_COMMIT_CHECK_STATE_ERROR -> "Your pipeline [$pipelineName] is failed"
@@ -456,7 +455,8 @@ class CodeWebhookService @Autowired constructor(
                                 mutableListOf(targetBranch!!)
                             } else {
                                 null
-                            }
+                            },
+                            channelCode = channelCode
                         )
                         pluginGitCheckDao.create(
                             dslContext = dslContext,
@@ -478,7 +478,8 @@ class CodeWebhookService @Autowired constructor(
                             event = event,
                             targetUrl = targetUrl,
                             pipelineName = pipelineName,
-                            description = description
+                            description = description,
+                            channelCode = channelCode
                         )
                     }
                     // mr锁定并且状态为pending时才需要解锁hook锁
@@ -497,7 +498,8 @@ class CodeWebhookService @Autowired constructor(
         event: GitCommitCheckEvent,
         targetUrl: String,
         pipelineName: String,
-        description: String
+        description: String,
+        channelCode: ChannelCode
     ) {
         if (record == null) {
             logger.warn("Illegal pluginGitCheck data,Failed to add commit check information")
@@ -513,7 +515,8 @@ class CodeWebhookService @Autowired constructor(
                     mutableListOf(record.targetBranch)
                 } else {
                     null
-                }
+                },
+                channelCode = channelCode
             )
             pluginGitCheckDao.update(
                 dslContext = dslContext,
@@ -617,6 +620,8 @@ class CodeWebhookService @Autowired constructor(
         val pipelineName = buildInfo.pipelineName
         val webhookEventType = variables[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]
         val name = "$pipelineName@$webhookEventType"
+
+        val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
         val detailUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
 
         while (true) {
@@ -639,9 +644,11 @@ class CodeWebhookService @Autowired constructor(
                         detailUrl = detailUrl,
                         externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                         status = status,
-                        startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
+                        startedAt = startedAt,
                         conclusion = conclusion,
-                        completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT)
+                        completedAt = completedAt,
+                        pipelineId = pipelineId,
+                        buildId = buildId
                     )
                     pluginGithubCheckDao.create(
                         dslContext = dslContext,
@@ -660,25 +667,25 @@ class CodeWebhookService @Autowired constructor(
                         val checkRunId = if (conclusion == null) {
                             val result = scmCheckService.addGithubCheckRuns(
                                 projectId = projectId,
+                                pipelineId = pipelineId,
+                                buildId = buildId,
                                 repositoryConfig = repositoryConfig,
                                 name = record.checkRunName ?: "$pipelineName #$buildNum",
                                 commitId = commitId,
                                 detailUrl = detailUrl,
                                 externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                                 status = status,
-                                startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                ),
+                                startedAt = startedAt,
                                 conclusion = conclusion,
-                                completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                )
+                                completedAt = completedAt
                             )
                             result.id
                         } else {
                             scmCheckService.updateGithubCheckRuns(
                                 checkRunId = record.checkRunId,
                                 projectId = projectId,
+                                pipelineId = pipelineId,
+                                buildId = buildId,
                                 repositoryConfig = repositoryConfig,
                                 // 兼容历史数据
                                 name = record.checkRunName ?: "$pipelineName #$buildNum",
@@ -686,13 +693,11 @@ class CodeWebhookService @Autowired constructor(
                                 detailUrl = detailUrl,
                                 externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                                 status = status,
-                                startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                ),
+                                startedAt = startedAt,
                                 conclusion = conclusion,
-                                completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                )
+                                completedAt = completedAt,
+                                pipelineName = pipelineName,
+                                channelCode = channelCode
                             )
                             record.checkRunId
                         }

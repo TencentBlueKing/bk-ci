@@ -160,7 +160,7 @@
             <pipeline-table-view
                 v-if="isTableLayout"
                 :filter-params="filters"
-                :max-height="$refs.tableBox?.offsetHeight"
+                :max-height="tableHeight"
                 ref="pipelineBox"
             />
             <pipelines-card-view
@@ -279,7 +279,8 @@
                     action: this.toggleImportPipelinePopup
                 }],
                 RESOURCE_ACTION,
-                PROJECT_RESOURCE_ACTION
+                PROJECT_RESOURCE_ACTION,
+                tableHeight: null
             }
         },
         computed: {
@@ -376,7 +377,7 @@
         },
 
         created () {
-            this.$updateTabTitle?.(this.$t('documentTitlePipeline'))
+            this.$updateTabTitle?.()
             this.goList()
             this.checkHasCreatePermission()
         },
@@ -385,17 +386,23 @@
             webSocketMessage.installWsMessage(this.$refs.pipelineBox?.updatePipelineStatus)
             bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
             bus.$on(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
+            this.updateTableHeight()
+            window.addEventListener('resize', this.updateTableHeight)
         },
 
         beforeDestroy () {
             webSocketMessage.unInstallWsMessage()
             bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
+            window.removeEventListener('resize', this.updateTableHeight)
         },
 
         methods: {
             ...mapActions('pipelines', [
                 'requestHasCreatePermission'
             ]),
+            updateTableHeight () {
+                this.tableHeight = this.$refs.tableBox.offsetHeight
+            },
             isActiveSort (sortType) {
                 return this.$route.query.sortType === sortType
             },

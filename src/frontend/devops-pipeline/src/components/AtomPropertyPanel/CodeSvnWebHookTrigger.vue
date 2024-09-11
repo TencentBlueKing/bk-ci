@@ -24,9 +24,9 @@
                                 v-validate.initial="Object.assign({}, { max: getMaxLengthByType(i.component) }, i.rule, { required: !!i.required })"
                                 :handle-change="handleMethods"
                                 :value="element[i.key] || atomPropsModel[key]?.children[index]?.default"
+                                :disabled="disabled"
                                 v-bind="i"
-                            >
-                            </component>
+                            />
                         </form-field>
                     </template>
                 </form-field-group>
@@ -46,9 +46,9 @@
                         :handle-change="handleMethods"
                         :value="element[key]"
                         :element="element"
+                        :disabled="disabled"
                         v-bind="obj"
-                    >
-                    </component>
+                    />
                 </form-field>
             </template>
         </template>
@@ -56,8 +56,8 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
     export default {
         name: 'code-svn-web-hook-trigger',
         mixins: [atomMixin, validMixins],

@@ -30,6 +30,7 @@ package com.tencent.devops.metrics.config
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_DISPATCH_JOB_METRICS
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_PROJECT_USER_DAILY_METRICS
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_PROJECT_USER_DAILY_OPERATE_METRICS
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
@@ -37,8 +38,10 @@ import com.tencent.devops.metrics.listener.BuildEndMetricsDataReportListener
 import com.tencent.devops.metrics.listener.DispatchJobMetricsListener
 import com.tencent.devops.metrics.listener.LabelChangeMetricsDataSyncListener
 import com.tencent.devops.metrics.listener.ProjectUserDailyMetricsListener
+import com.tencent.devops.metrics.listener.ProjectUserDailyOperateMetricsListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
+import org.springframework.amqp.core.DirectExchange
 import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
@@ -96,26 +99,26 @@ class MetricsListenerConfiguration {
         )
     }
 
-    @Bean
-    fun projectUserDailyMetricsQueue() = Queue(QUEUE_PROJECT_USER_DAILY_METRICS)
-
     /**
-     * 插件监控数据上报广播交换机
+     * 用户审计数据上报交换机
      */
     @Bean
-    fun projectUserDailyMetricsFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
+    fun projectUserDailyMetricsExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT, true, false)
+        directExchange.isDelayed = true
+        return directExchange
     }
+
+    @Bean
+    fun projectUserDailyMetricsQueue() = Queue(QUEUE_PROJECT_USER_DAILY_METRICS)
 
     @Bean
     fun projectUserDailyMetricsQueueBind(
         @Autowired projectUserDailyMetricsQueue: Queue,
-        @Autowired projectUserDailyMetricsFanoutExchange: FanoutExchange
+        @Autowired projectUserDailyMetricsExchange: DirectExchange
     ): Binding {
         return BindingBuilder.bind(projectUserDailyMetricsQueue)
-            .to(projectUserDailyMetricsFanoutExchange)
+            .to(projectUserDailyMetricsExchange).with(MQ.ROUTE_PROJECT_USER_DAILY_METRICS)
     }
 
     @Bean
@@ -129,6 +132,39 @@ class MetricsListenerConfiguration {
         return Tools.createSimpleMessageListenerContainer(
             connectionFactory = connectionFactory,
             queue = projectUserDailyMetricsQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = listener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 1000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 5,
+            maxConcurrency = 50
+        )
+    }
+
+    @Bean
+    fun projectUserDailyOperateMetricsQueue() = Queue(QUEUE_PROJECT_USER_DAILY_OPERATE_METRICS)
+
+    @Bean
+    fun projectUserDailyOperateMetricsQueueBind(
+        @Autowired projectUserDailyOperateMetricsQueue: Queue,
+        @Autowired projectUserDailyMetricsExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(projectUserDailyOperateMetricsQueue)
+            .to(projectUserDailyMetricsExchange).with(MQ.ROUTE_PROJECT_USER_DAILY_OPERATE_METRICS)
+    }
+
+    @Bean
+    fun projectUserDailyOperateMetricsListenerContainer(
+        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME) @Autowired connectionFactory: ConnectionFactory,
+        @Autowired projectUserDailyOperateMetricsQueue: Queue,
+        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME) @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired listener: ProjectUserDailyOperateMetricsListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = projectUserDailyOperateMetricsQueue,
             rabbitAdmin = rabbitAdmin,
             buildListener = listener,
             messageConverter = messageConverter,

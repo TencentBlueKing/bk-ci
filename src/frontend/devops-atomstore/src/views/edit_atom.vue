@@ -862,7 +862,7 @@
                     const message = this.checkJobType()
                     this.$validator.validate().then(valid => {
                         if (isCheckValid && !message && valid) resolve()
-                        // else reject(new Error(message || this.$t('store.校验不通过，请修改后再试')))
+                        else reject(new Error(message || this.$t('store.校验不通过，请修改后再试')))
                     })
                 })
             },

@@ -372,11 +372,11 @@
     overflow: hidden;
     .icon-edit-line,
     .icon-check-circle {
+        color: #979BA5;
+        font-size: 14px;
         &.icon-check-circle.is-release-version-icon {
             color: #3FC362;
         }
-        color: #979BA5;
-        font-size: 14px;
     }
     .pipeline-branch-version-icon {
         color: #FF9C01;

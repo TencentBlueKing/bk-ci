@@ -570,10 +570,11 @@
                 const route = {
                     name: 'createInstance',
                     params: {
-                        projectId: this.projectId,
-                        pipelineId: this.pipelineId,
                         curVersionId: this.currentVersionId,
                         pipelineName: (row.pipelineName + '_copy').substring(0, 128)
+                    },
+                    query: {
+                        pipelineId: row.pipelineId
                     }
                 }
                 this.$router.push(route)

@@ -5,7 +5,7 @@
                 v-if="step.tooltip"
                 v-bk-tooltips="step.tooltip"
                 :class="`stage-step ${step.statusCls}`"
-                :key="step.icon"
+                :key="step.stageId"
             >
                 <logo
                     :class="`step-icon ${step.statusCls} ${getRunningCls(step.statusCls)}`"
@@ -18,7 +18,7 @@
                 v-bk-tooltips="progressTooltips"
                 :data-stageId="step.stageId"
                 :class="`stage-step ${step.statusCls}`"
-                :key="step.icon"
+                :key="step.stageId"
             >
                 <logo
                     :class="`step-icon ${step.statusCls} ${getRunningCls(step.statusCls)}`"
@@ -29,7 +29,7 @@
             <span
                 v-else
                 :class="`stage-step ${step.statusCls}`"
-                :key="step.icon"
+                :key="step.stageId"
             >
                 <logo
                     :class="`step-icon ${step.statusCls} ${getRunningCls(step.statusCls)}`"

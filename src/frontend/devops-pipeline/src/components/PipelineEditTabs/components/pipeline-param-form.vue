@@ -179,8 +179,8 @@
         computed: {
             idValidRule () {
                 return this.paramType === 'constant'
-                    ? `required|notInList:${this.getUniqueArgs('id')}|constVarRule|max:64`
-                    : `required|notInList:${this.getUniqueArgs('id')}`
+                    ? `required|paramsIdRule|notInList:${this.getUniqueArgs('id')}|constVarRule|max:64`
+                    : `required|paramsIdRule|notInList:${this.getUniqueArgs('id')}`
             },
             idLabel () {
                 return this.paramType === 'constant' ? this.$t('newui.pipelineParam.constName') : this.$t('newui.pipelineParam.varName')

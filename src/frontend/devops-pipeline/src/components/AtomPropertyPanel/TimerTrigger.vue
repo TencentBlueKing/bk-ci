@@ -16,7 +16,7 @@
                     type="checkbox"
                     :disabled="disabled"
                     :checked="isShowBasicRule"
-                    style="margin-left: auto;"
+                    style="margin-left:auto;"
                 />
             </header>
             <div slot="content">
@@ -71,7 +71,8 @@
                         :value="advanceValue"
                         :placeholder="$t('editPage.crontabExpression')"
                         v-validate.initial="{ 'required': advance }"
-                    ></vuex-textarea>
+                        :disabled="disabled"
+                    />
                 </form-field>
             </div>
         </accordion>
@@ -187,10 +188,10 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
-    import BranchParameterArray from '../AtomFormComponent/BranchParameterArray/index'
     import { REPOSITORY_API_URL_PREFIX } from '@/store/constants'
+    import BranchParameterArray from '../AtomFormComponent/BranchParameterArray/index'
+    import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
 
     export default {
         name: 'timer-trigger',

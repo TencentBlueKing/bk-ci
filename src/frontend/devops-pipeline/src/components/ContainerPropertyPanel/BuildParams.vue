@@ -61,7 +61,8 @@
                                                 <p
                                                     v-for="error in errors.all(`param-${param.id}`)"
                                                     :key="error"
-                                                >{{ error }}</p>
+                                                >
+                                                    {{ error }}</p>
                                             </div>
                                         </bk-popover>
                                         {{ param.id }}
@@ -126,13 +127,14 @@
                                                 :data-vv-scope="`param-${param.id}`"
                                                 :disabled="disabled"
                                                 :handle-change="(name, value) => handleUpdateParamId(name, value, index)"
-                                                v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(',')}`"
+                                                v-validate.initial="`required|paramsIdRule|unique:${validateParams.map(p => p.id).join(',')}`"
                                                 name="id"
                                                 :placeholder="$t('nameInputTips')"
                                                 :value="param.id"
                                             />
                                         </bk-form-item>
                                         <bk-form-item
+                                            v-if="!isFileParam(param.type)"
                                             label-width="auto"
                                             class="flex-col-span-1"
                                             :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
@@ -168,7 +170,7 @@
                                             >
                                             </enum-input>
                                             <vuex-input
-                                                v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isFileParam(param.type)"
+                                                v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type)"
                                                 :disabled="disabled"
                                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 name="defaultValue"
@@ -227,6 +229,25 @@
                                                 :replace-key="param.replaceKey"
                                                 :search-url="param.searchUrl"
                                             ></request-selector>
+                                        </bk-form-item>
+
+                                        <bk-form-item
+                                            v-else
+                                            label-width="auto"
+                                            :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
+                                            :required="isBooleanParam(param.type)"
+                                            :is-error="errors.has(`param-${param.id}.defaultValue`)"
+                                            :error-msg="errors.first(`param-${param.id}.defaultValue`)"
+                                            :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)"
+                                        >
+                                            <file-param-input
+                                                name="defaultValue"
+                                                v-bind="param"
+                                                :required="valueRequired"
+                                                :disabled="disabled"
+                                                :value="param.defaultValue"
+                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                            />
                                         </bk-form-item>
                                     </div>
 
@@ -365,15 +386,6 @@
 
                                     <bk-form-item
                                         label-width="auto"
-                                        v-if="isFileParam(param.type)"
-                                    >
-                                        <file-param-input
-                                            :file-path="param.defaultValue"
-                                        ></file-param-input>
-                                    </bk-form-item>
-
-                                    <bk-form-item
-                                        label-width="auto"
                                         :label="$t('desc')"
                                     >
                                         <vuex-input
@@ -498,7 +510,6 @@
                 renderParams: []
             }
         },
-
         computed: {
             ...mapGetters('atom', [
                 'osList',
@@ -818,106 +829,126 @@
 </script>
 
 <style lang="scss">
-    @import '../../scss/conf';
-    .build-params-comp {
-        margin: 20px 0;
-        .params-flex-col {
-            display: flex;
-            .bk-form-item {
-                flex: 1;
-                padding-right: 8px;
-                margin-top: 0;
-                line-height: 30px;
-                &:last-child {
-                    padding-right: 0;
-                }
-                &+.bk-form-item {
-                    margin-top: 0 !important;
-                }
-                span.bk-form-help {
-                    display: block;
-                }
-            }
-            .flex-col-span-1 {
-                flex: 1;
-            }
-        }
-        .content .text-link {
-            font-size: 14px;
-            cursor: pointer;
-        }
-    }
-    .no-prop {
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+@import '../../scss/conf';
 
-    .param-option {
+.build-params-comp {
+    margin: 20px 0;
+
+    .params-flex-col {
         display: flex;
-        align-items: flex-start;
-        margin: 0 0 10px 0;
-        .option-input {
+
+        .bk-form-item {
             flex: 1;
-            &:first-child {
-                margin-right: 10px;
+            padding-right: 8px;
+            margin-top: 0;
+            line-height: 30px;
+
+            &:last-child {
+                padding-right: 0;
+            }
+
+            &+.bk-form-item {
+                margin-top: 0 !important;
+            }
+
+            span.bk-form-help {
+                display: block;
             }
         }
-        .devops-icon {
-            font-size: 14px;
-            padding: 10px  0 0 10px;
-            cursor: pointer;
-            &:disabled {
-                cursor: auto;
-                opacity: .5;
-            }
+
+        .flex-col-span-1 {
+            flex: 1;
         }
     }
 
-    .param-header {
-        display: flex;
+    .content .text-link {
+        font-size: 14px;
+        cursor: pointer;
+    }
+}
+
+.no-prop {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.param-option {
+    display: flex;
+    align-items: flex-start;
+    margin: 0 0 10px 0;
+
+    .option-input {
         flex: 1;
-        align-items: center;
-        word-wrap: break-word;
-        word-break: break-all;
-        > span {
-            flex: 1;
-        }
-        >.devops-icon {
-            width: 24px;
-            text-align: center;
-            &.icon-plus {
-                &:hover {
-                    color: $primaryColor;
-                }
-            }
-            &.icon-delete {
-                &:hover {
-                    color: $dangerColor;
-                }
-            }
+
+        &:first-child {
+            margin-right: 10px;
         }
     }
 
-    .params-help {
-        color: $fontColor;
-        font-size: 12px;
-    }
-    .sortable-ghost-atom {
-        opacity: 0.5;
-    }
-    .sortable-chosen-atom {
-        transform: scale(1.0);
-    }
+    .devops-icon {
+        font-size: 14px;
+        padding: 10px 0 0 10px;
+        cursor: pointer;
 
-    .param-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-        > span {
-            margin: 0 10px;
+        &:disabled {
+            cursor: auto;
+            opacity: .5;
         }
     }
+}
+
+.param-header {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    word-wrap: break-word;
+    word-break: break-all;
+
+    >span {
+        flex: 1;
+    }
+
+    >.devops-icon {
+        width: 24px;
+        text-align: center;
+
+        &.icon-plus {
+            &:hover {
+                color: $primaryColor;
+            }
+        }
+
+        &.icon-delete {
+            &:hover {
+                color: $dangerColor;
+            }
+        }
+    }
+}
+
+.params-help {
+    color: $fontColor;
+    font-size: 12px;
+}
+
+.sortable-ghost-atom {
+    opacity: 0.5;
+}
+
+.sortable-chosen-atom {
+    transform: scale(1.0);
+}
+
+.param-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+
+    >span {
+        margin: 0 10px;
+    }
+}
 </style>

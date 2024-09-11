@@ -5,7 +5,7 @@ name: Frontend CI
 
 on:
   push:
-    branches: [master]
+    branches: ["*"]
     paths:
       - "src/frontend/**"
   pull_request:
@@ -47,7 +47,7 @@ jobs:
           export NODE_OPTIONS=--openssl-legacy-provider
           pnpm public
         working-directory: src/frontend
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ inputs.upload == 'true'  }}
         with:
           name: frontend

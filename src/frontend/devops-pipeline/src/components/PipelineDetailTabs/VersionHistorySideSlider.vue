@@ -91,13 +91,20 @@
                         </template>
                     </bk-table-column>
                     <bk-table-column
-                        :width="222"
+                        :width="280"
                         :label="$t('operate')"
                     >
                         <div
                             slot-scope="props"
                             class="pipeline-history-version-operate"
                         >
+                            <bk-button
+                                v-if="props.row.isDraft"
+                                text
+                                @click="goDebugRecords"
+                            >
+                                {{ $t('draftExecRecords') }}
+                            </bk-button>
                             <rollback-entry
                                 v-if="props.row.canRollback"
                                 :has-permission="canEdit"
@@ -132,6 +139,7 @@
 <script>
     import Logo from '@/components/Logo'
     import EmptyException from '@/components/common/exception'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { convertTime, navConfirm } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
@@ -320,6 +328,15 @@
                                 message: this.$t('delete') + this.$t('version') + this.$t('success'),
                                 theme: 'success'
                             })
+
+                            if (row.isDraft) { // 删除草稿时需要更新pipelineInfo
+                                this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
+                                    version: this.pipelineInfo?.releaseVersion,
+                                    versionName: this.pipelineInfo?.releaseVersionName,
+                                    canDebug: false,
+                                    canRelease: false
+                                })
+                            }
                         } catch (err) {
                             this.$showTips({
                                 message: err.message || err,
@@ -337,6 +354,11 @@
             clearFilter (refresh = true) {
                 this.filterKeys = []
                 refresh && this.queryVersionList()
+            },
+            goDebugRecords () {
+                this.$router.push({
+                    name: 'draftDebugRecord'
+                })
             }
         }
     }

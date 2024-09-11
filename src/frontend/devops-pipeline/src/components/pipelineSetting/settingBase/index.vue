@@ -262,7 +262,6 @@
                 this.$emit('setState', this.isEditing)
             },
             setIsEditing () {
-                debugger
                 this.isEditing = true
             },
             handleChangeRunType (name, value) {

@@ -48,25 +48,27 @@
             >
                 {{ $t("cancel") }}
             </bk-button>
-            <bk-button
-                theme="primary"
-                :disabled="executeStatus"
-                :loading="executeStatus"
-                v-if="!isDebugPipeline"
-                v-perm="{
-                    hasPermission: canExecute,
-                    disablePermissionApi: true,
-                    permissionData: {
-                        projectId: projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EXECUTE
-                    }
-                }"
-                @click="handleClick"
-            >
-                {{ $t("exec") }}
-            </bk-button>
+            <span v-bk-tooltips="execTips">
+                <bk-button
+                    theme="primary"
+                    :disabled="executeStatus || versionNotMatch"
+                    :loading="executeStatus"
+                    v-if="!isDebugPipeline"
+                    v-perm="{
+                        hasPermission: canExecute,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
+                    @click="handleClick"
+                >
+                    {{ $t("exec") }}
+                </bk-button>
+            </span>
         </aside>
     </div>
     <i
@@ -122,6 +124,20 @@
             },
             canExecute () {
                 return this.pipelineInfo?.permissions.canExecute ?? true
+            },
+            versionNotMatch () {
+                try {
+                    // eslint-disable-next-line eqeqeq
+                    return !this.isDebugPipeline && (this.$route.params.version && this.$route.params.version != this.pipelineInfo?.releaseVersion)
+                } catch (error) {
+                    return false
+                }
+            },
+            execTips () {
+                return {
+                    content: this.$t('versionNotMatch'),
+                    disabled: !this.versionNotMatch
+                }
             }
         },
         watch: {
