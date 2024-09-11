@@ -16,7 +16,7 @@ import org.springframework.core.io.ClassPathResource
 class TXPipelineExportJsonUtilTest {
 
     @Test
-        /*比较内容是否一致*/
+            /*比较内容是否一致*/
     fun similarTest() {
         val baseModel = getStrFromResource("modelExportJsonUtil.json")
         ElementSubTypeRegisterLoader.registerElement(null)

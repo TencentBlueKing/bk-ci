@@ -30,10 +30,13 @@ package com.tencent.devops.remotedev.pojo.common
 enum class RemoteDevNotifyType {
     // 邮件
     EMAIL,
+
     // 蓝盾客户端-通知
     CLIENT_PUSH,
+
     // 企业微信
     RTX,
+
     // 云桌面-跑马灯消息
     DESKTOP_MARQUEE,
 
@@ -49,6 +52,7 @@ enum class RemoteDevNotifyType {
     enum class Status {
         SUCCESS,
         FAIL,
-        FAIL_RESEND
+        FAIL_RESEND, /*失败消息已重发*/
+        FAIL_EXPIRED /*失败消息已过期不重发*/
     }
 }

@@ -35,6 +35,7 @@ import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
@@ -76,7 +77,6 @@ import java.util.Base64
 import javax.ws.rs.core.Response
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.cloud.stream.function.StreamBridge
 
 @RestResource
@@ -289,9 +289,12 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun notifyWorkspaceInfo(operator: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
-        notifyControl.notifyWorkspaceInfo(
-            userId = operator,
-            notifyData = notifyData
+        logger.info("notify workspace|notifyData|$notifyData")
+        AsyncExecute.dispatch(
+            streamBridge, AsyncNotify(
+                operator = operator,
+                notifyData = notifyData
+            )
         )
         return Result(true)
     }
@@ -532,13 +535,13 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
-    override fun getWorkspaceImageList(projectId: String?): Result<Map<String, Any>> {
+    override fun getWorkspaceImageList(projectId: String?, imageId: String?): Result<Map<String, Any>> {
         // 获取基础镜像
         val baseImages = imageManageService.getVmStandardImages().map { JsonUtil.toMap(it) }
 
         // 获取项目特定镜像（如果有）
         val projectImageMap = if (!projectId.isNullOrBlank()) {
-            val projectImages = imageManageService.getProjectImageList(projectId).map { JsonUtil.toMap(it) }
+            val projectImages = imageManageService.getProjectImageList(projectId, imageId).map { JsonUtil.toMap(it) }
             mapOf(projectId to projectImages)
         } else {
             emptyMap()

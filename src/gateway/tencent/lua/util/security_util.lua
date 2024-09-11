@@ -49,6 +49,8 @@ function _M:isSafe()
             "/websocket/ws/desktop", -- 离岸开发 ws
             "/experience/api/open/experiences/appstore/redirect", -- 跳转到AppStore
             "/experience/api/open/experiences/outerLogin", -- 外部用户登录
+            "/ms/artifactory/api/open/experiences/appstore/redirect", -- 跳转到AppStore
+            "/ms/artifactory/api/open/experiences/outerLogin", -- 外部用户登录
             "/process/api/external/scm/codetgit/commit", -- 仓库的external/generic路径
             "/repository/api/external/github", -- Github回调
             "/process/api/external/scm/p4/commit", -- p4回调

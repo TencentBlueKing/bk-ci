@@ -105,7 +105,7 @@ enum class ErrorCodeEnum(
     CLIENT_NEED_UPDATED(
         errorType = ErrorType.USER,
         errorCode = "2132028",
-        formatErrorMessage = "Please install the latest version of the client."
+        formatErrorMessage = "The current client version is too low, please upgrade to the latest version."
     ),
     DELIVERING_FAILED(
         errorType = ErrorType.THIRD_PARTY,

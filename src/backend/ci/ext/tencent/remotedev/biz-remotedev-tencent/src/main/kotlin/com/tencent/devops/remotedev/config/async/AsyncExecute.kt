@@ -12,7 +12,8 @@ object AsyncExecute {
             event = AsyncExecuteEvent(
                 eventStr = JsonUtil.toJson(data, false),
                 type = data.toType()
-            ), errorLogTag = errorLogTag
+            ),
+                errorLogTag = errorLogTag
         )
     }
 
