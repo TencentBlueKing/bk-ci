@@ -60,6 +60,7 @@ class StreamTriggerExceptionHandler @Autowired constructor(
 
     fun <T> handle(
         action: BaseAction,
+        watcherStop: Boolean = true,
         f: () -> T?
     ): T? {
         try {
@@ -86,7 +87,7 @@ class StreamTriggerExceptionHandler @Autowired constructor(
                 return null
             }
         } finally {
-            if (action.data.isWatcherInitialized) {
+            if (action.data.isWatcherInitialized && watcherStop) {
                 action.data.watcher.stop()
                 LogUtils.printCostTimeWE(action.data.watcher, warnThreshold = 5000, errorThreshold = 10000)
             }
