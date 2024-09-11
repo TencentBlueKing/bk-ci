@@ -21,7 +21,7 @@ backendImage:
 mysql:
   enabled: true
   image:
-    tag: 5.7.26
+    tag: 8.0.37-debian-12-r2
   auth:
     # 修改此选项必须删除mysql的pvc , 否则会创建mysql失败
     rootPassword: blueking
