@@ -256,5 +256,4 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         result.addAll(tags)
         return result
     }
-
 }
