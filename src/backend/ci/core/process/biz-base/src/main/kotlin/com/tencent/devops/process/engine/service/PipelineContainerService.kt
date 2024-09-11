@@ -513,7 +513,7 @@ class PipelineContainerService @Autowired constructor(
                     // 如果插件任务之前已经是完成状态，则跳过当前插件
                     // 如果是取消状态的，则不能跳过，取消状态属于要重试再次执行的状态（比如重试的是checkout插件，其post-action如是取消)
                     try {
-                        if (target == null || (target.status.isFinish() && !target.status.isCancel())) {
+                        if (target == null || (target.status.isSuccess() || target.status.isFailure())) {
                             return@nextElement
                         }
                     } catch (ignored: Exception) { // 如果存在异常的ordinal
@@ -525,7 +525,7 @@ class PipelineContainerService @Autowired constructor(
                 // Rebuild/Stage-Retry/Fail-Task-Retry  重跑/Stage重试/失败的插件重试
                 val skipWhenFailed = context.inSkipStage(stage, atomElement)
                 val buildStatus = if (skipWhenFailed) BuildStatus.SKIP else null
-                val recordStatus = if (skipWhenFailed) BuildStatus.FAILED.name else null
+                val recordStatus = if (skipWhenFailed) BuildStatus.SKIP.name else null
                 val taskRecord = retryDetailModelStatus(
                     lastTimeBuildTasks = lastTimeBuildTasks,
                     container = container,
