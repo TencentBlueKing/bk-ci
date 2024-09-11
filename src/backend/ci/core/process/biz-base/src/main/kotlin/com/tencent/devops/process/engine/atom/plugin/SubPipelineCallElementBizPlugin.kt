@@ -56,7 +56,8 @@ class SubPipelineCallElementBizPlugin @Autowired constructor(
         contextMap: Map<String, String>,
         appearedCnt: Int,
         isTemplate: Boolean,
-        oauthUser: String?
+        oauthUser: String?,
+        pipelineId: String
     ): ElementCheckResult {
         return elementBizPluginServices.find {
             it.supportElement(element)
@@ -69,11 +70,19 @@ class SubPipelineCallElementBizPlugin @Autowired constructor(
             contextMap = contextMap,
             appearedCnt = appearedCnt,
             isTemplate = isTemplate,
-            oauthUser = oauthUser
+            oauthUser = oauthUser,
+            pipelineId = pipelineId
         ) ?: ElementCheckResult(true)
     }
 
-    override fun beforeDelete(element: SubPipelineCallElement, param: BeforeDeleteParam) = Unit
+    override fun beforeDelete(element: SubPipelineCallElement, param: BeforeDeleteParam) {
+        elementBizPluginServices.find {
+            it.supportElement(element)
+        }?.beforeDelete(
+            element = element,
+            param = param
+        )
+    }
 
     override fun afterCreate(
         element: SubPipelineCallElement,

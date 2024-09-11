@@ -80,6 +80,7 @@ interface ElementBizPlugin<T : Element> {
         contextMap: Map<String, String>,
         appearedCnt: Int,
         isTemplate: Boolean,
-        oauthUser: String?
+        oauthUser: String?,
+        pipelineId: String
     ): ElementCheckResult
 }

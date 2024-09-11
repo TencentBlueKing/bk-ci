@@ -90,7 +90,8 @@ open class DefaultModelCheckPlugin constructor(
         projectId: String?,
         userId: String,
         isTemplate: Boolean,
-        oauthUser: String?
+        oauthUser: String?,
+        pipelineId: String
     ): Int {
         var metaSize = 0
         // 检查流水线名称
@@ -179,7 +180,8 @@ open class DefaultModelCheckPlugin constructor(
                 atomInputParamList = atomInputParamList,
                 elementCheckResults = elementCheckResults,
                 isTemplate = isTemplate,
-                oauthUser = oauthUser
+                oauthUser = oauthUser,
+                pipelineId = pipelineId
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
                 AtomUtils.checkModelAtoms(
@@ -257,7 +259,8 @@ open class DefaultModelCheckPlugin constructor(
         atomInputParamList: MutableList<StoreParam>,
         elementCheckResults: MutableList<ElementCheckResult>,
         isTemplate: Boolean,
-        oauthUser: String?
+        oauthUser: String?,
+        pipelineId: String
     ): Int /* MetaSize*/ {
         var metaSize = 0
         containers.forEach { container ->
@@ -307,7 +310,8 @@ open class DefaultModelCheckPlugin constructor(
                     contextMap = contextMap,
                     elementCheckResults = elementCheckResults,
                     isTemplate = isTemplate,
-                    oauthUser = oauthUser
+                    oauthUser = oauthUser,
+                    pipelineId = pipelineId
                 )
             }
         }
@@ -325,7 +329,8 @@ open class DefaultModelCheckPlugin constructor(
         contextMap: Map<String, String>,
         elementCheckResults: MutableList<ElementCheckResult>,
         isTemplate: Boolean,
-        oauthUser: String?
+        oauthUser: String?,
+        pipelineId: String
     ) {
         val eCnt = elementCnt.computeIfPresent(element.getAtomCode()) { _, oldValue -> oldValue + 1 }
             ?: elementCnt.computeIfAbsent(element.getAtomCode()) { 1 } // 第一次时出现1次
@@ -338,7 +343,8 @@ open class DefaultModelCheckPlugin constructor(
             contextMap = contextMap,
             appearedCnt = eCnt,
             isTemplate = isTemplate,
-            oauthUser = oauthUser
+            oauthUser = oauthUser,
+            pipelineId = pipelineId
         )
         if (elementCheckResult?.result == false) {
             elementCheckResults.add(elementCheckResult)

@@ -53,7 +53,8 @@ interface ModelCheckPlugin {
         projectId: String?,
         userId: String,
         isTemplate: Boolean = false,
-        oauthUser: String? = null
+        oauthUser: String? = null,
+        pipelineId: String = ""
     ): Int
 
     /**

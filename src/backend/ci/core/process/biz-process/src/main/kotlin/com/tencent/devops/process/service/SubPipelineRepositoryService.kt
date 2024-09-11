@@ -279,7 +279,7 @@ class SubPipelineRepositoryService @Autowired constructor(
     /**
      * 获取最新版流水线编排
      */
-    private fun getModel(projectId: String, pipelineId: String): Model? {
+    fun getModel(projectId: String, pipelineId: String): Model? {
         var model: Model? = null
         val modelString = pipelineResDao.getLatestVersionModelString(dslContext, projectId, pipelineId)
         if (modelString.isNullOrBlank()) {
