@@ -32,7 +32,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.engine.listener.run.PipelineNotifyQueueListener
 import com.tencent.devops.process.engine.listener.run.PipelineWebHookQueueListener
 import com.tencent.devops.process.engine.service.PipelineNotifyService

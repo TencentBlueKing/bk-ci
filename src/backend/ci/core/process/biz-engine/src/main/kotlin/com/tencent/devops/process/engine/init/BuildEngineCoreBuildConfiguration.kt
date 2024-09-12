@@ -32,7 +32,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.engine.control.BuildCancelControl
 import com.tencent.devops.process.engine.control.BuildEndControl
 import com.tencent.devops.process.engine.control.BuildStartControl

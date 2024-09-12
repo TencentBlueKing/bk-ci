@@ -48,7 +48,7 @@ class AuthCoreConfiguration {
 
     @Bean
     fun authRefreshEventListener(
-        @Autowired userPermissionService: UserPermissionService,
+        @Autowired userPermissionService: UserPermissionService
     ) = AuthRefreshEventListener(
         userPermissionService = userPermissionService
     )

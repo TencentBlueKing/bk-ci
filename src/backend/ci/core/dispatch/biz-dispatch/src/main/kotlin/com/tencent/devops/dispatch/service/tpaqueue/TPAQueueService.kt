@@ -8,7 +8,6 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
-import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -16,20 +15,20 @@ import com.tencent.devops.dispatch.dao.TPAQueueDao
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentQueueSqlData
 import com.tencent.devops.dispatch.exception.DispatchRetryMQException
 import com.tencent.devops.dispatch.pojo.QueueDataContext
-import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.TPAQueueEvent
 import com.tencent.devops.dispatch.pojo.TPAQueueEventContext
+import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentSqlQueueType
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.TPACommonUtil.Companion.tagError
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentQueueEnvLock
+import java.time.LocalDateTime
+import java.util.UUID
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.UUID
 
 @Service
 class TPAQueueService @Autowired constructor(

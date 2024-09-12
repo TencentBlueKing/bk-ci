@@ -125,8 +125,7 @@ interface BuildListener {
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
                 message = "${I18nUtil.getCodeLanMessage(BK_FAILED_START_BUILD_MACHINE)}- ${e.message}",
-                executeCount = event.executeCount
-            ,
+                executeCount = event.executeCount,
                 jobId = event.jobId
             )
 
@@ -142,8 +141,7 @@ interface BuildListener {
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
                 message = "${I18nUtil.getCodeLanMessage(BK_FAILED_START_BUILD_MACHINE)} - ${t.message}",
-                executeCount = event.executeCount
-            ,
+                executeCount = event.executeCount,
                 jobId = event.jobId
             )
 

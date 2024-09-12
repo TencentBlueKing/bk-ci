@@ -133,8 +133,9 @@ class StreamMQConfiguration {
     @EventConsumer
     fun buildQualityCheckConsumer(
         @Autowired checkListener: StreamBuildQualityCheckListener
-    ) =
-        ScsConsumerBuilder.build<PipelineBuildQualityCheckBroadCastEvent> { checkListener.buildQualityCheckListener(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildQualityCheckBroadCastEvent> {
+        checkListener.buildQualityCheckListener(it)
+    }
 
     @Bean
     fun streamTriggerListener(

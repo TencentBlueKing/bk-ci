@@ -30,7 +30,6 @@ package com.tencent.devops.process.engine.init
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.engine.control.BuildMonitorControl
 import com.tencent.devops.process.engine.control.HeartbeatControl
 import com.tencent.devops.process.engine.listener.run.monitor.PipelineBuildHeartbeatListener

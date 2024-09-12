@@ -33,7 +33,6 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewB
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.quality.listener.PipelineBuildQualityListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration

@@ -28,20 +28,19 @@
 package com.tencent.devops.common.dispatch.sdk.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.dispatch.sdk.service.DispatchService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Bean
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
-import org.springframework.cloud.stream.function.StreamBridge
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Bean
 
 class SDKConfiguration {
     @Value("\${gateway.url:#{null}}")
