@@ -87,7 +87,10 @@ class SlaveGatewayService @Autowired constructor(
     // @return gateway,filegateway
     private fun getConfigGateway(zoneName: String?): Pair<String, String?> {
         if (zoneName.isNullOrBlank()) {
-            return Pair(agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!), null)
+            return Pair(
+                agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!),
+                agentUrlService.fixGateway(commonConfig.fileDevnetGateway!!)
+            )
         }
         val gateways = getGateway()
         gateways.forEach {
@@ -98,7 +101,10 @@ class SlaveGatewayService @Autowired constructor(
                 )
             }
         }
-        return Pair(agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!), null)
+        return Pair(
+            agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!),
+            agentUrlService.fixGateway(commonConfig.fileDevnetGateway!!)
+        )
     }
 
     fun getGateway(): List<SlaveGateway> {

@@ -66,7 +66,8 @@ import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
-import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter.Companion.KEYWORD_SKIP_CI
 import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
@@ -96,6 +97,10 @@ class TGitPushTriggerHandler(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TGitPushTriggerHandler::class.java)
+        // 空提交点，可用于推断是新增/删除分支
+        // 新增分支 -> before为此值
+        // 删除分支 -> after为此值
+        const val EMPTY_COMMIT_ID = "0000000000000000000000000000000000000000"
     }
 
     override fun eventClass(): Class<GitPushEvent> {
@@ -135,7 +140,11 @@ class TGitPushTriggerHandler(
     }
 
     override fun getAction(event: GitPushEvent): String? {
-        return event.action_kind
+        return when {
+            event.action_kind.isNullOrBlank() -> event.action_kind
+            event.before == EMPTY_COMMIT_ID -> TGitPushActionType.NEW_BRANCH.value
+            else -> TGitPushActionType.PUSH_FILE.value
+        }
     }
 
     override fun getEventDesc(event: GitPushEvent): String {
@@ -200,16 +209,17 @@ class TGitPushTriggerHandler(
                 includedBranches = convert(branchName),
                 excludedBranches = convert(excludeBranchName),
                 includedFailedReason = I18Variable(
-                    code = WebhookI18nConstants.SOURCE_BRANCH_NOT_MATCH,
+                    code = WebhookI18nConstants.BRANCH_NOT_MATCH,
                     params = listOf(triggerOnBranchName)
                 ).toJsonStr(),
                 excludedFailedReason = I18Variable(
-                    code = WebhookI18nConstants.SOURCE_BRANCH_IGNORED,
+                    code = WebhookI18nConstants.BRANCH_IGNORED,
                     params = listOf(triggerOnBranchName)
                 ).toJsonStr()
             )
-            val skipCiFilter = SkipCiFilter(
+            val skipCiFilter = KeywordSkipFilter(
                 pipelineId = pipelineId,
+                keyWord = KEYWORD_SKIP_CI,
                 triggerOnMessage = event.commits?.get(0)?.message ?: ""
             )
             val commits = event.commits

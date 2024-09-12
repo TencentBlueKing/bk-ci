@@ -1,7 +1,12 @@
 <template>
-    <div style="height: 100%;width: 100%;">
-        <bk-resize-layout :collapsible="true" class="pipeline-exec-outputs" :initial-divide="initWidth" :min="260"
-            :max="800">
+    <div style="height: 100%;width: 100%;" v-bkloading="{ isLoading }">
+        <bk-resize-layout
+            :collapsible="true"
+            class="pipeline-exec-outputs"
+            :initial-divide="initWidth"
+            :min="260"
+            :max="800"
+        >
             <aside slot="aside" class="pipeline-exec-outputs-aside">
                 <div class="pipeline-exec-outputs-filter-input">
                     <bk-input clearable right-icon="bk-icon icon-search" :placeholder="filterPlaceholder"
@@ -19,7 +24,6 @@
                         <i :class="['devops-icon', `icon-${output.icon}`]"></i>
                         <span :title="output.name">{{ output.name }}</span>
                         <p class="output-hover-icon-box">
-                            <output-qrcode v-if="output.isApp" :output="output" />
                             <artifact-download-button v-if="output.downloadable" :output="output" download-icon
                                 :has-permission="hasPermission" :path="output.fullPath" :name="output.name"
                                 :artifactory-type="output.artifactoryType" />
@@ -35,7 +39,7 @@
                 </div>
 
             </aside>
-            <section slot="main" v-bkloading="{ isLoading }" class="pipeline-exec-outputs-section">
+            <section slot="main" class="pipeline-exec-outputs-section">
                 <iframe-report v-if="isCustomizeReport" ref="iframeReport" :report-name="activeOutput.name"
                     :index-file-url="activeOutput.indexFileUrl" />
                 <third-party-report v-else-if="isActiveThirdReport" :report-list="thirdPartyReportList" />
@@ -53,7 +57,6 @@
                             <bk-button text theme="primary" v-for="btn in btns" :key="btn.text" @click="btn.handler">
                                 {{ btn.text }}
                             </bk-button>
-                            <output-qrcode :output="activeOutput" v-if="activeOutputDetail.isApp" />
 
                             <ext-menu v-if="!activeOutputDetail.folder" :data="activeOutputDetail"
                                 :config="artifactMoreActions"></ext-menu>
@@ -131,7 +134,6 @@
     import Logo from '@/components/Logo'
     import CopyToCustomRepoDialog from '@/components/Outputs/CopyToCustomRepoDialog'
     import IframeReport from '@/components/Outputs/IframeReport'
-    import OutputQrcode from '@/components/Outputs/OutputQrcode'
     import ThirdPartyReport from '@/components/Outputs/ThirdPartyReport'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
@@ -146,7 +148,6 @@
             ExtMenu,
             CopyToCustomRepoDialog,
             // ArtifactsList
-            OutputQrcode,
             ArtifactDownloadButton
         },
         props: {
@@ -429,6 +430,9 @@
                 }
             },
             currentTab: function () {
+                this.$nextTick(this.init)
+            },
+            '$route.params.buildNo' () {
                 this.$nextTick(this.init)
             }
         },

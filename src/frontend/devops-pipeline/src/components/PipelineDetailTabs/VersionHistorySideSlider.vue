@@ -1,7 +1,7 @@
 <template>
     <bk-sideslider
         quick-close
-        :width="950"
+        :width="1080"
         :is-show="showVersionSideslider"
         :before-close="handleClose"
         @shown="handleShown"
@@ -9,7 +9,7 @@
         :transfer="false"
     >
         <header slot="header">
-            {{$t('template.versionList')}}
+            {{ $t('template.versionList') }}
             <bk-popover class="pipeline-version-rule-tips">
                 <span class="pipeline-version-rule-tips-trigger">
                     <i class="devops-icon icon-question-circle" />
@@ -23,7 +23,11 @@
                 </div>
             </bk-popover>
         </header>
-        <main slot="content" class="pipeline-version-history" v-bkloading="{ isLoading }">
+        <main
+            slot="content"
+            class="pipeline-version-history"
+            v-bkloading="{ isLoading }"
+        >
             <header class="pipeline-version-history-header">
                 <search-select
                     class="pipeline-version-search-select"
@@ -33,7 +37,10 @@
                     @change="queryVersionList"
                 />
             </header>
-            <section class="pipeline-version-history-content" ref="tableBox">
+            <section
+                class="pipeline-version-history-content"
+                ref="tableBox"
+            >
                 <bk-table
                     :data="pipelineVersionList"
                     :pagination="pagination"
@@ -42,16 +49,39 @@
                     :max-height="$refs?.tableBox?.offsetHeight"
                     size="small"
                 >
-                    <empty-exception :type="emptyType" slot="empty" @clear="clearFilter"></empty-exception>
-                    <bk-table-column v-for="column in columns" :key="column.prop" v-bind="column">
-                        <template v-if="column.prop === 'versionName'" v-slot="{ row }">
-                            <div :class="['pipeline-version-name-cell', {
-                                'active-version-name': row.version === releaseVersion
-                            }]">
+                    <empty-exception
+                        :type="emptyType"
+                        slot="empty"
+                        @clear="clearFilter"
+                    ></empty-exception>
+                    <bk-table-column
+                        v-for="column in columns"
+                        :key="column.prop"
+                        v-bind="column"
+                    >
+                        <template
+                            v-if="column.prop === 'versionName'"
+                            v-slot="{ row }"
+                        >
+                            <div
+                                :class="['pipeline-version-name-cell', {
+                                    'active-version-name': row.version === releaseVersion
+                                }]"
+                            >
                                 <span>
-                                    <i class="devops-icon icon-edit-line" v-if="row.isDraft" />
-                                    <logo v-else-if="row.isBranchVersion" name="branch" size="16" />
-                                    <i v-else class="devops-icon icon-check-circle" />
+                                    <i
+                                        class="devops-icon icon-edit-line"
+                                        v-if="row.isDraft"
+                                    />
+                                    <logo
+                                        v-else-if="row.isBranchVersion"
+                                        name="branch"
+                                        size="16"
+                                    />
+                                    <i
+                                        v-else
+                                        class="devops-icon icon-check-circle"
+                                    />
                                 </span>
                                 {{ row.versionName }}
                                 <!-- <span>
@@ -60,8 +90,21 @@
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column width="266" :label="$t('operate')">
-                        <div slot-scope="props" class="pipeline-history-version-operate">
+                    <bk-table-column
+                        :width="280"
+                        :label="$t('operate')"
+                    >
+                        <div
+                            slot-scope="props"
+                            class="pipeline-history-version-operate"
+                        >
+                            <bk-button
+                                v-if="props.row.isDraft"
+                                text
+                                @click="goDebugRecords"
+                            >
+                                {{ $t('draftExecRecords') }}
+                            </bk-button>
                             <rollback-entry
                                 v-if="props.row.canRollback"
                                 :has-permission="canEdit"
@@ -96,6 +139,7 @@
 <script>
     import Logo from '@/components/Logo'
     import EmptyException from '@/components/common/exception'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { convertTime, navConfirm } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
@@ -150,11 +194,25 @@
                     prop: 'createTime',
                     label: this.$t('createTime'),
                     showOverflowTooltip: true,
+                    width: 156,
                     formatter: (row) => {
                         return convertTime(row.createTime)
                     }
                 }, {
-                    prop: 'lastModifyUser',
+                    prop: 'creator',
+                    width: 90,
+                    label: this.$t('creator')
+                }, {
+                    prop: 'updateTime',
+                    label: this.$t('lastUpdateTime'),
+                    showOverflowTooltip: true,
+                    width: 156,
+                    formatter: (row) => {
+                        return convertTime(row.updateTime)
+                    }
+                }, {
+                    prop: 'updater',
+                    width: 90,
                     label: this.$t('audit.operator')
                 }]
             },
@@ -184,10 +242,11 @@
             }
         },
         mounted () {
+            this.preZIndex = window.__bk_zIndex_manager.zIndex
             window.__bk_zIndex_manager.zIndex = 2500
         },
         beforeDestroy () {
-            window.__bk_zIndex_manager.zIndex = 2000
+            window.__bk_zIndex_manager.zIndex = this.preZIndex
         },
         methods: {
             ...mapActions('pipelines', [
@@ -269,6 +328,15 @@
                                 message: this.$t('delete') + this.$t('version') + this.$t('success'),
                                 theme: 'success'
                             })
+
+                            if (row.isDraft) { // 删除草稿时需要更新pipelineInfo
+                                this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
+                                    version: this.pipelineInfo?.releaseVersion,
+                                    versionName: this.pipelineInfo?.releaseVersionName,
+                                    canDebug: false,
+                                    canRelease: false
+                                })
+                            }
                         } catch (err) {
                             this.$showTips({
                                 message: err.message || err,
@@ -286,6 +354,11 @@
             clearFilter (refresh = true) {
                 this.filterKeys = []
                 refresh && this.queryVersionList()
+            },
+            goDebugRecords () {
+                this.$router.push({
+                    name: 'draftDebugRecord'
+                })
             }
         }
     }

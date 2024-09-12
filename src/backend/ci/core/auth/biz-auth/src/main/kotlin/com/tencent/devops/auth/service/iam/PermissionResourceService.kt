@@ -79,16 +79,6 @@ interface PermissionResourceService {
     ): Boolean
 
     /**
-     * 是否有资源管理员权限
-     */
-    fun hasManagerPermission(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ): Boolean
-
-    /**
      * 资源是否开启权限管理
      */
     fun isEnablePermission(

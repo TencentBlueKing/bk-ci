@@ -121,16 +121,6 @@ export const codelibConfig = {
         typeName: 'codeP4'
     }
 }
-
-export const codelibTypes = [
-    'SVN',
-    'GitHub',
-    'GitLab',
-    // 'Git',
-    'TGit',
-    'P4'
-]
-
 /**
  * 根据仓库类型获取仓库配置
  * method getCodelibConfig

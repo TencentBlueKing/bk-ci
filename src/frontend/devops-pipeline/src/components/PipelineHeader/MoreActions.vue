@@ -38,6 +38,7 @@
         />
         <import-pipeline-popup
             :handle-import-success="handleImportModifyPipeline"
+            :pipeline-id="$route.params.pipelineId"
             :pipeline-name="pipelineName"
             :is-show.sync="showImportDialog"
         ></import-pipeline-popup>
@@ -165,11 +166,15 @@
                                 {
                                     label: 'copyAsTemplateInstance',
                                     handler: () => this.copyAsTemplateInstance(pipeline),
-                                    permissionData: {
-                                        projectId,
-                                        resourceType: 'project',
-                                        resourceCode: projectId,
-                                        action: RESOURCE_ACTION.CREATE
+                                    vPerm: {
+                                        hasPermission: pipeline.permissions?.canManage,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId,
+                                            resourceType: 'project',
+                                            resourceCode: projectId,
+                                            action: RESOURCE_ACTION.CREATE
+                                        }
                                     }
                                 }
                             ]
@@ -191,11 +196,13 @@
                         {
                             label: 'newlist.saveAsTemp',
                             handler: () => this.saveAsTempHandler(pipeline),
-                            permissionData: {
-                                projectId,
-                                resourceType: 'project',
-                                resourceCode: projectId,
-                                action: TEMPLATE_RESOURCE_ACTION.CREATE
+                            vPerm: {
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'project',
+                                    resourceCode: projectId,
+                                    action: TEMPLATE_RESOURCE_ACTION.CREATE
+                                }
                             }
                         },
                         {
@@ -263,7 +270,7 @@
             },
             afterDisablePipeline (enable) {
                 this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                    runLockType: enable ? 'MULTIPLE' : 'LOCK'
+                    locked: !enable
                 })
             },
 
@@ -292,8 +299,8 @@
             },
             copyAsTemplateInstance (pipeline) {
                 const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
-                const { templateId, projectId, templateVersion } = pipeline
-                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${templateVersion}/${pipelineName}`
+                const { templateId, pipelineId, projectId, templateVersion } = pipeline
+                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${templateVersion}/${pipelineName}?pipelineId=${pipelineId}`
             },
             afterRemovePipeline () {
                 this.$router.push({

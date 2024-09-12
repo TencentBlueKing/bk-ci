@@ -30,6 +30,7 @@ package job
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -52,7 +53,6 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
-	"github.com/pkg/errors"
 )
 
 // buildDockerManager docker构建机构建对象管理
@@ -160,7 +160,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		logs.Error("DOCKER_JOB|create docker client error ", err)
+		logs.WithError(err).Error("DOCKER_JOB|create docker client error")
 		dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("LinkDockerError", map[string]interface{}{"err": err}), api.DockerClientCreateErrorEnum))
 		return
 	}
@@ -170,7 +170,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	// 判断本地是否已经有镜像了
 	images, err := cli.ImageList(ctx, types.ImageListOptions{})
 	if err != nil {
-		logs.Error("DOCKER_JOB|list docker images error ", err)
+		logs.WithError(err).Error("DOCKER_JOB|list docker images error")
 		dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("GetDockerImagesError", map[string]interface{}{"err": err}), api.DockerImagesFetchErrorEnum))
 		return
 	}
@@ -212,7 +212,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 			RegistryAuth: auth,
 		})
 		if err != nil {
-			logs.Error(fmt.Sprintf("DOCKER_JOB|pull new image %s error ", imageName), err)
+			logs.WithError(err).Errorf("DOCKER_JOB|pull new image %s error", imageName)
 			dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("PullImageError", map[string]interface{}{"name": imageName, "err": err.Error()}), api.DockerImagePullErrorEnum))
 			return
 		}
@@ -220,7 +220,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		buf := new(strings.Builder)
 		_, err = io.Copy(buf, reader)
 		if err != nil {
-			logs.Error("DOCKER_JOB|write image message error ", err)
+			logs.WithError(err).Error("DOCKER_JOB|write image message error")
 			postLog(true, i18n.Localize("GetPullImageLogError", map[string]interface{}{"err": err.Error()}), buildInfo, api.LogtypeLog)
 		} else {
 			// 异步打印，防止过大卡住主流程
@@ -241,9 +241,9 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	}
 
 	// 解析docker options
-	dockerConfig, err := job_docker.ParseDockeroptions(cli, dockerBuildInfo.Options)
+	dockerConfig, err := job_docker.ParseDockerOptions(cli, dockerBuildInfo.Options)
 	if err != nil {
-		logs.Error("DOCKER_JOB|" + err.Error())
+		logs.WithError(err).Error("DOCKER_JOB|")
 		dockerBuildFinish(buildInfo.ToFinish(false, err.Error(), api.DockerDockerOptionsErrorEnum))
 		return
 	}
@@ -253,7 +253,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	mounts, err := parseContainerMounts(buildInfo)
 	if err != nil {
 		errMsg := i18n.Localize("ReadDockerMountsError", map[string]interface{}{"err": err.Error()})
-		logs.Error("DOCKER_JOB| ", err)
+		logs.WithError(err).Error("DOCKER_JOB|")
 		dockerBuildFinish(buildInfo.ToFinish(false, errMsg, api.DockerMountCreateErrorEnum))
 		return
 	}
@@ -293,7 +293,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 
 	creatResp, err := cli.ContainerCreate(ctx, confg, hostConfig, netConfig, nil, containerName)
 	if err != nil {
-		logs.Error(fmt.Sprintf("DOCKER_JOB|create container %s error ", containerName), err)
+		logs.WithError(err).Errorf("DOCKER_JOB|create container %s error", containerName)
 		dockerBuildFinish(buildInfo.ToFinish(
 			false,
 			i18n.Localize("CreateContainerError", map[string]interface{}{"name": containerName, "err": err.Error()}),
@@ -308,13 +308,13 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 			return
 		}
 		if err = cli.ContainerRemove(ctx, creatResp.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
-			logs.Error(fmt.Sprintf("DOCKER_JOB|remove container %s error ", creatResp.ID), err)
+			logs.WithError(err).Errorf("DOCKER_JOB|remove container %s error", creatResp.ID)
 		}
 	}()
 
 	// 启动容器
 	if err := cli.ContainerStart(ctx, creatResp.ID, types.ContainerStartOptions{}); err != nil {
-		logs.Error(fmt.Sprintf("DOCKER_JOB|start container %s error ", creatResp.ID), err)
+		logs.WithError(err).Errorf("DOCKER_JOB|start container %s error", creatResp.ID)
 		dockerBuildFinish(buildInfo.ToFinish(
 			false,
 			i18n.Localize("StartContainerError", map[string]interface{}{"name": containerName, "err": err.Error()}),
@@ -328,7 +328,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	select {
 	case err := <-errCh:
 		if err != nil {
-			logs.Error(fmt.Sprintf("DOCKER_JOB|wait container %s over error ", creatResp.ID), err)
+			logs.WithError(err).Errorf("DOCKER_JOB|wait container %s over error ", creatResp.ID)
 			dockerBuildFinish(buildInfo.ToFinish(
 				false,
 				i18n.Localize("WaitContainerError", map[string]interface{}{"name": containerName, "err": err.Error()}),
@@ -338,7 +338,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		}
 	case status := <-statusCh:
 		if status.Error != nil {
-			logs.Error(fmt.Sprintf("DOCKER_JOB|wait container %s over error ", creatResp.ID), status.Error)
+			logs.Errorf("DOCKER_JOB|wait container %s over error %v", creatResp.ID, status.Error)
 			dockerBuildFinish(buildInfo.ToFinish(
 				false,
 				i18n.Localize("WaitContainerError", map[string]interface{}{"name": containerName, "err": status.Error.Message}),

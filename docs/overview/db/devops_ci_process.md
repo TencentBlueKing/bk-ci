@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_process
 
-**文档版本：** 1.0.2
+**文档版本：** 1.0.4
 
 **文档描述：** devops_ci_process 的数据库文档
 | 表名                  | 说明       |
@@ -177,6 +177,7 @@
 |  14   | CONTAINER_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 容器全局唯一 ID  |
 |  15   | MATRIX_GROUP_FLAG |   bit   | 1 |   0    |    Y     |  N   |       | 是否为构建矩阵  |
 |  16   | MATRIX_GROUP_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 所属的矩阵组 ID  |
+|  17   | JOB_ID |   varchar   | 128 |   0    |    Y     |  N   |       | jobid  |
 
 **表名：** <a>T_PIPELINE_BUILD_DETAIL</a>
 
@@ -211,7 +212,7 @@
 |  4   | BUILD_NUM |   int   | 10 |   0    |    Y     |  N   |   0    | 构建次数  |
 |  5   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
 |  6   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线 ID  |
-|  7   | VERSION |   int   | 10 |   0    |    Y     |  N   |       | 版本号  |
+|  7   | VERSION |   int   | 10 |   0    |    Y     |  N   |       | 编排版本号  |
 |  8   | START_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 启动者  |
 |  9   | TRIGGER |   varchar   | 32 |   0    |    N     |  N   |       | 触发器  |
 |  10   | START_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 开始时间  |
@@ -241,7 +242,7 @@
 |  34   | BUILD_NUM_ALIAS |   varchar   | 256 |   0    |    Y     |  N   |       | 自定义构建号  |
 |  35   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的 group  |
 |  36   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
-|  37   | VERSION_NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 版本名称  |
+|  37   | VERSION_NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 正式版本名称  |
 |  38   | YAML_VERSION |   varchar   | 34 |   0    |    Y     |  N   |       | YAML 的版本标记  |
 
 **表名：** <a>T_PIPELINE_BUILD_HISTORY_DEBUG</a>
@@ -258,7 +259,7 @@
 |  4   | BUILD_NUM |   int   | 10 |   0    |    Y     |  N   |   0    | 构建次数  |
 |  5   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
 |  6   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线 ID  |
-|  7   | VERSION |   int   | 10 |   0    |    Y     |  N   |       | 版本号  |
+|  7   | VERSION |   int   | 10 |   0    |    Y     |  N   |       | 编排版本号  |
 |  8   | START_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 启动者  |
 |  9   | TRIGGER |   varchar   | 32 |   0    |    N     |  N   |       | 触发器  |
 |  10   | START_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 开始时间  |
@@ -403,6 +404,7 @@
 |  16   | START_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 开始时间  |
 |  17   | END_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 结束时间  |
 |  18   | TIMESTAMPS |   text   | 65535 |   0    |    Y     |  N   |       | 运行中产生的时间戳集合  |
+|  19   | ASYNC_STATUS |   varchar   | 32 |   0    |    Y     |  N   |       | 插件异步执行状态  |
 
 **表名：** <a>T_PIPELINE_BUILD_STAGE</a>
 
@@ -491,6 +493,7 @@
 |  28   | PLATFORM_ERROR_CODE |   int   | 10 |   0    |    Y     |  N   |       | 对接平台错误码  |
 |  29   | CONTAINER_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 构建 Job 唯一标识  |
 |  30   | STEP_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 标识上下文的自定义 ID  |
+|  31   | JOB_ID |   varchar   | 128 |   0    |    Y     |  N   |       | jobid  |
 
 **表名：** <a>T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO</a>
 
@@ -595,6 +598,7 @@
 |  16   | PIPELINE_NAME_PINYIN |   varchar   | 1300 |   0    |    Y     |  N   |       | 流水线名称拼音  |
 |  17   | LATEST_START_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 最近启动时间  |
 |  18   | LATEST_VERSION_STATUS |   varchar   | 64 |   0    |    Y     |  N   |       | 最新分布版本状态  |
+|  19   | LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否锁定，PACv3.0 新增锁定，取代原来 setting 表中的 LOCK  |
 
 **表名：** <a>T_PIPELINE_JOB_MUTEX_GROUP</a>
 
@@ -775,7 +779,8 @@
 |  18   | STATUS |   varchar   | 16 |   0    |    Y     |  N   |       | 版本状态  |
 |  19   | BRANCH_ACTION |   varchar   | 32 |   0    |    Y     |  N   |       | 分支状态  |
 |  20   | DESCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 版本变更说明  |
-|  21   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  21   | UPDATER |   varchar   | 64 |   0    |    Y     |  N   |       | 最近更新人  |
+|  22   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_PIPELINE_RULE</a>
 
@@ -1265,6 +1270,7 @@
 |  9   | SECRET_TOKEN |   text   | 65535 |   0    |    Y     |  N   |       | Sendtoyourwithhttpheader:X-DEVOPS-WEBHOOK-TOKEN  |
 |  10   | ENABLE |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 启用  |
 |  11   | FAILURE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 失败时间  |
+|  12   | SECRET_PARAM |   text   | 65535 |   0    |    Y     |  N   |       | 鉴权参数  |
 
 **表名：** <a>T_PROJECT_PIPELINE_CALLBACK_HISTORY</a>
 
@@ -1399,3 +1405,4 @@
 |  12   | BUILD_NO |   text   | 65535 |   0    |    Y     |  N   |       | 构建号  |
 |  13   | PARAM |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 参数  |
 |  14   | DELETED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 流水线已被软删除  |
+|  15   | INSTANCE_ERROR_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 实例化错误信息  |

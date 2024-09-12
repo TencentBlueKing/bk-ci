@@ -1,8 +1,8 @@
 <template>
     <div class="pipeline-edit-header">
+
         <pipeline-bread-crumb :is-loading="!isPipelineNameReady" :pipeline-name="pipelineSetting?.pipelineName">
             <span class="pipeline-edit-header-tag">
-                <PacTag v-if="pacEnabled" :info="pipelineInfo?.yamlInfo" />
                 <bk-tag>
                     <span v-bk-overflow-tips class="edit-header-draft-tag">
                         {{ currentVersionName }}
@@ -21,7 +21,7 @@
             >
                 {{ $t("cancel") }}
             </bk-button>
-           
+
             <bk-button
                 :disabled="saveStatus || !isEditing"
                 :loading="saveStatus"
@@ -68,7 +68,7 @@
                     />
                 </span>
             </bk-button>
-            
+
             <!-- <more-actions /> -->
             <release-button
                 :can-release="canRelease && !isEditing"
@@ -81,7 +81,6 @@
 
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
-    import PacTag from '@/components/PacTag.vue'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import {
         RESOURCE_ACTION
@@ -96,8 +95,7 @@
         components: {
             PipelineBreadCrumb,
             ReleaseButton,
-            ModeSwitch,
-            PacTag
+            ModeSwitch
         },
         props: {
             isSwitchPipeline: Boolean
@@ -125,8 +123,7 @@
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isEditing: 'atom/isEditing',
                 checkPipelineInvalid: 'atom/checkPipelineInvalid',
-                draftBaseVersionName: 'atom/getDraftBaseVersionName',
-                pacEnabled: 'atom/pacEnabled'
+                draftBaseVersionName: 'atom/getDraftBaseVersionName'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -254,7 +251,10 @@
                                 name: pipelineSetting.pipelineName,
                                 desc: pipelineSetting.desc
                             },
-                            setting: pipelineSetting
+                            setting: Object.assign(pipelineSetting, {
+                                failSubscription: undefined,
+                                successSubscription: undefined
+                            })
                         },
                         yaml: pipelineYaml
                     })
@@ -263,8 +263,9 @@
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         canDebug: true,
                         canRelease: true,
-                        baseVersion: this.pipelineInfo?.baseVersion ?? this.pipelineInfo?.releaseVersion,
-                        baseVersionName: this.pipelineInfo?.baseVersionName ?? this.pipelineInfo?.releaseVersionName,
+                        baseVersion: this.pipelineInfo?.baseVersion ?? this.pipelineInfo?.releaseVersion ?? this.pipelineInfo?.version,
+                        baseVersionName: this.pipelineInfo?.baseVersionName ?? this.pipelineInfo?.releaseVersionName ?? this.pipelineInfo?.versionName,
+                        baseVersionStatus: this.pipelineInfo?.latestVersionStatus,
                         version,
                         versionName
                     })
@@ -295,10 +296,7 @@
             goDraftDebugRecord () {
                 if (this.canDebug) {
                     this.$router.push({
-                        name: 'draftDebugRecord',
-                        params: {
-                            version: this.pipelineInfo?.version
-                        }
+                        name: 'draftDebugRecord'
                     })
                 }
             },
@@ -353,6 +351,7 @@
     grid-auto-flow: column;
     height: 100%;
     align-items: center;
+    justify-content: center;
   }
 }
 .pipeline-save-error-list-box {

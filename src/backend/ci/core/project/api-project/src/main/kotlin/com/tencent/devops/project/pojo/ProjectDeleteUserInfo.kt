@@ -33,7 +33,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema
 data class ProjectDeleteUserInfo(
     @get:Schema(title = "操作人")
-    val operator: String,
+    val operator: String?,
     @get:Schema(title = "待分配的角色名称")
     val roleName: String?,
     @get:Schema(title = "角色Id")

@@ -76,6 +76,14 @@ spec:
               value: {{ .Values.multiCluster.enabled | quote }}
             - name: DEFAULT_NAMESPACE
               value: {{ .Values.multiCluster.defaultNamespace }}
+            {{- if .Values.kubernetesManager.docker.enable }}
+            - name: DOCKER_HOST
+              value: tcp://localhost:2375
+            {{- end}}
+            {{- if .Values.kubernetesManager.debug }}
+            - name: KUBERNETES_MANAGER_DEBUG_ENABLE
+              value: "true"
+            {{- end}}
           workingDir: /data/workspace/kubernetes-manager
           livenessProbe:
             tcpSocket:
@@ -99,8 +107,22 @@ spec:
               mountPath: /data/workspace/kubernetes-manager/config
               readOnly: true
           {{- end}}
-      {{- if .Values.configmap.enabled}}
+        {{- if .Values.kubernetesManager.docker.enable }}
+        - name: kuberentes-manager-docker
+          image: {{ .Values.kubernetesManager.docker.image }}
+          command: ["dockerd", "--host", "tcp://localhost:2375"]
+          {{- if .Values.kubernetesManager.docker.resources }}
+          resources: {{- toYaml .Values.kubernetesManager.docker.resources | nindent 12 }}
+          {{- end }}
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: docker-graph-storage
+              mountPath: /var/lib/docker  
+        {{- end }}      
+     
       volumes:
+        {{- if .Values.configmap.enabled}}
         - name: kubernetes-manager-config
           configMap:
             name: kubernetes-manager
@@ -110,6 +132,10 @@ spec:
               {{- if .Values.kubeConfig.useKubeConfig}}
               - key: kubeConfig.yaml
                 path: kubeConfig.yaml
-      {{- end}}
+        {{- end}}
+        {{- if .Values.kubernetesManager.docker.enable }}
+        - name: docker-graph-storage
+          emptyDir: {}
+        {{- end}}
     {{- end}}
 {{- end -}}

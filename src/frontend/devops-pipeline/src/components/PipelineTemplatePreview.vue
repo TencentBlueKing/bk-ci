@@ -167,7 +167,7 @@
                 try {
                     this.isLoading = true
                     const res = await this.requestTemplatePreview({
-                        projectId: this.templatePipeline.projectId,
+                        projectId: this.$route.params.projectId,
                         templateId: this.templatePipeline.templateId,
                         highlightType: this.highlightType
                     })

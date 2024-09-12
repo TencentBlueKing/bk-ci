@@ -101,7 +101,6 @@
                     />
                     <div class="atom-option">
                         <atom-option
-                            v-if="element['@type'] !== 'manualTrigger'"
                             :element-index="elementIndex"
                             :atom-props-model="atom.atomModal.props"
                             :container-index="containerIndex"
@@ -222,7 +221,6 @@
             ]),
             ...mapGetters('atom', [
                 'getAtomModal',
-                'getAtomModalKey',
                 'getDefaultVersion',
                 'classifyCodeListByCategory',
                 'getElement',
@@ -239,7 +237,6 @@
                 'atomCodeList',
                 'atomClassifyCodeList',
                 'atomMap',
-                'atomModalMap',
                 'fetchingAtmoModal',
                 'atomVersionList',
                 'isPropertyPanelVisible',
@@ -517,9 +514,8 @@
                 }
             },
             handleFetchAtomModal (atomCode, version) {
-                const { atomModalMap, fetchAtomModal, getAtomModalKey } = this
-                const atomModalKey = getAtomModalKey(atomCode, version)
-                const atomModal = atomModalMap[atomModalKey]
+                const { getAtomModal, fetchAtomModal } = this
+                const atomModal = getAtomModal({ atomCode, version })
                 const queryOfflineFlag = !this.editable
                 if (!atomModal && atomCode) { // 获取插件详情
                     fetchAtomModal({

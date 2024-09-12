@@ -28,18 +28,26 @@
 
 package com.tencent.devops.auth.resources
 
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.api.user.UserAuthResourceGroupResource
+import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
+import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
+import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.BkManagerCheck
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserAuthResourceGroupResourceImpl @Autowired constructor(
-    private val permissionResourceGroupService: PermissionResourceGroupService
+    private val permissionResourceGroupService: PermissionResourceGroupService,
+    private val permissionResourceMemberService: PermissionResourceMemberService
 ) : UserAuthResourceGroupResource {
     override fun getGroupPolicies(
         userId: String,
@@ -57,6 +65,26 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         )
     }
 
+    @BkManagerCheck
+    override fun getMemberGroupsDetails(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        memberId: String,
+        start: Int,
+        limit: Int
+    ): Result<SQLPage<GroupDetailsInfoVo>> {
+        return Result(
+            permissionResourceMemberService.getMemberGroupsDetails(
+                projectId = projectId,
+                resourceType = resourceType,
+                memberId = memberId,
+                start = start,
+                limit = limit
+            )
+        )
+    }
+
     override fun renewal(
         userId: String,
         projectId: String,
@@ -65,9 +93,9 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         memberRenewalDTO: GroupMemberRenewalDTO
     ): Result<Boolean> {
         return Result(
-            permissionResourceGroupService.renewal(
+            permissionResourceMemberService.renewalGroupMember(
                 userId = userId,
-                projectId = projectId,
+                projectCode = projectId,
                 resourceType = resourceType,
                 groupId = groupId,
                 memberRenewalDTO = memberRenewalDTO
@@ -82,15 +110,21 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         groupId: Int
     ): Result<Boolean> {
         return Result(
-            permissionResourceGroupService.deleteGroupMember(
+            permissionResourceMemberService.batchDeleteResourceGroupMembers(
                 userId = userId,
-                projectId = projectId,
-                resourceType = resourceType,
-                groupId = groupId
+                projectCode = projectId,
+                removeMemberDTO = GroupMemberCommonConditionReq(
+                    groupIds = listOf(groupId),
+                    targetMember = ResourceMemberInfo(
+                        id = userId,
+                        type = ManagerScopesEnum.getType(ManagerScopesEnum.USER)
+                    )
+                )
             )
         )
     }
 
+    @BkManagerCheck
     override fun deleteGroup(
         userId: String,
         projectId: String,
@@ -107,6 +141,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         )
     }
 
+    @BkManagerCheck
     override fun rename(
         userId: String,
         projectId: String,
@@ -115,7 +150,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         renameGroupDTO: RenameGroupDTO
     ): Result<Boolean> {
         return Result(
-            permissionResourceGroupService.rename(
+            permissionResourceGroupService.renameGroup(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,

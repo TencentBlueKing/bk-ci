@@ -49,6 +49,8 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind.UPDATE
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
@@ -79,7 +81,9 @@ import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
-import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter.Companion.KEYWORD_SKIP_CI
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter.Companion.KEYWORD_SKIP_WIP
 import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
@@ -190,6 +194,13 @@ class TGitMrTriggerHandler(
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
+            val wipFilter = KeywordSkipFilter(
+                pipelineId = pipelineId,
+                enable = skipWip,
+                keyWord = KEYWORD_SKIP_WIP,
+                triggerOnMessage = getMessage(event),
+                failedReason = I18Variable(WebhookI18nConstants.MR_SKIP_WIP).toJsonStr()
+            )
             val userId = getUsername(event)
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
@@ -235,14 +246,19 @@ class TGitMrTriggerHandler(
                     params = listOf(sourceBranch)
                 ).toJsonStr()
             )
-            val skipCiFilter = SkipCiFilter(
+            val skipCiFilter = KeywordSkipFilter(
                 pipelineId = pipelineId,
+                keyWord = KEYWORD_SKIP_CI,
                 triggerOnMessage = event.object_attributes.last_commit.message
             )
             val actionFilter = ContainsFilter(
                 pipelineId = pipelineId,
                 filterName = "mrAction",
-                triggerOn = TGitMrEventAction.getActionValue(event) ?: "",
+                triggerOn = if (repository is CodeGitlabRepository && getAction(event) == UPDATE.value) {
+                    TGitMrEventAction.PUSH_UPDATE.value
+                } else {
+                    TGitMrEventAction.getActionValue(event)
+                } ?: "",
                 included = convert(includeMrAction).ifEmpty {
                     listOf("empty-action")
                 },
@@ -303,7 +319,7 @@ class TGitMrTriggerHandler(
                 callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
             )
             return listOf(
-                userFilter, targetBranchFilter,
+                wipFilter, userFilter, targetBranchFilter,
                 sourceBranchFilter, skipCiFilter, pathFilter,
                 commitMessageFilter, actionFilter, thirdFilter
             )
@@ -359,7 +375,11 @@ class TGitMrTriggerHandler(
         startParams[PIPELINE_GIT_MR_ACTION] = event.object_attributes.action ?: ""
         startParams[PIPELINE_GIT_ACTION] = event.object_attributes.action ?: ""
         startParams[PIPELINE_GIT_EVENT_URL] = event.object_attributes.url ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = event.object_attributes.source_branch
+        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = if (getAction(event) == TGitMergeActionKind.MERGE.value) {
+            event.object_attributes.target_branch
+        } else {
+            event.object_attributes.source_branch
+        }
         // 有覆盖风险的上下文做二次确认
         startParams.putIfEmpty(GIT_MR_NUMBER, event.object_attributes.iid.toString())
         startParams.putIfEmpty(PIPELINE_GIT_MR_ID, event.object_attributes.id.toString())

@@ -35,6 +35,8 @@ import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
+import com.tencent.devops.process.engine.service.EngineConfigService
+import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Disabled
@@ -65,6 +67,7 @@ class MutexControlTest {
         buildId = buildId,
         stageId = stageId,
         containerId = containerId,
+        jobId = "job-123",
         containerHashId = containerHashId,
         containerType = "vmBuild",
         seq = containerId.toInt(),
@@ -73,17 +76,20 @@ class MutexControlTest {
         matrixGroupId = null,
         matrixGroupFlag = false
     )
+    private val engineConfigMock = mockk<EngineConfigService>()
     private val mutexControl: MutexControl = MutexControl(
         buildLogPrinter = buildLogPrinter,
         redisOperation = redisOperation,
         containerBuildRecordService = mockk(),
         pipelineUrlBean = mockk(),
-        pipelineContainerService = mockk()
+        pipelineContainerService = mockk(),
+        engineConfigService = engineConfigMock
     )
 
     @Test
     // 测试MutexControl的初始化功能
     fun initMutexGroup() {
+        every { engineConfigMock.getMutexMaxQueue() } returns 10
         val initMutexGroup = mutexControl.decorateMutexGroup(
             mutexGroup = mutexGroup,
             variables = variables

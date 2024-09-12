@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import org.springframework.beans.factory.annotation.Autowired
 
 @ElementBiz
@@ -54,7 +55,8 @@ class SubPipelineCallElementBizPlugin @Autowired constructor(
         element: SubPipelineCallElement,
         contextMap: Map<String, String>,
         appearedCnt: Int,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        oauthUser: String?
     ): ElementCheckResult {
         return elementBizPluginServices.find {
             it.supportElement(element)
@@ -66,7 +68,8 @@ class SubPipelineCallElementBizPlugin @Autowired constructor(
             element = element,
             contextMap = contextMap,
             appearedCnt = appearedCnt,
-            isTemplate = isTemplate
+            isTemplate = isTemplate,
+            oauthUser = oauthUser
         ) ?: ElementCheckResult(true)
     }
 
@@ -80,6 +83,7 @@ class SubPipelineCallElementBizPlugin @Autowired constructor(
         userId: String,
         channelCode: ChannelCode,
         create: Boolean,
-        container: Container
+        container: Container,
+        yamlInfo: PipelineYamlVo?
     ) = Unit
 }

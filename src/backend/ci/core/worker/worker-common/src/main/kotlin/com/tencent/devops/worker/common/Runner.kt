@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -84,6 +85,7 @@ object Runner {
         var workspacePathFile: File? = null
         val buildVariables = getBuildVariables()
         var failed = false
+        var errMsg: String? = null
         try {
             BuildEnv.setBuildId(buildVariables.buildId)
 
@@ -108,7 +110,7 @@ object Runner {
         } catch (ignore: Exception) {
             failed = true
             logger.warn("Catch unknown exceptions", ignore)
-            val errMsg = when (ignore) {
+            errMsg = when (ignore) {
                 is java.lang.IllegalArgumentException ->
                     MessageUtil.getMessageByLocale(
                         messageCode = PARAMETER_ERROR,
@@ -142,7 +144,7 @@ object Runner {
             throw ignore
         } finally {
             // 对应prepareWorker的兜底动作
-            finishWorker(buildVariables)
+            finishWorker(buildVariables, errMsg)
             finally(workspacePathFile, failed)
 
             if (systemExit) {
@@ -155,15 +157,29 @@ object Runner {
         try {
             // 启动成功, 报告process我已经启动了
             return EngineService.setStarted()
-        } catch (e: Exception) {
-            logger.warn("Set started catch unknown exceptions", e)
+        } catch (ignored: Exception) {
+            logger.warn("Set started catch unknown exceptions", ignored)
+            handleStartException(ignored)
+            throw ignored
+        }
+    }
+
+    private fun handleStartException(ignored: Exception) {
+        var endBuildFlag = true
+        if (ignored is RemoteServiceException) {
+            val errorCode = ignored.errorCode
+            if (errorCode == 2101182 || errorCode == 2101255) {
+                // 当构建已结束或者已经启动构建机时则不需要调结束构建接口
+                endBuildFlag = false
+            }
+        }
+        if (endBuildFlag) {
             // 启动失败，尝试结束构建
             try {
-                EngineService.endBuild(emptyMap(), DockerEnv.getBuildId())
-            } catch (e: Exception) {
-                logger.warn("End build catch unknown exceptions", e)
+                EngineService.endBuild(emptyMap(), DockerEnv.getBuildId(), BuildJobResult(ignored.message))
+            } catch (ignored: Exception) {
+                logger.warn("End build catch unknown exceptions", ignored)
             }
-            throw e
         }
     }
 
@@ -202,9 +218,9 @@ object Runner {
         return workspaceAndLogPath.first
     }
 
-    private fun finishWorker(buildVariables: BuildVariables) {
+    private fun finishWorker(buildVariables: BuildVariables, errMsg: String? = null) {
         LoggerService.stop()
-        EngineService.endBuild(buildVariables.variables)
+        EngineService.endBuild(variables = buildVariables.variables, result = BuildJobResult(errMsg))
         Heartbeat.stop()
     }
 
@@ -414,13 +430,15 @@ object Runner {
     ) {
         // 如果之前的插件不是在构建机执行, 会缺少环境变量
         val taskBuildVariable = buildTask.buildVariable?.toMutableMap() ?: mutableMapOf()
+        val variablesWithType = jobBuildVariables.variablesWithType
+            .associateBy { it.key }
+        // job 变量能取到真实readonly，保证task 变量readOnly属性不会改变
         val taskBuildParameters = taskBuildVariable.map { (key, value) ->
-            BuildParameters(key, value)
+            BuildParameters(key = key, value = value, readOnly = variablesWithType[key]?.readOnly)
         }.associateBy { it.key }
         jobBuildVariables.variables = jobBuildVariables.variables.plus(taskBuildVariable)
         // 以key去重, 并以buildTask中的为准
-        jobBuildVariables.variablesWithType = jobBuildVariables.variablesWithType
-            .associateBy { it.key }
+        jobBuildVariables.variablesWithType = variablesWithType
             .plus(taskBuildParameters)
             .values.toList()
 

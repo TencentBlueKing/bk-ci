@@ -42,7 +42,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -70,7 +69,6 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineBuildMaintainFacadeService: PipelineBuildMaintainFacadeService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val engineVMBuildService: EngineVMBuildService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) : ServiceBuildResource {
@@ -79,7 +77,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId, it must not empty.")
         }
         return Result(
-            pipelineBuildDetailService.getBuildDetailPipelineId(projectId, buildId)
+            pipelineRuntimeService.getBuildInfo(projectId, buildId)?.pipelineId
                 ?: throw ParamBlankException("Invalid buildId, please check if projectId & buildId are related")
         )
     }
@@ -385,7 +383,10 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildMsg: String?,
         startUser: List<String>?,
         archiveFlag: Boolean?,
-        debugVersion: Int?
+        debug: Boolean?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -419,7 +420,10 @@ class ServiceBuildResourceImpl @Autowired constructor(
             startUser = startUser?.filter { it.isNotBlank() },
             updateTimeDesc = updateTimeDesc,
             archiveFlag = archiveFlag,
-            debugVersion = debugVersion
+            debug = debug,
+            triggerAlias = triggerAlias,
+            triggerBranch = triggerBranch,
+            triggerUser = triggerUser
         )
         return Result(result)
     }
@@ -636,8 +640,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         val history = pipelineBuildFacadeService.getSingleHistoryBuild(
-            projectId, pipelineId,
-            buildNum.toInt(), channelCode ?: ChannelCode.BS
+            projectId = projectId, pipelineId = pipelineId,
+            buildNum = buildNum.toInt(), buildId = null,
+            channelCode = channelCode ?: ChannelCode.BS
         )
         return Result(history)
     }

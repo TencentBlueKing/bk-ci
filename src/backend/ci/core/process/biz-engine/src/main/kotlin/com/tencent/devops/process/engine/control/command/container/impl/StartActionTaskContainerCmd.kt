@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control.command.container.impl
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -94,6 +95,9 @@ class StartActionTaskContainerCmd(
                     commandContext.buildStatus = BuildStatus.SUCCEED
                 }
                 val waitToDoTask = findTask(commandContext)
+                if (waitToDoTask != null && TaskUtils.isStartVMTask(waitToDoTask)) {
+                    sendJobStartCallback(commandContext)
+                }
                 if (waitToDoTask == null) { // 非fast kill的强制终止时到最后无任务，最终状态必定是FAILED
                     val fastKill = FastKillUtils.isFastKillCode(commandContext.event.errorCode)
                     if (!fastKill && actionType.isTerminate() && !commandContext.buildStatus.isFailure()) {
@@ -112,6 +116,28 @@ class StartActionTaskContainerCmd(
                 commandContext.buildStatus = BuildStatus.UNKNOWN
                 commandContext.latestSummary = "j(${commandContext.container.containerId}) unknown action: $actionType"
             }
+        }
+    }
+
+    private fun sendJobStartCallback(commandContext: ContainerContext) {
+        with(commandContext.container) {
+            pipelineEventDispatcher.dispatch(
+                // job 启动
+                PipelineBuildStatusBroadCastEvent(
+                    source = "StartActionTaskContainerCmd",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = commandContext.event.userId,
+                    buildId = buildId,
+                    actionType = ActionType.START,
+                    stageId = stageId,
+                    containerHashId = containerHashId,
+                    jobId = jobId,
+                    stepId = null,
+                    executeCount = executeCount,
+                    buildStatus = commandContext.buildStatus.name
+                )
+            )
         }
     }
 
@@ -265,23 +291,30 @@ class StartActionTaskContainerCmd(
             containerContext.event.actionType.isTerminate() -> { // 终止命令，需要设置失败，并返回
                 containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask // 将当前任务传给TaskControl做终止
-                buildLogPrinter.addRedLine(
-                    buildId = toDoTask.buildId,
-                    message = "Terminate Plugin[${toDoTask.taskName}]: ${containerContext.event.reason ?: "unknown"}",
-                    tag = toDoTask.taskId,
-                    containerHashId = toDoTask.containerHashId,
-                    executeCount = toDoTask.executeCount ?: 1,
-                    jobId = null,
-                    stepId = toDoTask.stepId
-                )
+                val message = "Terminate Plugin[${currentTask.taskName}]: ${containerContext.event.reason ?: "unknown"}"
+                printRedLine(currentTask, message)
             }
 
             containerContext.event.actionType.isEnd() -> { // 将当前正在运行的任务传给TaskControl做结束
                 containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask
+                val message = "Cancel Plugin[${currentTask.taskName}]: ${containerContext.event.reason ?: "unknown"}"
+                printRedLine(currentTask, message)
             }
         }
         return toDoTask
+    }
+
+    private fun printRedLine(task: PipelineBuildTask, message: String) {
+        buildLogPrinter.addRedLine(
+            buildId = task.buildId,
+            message = message,
+            tag = task.taskId,
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount ?: 1,
+            jobId = null,
+            stepId = task.stepId
+        )
     }
 
     @Suppress("LongMethod", "ComplexMethod")
@@ -424,7 +457,7 @@ class StartActionTaskContainerCmd(
         if (message.isNotBlank()) {
             // #6366 增加日志明确展示跳过的原因
             // 打印构建日志--DEBUG级别日志，平时隐藏
-            buildLogPrinter.addDebugLine(
+            buildLogPrinter.addWarnLine(
                 executeCount = containerContext.executeCount, tag = taskId,
                 buildId = buildId, containerHashId = containerHashId, message = message.toString(),
                 jobId = null, stepId = stepId
@@ -464,8 +497,7 @@ class StartActionTaskContainerCmd(
                 containerFinalStatus = containerContext.buildStatus,
                 variables = contextMap,
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                message = message,
-                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+                message = message
             )
         }
 
@@ -480,8 +512,7 @@ class StartActionTaskContainerCmd(
                     containerFinalStatus = containerContext.buildStatus,
                     variables = contextMap,
                     hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                    message = message,
-                    asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+                    message = message
                 )
                 if (LOG.isDebugEnabled) {
                     LOG.debug("ENGINE|$buildId|CHECK_QUICK_SKIP|$stageId|j($containerId)|${it.taskName}|$skip")

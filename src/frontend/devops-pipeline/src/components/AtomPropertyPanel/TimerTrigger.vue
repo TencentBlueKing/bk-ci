@@ -1,33 +1,62 @@
 <template>
     <div class="cron-trigger">
-        <accordion show-checkbox :show-content="isShowBasicRule" :after-toggle="toggleBasicRule">
+        <accordion show-checkbox :show-content="isShowBasicRule" :disabled="disabled" :after-toggle="toggleBasicRule">
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.baseRule') }}</span>
-                <input class="accordion-checkbox" type="checkbox" :checked="isShowBasicRule" style="margin-left: auto;" />
+                <input
+                    :class="{ 'accordion-checkbox': true, 'disabled': disabled }"
+                    type="checkbox"
+                    :disabled="disabled"
+                    :checked="isShowBasicRule"
+                    style="margin-left:auto;"
+                />
             </header>
             <div slot="content">
-                <form-field :required="true" :label="$t('editPage.baseRule')" :is-error="errors.has('newExpression')">
-                    <cron-timer :name="'newExpression'" ref="newExpression" :value="element['newExpression']" :handle-change="handleUpdateElement" v-validate.initial="{ 'required': isShowBasicRule }" />
+                <form-field
+                    :required="true"
+                    :label="$t('editPage.baseRule')"
+                    :is-error="errors.has('newExpression')"
+                >
+                    <cron-timer
+                        :name="'newExpression'"
+                        ref="newExpression"
+                        :value="element['newExpression']"
+                        :handle-change="handleUpdateElement"
+                        v-validate.initial="{ 'required': isShowBasicRule }"
+                    />
                 </form-field>
             </div>
         </accordion>
 
-        <accordion show-checkbox :show-content="advance" :after-toggle="toggleAdvance">
+        <accordion show-checkbox :show-content="advance" :disabled="disabled" :after-toggle="toggleAdvance">
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.crontabTitle') }}</span>
-                <input class="accordion-checkbox" type="checkbox" :checked="advance" style="margin-left: auto;" />
+                <input class="accordion-checkbox" type="checkbox" :checked="advance" :disabled="disabled" style="margin-left: auto;" />
             </header>
             <div slot="content" class="cron-build-tab">
-                <form-field :required="false" :label="$t('editPage.planRule')" :is-error="errors.has('advanceExpression')" :error-msg="errors.first('advanceExpression')">
-                    <vuex-textarea name="advanceExpression" :handle-change="handleUpdateElement" :value="advanceValue" :placeholder="$t('editPage.crontabExpression')" v-validate.initial="{ 'required': advance }"></vuex-textarea>
+                <form-field
+                    :required="false"
+                    :label="$t('editPage.planRule')"
+                    :is-error="errors.has('advanceExpression')"
+                    :error-msg="errors.first('advanceExpression')"
+                >
+                    <vuex-textarea
+                        name="advanceExpression"
+                        :handle-change="handleUpdateElement"
+                        :value="advanceValue"
+                        :placeholder="$t('editPage.crontabExpression')"
+                        v-validate.initial="{ 'required': advance }"
+                        :disabled="disabled"
+                    >
+                    </vuex-textarea>
                 </form-field>
             </div>
         </accordion>
         <p class="empty-trigger-tips" v-if="!isShowBasicRule && !advance">{{ $t('editPage.triggerEmptyTips') }}</p>
-        <accordion show-checkbox :show-content="isShowCodelibConfig" :after-toggle="toggleCodelibConfig">
+        <accordion show-checkbox :show-content="isShowCodelibConfig" :disabled="disabled" :after-toggle="toggleCodelibConfig">
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.codelibConfigs') }}</span>
-                <input class="accordion-checkbox" type="checkbox" :checked="isShowCodelibConfig" style="margin-left: auto;" />
+                <input class="accordion-checkbox" type="checkbox" :checked="isShowCodelibConfig" :disabled="disabled" style="margin-left: auto;" />
             </header>
             <div slot="content" class="cron-build-tab">
                 <form-field class="cron-build-tab" :desc="$t('editPage.timerTriggerCodelibTips')" :required="false" :label="$t('editPage.codelib')">
@@ -37,7 +66,7 @@
                             ext-cls="group-box"
                             :clearable="false"
                             :disabled="disabled"
-                            @change="(val) => handleUpdateElement('repositoryType', val)"
+                            @change="(val) => handleChangeRepositoryType(val)"
                         >
                             <bk-option
                                 v-for="item in codelibConfigList"
@@ -57,23 +86,27 @@
                             :url="getCodeUrl"
                             name="repoHashId"
                             :value="element['repoHashId']"
-                            :handle-change="handleUpdateElement"
+                            :handle-change="(name, val) => handleChangeRepoHashId(name, val)"
                         >
                         </request-selector>
                         <vuex-input
                             v-else
-                            disabled
-                            placeholder="将自动监听所属PAC代码库，无需设置"
+                            :value="element['repoName']"
+                            :disabled="repositoryType === 'SELF'"
+                            :key="repositoryType"
+                            :placeholder="repositoryType === 'SELF' ? '将自动监听所属PAC代码库，无需设置' : '请输入代码库别名'"
                             class="input-selector"
+                            name="repoName"
+                            :handle-change="handleUpdateElement"
                         >
-
                         </vuex-input>
                     </div>
                 </form-field>
     
-                <form-field v-if="repositoryType === 'ID'" class="cron-build-tab" :label="$t('editPage.branches')">
+                <form-field class="cron-build-tab" :label="$t('editPage.branches')" :desc="$t('editPage.timerTriggerBranchTips')">
                     <BranchParameterArray
                         name="branches"
+                        :repository-type="element['repositoryType']"
                         :disabled="disabled"
                         :repo-hash-id="element['repoHashId']"
                         :value="element['branches']"
@@ -105,11 +138,11 @@
         mixins: [atomMixin, validMixins],
         data () {
             return {
-                isShowBasicRule: this.notEmptyArray('newExpression'),
-                advance: this.notEmptyArray('advanceExpression'),
-                isShowCodelibConfig: this.element.repoHashId || this.element.noScm,
+                isShowBasicRule: false,
+                advance: false,
+                isShowCodelibConfig: this.element?.repoHashId || this.element?.noScm || this.element?.repoName || this.element?.branches?.length || this.element?.repositoryType === 'SELF',
                 advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || '',
-                repositoryType: 'ID'
+                repositoryType: this.element.repositoryType || 'ID'
             }
         },
         computed: {
@@ -134,13 +167,15 @@
                 return [
                     {
                         value: 'ID',
-                        label: '选择代码库',
-                        key: 'repositoryHashId'
+                        label: '选择代码库'
+                    },
+                    {
+                        value: 'NAME',
+                        label: '输入别名'
                     },
                     {
                         value: 'SELF',
-                        label: '监听PAC',
-                        key: ''
+                        label: '监听PAC'
                     }
                 ]
             }
@@ -169,6 +204,8 @@
                     propKey: 'expression'
                 })
             }
+            this.isShowBasicRule = this.notEmptyArray('newExpression')
+            this.advance = this.notEmptyArray('advanceExpression')
         },
         methods: {
             notEmptyArray (prop) {
@@ -210,6 +247,15 @@
                 this.updateProps({
                     [name]: value
                 })
+            },
+            handleChangeRepositoryType (val) {
+                this.handleUpdateElement('branches', [])
+                this.handleUpdateElement('repoHashId', '')
+                this.handleUpdateElement('repositoryType', val)
+            },
+            handleChangeRepoHashId (name, val) {
+                this.handleUpdateElement(name, val)
+                this.handleUpdateElement('branches', [])
             }
         }
     }

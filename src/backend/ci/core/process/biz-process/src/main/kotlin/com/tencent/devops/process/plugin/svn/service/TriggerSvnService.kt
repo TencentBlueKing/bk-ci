@@ -347,7 +347,8 @@ class TriggerSvnService(
             svnRevisionInfo.revision.toInt(),
             paths,
             files,
-            svnRevisionInfo.commitTime
+            svnRevisionInfo.commitTime,
+            files.size
         )
     }
 

@@ -108,6 +108,9 @@ class CheckConditionalSkipContainerCmd constructor(
         val jobControlOption = containerControlOption.jobControlOption
         val conditions = jobControlOption.customVariables ?: emptyList()
 
+        // #10751 如果设置了job不可用，则直接跳过，无需判断后续的条件
+        if (!jobControlOption.enable) return true
+
         val message = StringBuilder()
         val needSkip = if (containerControlOption.inFinallyStage) {
             skipFinallyStageJob(jobControlOption, containerContext.event.previousStageStatus, message)
@@ -128,14 +131,13 @@ class CheckConditionalSkipContainerCmd constructor(
                 buildId = container.buildId,
                 runCondition = jobControlOption.runCondition,
                 customCondition = jobControlOption.customCondition,
-                message = message,
-                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+                message = message
             )
         }
 
         if (message.isNotBlank()) {
             // #6366 增加日志明确展示跳过的原因
-            buildLogPrinter.addDebugLine(
+            buildLogPrinter.addWarnLine(
                 executeCount = containerContext.executeCount,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
                 buildId = container.buildId,

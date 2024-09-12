@@ -496,15 +496,24 @@ interface ServiceBuildResource {
         @Parameter(description = "构建信息", required = false)
         @QueryParam("buildMsg")
         buildMsg: String? = null,
-        @Parameter(description = "触发人", required = false)
+        @Parameter(description = "执行人", required = false)
         @QueryParam("startUser")
         startUser: List<String>? = null,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false,
-        @Parameter(description = "查看指定版本调试数据", required = false, example = "false")
-        @QueryParam("version")
-        debugVersion: Int? = null
+        @Parameter(description = "指定调试数据", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = null,
+        @Parameter(description = "触发代码库", required = false)
+        @QueryParam("triggerAlias")
+        triggerAlias: List<String>? = null,
+        @Parameter(description = "触发分支", required = false)
+        @QueryParam("triggerBranch")
+        triggerBranch: List<String>? = null,
+        @Parameter(description = "触发人", required = false)
+        @QueryParam("triggerUser")
+        triggerUser: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "获取构建详情")

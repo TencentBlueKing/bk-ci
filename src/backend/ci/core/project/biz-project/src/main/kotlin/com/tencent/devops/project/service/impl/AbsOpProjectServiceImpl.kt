@@ -67,6 +67,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
 
     @Value("\${tag.gray:#{null}}")
     private val grayTag: String? = null
+    @Value("\${tag.codecc.gray:#{null}}")
+    private val codeccGrayTag: String? = null
 
     override fun updateProjectFromOp(
         userId: String,
@@ -171,15 +173,16 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
         remoteDevFlag: Boolean,
-        productId: Int?
+        productId: Int?,
+        channelCode: String?
     ): Map<String, Any?>? {
         val dataObj = mutableMapOf<String, Any?>()
 
         val routerTag = if (grayFlag) grayTag else null
 
         val otherRouterTagMaps = mutableMapOf<String, String>()
-        if (codeCCGrayFlag && grayTag != null) {
-            otherRouterTagMaps[SystemEnums.CODECC.name] = grayTag
+        if (codeCCGrayFlag && codeccGrayTag != null) {
+            otherRouterTagMaps[SystemEnums.CODECC.name] = codeccGrayTag
         }
         if (repoGrayFlag && grayTag != null) {
             otherRouterTagMaps[SystemEnums.REPO.name] = grayTag
@@ -204,7 +207,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             routerTag = routerTag,
             otherRouterTagMaps = otherRouterTagMaps,
             remoteDevFlag = remoteDevFlag,
-            productId = productId
+            productId = productId,
+            channelCode = channelCode
         )
         val totalCount = projectDao.getProjectCount(
             dslContext = dslContext,
@@ -218,7 +222,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             routerTag = routerTag,
             otherRouterTagMaps = otherRouterTagMaps,
             remoteDevFlag = remoteDevFlag,
-            productId = productId
+            productId = productId,
+            channelCode = channelCode
         )
         val dataList = mutableListOf<ProjectInfoResponse>()
 
@@ -273,7 +278,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                 kind = kind,
                 enabled = enabled ?: true,
                 grayFlag = routerTag == grayTag,
-                codeCCGrayFlag = otherRouterTagMap[SystemEnums.CODECC.name] == grayTag,
+                codeCCGrayFlag = otherRouterTagMap[SystemEnums.CODECC.name] == codeccGrayTag,
                 repoGrayFlag = otherRouterTagMap[SystemEnums.REPO.name] == grayTag,
                 hybridCCAppId = hybridCcAppId,
                 enableExternal = enableExternal,

@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerEle
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 
 abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constructor(
     private val pipelineWebhookService: PipelineWebhookService
@@ -54,7 +55,8 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
         userId: String,
         channelCode: ChannelCode,
         create: Boolean,
-        container: Container
+        container: Container,
+        yamlInfo: PipelineYamlVo?
     ) = Unit
 
     override fun beforeDelete(element: T, param: BeforeDeleteParam) {
@@ -76,7 +78,8 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
         element: T,
         contextMap: Map<String, String>,
         appearedCnt: Int,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        oauthUser: String?
     ) = ElementCheckResult(true)
 }
 

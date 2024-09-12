@@ -28,6 +28,7 @@
 package upgrade
 
 import (
+	"github.com/pkg/errors"
 	"os"
 	"strings"
 	"sync/atomic"
@@ -37,8 +38,6 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade/download"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
-
-	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
@@ -50,7 +49,7 @@ import (
 
 var JdkVersion = &JdkVersionType{}
 
-// JdkVersion jdk版本信息缓存
+// JdkVersionType jdk版本信息缓存
 type JdkVersionType struct {
 	JdkFileModTime time.Time
 	// 版本信息，原子级的 []string
@@ -149,7 +148,7 @@ func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 	logs.Info("agentUpgrade|download upgrade files done")
 	err := DoUpgradeOperation(changeItems)
 	if err != nil {
-		logs.Error("agentUpgrade|do upgrade operation failed", err)
+		logs.WithError(err).Error("agentUpgrade|do upgrade operation failed")
 	} else {
 		success = true
 	}
@@ -161,7 +160,7 @@ func SyncJdkVersion() error {
 	stat, err := os.Stat(config.GAgentConfig.JdkDirPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			logs.Error("syncJdkVersion no jdk dir find", err)
+			logs.WithError(err).Error("syncJdkVersion no jdk dir find")
 			// jdk版本置为空，否则会一直保持有版本的状态
 			JdkVersion.SetVersion([]string{})
 			return nil
@@ -175,7 +174,7 @@ func SyncJdkVersion() error {
 		version, err := getJdkVersion()
 		if err != nil {
 			// 拿取错误时直接下载新的
-			logs.Error("syncJdkVersion getJdkVersion err", err)
+			logs.WithError(err).Error("syncJdkVersion getJdkVersion err")
 			return nil
 		}
 		JdkVersion.SetVersion(version)
@@ -191,7 +190,7 @@ func SyncJdkVersion() error {
 	version, err := getJdkVersion()
 	if err != nil {
 		// 拿取错误时直接下载新的
-		logs.Error("syncJdkVersion getJdkVersion err", err)
+		logs.WithError(err).Error("syncJdkVersion getJdkVersion err")
 		JdkVersion.SetVersion([]string{})
 		return nil
 	}
@@ -247,7 +246,7 @@ func SyncDockerInitFileMd5() error {
 func getJdkVersion() ([]string, error) {
 	jdkVersion, err := command.RunCommand(config.GetJava(), []string{"-version"}, "", nil)
 	if err != nil {
-		logs.Error("agent get jdk version failed: ", err.Error())
+		logs.WithError(err).Error("agent get jdk version failed")
 		exitcode.CheckSignalJdkError(err)
 		return nil, errors.Wrap(err, "agent get jdk version failed")
 	}
@@ -346,7 +345,7 @@ func downloadUpgradeAgent(workDir, upgradeDir string) (agentChanged bool) {
 	logs.Info("agentUpgrade|download upgrader start")
 	_, err := download.DownloadUpgradeFile(upgradeDir)
 	if err != nil {
-		logs.Error("agentUpgrade|download upgrader failed", err)
+		logs.WithError(err).Error("agentUpgrade|download upgrader failed")
 		return false
 	}
 	logs.Info("agentUpgrade|download upgrader done")
@@ -354,7 +353,7 @@ func downloadUpgradeAgent(workDir, upgradeDir string) (agentChanged bool) {
 	logs.Info("agentUpgrade|download daemon start")
 	newDaemonMd5, err := download.DownloadDaemonFile(upgradeDir)
 	if err != nil {
-		logs.Error("agentUpgrade|download daemon failed", err)
+		logs.WithError(err).Error("agentUpgrade|download daemon failed")
 		return false
 	}
 	logs.Info("agentUpgrade|download daemon done")
