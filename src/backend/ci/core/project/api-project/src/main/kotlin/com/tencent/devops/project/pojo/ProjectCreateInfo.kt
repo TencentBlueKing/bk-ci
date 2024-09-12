@@ -74,5 +74,7 @@ data class ProjectCreateInfo(
     @get:Schema(title = "运营产品ID")
     val productId: Int? = null,
     @get:Schema(title = "运营产品名称")
-    val productName: String? = null
+    val productName: String? = null,
+    @get:Schema(title = "流水线语法风格")
+    val pipelineDialect: String? = null
 )

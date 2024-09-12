@@ -45,16 +45,18 @@ import com.tencent.devops.common.api.constant.VALUE
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.exception.VariableNotFoundException
 import com.tencent.devops.common.api.factory.BkDiskLruFileCacheFactory
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_RUN
@@ -68,6 +70,7 @@ import com.tencent.devops.process.utils.PIPELINE_ATOM_CODE
 import com.tencent.devops.process.utils.PIPELINE_ATOM_NAME
 import com.tencent.devops.process.utils.PIPELINE_ATOM_TIMEOUT
 import com.tencent.devops.process.utils.PIPELINE_ATOM_VERSION
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_STEP_ID
 import com.tencent.devops.process.utils.PIPELINE_TASK_NAME
@@ -153,10 +156,10 @@ open class MarketAtomTask : ITask() {
         val workspacePath = workspace.absolutePath
         // 输出参数的用户命名空间：防止重名窘况
         val namespace: String? = map["namespace"] as String?
-        val asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable == true
+        val asCodeSettings = buildVariables.pipelineAsCodeSettings
         logger.info(
             "${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
-                "|workspace=$workspacePath|asCodeEnabled=$asCodeEnabled"
+                    "|workspace=$workspacePath|asCodeSettings=$asCodeSettings"
         )
 
         // 获取插件基本信息
@@ -224,13 +227,16 @@ open class MarketAtomTask : ITask() {
             )
         )
 
+        val dialect = variables[PIPELINE_DIALECT]?.let {
+            PipelineDialectType.valueOf(it).dialect
+        } ?: PipelineDialectType.CLASSIC.dialect
         // 解析并打印插件执行传入的所有参数
         val inputParams = map["input"]?.let { input ->
             parseInputParams(
                 inputMap = input as Map<String, Any>,
                 variables = variables.plus(getContainerVariables(buildTask, buildVariables, workspacePath)),
                 acrossInfo = acrossInfo,
-                asCodeEnabled = asCodeEnabled
+                dialect = dialect
             )
         } ?: emptyMap()
         printInput(atomData, inputParams, inputTemplate)
@@ -245,7 +251,7 @@ open class MarketAtomTask : ITask() {
 
         buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }
 
-        val inputVariables = if (asCodeEnabled) {
+        val inputVariables = if (asCodeSettings?.enable == true) {
             // 如果开启PAC,插件入参增加旧变量，防止开启PAC后,插件获取参数失败
             PipelineVarUtil.mixOldVarAndNewVar(variables.toMutableMap())
         } else {
@@ -485,38 +491,38 @@ open class MarketAtomTask : ITask() {
         inputMap: Map<String, Any>,
         variables: Map<String, String>,
         acrossInfo: BuildTemplateAcrossInfo?,
-        asCodeEnabled: Boolean
+        dialect: IPipelineDialect
     ): Map<String, String> {
         val atomParams = mutableMapOf<String, String>()
         try {
-            if (asCodeEnabled) {
-                val customReplacement = EnvReplacementParser.getCustomExecutionContextByMap(
+            val customReplacement by lazy {
+                EnvReplacementParser.getCustomExecutionContextByMap(
                     variables = variables,
                     extendNamedValueMap = listOf(
                         CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossInfo?.targetProjectId),
                         CIKeywordsService.CIKeywordsRuntimeNamedValue()
                     )
                 )
-                inputMap.forEach { (name, value) ->
-                    logger.info("parseInputParams|name=$name|value=$value")
-                    atomParams[name] = EnvReplacementParser.parse(
-                        value = JsonUtil.toJson(value),
-                        contextMap = variables,
-                        onlyExpression = true,
-                        contextPair = customReplacement,
-                        functions = SpecialFunctions.functions,
-                        output = SpecialFunctions.output
-                    ).parseCredentialValue(null, acrossInfo?.targetProjectId)
-                }
-            } else {
-                inputMap.forEach { (name, value) ->
-                    // 修复插件input环境变量替换问题 #5682
-                    atomParams[name] = EnvUtils.parseEnv(
-                        command = JsonUtil.toJson(value),
-                        data = variables
-                    ).parseCredentialValue(null, acrossInfo?.targetProjectId)
-                }
             }
+            inputMap.forEach { (name, value) ->
+                atomParams[name] = EnvReplacementParser.parse(
+                    value = JsonUtil.toJson(value),
+                    contextMap = variables,
+                    dialect = dialect,
+                    contextPair = customReplacement,
+                    functions = SpecialFunctions.functions,
+                    output = SpecialFunctions.output
+                ).parseCredentialValue(null, acrossInfo?.targetProjectId)
+            }
+        } catch (exception: VariableNotFoundException) {
+            val errMessage = "Variable ${exception.variableKey} not found"
+            LoggerService.addErrorLine(errMessage)
+            throw TaskExecuteException(
+                errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
+                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: $errMessage",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            )
         } catch (e: Throwable) {
             logger.error("plugin input illegal! ", e)
             LoggerService.addErrorLine("plugin input illegal! ${e.message}")

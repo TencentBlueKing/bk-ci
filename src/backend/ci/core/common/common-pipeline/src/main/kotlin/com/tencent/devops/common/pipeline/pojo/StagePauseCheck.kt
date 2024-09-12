@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.pojo
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.option.StageControlOption
@@ -180,18 +181,18 @@ data class StagePauseCheck(
     /**
      *  进入审核流程前完成所有审核人变量替换
      */
-    fun parseReviewVariables(variables: Map<String, String>, asCodeEnabled: Boolean?) {
+    fun parseReviewVariables(variables: Map<String, String>, dialect: IPipelineDialect) {
         reviewGroups?.forEach { group ->
             if (group.status == null) {
                 val reviewers = group.reviewers.joinToString(",")
-                val realReviewers = EnvReplacementParser.parse(reviewers, variables, asCodeEnabled)
+                val realReviewers = EnvReplacementParser.parse(reviewers, variables, dialect)
                     .split(",").toList()
                 group.reviewers = realReviewers
             }
         }
-        reviewDesc = EnvReplacementParser.parse(reviewDesc, variables, asCodeEnabled)
+        reviewDesc = EnvReplacementParser.parse(reviewDesc, variables, dialect)
         notifyGroup = notifyGroup?.map {
-            EnvReplacementParser.parse(it, variables, asCodeEnabled)
+            EnvReplacementParser.parse(it, variables, dialect)
         }?.toMutableList()
         reviewParams?.forEach { it.parseValueWithType(variables) }
     }

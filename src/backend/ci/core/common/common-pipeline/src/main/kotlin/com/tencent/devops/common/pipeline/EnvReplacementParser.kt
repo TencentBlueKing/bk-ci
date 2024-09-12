@@ -27,8 +27,10 @@
 
 package com.tencent.devops.common.pipeline
 
+import com.tencent.devops.common.api.exception.VariableNotFoundException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
+import com.tencent.devops.common.expression.ContextNotFoundException
 import com.tencent.devops.common.expression.ExecutionContext
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
@@ -37,13 +39,17 @@ import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.RuntimeDictionaryContextData
 import com.tencent.devops.common.expression.context.RuntimeNamedValue
+import com.tencent.devops.common.expression.expression.EvaluationOptions
 import com.tencent.devops.common.expression.expression.ExpressionOutput
 import com.tencent.devops.common.expression.expression.IFunctionInfo
+import com.tencent.devops.common.expression.expression.ParseExceptionKind
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import org.apache.tools.ant.filters.StringInputStream
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.util.regex.Pattern
 
 @Suppress(
     "LoopWithTooManyJumpStatements",
@@ -56,6 +62,7 @@ import java.io.InputStreamReader
 object EnvReplacementParser {
 
     private val logger = LoggerFactory.getLogger(EnvReplacementParser::class.java)
+    private val expressionPattern = Pattern.compile("\\$[{]{2}([^$^{}]+)[}]{2}")
 
     /**
      * 根据环境变量map进行object处理并保持原类型
@@ -85,7 +92,8 @@ object EnvReplacementParser {
                     context = context,
                     nameValues = nameValues,
                     functions = functions,
-                    output = output
+                    output = output,
+                    contextNotNull = false
                 )
             } catch (ignore: Throwable) {
                 logger.warn("[$value]|EnvReplacementParser expression invalid: ", ignore)
@@ -95,6 +103,45 @@ object EnvReplacementParser {
             ObjectReplaceEnvVarUtil.replaceEnvVar(value, contextMap).let {
                 JsonUtil.toJson(it, false)
             }
+        }
+    }
+
+    fun parse(
+        value: String?,
+        contextMap: Map<String, String>,
+        dialect: IPipelineDialect,
+        contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null,
+        functions: Iterable<IFunctionInfo>? = null,
+        output: ExpressionOutput? = null
+    ): String {
+        if (value.isNullOrBlank()) return ""
+        var newValue = value
+        if (dialect.supportUseSingleCurlyBracesVar()) {
+            newValue = ObjectReplaceEnvVarUtil.replaceEnvVar(newValue, contextMap).let {
+                JsonUtil.toJson(it, false)
+            }
+        }
+        return if (containsExpressions(newValue)) {
+            try {
+                val (context, nameValues) = contextPair
+                    ?: getCustomExecutionContextByMap(contextMap)
+                    ?: return value
+                parseExpression(
+                    value = newValue,
+                    context = context,
+                    nameValues = nameValues,
+                    functions = functions,
+                    output = output,
+                    contextNotNull = !dialect.supportMissingVar()
+                )
+            } catch (ex: VariableNotFoundException) {
+                throw ex
+            } catch (ignore: Throwable) {
+                logger.warn("[$value]|EnvReplacementParser expression invalid: ", ignore)
+                value
+            }
+        } else {
+            newValue
         }
     }
 
@@ -125,7 +172,8 @@ object EnvReplacementParser {
         nameValues: List<NamedValueInfo>,
         context: ExecutionContext,
         functions: Iterable<IFunctionInfo>? = null,
-        output: ExpressionOutput? = null
+        output: ExpressionOutput? = null,
+        contextNotNull: Boolean
     ): String {
         val strReader = InputStreamReader(StringInputStream(value))
         val bufferReader = BufferedReader(strReader)
@@ -146,7 +194,8 @@ object EnvReplacementParser {
                     context = context,
                     nameValues = nameValues,
                     functions = functions,
-                    output = output
+                    output = output,
+                    contextNotNull = contextNotNull
                 )
 
                 val newLine = findExpressions(onceResult).let {
@@ -159,7 +208,8 @@ object EnvReplacementParser {
                             context = context,
                             nameValues = nameValues,
                             functions = functions,
-                            output = output
+                            output = output,
+                            contextNotNull = contextNotNull
                         )
                     }
                 }
@@ -182,7 +232,8 @@ object EnvReplacementParser {
         nameValues: List<NamedValueInfo>,
         context: ExecutionContext,
         functions: Iterable<IFunctionInfo>? = null,
-        output: ExpressionOutput? = null
+        output: ExpressionOutput? = null,
+        contextNotNull: Boolean
     ): String {
         var chars = value.toList()
         blocks.forEachIndexed nextBlockLevel@{ blockLevel, blocksInLevel ->
@@ -190,14 +241,24 @@ object EnvReplacementParser {
                 // 表达式因为含有 ${{ }} 所以起始向后推3位，末尾往前推两位
                 val expression = chars.joinToString("").substring(block.startIndex + 3, block.endIndex - 1)
                 if (expression.isBlank()) return@nextBlock
+                val options = EvaluationOptions(contextNotNull)
                 var result = try {
                     ExpressionParser.createTree(expression, null, nameValues, functions)!!
-                        .evaluate(null, context, null, output).value.let {
+                        .evaluate(null, context, options, output).value.let {
                             if (it is PipelineContextData) it.fetchValue() else it
                         }?.let {
                             JsonUtil.toJson(it, false)
                         } ?: ""
+                } catch (ignore: ContextNotFoundException) {
+                    throw VariableNotFoundException(
+                        variableKey = options.contextNotNull.errKey()
+                    )
                 } catch (ignore: ExpressionParseException) {
+                    if (contextNotNull && ignore.kind == ParseExceptionKind.UnrecognizedNamedValue) {
+                        throw VariableNotFoundException(
+                            variableKey = ignore.expression
+                        )
+                    }
                     return@nextBlock
                 }
 
@@ -311,6 +372,11 @@ object EnvReplacementParser {
             }
         }
         return result
+    }
+
+    fun containsExpressions(value: String?): Boolean {
+        if (value == null) return false
+        return expressionPattern.matcher(value).find()
     }
 
     /**

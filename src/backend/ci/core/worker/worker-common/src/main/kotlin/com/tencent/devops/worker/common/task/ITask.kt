@@ -30,15 +30,19 @@ package com.tencent.devops.worker.common.task
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.logger.LoggerService
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.stream.Collectors
-import org.slf4j.LoggerFactory
 
 @Suppress("NestedBlockDepth", "TooManyFunctions")
 abstract class ITask {
@@ -57,6 +61,8 @@ abstract class ITask {
 
     /* 存储常量的key */
     private lateinit var constVar: List<String>
+    /*  */
+    private lateinit var dialect: IPipelineDialect
 
     fun run(
         buildTask: BuildTask,
@@ -67,6 +73,9 @@ abstract class ITask {
             .filter { it.readOnly == true }
             .map { it.key }
             .collect(Collectors.toList())
+        dialect = buildVariables.variables[PIPELINE_DIALECT]?.let {
+            PipelineDialectType.valueOf(it).dialect
+        } ?: PipelineDialectType.CLASSIC.dialect
         execute(buildTask, buildVariables, workspace)
     }
 
@@ -95,23 +104,38 @@ abstract class ITask {
     )
 
     protected fun addEnv(env: Map<String, String>) {
-        if (this::constVar.isInitialized) {
-            var errFlag = false
-            env.forEach { (key, _) ->
-                if (key in constVar) {
-                    LoggerService.addErrorLine("Variable $key is read-only and cannot be modified.")
-                    errFlag = true
-                }
+        var errReadOnlyFlag = false
+        var errLongValueFlag = false
+        env.forEach { (key, value) ->
+            if (this::constVar.isInitialized && key in constVar) {
+                LoggerService.addErrorLine("Variable $key is read-only and cannot be modified.")
+                errReadOnlyFlag = true
             }
-            if (errFlag) {
+            if (value.length >= PIPELINE_VARIABLES_STRING_LENGTH_MAX) {
+                LoggerService.addErrorLine("Variable $key value exceeds 4000 length limit.")
+                errLongValueFlag = true
+            }
+        }
+        if (errReadOnlyFlag) {
+            throw TaskExecuteException(
+                errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
+                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: read-only cannot be modified.",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            )
+        }
+        if (this::dialect.isInitialized) {
+            if (errLongValueFlag && !dialect.supportLongVarValue()) {
                 throw TaskExecuteException(
                     errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
-                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: read-only cannot be modified.",
+                            "errorCode: ${ErrorCode.USER_INPUT_INVAILD}," +
+                            " message: variable value exceeds 4000 length limit.",
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD
                 )
             }
         }
+
         environment.putAll(env)
     }
 

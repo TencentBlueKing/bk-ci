@@ -102,7 +102,7 @@ class BuildVariableService @Autowired constructor(
             buildId = buildId,
             keys = keys
         )
-        return if (pipelineAsCodeService.asCodeEnabled(projectId, pipelineId, buildId, null) == true) {
+        return if (pipelineAsCodeService.asCodeEnabled(projectId, pipelineId) == true) {
             dataMap
         } else {
             PipelineVarUtil.mixOldVarAndNewVar(dataMap)

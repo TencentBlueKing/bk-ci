@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
@@ -231,7 +232,10 @@ class PipelineRepositoryService constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null
+        yamlInfo: PipelineYamlVo? = null,
+        inheritedDialectSetting: Boolean? = null,
+        pipelineDialectSetting: String? = null,
+        pipelineDialect: IPipelineDialect? = null
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -245,7 +249,8 @@ class PipelineRepositoryService constructor(
             create = create,
             versionStatus = versionStatus,
             channelCode = channelCode,
-            yamlInfo = yamlInfo
+            yamlInfo = yamlInfo,
+            pipelineDialect = pipelineDialect
         )
 
         val buildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
@@ -309,7 +314,9 @@ class PipelineRepositoryService constructor(
                     versionStatus = versionStatus,
                     branchName = branchName,
                     description = description,
-                    baseVersion = baseVersion
+                    baseVersion = baseVersion,
+                    inheritedDialectSetting = inheritedDialectSetting,
+                    pipelineDialectSetting = pipelineDialectSetting
                 )
             }
             operationLogService.addOperationLog(
@@ -338,13 +345,15 @@ class PipelineRepositoryService constructor(
         create: Boolean = true,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         channelCode: ChannelCode,
-        yamlInfo: PipelineYamlVo? = null
+        yamlInfo: PipelineYamlVo? = null,
+        pipelineDialect: IPipelineDialect? = null
     ): List<PipelineModelTask> {
         val metaSize = modelCheckPlugin.checkModelIntegrity(
             model = model,
             projectId = projectId,
             userId = userId,
-            oauthUser = getPipelineOauthUser(projectId, pipelineId)
+            oauthUser = getPipelineOauthUser(projectId, pipelineId),
+            pipelineDialect = pipelineDialect
         )
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
@@ -633,7 +642,9 @@ class PipelineRepositoryService constructor(
         templateId: String? = null,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String?,
-        description: String?
+        description: String?,
+        inheritedDialectSetting: Boolean? = true,
+        pipelineDialectSetting: String? = null
     ): DeployPipelineResult {
         // #8161 如果只有一个草稿版本的创建操作，流水线状态也为仅有草稿
         val modelVersion = 1
@@ -699,7 +710,13 @@ class PipelineRepositoryService constructor(
                         content = NotifyTemplateUtils.getCommonShutdownFailureContent()
                     ).takeIf { failType.isNotEmpty() }
                     PipelineSetting.defaultSetting(
-                        projectId, pipelineId, model.name, maxPipelineResNum, failSubscription
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        pipelineName = model.name,
+                        maxPipelineResNum = maxPipelineResNum,
+                        failSubscription = failSubscription,
+                        inheritedDialectSetting = inheritedDialectSetting,
+                        pipelineDialectSetting = pipelineDialectSetting
                     )
                 }
 
@@ -739,7 +756,10 @@ class PipelineRepositoryService constructor(
                                 }
                                 setting.labels = labels
                             }
-                            setting.pipelineAsCodeSettings = PipelineAsCodeSettings()
+                            setting.pipelineAsCodeSettings = PipelineAsCodeSettings.initDialect(
+                                inheritedDialect = inheritedDialectSetting,
+                                pipelineDialect = pipelineDialectSetting
+                            )
                             newSetting = setting
                         }
                         // 如果不需要覆盖模板内容，则直接保存传值或默认值
@@ -1725,6 +1745,7 @@ class PipelineRepositoryService constructor(
         isTemplate: Boolean
     ): PipelineName {
         var oldName: String = setting.pipelineName
+        setting.pipelineAsCodeSettings?.resetDialect()
         (context ?: dslContext).transaction { t ->
             val transactionContext = DSL.using(t)
             val old = pipelineSettingDao.getSetting(

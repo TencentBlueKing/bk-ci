@@ -28,10 +28,12 @@
 package com.tencent.devops.process.yaml.transfer
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
@@ -42,6 +44,7 @@ import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
+import com.tencent.devops.process.yaml.v3.enums.SyntaxDialectType
 import com.tencent.devops.process.yaml.v3.models.Concurrency
 import com.tencent.devops.process.yaml.v3.models.Extends
 import com.tencent.devops.process.yaml.v3.models.GitNotices
@@ -97,7 +100,7 @@ class ModelTransfer @Autowired constructor(
                 ?: VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE,
             maxQueueSize = yaml.concurrency?.queueLength ?: VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE,
             labels = yaml2Labels(yamlInput),
-            pipelineAsCodeSettings = yamlInput.asCodeSettings,
+            pipelineAsCodeSettings = yamlSyntaxDialect2Setting(yaml.syntaxDialect),
             successSubscriptionList = yamlNotice2Setting(
                 projectId = yamlInput.projectCode,
                 notices = yaml.notices?.filter { it.checkNotifyForSuccess() }
@@ -114,6 +117,22 @@ class ModelTransfer @Autowired constructor(
         return notices.map {
             val res = it.toSubscription()
             prepareModelGroups(projectId, res)
+        }
+    }
+
+    private fun yamlSyntaxDialect2Setting(syntaxDialectType: String?): PipelineAsCodeSettings? {
+        if (syntaxDialectType.isNullOrBlank()) return null
+        return when (syntaxDialectType) {
+            SyntaxDialectType.INHERIT.name -> PipelineAsCodeSettings(inheritedDialect = true)
+            SyntaxDialectType.CLASSIC.name -> PipelineAsCodeSettings(
+                inheritedDialect = false,
+                pipelineDialect = PipelineDialectType.CLASSIC.name
+            )
+            SyntaxDialectType.CONSTRAINT.name -> PipelineAsCodeSettings(
+                inheritedDialect = false,
+                pipelineDialect = PipelineDialectType.CONSTRAINED.name
+            )
+            else -> null
         }
     }
 
@@ -206,7 +225,8 @@ class ModelTransfer @Autowired constructor(
                 desc = modelInput.setting.desc.ifEmpty { null },
                 label = label,
                 resources = modelInput.model.resources,
-                notices = makeNoticesV3(modelInput.setting)
+                notices = makeNoticesV3(modelInput.setting),
+                syntaxDialect = makeSyntaxDialect(modelInput.setting)
             )
             else -> {
                 throw PipelineTransferException(
@@ -389,6 +409,16 @@ class ModelTransfer @Autowired constructor(
                 trigger.addAll(triggerV3)
                 return trigger
             }
+        }
+    }
+
+    private fun makeSyntaxDialect(setting: PipelineSetting): String? {
+        val asCodeSettings = setting.pipelineAsCodeSettings ?: return null
+        return when {
+            asCodeSettings.inheritedDialect == true -> SyntaxDialectType.INHERIT.name
+            asCodeSettings.pipelineDialect == PipelineDialectType.CLASSIC.name -> SyntaxDialectType.CLASSIC.name
+            asCodeSettings.pipelineDialect == PipelineDialectType.CONSTRAINED.name -> SyntaxDialectType.CONSTRAINT.name
+            else -> null
         }
     }
 

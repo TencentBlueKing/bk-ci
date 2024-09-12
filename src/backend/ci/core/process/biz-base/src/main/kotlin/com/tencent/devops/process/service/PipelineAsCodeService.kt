@@ -27,10 +27,10 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.process.dao.PipelineSettingDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -39,31 +39,95 @@ import org.springframework.stereotype.Service
 class PipelineAsCodeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineSettingDao: PipelineSettingDao,
-    private val pipelineBuildDao: PipelineBuildDao
+    private val projectCacheService: ProjectCacheService
 ) {
 
     fun asCodeEnabled(
         projectId: String,
-        pipelineId: String,
-        buildId: String,
-        buildInfo: BuildInfo?
+        pipelineId: String
     ): Boolean? {
-        return getPipelineAsCodeSettings(projectId, pipelineId, buildId, buildInfo)?.enable
+        return getPipelineAsCodeSettings(projectId, pipelineId)?.enable
     }
 
-    fun getPipelineAsCodeSettings(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        buildInfo: BuildInfo?
-    ): PipelineAsCodeSettings? {
+    fun getPipelineAsCodeSettings(projectId: String, pipelineId: String): PipelineAsCodeSettings? {
         val settings = pipelineSettingDao.getPipelineAsCodeSettings(
             dslContext = dslContext, projectId = projectId, pipelineId = pipelineId
         )
-//        val info = buildInfo ?: pipelineBuildDao.getBuildInfo(
-//            dslContext, projectId, pipelineId, buildId
-//        )
-//        return settings?.copy(enable = info?.yamlVersion == YamlVersion.V3_0.tag)
-        return settings
+        return getPipelineAsCodeSettings(projectId = projectId, asCodeSettings = settings)
+    }
+
+    /**
+     * 前端或者构建机请求时,构造PipelineAsCodeSettings,保证dialect一定有值
+     *
+     * 1. 如果asCodeSettings为空,则使用项目方言
+     * 2. 如果继承项目方言,则查询项目方言
+     */
+    fun getPipelineAsCodeSettings(
+        projectId: String,
+        asCodeSettings: PipelineAsCodeSettings?
+    ): PipelineAsCodeSettings? {
+        return when {
+            asCodeSettings == null -> {
+                val projectDialect =
+                    projectCacheService.getProjectDialect(projectId) ?: PipelineDialectType.CLASSIC.name
+                PipelineAsCodeSettings(inheritedDialect = true, projectDialect = projectDialect)
+            }
+            asCodeSettings.inheritedDialect != false -> {
+                val projectDialect =
+                    projectCacheService.getProjectDialect(projectId) ?: PipelineDialectType.CLASSIC.name
+                asCodeSettings.copy(projectDialect = projectDialect)
+            }
+            else ->
+                asCodeSettings
+        }
+    }
+
+    /**
+     * 获取项目级方言
+     */
+    fun getProjectDialect(projectId: String): IPipelineDialect {
+        val projectDialect =
+            projectCacheService.getProjectDialect(projectId) ?: PipelineDialectType.CLASSIC.name
+        return PipelineDialectType.valueOf(projectDialect).dialect
+    }
+
+    fun getPipelineDialect(projectId: String, pipelineId: String): IPipelineDialect {
+        val asCodeSettings = getPipelineAsCodeSettings(projectId = projectId, pipelineId = pipelineId)
+        return getPipelineDialect(projectId = projectId, asCodeSettings = asCodeSettings)
+    }
+
+    /**
+     * 获取流水线方言,根据流水线设置
+     */
+    fun getPipelineDialect(projectId: String, asCodeSettings: PipelineAsCodeSettings?): IPipelineDialect {
+        return PipelineDialectType.getPipelineDialect(
+            getPipelineAsCodeSettings(
+                projectId = projectId,
+                asCodeSettings = asCodeSettings
+            )
+        )
+    }
+
+    /**
+     * 获取流水线方言,根据流水线设置或者方言设置
+     */
+    fun getPipelineDialect(
+        projectId: String,
+        asCodeSettings: PipelineAsCodeSettings?,
+        inheritedDialectSetting: Boolean?,
+        pipelineDialectSetting: String?
+    ): IPipelineDialect {
+        val projectDialect = projectCacheService.getProjectDialect(projectId = projectId)
+        return if (asCodeSettings != null) {
+            PipelineDialectType.getPipelineDialect(
+                asCodeSettings.copy(projectDialect = projectDialect)
+            )
+        } else {
+            PipelineDialectType.getPipelineDialect(
+                inheritedDialect = inheritedDialectSetting,
+                projectDialect = projectDialect,
+                pipelineDialect = pipelineDialectSetting
+            )
+        }
     }
 }

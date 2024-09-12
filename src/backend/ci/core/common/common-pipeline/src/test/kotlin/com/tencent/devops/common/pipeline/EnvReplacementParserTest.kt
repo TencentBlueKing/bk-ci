@@ -1,5 +1,8 @@
 package com.tencent.devops.common.pipeline
 
+import com.tencent.devops.common.api.exception.VariableNotFoundException
+import com.tencent.devops.common.pipeline.dialect.ClassicPipelineDialect
+import com.tencent.devops.common.pipeline.dialect.ConstrainedPipelineDialect
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -496,6 +499,13 @@ let branch = master
 let branch1 = 
 let branchs = branch.split("/")"""
         Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, true))
+        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, ClassicPipelineDialect()))
+        Assertions.assertThrows(VariableNotFoundException::class.java) {
+            EnvReplacementParser.parse(command1, data, ConstrainedPipelineDialect())
+        }
+        Assertions.assertThrows(VariableNotFoundException::class.java) {
+            EnvReplacementParser.parse(command1, mapOf(), ConstrainedPipelineDialect())
+        }
     }
 
     @Test
@@ -546,6 +556,8 @@ echo true"""
             "ci.branch" to "master"
         )
         Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, true))
+        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, ClassicPipelineDialect()))
+        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, ConstrainedPipelineDialect()))
     }
 
     private fun parseAndEquals(
@@ -558,5 +570,53 @@ echo true"""
         val buff = EnvReplacementParser.parse(template, contextMap.plus(data), onlyExpression)
         println("template=$template\nreplaced=$buff\n")
         Assertions.assertEquals(expect, buff)
+    }
+
+    @Test
+    fun containsExpressions() {
+        val command = "{\"age\": \${{age}} , \"sex\": \"boy\", \"name\": \${{name}}}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command))
+
+        val command1 = "hello \${{variables.abc}} world"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command1))
+
+        val command2 = "\${{variables.abc}}world"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command2))
+
+        val command3 = "hello\${{variables.abc}}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command3))
+
+        val command4 = "hello\${{variables.abc"
+        Assertions.assertFalse(EnvReplacementParser.containsExpressions(command4))
+
+        val command5 = "hello\${{variables.abc}"
+        Assertions.assertFalse(EnvReplacementParser.containsExpressions(command5))
+
+        val command6 = "hello\${variables.abc}}"
+        Assertions.assertFalse(EnvReplacementParser.containsExpressions(command6))
+
+        val command7 = "hello\$variables.abc}}"
+        Assertions.assertFalse(EnvReplacementParser.containsExpressions(command7))
+
+        val command8 = "echo \${{ variables.hello }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command8))
+
+        val command9 = "echo \${{ ci.workspace }} || \${{variables.hello}}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command9))
+
+        val command10 = "echo \${{ ci.xyz == 'zzzz' }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command10))
+
+        val command11 = "echo \${{ variables.xyz == 'zzzz' }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command11))
+
+        val command12 = "echo \${{ strToTime(variables.date) > strToTime('2023-03-16 12:06:21') }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command12))
+
+        val command13 = "echo \${{ strToTime(variables.date) > strToTime('2023-03-14 12:06:21') }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command13))
+
+        val command14 = "\${{ strToTime(\${{variables.date}}) > strToTime('2023-03-14 12:06:21') }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command14))
     }
 }

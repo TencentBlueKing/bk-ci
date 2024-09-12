@@ -29,6 +29,7 @@ package com.tencent.devops.process.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
@@ -111,6 +112,9 @@ class PipelineSettingVersionDao {
                 .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
+                .set(PIPELINE_AS_CODE_SETTINGS, setting.pipelineAsCodeSettings?.let { self ->
+                    JsonUtil.toJson(self, false)
+                })
                 .execute()
         }
     }
@@ -219,7 +223,10 @@ class PipelineSettingVersionDao {
                     maxQueueSize = t.maxQueueSize,
                     buildNumRule = t.buildNumRule,
                     concurrencyCancelInProgress = t.concurrencyCancelInProgress,
-                    concurrencyGroup = t.concurrencyGroup
+                    concurrencyGroup = t.concurrencyGroup,
+                    pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
+                        JsonUtil.to(self, PipelineAsCodeSettings::class.java)
+                    }
                 )
             }
         }

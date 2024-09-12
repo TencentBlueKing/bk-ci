@@ -110,12 +110,12 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import java.time.LocalDateTime
 import java.util.LinkedList
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service
@@ -138,7 +138,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val transferService: PipelineTransferYamlService,
     private val yamlFacadeService: PipelineYamlFacadeService,
     private val operationLogService: PipelineOperationLogService,
-    private val pipelineAuthorizationService: PipelineAuthorizationService
+    private val pipelineAuthorizationService: PipelineAuthorizationService,
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -307,7 +308,9 @@ class PipelineInfoFacadeService @Autowired constructor(
         useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null
+        yamlInfo: PipelineYamlVo? = null,
+        inheritedDialectSetting: Boolean? = true,
+        pipelineDialectSetting: String? = null
     ): DeployPipelineResult {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
@@ -427,6 +430,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                 }
 
                 watcher.start("deployPipeline")
+                val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
+                    projectId = projectId,
+                    asCodeSettings = setting?.pipelineAsCodeSettings,
+                    inheritedDialectSetting = inheritedDialectSetting,
+                    pipelineDialectSetting = pipelineDialectSetting
+                )
                 val result = pipelineRepositoryService.deployPipeline(
                     model = instance,
                     setting = setting,
@@ -444,7 +453,10 @@ class PipelineInfoFacadeService @Autowired constructor(
                     description = description,
                     yaml = yaml,
                     baseVersion = null,
-                    yamlInfo = yamlInfo
+                    yamlInfo = yamlInfo,
+                    inheritedDialectSetting = inheritedDialectSetting,
+                    pipelineDialectSetting = pipelineDialectSetting,
+                    pipelineDialect = pipelineDialect
                 )
                 pipelineId = result.pipelineId
                 watcher.stop()
@@ -597,12 +609,14 @@ class PipelineInfoFacadeService @Autowired constructor(
         } ?: newResource.model.name.ifBlank {
             yamlFileName
         }
+        val pipelineAsCodeSettings =
+            newResource.setting.pipelineAsCodeSettings?.copy(enable = true) ?: PipelineAsCodeSettings(enable = true)
         // 通过PAC模式创建或保存的流水线均打开PAC
         // 修正创建时的流水线名和增加PAC开关参数
         val newSetting = newResource.setting.copy(
             projectId = projectId,
             pipelineName = pipelineName,
-            pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
+            pipelineAsCodeSettings = pipelineAsCodeSettings
         )
         return createPipeline(
             userId = userId,
@@ -649,13 +663,15 @@ class PipelineInfoFacadeService @Autowired constructor(
         // 通过PAC模式创建或保存的流水线均打开PAC
         // 修正创建时的流水线名和增加PAC开关参数
         val pipelineName = newResource.model.name.ifBlank { yamlFileName }
+        val pipelineAsCodeSettings =
+            newResource.setting.pipelineAsCodeSettings?.copy(enable = true) ?: PipelineAsCodeSettings(enable = true)
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             setting = newResource.setting.copy(
                 pipelineName = pipelineName,
-                pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
+                pipelineAsCodeSettings = pipelineAsCodeSettings
             ),
             checkPermission = false,
             versionStatus = versionStatus,
@@ -1107,6 +1123,11 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
                 modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
             }
+            val pipelineSetting = savedSetting ?: pipelineSettingFacadeService.getSettingInfo(projectId, pipelineId)
+            val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
+                projectId = projectId,
+                pipelineSetting?.pipelineAsCodeSettings
+            )
             val deployResult = pipelineRepositoryService.deployPipeline(
                 model = model,
                 projectId = projectId,
@@ -1121,7 +1142,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 description = description,
                 yaml = yaml,
                 baseVersion = baseVersion,
-                yamlInfo = yamlInfo
+                yamlInfo = yamlInfo,
+                pipelineDialect = pipelineDialect
             )
             // 审计
             ActionAuditContext.current()

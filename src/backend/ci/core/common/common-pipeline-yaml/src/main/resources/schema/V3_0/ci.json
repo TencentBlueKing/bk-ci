@@ -2152,6 +2152,9 @@
     },
     "custom-build-num" : {
       "type" : "string"
+    },
+    "syntax-dialect" : {
+      "enum" : [ "INHERIT", "CLASSIC", "CONSTRAINT" ]
     }
   },
   "definitions" : {

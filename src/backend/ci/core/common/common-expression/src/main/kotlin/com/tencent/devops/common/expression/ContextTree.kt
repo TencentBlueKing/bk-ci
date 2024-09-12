@@ -2,9 +2,7 @@ package com.tencent.devops.common.expression
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.DictionaryContextDataWithVal
@@ -13,7 +11,6 @@ import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import java.util.LinkedList
 import java.util.Queue
-import java.util.Stack
 import kotlin.jvm.Throws
 
 /**
@@ -144,22 +141,6 @@ open class ContextTreeNode(
         children.add(child)
     }
 
-    fun depthFirstTraversal(run: (node: ContextTreeNode) -> Unit) {
-        val stack = Stack<ContextTreeNode>()
-        stack.push(this)
-
-        while (!stack.isEmpty()) {
-            val node = stack.pop()
-
-            run(node)
-
-            // 将子节点逆序入栈，保证先访问左边的子节点
-            for (i in node.children.lastIndex downTo 0) {
-                stack.push(node.children[i])
-            }
-        }
-    }
-
     fun breadthFirstTraversal(run: (node: ContextTreeNode) -> Boolean) {
         val queue: Queue<ContextTreeNode> = LinkedList()
         queue.offer(this)
@@ -187,30 +168,6 @@ open class ContextTreeNode(
             dict[child.key] = child.toContext()
         }
         return dict
-    }
-
-    // 校验当前节点的值转换的JSON树是否与子节点结构和值相同
-//    @Throws(ContextJsonFormatException::class)
-//    private fun checkJson() {
-//        val jsonTree = try {
-//            ObjectMapper().readTree(this.value)
-//        } catch (e: Exception) {
-//            throw ContextJsonFormatException("${this.value} to json error ${e.localizedMessage}")
-//        }
-//        // TODO: 是否需要兼容 json 不同类型
-//        jsonTree.equals(ObjectNodeComparator(), this.toJson())
-//    }
-
-    private fun toJson(): JsonNode {
-        val jsonNodeFactory = JsonNodeFactory.instance
-        val rootObj = jacksonObjectMapper().createObjectNode()
-        if (this.children.isEmpty()) {
-            return jsonNodeFactory.textNode(this.value)
-        }
-        this.children.forEach { child ->
-            rootObj.putIfAbsent(child.key, child.toJson())
-        }
-        return rootObj
     }
 }
 

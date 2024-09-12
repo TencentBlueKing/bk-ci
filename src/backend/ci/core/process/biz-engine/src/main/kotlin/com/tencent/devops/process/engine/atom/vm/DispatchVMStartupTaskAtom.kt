@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.atom.vm
 
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ENV_NOT_YET_SUPPORTED
+import com.tencent.devops.common.api.exception.VariableNotFoundException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
@@ -42,6 +43,7 @@ import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -67,6 +69,7 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -289,25 +292,35 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     ): Boolean {
         param.buildEnv?.let { buildEnv ->
             val asCode by lazy {
-                val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
-                    task.projectId, task.pipelineId, task.buildId, null
-                )
-                val asCodeEnabled = asCodeSettings?.enable == true
-                val contextPair = if (asCodeEnabled) {
-                    EnvReplacementParser.getCustomExecutionContextByMap(variables)
-                } else null
-                Pair(asCodeEnabled, contextPair)
+                val dialect = variables[PIPELINE_DIALECT]?.let {
+                    PipelineDialectType.valueOf(it).dialect
+                } ?: PipelineDialectType.CLASSIC.dialect
+                val contextPair = EnvReplacementParser.getCustomExecutionContextByMap(variables)
+                Pair(dialect, contextPair)
             }
             buildEnv.forEach { env ->
                 if (!env.value.startsWith("$")) {
                     return@forEach
                 }
-                val version = EnvReplacementParser.parse(
-                    value = env.value,
-                    contextMap = variables,
-                    onlyExpression = asCode.first,
-                    contextPair = asCode.second
-                )
+                val version = try {
+                    EnvReplacementParser.parse(
+                        value = env.value,
+                        contextMap = variables,
+                        dialect = asCode.first,
+                        contextPair = asCode.second
+                    )
+                } catch (ignored: VariableNotFoundException) {
+                    buildLogPrinter.addRedLine(
+                        buildId = task.buildId,
+                        message = "variable ${ignored.variableKey} not found",
+                        tag = task.taskId,
+                        containerHashId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1,
+                        jobId = null,
+                        stepId = task.stepId
+                    )
+                    return false
+                }
                 val res = client.get(ServiceContainerAppResource::class).getBuildEnv(
                     name = env.key,
                     version = version,

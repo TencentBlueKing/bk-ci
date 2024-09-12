@@ -20,6 +20,24 @@ BEGIN
             ADD COLUMN `DOC_URL` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '文档链接';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PROJECT'
+                        AND COLUMN_NAME = 'pipeline_dialect') THEN
+        ALTER TABLE T_PROJECT
+            ADD COLUMN `pipeline_dialect` VARCHAR(32) DEFAULT null comment '流水线语法风格';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PROJECT_APPROVAL'
+                        AND COLUMN_NAME = 'PIPELINE_DIALECT') THEN
+        ALTER TABLE T_PROJECT_APPROVAL
+            ADD COLUMN `PIPELINE_DIALECT` VARCHAR(32) DEFAULT null comment '流水线语法风格';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

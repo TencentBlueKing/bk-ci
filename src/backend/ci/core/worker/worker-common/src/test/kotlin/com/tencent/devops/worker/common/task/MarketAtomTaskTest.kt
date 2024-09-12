@@ -10,6 +10,9 @@ import com.tencent.devops.common.expression.context.RuntimeNamedValue
 import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.pipeline.dialect.ClassicPipelineDialect
+import com.tencent.devops.common.pipeline.dialect.ConstrainedPipelineDialect
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.worker.common.expression.SpecialFunctions
@@ -37,6 +40,44 @@ internal class MarketAtomTaskTest {
             originReplacement(inputParam, variables),
             newReplacement(inputParam, variables)
         )
+        Assertions.assertEquals(
+            originReplacement(inputParam, variables),
+            mixReplacement(inputParam, variables, ClassicPipelineDialect())
+        )
+        Assertions.assertNotEquals(
+            originReplacement(inputParam, variables),
+            mixReplacement(inputParam, variables, ConstrainedPipelineDialect())
+        )
+    }
+
+    @Test
+    fun inputTest2() {
+        val variables = mapOf(
+            "host1" to "127.0.0.1",
+            "service" to "process",
+            "port" to "8080",
+            "workspace" to "d:\\landun\\workspace"
+        )
+        val inputParam = mapOf(
+            "bizId" to "100205",
+            "globalVarStr" to
+                    "[{\"server\":{\"ip_list\":[{\"ip\":\"\${{host1}}\"}]}}," +
+                    "{\"name\":\"service\",\"value\":\"\${{service}}\"},\"value\":\"\${{port}}\"}]",
+            "planId" to "17667",
+            "workspace" to "\${{workspace}}"
+        )
+        Assertions.assertEquals(
+            originReplacement(inputParam, variables),
+            newReplacement(inputParam, variables)
+        )
+        Assertions.assertEquals(
+            originReplacement(inputParam, variables),
+            mixReplacement(inputParam, variables, ClassicPipelineDialect())
+        )
+        Assertions.assertEquals(
+            originReplacement(inputParam, variables),
+            mixReplacement(inputParam, variables, ConstrainedPipelineDialect())
+        )
     }
 
     @Test
@@ -55,6 +96,26 @@ internal class MarketAtomTaskTest {
                 value = "\${{ settings.a.password }}",
                 contextMap = variables,
                 onlyExpression = true,
+                contextPair = r,
+                functions = SpecialFunctions.functions
+            )
+        )
+        Assertions.assertEquals(
+            "1234",
+            EnvReplacementParser.parse(
+                value = "\${{ settings.a.password }}",
+                contextMap = variables,
+                dialect = ClassicPipelineDialect(),
+                contextPair = r,
+                functions = SpecialFunctions.functions
+            )
+        )
+        Assertions.assertEquals(
+            "1234",
+            EnvReplacementParser.parse(
+                value = "\${{ settings.a.password }}",
+                contextMap = variables,
+                dialect = ConstrainedPipelineDialect(),
                 contextPair = r,
                 functions = SpecialFunctions.functions
             )
@@ -87,6 +148,30 @@ internal class MarketAtomTaskTest {
             atomParams[name] = EnvReplacementParser.parse(
                 value = JsonUtil.toJson(value),
                 contextMap = variables,
+                contextPair = Pair(context, nameValue),
+                functions = SpecialFunctions.functions
+            )
+        }
+        return atomParams
+    }
+
+    /**
+     * 表达式混合
+     */
+    private fun mixReplacement(
+        inputMap: Map<String, Any>,
+        variables: Map<String, String>,
+        dialect: IPipelineDialect
+    ): Map<String, String> {
+        val atomParams = mutableMapOf<String, String>()
+        val context = ExecutionContext(DictionaryContextData())
+        val nameValue = mutableListOf<NamedValueInfo>()
+        ExpressionParser.fillContextByMap(variables, context, nameValue)
+        inputMap.forEach { (name, value) ->
+            atomParams[name] = EnvReplacementParser.parse(
+                value = JsonUtil.toJson(value),
+                contextMap = variables,
+                dialect = dialect,
                 contextPair = Pair(context, nameValue),
                 functions = SpecialFunctions.functions
             )

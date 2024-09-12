@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.control.command.container
 
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.command.CmdContext
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -44,8 +45,9 @@ data class ContainerContext(
     var latestSummary: String, // 最新备注信息，64字符以内
     var cmdFlowState: CmdFlowState = CmdFlowState.CONTINUE, // 当前容器引擎命令流转状态
     val stageMatrixCount: Int = 0,
-    var firstQueueTaskId: String? = null, // 缓存找到的第一个待执行的任务（未必执行）
     val pipelineAsCodeEnabled: Boolean? = null,
+    var firstQueueTaskId: String? = null, // 缓存找到的第一个待执行的任务（未必执行）
+    val dialect: IPipelineDialect, // 流水线语法风格
     var needUpdateControlOption: PipelineBuildContainerControlOption? = null, // 是否需要更新Job设置（超时、互斥组等）
     override var cmdFlowSeq: Int = 0, // 命令序号
     override val variables: Map<String, String>, // 变量

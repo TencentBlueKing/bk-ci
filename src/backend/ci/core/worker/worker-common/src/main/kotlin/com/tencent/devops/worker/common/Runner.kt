@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -45,6 +46,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_PREPARE_TO_BUILD
@@ -54,7 +56,6 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.UNKNOWN_ERRO
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
-import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.exception.TaskExecuteExceptionDecorator
 import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
@@ -176,7 +177,7 @@ object Runner {
         if (endBuildFlag) {
             // 启动失败，尝试结束构建
             try {
-                EngineService.endBuild(emptyMap(), DockerEnv.getBuildId(), BuildJobResult(ignored.message))
+                EngineService.endBuild(emptyMap(), "", BuildJobResult(ignored.message))
             } catch (ignored: Exception) {
                 logger.warn("End build catch unknown exceptions", ignored)
             }
@@ -453,13 +454,16 @@ object Runner {
             }
             if (customEnv.isNullOrEmpty()) return
             val jobVariables = jobBuildVariables.variables.toMutableMap()
+            val dialect = jobBuildVariables.variables[PIPELINE_DIALECT]?.let {
+                PipelineDialectType.valueOf(it).dialect
+            } ?: PipelineDialectType.CLASSIC.dialect
             customEnv.forEach {
                 if (!it.key.isNullOrBlank()) {
                     // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
                     val value = EnvReplacementParser.parse(
                         value = it.value ?: "",
                         contextMap = jobVariables,
-                        onlyExpression = jobBuildVariables.pipelineAsCodeSettings?.enable,
+                        dialect = dialect,
                         functions = SpecialFunctions.functions,
                         output = SpecialFunctions.output
                     )

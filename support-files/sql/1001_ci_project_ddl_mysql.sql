@@ -153,6 +153,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `SUBJECT_SCOPES` text DEFAULT NULL COMMENT '最大可授权人员范围',
   `AUTH_SECRECY` int(10) DEFAULT b'0' COMMENT '项目性质,0-公开，1-保密,2-机密',
   `product_id` int(10) DEFAULT NULL comment '运营产品ID',
+  `pipeline_dialect` VARCHAR(32) DEFAULT null comment '流水线语法风格',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `project_name` (`project_name`) USING BTREE,
   UNIQUE KEY `project_id` (`project_id`) USING BTREE,
@@ -374,6 +375,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_APPROVAL` (
    `PROJECT_TYPE` int(10) DEFAULT NULL COMMENT '项目类型',
    `PRODUCT_ID` int(10) DEFAULT NULL COMMENT '运营产品ID',
    `PRODUCT_NAME` VARCHAR(64) DEFAULT NULL comment '运营产品名称',
+   `PIPELINE_DIALECT` VARCHAR(32) DEFAULT null comment '流水线语法风格',
    PRIMARY KEY (`ID`) USING BTREE,
    UNIQUE KEY `project_name` (`PROJECT_NAME`) USING BTREE,
    UNIQUE KEY `english_name` (`ENGLISH_NAME`) USING BTREE
