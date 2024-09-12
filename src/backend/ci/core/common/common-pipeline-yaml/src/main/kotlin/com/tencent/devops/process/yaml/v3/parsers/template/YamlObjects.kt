@@ -482,6 +482,7 @@ fun <T> YamlTemplate<T>.getStage(
     deepTree: TemplateDeepTreeNode
 ): PreStage {
     return PreStage(
+        id = stage["id"]?.toString(),
         enable = YamlObjects.getNullValue("enable", stage)?.toBoolean(),
         name = stage["name"]?.toString(),
         label = stage["label"],
