@@ -436,7 +436,8 @@ class ServiceRemoteDevResourceImpl(
         return Result(
             workspaceService.getWorkspaceList4WeSec(
                 workspaceName = workspace.workspaceName,
-                notStatus = null
+                notStatus = null,
+                hasCurrentUser = true
             ).firstOrNull()
         )
     }
