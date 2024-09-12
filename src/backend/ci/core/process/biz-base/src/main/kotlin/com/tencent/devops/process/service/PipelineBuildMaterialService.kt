@@ -62,7 +62,8 @@ class PipelineBuildMaterialService @Autowired constructor(
         val existTaskIds = material?.mapNotNull { it.taskId } ?: listOf()
         if (!material.isNullOrEmpty()) {
             materialList.addAll(material)
-            // 不包含空taskId，没有task
+            // 存在空TaskId，直接添加
+            // 不存在空TaskId，旧数据不存在当前TaskId上报的源材料时则添加
             if ((!containsEmptyTaskId && !existTaskIds.contains(taskId)) || containsEmptyTaskId) {
                 materialList.addAll(pipelineBuildMaterials.map { it.copy(taskId = taskId) })
             }
