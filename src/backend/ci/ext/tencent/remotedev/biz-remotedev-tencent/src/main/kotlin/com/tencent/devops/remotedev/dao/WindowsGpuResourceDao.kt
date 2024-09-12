@@ -25,23 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.dao
+package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.service.utils.ByteUtils
-import com.tencent.devops.model.remotedev.tables.TDispatchWorkspace
 import com.tencent.devops.model.remotedev.tables.TWindowsGpuPool
 import com.tencent.devops.model.remotedev.tables.TWindowsVmResource
-import com.tencent.devops.model.remotedev.tables.records.TDispatchWorkspaceRecord
-import com.tencent.devops.model.remotedev.tables.records.TWindowsGpuPoolRecord
-import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespDataMachineResource
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record2
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -114,47 +108,7 @@ class WindowsGpuResourceDao {
         }
     }
 
-    fun getCgsResourceList(
-        dslContext: DSLContext,
-        cgsIds: List<String>?,
-        ips: List<String>?
-    ): Result<TWindowsGpuPoolRecord> {
-        with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
-            val conditions = mutableListOf<Condition>()
-            if (!cgsIds.isNullOrEmpty() && cgsIds.size == 1) {
-                conditions.add(CGS_ID.eq(cgsIds.first()))
-            } else if (!cgsIds.isNullOrEmpty()) {
-                conditions.add(CGS_ID.`in`(cgsIds))
-            }
-
-            if (!ips.isNullOrEmpty()) {
-                conditions.add(CGS_IP.`in`(ips))
-            }
-
-            return dslContext.selectFrom(this)
-                .where(conditions)
-                .fetch()
-        }
-    }
-
-    fun getCgsWorkspace(
-        dslContext: DSLContext,
-        cgsId: String,
-        status: EnvStatusEnum? = null
-    ): TDispatchWorkspaceRecord? {
-        with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
-            val condition = mutableListOf<Condition>()
-            condition.add(ENVIRONMENT_UID.eq(cgsId))
-            status?.let {
-                condition.add(STATUS.eq(status.ordinal))
-            }
-            return dslContext.selectFrom(this)
-                .where(condition)
-                .fetchAny()
-        }
-    }
-
-    /**
+    /** 仅op使用
      * 获取cgs的机型和区域列表
      */
     fun getCgsConfig(
