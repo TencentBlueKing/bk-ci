@@ -39,7 +39,6 @@ import com.tencent.devops.common.web.task.AccessLogCleanupTask
 import io.micrometer.core.instrument.binder.jersey.server.JerseyTagsProvider
 import io.undertow.UndertowOptions
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder

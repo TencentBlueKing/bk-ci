@@ -49,11 +49,12 @@ class ExternalScmResourceImpl @Autowired constructor(
 
     @Value("\${scm.external.tGit.hookSecret:}")
     private val tGitWebhookSecret: String = ""
+
     @Value("\${scm.external.tGit.enableHookSecret}")
     private val enableTGitWebhookSecret: Boolean = false
 
     override fun webHookCodeSvnCommit(event: String) =
-            Result(CodeWebhookEventDispatcher.dispatchEvent(streamBridge, SvnWebhookEvent(requestContent = event)))
+        Result(CodeWebhookEventDispatcher.dispatchEvent(streamBridge, SvnWebhookEvent(requestContent = event)))
 
     override fun webHookCodeGitCommit(
         event: String,
@@ -75,7 +76,8 @@ class ExternalScmResourceImpl @Autowired constructor(
                     secret = secret
                 )
             )
-        )}
+        )
+    }
 
     override fun webHookGitlabCommit(event: String) =
         Result(CodeWebhookEventDispatcher.dispatchEvent(streamBridge, GitlabWebhookEvent(requestContent = event)))

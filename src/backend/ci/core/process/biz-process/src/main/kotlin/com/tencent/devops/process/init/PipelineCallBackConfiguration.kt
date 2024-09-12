@@ -28,21 +28,18 @@
 package com.tencent.devops.process.init
 
 import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineStreamEnabledListener
 import com.tencent.devops.process.engine.listener.run.callback.PipelineBuildCallBackListener
 import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import java.time.Duration
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.time.Duration
 
 /**
  * 流水线回调扩展配置

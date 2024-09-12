@@ -37,14 +37,14 @@ class PipelineYamlMQConfig @Autowired constructor(
     private val pipelineYamlTriggerListener: PipelineYamlTriggerListener
 ) {
     @EventConsumer
-    fun pipelineYamlEnableConsumer(
-    ) = ScsConsumerBuilder.build<PipelineYamlEnableEvent> { pipelineYamlTriggerListener.execute(it) }
+    fun pipelineYamlEnableConsumer() =
+        ScsConsumerBuilder.build<PipelineYamlEnableEvent> { pipelineYamlTriggerListener.execute(it) }
 
     @EventConsumer
-    fun pipelineYamlDisableConsumer(
-    ) = ScsConsumerBuilder.build<PipelineYamlDisableEvent> { pipelineYamlTriggerListener.execute(it) }
+    fun pipelineYamlDisableConsumer() =
+        ScsConsumerBuilder.build<PipelineYamlDisableEvent> { pipelineYamlTriggerListener.execute(it) }
 
     @EventConsumer
-    fun pipelineYamlTriggerConsumer(
-    ) = ScsConsumerBuilder.build<PipelineYamlTriggerEvent> { pipelineYamlTriggerListener.execute(it) }
+    fun pipelineYamlTriggerConsumer() =
+        ScsConsumerBuilder.build<PipelineYamlTriggerEvent> { pipelineYamlTriggerListener.execute(it) }
 }

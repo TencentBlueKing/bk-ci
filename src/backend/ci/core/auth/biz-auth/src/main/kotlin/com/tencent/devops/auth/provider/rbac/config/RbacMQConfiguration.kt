@@ -71,7 +71,6 @@ class RbacMQConfiguration {
         @Autowired syncGroupAndMemberListener: SyncGroupAndMemberListener
     ) = ScsConsumerBuilder.build<ProjectEnableStatusBroadCastEvent> { syncGroupAndMemberListener.execute(it) }
 
-
     @Bean
     fun authItsmCallbackListener(
         client: Client,
