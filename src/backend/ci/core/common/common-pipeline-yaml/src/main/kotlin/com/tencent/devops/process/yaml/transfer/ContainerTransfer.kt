@@ -177,6 +177,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
         steps: List<PreStep>?
     ): PreJob {
         return PreJob(
+            enable = job.containerEnabled().nullIfDefault(true),
             name = job.name,
             runsOn = RunsOn(
                 selfHosted = null,
@@ -220,6 +221,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
         steps: List<PreStep>?
     ): PreJob {
         return PreJob(
+            enable = job.containerEnabled().nullIfDefault(true),
             name = job.name,
             runsOn = dispatchTransfer.makeRunsOn(job)?.fix(
                 jobId = job.jobId.toString(),
