@@ -53,7 +53,7 @@ class PipelineBuildMaterialService @Autowired constructor(
         // 如果找不到构建历史或重试时，不做原材料写入
         logger.info("save build material|buildId=$buildId|taskId=$taskId|${pipelineBuildMaterials.size}")
         val material = pipelineBuildHistoryRecord.material
-        // 重试操作，如果源材料包含空TaskId，则不保存，否则会出现重复数据
+        // 重试场景下，只要有空taskId，就直接返回
         val containsEmptyTaskId = material?.find { it.taskId.isNullOrBlank() } != null || taskId.isNullOrBlank()
         if (pipelineBuildHistoryRecord.executeCount?.let { it > 1 } == true && containsEmptyTaskId) {
             logger.info("skip save build material")
@@ -62,14 +62,8 @@ class PipelineBuildMaterialService @Autowired constructor(
         val existTaskIds = material?.mapNotNull { it.taskId } ?: listOf()
         if (!material.isNullOrEmpty()) {
             materialList.addAll(material)
-            // 不包含空taskId，则需要过滤掉空taskId
-            if (!containsEmptyTaskId) {
-                pipelineBuildMaterials.forEach {
-                    if (!existTaskIds.contains(taskId)) {
-                        materialList.add(it.copy(taskId = taskId))
-                    }
-                }
-            } else {
+            // 不包含空taskId，没有task
+            if ((!containsEmptyTaskId && !existTaskIds.contains(taskId)) || containsEmptyTaskId) {
                 materialList.addAll(pipelineBuildMaterials.map { it.copy(taskId = taskId) })
             }
         } else {
