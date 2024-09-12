@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.devcloud.config
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.dispatch.devcloud.listener.DevCloudBuildListener
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownDemoteEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent

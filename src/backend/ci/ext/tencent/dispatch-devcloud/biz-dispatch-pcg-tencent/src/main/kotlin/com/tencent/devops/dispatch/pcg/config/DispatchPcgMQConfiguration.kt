@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.pcg.config
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.dispatch.pcg.listener.PCGBuildListener
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownDemoteEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent

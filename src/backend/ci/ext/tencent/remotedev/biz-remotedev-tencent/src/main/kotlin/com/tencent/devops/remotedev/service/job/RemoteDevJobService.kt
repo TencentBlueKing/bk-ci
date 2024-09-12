@@ -40,7 +40,6 @@ import com.tencent.devops.remotedev.service.PermissionService
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import org.jooq.DSLContext
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
