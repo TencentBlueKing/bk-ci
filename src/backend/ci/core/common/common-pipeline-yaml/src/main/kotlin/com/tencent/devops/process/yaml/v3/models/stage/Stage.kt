@@ -38,6 +38,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Stage(
+    val id: String? = null,
     var enable: Boolean? = null,
     val name: String?,
     val label: List<String> = emptyList(),

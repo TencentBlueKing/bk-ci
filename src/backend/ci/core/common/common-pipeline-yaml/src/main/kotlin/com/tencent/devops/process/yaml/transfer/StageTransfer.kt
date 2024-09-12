@@ -251,6 +251,7 @@ class StageTransfer @Autowired(required = false) constructor(
         val stageId = VMUtils.genStageId(stageIndex)
         return Stage(
             id = stageId,
+            stageIdForUser = stage.id,
             name = stage.name ?: if (finalStage) {
                 "Final"
             } else {
@@ -298,6 +299,7 @@ class StageTransfer @Autowired(required = false) constructor(
             }
         }
         return PreStage(
+            id = stage.stageIdForUser,
             enable = stage.stageEnabled().nullIfDefault(true),
             name = stage.name,
             label = maskYamlStageLabel(stage.tag).ifEmpty { null },

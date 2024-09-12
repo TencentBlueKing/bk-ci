@@ -525,6 +525,7 @@ object ScriptYmlUtils {
         preStageList.forEach {
             stageList.add(
                 Stage(
+                    id = it.id,
                     enable = it.enable,
                     name = it.name,
                     label = formatStageLabel(it.label),
