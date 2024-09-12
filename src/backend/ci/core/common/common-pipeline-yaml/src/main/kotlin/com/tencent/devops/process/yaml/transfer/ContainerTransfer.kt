@@ -375,6 +375,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
 
         return if (finalStage) {
             JobControlOption(
+                enable = jobEnable,
                 timeout = timeout,
                 timeoutVar = timeoutVar,
                 runCondition = when (job.ifField) {
