@@ -124,7 +124,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             if (element is ManualTriggerElement) {
                 triggerOn.value.manual = ManualRule(
                     name = element.name,
-                    enable = element.isElementEnable().nullIfDefault(true),
+                    enable = element.elementEnabled().nullIfDefault(true),
                     canElementSkip = element.canElementSkip.nullIfDefault(false),
                     useLatestParameters = element.useLatestParameters.nullIfDefault(false)
                 )
@@ -179,13 +179,13 @@ class ElementTransfer @Autowired(required = false) constructor(
                         repoName = repoName,
                         branches = element.branches,
                         always = (element.noScm != true).nullIfDefault(false),
-                        enable = element.isElementEnable().nullIfDefault(true)
+                        enable = element.elementEnabled().nullIfDefault(true)
                     )
                 )
                 return@forEach
             }
             if (element is RemoteTriggerElement) {
-                triggerOn.value.remote = if (element.isElementEnable()) {
+                triggerOn.value.remote = if (element.elementEnabled()) {
                     RemoteRule(element.name, EnableType.TRUE.value)
                 } else {
                     RemoteRule(element.name, EnableType.FALSE.value)
@@ -562,7 +562,7 @@ class ElementTransfer @Autowired(required = false) constructor(
 
             else -> element.transferYaml(transferCache.getAtomDefaultValue(uses))
         }?.apply {
-            this.enable = element.isElementEnable().nullIfDefault(true)
+            this.enable = element.elementEnabled().nullIfDefault(true)
             this.timeoutMinutes =
                 (element.additionalOptions?.timeoutVar ?: element.additionalOptions?.timeout?.toString()).nullIfDefault(
                     VariableDefault.DEFAULT_TASK_TIME_OUT.toString()

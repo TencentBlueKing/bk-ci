@@ -263,4 +263,6 @@ object CommonMessageCode {
     const val BK_BUILD_ENV_TYPE = "BUILD_ENV_TYPE_" // 构建环境-
     const val BK_BUILD_ENV_TYPE_BUILDLESS = "BUILD_ENV_TYPE_BUILDLESS" // 无编译环境
     const val BK_BUILD_ENV_TYPE_BUILD_TRIGGERS = "BUILD_ENV_TYPE_BUILD_TRIGGER" // 构建触发
+    const val TRANSFER_ERROR_CHECK_AGENT_ID_FAILED = "transferErrorCheckAgentIdFailed" // 当前私有构建机数据有误或不存在
+    const val TRANSFER_ERROR_CHECK_ENV_ID_FAILED = "transferErrorCheckEnvIdFailed" // 当前私有构建机集群数据有误或不存在
 }

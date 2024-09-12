@@ -296,10 +296,7 @@
             goDraftDebugRecord () {
                 if (this.canDebug) {
                     this.$router.push({
-                        name: 'draftDebugRecord',
-                        params: {
-                            version: this.pipelineInfo?.version
-                        }
+                        name: 'draftDebugRecord'
                     })
                 }
             },

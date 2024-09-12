@@ -23,7 +23,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "0.28.0",
-    "bk-permission": "^0.0.30",
+    "bk-permission": "^0.1.0",
     "bkui-vue": "2.0.1-beta.42",
     "dayjs": "^1.11.2",
     "pinia": "^2.0.23",
@@ -31,6 +31,7 @@
     "vue-i18n": "^9.1.10",
     "vue-router": "^4.1.6",
     "lodash.throttle": "^4.1.1",
+    "@blueking/date-picker": "2.0.0-beta.26",
     "@icon-cool/bk-icon-bk-biz-components": "0.0.4"
   },
   "devDependencies": {

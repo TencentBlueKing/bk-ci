@@ -47,7 +47,7 @@ class AgentReuseMutexTest {
                 "job_id_dep_7" to initReuseEnv("job_env_1")
             )
         )
-        val tree = AgentReuseMutexTree(mutableListOf())
+        val tree = AgentReuseMutexTree(1, mutableListOf())
         stages.forEachIndexed { index, stage ->
             stage.forEach { (jobId, dsp) ->
                 tree.addNode(
@@ -184,7 +184,7 @@ class AgentReuseMutexTest {
 
     @Test
     fun checkDepTypeError() {
-        val tree = AgentReuseMutexTree(mutableListOf())
+        val tree = AgentReuseMutexTree(1, mutableListOf())
         val stages = mutableListOf<Map<String, ThirdPartyAgentDispatch>>()
         stages.add(
             mapOf(
@@ -229,7 +229,7 @@ class AgentReuseMutexTest {
 
     @Test
     fun checkDepCycleError() {
-        val tree = AgentReuseMutexTree(mutableListOf())
+        val tree = AgentReuseMutexTree(1, mutableListOf())
         val stages = mutableListOf<Map<String, ThirdPartyAgentDispatch>>()
         stages.add(
             mapOf(
