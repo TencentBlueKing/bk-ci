@@ -67,7 +67,8 @@ class PipelineBuildStageDao {
                 EXECUTE_COUNT,
                 CONDITIONS,
                 CHECK_IN,
-                CHECK_OUT
+                CHECK_OUT,
+                STAGE_ID_FOR_USER
             )
                 .values(
                     buildStage.projectId,
@@ -82,7 +83,8 @@ class PipelineBuildStageDao {
                     buildStage.executeCount,
                     buildStage.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) },
                     buildStage.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) },
-                    buildStage.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) }
+                    buildStage.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                    buildStage.stageIdForUser
                 )
                 .execute()
         }
@@ -105,7 +107,8 @@ class PipelineBuildStageDao {
                 EXECUTE_COUNT,
                 CONDITIONS,
                 CHECK_IN,
-                CHECK_OUT
+                CHECK_OUT,
+                STAGE_ID_FOR_USER
             ).also { insert ->
                 stageList.forEach {
                     insert.values(
@@ -121,7 +124,8 @@ class PipelineBuildStageDao {
                         it.executeCount,
                         it.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) },
                         it.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) },
-                        it.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) }
+                        it.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                        it.stageIdForUser
                     )
                 }
             }.onDuplicateKeyUpdate()
@@ -148,6 +152,7 @@ class PipelineBuildStageDao {
                     .set(CONDITIONS, it.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) })
                     .set(CHECK_IN, it.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) })
                     .set(CHECK_OUT, it.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                    .set(STAGE_ID_FOR_USER, it.stageIdForUser)
                     .where(BUILD_ID.eq(it.buildId).and(STAGE_ID.eq(it.stageId)).and(PROJECT_ID.eq(it.projectId)))
                     .execute()
             }
