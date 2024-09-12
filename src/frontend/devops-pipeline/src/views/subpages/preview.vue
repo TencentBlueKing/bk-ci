@@ -326,7 +326,7 @@
                     }
                     this.paramList = startupInfo.properties.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
-                        isChanged: p.defaultValue !== p.value,
+                        isChanged: p.defaultValue !== p.value || p.defaultBranch !== p.branch,
                         readOnly: false,
                         label: `${p.id}${p.name ? `(${p.name})` : ''}`
                     }))

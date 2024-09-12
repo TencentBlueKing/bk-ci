@@ -15,6 +15,8 @@
         :search-url="searchUrl"
         :replace-key="replaceKey"
         :data-path="dataPath"
+        :setting-key="paramId"
+        :display-key="paramName"
     >
         <template v-if="hasAddItem">
             <div class="bk-selector-create-item">
