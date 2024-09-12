@@ -51,7 +51,50 @@
                     </div>
                 </bk-radio-group>
             </bk-form-item>
-            <div class="single-lock-sub-form" v-if="isSingleLock">
+            <div
+                v-if="isMultipleLock"
+                class="single-lock-sub-form"
+                :key="pipelineSetting.runLockType"
+            >
+                <bk-form-item
+                    :required="isMultipleLock"
+                    :label="$t('settings.concurrentMaxConcurrency')"
+                    error-display-type="normal"
+                    property="maxConRunningQueueSize"
+                >
+                    <bk-input
+                        type="number"
+                        :disabled="!editable"
+                        :placeholder="$t('settings.itemPlaceholder')"
+                        v-model="pipelineSetting.maxConRunningQueueSize"
+                        @change="val => handleBaseInfoChange('maxConRunningQueueSize', val)"
+                    />
+                </bk-form-item>
+
+                <bk-form-item
+                    :required="isMultipleLock"
+                    :label="$t('settings.concurrentTimeout')"
+                    error-display-type="normal"
+                    property="waitQueueTimeMinute"
+                >
+                    <bk-input
+                        type="number"
+                        :disabled="!editable"
+                        :placeholder="$t('settings.itemPlaceholder')"
+                        v-model="pipelineSetting.waitQueueTimeMinute"
+                        @change="val => handleBaseInfoChange('waitQueueTimeMinute', val)"
+                    >
+                        <template slot="append">
+                            <span class="pipeline-setting-unit">{{$t('settings.minutes')}}</span>
+                        </template>
+                    </bk-input>
+                </bk-form-item>
+            </div>
+            <div
+                v-if="isSingleLock"
+                class="single-lock-sub-form"
+                :key="isSingleLock"
+            >
                 <bk-form-item
                     :required="isSingleLock"
                     property="concurrencyGroup"
@@ -159,6 +202,9 @@
             isSingleLock () {
                 return [this.runTypeMap.GROUP, this.runTypeMap.SINGLE].includes(this.pipelineSetting?.runLockType)
             },
+            isMultipleLock () {
+                return [this.runTypeMap.MULTIPLE].includes(this.pipelineSetting?.runLockType)
+            },
             formRule () {
                 const requiredRule = {
                     required: this.isSingleLock,
@@ -185,9 +231,25 @@
                         {
                             validator: (val) => {
                                 const intVal = parseInt(val, 10)
-                                return !this.isSingleLock || (intVal <= 1440 && intVal >= 1)
+                                if (this.isSingleLock || this.isMultipleLock) {
+                                    return intVal <= 1440 && intVal >= 1
+                                }
+                                return true
                             },
-                            message: `${this.$t('settings.lagestTime')}${this.$t('numberRange', [1, 1440])}`,
+                            message: `${this.isSingleLock
+                                ? this.$t('settings.lagestTime')
+                                : this.$t('settings.concurrentTimeout')
+                            }${this.$t('numberRange', [1, 1440])}`,
+                            trigger: 'blur'
+                        }
+                    ],
+                    maxConRunningQueueSize: [
+                        requiredRule,
+                        {
+                            validator: (val) => {
+                                return /^(?:[1-9]|[1-9][0-9]|1[0-9]{2}|200)$/.test(val)
+                            },
+                            message: this.$t('settings.maxConRunningQueueSizeTips'),
                             trigger: 'blur'
                         }
                     ]

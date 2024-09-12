@@ -370,7 +370,10 @@
     "mdLink": "markdown链接",
     "conCopySuc": "内容复制成功",
     "additionDesc": "其他描述",
-    "voice": "语音"
+    "voice": "语音",
+    "concurrentMaxConcurrency": "最大可并发数",
+    "concurrentTimeout": "超限时排队，排队超时时间",
+    "maxConRunningQueueSizeTips": "最大可并发数范围在1-200之间"
   },
   "template": {
     "addTemplate": "新建模板",

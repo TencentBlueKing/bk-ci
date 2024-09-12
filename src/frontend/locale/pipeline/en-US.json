@@ -373,7 +373,10 @@
     "mdLink": "Markdown Link",
     "conCopySuc": "Copied Succeed",
     "additionDesc": "Description",
-    "voice": "Voice"
+    "voice": "Voice",
+    "concurrentMaxConcurrency": "Maximum Concurrency",
+    "concurrentTimeout": "Queue Timeout for Exceeding Limit",
+    "maxConRunningQueueSizeTips": "The range of maximum concurrency is between 1 and 200-200之间"
   },
   "template": {
     "addTemplate": "New Template",
