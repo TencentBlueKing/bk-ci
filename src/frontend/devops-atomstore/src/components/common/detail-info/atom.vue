@@ -148,7 +148,6 @@
                     />
                     <span class="approve-msg">{{ isPublic ? $t('store.源码') : $t('store.未开源') }}</span>
                 </h5>
-                <span class="gap"></span>
                 <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
                     <h5
                         :title="approveTip"
