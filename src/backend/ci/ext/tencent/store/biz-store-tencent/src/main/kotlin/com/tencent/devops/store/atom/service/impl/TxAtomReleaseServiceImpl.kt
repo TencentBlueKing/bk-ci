@@ -1007,13 +1007,23 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
 
         if (null != buildIdObj) {
             storePipelineBuildRelDao.add(context, atomId, pipelineId, buildIdObj.id)
-            storePipelineRelDao.add(
-                dslContext = context,
-                storeCode = atomCode,
-                storeType = StoreTypeEnum.ATOM,
-                pipelineId = pipelineId,
-                projectCode = storeInnerPipelineConfig.innerPipelineProject
-            )
+            if (atomPipelineRelRecord == null) {
+                storePipelineRelDao.add(
+                    dslContext = context,
+                    storeCode = atomCode,
+                    storeType = StoreTypeEnum.ATOM,
+                    pipelineId = pipelineId,
+                    projectCode = storeInnerPipelineConfig.innerPipelineProject
+                )
+            } else {
+                storePipelineRelDao.updateStorePipelineProject(
+                    dslContext = context,
+                    storeCode = atomCode,
+                    storeType = StoreTypeEnum.ATOM,
+                    projectCode = innerPipelineProject,
+                    pipelineId = pipelineId
+                )
+            }
             marketAtomDao.setAtomStatusById(
                 dslContext = context,
                 atomId = atomId,
