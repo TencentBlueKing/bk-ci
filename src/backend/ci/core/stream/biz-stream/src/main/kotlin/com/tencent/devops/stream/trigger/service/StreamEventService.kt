@@ -38,7 +38,6 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.message.UserMessageType
 import com.tencent.devops.stream.service.StreamGitProjectInfoCache
-import com.tencent.devops.stream.service.StreamWebsocketService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.toGitState
@@ -60,7 +59,6 @@ class StreamEventService @Autowired constructor(
     private val gitCheckService: GitCheckService,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val websocketService: StreamWebsocketService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
     private val userMessageConsumer: UserMessageConsumer

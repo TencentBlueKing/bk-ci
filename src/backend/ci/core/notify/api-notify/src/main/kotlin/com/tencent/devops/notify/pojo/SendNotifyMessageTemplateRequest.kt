@@ -46,6 +46,8 @@ data class SendNotifyMessageTemplateRequest(
     val bcc: MutableSet<String>? = null,
     @get:Schema(title = "是否以markdown格式发送通知内容, 目前仅企业微信群支持markdown", required = false)
     val markdownContent: Boolean? = false,
+    @get:Schema(title = "是否@receivers, 仅企业微信群支持, 当然如果markdownContent=true时无法支持", required = false)
+    val mentionReceivers: Boolean? = false,
     @get:Schema(title = "回调内容", required = false)
     val callbackData: Map<String, String>? = null
 )

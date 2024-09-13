@@ -257,6 +257,12 @@
             },
             "description" : {
               "type" : "string"
+            },
+            "chat-id" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
             }
           }
         },
@@ -387,6 +393,10 @@
                             "type" : "string"
                           }
                         }
+                      },
+                      "image-pull-policy" : {
+                        "type" : "string",
+                        "pattern" : "(\\balways\\b|\\bif-not-present\\b)"
                       }
                     }
                   },
@@ -671,10 +681,7 @@
         }, {
           "type" : "boolean"
         }, {
-          "type" : "array",
-          "items" : {
-            "type" : "string"
-          }
+          "type" : "array"
         } ]
       }
     },

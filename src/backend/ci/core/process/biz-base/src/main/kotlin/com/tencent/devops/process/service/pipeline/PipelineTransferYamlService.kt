@@ -158,6 +158,7 @@ class PipelineTransferYamlService @Autowired constructor(
 
                 TransferActionType.FULL_YAML2MODEL -> {
                     watcher.start("step_1|FULL_YAML2MODEL start")
+                    PipelineTransferAspectLoader.checkLockResourceJob(aspects)
                     yamlSchemaCheck.check(data.oldYaml)
                     val pipelineInfo = pipelineId?.let {
                         pipelineInfoDao.convert(
