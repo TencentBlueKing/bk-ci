@@ -264,19 +264,19 @@ class PipelineStageService @Autowired constructor(
         debug: Boolean
     ): Boolean {
         with(buildStage) {
-            val success = checkIn?.reviewGroup(
+            val startGroup = checkIn?.reviewGroup(
                 userId = userId, groupId = reviewRequest?.id,
                 action = ManualReviewAction.PROCESS, params = reviewRequest?.reviewParams,
                 suggest = reviewRequest?.suggest
             )
-            if (success == null) return false
+            if (startGroup == null) return false
             stageBuildRecordService.stageReview(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount,
                 controlOption = controlOption!!,
                 checkIn = checkIn, checkOut = checkOut
             )
-            val index = checkIn?.reviewGroups?.indexOf(success)
+            val index = checkIn?.reviewGroups?.indexOf(startGroup)
             val stageIdForUser = stageIdForUser ?: VMUtils.genStageIdForUser(seq)
             buildVariableService.batchUpdateVariable(
                 projectId = projectId,
