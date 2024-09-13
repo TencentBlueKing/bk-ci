@@ -2,7 +2,10 @@
     <div class="node-list-wrapper">
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.node') }}</div>
-            <div slot="right" v-if="nodeList.length > 0">
+            <div
+                slot="right"
+                v-if="nodeList.length > 0"
+            >
                 <bk-button
                     v-perm="{
                         permissionData: {
@@ -13,37 +16,61 @@
                         }
                     }"
                     theme="primary"
-                    @click="toImportNode('construct')">
+                    @click="toImportNode('construct')"
+                >
                     {{ $t('environment.nodeInfo.importNode') }}
                 </bk-button>
             </div>
         </content-header>
-        <section class="sub-view-port" v-bkloading="{
-            isLoading: loading.isLoading,
-            title: loading.title
-        }">
-            <bk-table v-if="showContent && nodeList.length"
+        <section
+            class="sub-view-port"
+            v-bkloading="{
+                isLoading: loading.isLoading,
+                title: loading.title
+            }"
+        >
+            <bk-table
+                v-if="showContent && nodeList.length"
                 size="medium"
                 class="node-table-wrapper"
                 row-class-name="node-item-row"
-                :data="nodeList">
-                <bk-table-column :label="$t('environment.nodeInfo.displayName')" prop="displayName">
+                :data="nodeList"
+            >
+                <bk-table-column
+                    :label="$t('environment.nodeInfo.displayName')"
+                    prop="displayName"
+                >
                     <template slot-scope="props">
-                        <div class="bk-form-content node-item-content" v-if="props.row.isEnableEdit">
+                        <div
+                            class="bk-form-content node-item-content"
+                            v-if="props.row.isEnableEdit"
+                        >
                             <div class="edit-content">
-                                <input type="text" class="bk-form-input env-name-input"
+                                <input
+                                    type="text"
+                                    class="bk-form-input env-name-input"
                                     maxlength="30"
                                     name="nodeName"
                                     v-validate="'required'"
                                     v-model="curEditNodeDisplayName"
-                                    :class="{ 'is-danger': errors.has('nodeName') }">
+                                    :class="{ 'is-danger': errors.has('nodeName') }"
+                                >
                                 <div class="handler-btn">
-                                    <span class="edit-base save" @click="saveEdit(props.row)">{{ $t('environment.save') }}</span>
-                                    <span class="edit-base cancel" @click="cancelEdit(props.row.nodeHashId)">{{ $t('environment.cancel') }}</span>
+                                    <span
+                                        class="edit-base save"
+                                        @click="saveEdit(props.row)"
+                                    >{{ $t('environment.save') }}</span>
+                                    <span
+                                        class="edit-base cancel"
+                                        @click="cancelEdit(props.row.nodeHashId)"
+                                    >{{ $t('environment.cancel') }}</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="table-node-item node-item-id" v-else>
+                        <div
+                            class="table-node-item node-item-id"
+                            v-else
+                        >
                             <span
                                 v-perm="canShowDetail(props.row) ? {
                                     hasPermission: props.row.canView,
@@ -74,22 +101,37 @@
                                     }
                                 }"
                             >
-                                <i class="devops-icon icon-edit" v-if="!isEditNodeStatus" @click="editNodeName(props.row)"></i>
+                                <i
+                                    class="devops-icon icon-edit"
+                                    v-if="!isEditNodeStatus"
+                                    @click="editNodeName(props.row)"
+                                ></i>
                             </span>
                         </div>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="`${$t('environment.nodeInfo.intranet')} Ip`" prop="ip" min-width="80">
+                <bk-table-column
+                    :label="`${$t('environment.nodeInfo.intranet')} Ip`"
+                    prop="ip"
+                    min-width="80"
+                >
                     <template slot-scope="props">
                         {{ props.row.ip || '-' }}
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('environment.nodeInfo.os')" prop="osName">
+                <bk-table-column
+                    :label="$t('environment.nodeInfo.os')"
+                    prop="osName"
+                >
                     <template slot-scope="props">
                         {{ props.row.osName || '-' }}
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`" prop="createdUser" min-width="120">
+                <bk-table-column
+                    :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`"
+                    prop="createdUser"
+                    min-width="120"
+                >
                     <template slot-scope="props">
                         <div>
                             <span class="node-name">{{ $t('environment.nodeTypeMap')[props.row.nodeType] || '-' }}</span>
@@ -97,21 +139,33 @@
                         </div>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('environment.status')" prop="nodeStatus">
+                <bk-table-column
+                    :label="$t('environment.status')"
+                    prop="nodeStatus"
+                >
                     <template slot-scope="props">
-                        <div class="table-node-item node-item-status"
-                            v-if="props.row.nodeStatus === 'BUILDING_IMAGE'">
+                        <div
+                            class="table-node-item node-item-status"
+                            v-if="props.row.nodeStatus === 'BUILDING_IMAGE'"
+                        >
                             <span class="node-status-icon normal-stutus-icon"></span>
                             <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
                         </div>
                         <div class="table-node-item node-item-status">
                             <!-- 状态icon -->
-                            <span class="node-status-icon normal-stutus-icon" v-if="successStatus.includes(props.row.nodeStatus)"></span>
-                            <span class="node-status-icon abnormal-stutus-icon"
-                                v-if="failStatus.includes(props.row.nodeStatus)">
+                            <span
+                                class="node-status-icon normal-stutus-icon"
+                                v-if="successStatus.includes(props.row.nodeStatus)"
+                            ></span>
+                            <span
+                                class="node-status-icon abnormal-stutus-icon"
+                                v-if="failStatus.includes(props.row.nodeStatus)"
+                            >
                             </span>
-                            <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                                v-if="runningStatus.includes(props.row.nodeStatus)">
+                            <div
+                                class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                                v-if="runningStatus.includes(props.row.nodeStatus)"
+                            >
                                 <div class="rotate rotate1"></div>
                                 <div class="rotate rotate2"></div>
                                 <div class="rotate rotate3"></div>
@@ -122,30 +176,49 @@
                                 <div class="rotate rotate8"></div>
                             </div>
                             <!-- 状态值 -->
-                            <span class="install-agent"
+                            <span
+                                class="install-agent"
                                 v-if="props.row.nodeStatus === 'RUNNING'"
-                                @click="installAgent(props.row)">
+                                @click="installAgent(props.row)"
+                            >
                                 {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
                             </span>
-                            <span class="node-status" v-else>{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
-                            <div class="install-agent"
+                            <span
+                                class="node-status"
+                                v-else
+                            >{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
+                            <div
+                                class="install-agent"
                                 v-if="['THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
                                 @click="installAgent(props.row)"
-                            >{{ `（${$t('environment.install')}Agent）` }}</div>
+                            >
+                                {{ `（${$t('environment.install')}Agent）` }}
+                            </div>
                         </div>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="`${$t('environment.create')}/${$t('environment.nodeInfo.importTime')}`" prop="createTime" min-width="80">
+                <bk-table-column
+                    :label="`${$t('environment.create')}/${$t('environment.nodeInfo.importTime')}`"
+                    prop="createTime"
+                    min-width="80"
+                >
                     <template slot-scope="props">
                         {{ props.row.createTime || '-' }}
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('environment.nodeInfo.lastModifyTime')" prop="lastModifyTime" min-width="80">
+                <bk-table-column
+                    :label="$t('environment.nodeInfo.lastModifyTime')"
+                    prop="lastModifyTime"
+                    min-width="80"
+                >
                     <template slot-scope="props">
                         {{ props.row.lastModifyTime || '-' }}
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('environment.operation')" width="160">
+                <bk-table-column
+                    :label="$t('environment.operation')"
+                    width="160"
+                >
                     <template slot-scope="props">
                         <template v-if="props.row.canUse">
                             <div class="table-node-item node-item-handler">
@@ -182,12 +255,14 @@
                 </bk-table-column>
             </bk-table>
 
-            <empty-node v-if="showContent && !nodeList.length"
+            <empty-node
+                v-if="showContent && !nodeList.length"
                 :to-import-node="toImportNode"
                 :empty-info="emptyInfo"
             ></empty-node>
         </section>
-        <third-construct :construct-tool-conf="constructToolConf"
+        <third-construct
+            :construct-tool-conf="constructToolConf"
             :construct-import-form="constructImportForm"
             :connect-node-detail="connectNodeDetail"
             :gateway-list="gatewayList"

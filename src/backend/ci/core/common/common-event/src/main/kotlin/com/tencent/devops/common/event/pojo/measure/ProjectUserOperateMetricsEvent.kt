@@ -32,7 +32,7 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT, routeKey = MQ.ROUTE_PROJECT_USER_DAILY_OPERATE_METRICS)
+@Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_OPERATE, routeKey = MQ.ROUTE_PROJECT_USER_DAILY_OPERATE_METRICS)
 data class ProjectUserOperateMetricsEvent(
     @get:Schema(title = "项目用户操作度量数据")
     val userOperateCounterData: UserOperateCounterData

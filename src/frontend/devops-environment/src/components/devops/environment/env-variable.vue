@@ -3,28 +3,40 @@
         <div class="Key-value-nomal">
             <ul>
                 <template v-if="renderList.length">
-                    <li class="param-item" v-for="(param, index) in renderList" :key="index">
-                        <input class="bk-form-input"
+                    <li
+                        class="param-item"
+                        v-for="(param, index) in renderList"
+                        :key="index"
+                    >
+                        <input
+                            class="bk-form-input"
                             :name="`param-${index}-key`"
                             :disabled="!editable"
                             v-validate="'required'"
                             v-model="param.name"
-                            :class="{ 'is-danger': errors.has(`param-${index}-key`) }" />
+                            :class="{ 'is-danger': errors.has(`param-${index}-key`) }"
+                        />
                         <i class="equal-sign">=</i>
-                        <input class="bk-form-input"
+                        <input
+                            class="bk-form-input"
                             :name="`param-${index}-value`"
                             :disabled="!editable"
                             :type="param.secure ? 'password' : 'text'"
                             v-validate="'required'"
                             v-model="param.value"
-                            :class="{ 'editable-input': editable, 'is-danger': errors.has(`param-${index}-value`) }" />
-                        <i class="devops-icon text-type-icon" v-if="editable"
+                            :class="{ 'editable-input': editable, 'is-danger': errors.has(`param-${index}-value`) }"
+                        />
+                        <i
+                            class="devops-icon text-type-icon"
+                            v-if="editable"
                             :class="param.secure ? 'icon-eye' : 'icon-hide'"
                             @click="toggleInputType(index)"
                         ></i>
                         <section v-if="editable">
-                            <i class="devops-icon icon-minus-circle"
-                                @click="reduceHandle(index, 'reduce')"></i>
+                            <i
+                                class="devops-icon icon-minus-circle"
+                                @click="reduceHandle(index, 'reduce')"
+                            ></i>
                         </section>
                     </li>
                 </template>
@@ -41,15 +53,38 @@
                     }
                 }"
             >
-                <p class="add-variable" :class="{ 'is-disabled': !nodeDetails.canEdit }"
-                    v-if="editable || !renderList.length" @click="addHandle">
+                <p
+                    class="add-variable"
+                    :class="{ 'is-disabled': !nodeDetails.canEdit }"
+                    v-if="editable || !renderList.length"
+                    @click="addHandle"
+                >
                     <i class="devops-icon icon-plus-circle"></i>{{ $t('environment.envInfo.createVariable') }}
                 </p>
             </span>
             <div class="footer-handle">
-                <bk-button theme="primary" :disabled="!nodeDetails.canEdit" v-if="!editable && renderList.length" @click="edithandle">{{ $t('environment.edit') }}</bk-button>
-                <bk-button theme="primary" v-if="editable" @click="save">{{ $t('environment.save') }}</bk-button>
-                <bk-button theme="defalut" v-if="editable" @click="editable = false">{{ $t('environment.cancel') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    :disabled="!nodeDetails.canEdit"
+                    v-if="!editable && renderList.length"
+                    @click="edithandle"
+                >
+                    {{ $t('environment.edit') }}
+                </bk-button>
+                <bk-button
+                    theme="primary"
+                    v-if="editable"
+                    @click="save"
+                >
+                    {{ $t('environment.save') }}
+                </bk-button>
+                <bk-button
+                    theme="defalut"
+                    v-if="editable"
+                    @click="editable = false"
+                >
+                    {{ $t('environment.cancel') }}
+                </bk-button>
             </div>
         </div>
     </div>
