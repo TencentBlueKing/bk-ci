@@ -859,6 +859,180 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return true
     }
 
+    @SuppressWarnings("ComplexMethod", "LongMethod")
+    private fun runPipeline(
+        context: DSLContext,
+        atomId: String,
+        userId: String,
+        branch: String? = null,
+        validOsNameFlag: Boolean? = null,
+        validOsArchFlag: Boolean? = null
+    ): Boolean {
+        val atomRecord = marketAtomDao.getAtomRecordById(context, atomId) ?: return false
+        val repositoryHashId = atomRecord.repositoryHashId
+        if (repositoryHashId.isNullOrBlank()) {
+            return false
+        }
+        val atomCode = atomRecord.atomCode
+        val atomPipelineRelRecord = storePipelineRelDao.getStorePipelineRel(context, atomCode, StoreTypeEnum.ATOM)
+        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = context,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM.type.toByte()
+        )!! // 查找新增插件时关联的项目
+        // 获取插件代码库最新提交记录
+        val getRepoRecentCommitInfoResult = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
+            userId = userId,
+            repoId = repositoryHashId,
+            sha = branch ?: MASTER,
+            tokenType = TokenTypeEnum.PRIVATE_KEY
+        )
+        logger.info("runPipeline  atomId:$atomId,getRepoRecentCommitInfoResult:$getRepoRecentCommitInfoResult")
+        if (getRepoRecentCommitInfoResult.isNotOk()) {
+            throw ErrorCodeException(
+                errorCode = getRepoRecentCommitInfoResult.status.toString(),
+                defaultMessage = getRepoRecentCommitInfoResult.message
+            )
+        }
+        val gitCommit = getRepoRecentCommitInfoResult.data!!
+        val commitId = gitCommit.id
+        val codeccFlag = txStoreCodeccService.getCodeccFlag(StoreTypeEnum.ATOM.name)
+        if (codeccFlag == true) {
+            handleCodeccTask(atomCode, atomId, commitId)
+        }
+        val buildInfo = marketAtomBuildInfoDao.getAtomBuildInfo(context, atomId)
+        logger.info("atom[$atomCode] buildInfo is:$buildInfo")
+        val language = buildInfo.value3()
+        // 获取打包所需的操作系统名称和操作系统cpu架构
+        val atomEnvRecords = marketAtomEnvInfoDao.getMarketAtomEnvInfosByAtomId(context, atomId)
+        val osNames = mutableSetOf<String>()
+        val osArchs = mutableSetOf<String>()
+        var runtimeVersion: String? = null
+        val validOsInfos = mutableSetOf<String>()
+        atomEnvRecords?.forEach { atomEnvRecord ->
+            if (runtimeVersion == null) {
+                runtimeVersion = atomEnvRecord.runtimeVersion
+            }
+            val osName = atomEnvRecord.osName
+            if (!osName.isNullOrBlank()) {
+                osNames.add(osName)
+            }
+            val osArch = atomEnvRecord.osArch
+            if (!osArch.isNullOrBlank()) {
+                osArchs.add(osArch)
+            }
+            validOsInfos.add("$osName-$osArch")
+        }
+        val invalidOsInfos = getInvalidOsInfos(osNames, osArchs, validOsInfos)
+        if (osNames.isEmpty()) {
+            osNames.add(OSType.LINUX.name.lowercase())
+        }
+        if (osArchs.isEmpty()) {
+            osArchs.add("amd64")
+        }
+        val startParams = mutableMapOf<String, String>() // 启动参数
+        startParams[KEY_ATOM_CODE] = atomCode
+        startParams[KEY_VERSION] = atomRecord.version
+        startParams[KEY_COMMIT_ID] = commitId
+        startParams[KEY_BRANCH] = branch ?: MASTER
+        startParams[KEY_OS_NAME] = JsonUtil.toJson(osNames)
+        startParams[KEY_OS_ARCH] = JsonUtil.toJson(osArchs)
+        startParams[KEY_INVALID_OS_INFO] = JsonUtil.toJson(invalidOsInfos)
+        runtimeVersion?.let { startParams[KEY_RUNTIME_VERSION] = it }
+        validOsNameFlag?.let {
+            startParams[KEY_VALID_OS_NAME_FLAG] = it.toString()
+        }
+        validOsArchFlag?.let {
+            startParams[KEY_VALID_OS_ARCH_FLAG] = it.toString()
+        }
+        val innerPipelineProject = storeInnerPipelineConfig.innerPipelineProject
+        val innerPipelineUser = storeInnerPipelineConfig.innerPipelineUser
+        val pipelineName = "am-$innerPipelineProject-$language"
+        var pipelineId = redisOperation.get(pipelineName)
+        if (!pipelineId.isNullOrBlank()) {
+            pipelineId = creatAtomPipeline(
+                context = context,
+                userId = innerPipelineUser,
+                projectCode = innerPipelineProject,
+                language = language
+            )
+        }
+        if (null != atomPipelineRelRecord) {
+            val projectCode: String
+            val userName: String
+            if (atomPipelineRelRecord.projectCode == innerPipelineUser) {
+                projectCode = innerPipelineProject
+                userName = innerPipelineProject
+            } else {
+                projectCode = atomPipelineRelRecord.projectCode
+                userName = atomPipelineRelRecord.creator
+            }
+            val buildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, atomId)
+            // 判断插件版本最近一次的构建是否完成
+            val buildResult = if (buildInfoRecord != null) {
+                client.get(ServiceBuildResource::class).getBuildStatusWithoutPermission(
+                    userId = userId,
+                    projectId = projectCode,
+                    pipelineId = buildInfoRecord.pipelineId,
+                    buildId = buildInfoRecord.buildId,
+                    channelCode = ChannelCode.AM
+                ).data
+            } else {
+                null
+            }
+            if (buildResult != null) {
+                val buildStatus = BuildStatus.parse(buildResult.status)
+                if (!buildStatus.isFinish()) {
+                    // 最近一次构建还未完全结束，给出错误提示
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
+                        params = arrayOf(atomRecord.name, atomRecord.version)
+                    )
+                }
+            }
+        }
+
+        // 触发执行流水线
+        val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
+            userId = innerPipelineUser,
+            projectId = innerPipelineProject,
+            pipelineId = pipelineId!!,
+            values = startParams,
+            channelCode = ChannelCode.AM,
+            startType = StartType.SERVICE
+        ).data
+        logger.info("the buildIdObj is:$buildIdObj")
+
+        if (null != buildIdObj) {
+            storePipelineBuildRelDao.add(context, atomId, pipelineId, buildIdObj.id)
+            storePipelineRelDao.add(
+                dslContext = context,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM,
+                pipelineId = pipelineId,
+                projectCode = storeInnerPipelineConfig.innerPipelineProject
+            )
+            marketAtomDao.setAtomStatusById(
+                dslContext = context,
+                atomId = atomId,
+                atomStatus = AtomStatusEnum.BUILDING.status.toByte(),
+                userId = userId,
+                msg = null
+            ) // 构建中
+        } else {
+            marketAtomDao.setAtomStatusById(
+                dslContext = context,
+                atomId = atomId,
+                atomStatus = AtomStatusEnum.BUILD_FAIL.status.toByte(),
+                userId = userId,
+                msg = null
+            ) // 构建失败
+        }
+        // 通过websocket推送状态变更消息
+        storeWebsocketService.sendWebsocketMessage(userId, atomId)
+        return true
+    }
+
     private fun getInvalidOsInfos(
         osNames: MutableSet<String>,
         osArchs: MutableSet<String>,
