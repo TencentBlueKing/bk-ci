@@ -2,7 +2,10 @@
     <div class="empty-node-wrapper">
         <p class="title">{{ emptyInfo.title }}</p>
         <p class="intro-prompt">{{ emptyInfo.desc }}</p>
-        <div class="create-node-row" v-if="isEnv">
+        <div
+            class="create-node-row"
+            v-if="isEnv"
+        >
             <bk-button
                 v-perm="{
                     permissionData: {
@@ -12,9 +15,17 @@
                         action: ENV_RESOURCE_ACTION.CREATE
                     }
                 }"
-                theme="primary" class="create-env-btn" @click="toCreateNode">{{ $t('environment.newPool') }}</bk-button>
+                theme="primary"
+                class="create-env-btn"
+                @click="toCreateNode"
+            >
+                {{ $t('environment.newPool') }}
+            </bk-button>
         </div>
-        <div class="create-node-row" v-else>
+        <div
+            class="create-node-row"
+            v-else
+        >
             <bk-button
                 v-perm="{
                     permissionData: {
@@ -24,7 +35,12 @@
                         action: NODE_RESOURCE_ACTION.CREATE
                     }
                 }"
-                theme="primary" class="import-node-btn" @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
+                theme="primary"
+                class="import-node-btn"
+                @click="toImportNode('construct')"
+            >
+                {{ $t('environment.nodeInfo.importNode') }}
+            </bk-button>
         </div>
     </div>
 </template>

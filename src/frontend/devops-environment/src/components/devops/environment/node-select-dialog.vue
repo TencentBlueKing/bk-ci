@@ -1,15 +1,19 @@
 <template>
-    <bk-dialog v-model="nodeSelectConf.isShow"
+    <bk-dialog
+        v-model="nodeSelectConf.isShow"
         :width="'900'"
         :ext-cls="'node-select-wrapper'"
-        :close-icon="false">
+        :close-icon="false"
+    >
         <div
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title
-            }">
+            }"
+        >
             <div class="node-list-header">
-                <div class="title">{{ $t('environment.nodeInfo.selectNodeTip') }}
+                <div class="title">
+                    {{ $t('environment.nodeInfo.selectNodeTip') }}
                     <span class="selected-node-prompt">
                         {{ $t('environment.nodeInfo.selectNodeTip') }}<span class="node-count"> {{ selectHandlercConf.curTotalCount }} </span>{{ $t('environment.nodes') }}
                     </span>
@@ -20,27 +24,55 @@
                 <div class="search-input-row">
                     <div class="biz-search-input">
                         <div class="biz-ip-searcher-wrapper">
-                            <div class="biz-searcher" @click="focusSearch" ref="bizSearcher">
-                                <ul class="search-key" ref="searchKey">
-                                    <li class="key-node" v-for="(entry, index) in searchKeyList" :key="index">
+                            <div
+                                class="biz-searcher"
+                                @click="focusSearch"
+                                ref="bizSearcher"
+                            >
+                                <ul
+                                    class="search-key"
+                                    ref="searchKey"
+                                >
+                                    <li
+                                        class="key-node"
+                                        v-for="(entry, index) in searchKeyList"
+                                        :key="index"
+                                    >
                                         <span>{{ entry }}</span>
-                                        <i class="devops-icon icon-close" @click="deleteKey(index)"></i>
+                                        <i
+                                            class="devops-icon icon-close"
+                                            @click="deleteKey(index)"
+                                        ></i>
                                     </li>
                                     <li class="input-item">
-                                        <input type="text" class="search-input" ref="searchInput"
+                                        <input
+                                            type="text"
+                                            class="search-input"
+                                            ref="searchInput"
                                             v-model="inputValue"
                                             :style="inputStyle"
                                             @blur="handleBlur"
                                             @paste="paste"
-                                            @keyup="keyupHandler">
+                                            @keyup="keyupHandler"
+                                        >
                                     </li>
                                 </ul>
                             </div>
                             <div class="actions">
-                                <i class="devops-icon icon-close" @click="deleteAllKey" v-if="searchKeyList.length"></i>
-                                <i class="devops-icon icon-search" @click="searchNode"></i>
+                                <i
+                                    class="devops-icon icon-close"
+                                    @click="deleteAllKey"
+                                    v-if="searchKeyList.length"
+                                ></i>
+                                <i
+                                    class="devops-icon icon-search"
+                                    @click="searchNode"
+                                ></i>
                             </div>
-                            <div class="ip-searcher-footer" v-if="isSearchFooter">
+                            <div
+                                class="ip-searcher-footer"
+                                v-if="isSearchFooter"
+                            >
                                 <p>{{ $t('environment.nodeInfo.searchNodePlaceholder') }}</p>
                             </div>
                         </div>
@@ -48,7 +80,10 @@
                 </div>
             </div>
             <div class="node-table">
-                <div class="node-table-message" v-if="!selectHandlercConf.searchEmpty && rowList.length">
+                <div
+                    class="node-table-message"
+                    v-if="!selectHandlercConf.searchEmpty && rowList.length"
+                >
                     <div class="table-node-head">
                         <bk-checkbox
                             :true-value="true"
@@ -66,7 +101,12 @@
                         </div>
                     </div>
                     <div class="table-node-body">
-                        <div class="table-node-row" v-for="(col, index) of rowList" :key="index" v-if="col.isDisplay">
+                        <div
+                            class="table-node-row"
+                            v-for="(col, index) of rowList"
+                            :key="index"
+                            v-if="col.isDisplay"
+                        >
                             <div class="table-node-item node-item-checkbox">
                                 <bk-checkbox
                                     :true-value="true"
@@ -78,22 +118,34 @@
                             <div class="table-node-item node-item-ip">
                                 <span class="node-ip">{{ col.ip }}</span>
                             </div>
-                            <div class="table-node-item node-item-name" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">
+                            <div
+                                class="table-node-item node-item-name"
+                                :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }"
+                            >
                                 <span class="node-name">{{ col.name }}</span>
                             </div>
                             <div class="table-node-item node-item-displayname">
                                 <span class="node-displayname">{{ col.displayName }}</span>
                             </div>
-                            <div class="table-node-item node-item-type" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">
+                            <div
+                                class="table-node-item node-item-type"
+                                :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }"
+                            >
                                 <div>
                                     <span class="node-name">{{ $t('environment.nodeTypeMap')[col.nodeType] }}</span>
                                     <span>({{ col.createdUser }})</span>
                                 </div>
                             </div>
                             <div class="table-node-item node-item-status">
-                                <span class="node-status" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">{{ $t('environment.nodeStatusMap')[col.nodeStatus] }}</span>
+                                <span
+                                    class="node-status"
+                                    :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }"
+                                >{{ $t('environment.nodeStatusMap')[col.nodeStatus] }}</span>
                             </div>
-                            <div class="table-node-item node-item-agstatus" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">
+                            <div
+                                class="table-node-item node-item-agstatus"
+                                :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }"
+                            >
                                 <span>{{ col.gateway }}</span>
                             </div>
                         </div>
@@ -110,8 +162,19 @@
         </div>
         <div slot="footer">
             <div class="footer-handler">
-                <bk-button theme="primary" @click="confirmFn" :disabled="nodeSelectConf.unselected">{{ nodeSelectConf.importText }}</bk-button>
-                <bk-button theme="default" @click="cancelFn">{{ $t('environment.cancel') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    @click="confirmFn"
+                    :disabled="nodeSelectConf.unselected"
+                >
+                    {{ nodeSelectConf.importText }}
+                </bk-button>
+                <bk-button
+                    theme="default"
+                    @click="cancelFn"
+                >
+                    {{ $t('environment.cancel') }}
+                </bk-button>
             </div>
         </div>
     </bk-dialog>

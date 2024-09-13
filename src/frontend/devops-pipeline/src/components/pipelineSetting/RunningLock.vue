@@ -1,6 +1,9 @@
 <template>
-    <div v-if="pipelineSetting" class="bkdevops-running-lock-setting-tab">
-        <div class="pipeline-setting-title">{{$t('settings.runLock')}}</div>
+    <div
+        v-if="pipelineSetting"
+        class="bkdevops-running-lock-setting-tab"
+    >
+        <div class="pipeline-setting-title">{{ $t('settings.runLock') }}</div>
         <bk-form
             :model="pipelineSetting"
             :rules="formRule"
@@ -8,12 +11,18 @@
             form-type="vertical"
             class="new-ui-form"
         >
-            <bk-form-item :is-error="errors.has('buildNumRule')" :error-msg="errors.first('buildNumRule')">
+            <bk-form-item
+                :is-error="errors.has('buildNumRule')"
+                :error-msg="errors.first('buildNumRule')"
+            >
                 <div class="layout-label">
                     <label class="ui-inner-label">
                         <span class="bk-label-text">{{ $t('settings.buildNumberFormat') }}</span>
                         <span @click="handleGoDocumentInfo">
-                            <i class="bk-icon icon-question-circle-shape" v-bk-tooltips="$t('buildNumRuleWarn')" />
+                            <i
+                                class="bk-icon icon-question-circle-shape"
+                                v-bk-tooltips="$t('buildNumRuleWarn')"
+                            />
                         </span>
                     </label>
                 </div>
@@ -26,19 +35,24 @@
                     v-validate.initial="{ buildNumRule: true }"
                     :handle-change="handleBaseInfoChange"
                 />
-                <p class="error-tips"
-                    v-if="errors.has('buildNumRule')">
+                <p
+                    class="error-tips"
+                    v-if="errors.has('buildNumRule')"
+                >
                     {{ $t('settings.validatebuildNum') }}
                 </p>
             </bk-form-item>
             <bk-form-item :label="$t('template.parallelSetting')">
-                <bk-radio-group :value="pipelineSetting.runLockType" @change="handleLockTypeChange">
+                <bk-radio-group
+                    :value="pipelineSetting.runLockType"
+                    @change="handleLockTypeChange"
+                >
                     <div class="run-lock-radio-item">
                         <bk-radio
                             :disabled="!editable"
                             :value="runTypeMap.MULTIPLE"
                         >
-                            {{$t('settings.runningOption.multiple')}}
+                            {{ $t('settings.runningOption.multiple') }}
                         </bk-radio>
                     </div>
                     <div class="run-lock-radio-item">
@@ -46,7 +60,7 @@
                             :disabled="!editable"
                             :value="runTypeMap.GROUP"
                         >
-                            {{$t('settings.runningOption.single')}}
+                            {{ $t('settings.runningOption.single') }}
                         </bk-radio>
                     </div>
                 </bk-radio-group>
@@ -93,7 +107,6 @@
             <div
                 v-if="isSingleLock"
                 class="single-lock-sub-form"
-                :key="isSingleLock"
             >
                 <bk-form-item
                     :required="isSingleLock"
@@ -119,7 +132,7 @@
                         :checked="pipelineSetting.concurrencyCancelInProgress"
                         @change="handleConCurrencyCancel"
                     >
-                        {{$t('settings.stopWhenNewCome')}}
+                        {{ $t('settings.stopWhenNewCome') }}
                     </bk-checkbox>
                 </bk-form-item>
                 <template v-if="!pipelineSetting.concurrencyCancelInProgress">
@@ -136,7 +149,7 @@
                             @change="val => handleBaseInfoChange('maxQueueSize', val)"
                         >
                             <template slot="append">
-                                <span class="pipeline-setting-unit">{{$t('settings.item')}}</span>
+                                <span class="pipeline-setting-unit">{{ $t('settings.item') }}</span>
                             </template>
                         </bk-input>
                     </bk-form-item>
@@ -153,7 +166,7 @@
                             @change="val => handleBaseInfoChange('waitQueueTimeMinute', val)"
                         >
                             <template slot="append">
-                                <span class="pipeline-setting-unit">{{$t('settings.minutes')}}</span>
+                                <span class="pipeline-setting-unit">{{ $t('settings.minutes') }}</span>
                             </template>
                         </bk-input>
                     </bk-form-item>

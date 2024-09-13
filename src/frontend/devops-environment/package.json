@@ -4,8 +4,11 @@
   "description": "",
   "private": true,
   "dependencies": {
+    "@blueking/search-select": "0.0.1-beta.2",
+    "ace-builds": "^1.4.12",
     "clipboard": "^1.7.1",
     "echarts": "^5.3.2",
+    "lodash": "^4.17.21",
     "vee-validate": "^2.0.3",
     "vue": "~2.7.16",
     "vue-echarts": "^6.0.2",
@@ -29,10 +32,12 @@
     "@babel/plugin-transform-runtime": "^7.15.8",
     "@babel/preset-env": "^7.15.8",
     "@babel/preset-react": "^7.16.0",
+    "@babel/runtime": "^7.15.4",
     "@vue/babel-preset-jsx": "^1.2.4",
     "babel-helper-vue-jsx-merge-props": "^2.0.3",
     "babel-loader": "^8.2.2",
     "babel-plugin-transform-vue-jsx": "^4.0.1",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.4.0",
     "css-minimizer-webpack-plugin": "^4.2.1",
     "eslint": "^7.3.1",
@@ -51,8 +56,8 @@
     "sass-loader": "^12.1.0",
     "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.3.6",
-    "vue-loader": "^15.10.0",
-    "webpack": "^5.58.1"
+    "vue-loader": "~15.10.0",
+    "webpack": "~5.76.1"
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
@@ -65,5 +70,18 @@
     "type": "git",
     "url": ""
   },
-  "license": "ISC"
+  "license": "ISC",
+  "nx": {
+    "targets": {
+      "inputs": [
+        "{workspaceRoot}/locale/environment/*.json",
+        "{projectRoot}"
+      ],
+      "public:master": {
+        "outputs": [
+          "{workspaceRoot}/frontend/environment"
+        ]
+      }
+    }
+  }
 }
