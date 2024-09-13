@@ -504,20 +504,6 @@
                 color: #3c96ff;
             }
         }
-        .gap {
-            display: inline-block;
-            flex: 1;
-            position: relative;
-            height: 16px;
-            &:before {
-                content: '';
-                position: absolute;
-                background: #dcdee5;
-                height: 16px;
-                width: 1px;
-                right: 50%;
-            }
-        }
         .mr4 {
             margin-right: 4px;
         }
