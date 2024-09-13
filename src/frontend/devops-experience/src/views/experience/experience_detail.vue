@@ -1,5 +1,8 @@
 <template>
-    <div class="release-detail-wrapper" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
+    <div
+        class="release-detail-wrapper"
+        v-bkloading="{ isLoading: loading.isLoading, title: loading.title }"
+    >
         <content-header>
             <div slot="left">
                 <router-link :to="{ name: 'experienceList' }">
@@ -7,19 +10,26 @@
                 </router-link>
                 <span> {{ $route.meta.title }} </span>
                 <span v-if="curReleaseDetail">
-                    {{curReleaseDetail.name}}（{{curReleaseDetail.installation_package}}）
+                    {{ curReleaseDetail.name }}（{{ curReleaseDetail.installation_package }}）
                 </span>
             </div>
         </content-header>
         <section class="sub-view-port">
-            <bk-tab v-if="showContent" :active.sync="curTab" @tab-change="changeTab">
+            <bk-tab
+                v-if="showContent"
+                :active.sync="curTab"
+                @tab-change="changeTab"
+            >
                 <bk-tab-panel
                     v-for="(panel, index) in panels"
                     v-bind="panel"
                     render-directive="if"
                     :key="index"
                 >
-                    <component :is="panel.component" v-bind="panel.bindData"></component>
+                    <component
+                        :is="panel.component"
+                        v-bind="panel.bindData"
+                    ></component>
                 </bk-tab-panel>
             </bk-tab>
         </section>

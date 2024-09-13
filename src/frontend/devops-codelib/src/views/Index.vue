@@ -126,7 +126,7 @@
     } from '../config/'
     import { getOffset } from '../utils/'
     import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
-                                    
+    
     export default {
         name: 'codelib-list',
 

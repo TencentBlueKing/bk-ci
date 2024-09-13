@@ -1,5 +1,5 @@
 module.exports = {
   presets: [
-    "@blueking/babel-preset-bk"
+    "babel-preset-peer-bk"
   ]
 }

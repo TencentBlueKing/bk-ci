@@ -79,7 +79,7 @@ class BcsContainerOpAtom @Autowired constructor(
         param: BcsContainerOpElement,
         runVariables: Map<String, String>
     ): AtomResponse {
-
+        logger.warn("Deprecated_Plugin|BcsContainerOpAtom|${task.projectId}|${task.pipelineId}")
         if (param.opType.isBlank()) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId, message = "opType is not init",

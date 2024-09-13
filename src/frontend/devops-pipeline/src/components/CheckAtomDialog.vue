@@ -7,10 +7,18 @@
         :position="{ top: '100' }"
         :auto-close="false"
         @confirm="handleAtomCheck"
-        @cancel="cancleAtomCheck">
+        @cancel="cancleAtomCheck"
+    >
         <div v-bkloading="{ isLoading }">
-            <bk-form form-type="vertical" :model="data" ref="checkForm">
-                <bk-form-item v-if="data.desc" :label="$t('editPage.checkDesc')">
+            <bk-form
+                form-type="vertical"
+                :model="data"
+                ref="checkForm"
+            >
+                <bk-form-item
+                    v-if="data.desc"
+                    :label="$t('editPage.checkDesc')"
+                >
                     <mavon-editor
                         class="markdown-desc"
                         :editable="false"
@@ -24,19 +32,36 @@
                     >
                     </mavon-editor>
                 </bk-form-item>
-                <bk-form-item :label="$t('editPage.checkResult')"
+                <bk-form-item
+                    :label="$t('editPage.checkResult')"
                     required
                     error-display-type="normal"
                     property="status"
                     :rules="[requireRule]"
                 >
                     <bk-radio-group v-model="data.status">
-                        <bk-radio class="choose-item" :value="'PROCESS'">{{ $t('editPage.agree') }}</bk-radio>
-                        <bk-radio class="choose-item" :value="'ABORT'">{{ $t('editPage.abort') }}</bk-radio>
+                        <bk-radio
+                            class="choose-item"
+                            :value="'PROCESS'"
+                        >
+                            {{ $t('editPage.agree') }}
+                        </bk-radio>
+                        <bk-radio
+                            class="choose-item"
+                            :value="'ABORT'"
+                        >
+                            {{ $t('editPage.abort') }}
+                        </bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
                 <bk-form-item>
-                    <bk-input style="width: 98%" type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
+                    <bk-input
+                        style="width: 98%"
+                        type="textarea"
+                        v-model="data.suggest"
+                        :placeholder="$t('editPage.checkSuggestTips')"
+                        class="check-suggest"
+                    ></bk-input>
                 </bk-form-item>
                 <bk-form-item>
                     <check-params

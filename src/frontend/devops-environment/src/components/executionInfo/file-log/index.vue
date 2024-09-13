@@ -3,7 +3,8 @@
         ref="contentBox"
         class="file-download-log"
         @scroll="handleScroll"
-        v-bkloading="{ isLoading, opacity: .1 }">
+        v-bkloading="{ isLoading, opacity: .1 }"
+    >
         <div>
             <file-item
                 v-for="(item, index) in renderList"
@@ -12,7 +13,8 @@
                 :open-memo="openMemo"
                 :data="item"
                 :render-content-map="renderContentMap"
-                @on-toggle="handleToggle" />
+                @on-toggle="handleToggle"
+            />
         </div>
         <!-- <div ref="load" class="load-more" v-if="fileTaskLogs.length && !renderList.length">
             <div class="loading-flag">

@@ -204,7 +204,6 @@ class ServiceRemoteDevResourceImpl(
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
         val projectId = checkNotNull(data.projectId)
-        workspaceCommon.syncStartCloudResourceList()
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
         // 增加可以分配的配额
         if (!data.ips.isNullOrEmpty() || !data.cgsIds.isNullOrEmpty()) {
@@ -437,7 +436,8 @@ class ServiceRemoteDevResourceImpl(
         return Result(
             workspaceService.getWorkspaceList4WeSec(
                 workspaceName = workspace.workspaceName,
-                notStatus = null
+                notStatus = null,
+                hasCurrentUser = true
             ).firstOrNull()
         )
     }

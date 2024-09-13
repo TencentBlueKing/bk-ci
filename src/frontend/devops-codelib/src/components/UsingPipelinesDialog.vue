@@ -28,14 +28,18 @@
                 <li
                     v-for="pipeline in pipelinesList"
                     :key="pipeline.pipelineId"
-                   
                 >
                     <a @click="handleToPipeline(pipeline)">{{ pipeline.pipelineName }}</a>
                 </li>
             </ul>
             <footer>
-                <bk-button theme="primary" @click="handleConfirm">{{$t('codelib.确认更改')}}</bk-button>
-                <bk-button @click="handleClose">{{$t('codelib.取消')}}</bk-button>
+                <bk-button
+                    theme="primary"
+                    @click="handleConfirm"
+                >
+                    {{ $t('codelib.确认更改') }}
+                </bk-button>
+                <bk-button @click="handleClose">{{ $t('codelib.取消') }}</bk-button>
             </footer>
         </template>
         <template v-else>
@@ -56,13 +60,12 @@
                 <li
                     v-for="pipeline in pipelinesList"
                     :key="pipeline.pipelineId"
-                   
                 >
                     <a @click="handleToPipeline(pipeline)">{{ pipeline.pipelineName }}</a>
                 </li>
             </ul>
             <footer>
-                <bk-button @click="handleClose">{{$t('codelib.关闭')}}</bk-button>
+                <bk-button @click="handleClose">{{ $t('codelib.关闭') }}</bk-button>
             </footer>
         </template>
     </bk-dialog>

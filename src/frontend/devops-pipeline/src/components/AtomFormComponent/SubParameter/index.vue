@@ -2,15 +2,26 @@
     <div class="sub-parameter">
         <label class="bk-label">
             {{ title }}：
-            <span v-if="!disabled" class="add-params-btn" @click="addParam">
+            <span
+                v-if="!disabled"
+                class="add-params-btn"
+                @click="addParam"
+            >
                 <i class="devops-icon icon-plus-circle"></i>
                 添加参数
             </span>
         </label>
         <div class="sub-params-desc">{{ desc }}</div>
-        <div class="bk-form-content" v-if="parameters.length">
+        <div
+            class="bk-form-content"
+            v-if="parameters.length"
+        >
             <ul v-bkloading="{ isLoading }">
-                <li class="param-input" v-for="(parameter, index) in parameters" :key="index">
+                <li
+                    class="param-input"
+                    v-for="(parameter, index) in parameters"
+                    :key="index"
+                >
                     <bk-select
                         class="input-com"
                         :disabled="disabled"

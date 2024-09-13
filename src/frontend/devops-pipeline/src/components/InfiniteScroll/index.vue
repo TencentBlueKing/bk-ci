@@ -1,7 +1,16 @@
 <template>
-    <div style="height: 100%;" v-bkloading="{ isLoading }">
+    <div
+        style="height: 100%;"
+        v-bkloading="{ isLoading }"
+    >
         <slot v-bind="{ list, isLoading, isLoadingMore, queryList, setScrollTop, animateScroll, totals }"></slot>
-        <div v-if="isLoadingMore" class="loading-more" slot="append"><i class="devops-icon icon-circle-2-1 spin-icon"></i><span>{{ $t('loadingTips') }}</span></div>
+        <div
+            v-if="isLoadingMore"
+            class="loading-more"
+            slot="append"
+        >
+            <i class="devops-icon icon-circle-2-1 spin-icon"></i><span>{{ $t('loadingTips') }}</span>
+        </div>
     </div>
 </template>
 

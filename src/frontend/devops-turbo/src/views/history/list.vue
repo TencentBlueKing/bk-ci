@@ -1,8 +1,12 @@
 <template>
     <article class="history-list-home">
-        <main class="g-turbo-box history-list-main" v-if="hasPermission">
+        <main
+            class="g-turbo-box history-list-main"
+            v-if="hasPermission"
+        >
             <header class="filter-area">
-                <bk-select multiple
+                <bk-select
+                    multiple
                     :value="filter.value"
                     @change="(options) => chooseFilter(filter.key, options)"
                     searchable
@@ -13,17 +17,31 @@
                     :key="filter.key"
                     :placeholder="filter.placeholder"
                 >
-                    <bk-option v-for="(value, key) in filter.list"
+                    <bk-option
+                        v-for="(value, key) in filter.list"
                         :key="key"
                         :id="key"
-                        :name="value">
+                        :name="value"
+                    >
                     </bk-option>
                 </bk-select>
-                <bk-date-picker class="single-width" :placeholder="$t('turbo.选择日期范围')" type="daterange" :value="timeRange" @change="(options) => chooseFilter('timeRange', options)"></bk-date-picker>
-                <bk-button @click="clearFilter" class="clear-btn"> {{ $t('turbo.重置') }} </bk-button>
+                <bk-date-picker
+                    class="single-width"
+                    :placeholder="$t('turbo.选择日期范围')"
+                    type="daterange"
+                    :value="timeRange"
+                    @change="(options) => chooseFilter('timeRange', options)"
+                ></bk-date-picker>
+                <bk-button
+                    @click="clearFilter"
+                    class="clear-btn"
+                >
+                    {{ $t('turbo.重置') }}
+                </bk-button>
             </header>
 
-            <bk-table class="history-records g-turbo-scroll-table"
+            <bk-table
+                class="history-records g-turbo-scroll-table"
                 :data="historyList"
                 :outer-border="false"
                 :header-border="false"
@@ -35,31 +53,79 @@
                 @row-click="goToDetail"
                 @sort-change="sortChange"
             >
-                <bk-table-column :label="$t('turbo.编号')" prop="executeNum" width="80" sortable></bk-table-column>
-                <bk-table-column :label="$t('turbo.流水线/构建机')" prop="pipeline_name" sortable show-overflow-tooltip>
+                <bk-table-column
+                    :label="$t('turbo.编号')"
+                    prop="executeNum"
+                    width="80"
+                    sortable
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('turbo.流水线/构建机')"
+                    prop="pipeline_name"
+                    sortable
+                    show-overflow-tooltip
+                >
                     <template slot-scope="props">
                         <span v-if="props.row.pipelineName">
                             {{ props.row.pipelineName }}
-                            <a @click.stop :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.devopsBuildId}`" target="_blank" class="g-turbo-click-text"><logo name="cc-jump-link" class="jump-link" size="14"></logo></a>
+                            <a
+                                @click.stop
+                                :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.devopsBuildId}`"
+                                target="_blank"
+                                class="g-turbo-click-text"
+                            ><logo
+                                name="cc-jump-link"
+                                class="jump-link"
+                                size="14"
+                            ></logo></a>
                         </span>
                         <span v-else>{{ props.row.clientIp }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('turbo.状态')" prop="status" sortable>
+                <bk-table-column
+                    :label="$t('turbo.状态')"
+                    prop="status"
+                    sortable
+                >
                     <template slot-scope="props">
-                        <task-status :status="props.row.status" :message="props.row.message"></task-status>
+                        <task-status
+                            :status="props.row.status"
+                            :message="props.row.message"
+                        ></task-status>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('turbo.开始时间')" prop="startTime" sortable></bk-table-column>
-                <bk-table-column :label="$t('turbo.未加速耗时')" prop="estimateTimeValue" sortable></bk-table-column>
-                <bk-table-column :label="$t('turbo.实际耗时')" prop="executeTimeValue" sortable></bk-table-column>
-                <bk-table-column :label="$t('turbo.节省率')" prop="turboRatio" sortable></bk-table-column>
+                <bk-table-column
+                    :label="$t('turbo.开始时间')"
+                    prop="startTime"
+                    sortable
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('turbo.未加速耗时')"
+                    prop="estimateTimeValue"
+                    sortable
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('turbo.实际耗时')"
+                    prop="executeTimeValue"
+                    sortable
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('turbo.节省率')"
+                    prop="turboRatio"
+                    sortable
+                ></bk-table-column>
                 <template #empty>
-                    <EmptyTableStatus :type="emptyType" @clear="clearFilter" />
+                    <EmptyTableStatus
+                        :type="emptyType"
+                        @clear="clearFilter"
+                    />
                 </template>
             </bk-table>
         </main>
-        <permission-exception v-else :message="errMessage" />
+        <permission-exception
+            v-else
+            :message="errMessage"
+        />
     </article>
 </template>
 

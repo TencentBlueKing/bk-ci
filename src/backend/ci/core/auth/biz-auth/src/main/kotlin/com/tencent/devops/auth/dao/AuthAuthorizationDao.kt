@@ -96,7 +96,7 @@ class AuthAuthorizationDao {
                                     .set(HANDOVER_FROM_CN_NAME, resourceAuthorizationDto.handoverToCnName)
                                     .set(HANDOVER_TIME, LocalDateTime.now())
                             } else {
-                                it
+                                it.set(HANDOVER_TIME, HANDOVER_TIME)
                             }
                         }
                         .set(RESOURCE_NAME, resourceAuthorizationDto.resourceName)

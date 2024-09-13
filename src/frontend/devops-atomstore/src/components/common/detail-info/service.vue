@@ -1,49 +1,105 @@
 <template>
     <section class="detail-title">
-        <img class="detail-pic atom-logo" :src="detail.logoUrl">
+        <img
+            class="detail-pic atom-logo"
+            :src="detail.logoUrl"
+        >
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
-                <span :class="[{ 'not-recommend': detail.recommendFlag === false }, 'title-with-img']" :title="detail.recommendFlag === false ? $t('store.该微扩展不推荐使用') : ''">
-                    {{detail.name}}
+                <span
+                    :class="[{ 'not-recommend': detail.recommendFlag === false }, 'title-with-img']"
+                    :title="detail.recommendFlag === false ? $t('store.该微扩展不推荐使用') : ''"
+                >
+                    {{ detail.name }}
                 </span>
-                <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic }" v-if="!isEnterprise">
-                    <icon class="detail-img" name="gray-git-code" size="14" />
+                <h5
+                    :title="isPublicTitle"
+                    @click="goToCode"
+                    :class="{ 'not-public': !isPublic }"
+                    v-if="!isEnterprise"
+                >
+                    <icon
+                        class="detail-img"
+                        name="gray-git-code"
+                        size="14"
+                    />
                     <span class="approve-msg">{{ isPublic ? $t('store.源码') : $t('store.未开源') }}</span>
                 </h5>
             </h3>
             <h5 class="install-info">
-                <span>{{detail.publisher || '-'}}</span><span class="install-title"> {{ $t('store.发布') }} </span>
-                <span>{{detail.downloads || 0}}</span><span class="install-title"> {{ $t('store.次安装') }} </span>
-                <h6 class="detail-score" :title="$t('store.rateTips', [(detail.score || 0), (detail.totalNum || 0)])">
-                    <span>{{detail.totalNum || 0}}</span>
+                <span>{{ detail.publisher || '-' }}</span><span class="install-title"> {{ $t('store.发布') }} </span>
+                <span>{{ detail.downloads || 0 }}</span><span class="install-title"> {{ $t('store.次安装') }} </span>
+                <h6
+                    class="detail-score"
+                    :title="$t('store.rateTips', [(detail.score || 0), (detail.totalNum || 0)])"
+                >
+                    <span>{{ detail.totalNum || 0 }}</span>
                     <p class="score-group">
-                        <comment-rate :rate="5" :width="14" :height="14" :style="{ width: starWidth }" class="score-real"></comment-rate>
-                        <comment-rate :rate="0" :width="14" :height="14"></comment-rate>
+                        <comment-rate
+                            :rate="5"
+                            :width="14"
+                            :height="14"
+                            :style="{ width: starWidth }"
+                            class="score-real"
+                        ></comment-rate>
+                        <comment-rate
+                            :rate="0"
+                            :width="14"
+                            :height="14"
+                        ></comment-rate>
                     </p>
                 </h6>
-                <span>V{{detail.version || 'init'}}</span><span class="install-title"> {{ $t('store.版本') }} </span>
+                <span>V{{ detail.version || 'init' }}</span><span class="install-title"> {{ $t('store.版本') }} </span>
             </h5>
             <h5 class="detail-info detail-label">
                 <span> {{ $t('store.功能标签：') }} </span>
-                <span v-for="(label, index) in detail.labelList" :key="index" class="info-label">{{label.labelName}}</span>
+                <span
+                    v-for="(label, index) in detail.labelList"
+                    :key="index"
+                    class="info-label"
+                >{{ label.labelName }}</span>
                 <span v-if="!detail.labelList || detail.labelList.length <= 0 ">-</span>
             </h5>
             <h5 class="detail-info">
                 <span> {{ $t('store.扩展点') }}： </span>
-                <span class="info-over-hidden" :title="detail.itemName">{{detail.itemName || '-'}}</span>
+                <span
+                    class="info-over-hidden"
+                    :title="detail.itemName"
+                >{{ detail.itemName || '-' }}</span>
             </h5>
-            <h5 class="detail-info" :title="detail.summary">
+            <h5
+                class="detail-info"
+                :title="detail.summary"
+            >
                 <span> {{ $t('store.简介：') }} </span>
-                <span class="info-over-hidden" :title="detail.summary">{{detail.summary || '-'}}</span>
+                <span
+                    class="info-over-hidden"
+                    :title="detail.summary"
+                >{{ detail.summary || '-' }}</span>
             </h5>
         </hgroup>
-        <bk-popover placement="top" v-if="buttonInfo.disable">
-            <button class="bk-button bk-primary" type="button" disabled> {{ $t('store.安装') }} </button>
+        <bk-popover
+            placement="top"
+            v-if="buttonInfo.disable"
+        >
+            <button
+                class="bk-button bk-primary"
+                type="button"
+                disabled
+            >
+                {{ $t('store.安装') }}
+            </button>
             <template slot="content">
-                <p>{{buttonInfo.des}}</p>
+                <p>{{ buttonInfo.des }}</p>
             </template>
         </bk-popover>
-        <button class="detail-install" @click="goToInstall" v-else> {{ $t('store.安装') }} </button>
+        <button
+            class="detail-install"
+            @click="goToInstall"
+            v-else
+        >
+            {{ $t('store.安装') }}
+        </button>
     </section>
 </template>
 

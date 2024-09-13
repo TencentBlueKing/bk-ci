@@ -9,7 +9,11 @@
                 :href="props.row.indexFileUrl"
             >
                 {{ props.row.name }}
-                <logo name="tiaozhuan" size="16" class="jump-icon" />
+                <logo
+                    name="tiaozhuan"
+                    size="16"
+                    class="jump-icon"
+                />
             </bk-link>
         </bk-table-column>
     </bk-table>

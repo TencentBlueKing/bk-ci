@@ -23,8 +23,14 @@
                 align="bottom"
                 :options="options"
             >
-                <i slot="dropdown-trigger" class="bk-icon icon-more"></i>
-                <div class="more-operation-dropmenu" slot="dropdown-content">
+                <i
+                    slot="dropdown-trigger"
+                    class="bk-icon icon-more"
+                ></i>
+                <div
+                    class="more-operation-dropmenu"
+                    slot="dropdown-content"
+                >
                     <ul>
                         <li
                             v-for="option in options"
