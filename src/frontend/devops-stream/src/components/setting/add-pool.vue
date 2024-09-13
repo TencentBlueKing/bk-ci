@@ -34,7 +34,7 @@
                     nodeHashIds: []
                 },
                 nameRule: {
-                    validator: (val) => (/^[a-zA-Z0-9-]{1,64}$/.test(val)),
+                    validator: (val) => (/^[a-zA-Z0-9-_]{1,64}$/.test(val)),
                     message: this.$t('setting.agent.poolNamePlaceholder'),
                     trigger: 'blur'
                 },
