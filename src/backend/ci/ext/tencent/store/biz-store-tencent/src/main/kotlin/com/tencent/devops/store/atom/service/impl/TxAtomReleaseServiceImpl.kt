@@ -1143,4 +1143,60 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
 
         return Result(true)
     }
+
+    private fun creatAtomPipeline(
+        context: DSLContext,
+        userId: String,
+        projectCode: String,
+        language: String
+    ): String {
+        var pipelineId: String?
+        val lock = RedisLock(redisOperation, "creatAtomPipeline-$projectCode-$language", 60L)
+        val pipelineName = "am-$projectCode-$language"
+        try {
+            lock.lock()
+            pipelineId = redisOperation.get(pipelineName)
+            if (!pipelineId.isNullOrBlank()) {
+                return pipelineId
+            }
+            val pipelineModelConfig = businessConfigDao.get(
+                dslContext = context,
+                business = StoreTypeEnum.ATOM.name,
+                feature = "initBuildPipeline",
+                businessValue = "PIPELINE_MODEL"
+            )
+            val buildInfo = marketAtomBuildInfoDao.getAtomBuildInfo(
+                dslContext = context,
+                storeType = StoreTypeEnum.ATOM,
+                language = language
+            )
+            val script = buildInfo.value1()
+            val paramMap = mapOf(
+                KEY_PIPELINE_NAME to pipelineName,
+                KEY_LANGUAGE to language,
+                KEY_SCRIPT to StringEscapeUtils.escapeJava(script),
+                KEY_REPOSITORY_PATH to (buildInfo.value2() ?: ""),
+            )
+            var pipelineModel = pipelineModelConfig!!.configValue
+            // 将流水线模型中的变量替换成具体的值
+            paramMap.forEach { (key, value) ->
+                pipelineModel = pipelineModel.replace("#{$key}", value)
+            }
+            val model = JsonUtil.to(pipelineModel, Model::class.java)
+            pipelineId = client.get(ServicePipelineResource::class).create(
+                userId = userId,
+                projectId = projectCode,
+                pipeline = model,
+                channelCode = ChannelCode.AM
+            ).data!!.id
+            redisOperation.set(
+                key = pipelineName,
+                value = pipelineId,
+                expired = false
+            )
+            return pipelineId
+        } finally {
+            lock.unlock()
+        }
+    }
 }
