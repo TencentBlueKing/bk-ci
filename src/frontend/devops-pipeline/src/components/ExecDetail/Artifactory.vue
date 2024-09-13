@@ -1,5 +1,8 @@
 <template>
-    <article class="detail-artifactory-home" v-bkloading="{ isLoading }">
+    <article
+        class="detail-artifactory-home"
+        v-bkloading="{ isLoading }"
+    >
         <bk-table
             :data="artifactories"
             :outer-border="false"
@@ -20,8 +23,14 @@
                             name="docker-svgrepo-com"
                             size="30"
                         />
-                        <i v-else :class="['devops-icon', `icon-${props.row.icon}`]"></i>
-                        <span class="ml5" :title="props.row.name">{{ props.row.name }}</span>
+                        <i
+                            v-else
+                            :class="['devops-icon', `icon-${props.row.icon}`]"
+                        ></i>
+                        <span
+                            class="ml5"
+                            :title="props.row.name"
+                        >{{ props.row.name }}</span>
                     </div>
                 </template>
             </bk-table-column>
@@ -46,7 +55,10 @@
                 show-overflow-tooltip
             >
             </bk-table-column>
-            <bk-table-column :label="$t('operate')" width="150">
+            <bk-table-column
+                :label="$t('operate')"
+                width="150"
+            >
                 <template slot-scope="props">
                     <artifact-download-button
                         :output="props.row"

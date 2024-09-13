@@ -1,9 +1,11 @@
 <template>
-    <span :class="{
-        'pipeline-status-icon': true,
-        'spin-icon': isRunning,
-        'hourglass-queue': isEnqueue
-    }">
+    <span
+        :class="{
+            'pipeline-status-icon': true,
+            'spin-icon': isRunning,
+            'hourglass-queue': isEnqueue
+        }"
+    >
         <logo :name="logoName" />
     </span>
 </template>
