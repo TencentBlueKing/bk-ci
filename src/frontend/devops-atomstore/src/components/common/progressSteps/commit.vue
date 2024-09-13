@@ -1,14 +1,40 @@
 <template>
-    <section class="main-body" v-bkloading="{ isLoading }">
+    <section
+        class="main-body"
+        v-bkloading="{ isLoading }"
+    >
         <bk-form class="progress-info">
-            <bk-form-item :label="$t('store.可见范围')" :desc="$t('store.未设置可见范围时，仅微扩展成员可以安装到名下项目中使用。设置后，对应组织架构的用户可以在研发商店中安装使用')">
-                <ul class="info-visable" v-if="deptInfoList.length">
-                    <li v-for="dept in deptInfoList" :key="dept.deptId" class="visable-item">{{ dept.deptName }}<icon name="close" size="10" class="dept-close" @click.native="deleteDept(dept)" /></li>
+            <bk-form-item
+                :label="$t('store.可见范围')"
+                :desc="$t('store.未设置可见范围时，仅微扩展成员可以安装到名下项目中使用。设置后，对应组织架构的用户可以在研发商店中安装使用')"
+            >
+                <ul
+                    class="info-visable"
+                    v-if="deptInfoList.length"
+                >
+                    <li
+                        v-for="dept in deptInfoList"
+                        :key="dept.deptId"
+                        class="visable-item"
+                    >
+                        {{ dept.deptName }}<icon
+                            name="close"
+                            size="10"
+                            class="dept-close"
+                            @click.native="deleteDept(dept)"
+                        />
+                    </li>
                 </ul>
-                <p @click="showDialog = true" class="info-add-vis"><i class="bk-icon icon-plus"></i>{{ $t('store.添加') }}</p>
+                <p
+                    @click="showDialog = true"
+                    class="info-add-vis"
+                >
+                    <i class="bk-icon icon-plus"></i>{{ $t('store.添加') }}
+                </p>
             </bk-form-item>
             <bk-form-item :label="$t('store.截图')">
-                <upload type="PICTURE"
+                <upload
+                    type="PICTURE"
                     :file-list.sync="imageList"
                     :limit="6"
                     :size="2"
@@ -16,7 +42,8 @@
                 ></upload>
             </bk-form-item>
             <bk-form-item :label="$t('store.视频教程')">
-                <upload type="VIDEO"
+                <upload
+                    type="VIDEO"
                     :file-list.sync="videoList"
                     :limit="4"
                     :size="50"
@@ -26,14 +53,29 @@
         </bk-form>
 
         <footer class="main-footer">
-            <bk-button theme="primary" @click="submit" :disabled="isToBackIng" :loading="isCommiting"> {{ $t('store.下一步') }} </bk-button>
-            <bk-button @click="previousStep" :disabled="isCommiting" :loading="isToBackIng"> {{ $t('store.上一步') }} </bk-button>
+            <bk-button
+                theme="primary"
+                @click="submit"
+                :disabled="isToBackIng"
+                :loading="isCommiting"
+            >
+                {{ $t('store.下一步') }}
+            </bk-button>
+            <bk-button
+                @click="previousStep"
+                :disabled="isCommiting"
+                :loading="isToBackIng"
+            >
+                {{ $t('store.上一步') }}
+            </bk-button>
         </footer>
 
-        <organization-dialog :show-dialog="showDialog"
+        <organization-dialog
+            :show-dialog="showDialog"
             :is-loading="false"
             @saveHandle="saveHandle"
-            @cancelHandle="cancelHandle">
+            @cancelHandle="cancelHandle"
+        >
         </organization-dialog>
     </section>
 </template>

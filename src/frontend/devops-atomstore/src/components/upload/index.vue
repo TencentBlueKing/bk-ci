@@ -1,6 +1,7 @@
 <template>
     <section>
-        <upload ref="upload"
+        <upload
+            ref="upload"
             action="/support/api/user/file/upload"
             list-type="picture-card"
             :accept="accept"
@@ -9,20 +10,29 @@
             :file-list="fileList"
             :limit="limit"
         >
-            <p slot="tip" class="upload-tip">
-                {{tip}}
+            <p
+                slot="tip"
+                class="upload-tip"
+            >
+                {{ tip }}
             </p>
             <p class="upload-title">
                 <i class="bk-icon icon-plus"></i>
-                <span>{{$t('store.点击上传')}}</span>
+                <span>{{ $t('store.点击上传') }}</span>
             </p>
-            <div slot="file" slot-scope="{ file }" class="upload-list">
-                <span v-if="type === 'PICTURE'"
+            <div
+                slot="file"
+                slot-scope="{ file }"
+                class="upload-list"
+            >
+                <span
+                    v-if="type === 'PICTURE'"
                     class="media-item media-image"
                     @click="imgSrc = file.mediaUrl"
                     :style="`background-image: url(${file.mediaUrl})`"
                 ></span>
-                <video v-else
+                <video
+                    v-else
                     preload="auto"
                     webkit-playsinline="true"
                     playsinline="true"
@@ -31,10 +41,20 @@
                     x5-video-player-fullscreen="true"
                     x5-video-orientation="portraint"
                     style="object-fit: fill; width: 100%; height: 100%"
-                    :src="file.mediaUrl">
+                    :src="file.mediaUrl"
+                >
                 </video>
-                <bk-progress class="media-progress" v-if="file.status === 'uploading'" :show-text="false" :theme="file.theme || 'success'" :percent="+(file.percentage || 100) / 100"></bk-progress>
-                <span class="media-tool-abort media-tool" v-if="file.status === 'uploading'">
+                <bk-progress
+                    class="media-progress"
+                    v-if="file.status === 'uploading'"
+                    :show-text="false"
+                    :theme="file.theme || 'success'"
+                    :percent="+(file.percentage || 100) / 100"
+                ></bk-progress>
+                <span
+                    class="media-tool-abort media-tool"
+                    v-if="file.status === 'uploading'"
+                >
                     <span
                         v-if="!disabled"
                         @click="abortFile(file)"
@@ -42,7 +62,10 @@
                         <i class="bk-icon icon-delete"></i>
                     </span>
                 </span>
-                <span class="media-tool" v-else>
+                <span
+                    class="media-tool"
+                    v-else
+                >
                     <span
                         v-if="!disabled"
                         @click="deleteFile(file)"

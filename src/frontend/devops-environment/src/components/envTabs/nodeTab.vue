@@ -12,7 +12,8 @@
                         action: ENV_RESOURCE_ACTION.EDIT
                     }
                 }"
-                theme="primary" @click="importNewNode"
+                theme="primary"
+                @click="importNewNode"
             >
                 {{ $t('environment.import') }}
             </bk-button>
@@ -28,23 +29,50 @@
                 @page-change="handlePageChange"
                 @page-limit-change="handlePageLimitChange"
             >
-                <bk-table-column :label="$t('environment.envInfo.name')" width="150" prop="displayName" show-overflow-tooltip></bk-table-column>
-                <bk-table-column :width="150" label="IP" prop="ip" show-overflow-tooltip></bk-table-column>
-                <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`" show-overflow-tooltip>
+                <bk-table-column
+                    :label="$t('environment.envInfo.name')"
+                    width="150"
+                    prop="displayName"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :width="150"
+                    label="IP"
+                    prop="ip"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`"
+                    show-overflow-tooltip
+                >
                     <template slot-scope="props">
                         <span class="node-name">{{ props.row.nodeType }}</span>
                         <span>({{ props.row.createdUser }})</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :width="150" :label="$t('environment.nodeInfo.os')" prop="osName"></bk-table-column>
+                <bk-table-column
+                    :width="150"
+                    :label="$t('environment.nodeInfo.os')"
+                    prop="osName"
+                ></bk-table-column>
                 <bk-table-column :label="$t('environment.nodeInfo.cpuStatus')">
                     <template slot-scope="props">
                         <div class="status-cell">
-                            <StatusIcon v-if="successStatus.includes(props.row.nodeStatus)" status="success" />
-                            <StatusIcon v-else-if="failStatus.includes(props.row.nodeStatus)" status="error" />
-                            <StatusIcon v-else-if="['NOT_INSTALLED'].includes(props.row.nodeStatus)" status="normal" />
+                            <StatusIcon
+                                v-if="successStatus.includes(props.row.nodeStatus)"
+                                status="success"
+                            />
+                            <StatusIcon
+                                v-else-if="failStatus.includes(props.row.nodeStatus)"
+                                status="error"
+                            />
+                            <StatusIcon
+                                v-else-if="['NOT_INSTALLED'].includes(props.row.nodeStatus)"
+                                status="normal"
+                            />
 
-                            <div v-else-if="runningStatus.includes(props.row.nodeStatus)"
+                            <div
+                                v-else-if="runningStatus.includes(props.row.nodeStatus)"
                                 class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary loading-icon"
                             >
                                 <div class="rotate rotate1"></div>
@@ -60,7 +88,10 @@
                         </div>
                     </template>
                 </bk-table-column>
-                <bk-table-column :width="180" :label="$t('environment.operation')">
+                <bk-table-column
+                    :width="180"
+                    :label="$t('environment.operation')"
+                >
                     <template slot-scope="props">
                         <bk-button
                             v-perm="{
@@ -97,7 +128,8 @@
                 </bk-table-column>
             </bk-table>
         </div>
-        <node-select :node-select-conf="nodeSelectConf"
+        <node-select
+            :node-select-conf="nodeSelectConf"
             :search-info="searchInfo"
             :cur-user-info="curUserInfo"
             :row-list="importNodeList"
@@ -107,9 +139,9 @@
             :toggle-all-select="toggleAllSelect"
             :loading="nodeDialogLoading"
             :cancel-fn="cancelFn"
-            :query="query">
+            :query="query"
+        >
         </node-select>
-        
     </div>
 </template>
 

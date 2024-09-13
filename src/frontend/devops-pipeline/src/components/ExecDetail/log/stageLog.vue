@@ -1,19 +1,38 @@
 <template>
     <section class="job-log">
-        <bk-log-search :execute-count="executeCount" @change-execute="changeExecute" class="log-tools">
+        <bk-log-search
+            :execute-count="executeCount"
+            @change-execute="changeExecute"
+            class="log-tools"
+        >
             <template v-slot:tool>
-                <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? $t('hideDebugLog') : $t('showDebugLog') }}</li>
-                <li class="more-button" @click="downloadLog">{{ $t('downloadLog') }}</li>
+                <li
+                    class="more-button"
+                    @click="toggleShowDebugLog"
+                >
+                    {{ showDebug ? $t('hideDebugLog') : $t('showDebugLog') }}
+                </li>
+                <li
+                    class="more-button"
+                    @click="downloadLog"
+                >
+                    {{ $t('downloadLog') }}
+                </li>
             </template>
         </bk-log-search>
-        <bk-stage-log ref="multipleLog"
+        <bk-stage-log
+            ref="multipleLog"
             class="bk-log"
             :stage="stage"
             @open-log="openLog"
             @tag-change="tagChange"
         >
             <template slot-scope="log">
-                <status-icon :status="log.data.status" :is-hook="((log.data.additionalOptions || {}).elementPostInfo || false)" class="multiple-log-status"></status-icon>
+                <status-icon
+                    :status="log.data.status"
+                    :is-hook="((log.data.additionalOptions || {}).elementPostInfo || false)"
+                    class="multiple-log-status"
+                ></status-icon>
                 {{ log.data.name }}
                 {{ stage.containers.length }}
             </template>

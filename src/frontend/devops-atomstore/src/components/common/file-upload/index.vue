@@ -1,35 +1,80 @@
 <template>
     <div class="bk-file-upload">
-        <div class="file-list" v-if="uploadQueue.length">
-            <div class="file-item" v-for="(file, index) of uploadQueue" :key="index">
+        <div
+            class="file-list"
+            v-if="uploadQueue.length"
+        >
+            <div
+                class="file-item"
+                v-for="(file, index) of uploadQueue"
+                :key="index"
+            >
                 <div :class="['file-item-wrapper', { 'error': file.status === 'error', 'success': file.status === 'success' }]">
                     <div class="file-icon">
-                        <img src="../../../images/placeholder.svg" alt="">
+                        <img
+                            src="../../../images/placeholder.svg"
+                            alt=""
+                        >
                     </div>
                     <div class="file-info">
                         <div class="file-metedata">
-                            <p class="file-name">{{file.name}}</p>
-                            <span class="file-status" v-if="file.status === 'uploading'">{{progress}}%</span>
-                            <span class="file-status success" v-if="file.status === 'success'"> {{ $t('store.上传成功') }} </span>
-                            <span class="file-status error" v-if="file.status === 'error'"> {{ $t('store.上传失败') }} </span>
+                            <p class="file-name">{{ file.name }}</p>
+                            <span
+                                class="file-status"
+                                v-if="file.status === 'uploading'"
+                            >{{ progress }}%</span>
+                            <span
+                                class="file-status success"
+                                v-if="file.status === 'success'"
+                            > {{ $t('store.上传成功') }} </span>
+                            <span
+                                class="file-status error"
+                                v-if="file.status === 'error'"
+                            > {{ $t('store.上传失败') }} </span>
                         </div>
                         <div :class="['file-progress']">
-                            <div :class="['file-progress-bar']" :style="`width: ${progress}%`"></div>
+                            <div
+                                :class="['file-progress-bar']"
+                                :style="`width: ${progress}%`"
+                            ></div>
                         </div>
                     </div>
-                    <i class="devops-icon icon-close" @click="removeFile(index)" v-if="file.status !== 'success'"></i>
+                    <i
+                        class="devops-icon icon-close"
+                        @click="removeFile(index)"
+                        v-if="file.status !== 'success'"
+                    ></i>
                 </div>
-                <p class="tip" v-if="file.statusText && file.status === 'error'">{{file.statusText}}</p>
+                <p
+                    class="tip"
+                    v-if="file.statusText && file.status === 'error'"
+                >
+                    {{ file.statusText }}
+                </p>
             </div>
         </div>
         <template v-else>
             <div class="file-input">
                 <button class="trigger-btn">
-                    <img src="../../../images/upload.svg" alt="" class="upload-icon"> {{ $t('store.拖拽到此处上传或 ') }} <span> {{ $t('store.点击上传') }} </span>
+                    <img
+                        src="../../../images/upload.svg"
+                        alt=""
+                        class="upload-icon"
+                    > {{ $t('store.拖拽到此处上传或 ') }} <span> {{ $t('store.点击上传') }} </span>
                 </button>
-                <input type="file" @change="selectFile" :multiple="multiple" :accept="accept">
+                <input
+                    type="file"
+                    @change="selectFile"
+                    :multiple="multiple"
+                    :accept="accept"
+                >
             </div>
-            <p class="tip prompt" v-if="tip">{{tip}}</p>
+            <p
+                class="tip prompt"
+                v-if="tip"
+            >
+                {{ tip }}
+            </p>
         </template>
     </div>
 </template>

@@ -1,17 +1,33 @@
 <template>
     <div class="reference-var">
         <span>{{ $t('editPage.useParams') }} <i class="devops-icon icon-angle-down"></i><i class="devops-icon icon-angle-up"></i></span>
-        <div v-if="globalEnvs" class="env-layout">
+        <div
+            v-if="globalEnvs"
+            class="env-layout"
+        >
             <bk-table
                 :data="envsData"
                 :show-header="false"
                 :size="'small'"
             >
-                <bk-table-column v-for="col in columnList" v-bind="col" :key="col.prop">
-                    <template v-if="col.prop === 'clipboard'" v-slot="props">
-                        <i class="devops-icon icon-clipboard env-copy-icon" :data-clipboard-text="bkVarWrapper(props.row.name)"></i>
+                <bk-table-column
+                    v-for="col in columnList"
+                    v-bind="col"
+                    :key="col.prop"
+                >
+                    <template
+                        v-if="col.prop === 'clipboard'"
+                        v-slot="props"
+                    >
+                        <i
+                            class="devops-icon icon-clipboard env-copy-icon"
+                            :data-clipboard-text="bkVarWrapper(props.row.name)"
+                        ></i>
                     </template>
-                    <template v-else v-slot="props">
+                    <template
+                        v-else
+                        v-slot="props"
+                    >
                         <span :title="props.row[col.prop]">{{ props.row[col.prop] }}</span>
                     </template>
                 </bk-table-column>

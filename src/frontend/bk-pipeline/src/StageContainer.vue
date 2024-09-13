@@ -8,14 +8,44 @@
             'editing': reactiveData.editable
         }"
     >
-        <Logo v-if="reactiveData.editable && !isTriggerStage" size="12" name="right-shape" class="container-connect-triangle" />
+        <Logo
+            v-if="reactiveData.editable && !isTriggerStage"
+            size="12"
+            name="right-shape"
+            class="container-connect-triangle"
+        />
         <template v-if="containerIndex === 0">
-            <cruve-line v-if="showLeftCruveLine" class="first-connect-line connect-line left" :width="58" :height="60" />
-            <cruve-line v-if="showLastCruveLine" class="first-connect-line connect-line right" style="margin-left: 2px" :width="58" :direction="false" :height="60" />
+            <cruve-line
+                v-if="showLeftCruveLine"
+                class="first-connect-line connect-line left"
+                :width="58"
+                :height="60"
+            />
+            <cruve-line
+                v-if="showLastCruveLine"
+                class="first-connect-line connect-line right"
+                style="margin-left: 2px"
+                :width="58"
+                :direction="false"
+                :height="60"
+            />
         </template>
         <template v-if="containerIndex !== containerLength - 1">
-            <cruve-line v-if="showLeftCruveLine" :straight="true" :width="58" :height="cruveHeight" class="connect-line left" />
-            <cruve-line v-if="showLastCruveLine" :straight="true" :width="58" :height="cruveHeight" :direction="false" class="connect-line right" />
+            <cruve-line
+                v-if="showLeftCruveLine"
+                :straight="true"
+                :width="58"
+                :height="cruveHeight"
+                class="connect-line left"
+            />
+            <cruve-line
+                v-if="showLastCruveLine"
+                :straight="true"
+                :width="58"
+                :height="cruveHeight"
+                :direction="false"
+                class="connect-line right"
+            />
         </template>
         <Component
             :is="jobComponentName"

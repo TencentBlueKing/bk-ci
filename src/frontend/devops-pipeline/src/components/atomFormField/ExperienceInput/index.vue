@@ -1,7 +1,10 @@
 <template>
     <div class="experience-input">
         <vuex-input v-bind="$props" />
-        <span class="experience-input-link" @click="goToArtifactory">{{ $t('editPage.atomForm.toArtifactory') }}</span>
+        <span
+            class="experience-input-link"
+            @click="goToArtifactory"
+        >{{ $t('editPage.atomForm.toArtifactory') }}</span>
     </div>
 </template>
 
