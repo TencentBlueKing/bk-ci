@@ -27,15 +27,20 @@
 
 package com.tencent.devops.artifactory.util
 
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
 
 @Suppress("ALL")
 object DefaultPathUtils {
     private const val DEFAULT_EXTENSION = "temp"
-
+    private val LOG = LoggerFactory.getLogger(this::class.java.name)
     fun isFolder(path: String): Boolean {
         return path.endsWith("/")
     }
@@ -67,6 +72,48 @@ object DefaultPathUtils {
         val suffix = if (fileExtension.isBlank()) "" else ".$fileExtension"
         return "${UUIDUtil.generate()}$suffix"
     }
+
+
+    //根据上传时间来生成文件路径(全路径)
+    fun getUploadPathByTime(filePath: String?, fileType: FileTypeEnum?, type: String): String {
+        val filePathSb = StringBuilder()
+        val today = LocalDate.now()
+        val formatter  = DateTimeFormatter.ofPattern(DateTimeUtil.YYYYMMDD )
+        val nowTime = today.format(formatter)
+        val baseUrl="$nowTime/${UUIDUtil.generate()}.$type"
+        val path = if (filePath.isNullOrBlank()) {
+            filePathSb.append("file/")
+            if (fileType == null){
+                filePathSb.append(baseUrl).toString();
+            }else{
+                filePathSb.append("${fileType.fileType.lowercase()}/").append(baseUrl).toString();
+            }
+        } else {
+            filePath;
+        }
+        LOG.info("upload path:$path")
+        return path;
+
+    }
+
+
+    /**
+     *  根据上传时间来生成文件路径(全路径)
+     */
+    fun getUploadPathByTime(fileType: String, type: String): String {
+        val filePathSb = StringBuilder()
+        val today = LocalDate.now()
+        val formatter  = DateTimeFormatter.ofPattern(DateTimeUtil.YYYYMMDD )
+        val nowTime = today.format(formatter)
+        val baseUrl="$nowTime/${UUIDUtil.generate()}.$type"
+        val path = filePathSb.append(fileType).append("/").append(baseUrl).toString();
+        LOG.info("upload path:$path")
+        return path;
+
+    }
+
+
+
 
     fun resolvePipelineId(path: String): String {
         val roads = path.removePrefix("/").split("/")
