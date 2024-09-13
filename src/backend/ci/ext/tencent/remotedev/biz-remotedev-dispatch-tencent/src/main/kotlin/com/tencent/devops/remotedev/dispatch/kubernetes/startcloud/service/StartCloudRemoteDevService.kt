@@ -43,7 +43,6 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.Worksp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateBasicBody
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
@@ -89,18 +88,6 @@ class StartCloudRemoteDevService @Autowired constructor(
             // 迁移orderId
             workspaceRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
             return CreateWorkspaceRes(event.devFile.environmentUid!!, event.devFile.uid!!, 0, "")
-        }
-
-        kotlin.runCatching {
-            workspaceClient.createUser(
-                userId,
-                EnvironmentUserCreate(userId, contentProviderName, checkNotNull(event.appName))
-            )
-        }.onFailure {
-            logger.warn("create user failed.|${it.message}")
-            if (it is WorkspaceDispatchException) {
-                throw it
-            }
         }
 
         // 生产创建start资源的订单号

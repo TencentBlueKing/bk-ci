@@ -10,7 +10,7 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     export default {
         components: {
@@ -22,6 +22,9 @@
                 isLoading: false
             }
         },
+        computed: {
+            ...mapState('atom', ['pipelineInfo'])
+        },
         created () {
             this.init()
         },
@@ -32,7 +35,10 @@
             async init () {
                 try {
                     this.isLoading = true
-                    const res = await this.fetchPipelineByVersion(this.$route.params)
+                    const res = await this.fetchPipelineByVersion({
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.version
+                    })
                     this.pipelineName = res?.modelAndSetting?.model?.name ?? '--'
                 } catch (error) {
                     console.error(error)

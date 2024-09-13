@@ -371,7 +371,10 @@ interface ServiceRemoteDevResource {
     fun getWorkspaceImageList(
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
-        projectId: String?
+        projectId: String?,
+        @Parameter(description = "项目镜像id", required = true)
+        @QueryParam("imageId")
+        imageId: String?
     ): Result<Map<String, Any>>
 
     @Operation(summary = "修改工作空间别名")

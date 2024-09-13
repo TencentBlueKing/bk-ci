@@ -38,5 +38,4 @@ import com.tencent.devops.common.api.util.UUIDUtil
 open class UniqueIdException(
     val msg: String?,
     val uniqueId: String? = UUIDUtil.generate()
-) :
-    RuntimeException("[uniqueId=$uniqueId]$msg")
+) : RuntimeException("[uniqueId=$uniqueId]$msg")

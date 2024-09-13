@@ -144,6 +144,7 @@ export function isObject (o) {
 export function getStatusCls (status) {
     switch (status) {
         case STATUS_MAP.QUEUE:
+        case STATUS_MAP.QUEUE_CACHE:
         case STATUS_MAP.RUNNING:
         case STATUS_MAP.REVIEWING:
         case STATUS_MAP.PREPARE_ENV:
@@ -158,7 +159,6 @@ export function getStatusCls (status) {
         case STATUS_MAP.CANCELED:
         case STATUS_MAP.REVIEW_ABORT:
         case STATUS_MAP.TRY_FINALLY:
-        case STATUS_MAP.QUEUE_CACHE:
         case STATUS_MAP.SKIP:
             return 'WARNING'
         case STATUS_MAP.FAILED:

@@ -99,7 +99,7 @@ class AppPipelineResourceImpl @Autowired constructor(
         pageSize: Int?,
         channelCode: ChannelCode?,
         materialBranch: List<String>?,
-        customVersion: Int?,
+        debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
         triggerUser: List<String>?
@@ -114,7 +114,7 @@ class AppPipelineResourceImpl @Autowired constructor(
                 channelCode = channelCode ?: ChannelCode.BS,
                 checkPermission = true,
                 materialBranch = materialBranch,
-                customVersion = customVersion,
+                debug = debug,
                 triggerAlias = triggerAlias,
                 triggerBranch = triggerBranch,
                 triggerUser = triggerUser

@@ -127,6 +127,7 @@ class UpgradeProps @Autowired constructor(
         opType: ClientUpgradeOpType,
         isDistinguishCluster: Boolean
     ) {
+        logger.info("opHashCache: $redisKey, $values, $opType")
         when (opType) {
             ClientUpgradeOpType.ADD -> {
                 redisOperation.hmset(redisKey, values, isDistinguishCluster)
@@ -218,7 +219,7 @@ class UpgradeProps @Autowired constructor(
             return "$REMOTEDEV_UPGRADE_KEY_PREFIX:${comp.value}:${os.name.lowercase()}:${kind.value}"
         }
 
-        private const val MAX_UPGRADE_DEFAULT_NUMB = 500
+        private const val MAX_UPGRADE_DEFAULT_NUMB = 10000
 
         private val logger = LoggerFactory.getLogger(UpgradeProps::class.java)
     }

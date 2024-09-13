@@ -427,7 +427,10 @@ interface ApigwRemoteDevResource {
         apigwType: String?,
         @Parameter(description = "项目ID(项目英文名)", required = true)
         @QueryParam("projectId")
-        projectId: String?
+        projectId: String?,
+        @Parameter(description = "项目镜像id", required = true)
+        @QueryParam("imageId")
+        imageId: String?
     ): Result<Map<String, Any>>
 
     @Operation(

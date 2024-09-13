@@ -89,7 +89,7 @@ object StreamTriggerExceptionHandlerUtil {
         } finally {
             if (action.data.isWatcherInitialized) {
                 action.data.watcher.stop()
-                LogUtils.printCostTimeWE(action.data.watcher, warnThreshold = 1000, errorThreshold = 5000)
+                LogUtils.printCostTimeWE(action.data.watcher, warnThreshold = 5000, errorThreshold = 10000)
             }
         }
     }

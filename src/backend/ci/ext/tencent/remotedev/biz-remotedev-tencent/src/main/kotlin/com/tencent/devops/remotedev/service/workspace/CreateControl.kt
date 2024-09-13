@@ -226,6 +226,8 @@ class CreateControl @Autowired constructor(
         val newNum: Int
 
         val gameId = workspaceCommon.getGameIdAndAppId(projectId, ownerType)
+        SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
+            .createStartCloudUser(creator, gameId.first)
         val availableZone = windowsResourceConfigService.getAvailableZone(windowsZone, zoneType) ?: run {
             logger.warn("not has available zone ${windowsZone.zoneShortName}")
             throw ErrorCodeException(
@@ -373,7 +375,7 @@ class CreateControl @Autowired constructor(
             workspaceSystemType = systemType,
             ownerType = ownerType,
             winConfigId = windowsConfig.id?.toInt(),
-            imageId = workspaceCreate.imageId,
+            imageId = workspaceCreate.imageCosFile,
             zoneId = zoneId
         )
 
@@ -602,7 +604,7 @@ class CreateControl @Autowired constructor(
             return false
         }
 
-        val vm = workspaceCommon.syncStartCloudResourceList().find { it.cgsId == taskInfo.vmCreateResp?.cgsIp }
+        val vm = workspaceCommon.realtimeStartCloudResourceList().find { it.cgsId == taskInfo.vmCreateResp?.cgsIp }
             ?: kotlin.run {
                 logger.warn("createWinWorkspaceByVm not find cgsIp ${taskInfo.vmCreateResp?.cgsIp}")
                 return false
@@ -700,7 +702,8 @@ class CreateControl @Autowired constructor(
                 )
             }
         }
-
+        SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
+            .createStartCloudUser(userId, gameId.first)
         val bizId = MDC.get(TraceTag.BIZID)
         // 发送给k8s
         dispatcher.dispatch(
@@ -865,7 +868,7 @@ class CreateControl @Autowired constructor(
     }
 
     private fun startCloudResourceCountCheck(type: String) =
-        workspaceCommon.syncStartCloudResourceList().filter {
+        workspaceCommon.realtimeStartCloudResourceList().filter {
             it.status == 11 &&
                 it.machineType == type
         }

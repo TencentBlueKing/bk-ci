@@ -176,19 +176,13 @@ class StreamEventService @Autowired constructor(
             branch = branch
         )
 
-        if (saveUserMessage(
-                userId = userId,
-                projectCode = projectCode,
-                event = event,
-                gitProjectId = gitProjectId,
-                messageType = UserMessageType.REQUEST
-            )
-        ) {
-            websocketService.pushNotifyWebsocket(
-                userId,
-                GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
-            )
-        }
+        saveUserMessage(
+            userId = userId,
+            projectCode = projectCode,
+            event = event,
+            gitProjectId = gitProjectId,
+            messageType = UserMessageType.REQUEST
+        )
         return messageId
     }
 

@@ -26,20 +26,40 @@ class ClientUpgradeService @Autowired constructor(
 ) {
     fun checkUpgrade(userId: String, data: ClientUpgradeData): ClientUpgradeResp {
         val record = clientDao.fetchAny(dslContext, data.macAddress) ?: return ClientUpgradeResp.noUpgrade()
-        if (!upgradeProps.checkCanUpgrade(record.macAddress)) {
+        if (data.forceUpdate != true && !upgradeProps.checkCanUpgrade(record.macAddress)) {
             return ClientUpgradeResp.noUpgrade()
         }
         // 即使在列表中时还要校验下，保证实时性
         val os = OS.parse(record.os) ?: return ClientUpgradeResp.noUpgrade()
         val currentClientVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.CLIENT, os)
         val currentStartVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.START, os)
-        val dynamicProps = initUpgradeDynamicProps(os, currentClientVersion, currentStartVersion)
-        val clientVersion = checkVersion(ClientUpgradeComp.CLIENT, currentClientVersion, record, dynamicProps)
-        val startVersion = checkVersion(ClientUpgradeComp.START, currentStartVersion, record, dynamicProps)
+        if (currentClientVersion.isBlank() && currentStartVersion.isBlank()) {
+            return ClientUpgradeResp.noUpgrade()
+        }
+        val dynamicProps = initUpgradeDynamicProps(
+            os = os,
+            clientCurrentVersion = currentClientVersion,
+            startCurrentVersion = currentStartVersion,
+            noMax = data.forceUpdate ?: false
+        )
+        val clientVersion = checkVersion(
+            upgradeComp = ClientUpgradeComp.CLIENT,
+            inCurrentVersion = currentClientVersion,
+            record = record,
+            props = dynamicProps,
+            noMax = data.forceUpdate ?: false
+        )
+        val startVersion = checkVersion(
+            upgradeComp = ClientUpgradeComp.START,
+            inCurrentVersion = currentStartVersion,
+            record = record,
+            props = dynamicProps,
+            noMax = data.forceUpdate ?: false
+        )
         return ClientUpgradeResp(clientVersion, startVersion)
     }
 
-    @Scheduled(initialDelay = 60 * 1000L, fixedDelay = 5 * 60 * 1000L)
+    @Scheduled(initialDelay = 60 * 1000L, fixedDelay = 3 * 60 * 1000L)
     fun updateCanUpgradeClients() {
         val watcher = Watcher("updateCanUpgradeClients")
         logger.debug("updateCanUpgradeClients start")
@@ -60,7 +80,7 @@ class ClientUpgradeService @Autowired constructor(
             }
 
             watcher.start("listCanUpdateClients")
-            val canUpgradeClients = listCanUpgradeClients(maxParallelCount)?.ifEmpty { return } ?: return
+            val canUpgradeClients = listCanUpgradeClients(maxParallelCount).ifEmpty { return }
 
             watcher.start("setCanUpgradeClients")
             upgradeProps.setCanUpgradeClients(canUpgradeClients)
@@ -83,9 +103,26 @@ class ClientUpgradeService @Autowired constructor(
             if (clientCurrentVersion.isBlank() && startCurrentVersion.isBlank()) {
                 return@forEach
             }
-            val dynamicProps = initUpgradeDynamicProps(os, clientCurrentVersion, startCurrentVersion)
-            val clientCan = checkVersion(ClientUpgradeComp.CLIENT, clientCurrentVersion, it, dynamicProps)
-            val startCan = checkVersion(ClientUpgradeComp.START, startCurrentVersion, it, dynamicProps)
+            val dynamicProps = initUpgradeDynamicProps(
+                os = os,
+                clientCurrentVersion = clientCurrentVersion,
+                startCurrentVersion = startCurrentVersion,
+                noMax = false
+            )
+            val clientCan = checkVersion(
+                upgradeComp = ClientUpgradeComp.CLIENT,
+                inCurrentVersion = clientCurrentVersion,
+                record = it,
+                props = dynamicProps,
+                noMax = false
+            )
+            val startCan = checkVersion(
+                upgradeComp = ClientUpgradeComp.START,
+                inCurrentVersion = startCurrentVersion,
+                record = it,
+                props = dynamicProps,
+                noMax = false
+            )
             if (!clientCan.isNullOrBlank() || !startCan.isNullOrBlank()) {
                 canUpgradeMacAddressSet.add(it.macAddress)
             }
@@ -97,23 +134,27 @@ class ClientUpgradeService @Autowired constructor(
         return canUpgradeMacAddressSet
     }
 
-    // 初始化一些动态的参数
+    /**
+     * 初始化一些动态的参数
+     * @param noMax 不管最大升级数的限制
+     */
     private fun initUpgradeDynamicProps(
         os: OS,
         clientCurrentVersion: String,
-        startCurrentVersion: String
+        startCurrentVersion: String,
+        noMax: Boolean
     ): UpgradeDynamicProps {
         // 设置当前符合版本的个数
         val clientMaxNumber = upgradeProps.getMaxNumb(ClientUpgradeComp.CLIENT, os)
         var clientCanUpgradeNumb: Int? = null
-        if (clientMaxNumber != null && clientCurrentVersion.isNotBlank()) {
+        if (!noMax && clientCurrentVersion.isNotBlank()) {
             val count = clientDao.fetchVersionCount(dslContext, clientCurrentVersion)
             clientCanUpgradeNumb = (clientMaxNumber - count).let { if (it < 0) 0 else it }
         }
 
         val startMaxNumber = upgradeProps.getMaxNumb(ClientUpgradeComp.START, os)
         var startCanUpgradeNumb: Int? = null
-        if (startMaxNumber != null && startCurrentVersion.isNotBlank()) {
+        if (!noMax && startCurrentVersion.isNotBlank()) {
             val count = clientDao.fetchStartVersionCount(dslContext, startCurrentVersion)
             startCanUpgradeNumb = (startMaxNumber - count).let { if (it < 0) 0 else it }
         }
@@ -135,13 +176,17 @@ class ClientUpgradeService @Autowired constructor(
         upgradeComp: ClientUpgradeComp,
         inCurrentVersion: String?,
         record: TClientRecord,
-        props: UpgradeDynamicProps
+        props: UpgradeDynamicProps,
+        noMax: Boolean
     ): String? {
-        // 为空的上报版本不参与比较
+        // 为空的上报版本不参与比较，start除外
         val version = when (upgradeComp) {
             ClientUpgradeComp.START -> record.startVersion
             ClientUpgradeComp.CLIENT -> record.version
-        }.trim().ifBlank { return null }
+        }.trim()
+        if (version.isBlank() && upgradeComp == ClientUpgradeComp.CLIENT) {
+            return null
+        }
 
         // 根据用户升级版本
         val currentUser = record.currentUser
@@ -183,19 +228,23 @@ class ClientUpgradeService @Autowired constructor(
         }
 
         // 正常升级
-        val currentVersion =
-            (inCurrentVersion ?: (upgradeProps.getCurrentVersion(
-                comp = upgradeComp,
-                os = OS.parse(record.os) ?: return null
-            ))).trim().ifBlank { return null }
+        val currentVersion = (inCurrentVersion ?: (upgradeProps.getCurrentVersion(
+            comp = upgradeComp,
+            os = OS.parse(record.os) ?: return null
+        ))).trim().ifBlank { return null }
         if (version == currentVersion) {
             return null
         }
-        val canUpgradeNumb = props.canUpgradeNumb(upgradeComp) ?: return null
-        if (canUpgradeNumb - 1 < 0) {
-            return null
+
+        // 正常升级检查最大升级数
+        if (!noMax) {
+            val canUpgradeNumb = props.canUpgradeNumb(upgradeComp) ?: return null
+            if (canUpgradeNumb - 1 < 0) {
+                return null
+            }
+            props.setCanUpgradeNumb(upgradeComp, canUpgradeNumb - 1)
         }
-        props.setCanUpgradeNumb(upgradeComp, canUpgradeNumb - 1)
+
         return currentVersion
     }
 
