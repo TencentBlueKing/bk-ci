@@ -949,7 +949,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val innerPipelineUser = storeInnerPipelineConfig.innerPipelineUser
         val pipelineName = "am-$innerPipelineProject-$language"
         var pipelineId = redisOperation.get(pipelineName)
-        if (!pipelineId.isNullOrBlank()) {
+        if (pipelineId.isNullOrBlank()) {
             pipelineId = creatAtomPipeline(
                 context = context,
                 userId = innerPipelineUser,
