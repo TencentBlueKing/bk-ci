@@ -938,6 +938,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         startParams[KEY_OS_NAME] = JsonUtil.toJson(osNames)
         startParams[KEY_OS_ARCH] = JsonUtil.toJson(osArchs)
         startParams[KEY_INVALID_OS_INFO] = JsonUtil.toJson(invalidOsInfos)
+        startParams[KEY_CODE_SRC] = atomRecord.codeSrc
+        startParams[KEY_REPOSITORY_PATH] = (buildInfo.value2() ?: "")
         runtimeVersion?.let { startParams[KEY_RUNTIME_VERSION] = it }
         validOsNameFlag?.let {
             startParams[KEY_VALID_OS_NAME_FLAG] = it.toString()
