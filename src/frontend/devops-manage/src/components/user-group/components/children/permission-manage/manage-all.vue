@@ -1,6 +1,14 @@
 <template>
   <bk-loading class="manage" :loading="isLoading"  :zIndex="100">
     <div class="manage-search">
+      <div class="search-expired">
+        <p class="search-terms">{{ t('过期时间') }}</p>
+        <date-picker
+          v-model="searchExpiredAt"
+          :commonUseList="commonUseList"
+          @update:model-value="handleValueChange"
+        />
+      </div>
       <bk-search-select
         v-model="searchValue"
         :data="searchData"
@@ -364,6 +372,8 @@
 </template>
 
 <script setup name="ManageAll">
+import DatePicker from '@blueking/date-picker';
+import '@blueking/date-picker/vue3/vue3.css';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { Message } from 'bkui-vue';
@@ -427,11 +437,63 @@ const searchData = computed(() => {
       name: t('组织架构'),
       id: 'department',
     },
+    {
+      name: t('用户组名称'),
+      id: 'groupName',
+    },
   ]
   return data.filter(data => {
     return !searchValue.value.find(val => val.id === data.id)
   })
 });
+const searchExpiredAt = ref([]);
+const expiredAtList = ref([])
+const searchGroup = computed(() => ({
+  searchValue: searchValue.value,
+  expiredAt: expiredAtList.value
+}));
+const commonUseList = ref([
+  {
+    id: ['now', 'now+24h'],
+    name: t('未来 X 小时', [24]),
+  },
+  {
+    id: ['now', 'now+7d'],
+    name: t('未来 X 天', [7]),
+  },
+  {
+    id: ['now', 'now+15d'],
+    name: t('未来 X 天', [15]),
+  },
+  {
+    id: ['now', 'now+30d'],
+    name: t('未来 X 天', [30]),
+  },
+  {
+    id: ['now', 'now+60d'],
+    name: t('未来 X 天', [60]),
+  },
+  {
+    id: ['now-24h', 'now'],
+    name: t('过去 X 小时', [24]),
+  },
+  {
+    id: ['now-7d', 'now'],
+    name: t('过去 X 天', [7]),
+  },
+  {
+    id: ['now-15d', 'now'],
+    name: t('过去 X 天', [15]),
+  },
+  {
+    id: ['now-30d', 'now'],
+    name: t('过去 X 天', [30]),
+  },
+  {
+    id: ['now-60d', 'now'],
+    name: t('过去 X 天', [60]),
+  },
+]);
 const manageAsideRef = ref(null);
 const groupTableStore = userGroupTable();
 const manageAsideStore = useManageAside();
@@ -502,12 +564,18 @@ onMounted(() => {
 watch(projectId, () => {
   init(true);
 });
-watch(searchValue, (newSearchValue) => {
-  init(undefined, newSearchValue);
+watch(searchGroup, () => {
+  init(undefined, searchGroup.value);
 });
 function handleSearch (value) {
   if(!value.length) return;
-  init(undefined, value);
+  searchValue.value = value;
+  init(undefined, searchGroup.value);
+}
+function handleValueChange (value, info) {
+  console.log(value,'/////');
+  searchExpiredAt.value = value;
+  expiredAtList.value = info;
 }
 function init (flag, searchValue) {
   memberPagination.value.current = 1;
@@ -519,7 +587,9 @@ function asideClick (item) {
 }
 async function refresh () {
   searchValue.value = [];
-  getProjectMembers(projectId.value, true, searchValue.value);
+  searchExpiredAt.value = [];
+  expiredAtList.value = [];
+  getProjectMembers(projectId.value, true);
 }
 /**
  * 移交弹窗打开时
@@ -740,21 +810,26 @@ async function getMenuList (item, keyword) {
   const query = {
     memberType: item.id,
     page: 1,
-    pageSize: 400
+    pageSize: 400,
+    projectCode: projectId.value,
   }
   if (item.id === 'user' && keyword) {
     query.userName = keyword
   } else if (item.id === 'department' && keyword) {
     query.deptName = keyword
   }
-  const res = await http.getProjectMembers(projectId.value, query)
-  return res.records.map(i => {
-    return {
-      ...i,
-      displayName: i.name || i.id,
-      name: i.type === 'user' ? (!i.name ? i.id : `${i.id} (${i.name})`) : i.name,
-    }
-  })
+  if(item.id === 'groupName') {
+    return []
+  } else {
+    const res = await http.getProjectMembers(projectId.value, query)
+    return res.records.map(i => {
+      return {
+        ...i,
+        displayName: i.name || i.id,
+        name: i.type === 'user' ? (!i.name ? i.id : `${i.id} (${i.name})`) : i.name,
+      }
+    })
+  }
 }
 function handleChangeOverFormName ({list, userList}) {
   if(!list){
@@ -787,9 +862,25 @@ function closeDeptListPermissionDialog () {
     background: #FFFFFF;
     padding: 16px 24px;
     box-shadow: 0 2px 4px 0 #1919290d;
+    
+    .search-expired {
+      display: flex;
+      align-items: center;
+
+      .search-terms {
+        color: #63656e;
+        line-height: 30px;
+        padding: 0 10px;
+        color: #63656e;
+        border: 1px solid #c4c6cc;
+        border-radius: 2px;
+        background-color: #f5f7fa;
+      }
+    }
 
     .multi-search {
       width: 50%;
+      margin-left: 10px;
     }
   }
 

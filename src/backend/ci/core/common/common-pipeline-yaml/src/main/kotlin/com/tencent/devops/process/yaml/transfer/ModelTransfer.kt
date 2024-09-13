@@ -172,12 +172,17 @@ class ModelTransfer @Autowired constructor(
         // 添加finally
         val finallyJobs = yamlInput.yaml.formatFinallyStage()
         if (finallyJobs.isNotEmpty()) {
+            yamlInput.aspectWrapper.setYamlStage4Yaml(
+                aspectType = PipelineTransferAspectWrapper.AspectType.BEFORE
+            )
             stageList.add(
                 modelStage.yaml2FinallyStage(
                     stageIndex = stageIndex,
                     finallyJobs = finallyJobs,
                     yamlInput = yamlInput
-                )
+                ).also {
+                    yamlInput.aspectWrapper.setModelStage4Model(it, PipelineTransferAspectWrapper.AspectType.AFTER)
+                }
             )
         }
         checkExtends(yamlInput.yaml.templateFilter().extends, model)

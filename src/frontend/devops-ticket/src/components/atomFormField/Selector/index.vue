@@ -11,14 +11,22 @@
         @selected="onSelect"
         @toggle="toggle"
     >
-        <bk-option v-for="(option, index) in list"
+        <bk-option
+            v-for="(option, index) in list"
             :key="index"
             :id="option[settingKey]"
             :name="option[displayKey]"
         >
         </bk-option>
-        <div slot="extension" v-if="hasAddItem" class="bk-selector-create-item">
-            <a :href="itemUrl" target="_blank">
+        <div
+            slot="extension"
+            v-if="hasAddItem"
+            class="bk-selector-create-item"
+        >
+            <a
+                :href="itemUrl"
+                target="_blank"
+            >
                 <i class="devops-icon icon-plus-circle" />
                 {{ itemText }}
             </a>

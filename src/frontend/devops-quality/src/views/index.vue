@@ -4,7 +4,8 @@
             <side-bar
                 :nav="sideMenuNav"
                 :side-menu-list="sideMenuList"
-                :sub-system-name="'qualityLevel'">
+                :sub-system-name="'qualityLevel'"
+            >
             </side-bar>
         </div>
         <router-view style="width: 100%"></router-view>

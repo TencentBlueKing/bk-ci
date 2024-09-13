@@ -6,13 +6,25 @@
             class="log-tools"
         >
             <template v-slot:tool>
-                <li class="more-button" @click="toggleShowDebugLog">
+                <li
+                    class="more-button"
+                    @click="toggleShowDebugLog"
+                >
                     {{ showDebug ? $t("hideDebugLog") : $t("showDebugLog") }}
                 </li>
-                <li class="more-button" @click="downloadLog">{{ $t("downloadLog") }}</li>
+                <li
+                    class="more-button"
+                    @click="downloadLog"
+                >
+                    {{ $t("downloadLog") }}
+                </li>
             </template>
         </bk-log-search>
-        <bk-log class="bk-log" ref="scroll" @tag-change="tagChange"></bk-log>
+        <bk-log
+            class="bk-log"
+            ref="scroll"
+            @tag-change="tagChange"
+        ></bk-log>
     </section>
 </template>
 

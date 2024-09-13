@@ -3,7 +3,10 @@
         v-bkloading="loadingOption"
         class="devops-index"
     >
-        <div class="user-prompt" v-if="showAnnounce">
+        <div
+            class="user-prompt"
+            v-if="showAnnounce"
+        >
             <!-- <p><i class="bk-icon icon-info-circle-shape"></i>{{currentNotice.noticeContent}}</p> -->
             <p v-html="currentNotice.noticeContent"></p>
         </div>
@@ -67,7 +70,10 @@
             </main>
         </template>
 
-        <apply-project-dialog ref="applyProjectDialog" :project-code="curProjectCode" />
+        <apply-project-dialog
+            ref="applyProjectDialog"
+            :project-code="curProjectCode"
+        />
     </div>
 </template>
 
