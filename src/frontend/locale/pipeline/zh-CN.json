@@ -1037,6 +1037,7 @@
     "bool": "布尔值",
     "enum": "单选框",
     "multiple": "复选框",
+    "checkbox": "Checkbox确认框",
     "svntag": "SVN分支或TAG",
     "gitref": "GIT分支或TAG",
     "codelib": "代码库",

@@ -54,7 +54,8 @@
         CHECK_PARAM_LIST,
         isEnumParam,
         isMultipleParam,
-        isBooleanParam
+        isBooleanParam,
+        isCheakboxParam
     } from '@/store/modules/atom/paramsConfig'
 
     const paramTypeList = CHECK_PARAM_LIST.map((item) => ({
@@ -104,6 +105,7 @@
         methods: {
             isBooleanParam,
             isMultipleParam,
+            isCheakboxParam,
 
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
@@ -129,7 +131,9 @@
 
                 if (isMultipleParam(type)) this.copyForm.value = []
 
-                if (isBooleanParam(type)) this.copyForm.value = false
+                if (isBooleanParam(type)) this.copyForm.value = ''
+
+                if (isCheakboxParam(type)) this.copyForm.value = false
             },
 
             changeOption (val) {

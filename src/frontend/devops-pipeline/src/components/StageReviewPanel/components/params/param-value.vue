@@ -11,6 +11,8 @@
         </bk-option>
     </bk-select>
 
+    <bk-checkbox v-model="form.value" v-else-if="isCheakboxParam(form.valueType)"></bk-checkbox>
+
     <bk-radio-group v-model="form.value" v-else-if="isBooleanParam(form.valueType)">
         <bk-radio :value="true" :disabled="disabled">
             true
@@ -27,7 +29,8 @@
         isMultipleParam,
         isTextareaParam,
         isStringParam,
-        isBooleanParam
+        isBooleanParam,
+        isCheakboxParam
     } from '@/store/modules/atom/paramsConfig'
 
     export default {
@@ -41,6 +44,7 @@
             isStringParam,
             isTextareaParam,
             isMultipleParam,
+            isCheakboxParam,
 
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
