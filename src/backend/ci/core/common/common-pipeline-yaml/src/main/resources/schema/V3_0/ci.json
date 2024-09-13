@@ -1737,6 +1737,9 @@
           "additionalProperties" : false,
           "required" : [ "jobs" ],
           "properties" : {
+            "enable" : {
+              "type" : "boolean"
+            },
             "name" : {
               "type" : "string"
             },
@@ -1875,6 +1878,9 @@
           "required" : [ "steps" ],
           "additionalProperties" : false,
           "properties" : {
+            "enable" : {
+              "type" : "boolean"
+            },
             "name" : {
               "type" : "string"
             },
@@ -2110,6 +2116,11 @@
           "type" : "integer",
           "minimum" : 1,
           "maximum" : 1440
+        },
+        "max-parallel" : {
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 200
         }
       }
     },
@@ -2318,6 +2329,9 @@
           "required" : [ "steps" ],
           "additionalProperties" : false,
           "properties" : {
+            "enable" : {
+              "type" : "boolean"
+            },
             "name" : {
               "type" : "string"
             },
