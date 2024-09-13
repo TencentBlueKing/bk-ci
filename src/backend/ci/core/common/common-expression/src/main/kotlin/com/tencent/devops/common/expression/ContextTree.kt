@@ -1,8 +1,5 @@
 package com.tencent.devops.common.expression
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.DictionaryContextDataWithVal
@@ -11,7 +8,6 @@ import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import java.util.LinkedList
 import java.util.Queue
-import kotlin.jvm.Throws
 
 /**
  * 用来将流水线变量转为树的形式，来对其转换到表达式引擎做兼容处理
@@ -168,43 +164,5 @@ open class ContextTreeNode(
             dict[child.key] = child.toContext()
         }
         return dict
-    }
-}
-
-// 存在用户的 json 值为 array 但是翻译成了 map，这里我们认为是等价的
-class ObjectNodeComparator : Comparator<JsonNode> {
-    override fun compare(o1: JsonNode?, o2: JsonNode?): Int {
-        if (o1 == null && o2 == null) {
-            return 0
-        }
-        if (o1 == null || o2 == null) {
-            return 1
-        }
-        if (o1 == o2) {
-            return 0
-        }
-        if (o1 is ArrayNode && o2 is ObjectNode) {
-            if (o1.size() != o2.size()) {
-                return 1
-            }
-            o1.forEachIndexed { index, node ->
-                if (o2[index] == null || node != o2[index]) {
-                    return 1
-                }
-            }
-            return 0
-        }
-        if (o1 is ObjectNode && o2 is ArrayNode) {
-            if (o1.size() != o2.size()) {
-                return 1
-            }
-            o2.forEachIndexed { index, node ->
-                if (o1[index] == null || node != o1[index]) {
-                    return 1
-                }
-            }
-            return 0
-        }
-        return 1
     }
 }

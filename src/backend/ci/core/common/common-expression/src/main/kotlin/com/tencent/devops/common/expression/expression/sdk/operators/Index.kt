@@ -143,6 +143,7 @@ class Index : Container() {
         return Pair(result, true)
     }
 
+    @Suppress("ComplexMethod")
     private fun handleFilteredArray(
         context: EvaluationContext,
         filteredArray: FilteredArray

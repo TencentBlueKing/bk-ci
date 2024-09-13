@@ -297,7 +297,7 @@ class SubPipelineRepositoryService @Autowired constructor(
         val trigger = stages.getOrNull(0)
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB)
         // 检查触发容器
-        val paramsMap = defaultModelCheckPlugin.checkTriggerContainer(trigger)
+        val paramsMap = defaultModelCheckPlugin.checkTriggerContainer(trigger, false)
         return PipelineVarUtil.fillVariableMap(paramsMap.mapValues { it.value.defaultValue.toString() })
     }
 
