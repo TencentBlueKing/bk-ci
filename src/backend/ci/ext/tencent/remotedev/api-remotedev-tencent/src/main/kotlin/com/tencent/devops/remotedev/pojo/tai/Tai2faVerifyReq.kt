@@ -26,5 +26,5 @@ data class Moa2faVerifyRespData(
 data class VerifySessionData(
     val sessionId: String,
     val status: String,
-    val buttonType: String
+    val buttonType: String?
 )
