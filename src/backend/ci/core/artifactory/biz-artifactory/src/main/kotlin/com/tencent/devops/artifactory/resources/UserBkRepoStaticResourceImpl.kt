@@ -34,6 +34,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.RestResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -67,7 +68,7 @@ class UserBkRepoStaticResourceImpl @Autowired constructor(
         val baseUrl="$nowTime/${UUIDUtil.generate()}.$fileSuffix"
         val filePath = if (type.isNullOrBlank()) {
            // filePathSb.append(fileSuffix)
-            filePathSb.append(baseUrl)
+                filePathSb.append(baseUrl)
         } else {
            // filePathSb.append("${type.lowercase()}/$fileSuffix")
             filePathSb.append("${type.lowercase()}/").append(baseUrl)

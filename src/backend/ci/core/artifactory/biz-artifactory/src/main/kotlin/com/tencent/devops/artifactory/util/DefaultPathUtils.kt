@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.util
 
 import com.tencent.devops.artifactory.constant.DATE_FORMAT_YYYY_MM_DD
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -78,10 +79,11 @@ object DefaultPathUtils {
     fun getUploadPathByTime(filePath: String?,fileType: FileTypeEnum?,type: String): String {
         val filePathSb = StringBuilder()
         val today = LocalDate.now()
-        val formatter  = DateTimeFormatter.ofPattern(DATE_FORMAT_YYYY_MM_DD )
+        val formatter  = DateTimeFormatter.ofPattern(DateTimeUtil.YYYYMMDD)
         val nowTime = today.format(formatter)
         val baseUrl="$nowTime/${UUIDUtil.generate()}.$type"
         val path = if (filePath.isNullOrBlank()) {
+            filePathSb.append("file/")
             if (fileType == null){
                 filePathSb.append(baseUrl).toString();
             }else{
@@ -95,7 +97,20 @@ object DefaultPathUtils {
 
     }
 
+    /**
+     *  根据上传时间来生成文件路径(全路径)
+     */
+    fun getUploadPathByTime(fileType: String, type: String): String {
+        val filePathSb = StringBuilder()
+        val today = LocalDate.now()
+        val formatter  = DateTimeFormatter.ofPattern(DateTimeUtil.YYYYMMDD )
+        val nowTime = today.format(formatter)
+        val baseUrl="$nowTime/${UUIDUtil.generate()}.$type"
+        val path = filePathSb.append(fileType).append("/").append(baseUrl).toString();
+        LOG.info("upload path:$path")
+        return path;
 
+    }
 
 
 
