@@ -478,20 +478,7 @@ class PipelineRuntimeService @Autowired constructor(
                 status = status.name,
                 stageStatus = stageStatus,
                 currentTimestamp = currentTimestamp,
-                material = material?.let { list ->
-                    list.sortedWith { o1, o2 ->
-                        val (mainRepo1, createTime1) = (o1.mainRepo ?: false) to (o1.createTime ?: 0)
-                        val (mainRepo2, createTime2) = (o2.mainRepo ?: false) to (o2.createTime ?: 0)
-                        when {
-                            mainRepo1 == mainRepo2 -> if (mainRepo1) {
-                                createTime2.compareTo(createTime1)
-                            } else {
-                                (o1.aliasName ?: "").compareTo(o2.aliasName ?: "")
-                            }
-                            else -> mainRepo2.compareTo(mainRepo1)
-                        }
-                    }
-                },
+                material = material,
                 queueTime = queueTime,
                 artifactList = artifactList,
                 remark = remark,

@@ -42,6 +42,7 @@ class PipelineBuildMaterialService @Autowired constructor(
 ) {
     private val logger = LoggerFactory.getLogger(PipelineBuildMaterialService::class.java)
 
+    @SuppressWarnings("CyclomaticComplexMethod")
     fun saveBuildMaterial(
         buildId: String,
         projectId: String,
@@ -70,8 +71,25 @@ class PipelineBuildMaterialService @Autowired constructor(
         } else {
             materialList.addAll(pipelineBuildMaterials.map { it.copy(taskId = taskId) })
         }
+        // 按顺序保存
+        val materials = JsonUtil.toJson(
+            bean = materialList.let { list ->
+                list.sortedWith { o1, o2 ->
+                    val (mainRepo1, createTime1) = (o1.mainRepo ?: false) to (o1.createTime ?: 0)
+                    val (mainRepo2, createTime2) = (o2.mainRepo ?: false) to (o2.createTime ?: 0)
+                    when {
+                        mainRepo1 == mainRepo2 -> if (mainRepo1) {
+                            createTime2.compareTo(createTime1)
+                        } else {
+                            (o1.aliasName ?: "").compareTo(o2.aliasName ?: "")
+                        }
 
-        val materials = JsonUtil.toJson(materialList, formatted = false)
+                        else -> mainRepo2.compareTo(mainRepo1)
+                    }
+                }
+            },
+            formatted = false
+        )
         pipelineBuildDao.updateBuildMaterial(
             dslContext = dslContext,
             projectId = projectId,
