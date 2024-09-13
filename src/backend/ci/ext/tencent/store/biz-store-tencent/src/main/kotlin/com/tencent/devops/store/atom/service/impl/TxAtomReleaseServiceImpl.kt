@@ -949,7 +949,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         val innerPipelineProject = storeInnerPipelineConfig.innerPipelineProject
         val innerPipelineUser = storeInnerPipelineConfig.innerPipelineUser
-        val pipelineName = "am-$innerPipelineProject-$language"
+        val pipelineName = "atom-build-$innerPipelineProject-$language"
         var pipelineId = redisOperation.get(pipelineName)
         if (pipelineId.isNullOrBlank()) {
             pipelineId = creatAtomPipeline(
@@ -1338,7 +1338,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     ): String {
         var pipelineId: String?
         val lock = RedisLock(redisOperation, "creatAtomPipeline-$projectCode-$language", 60L)
-        val pipelineName = "am-$projectCode-$language"
+        val pipelineName = "atom-build-$projectCode-$language"
         try {
             lock.lock()
             pipelineId = redisOperation.get(pipelineName)
