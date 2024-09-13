@@ -85,7 +85,7 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
         marketAtomService.setAtomBuildStatusByAtomCode(
             atomCode = atomCode,
             version = version,
-            userId = atomRecord.modifier,
+            userId = storeBuildResultRequest.userId,
             atomStatus = atomStatus,
             msg = null
         )
@@ -98,7 +98,7 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
                 redisLock.lock()
                 marketAtomDao.setupAtomLatestTestFlag(
                     dslContext = dslContext,
-                    userId = atomRecord.modifier,
+                    userId = storeBuildResultRequest.userId,
                     atomCode = atomCode,
                     atomId = atomId
                 )
