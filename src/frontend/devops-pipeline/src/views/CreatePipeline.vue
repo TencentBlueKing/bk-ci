@@ -386,6 +386,11 @@
                     }, [])
                     console.log(this.applySettings)
                 }
+            },
+            searchName (val) {
+                if (this.activePanel === 'store') {
+                    this.requestMarkTemplates(true)
+                }
             }
         },
         created () {
@@ -436,7 +441,8 @@
                 const param = {
                     page: this.page,
                     pageSize: this.pageSize,
-                    projectCode: this.$route.params.projectId
+                    projectCode: this.$route.params.projectId,
+                    keyword: this.searchName
                 }
                 this.requestStoreTemplate(param).then((res) => {
                     this.page++
