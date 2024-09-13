@@ -117,6 +117,23 @@ class StorePipelineRelDao {
         }
     }
 
+    fun updateStorePipelineProject(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        pipelineId: String,
+        projectCode: String
+    ) {
+        with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
+            dslContext.update(this)
+                .set(PROJECT_CODE, projectCode)
+                .set(PIPELINE_ID, pipelineId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .execute()
+        }
+    }
+
     fun deleteStorePipelineRelById(dslContext: DSLContext, id: String) {
         with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
             dslContext.deleteFrom(this)
