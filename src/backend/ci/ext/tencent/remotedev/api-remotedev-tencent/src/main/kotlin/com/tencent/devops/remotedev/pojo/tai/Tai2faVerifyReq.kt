@@ -25,5 +25,6 @@ data class Moa2faVerifyRespData(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class VerifySessionData(
     val sessionId: String,
-    val status: String
+    val status: String,
+    val buttonType: String
 )
