@@ -229,7 +229,6 @@ include(":core:metrics:model-metrics")
 //  ==================== tencent ============================================================
 include(":ext")
 include(":ext:tencent")
-include(":ext:tencent:common:common-job")
 include(":ext:tencent:common:common-notify-tencent")
 include(":ext:tencent:common:common-digest-tencent")
 include(":ext:tencent:common:common-devcloud")

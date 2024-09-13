@@ -100,13 +100,13 @@ class MetricsListenerConfiguration {
     }
 
     /**
-     * 用户审计数据上报交换机
+     * 插件监控数据上报广播交换机
      */
     @Bean
-    fun projectUserDailyMetricsExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
+    fun projectUserDailyMetricsFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
     }
 
     @Bean
@@ -115,10 +115,10 @@ class MetricsListenerConfiguration {
     @Bean
     fun projectUserDailyMetricsQueueBind(
         @Autowired projectUserDailyMetricsQueue: Queue,
-        @Autowired projectUserDailyMetricsExchange: DirectExchange
+        @Autowired projectUserDailyMetricsFanoutExchange: FanoutExchange
     ): Binding {
         return BindingBuilder.bind(projectUserDailyMetricsQueue)
-            .to(projectUserDailyMetricsExchange).with(MQ.ROUTE_PROJECT_USER_DAILY_METRICS)
+            .to(projectUserDailyMetricsFanoutExchange)
     }
 
     @Bean
@@ -142,16 +142,26 @@ class MetricsListenerConfiguration {
         )
     }
 
+    /**
+     * 用户操作度量数据上报交换机
+     */
+    @Bean
+    fun projectUserDailyOperateMetricsExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_PROJECT_USER_DAILY_OPERATE, true, false)
+        directExchange.isDelayed = true
+        return directExchange
+    }
+
     @Bean
     fun projectUserDailyOperateMetricsQueue() = Queue(QUEUE_PROJECT_USER_DAILY_OPERATE_METRICS)
 
     @Bean
     fun projectUserDailyOperateMetricsQueueBind(
         @Autowired projectUserDailyOperateMetricsQueue: Queue,
-        @Autowired projectUserDailyMetricsExchange: DirectExchange
+        @Autowired projectUserDailyOperateMetricsExchange: DirectExchange
     ): Binding {
         return BindingBuilder.bind(projectUserDailyOperateMetricsQueue)
-            .to(projectUserDailyMetricsExchange).with(MQ.ROUTE_PROJECT_USER_DAILY_OPERATE_METRICS)
+            .to(projectUserDailyOperateMetricsExchange).with(MQ.ROUTE_PROJECT_USER_DAILY_OPERATE_METRICS)
     }
 
     @Bean

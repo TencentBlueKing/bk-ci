@@ -61,6 +61,19 @@ class UserAuthResourceMemberResourceImpl(
     }
 
     @BkManagerCheck
+    override fun listProjectMembersByCondition(
+        userId: String,
+        projectId: String,
+        projectMembersQueryConditionReq: ProjectMembersQueryConditionReq
+    ): Result<SQLPage<ResourceMemberInfo>> {
+        return Result(
+            permissionResourceMemberService.listProjectMembersByComplexConditions(
+                conditionReq = projectMembersQueryConditionReq
+            )
+        )
+    }
+
+    @BkManagerCheck
     override fun renewalGroupMember(
         userId: String,
         projectId: String,
