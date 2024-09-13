@@ -55,6 +55,50 @@
                             {{ $t('settings.runningOption.multiple') }}
                         </bk-radio>
                     </div>
+                </bk-radio-group>
+                <div
+                    v-if="isMultipleLock"
+                    class="single-lock-sub-form"
+                    :key="pipelineSetting.runLockType"
+                >
+                    <bk-form-item
+                        :required="isMultipleLock"
+                        :label="$t('settings.concurrentMaxConcurrency')"
+                        error-display-type="normal"
+                        property="maxConRunningQueueSize"
+                    >
+                        <bk-input
+                            type="number"
+                            :disabled="!editable"
+                            :placeholder="$t('settings.itemPlaceholder')"
+                            v-model="pipelineSetting.maxConRunningQueueSize"
+                            @change="val => handleBaseInfoChange('maxConRunningQueueSize', val)"
+                        />
+                    </bk-form-item>
+
+                    <bk-form-item
+                        :required="isMultipleLock"
+                        :label="$t('settings.concurrentTimeout')"
+                        error-display-type="normal"
+                        property="waitQueueTimeMinute"
+                    >
+                        <bk-input
+                            type="number"
+                            :disabled="!editable"
+                            :placeholder="$t('settings.itemPlaceholder')"
+                            v-model="pipelineSetting.waitQueueTimeMinute"
+                            @change="val => handleBaseInfoChange('waitQueueTimeMinute', val)"
+                        >
+                            <template slot="append">
+                                <span class="pipeline-setting-unit">{{ $t('settings.minutes') }}</span>
+                            </template>
+                        </bk-input>
+                    </bk-form-item>
+                </div>
+                <bk-radio-group
+                    :value="pipelineSetting.runLockType"
+                    @change="handleLockTypeChange"
+                >
                     <div class="run-lock-radio-item">
                         <bk-radio
                             :disabled="!editable"
@@ -65,45 +109,7 @@
                     </div>
                 </bk-radio-group>
             </bk-form-item>
-            <div
-                v-if="isMultipleLock"
-                class="single-lock-sub-form"
-                :key="pipelineSetting.runLockType"
-            >
-                <bk-form-item
-                    :required="isMultipleLock"
-                    :label="$t('settings.concurrentMaxConcurrency')"
-                    error-display-type="normal"
-                    property="maxConRunningQueueSize"
-                >
-                    <bk-input
-                        type="number"
-                        :disabled="!editable"
-                        :placeholder="$t('settings.itemPlaceholder')"
-                        v-model="pipelineSetting.maxConRunningQueueSize"
-                        @change="val => handleBaseInfoChange('maxConRunningQueueSize', val)"
-                    />
-                </bk-form-item>
 
-                <bk-form-item
-                    :required="isMultipleLock"
-                    :label="$t('settings.concurrentTimeout')"
-                    error-display-type="normal"
-                    property="waitQueueTimeMinute"
-                >
-                    <bk-input
-                        type="number"
-                        :disabled="!editable"
-                        :placeholder="$t('settings.itemPlaceholder')"
-                        v-model="pipelineSetting.waitQueueTimeMinute"
-                        @change="val => handleBaseInfoChange('waitQueueTimeMinute', val)"
-                    >
-                        <template slot="append">
-                            <span class="pipeline-setting-unit">{{$t('settings.minutes')}}</span>
-                        </template>
-                    </bk-input>
-                </bk-form-item>
-            </div>
             <div
                 v-if="isSingleLock"
                 class="single-lock-sub-form"
