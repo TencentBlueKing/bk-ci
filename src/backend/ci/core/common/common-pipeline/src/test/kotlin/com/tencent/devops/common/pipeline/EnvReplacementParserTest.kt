@@ -557,7 +557,9 @@ echo true"""
         )
         Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, true))
         Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, ClassicPipelineDialect()))
-        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, ConstrainedPipelineDialect()))
+        Assertions.assertThrows(VariableNotFoundException::class.java) {
+            EnvReplacementParser.parse(command1, mapOf(), ConstrainedPipelineDialect())
+        }
     }
 
     private fun parseAndEquals(
