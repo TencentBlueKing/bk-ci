@@ -63,6 +63,8 @@ object AgentEnv {
     const val BK_TAG = "devops_bk_tag"
     const val PUBLIC_HOST_MAX_FILE_CACHE_SIZE = "devops.public.host.maxFileCacheSize"
     const val THIRD_HOST_MAX_FILE_CACHE_SIZE = "devops.public.third.maxFileCacheSize"
+    const val AGENT_JDK_8_PATH = "DEVOPS_AGENT_JDK_8_PATH"
+    const val AGENT_JDK_17_PATH = "DEVOPS_AGENT_JDK_17_PATH"
 
     private var projectId: String? = null
     private var agentId: String? = null

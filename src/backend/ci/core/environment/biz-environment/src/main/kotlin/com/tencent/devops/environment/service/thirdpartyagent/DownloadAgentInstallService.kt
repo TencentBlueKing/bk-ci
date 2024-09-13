@@ -52,6 +52,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.nio.charset.Charset
+import java.util.Locale
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -207,8 +208,10 @@ class DownloadAgentInstallService @Autowired constructor(
 
     private fun getGoAgentJarFiles(os: String, arch: AgentArchType?): List<File> {
         val agentJar = getAgentJarFile()
-        val jreFile = getJreZipFile(os, arch)
-        return listOf(agentJar, jreFile)
+        // #10586 现阶段保持 8 和 17并行，直到没有 8 的使用
+        val jreFile = getJreZipFile(os, arch, JDK8_FILENAME)
+        val jdk17File = getJreZipFile(os, arch, JDK17_FILENAME)
+        return listOf(agentJar, jreFile, jdk17File)
     }
 
     private fun getGoFile(os: String, fileName: String, arch: AgentArchType?): File {
@@ -253,7 +256,7 @@ class DownloadAgentInstallService @Autowired constructor(
     fun downloadJre(agentId: String, eTag: String?, arch: AgentArchType?): Response {
         logger.info("downloadJre, agentId: $agentId, eTag: $eTag")
         val record = getAgentRecord(agentId)
-        val file = getJreZipFile(record.os, arch)
+        val file = getJreZipFile(record.os, arch, JDK17_FILENAME)
 
         if (!eTag.isNullOrBlank()) {
             if (eTag == getFileMD5(file)) {
@@ -302,13 +305,13 @@ class DownloadAgentInstallService @Autowired constructor(
         return agentJar
     }
 
-    fun getJreZipFile(os: String, arch: AgentArchType?): File {
+    fun getJreZipFile(os: String, arch: AgentArchType?, fileName: String): File {
         val archStr = if (arch == null) {
             ""
         } else {
             "_${arch.arch}"
         }
-        val file = File(agentPackage, "/jre/${os.toLowerCase()}$archStr/jre.zip")
+        val file = File(agentPackage, "/jre/${os.lowercase(Locale.getDefault())}$archStr/$fileName")
         if (!file.exists()) {
             logger.warn("The jre file(${file.absolutePath}) is not exist")
             throw FileNotFoundException("The jre file is not exist")
@@ -426,5 +429,8 @@ class DownloadAgentInstallService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(DownloadAgentInstallService::class.java)
         private const val AGENT_FILE_MODE = 0b111101101
         private const val CERT_FILE_NAME = ".cert"
+
+        private const val JDK8_FILENAME = "jre.zip"
+        private const val JDK17_FILENAME = "jdk17.zip"
     }
 }
