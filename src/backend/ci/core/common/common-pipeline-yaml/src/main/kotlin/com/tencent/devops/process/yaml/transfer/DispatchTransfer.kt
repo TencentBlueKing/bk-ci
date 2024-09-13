@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.Credential
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoStoreImage
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
@@ -185,10 +186,19 @@ class DispatchTransfer @Autowired(required = false) constructor(
                     password = info.password,
                     credentialId = info.credId,
                     acrossTemplateId = info.acrossTemplateId,
-                    jobId = job.id
+                    jobId = job.id,
+                    credentialProjectId = null
                 ),
                 options = info.options,
-                imagePullPolicy = info.imagePullPolicy
+                imagePullPolicy = info.imagePullPolicy,
+                storeImage = if (info.imageCode != null && info.imageVersion != null) {
+                    ThirdPartyAgentDockerInfoStoreImage(
+                        imageCode = info.imageCode,
+                        imageVersion = info.imageVersion
+                    )
+                } else {
+                    null
+                }
             )
         } else null
     }
