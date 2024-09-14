@@ -372,7 +372,7 @@ class PipelineRuntimeService @Autowired constructor(
         startUser: List<String>?,
         updateTimeDesc: Boolean? = null,
         queryDslContext: DSLContext? = null,
-        debugVersion: Int?,
+        debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
         triggerUser: List<String>?
@@ -408,7 +408,7 @@ class PipelineRuntimeService @Autowired constructor(
             buildMsg = buildMsg,
             startUser = startUser,
             updateTimeDesc = updateTimeDesc,
-            debugVersion = debugVersion,
+            debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
             triggerUser = triggerUser
@@ -1886,7 +1886,7 @@ class PipelineRuntimeService @Autowired constructor(
         buildMsg: String? = null,
         startUser: List<String>? = null,
         queryDslContext: DSLContext? = null,
-        debugVersion: Int? = null,
+        debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
         triggerUser: List<String>?
@@ -1915,7 +1915,7 @@ class PipelineRuntimeService @Autowired constructor(
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
             startUser = startUser,
-            debugVersion = debugVersion,
+            debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
             triggerUser = triggerUser

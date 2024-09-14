@@ -4,7 +4,10 @@
             <div class="yaml-preview-popup">
                 <header>
                     {{ $t('previewYaml') }}
-                    <i class="devops-icon icon-close" @click="close" />
+                    <i
+                        class="devops-icon icon-close"
+                        @click="close"
+                    />
                 </header>
                 <YamlEditor
                     class="preview-yaml-content"

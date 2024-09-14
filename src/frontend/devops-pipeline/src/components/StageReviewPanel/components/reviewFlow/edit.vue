@@ -1,25 +1,53 @@
 <template>
     <section>
         <bk-form>
-            <bk-form-item v-for="(reviewGroup, index) in copyReviewGroups" :key="index"
-                :class="{ 'is-error': errorIndexs.includes(index), 'review-form': true }">
+            <bk-form-item
+                v-for="(reviewGroup, index) in copyReviewGroups"
+                :key="index"
+                :class="{ 'is-error': errorIndexs.includes(index), 'review-form': true }"
+            >
                 <section class="review-group">
-                    <bk-input class="review-name" :placeholder="'Flow ' + (index + 1)" :disabled="disabled"
-                        :value="reviewGroup.name" @change="modifyReviewName(reviewGroup, ...arguments)"></bk-input>
+                    <bk-input
+                        class="review-name"
+                        :placeholder="'Flow ' + (index + 1)"
+                        :disabled="disabled"
+                        :value="reviewGroup.name"
+                        @change="modifyReviewName(reviewGroup, ...arguments)"
+                    ></bk-input>
 
-                    <user-input clearable class="review-user" :placeholder="$t('stageReview.userInputTips')"
-                        :value="reviewGroup.reviewers" :disabled="disabled"
-                        :handle-change="(name, value) => addReviewUser(reviewGroup, name, value)"></user-input>
+                    <user-input
+                        clearable
+                        class="review-user"
+                        :placeholder="$t('stageReview.userInputTips')"
+                        :value="reviewGroup.reviewers"
+                        :disabled="disabled"
+                        :handle-change="(name, value) => addReviewUser(reviewGroup, name, value)"
+                    ></user-input>
 
-                    <bk-button text title="primary" @click="deleteReviewGroup(index)" :disabled="disabled"
-                        class="review-opt">{{ $t('delete') }}</bk-button>
+                    <bk-button
+                        text
+                        title="primary"
+                        @click="deleteReviewGroup(index)"
+                        :disabled="disabled"
+                        class="review-opt"
+                    >
+                        {{ $t('delete') }}
+                    </bk-button>
                 </section>
-                <span v-if="errorIndexs.includes(index)" class="bk-form-tip is-danger">{{
+                <span
+                    v-if="errorIndexs.includes(index)"
+                    class="bk-form-tip is-danger"
+                >{{
                     $t('stageReview.reviewRequire') }}</span>
             </bk-form-item>
         </bk-form>
-        <bk-button text title="primary" @click="addReviewGroup" :disabled="disabled || reviewGroups.length >= 5"
-            class="review-opt mt3">
+        <bk-button
+            text
+            title="primary"
+            @click="addReviewGroup"
+            :disabled="disabled || reviewGroups.length >= 5"
+            class="review-opt mt3"
+        >
             <i class="bk-icon icon-plus-circle"></i>{{ $t('stageReview.addFlow') }}
         </bk-button>
     </section>

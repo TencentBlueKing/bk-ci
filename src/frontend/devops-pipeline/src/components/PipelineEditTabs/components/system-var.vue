@@ -1,6 +1,11 @@
 <template>
     <div class="system-var-container">
-        <bk-alert v-if="editable" type="info" :title="$t('newui.sysVarTips')" closable></bk-alert>
+        <bk-alert
+            v-if="editable"
+            type="info"
+            :title="$t('newui.sysVarTips')"
+            closable
+        ></bk-alert>
         <div class="operate-row">
             <bk-input
                 v-model="searchStr"
@@ -19,7 +24,12 @@
             >
                 <section slot="content">
                     <template v-for="env in group.params">
-                        <env-item :key="env.name" :name="env.name" :desc="env.desc" :editable="editable" />
+                        <env-item
+                            :key="env.name"
+                            :name="env.name"
+                            :desc="env.desc"
+                            :editable="editable"
+                        />
                     </template>
                 </section>
             </param-group>
