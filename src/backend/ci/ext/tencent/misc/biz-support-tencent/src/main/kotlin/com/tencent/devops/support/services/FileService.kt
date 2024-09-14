@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -44,6 +45,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Service
 class FileService @Autowired constructor(private val client: Client) {
@@ -89,8 +92,11 @@ class FileService @Autowired constructor(private val client: Client) {
         }
         val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoResource::class)
         // 组装文件上传目标路径
+        val today = LocalDate.now()
+        val formatter = DateTimeFormatter.ofPattern(DateTimeUtil.YYYYMMDD)
+        val nowTime = today.format(formatter)
         val destPath = if (fileRepoPath.isNullOrBlank()) {
-            "file/$fileType/${file.name}"
+            "file/$fileType/$nowTime/${file.name}"
         } else {
             fileRepoPath
         }
