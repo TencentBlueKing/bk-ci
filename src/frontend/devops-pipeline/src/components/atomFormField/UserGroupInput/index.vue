@@ -5,8 +5,7 @@
             allow-create
             clearable
             :placeholder="placeholder"
-            :search-key="['groupId', 'groupName']"
-            save-key="groupId"
+            :search-key="['id', 'name']"
             separator=","
             :disabled="disabled"
             :create-tag-validator="checkVariable"

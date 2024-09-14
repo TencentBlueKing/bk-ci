@@ -35,7 +35,7 @@
                             clearable
                             class="review-user"
                             :placeholder="reviewGroup.reviewType ? $t('stageReview.userGroupInputTips') : ''"
-                            :value="reviewGroup.reviewers"
+                            :value="reviewGroup.groups"
                             :disabled="disabled"
                             :handle-change="(name, value) => addReviewGroup(reviewGroup, name, value)"
                         >
