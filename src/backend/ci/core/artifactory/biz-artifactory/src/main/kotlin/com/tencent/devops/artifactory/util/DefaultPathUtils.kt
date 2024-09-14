@@ -27,7 +27,6 @@
 
 package com.tencent.devops.artifactory.util
 
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import org.slf4j.LoggerFactory
