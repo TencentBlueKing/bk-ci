@@ -330,7 +330,7 @@ class StageTransfer @Autowired(required = false) constructor(
 
     private fun getCheckInForStage(stage: Stage): PreStageCheck? {
         val reviews = PreStageReviews(
-            flows = stage.checkIn?.reviewGroups?.map { PreFlow(it.name, it.reviewers) },
+            flows = stage.checkIn?.reviewGroups?.map { PreFlow(it.name, it.reviewers, it.groups) },
             variables = stage.checkIn?.reviewParams?.associate {
                 it.key to ReviewVariable(
                     label = it.chineseName ?: it.key,
@@ -374,7 +374,8 @@ class StageTransfer @Autowired(required = false) constructor(
             check.reviewGroups = stageCheck.reviews.flows.map {
                 StageReviewGroup(
                     name = it.name,
-                    reviewers = ModelCommon.parseReceivers(it.reviewers).toList()
+                    reviewers = ModelCommon.parseReceivers(it.reviewers).toList(),
+                    groups = ModelCommon.parseReceivers(it.groups).toList()
                 )
             }.toMutableList()
             check.markdownContent = stageCheck.reviews.contentFormat == ContentFormat.MARKDOWN

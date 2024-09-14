@@ -552,7 +552,8 @@ object ScriptYmlUtils {
                     flows = preCheck.reviews.flows?.map {
                         Flow(
                             name = it.name,
-                            reviewers = anyToListString(it.reviewers)
+                            reviewers = anyToListString(it.reviewers),
+                            groups = anyToListString(it.groups)
                         )
                     },
                     variables = preCheck.reviews.variables,
