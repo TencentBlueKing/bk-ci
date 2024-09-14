@@ -973,7 +973,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             // 判断插件版本最近一次的构建是否完成
             val buildResult = if (buildInfoRecord != null) {
                 client.get(ServiceBuildResource::class).getBuildStatusWithoutPermission(
-                    userId = userId,
+                    userId = userName,
                     projectId = projectCode,
                     pipelineId = buildInfoRecord.pipelineId,
                     buildId = buildInfoRecord.buildId,
@@ -998,7 +998,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
             userId = innerPipelineUser,
             projectId = innerPipelineProject,
-            pipelineId = pipelineId!!,
+            pipelineId = pipelineId,
             values = startParams,
             channelCode = ChannelCode.AM,
             startType = StartType.SERVICE
