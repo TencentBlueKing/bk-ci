@@ -68,7 +68,7 @@ class StoreLogServiceImpl @Autowired constructor(
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?> {
-        val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
+        val validateResult = validateUserQueryPermission(storeType, buildId, userId)
         if (validateResult.isNotOk()) {
             return Result(status = validateResult.status, message = validateResult.message, data = null)
         }
@@ -102,7 +102,7 @@ class StoreLogServiceImpl @Autowired constructor(
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?> {
-        val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
+        val validateResult = validateUserQueryPermission(storeType, buildId, userId)
         if (validateResult.isNotOk()) {
             return Result(status = validateResult.status, message = validateResult.message, data = null)
         }
@@ -140,7 +140,7 @@ class StoreLogServiceImpl @Autowired constructor(
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?> {
-        val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
+        val validateResult = validateUserQueryPermission(storeType, buildId, userId)
         if (validateResult.isNotOk()) {
             return Result(status = validateResult.status, message = validateResult.message, data = null)
         }
