@@ -122,25 +122,26 @@ class CheckPauseReviewStageCmd(
     }
 
     private fun checkReviewGroup(projectId: String, check: StagePauseCheck) {
-        val projectRoleUsers = authProjectApi.getProjectGroupAndUserList(
-            serviceCode = pipelineAuthServiceCode,
-            projectCode = projectId
-        ).associateBy { it.roleName }
-        check.reviewGroups?.forEach { group ->
-            if (group.status != null) {
+        val projectRoleUsers = lazy {
+            authProjectApi.getProjectGroupAndUserList(
+                serviceCode = pipelineAuthServiceCode,
+                projectCode = projectId
+            ).associateBy { it.roleName }
+        }
+        check.reviewGroups?.forEach { review ->
+            if (review.status != null || review.groups.isEmpty()) {
                 return@forEach
             }
-            if (group.reviewers.find { it in projectRoleUsers.keys } == null) {
+            if (review.groups.find { it in projectRoleUsers.value.keys } == null) {
                 return@forEach
             }
-            val realReviewer = group.reviewers.toMutableSet()
-            group.reviewers.forEach { reviewer ->
-                if (projectRoleUsers[reviewer] != null) {
-                    realReviewer.addAll(projectRoleUsers[reviewer]!!.userIdList)
-                    realReviewer.remove(reviewer)
+            val realReviewer = review.reviewers.toMutableSet()
+            review.groups.forEach { group ->
+                if (projectRoleUsers.value[group] != null) {
+                    realReviewer.addAll(projectRoleUsers.value[group]!!.userIdList)
                 }
             }
-            group.reviewers = realReviewer.toList()
+            review.reviewers = realReviewer.toList()
         }
     }
 

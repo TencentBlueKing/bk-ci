@@ -182,11 +182,18 @@ data class StagePauseCheck(
      */
     fun parseReviewVariables(variables: Map<String, String>, asCodeEnabled: Boolean?) {
         reviewGroups?.forEach { group ->
-            if (group.status == null) {
+            if (group.status != null) return@forEach
+            if (group.reviewers.isNotEmpty()) {
                 val reviewers = group.reviewers.joinToString(",")
                 val realReviewers = EnvReplacementParser.parse(reviewers, variables, asCodeEnabled)
                     .split(",").toList()
                 group.reviewers = realReviewers
+            }
+            if (group.groups.isNotEmpty()) {
+                val groups = group.groups.joinToString(",")
+                val realGroups = EnvReplacementParser.parse(groups, variables, asCodeEnabled)
+                    .split(",").toList()
+                group.groups = realGroups
             }
         }
         reviewDesc = EnvReplacementParser.parse(reviewDesc, variables, asCodeEnabled)
