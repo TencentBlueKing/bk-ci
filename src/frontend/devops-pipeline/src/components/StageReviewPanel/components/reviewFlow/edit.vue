@@ -19,6 +19,7 @@
                     >
                         <bk-select
                             v-model="reviewGroup.reviewType"
+                            :disabled="disabled"
                             class="review-type-select"
                             @change="() => handleChangeReviewType(index)"
                         >
@@ -36,7 +37,7 @@
                             class="review-user"
                             :placeholder="reviewGroup.reviewType ? $t('stageReview.userGroupInputTips') : ''"
                             :value="reviewGroup.groups"
-                            :disabled="disabled"
+                            :disabled="disabled || !reviewGroup.reviewType"
                             :handle-change="(name, value) => addReviewGroup(reviewGroup, name, value)"
                         >
                         </user-group-input>
