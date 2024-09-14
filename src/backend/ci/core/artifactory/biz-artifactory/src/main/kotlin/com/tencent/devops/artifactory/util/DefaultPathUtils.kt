@@ -27,7 +27,6 @@
 
 package com.tencent.devops.artifactory.util
 
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import org.slf4j.LoggerFactory
@@ -73,19 +72,17 @@ object DefaultPathUtils {
         return "${UUIDUtil.generate()}$suffix"
     }
 
-
-    // 根据上传时间来生成文件路径(全路径)
     fun getUploadPathByTime(filePath: String?, fileType: String?, type: String): String {
         val filePathSb = StringBuilder()
         val today = LocalDate.now()
-        val formatter  = DateTimeFormatter.ofPattern(DateTimeUtil.YYYYMMDD )
+        val formatter = DateTimeFormatter.ofPattern(DateTimeUtil.YYYYMMDD)
         val nowTime = today.format(formatter)
-        val baseUrl="$nowTime/${UUIDUtil.generate()}.$type"
+        val baseUrl = "$nowTime/${UUIDUtil.generate()}.$type"
         val path = if (filePath.isNullOrBlank()) {
             filePathSb.append("file/")
-            if (fileType == null){
+            if (fileType == null) {
                 filePathSb.append(baseUrl).toString()
-            }else{
+            } else {
                 filePathSb.append("${fileType.lowercase()}/").append(baseUrl).toString()
             }
         } else {
@@ -93,7 +90,6 @@ object DefaultPathUtils {
         }
         return path
     }
-
 
     fun resolvePipelineId(path: String): String {
         val roads = path.removePrefix("/").split("/")

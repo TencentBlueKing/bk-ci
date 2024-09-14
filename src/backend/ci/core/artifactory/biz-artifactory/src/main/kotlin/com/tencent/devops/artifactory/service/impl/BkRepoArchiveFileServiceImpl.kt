@@ -116,7 +116,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         staticFlag: Boolean?
     ): String {
         val pathSplit = file.name.split('.')
-        val destPath = DefaultPathUtils.getUploadPathByTime(filePath, fileType?.fileType,pathSplit[pathSplit.size - 1]);
+        val destPath = DefaultPathUtils.getUploadPathByTime(filePath, fileType?.fileType,pathSplit[pathSplit.size - 1])
         val metadata = mutableMapOf<String, String>()
         metadata[KEY_SHA_CONTENT] = file.inputStream().use { ShaUtils.sha1InputStream(it) }
         props?.forEach {
