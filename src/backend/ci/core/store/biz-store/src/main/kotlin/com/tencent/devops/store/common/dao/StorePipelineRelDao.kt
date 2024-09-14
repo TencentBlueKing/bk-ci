@@ -106,6 +106,7 @@ class StorePipelineRelDao {
             return dslContext.select(STORE_TYPE).from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .orderBy(UPDATE_TIME.desc())
+                .limit(1)
                 .fetchOne(0, Byte::class.java)
         }
     }
