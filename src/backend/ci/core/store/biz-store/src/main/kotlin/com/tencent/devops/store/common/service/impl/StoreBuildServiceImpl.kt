@@ -61,19 +61,24 @@ class StoreBuildServiceImpl @Autowired constructor(
         logger.info("handleStoreBuildResult params:[$pipelineId|$buildId|$storeBuildResultRequest]")
         // 查看该次构建流水线属于研发商店哪个组件类型
         val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRelByBuildId(dslContext, buildId)
-        val storeType = storeBuildInfoRecord?.pipelineId?.let {
-            storePipelineRelDao.getStoreTypeByLatestPipelineId(
-                dslContext = dslContext,
-                pipelineId = it
-            )
-        }
-        logger.info("handleStoreBuildResult pipelineId:${storeBuildInfoRecord?.pipelineId},storeType:$storeType")
-        if (storeType == null) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(pipelineId),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )
+        logger.info("handleStoreBuildResult pipelineId:${storeBuildInfoRecord?.pipelineId}")
+        try {
+            val storeType = storeBuildInfoRecord?.pipelineId?.let {
+                storePipelineRelDao.getStoreTypeByLatestPipelineId(
+                    dslContext = dslContext,
+                    pipelineId = it
+                )
+            }
+            logger.info("handleStoreBuildResult pipelineId:${storeBuildInfoRecord?.pipelineId},storeType:$storeType")
+            if (storeType == null) {
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(pipelineId),
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("handleStoreBuildResult getStoreTypeByLatestPipelineId:" + ignored.message)
         }
         val storeHandleBuildResultService =
             getStoreHandleBuildResultService(StoreTypeEnum.getStoreType(storeType.toInt()))
