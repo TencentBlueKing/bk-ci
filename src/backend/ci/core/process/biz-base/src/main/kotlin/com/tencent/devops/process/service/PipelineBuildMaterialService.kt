@@ -42,7 +42,7 @@ class PipelineBuildMaterialService @Autowired constructor(
 ) {
     private val logger = LoggerFactory.getLogger(PipelineBuildMaterialService::class.java)
 
-    @SuppressWarnings("CyclomaticComplexMethod")
+    @SuppressWarnings("CyclomaticComplexMethod", "ComplexMethod")
     fun saveBuildMaterial(
         buildId: String,
         projectId: String,
