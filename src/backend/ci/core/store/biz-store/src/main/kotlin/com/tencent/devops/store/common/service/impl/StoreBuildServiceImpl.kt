@@ -77,15 +77,16 @@ class StoreBuildServiceImpl @Autowired constructor(
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
+
+            val storeHandleBuildResultService =
+                getStoreHandleBuildResultService(StoreTypeEnum.getStoreType(storeType.toInt()))
+            val result = storeHandleBuildResultService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest)
+            logger.info("handleStoreBuildResult result is:$result")
+            if (result.isNotOk() || result.data != true) {
+                return result
+            }
         } catch (ignored: Throwable) {
             logger.warn("handleStoreBuildResult getStoreTypeByLatestPipelineId:" + ignored.message)
-        }
-        val storeHandleBuildResultService =
-            getStoreHandleBuildResultService(StoreTypeEnum.getStoreType(storeType.toInt()))
-        val result = storeHandleBuildResultService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest)
-        logger.info("handleStoreBuildResult result is:$result")
-        if (result.isNotOk() || result.data != true) {
-            return result
         }
         return Result(true)
     }
