@@ -62,31 +62,26 @@ class StoreBuildServiceImpl @Autowired constructor(
         // 查看该次构建流水线属于研发商店哪个组件类型
         val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRelByBuildId(dslContext, buildId)
         logger.info("handleStoreBuildResult pipelineId:${storeBuildInfoRecord?.pipelineId}")
-        try {
-            val storeType = storeBuildInfoRecord?.pipelineId?.let {
-                storePipelineRelDao.getStoreTypeByLatestPipelineId(
-                    dslContext = dslContext,
-                    pipelineId = it
-                )
-            }
-            logger.info("handleStoreBuildResult pipelineId:${storeBuildInfoRecord?.pipelineId},storeType:$storeType")
-            if (storeType == null) {
-                return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf(pipelineId),
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                )
-            }
-
-            val storeHandleBuildResultService =
-                getStoreHandleBuildResultService(StoreTypeEnum.getStoreType(storeType.toInt()))
-            val result = storeHandleBuildResultService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest)
-            logger.info("handleStoreBuildResult result is:$result")
-            if (result.isNotOk() || result.data != true) {
-                return result
-            }
-        } catch (ignored: Throwable) {
-            logger.warn("handleStoreBuildResult getStoreTypeByLatestPipelineId:" + ignored.message)
+        val storeType = storeBuildInfoRecord?.pipelineId?.let {
+            storePipelineRelDao.getStoreTypeByLatestPipelineId(
+                dslContext = dslContext,
+                pipelineId = it
+            )
+        }
+        logger.info("handleStoreBuildResult pipelineId:${storeBuildInfoRecord?.pipelineId},storeType:$storeType")
+        if (storeType == null) {
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(pipelineId),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
+        }
+        val storeHandleBuildResultService =
+            getStoreHandleBuildResultService(StoreTypeEnum.getStoreType(storeType.toInt()))
+        val result = storeHandleBuildResultService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest)
+        logger.info("handleStoreBuildResult result is:$result")
+        if (result.isNotOk() || result.data != true) {
+            return result
         }
         return Result(true)
     }
