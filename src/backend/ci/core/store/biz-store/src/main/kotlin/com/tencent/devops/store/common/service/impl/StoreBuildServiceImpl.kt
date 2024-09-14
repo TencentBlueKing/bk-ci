@@ -70,7 +70,7 @@ class StoreBuildServiceImpl @Autowired constructor(
         logger.info("handleStoreBuildResult storeType:${storeType?.toInt()}")
         storeType?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(pipelineId),
+                params = arrayOf("pipelineId:$pipelineId,storeType:$storeType"),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         val storeHandleBuildResultService =
