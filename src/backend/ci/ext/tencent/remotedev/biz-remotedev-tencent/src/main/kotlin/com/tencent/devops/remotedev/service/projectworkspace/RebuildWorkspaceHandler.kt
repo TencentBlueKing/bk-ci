@@ -170,12 +170,13 @@ class RebuildWorkspaceHandler @Autowired constructor(
             )
 
             // 保存些需要回调才能使用的参数，有配置了参数才进行保存
-            if (rebuildReq.formatDataDisk == true) {
+            if (rebuildReq.removeOwner == true) {
                 saveRebuildOptions(
                     workspaceName = workspaceName,
                     userId = userId,
-                    data = RebuildOptions(rebuildReq.removeOwner ?: false)
+                    data = RebuildOptions(removeOwner = true)
                 )
+                logger.debug("rebuildWorkspace|saveRebuildOptions|$workspaceName|$userId")
             }
 
             val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
@@ -218,7 +219,8 @@ class RebuildWorkspaceHandler @Autowired constructor(
 
     fun rebuildWorkspaceCallback(event: RemoteDevUpdateEvent) {
         // 回调来了先删除缓存的参数
-        val options = getRebuildOptions(event.workspaceName, event.userId)
+        val options = getRebuildOptions(workspaceName = event.workspaceName, userId = event.userId)
+        logger.debug("rebuildWorkspace|getRebuildOptions|${event.workspaceName}|${event.userId}")
         if (options != null) {
             deleteRebuildOptions(event.workspaceName, event.userId)
         }
@@ -233,9 +235,14 @@ class RebuildWorkspaceHandler @Autowired constructor(
         if (event.status) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                var toStatus = WorkspaceStatus.RUNNING
+                if (options?.removeOwner == true) {
+                    workspaceSharedDao.deleteOwner(transactionContext, event.workspaceName)
+                    toStatus = WorkspaceStatus.DISTRIBUTING
+                }
                 workspaceDao.updateWorkspaceStatus(
                     workspaceName = event.workspaceName,
-                    status = WorkspaceStatus.RUNNING,
+                    status = toStatus,
                     dslContext = transactionContext
                 )
                 workspaceOpHistoryDao.createWorkspaceHistory(
@@ -246,7 +253,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
                     actionMessage = String.format(
                         workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                         WorkspaceStatus.REBUILDING,
-                        WorkspaceStatus.RUNNING.name
+                        toStatus.name
                     )
                 )
             }
@@ -257,16 +264,6 @@ class RebuildWorkspaceHandler @Autowired constructor(
                     projectId = workspace.projectId,
                     userId = event.userId,
                     workspaceName = event.workspaceName
-                )
-            }
-
-            // 成功后执行
-            if (options?.removeOwner == true) {
-                workspaceSharedDao.deleteOwner(dslContext, event.workspaceName)
-                workspaceDao.updateWorkspaceStatus(
-                    workspaceName = event.workspaceName,
-                    status = WorkspaceStatus.DISTRIBUTING,
-                    dslContext = dslContext
                 )
             }
         } else {
@@ -336,7 +333,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
     }
 
     private fun genRebuildOptionsKey(workspaceName: String, userId: String) =
-        REBUILD_OPTIONS_REDIS_KEY_PRI + "$workspaceName.$userId"
+        "$REBUILD_OPTIONS_REDIS_KEY_PRI:$workspaceName.$userId"
 
     companion object {
         private val logger = LoggerFactory.getLogger(RebuildWorkspaceHandler::class.java)
