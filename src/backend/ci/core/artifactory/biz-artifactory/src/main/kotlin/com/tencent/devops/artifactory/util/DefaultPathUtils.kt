@@ -74,8 +74,8 @@ object DefaultPathUtils {
     }
 
 
-    //根据上传时间来生成文件路径(全路径)
-    fun getUploadPathByTime(filePath: String?, fileType: FileTypeEnum?, type: String): String {
+    // 根据上传时间来生成文件路径(全路径)
+    fun getUploadPathByTime(filePath: String?, fileType: String?, type: String): String {
         val filePathSb = StringBuilder()
         val today = LocalDate.now()
         val formatter  = DateTimeFormatter.ofPattern(DateTimeUtil.YYYYMMDD )
@@ -84,35 +84,15 @@ object DefaultPathUtils {
         val path = if (filePath.isNullOrBlank()) {
             filePathSb.append("file/")
             if (fileType == null){
-                filePathSb.append(baseUrl).toString();
+                filePathSb.append(baseUrl).toString()
             }else{
-                filePathSb.append("${fileType.fileType.lowercase()}/").append(baseUrl).toString();
+                filePathSb.append("${fileType.lowercase()}/").append(baseUrl).toString()
             }
         } else {
-            filePath;
+            filePath
         }
-        LOG.info("upload path:$path")
-        return path;
-
+        return path
     }
-
-
-    /**
-     *  根据上传时间来生成文件路径(全路径)
-     */
-    fun getUploadPathByTime(fileType: String, type: String): String {
-        val filePathSb = StringBuilder()
-        val today = LocalDate.now()
-        val formatter  = DateTimeFormatter.ofPattern(DateTimeUtil.YYYYMMDD )
-        val nowTime = today.format(formatter)
-        val baseUrl="$nowTime/${UUIDUtil.generate()}.$type"
-        val path = filePathSb.append(fileType).append("/").append(baseUrl).toString();
-        LOG.info("upload path:$path")
-        return path;
-
-    }
-
-
 
 
     fun resolvePipelineId(path: String): String {

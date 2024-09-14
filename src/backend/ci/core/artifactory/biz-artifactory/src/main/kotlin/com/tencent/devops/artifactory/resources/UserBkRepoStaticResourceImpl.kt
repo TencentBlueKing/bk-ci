@@ -62,13 +62,10 @@ class UserBkRepoStaticResourceImpl @Autowired constructor(
         val nowTime = today.format(formatter)
         val baseUrl="$nowTime/${UUIDUtil.generate()}.$fileSuffix"
         val filePath = if (type.isNullOrBlank()) {
-            // filePathSb.append(fileSuffix)
             filePathSb.append(baseUrl)
         } else {
-            // filePathSb.append("${type.lowercase()}/$fileSuffix")
             filePathSb.append("${type.lowercase()}/").append(baseUrl)
         }
-        // filePathSb.append("/${UUIDUtil.generate()}.$fileSuffix")
         val url = archiveFileService.uploadFile(
             userId = userId,
             inputStream = inputStream,
