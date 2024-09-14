@@ -301,9 +301,10 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, storeId)
         if (null != storeBuildInfoRecord) {
             val pipelineId = storeBuildInfoRecord.pipelineId
-            val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(
+            val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByStoreCode(
                 dslContext = dslContext,
-                pipelineId = pipelineId
+                storeType = storeType,
+                storeCode = storeCode
             )
             var projectCode = storePipelineRelRecord?.projectCode
             if (projectCode.isNullOrBlank()) {
@@ -531,5 +532,17 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         )
         val currentNum = if (status == StoreStatusEnum.RELEASED) 1 else 0
         return releaseTotalNum > currentNum
+    }
+
+    override fun getStoreCodeById(
+        storeId: String,
+        storeType: StoreTypeEnum
+    ): String {
+        var code = storeBaseQueryDao.getComponentById(dslContext, storeId)?.storeCode
+        if (code == null) {
+            val storeCommonDao = getStoreCommonDao(storeType.name)
+            code = storeCommonDao.getStoreCodeById(dslContext, storeId)
+        }
+        return code ?: ""
     }
 }

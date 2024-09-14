@@ -34,7 +34,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.common.dao.StorePipelineRelDao
+import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
+import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreLogService
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -51,9 +52,10 @@ import org.springframework.stereotype.Service
 class StoreLogServiceImpl @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val storePipelineRelDao: StorePipelineRelDao,
+    private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
     private val storeMemberDao: StoreMemberDao,
-    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig,
+    private val storeCommonService: StoreCommonService
 ) : StoreLogService {
 
     override fun getInitLogs(
@@ -167,27 +169,28 @@ class StoreLogServiceImpl @Autowired constructor(
 
     private fun validateUserQueryPermission(
         storeType: StoreTypeEnum,
-        pipelineId: String,
+        buildId: String,
         userId: String
     ): Result<Boolean> {
         // 查询是否是插件的成员，只有插件的成员才能看日志
-        val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(dslContext, pipelineId)
+        val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRelByBuildId(dslContext, buildId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(pipelineId),
+                params = arrayOf(buildId),
                 language = I18nUtil.getLanguage(userId)
             )
+        val storeCode = storeCommonService.getStoreCodeById(storeBuildInfoRecord.storeId, storeType)
         val flag = storeMemberDao.isStoreMember(
             dslContext = dslContext,
             userId = userId,
-            storeCode = storePipelineRelRecord.storeCode,
+            storeCode = storeCode,
             storeType = storeType.type.toByte()
         )
         if (!flag) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = GET_INFO_NO_PERMISSION,
                 language = I18nUtil.getLanguage(userId),
-                params = arrayOf(storePipelineRelRecord.storeCode)
+                params = arrayOf(storeCode)
             )
         }
         return Result(true)

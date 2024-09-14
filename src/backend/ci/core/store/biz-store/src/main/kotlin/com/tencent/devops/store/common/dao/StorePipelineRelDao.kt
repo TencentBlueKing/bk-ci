@@ -32,11 +32,11 @@ import com.tencent.devops.model.store.tables.TStorePipelineRel
 import com.tencent.devops.model.store.tables.records.TStorePipelineRelRecord
 import com.tencent.devops.store.pojo.common.enums.StorePipelineBusTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class StorePipelineRelDao {
@@ -86,11 +86,27 @@ class StorePipelineRelDao {
         }
     }
 
-    fun getStorePipelineRelByPipelineId(dslContext: DSLContext, pipelineId: String): TStorePipelineRelRecord? {
+    fun getStorePipelineRelByStoreCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): TStorePipelineRelRecord? {
         with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .orderBy(UPDATE_TIME.desc())
+                .limit(1)
                 .fetchOne()
+        }
+    }
+
+    fun getStoreTypeByLatestPipelineId(dslContext: DSLContext, pipelineId: String): Byte? {
+        with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
+            return dslContext.select(STORE_TYPE).from(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .orderBy(UPDATE_TIME.desc())
+                .fetchOne()?.get(0) as Byte
         }
     }
 
