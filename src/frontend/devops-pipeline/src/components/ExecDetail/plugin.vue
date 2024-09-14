@@ -43,7 +43,7 @@
                 v-if="currentTab === 'log'"
             />
             <component
-                v-if="currentTab === key"
+                v-show="currentTab === key"
                 :is="value.component"
                 v-bind="value.bindData"
                 v-for="(value, key) in componentList"
@@ -95,7 +95,8 @@
                     { name: 'artifactory', show: false, completeLoading: false },
                     { name: 'report', show: false, completeLoading: false },
                     { name: 'setting', show: true }
-                ]
+                ],
+                isShowArtifact: false
             }
         },
 
@@ -167,15 +168,6 @@
                 // } catch (error) {
                 //     return null
                 // }
-            },
-
-            showTab () {
-                const artifactoryTab = this.tabList.find(tab => tab.name === 'artifactory')
-                const reportTab = this.tabList.find(tab => tab.name === 'report')
-                if (artifactoryTab && reportTab) {
-                    return artifactoryTab.completeLoading && reportTab.completeLoading
-                }
-                return false
             }
         },
 
