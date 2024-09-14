@@ -1,5 +1,6 @@
 <template>
-    <bk-dialog v-model="isShow"
+    <bk-dialog
+        v-model="isShow"
         theme="primary"
         :width="600"
         :height="400"
@@ -8,7 +9,7 @@
         :show-footer="false"
         @cancel="handleCancel"
     >
-        {{$t('importPipelineLabel')}}
+        {{ $t('importPipelineLabel') }}
         <bk-upload
             v-if="isShow"
             accept="application/json"
@@ -124,9 +125,9 @@
                 })
             },
             async updatePipeline (result, newPipelineName) {
+                const { templateId, instanceFromTemplate, ...restModel } = result.model
                 const pipeline = {
-                    ...result.model,
-                    instanceFromTemplate: false,
+                    ...restModel,
                     name: newPipelineName
                 }
                 try {

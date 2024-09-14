@@ -283,7 +283,7 @@ const {
   memberPagination,
 } = storeToRefs(manageAsideStore);
 
-const projectId = computed(() => route.params?.projectCode);
+const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
 const removeUser = ref(null);
 const isChecking = ref(false);
 const overTable = ref([]);

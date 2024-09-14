@@ -1,5 +1,8 @@
 <template>
-    <div class="devops-app" v-bkloading="{ isLoading: moduleLoading }">
+    <div
+        class="devops-app"
+        v-bkloading="{ isLoading: moduleLoading }"
+    >
         <router-view />
     </div>
 </template>

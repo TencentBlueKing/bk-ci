@@ -1,22 +1,37 @@
 <template>
-    <detail-container @close="$emit('close')"
+    <detail-container
+        @close="$emit('close')"
         :title="currentElement.name"
         :status="currentElement.status"
         :current-tab="currentTab"
         :is-hook="((currentElement.additionalOptions || {}).elementPostInfo || false)"
     >
-        <span class="head-tab" slot="tab" v-if="showTab">
+        <span
+            class="head-tab"
+            slot="tab"
+        >
             <template v-for="tab in tabList">
-                <span v-if="tab.show"
+                <span
+                    v-if="tab.show"
                     :key="tab.name"
                     :class="{ active: currentTab === tab.name }"
                     @click="currentTab = tab.name"
                 >{{ $t(`execDetail.${tab.name}`) }}</span>
             </template>
         </span>
-        <reference-variable slot="tool" class="head-tool" :global-envs="globalEnvs" :stages="stages" :container="container" v-if="currentTab === 'setting'" />
+        <reference-variable
+            slot="tool"
+            class="head-tool"
+            :global-envs="globalEnvs"
+            :stages="stages"
+            :container="container"
+            v-if="currentTab === 'setting'"
+        />
         <template v-slot:content>
-            <error-summary v-if="activeErorr && currentTab === 'log'" :error="activeErorr"></error-summary>
+            <error-summary
+                v-if="activeErorr && currentTab === 'log'"
+                :error="activeErorr"
+            ></error-summary>
             <plugin-log
                 :id="currentElement.id"
                 :key="currentElement.id"
@@ -27,28 +42,29 @@
                 ref="log"
                 v-if="currentTab === 'log'"
             />
-            <component :is="value.component"
+            <component
+                v-if="currentTab === key"
+                :is="value.component"
                 v-bind="value.bindData"
                 v-for="(value, key) in componentList"
                 :key="key"
                 :ref="key"
                 @toggle="(show) => toggleTab(key, show)"
                 @complete="completeLoading(key)"
-                v-show="currentTab === key"
             ></component>
         </template>
     </detail-container>
 </template>
 
 <script>
-    import { mapState } from 'vuex'
-    import detailContainer from './detailContainer'
     import AtomContent from '@/components/AtomPropertyPanel/AtomContent.vue'
     import ReferenceVariable from '@/components/AtomPropertyPanel/ReferenceVariable'
-    import pluginLog from './log/pluginLog'
     import ErrorSummary from '@/components/ExecDetail/ErrorSummary'
-    import Report from './Report'
+    import { mapState } from 'vuex'
     import Artifactory from './Artifactory'
+    import Report from './Report'
+    import detailContainer from './detailContainer'
+    import pluginLog from './log/pluginLog'
 
     export default {
         components: {
