@@ -61,6 +61,7 @@ class StoreBuildServiceImpl @Autowired constructor(
         logger.info("handleStoreBuildResult params:[$pipelineId|$buildId|$storeBuildResultRequest]")
         // 查看该次构建流水线属于研发商店哪个组件类型
         val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRelByBuildId(dslContext, buildId)
+        logger.info("handleStoreBuildResult pipelineId:${storeBuildInfoRecord?.pipelineId}")
         val storeType = storeBuildInfoRecord?.pipelineId?.let {
             storePipelineRelDao.getStoreTypeByLatestPipelineId(
                 dslContext = dslContext,
