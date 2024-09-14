@@ -58,9 +58,9 @@ class UserBkRepoStaticResourceImpl @Autowired constructor(
         val fileSuffix = fileName.substring(index + 1)
         val filePathSb = StringBuilder("file/")
         val today = LocalDate.now()
-        val formatter  = DateTimeFormatter.ofPattern(DATE_FORMAT_YYYY_MM_DD )
+        val formatter = DateTimeFormatter.ofPattern(DATE_FORMAT_YYYY_MM_DD)
         val nowTime = today.format(formatter)
-        val baseUrl="$nowTime/${UUIDUtil.generate()}.$fileSuffix"
+        val baseUrl = "$nowTime/${UUIDUtil.generate()}.$fileSuffix"
         val filePath = if (type.isNullOrBlank()) {
             filePathSb.append(baseUrl)
         } else {
