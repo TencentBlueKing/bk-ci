@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.service.projectworkspace
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
@@ -321,8 +322,8 @@ class RebuildWorkspaceHandler @Autowired constructor(
         workspaceName: String,
         userId: String
     ): RebuildOptions? {
-        val dataStr = redisOperation.get(genRebuildOptionsKey(workspaceName, userId)) ?: return null
-        return JsonUtil.to(dataStr)
+        val dataStr = redisOperation.get(genRebuildOptionsKey(workspaceName, userId))?.ifBlank { null } ?: return null
+        return JsonUtil.to(dataStr,object : TypeReference<RebuildOptions>() {})
     }
 
     fun deleteRebuildOptions(
