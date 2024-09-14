@@ -339,11 +339,13 @@ class StageTransfer @Autowired(required = false) constructor(
                         ManualReviewParamType.ENUM -> "SELECTOR"
                         ManualReviewParamType.MULTIPLE -> "SELECTOR-MULTIPLE"
                         ManualReviewParamType.BOOLEAN -> "BOOL"
+                        ManualReviewParamType.CHECKBOX -> "CHECKBOX"
                         else -> "INPUT"
                     },
                     default = it.value,
                     values = it.options?.map { mit -> mit.key },
-                    description = it.desc
+                    description = it.desc,
+                    required = it.required
                 )
             },
             description = stage.checkIn?.reviewDesc,
@@ -392,13 +394,18 @@ class StageTransfer @Autowired(required = false) constructor(
             params.add(
                 ManualReviewParam(
                     key = key,
-                    value = variable.default,
-                    required = true,
+                    value = when (variable.type) {
+                        /* CHECKBOX 只能false，不允许修改 */
+                        "CHECKBOX" -> false
+                        else -> variable.default
+                    },
+                    required = variable.required ?: false,
                     valueType = when (variable.type) {
                         "TEXTAREA" -> ManualReviewParamType.TEXTAREA
                         "SELECTOR" -> ManualReviewParamType.ENUM
                         "SELECTOR-MULTIPLE" -> ManualReviewParamType.MULTIPLE
                         "BOOL" -> ManualReviewParamType.BOOLEAN
+                        "CHECKBOX" -> ManualReviewParamType.CHECKBOX
                         else -> ManualReviewParamType.STRING
                     },
                     chineseName = variable.label,

@@ -1018,7 +1018,7 @@ class PipelineBuildFacadeService(
                         }
                         params.params.forEach {
                             when (it.valueType) {
-                                ManualReviewParamType.BOOLEAN -> {
+                                ManualReviewParamType.BOOLEAN, ManualReviewParamType.CHECKBOX -> {
                                     it.value = it.value ?: false
                                 }
 
@@ -1327,7 +1327,7 @@ class PipelineBuildFacadeService(
                         }
                         el.params.forEach { param ->
                             when (param.valueType) {
-                                ManualReviewParamType.BOOLEAN -> {
+                                ManualReviewParamType.BOOLEAN, ManualReviewParamType.CHECKBOX -> {
                                     param.value = param.value ?: false
                                 }
 
@@ -2771,6 +2771,14 @@ class PipelineBuildFacadeService(
 
             ManualReviewParamType.BOOLEAN -> {
                 originParam.value = param.toBoolean()
+            }
+
+            ManualReviewParamType.CHECKBOX -> {
+                val value = param.toBoolean()
+                if (originParam.required && !value) {
+                    throw ParamBlankException("param: ${originParam.key} value must be true")
+                }
+                originParam.value = value
             }
 
             else -> {
