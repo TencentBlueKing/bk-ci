@@ -132,7 +132,7 @@
                 <plugin
                     :exec-detail="execDetail"
                     :editing-element-pos="editingElementPos"
-                    :properties="['CONFIG', 'LOG', 'ARTIFACT']"
+                    :properties="curProject.properties.pluginDetailsDisplayOrder"
                     @close="hideSidePanel"
                 />
             </template>
