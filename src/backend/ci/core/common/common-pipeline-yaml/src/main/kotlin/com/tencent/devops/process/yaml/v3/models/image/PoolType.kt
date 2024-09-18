@@ -147,6 +147,23 @@ enum class PoolType {
 
         private fun makeContainer(dockerInfo: ThirdPartyAgentDockerInfo?): Container3? {
             if (dockerInfo == null) return null
+            // 使用研发商店镜像的情况
+            if (dockerInfo.storeImage != null) {
+                return Container3(
+                    imageVersion = dockerInfo.storeImage?.imageVersion,
+                    imageCode = dockerInfo.storeImage?.imageCode,
+                    credentials = with(dockerInfo.credential) {
+                        when {
+                            this == null -> null
+                            credentialId != null -> dockerInfo.credential?.credentialId?.ifBlank { null }
+                            user != null && password != null -> Credentials(user!!, password!!)
+                            else -> null
+                        }
+                    },
+                    options = dockerInfo.options,
+                    imagePullPolicy = dockerInfo.imagePullPolicy
+                )
+            }
             return Container3(
                 image = dockerInfo.image,
                 credentials = with(dockerInfo.credential) {
