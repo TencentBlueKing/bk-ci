@@ -1,23 +1,32 @@
 <template>
     <div class="create-pipeline-page-wrapper">
         <pipeline-header>
-            <logo size="24" name="pipeline" slot="logo" />
-            <bk-breadcrumb slot="title" separator-class="devops-icon icon-angle-right">
+            <logo
+                size="24"
+                name="pipeline"
+                slot="logo"
+            />
+            <bk-breadcrumb
+                slot="title"
+                separator-class="devops-icon icon-angle-right"
+            >
                 <bk-breadcrumb-item
                     class="pipeline-breadcrumb-item"
                     :to="pipelineListRoute"
                 >
-                    {{$t('pipeline')}}
+                    {{ $t('pipeline') }}
                 </bk-breadcrumb-item>
                 <bk-breadcrumb-item
                     class="pipeline-breadcrumb-item"
                 >
-                    {{$t('newlist.addPipeline')}}
+                    {{ $t('newlist.addPipeline') }}
                 </bk-breadcrumb-item>
-
             </bk-breadcrumb>
         </pipeline-header>
-        <div v-bkloading="{ isLoading }" class="pipeline-template-box">
+        <div
+            v-bkloading="{ isLoading }"
+            class="pipeline-template-box"
+        >
             <aside class="pipeline-template-box-left-side">
                 <bk-form form-type="vertical">
                     <bk-form-item :label="$t('pipelineName')">
@@ -30,26 +39,48 @@
                                 v-model.trim="newPipelineName"
                                 v-validate.initial="'required'"
                             />
-                            <span class="border-effect" v-show="!errors.has('newPipelineName')"></span>
-                            <span v-show="errors.has('newPipelineName')" class="validate-fail-border-effect"></span>
+                            <span
+                                class="border-effect"
+                                v-show="!errors.has('newPipelineName')"
+                            ></span>
+                            <span
+                                v-show="errors.has('newPipelineName')"
+                                class="validate-fail-border-effect"
+                            ></span>
                         </div>
                     </bk-form-item>
                     <template v-if="!isActiveTempEmpty">
                         <bk-form-item :label="$t('type')">
-                            <bk-radio-group class="pipelinte-template-type-group" v-model="templateType">
-                                <bk-popover placement="bottom" v-for="(entry, key) in tplTypes" :key="key">
+                            <bk-radio-group
+                                class="pipelinte-template-type-group"
+                                v-model="templateType"
+                            >
+                                <bk-popover
+                                    placement="bottom"
+                                    v-for="(entry, key) in tplTypes"
+                                    :key="key"
+                                >
                                     <bk-radio
                                         :value="entry.value"
                                     >
                                         <span class="radio-label">{{ entry.label }}</span>
                                     </bk-radio>
-                                    <div slot="content" style="white-space: normal;">{{entry.tip}}</div>
+                                    <div
+                                        slot="content"
+                                        style="white-space: normal;"
+                                    >
+                                        {{ entry.tip }}
+                                    </div>
                                 </bk-popover>
                             </bk-radio-group>
                         </bk-form-item>
-                        <bk-form-item :label="$t('copyTempConf')" label-width="auto">
+                        <bk-form-item
+                            :label="$t('copyTempConf')"
+                            label-width="auto"
+                        >
                             <bk-checkbox-group v-model="applySettings">
-                                <div v-for="item in settingItems"
+                                <div
+                                    v-for="item in settingItems"
                                     :key="item.label"
                                     :class="['template-setting-apply-checkbox', {
                                         'disabled-setting': item.disabled
@@ -64,7 +95,7 @@
                                         </p>
                                     </bk-checkbox>
                                     <em v-if="item.disabled">
-                                        {{$t('tempWithoutConf')}}
+                                        {{ $t('tempWithoutConf') }}
                                     </em>
                                     <bk-button
                                         text
@@ -73,7 +104,7 @@
                                         @click.stop="previewSetting(item.value)"
                                         v-else
                                     >
-                                        {{$t('pipelinesPreview')}}
+                                        {{ $t('pipelinesPreview') }}
                                     </bk-button>
                                 </div>
                             </bk-checkbox-group>
@@ -94,18 +125,25 @@
                         :disabled="isConfirmDisable"
                         @click="createNewPipeline"
                     >
-                        {{$t('create')}}
+                        {{ $t('create') }}
                     </bk-button>
                     <bk-button
                         @click="goList"
                     >
-                        {{$t('cancel')}}
+                        {{ $t('cancel') }}
                     </bk-button>
                 </footer>
             </aside>
             <div class="pipeline-template-box-right-side">
-                <bk-tab :active.sync="activePanel" @tab-change="handleTemplateTypeChange" type="unborder-card">
-                    <div class="pipeline-template-searchbox" slot="setting">
+                <bk-tab
+                    :active.sync="activePanel"
+                    @tab-change="handleTemplateTypeChange"
+                    type="unborder-card"
+                >
+                    <div
+                        class="pipeline-template-searchbox"
+                        slot="setting"
+                    >
                         <bk-input
                             v-model.trim="searchName"
                             icon-right="bk-icon icon-search"
@@ -119,8 +157,13 @@
                     >
                     </bk-tab-panel>
                 </bk-tab>
-                <ul class="create-pipeline-template-list" v-if="tempList.length" @scroll.passive="scrollLoadMore">
-                    <li v-for="(temp, tIndex) in tempList"
+                <ul
+                    class="create-pipeline-template-list"
+                    v-if="tempList.length"
+                    @scroll.passive="scrollLoadMore"
+                >
+                    <li
+                        v-for="(temp, tIndex) in tempList"
                         :class="{
                             'active': activeTempIndex === tIndex,
                             'disabled': !temp.installed
@@ -128,16 +171,28 @@
                         :key="temp.name"
                         @click="selectTemp(tIndex)"
                     >
-
-                        <span v-if="activeTempIndex === tIndex" class="pipeline-template-corner">
+                        <span
+                            v-if="activeTempIndex === tIndex"
+                            class="pipeline-template-corner"
+                        >
                             <i class="bk-icon icon-check-1"></i>
                         </span>
                         <p class="pipeline-template-logo">
-                            <img :src="temp.logoUrl" v-if="temp.logoUrl">
-                            <logo size="50" :name="temp.icon || 'placeholder'" v-else></logo>
+                            <img
+                                :src="temp.logoUrl"
+                                v-if="temp.logoUrl"
+                            >
+                            <logo
+                                size="50"
+                                :name="temp.icon || 'placeholder'"
+                                v-else
+                            ></logo>
                         </p>
                         <div class="pipeline-template-detail">
-                            <p class="pipeline-template-title" :title="temp.name">
+                            <p
+                                class="pipeline-template-title"
+                                :title="temp.name"
+                            >
                                 <span>{{ temp.name }}</span>
                                 <logo
                                     v-if="temp.isStore"
@@ -146,11 +201,17 @@
                                     size="22"
                                 />
                             </p>
-                            <p class="pipeline-template-desc" :title="temp.desc">
+                            <p
+                                class="pipeline-template-desc"
+                                :title="temp.desc"
+                            >
                                 {{ temp.desc || '--' }}
                             </p>
                         </div>
-                        <div v-if="tIndex > 0 || activePanel === 'store'" class="pipeline-template-status">
+                        <div
+                            v-if="tIndex > 0 || activePanel === 'store'"
+                            class="pipeline-template-status"
+                        >
                             <bk-button
                                 v-if="temp.hasPermission"
                                 text
@@ -168,16 +229,15 @@
                                 }"
                                 @click.stop="handleTemp(temp, tIndex)"
                             >
-                                {{$t(temp.btnText)}}
+                                {{ $t(temp.btnText) }}
                             </bk-button>
                             <span v-else>
-                                {{$t('newlist.noInstallPerm')}}
+                                {{ $t('newlist.noInstallPerm') }}
                             </span>
                         </div>
                     </li>
                 </ul>
             </div>
-
         </div>
         <pipeline-template-preview
             v-model="isShowPreview"
@@ -339,6 +399,11 @@
                     }, [])
                     console.log(this.applySettings)
                 }
+            },
+            searchName (val) {
+                if (this.activePanel === 'store') {
+                    this.requestMarkTemplates(true)
+                }
             }
         },
         created () {
@@ -391,7 +456,8 @@
                 const param = {
                     page: this.page,
                     pageSize: this.pageSize,
-                    projectCode: this.$route.params.projectId
+                    projectCode: this.$route.params.projectId,
+                    keyword: this.searchName
                 }
                 this.requestStoreTemplate(param).then((res) => {
                     this.page++

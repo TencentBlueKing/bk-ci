@@ -28,6 +28,7 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.ProjectBuildSummaryDao
@@ -87,6 +88,7 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
         val lock = RedisLock(redisOperation, projectBuildKey(projectId), 120)
         lock.use {
             lock.lock()
+            logger.info("save Project User:$projectId|$userId|$theDate")
             val projectVO = cacheProjectInfoService.getProject(projectId)
             if (projectVO?.enabled == false) {
                 logger.info("Project [${projectVO.englishName}] has disabled, skip user count")
@@ -109,6 +111,15 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
                 }
             }
         }
+    }
+
+    override fun saveProjectUserOperateMetrics(
+        userOperateCounterData: UserOperateCounterData
+    ) {
+        projectBuildSummaryDao.saveUserOperateCount(
+            dslContext = dslContext,
+            projectUserOperateMetricsData2OperateCount = userOperateCounterData.getUserOperationCountMap()
+        )
     }
 
     override fun getProjectActiveUserCount(

@@ -2,15 +2,25 @@
     <aside class="pipeline-group-aside">
         <div class="pipeline-group-aside-main">
             <header class="pipeline-group-aside-header">
-                <div :class="{
-                    'pipeline-group-item': true,
-                    active: $route.params.viewId === sumView.id
-                }" @click="switchViewId(sumView.id)">
-                    <logo class="pipeline-group-item-icon" size="14" :name="sumView.icon" />
+                <div
+                    :class="{
+                        'pipeline-group-item': true,
+                        active: $route.params.viewId === sumView.id
+                    }"
+                    @click="switchViewId(sumView.id)"
+                >
+                    <logo
+                        class="pipeline-group-item-icon"
+                        size="14"
+                        :name="sumView.icon"
+                    />
                     <span class="pipeline-group-item-name">
-                        {{$t(sumView.name)}}
+                        {{ $t(sumView.name) }}
                     </span>
-                    <span v-if="sumView.pipelineCount" class="pipeline-group-item-sum group-header-sum">{{sumView.pipelineCount}}</span>
+                    <span
+                        v-if="sumView.pipelineCount"
+                        class="pipeline-group-item-sum group-header-sum"
+                    >{{ sumView.pipelineCount }}</span>
                 </div>
             </header>
             <article class="pipeline-group-container">
@@ -21,12 +31,13 @@
                         :style="`top: ${block.stickyTop}`"
                         :key="block.id"
                     >
-                        <i :class="['devops-icon', 'pipeline-group-item-icon', {
-                            'icon-down-shape': block.show,
-                            'icon-right-shape': !block.show
-                        }]"
+                        <i
+                            :class="['devops-icon', 'pipeline-group-item-icon', {
+                                'icon-down-shape': block.show,
+                                'icon-right-shape': !block.show
+                            }]"
                         />
-                        <span class="pipeline-group-header-name">{{block.title}}</span>
+                        <span class="pipeline-group-header-name">{{ block.title }}</span>
                         <span v-bk-tooltips="block.tooltips">
                             <bk-button
                                 v-perm="block.isCheckPermission ?
@@ -42,11 +53,17 @@
                                 :disabled="block.disabled"
                                 @click.stop="showAddPipelineGroupDialog(block.projected)"
                             >
-                                <logo name="increase" size="16"></logo>
+                                <logo
+                                    name="increase"
+                                    size="16"
+                                ></logo>
                             </bk-button>
                         </span>
                     </h3>
-                    <div class="pipeline-group-block" :key="block.title">
+                    <div
+                        class="pipeline-group-block"
+                        :key="block.title"
+                    >
                         <div
                             :class="{
                                 'pipeline-group-item': true,
@@ -58,8 +75,16 @@
                             :key="item.id"
                             @click="switchViewId(item.id)"
                         >
-                            <i v-if="item.pac" class="pipeline-group-item-icon devops-icon icon-pac" />
-                            <logo v-else-if="item.icon" size="14" class="pipeline-group-item-icon" :name="item.icon" />
+                            <i
+                                v-if="item.pac"
+                                class="pipeline-group-item-icon devops-icon icon-pac"
+                            />
+                            <logo
+                                v-else-if="item.icon"
+                                size="14"
+                                class="pipeline-group-item-icon"
+                                :name="item.icon"
+                            />
                             <bk-input
                                 v-if="item.id === editingGroupId"
                                 v-bk-focus="1"
@@ -68,24 +93,38 @@
                                 @enter="submitRename(item)"
                                 v-model.trim="newViewName"
                             />
-                            <span v-else class="pipeline-group-item-name" v-bk-overflow-tips>
-                                {{item.name}}
+                            <span
+                                v-else
+                                class="pipeline-group-item-name"
+                                v-bk-overflow-tips
+                            >
+                                {{ item.name }}
                             </span>
                             <span
                                 v-if="$route.params.viewId === item.id && currentPipelineCountDetail.deleteCount > 0"
                                 class="pipeline-group-item-sum has-delete-count"
                             >
-                                <span class="normal-count">{{currentPipelineCountDetail.normalCount}}</span>
+                                <span class="normal-count">{{ currentPipelineCountDetail.normalCount }}</span>
                                 <span class="delete-count">
-                                    <logo name="delete" size="8" />
-                                    {{currentPipelineCountDetail.deleteCount}}
+                                    <logo
+                                        name="delete"
+                                        size="8"
+                                    />
+                                    {{ currentPipelineCountDetail.deleteCount }}
                                 </span>
                             </span>
-                            <span v-else class="pipeline-group-item-sum">
-                                {{item.pipelineCount}}
+                            <span
+                                v-else
+                                class="pipeline-group-item-sum"
+                            >
+                                {{ item.pipelineCount }}
                             </span>
                             <span @click.stop>
-                                <ext-menu :class="{ hidden: item.actions.length <= 0 }" :data="item" :config="item.actions" />
+                                <ext-menu
+                                    :class="{ hidden: item.actions.length <= 0 }"
+                                    :data="item"
+                                    :config="item.actions"
+                                />
                             </span>
                         </div>
                     </div>
@@ -98,8 +137,12 @@
             }]"
             @click="goRecycleBin"
         >
-            <logo class="pipeline-group-item-icon" name="delete" size="16"></logo>
-            <span>{{$t('restore.recycleBin')}}</span>
+            <logo
+                class="pipeline-group-item-icon"
+                name="delete"
+                size="16"
+            ></logo>
+            <span>{{ $t('restore.recycleBin') }}</span>
         </footer>
         <bk-dialog
             v-model="isAddPipelineGroupDialogShow"
@@ -111,19 +154,40 @@
             :loading="isAdding"
             @cancel="closeAddPipelineGroupDialog"
         >
-            <bk-form ref="newPipelineGroupForm" :label-width="200" v-bkloading="{ isLoading: isAdding }" form-type="vertical" :model="newPipelineGroup">
-                <bk-form-item property="name" :rules="groupNameRules" :label="$t('pipelineGroupName')">
-                    <bk-input v-model.trim="newPipelineGroup.name" :maxlength="32" :placeholder="$t('groupNamePlaceholder')" />
+            <bk-form
+                ref="newPipelineGroupForm"
+                :label-width="200"
+                v-bkloading="{ isLoading: isAdding }"
+                form-type="vertical"
+                :model="newPipelineGroup"
+            >
+                <bk-form-item
+                    property="name"
+                    :rules="groupNameRules"
+                    :label="$t('pipelineGroupName')"
+                >
+                    <bk-input
+                        v-model.trim="newPipelineGroup.name"
+                        :maxlength="32"
+                        :placeholder="$t('groupNamePlaceholder')"
+                    />
                 </bk-form-item>
-                <bk-form-item required property="projected" :label="$t('visibleRange')">
-                    <bk-radio-group class="pipeline-group-visible-range-group" v-model="newPipelineGroup.projected">
-                        <bk-radio :value="false">{{$t('personalVis')}}</bk-radio>
+                <bk-form-item
+                    required
+                    property="projected"
+                    :label="$t('visibleRange')"
+                >
+                    <bk-radio-group
+                        class="pipeline-group-visible-range-group"
+                        v-model="newPipelineGroup.projected"
+                    >
+                        <bk-radio :value="false">{{ $t('personalVis') }}</bk-radio>
                         <bk-radio
                             v-bk-tooltips="projectedGroupDisableTips"
                             :disabled="!isManage"
                             :value="true"
                         >
-                            {{$t('projectVis')}}
+                            {{ $t('projectVis') }}
                         </bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
@@ -134,10 +198,10 @@
                     :disabled="!isValidGroupName"
                     @click="submitPipelineAdd"
                 >
-                    {{$t('confirm')}}
+                    {{ $t('confirm') }}
                 </bk-button>
                 <bk-button @click="closeAddPipelineGroupDialog">
-                    {{$t('cancel')}}
+                    {{ $t('cancel') }}
                 </bk-button>
             </footer>
         </bk-dialog>

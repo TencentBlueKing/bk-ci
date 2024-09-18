@@ -1,8 +1,18 @@
 <template>
-    <div v-if="pipelineSetting" class="bkdevops-base-info-setting-tab">
-        <div class="pipeline-setting-title">{{$t('settings.baseInfo')}}</div>
-        <bk-form form-type="vertical" :label-width="300" class="new-ui-form">
-            <bk-form-item :label="$t('pipelineName')" :required="true">
+    <div
+        v-if="pipelineSetting"
+        class="bkdevops-base-info-setting-tab"
+    >
+        <div class="pipeline-setting-title">{{ $t('settings.baseInfo') }}</div>
+        <bk-form
+            form-type="vertical"
+            :label-width="300"
+            class="new-ui-form"
+        >
+            <bk-form-item
+                :label="$t('pipelineName')"
+                :required="true"
+            >
                 <vuex-input
                     v-bk-focus
                     :disabled="!editable"
@@ -20,8 +30,14 @@
                     <label class="ui-inner-label">
                         <span class="bk-label-text">{{ $t('settings.label') }} </span>
                     </label>
-                    <label v-if="editable" class="ui-inner-label">
-                        <span @click="toManageLabel" class="bk-label-text link-text">{{$t('settings.manageLabel')}}</span>
+                    <label
+                        v-if="editable"
+                        class="ui-inner-label"
+                    >
+                        <span
+                            @click="toManageLabel"
+                            class="bk-label-text link-text"
+                        >{{ $t('settings.manageLabel') }}</span>
                     </label>
                 </div>
                 <ul class="pipeline-label-selector">
@@ -30,7 +46,10 @@
                             v-for="(item, index) in tagGroupList"
                             :key="item.id"
                         >
-                            <label :title="item.name" class="pipeline-selector-label"> {{ item.name }} </label>
+                            <label
+                                :title="item.name"
+                                class="pipeline-selector-label"
+                            > {{ item.name }} </label>
                             <bk-select
                                 class="sub-label-select"
                                 :disabled="!editable"
@@ -49,14 +68,28 @@
                             </bk-select>
                         </li>
                     </template>
-                    <span class="no-label-placeholder" v-else>
-                        {{$t('noLabels')}}
+                    <span
+                        class="no-label-placeholder"
+                        v-else
+                    >
+                        {{ $t('noLabels') }}
                     </span>
                 </ul>
             </bk-form-item>
 
-            <bk-form-item :label="$t('desc')" :is-error="errors.has('desc')" :error-msg="errors.first('desc')">
-                <vuex-textarea :disabled="!editable" name="desc" :value="pipelineSetting.desc" :placeholder="$t('pipelineDescInputTips')" v-validate.initial="'max:100'" :handle-change="handleBaseInfoChange" />
+            <bk-form-item
+                :label="$t('desc')"
+                :is-error="errors.has('desc')"
+                :error-msg="errors.first('desc')"
+            >
+                <vuex-textarea
+                    :disabled="!editable"
+                    name="desc"
+                    :value="pipelineSetting.desc"
+                    :placeholder="$t('pipelineDescInputTips')"
+                    v-validate.initial="'max:100'"
+                    :handle-change="handleBaseInfoChange"
+                />
             </bk-form-item>
 
             <bk-form-item ext-cls="namingConvention">

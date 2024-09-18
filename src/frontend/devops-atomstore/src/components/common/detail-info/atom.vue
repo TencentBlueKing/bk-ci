@@ -10,8 +10,12 @@
                 <span
                     :class="{ 'not-recommend': detail.recommendFlag === false }"
                     :title="detail.recommendFlag === false ? $t('store.该插件不推荐使用') : ''"
-                >{{detail.name}}</span>
-                <honer-tag :detail="detail" :max-num="2" class="ml16"></honer-tag>
+                >{{ detail.name }}</span>
+                <honer-tag
+                    :detail="detail"
+                    :max-num="2"
+                    class="ml16"
+                ></honer-tag>
                 <img
                     v-for="indexInfo in detail.indexInfos"
                     v-bk-tooltips="{
@@ -48,69 +52,136 @@
                     <span class="ml6">{{ detail.score }}</span>
                 </section>
                 <section class="num-wraper">
-                    <img v-if="detail.hotFlag" class="hot-icon" src="../../../images/hot-red.png">
-                    <img v-else class="hot-icon" src="../../../images/hot.png">
+                    <img
+                        v-if="detail.hotFlag"
+                        class="hot-icon"
+                        src="../../../images/hot-red.png"
+                    >
+                    <img
+                        v-else
+                        class="hot-icon"
+                        src="../../../images/hot.png"
+                    >
                     <span class="ml3">{{ getShowNum(detail.recentExecuteNum) }}</span>
                 </section>
             </h3>
             <div class="detail-info-row atom-detail-info-row">
                 <h5 class="detail-info">
-                    <span> {{ $t('store.发布者：') }} </span><span>{{detail.publisher || '-'}}</span>
+                    <span> {{ $t('store.发布者：') }} </span><span>{{ detail.publisher || '-' }}</span>
                 </h5>
                 <h5 class="detail-info">
-                    <span> {{ $t('store.版本：') }} </span><span>{{detail.version || '-'}}</span>
+                    <span> {{ $t('store.版本：') }} </span><span>{{ detail.version || '-' }}</span>
                 </h5>
                 <h5 class="detail-info">
                     <span> {{ $t('store.适用Job类型：') }} </span>
                     <span>
-                        {{detail.jobType|atomJobType}}
+                        {{ detail.jobType|atomJobType }}
                         <template v-if="detail.os && detail.os.length">
-                            (<i v-for="item in getJobList(detail.os)" :class="[item.icon, 'devops-icon']" :key="item" :title="item.name"></i>)
+                            (<i
+                                v-for="item in getJobList(detail.os)"
+                                :class="[item.icon, 'devops-icon']"
+                                :key="item"
+                                :title="item.name"
+                            ></i>)
                         </template>
                     </span>
                 </h5>
                 <h5 class="detail-info">
-                    <span> {{ $t('store.分类：') }} </span><span>{{detail.classifyName || '-'}}</span>
+                    <span> {{ $t('store.分类：') }} </span><span>{{ detail.classifyName || '-' }}</span>
                 </h5>
             </div>
             <h5 class="detail-info detail-label">
                 <span> {{ $t('store.功能标签：') }} </span>
                 <p>
-                    <bk-tag v-for="(label, index) in detail.labelList" :key="index">{{label.labelName}}</bk-tag>
+                    <bk-tag
+                        v-for="(label, index) in detail.labelList"
+                        :key="index"
+                    >
+                        {{ label.labelName }}
+                    </bk-tag>
                     <span v-if="!detail.labelList || detail.labelList.length <= 0 ">--</span>
                 </p>
             </h5>
-            <h5 class="detail-info detail-label" :title="detail.summary">
-                <span> {{ $t('store.简介：') }} </span><span>{{detail.summary || '-'}}</span>
+            <h5
+                class="detail-info detail-label"
+                :title="detail.summary"
+            >
+                <span> {{ $t('store.简介：') }} </span><span>{{ detail.summary || '-' }}</span>
             </h5>
         </hgroup>
 
         <section>
-            <bk-popover placement="top" v-if="buttonInfo.disable">
-                <button class="bk-button bk-primary" type="button" disabled> {{ detail.defaultFlag ? $t('store.已安装') : $t('store.安装')}} </button>
+            <bk-popover
+                placement="top"
+                v-if="buttonInfo.disable"
+            >
+                <button
+                    class="bk-button bk-primary"
+                    type="button"
+                    disabled
+                >
+                    {{ detail.defaultFlag ? $t('store.已安装') : $t('store.安装') }}
+                </button>
                 <template slot="content">
-                    <p>{{buttonInfo.des}}</p>
+                    <p>{{ buttonInfo.des }}</p>
                 </template>
             </bk-popover>
-            <button class="detail-install" @click="goToInstall" v-else> {{ $t('store.安装') }} </button>
+            <button
+                class="detail-install"
+                @click="goToInstall"
+                v-else
+            >
+                {{ $t('store.安装') }}
+            </button>
 
             <section class="click-area">
                 <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
-                    <h5 :title="approveTip" :class="[{ 'not-public': approveMsg !== $t('store.协作') }, 'click-button']" @click="cooperation">
-                        <icon class="detail-img mr4" name="cooperation" size="16" />
-                        <span class="approve-msg">{{approveMsg}}</span>
+                    <h5
+                        :title="approveTip"
+                        :class="[{ 'not-public': approveMsg !== $t('store.协作') }, 'click-button']"
+                        @click="cooperation"
+                    >
+                        <icon
+                            class="detail-img mr4"
+                            name="cooperation"
+                            size="16"
+                        />
+                        <span class="approve-msg">{{ approveMsg }}</span>
                     </h5>
                 </template>
             </section>
         </section>
 
-        <bk-dialog v-model="showCooperDialog" :title="$t('store.申请成为协作者')" width="600" :on-close="closeDialog" @confirm="confirmDialog" :loading="dialogLoading" :close-icon="false">
-            <bk-form label-width="90" ref="validateForm" :model="cooperData" v-if="showCooperDialog">
+        <bk-dialog
+            v-model="showCooperDialog"
+            :title="$t('store.申请成为协作者')"
+            width="600"
+            :on-close="closeDialog"
+            @confirm="confirmDialog"
+            :loading="dialogLoading"
+            :close-icon="false"
+        >
+            <bk-form
+                label-width="90"
+                ref="validateForm"
+                :model="cooperData"
+                v-if="showCooperDialog"
+            >
                 <bk-form-item :label="$t('store.申请人')">
-                    <bk-input v-model="user" :disabled="true"></bk-input>
+                    <bk-input
+                        v-model="user"
+                        :disabled="true"
+                    ></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.调试项目')" :required="true" :rules="rules" property="testProjectCode" :icon-offset="30">
-                    <bk-select class="big-select"
+                <bk-form-item
+                    :label="$t('store.调试项目')"
+                    :required="true"
+                    :rules="rules"
+                    property="testProjectCode"
+                    :icon-offset="30"
+                >
+                    <bk-select
+                        class="big-select"
                         v-model="cooperData.testProjectCode"
                         searchable
                         :loading="isLoading"
@@ -128,8 +199,17 @@
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.申请原因')" :required="true" :rules="rules" property="applyReason">
-                    <bk-input type="textarea" v-model="cooperData.applyReason" :placeholder="$t('store.请输入申请原因')"></bk-input>
+                <bk-form-item
+                    :label="$t('store.申请原因')"
+                    :required="true"
+                    :rules="rules"
+                    property="applyReason"
+                >
+                    <bk-input
+                        type="textarea"
+                        v-model="cooperData.applyReason"
+                        :placeholder="$t('store.请输入申请原因')"
+                    ></bk-input>
                 </bk-form-item>
             </bk-form>
             <form-tips :prompt-list="[$t('store.欢迎加入插件开发，成为协作者后，可以丰富插件功能，优化插件'), $t('store.调试项目用来测试插件，建议使用非正式业务项目，避免影响正式流水线')]"></form-tips>
