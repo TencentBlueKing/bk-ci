@@ -28,6 +28,8 @@
 package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.github.GithubToken
@@ -41,6 +43,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "BUILD_REPOSITORY_OAUTH", description = "构建-oauth相关")
@@ -78,4 +81,38 @@ interface BuildOauthResource {
         @PathParam("userId")
         userId: String
     ): Result<GithubToken?>
+
+    @Operation(summary = "获取授权链接")
+    @GET
+    @Path("/git/oauthUrl")
+    fun gitOauthUrl(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @QueryParam("userId")
+        userId: String
+    ): Result<String>
+
+    @Operation(summary = "获取授权链接")
+    @GET
+    @Path("/github/oauthUrl")
+    fun githubOauthUrl(
+        @Parameter(description = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @QueryParam("userId")
+        userId: String
+    ): Result<String>
 }
