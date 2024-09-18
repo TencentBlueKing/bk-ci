@@ -875,11 +875,6 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         val atomCode = atomRecord.atomCode
         val atomPipelineRelRecord = storePipelineRelDao.getStorePipelineRel(context, atomCode, StoreTypeEnum.ATOM)
-        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-            dslContext = context,
-            storeCode = atomCode,
-            storeType = StoreTypeEnum.ATOM.type.toByte()
-        )!! // 查找新增插件时关联的项目
         // 获取插件代码库最新提交记录
         val getRepoRecentCommitInfoResult = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
             userId = userId,
