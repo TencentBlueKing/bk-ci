@@ -95,8 +95,7 @@
                     { name: 'artifactory', show: false, completeLoading: false },
                     { name: 'report', show: false, completeLoading: false },
                     { name: 'setting', show: true }
-                ],
-                isShowArtifact: false
+                ]
             }
         },
 
