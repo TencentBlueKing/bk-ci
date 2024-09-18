@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoStoreImage
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
@@ -191,7 +192,10 @@ class DispatchTransfer @Autowired(required = false) constructor(
                 ),
                 options = info.options,
                 imagePullPolicy = info.imagePullPolicy,
-                storeImage = if (info.imageCode != null && info.imageVersion != null) {
+                storeImage = if (
+                    info.imageType == ImageType.BKSTORE &&
+                    info.imageCode != null && info.imageVersion != null
+                ) {
                     ThirdPartyAgentDockerInfoStoreImage(
                         imageCode = info.imageCode,
                         imageVersion = info.imageVersion
