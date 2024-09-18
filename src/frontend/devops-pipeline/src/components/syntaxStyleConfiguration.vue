@@ -1,7 +1,11 @@
 <template>
     <div>
-        <bk-popover theme="light" :width="892" placement="top-start">
-            <label class="label">{{$t('namingConvention')}}</label>
+        <bk-popover
+            theme="light"
+            :width="892"
+            placement="top-start"
+        >
+            <label class="label">{{ $t('namingConvention') }}</label>
             <div slot="content">
                 <h3>{{ $t('grammaticalDifferences') }}</h3>
                 <bk-table
@@ -10,8 +14,16 @@
                     row-auto-height
                     show-overflow-tooltip
                 >
-                    <bk-table-column :label="$t('differenceItem')" prop="difference" :width="140" />
-                    <bk-table-column :label="$t('traditionalStyle')" prop="classic" :width="290">
+                    <bk-table-column
+                        :label="$t('differenceItem')"
+                        prop="difference"
+                        :width="140"
+                    />
+                    <bk-table-column
+                        :label="$t('traditionalStyle')"
+                        prop="classic"
+                        :width="290"
+                    >
                         <template slot-scope="props">
                             <div class="label-column">
                                 <p>{{ props.row.classic }}</p>
@@ -19,7 +31,10 @@
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('constraintStyle')" prop="constrainedMode">
+                    <bk-table-column
+                        :label="$t('constraintStyle')"
+                        prop="constrainedMode"
+                    >
                         <template slot-scope="props">
                             <div class="label-column">
                                 <p>{{ props.row.constrainedMode }}</p>
@@ -42,10 +57,16 @@
             v-model="pipelineDialect"
             @change="pipelineDialectChange"
         >
-            <bk-radio :value="'CLASSIC'" :disabled="isDialectDisabled">
+            <bk-radio
+                :value="'CLASSIC'"
+                :disabled="isDialectDisabled"
+            >
                 <span class="radio-label">{{ $t('traditionalStyle') }}</span>
             </bk-radio>
-            <bk-radio :value="'CONSTRAINED'" :disabled="isDialectDisabled">
+            <bk-radio
+                :value="'CONSTRAINED'"
+                :disabled="isDialectDisabled"
+            >
                 <span class="radio-label">{{ $t('constraintStyle') }}</span>
             </bk-radio>
         </bk-radio-group>
