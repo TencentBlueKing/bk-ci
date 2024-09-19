@@ -111,9 +111,7 @@ data class PipelineSetting(
                 version = 1,
                 desc = pipelineName,
                 maxPipelineResNum = maxPipelineResNum ?: PIPELINE_RES_NUM_MIN,
-                waitQueueTimeMinute = DateTimeUtil.minuteToSecond(
-                    PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
-                ),
+                waitQueueTimeMinute = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
                 maxQueueSize = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
                 runLockType = PipelineRunLockType.MULTIPLE,
                 successSubscription = null,
