@@ -161,6 +161,8 @@
                 this.praiseAi({
                     ...this.postData,
                     score: true
+                }).then(() => {
+                    this.$bkMessage({ theme: 'error', message: this.$t('successPraise') })
                 })
             },
 
@@ -168,6 +170,8 @@
                 this.praiseAi({
                     ...this.postData,
                     score: false
+                }).then(() => {
+                    this.$bkMessage({ theme: 'error', message: this.$t('successDownPraise') })
                 })
             },
 
@@ -180,6 +184,7 @@
                     callBack (val) {
                         item.aiMessage += val
                         scrollRef.setSingleLogData(item)
+                        scrollRef.scrollAILogToBottom()
                     }
                 })
             },
@@ -193,6 +198,7 @@
                     callBack (val) {
                         item.aiMessage += val
                         scrollRef.setSingleLogData(item)
+                        scrollRef.scrollAILogToBottom()
                     }
                 })
             },

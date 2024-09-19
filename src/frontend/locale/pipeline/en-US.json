@@ -149,6 +149,8 @@
   "downloadLog": "Download Log",
   "hideDebugLog": "Hide Debug Log",
   "showDebugLog": "Show Debug Log",
+  "successPraise": "Like Success",
+  "successDownPraise": "Down Like Success",
   "stageReview": {
     "stageInConditions": "Stage-In conditions",
     "approvalFlow": "Approval flow",
@@ -601,7 +603,7 @@
     "downloading": "Downloading ",
     "copySuc": " Copy {0} to custom artifactory successfully",
     "buildMsg": "Build Message"
-},
+  },
   "preview": {
     "build": "Build",
     "introVersion": "Recommended Version",
