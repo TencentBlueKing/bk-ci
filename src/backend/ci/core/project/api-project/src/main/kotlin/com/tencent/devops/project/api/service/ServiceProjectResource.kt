@@ -378,13 +378,4 @@ interface ServiceProjectResource {
         @QueryParam("englishName")
         englishName: List<String>
     ): Result<List<String>?>
-
-    @Operation(summary = "获取项目级流水线方言, 流水线编辑/修改时调用")
-    @GET
-    @Path("{projectId}/pipelineDialect")
-    fun getPipelineDialect(
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
-    ): Result<String>
 }

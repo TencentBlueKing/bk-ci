@@ -276,8 +276,4 @@ class ServiceProjectResourceImpl @Autowired constructor(
             projectService.getExistedEnglishName(englishName)
         )
     }
-
-    override fun getPipelineDialect(projectId: String): Result<String> {
-        return Result(projectService.getPipelineDialect(projectId = projectId))
-    }
 }

@@ -1683,11 +1683,13 @@ class PipelineRepositoryService constructor(
     fun getSettingByPipelineVersion(
         projectId: String,
         pipelineId: String,
-        pipelineVersion: Int
+        pipelineVersion: Int?
     ): PipelineSetting? {
-        val resource = pipelineResourceVersionDao.getPipelineVersionSimple(
-            dslContext, projectId, pipelineId, pipelineVersion
-        )
+        val resource = pipelineVersion?.let {
+            pipelineResourceVersionDao.getPipelineVersionSimple(
+                dslContext, projectId, pipelineId, pipelineVersion
+            )
+        }
         return resource?.settingVersion?.let {
             pipelineSettingVersionService.getPipelineSetting(
                 projectId = projectId,

@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
@@ -294,11 +295,11 @@ class SubPipelineRepositoryService @Autowired constructor(
     }
 
     private fun getContextMap(stages: List<Stage>): Map<String, String> {
-        val trigger = stages.getOrNull(0)
-            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB)
-        // 检查触发容器
-        val paramsMap = defaultModelCheckPlugin.checkTriggerContainer(trigger, false)
-        return PipelineVarUtil.fillVariableMap(paramsMap.mapValues { it.value.defaultValue.toString() })
+        val triggerContainer = stages[0].containers[0] as TriggerContainer
+        val variables = triggerContainer.params.associate { param ->
+            param.id to param.defaultValue.toString()
+        }
+        return PipelineVarUtil.fillVariableMap(variables)
     }
 
     companion object {

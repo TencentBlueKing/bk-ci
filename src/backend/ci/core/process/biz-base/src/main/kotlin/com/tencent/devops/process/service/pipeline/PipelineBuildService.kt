@@ -167,13 +167,11 @@ class PipelineBuildService(
             }
         } else {
             // webhook、重试可以指定流水线版本
-            signPipelineVersion?.let {
-                pipelineRepositoryService.getSettingByPipelineVersion(
-                    projectId = pipeline.projectId,
-                    pipelineId = pipeline.pipelineId,
-                    pipelineVersion = it
-                )
-            } ?: pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
+            pipelineRepositoryService.getSettingByPipelineVersion(
+                projectId = pipeline.projectId,
+                pipelineId = pipeline.pipelineId,
+                pipelineVersion = signPipelineVersion
+            )
         }
         val bucketSize = setting!!.maxConRunningQueueSize
         val lockKey = "PipelineRateLimit:${pipeline.pipelineId}"

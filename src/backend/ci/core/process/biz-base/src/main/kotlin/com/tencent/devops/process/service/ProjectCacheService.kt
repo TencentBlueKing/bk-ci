@@ -69,12 +69,7 @@ class ProjectCacheService @Autowired constructor(private val client: Client) {
     }
 
     fun getProjectDialect(projectId: String): String? {
-        return try {
-            client.get(ServiceProjectResource::class).getPipelineDialect(projectId).data
-        } catch (ignored: Exception) {
-            logger.warn("Fail to  get the project dialect project code($projectId)", ignored)
-            null
-        }
+        return getProject(projectId = projectId)?.pipelineDialect
     }
 
     private fun getProjectInner(projectId: String): ProjectVO {

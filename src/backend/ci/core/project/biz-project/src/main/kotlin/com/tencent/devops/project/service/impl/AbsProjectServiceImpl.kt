@@ -67,7 +67,6 @@ import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
-import com.tencent.devops.project.PROJECT_PIPELINE_DIALECT_REDIS_KEY
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.PROJECT_ID_MAX_LENGTH
@@ -308,10 +307,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 if (projectInfo.secrecy) {
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                 }
-                setRedisPipelineDialect(
-                    projectId = projectInfo.englishName,
-                    pipelineDialect = projectCreateInfo.pipelineDialect
-                )
             }
             updateProjectRouterTag(projectCreateInfo.englishName)
         } catch (e: DuplicateKeyException) {
@@ -615,10 +610,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                                 )
                             )
                         }
-                        setRedisPipelineDialect(
-                            projectId = projectUpdateInfo.englishName,
-                            pipelineDialect = projectUpdateInfo.pipelineDialect
-                        )
                     }
                 }
                 // 记录项目更新记录
@@ -1609,21 +1600,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     )
 
     override fun getPipelineDialect(projectId: String): String {
-        return redisOperation.hget(PROJECT_PIPELINE_DIALECT_REDIS_KEY, projectId)
-            ?: run {
-                val pipelineDialect =
-                    getByEnglishName(englishName = projectId)?.pipelineDialect ?: PipelineDialectType.CLASSIC.name
-                setRedisPipelineDialect(projectId = projectId, pipelineDialect = pipelineDialect)
-                pipelineDialect
-            }
-    }
-
-    private fun setRedisPipelineDialect(projectId: String, pipelineDialect: String?) {
-        redisOperation.hset(
-            PROJECT_PIPELINE_DIALECT_REDIS_KEY,
-            projectId,
-            pipelineDialect ?: PipelineDialectType.CLASSIC.name
-        )
+        return getByEnglishName(englishName = projectId)?.pipelineDialect ?: PipelineDialectType.CLASSIC.name
     }
 
     companion object {
