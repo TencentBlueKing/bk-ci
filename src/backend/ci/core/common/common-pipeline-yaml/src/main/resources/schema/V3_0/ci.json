@@ -1759,24 +1759,20 @@
               } ]
             },
             "if" : {
-              "type" : "object",
-              "additionalProperties" : {
-                "anyOf" : [ {
-                  "type" : "string"
-                }, {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "required" : [ "value" ],
-                  "properties" : {
-                    "mode" : {
-                      "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
-                    },
-                    "params" : {
-                      "type" : "object"
-                    }
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "mode" : {
+                    "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                  },
+                  "params" : {
+                    "type" : "object"
                   }
-                } ]
-              }
+                }
+              } ]
             },
             "check-in" : {
               "$ref" : "#/definitions/check-in"
@@ -2495,24 +2491,20 @@
               }
             },
             "if" : {
-              "type" : "object",
-              "additionalProperties" : {
-                "anyOf" : [ {
-                  "type" : "string"
-                }, {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "required" : [ "value" ],
-                  "properties" : {
-                    "mode" : {
-                      "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
-                    },
-                    "params" : {
-                      "type" : "object"
-                    }
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "mode" : {
+                    "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                  },
+                  "params" : {
+                    "type" : "object"
                   }
-                } ]
-              }
+                }
+              } ]
             },
             "steps" : {
               "$ref" : "#/definitions/steps"
@@ -2632,24 +2624,20 @@
               "maxLength" : 64
             },
             "if" : {
-              "type" : "object",
-              "additionalProperties" : {
-                "anyOf" : [ {
-                  "type" : "string"
-                }, {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "required" : [ "value" ],
-                  "properties" : {
-                    "mode" : {
-                      "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
-                    },
-                    "params" : {
-                      "type" : "object"
-                    }
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "mode" : {
+                    "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                  },
+                  "params" : {
+                    "type" : "object"
                   }
-                } ]
-              }
+                }
+              } ]
             },
             "with" : {
               "type" : "object"
