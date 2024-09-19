@@ -106,7 +106,7 @@ class QueueInterceptor @Autowired constructor(
 
             (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) >= max(
                 PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
-                task.maxConRunningQueueSize!!
+                task.maxConRunningQueueSize
             ) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
