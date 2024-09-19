@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ClientTips
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeData
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeResp
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
@@ -187,4 +188,14 @@ interface UserRemoteDevResource {
         userId: String,
         data: ClientUpgradeData
     ): Result<ClientUpgradeResp>
+
+    @Operation(summary = "客户端获取加载时Tips")
+    @GET
+    @Path("/client/tips")
+    fun clientTips(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<List<ClientTips>>
 }
