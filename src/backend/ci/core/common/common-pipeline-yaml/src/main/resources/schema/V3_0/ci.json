@@ -1737,6 +1737,9 @@
           "additionalProperties" : false,
           "required" : [ "jobs" ],
           "properties" : {
+            "enable" : {
+              "type" : "boolean"
+            },
             "name" : {
               "type" : "string"
             },
@@ -1756,7 +1759,24 @@
               } ]
             },
             "if" : {
-              "type" : "string"
+              "type" : "object",
+              "additionalProperties" : {
+                "anyOf" : [ {
+                  "type" : "string"
+                }, {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "required" : [ "value" ],
+                  "properties" : {
+                    "mode" : {
+                      "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                    },
+                    "params" : {
+                      "type" : "object"
+                    }
+                  }
+                } ]
+              }
             },
             "check-in" : {
               "$ref" : "#/definitions/check-in"
@@ -1875,6 +1895,9 @@
           "required" : [ "steps" ],
           "additionalProperties" : false,
           "properties" : {
+            "enable" : {
+              "type" : "boolean"
+            },
             "name" : {
               "type" : "string"
             },
@@ -2110,6 +2133,11 @@
           "type" : "integer",
           "minimum" : 1,
           "maximum" : 1440
+        },
+        "max-parallel" : {
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 200
         }
       }
     },
@@ -2184,6 +2212,16 @@
                         "type" : "string"
                       }
                     } ]
+                  },
+                  "groups" : {
+                    "anyOf" : [ {
+                      "type" : "string"
+                    }, {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    } ]
                   }
                 }
               }
@@ -2198,7 +2236,7 @@
                     "type" : "string"
                   },
                   "type" : {
-                    "enum" : [ "INPUT", "TEXTAREA", "SELECTOR", "SELECTOR-MULTIPLE", "BOOL" ]
+                    "enum" : [ "INPUT", "TEXTAREA", "SELECTOR", "SELECTOR-MULTIPLE", "BOOL", "CHECKBOX" ]
                   },
                   "default" : {
                     "anyOf" : [ {
@@ -2222,6 +2260,9 @@
                         "type" : "boolean"
                       } ]
                     }
+                  },
+                  "required" : {
+                    "type" : "boolean"
                   },
                   "description" : {
                     "type" : "string"
@@ -2318,6 +2359,9 @@
           "required" : [ "steps" ],
           "additionalProperties" : false,
           "properties" : {
+            "enable" : {
+              "type" : "boolean"
+            },
             "name" : {
               "type" : "string"
             },
@@ -2451,7 +2495,24 @@
               }
             },
             "if" : {
-              "type" : "string"
+              "type" : "object",
+              "additionalProperties" : {
+                "anyOf" : [ {
+                  "type" : "string"
+                }, {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "required" : [ "value" ],
+                  "properties" : {
+                    "mode" : {
+                      "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                    },
+                    "params" : {
+                      "type" : "object"
+                    }
+                  }
+                } ]
+              }
             },
             "steps" : {
               "$ref" : "#/definitions/steps"
@@ -2571,7 +2632,24 @@
               "maxLength" : 64
             },
             "if" : {
-              "type" : "string"
+              "type" : "object",
+              "additionalProperties" : {
+                "anyOf" : [ {
+                  "type" : "string"
+                }, {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "required" : [ "value" ],
+                  "properties" : {
+                    "mode" : {
+                      "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                    },
+                    "params" : {
+                      "type" : "object"
+                    }
+                  }
+                } ]
+              }
             },
             "with" : {
               "type" : "object"

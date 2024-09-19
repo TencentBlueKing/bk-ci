@@ -196,7 +196,7 @@ object YamlObjects {
             enable = getNullValue("enable", step)?.toBoolean(),
             name = step["name"]?.toString(),
             id = step["id"]?.toString(),
-            ifFiled = step["if"]?.toString(),
+            ifField = step["if"],
             ifModify = if (step["if-modify"] is List<*>) {
                 val ifModifyList = step["if-modify"] as List<*>
                 ifModifyList.map { it.toString() }.toList()
@@ -485,7 +485,7 @@ fun <T> YamlTemplate<T>.getStage(
         enable = YamlObjects.getNullValue("enable", stage)?.toBoolean(),
         name = stage["name"]?.toString(),
         label = stage["label"],
-        ifField = stage["if"]?.toString(),
+        ifField = stage["if"],
         ifModify = if (stage["if-modify"] is List<*>) {
             val ifModifyList = stage["if-modify"] as List<*>
             ifModifyList.map { it.toString() }.toList()
@@ -551,7 +551,7 @@ fun <T> YamlTemplate<T>.getJob(fromPath: TemplatePath, job: Map<String, Any>, de
         } else {
             YamlObjects.getService(fromPath, job["services"]!!)
         },
-        ifField = job["if"]?.toString(),
+        ifField = job["if"],
         ifModify = if (job["if-modify"] is List<*>) {
             val ifModifyList = job["if-modify"] as List<*>
             ifModifyList.map { it.toString() }.toList()
