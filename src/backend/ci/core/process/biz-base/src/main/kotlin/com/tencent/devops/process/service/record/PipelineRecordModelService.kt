@@ -239,6 +239,7 @@ class PipelineRecordModelService @Autowired constructor(
         containerVarMap[Container::status.name] = recordContainer.status ?: ""
         containerVarMap[Container::executeCount.name] = recordContainer.executeCount
         containerVarMap[Container::containPostTaskFlag.name] = recordContainer.containPostTaskFlag ?: false
+        containerVarMap[Container::matrixGroupFlag.name] = recordContainer.matrixGroupFlag ?: false
         return containerVarMap
     }
 
