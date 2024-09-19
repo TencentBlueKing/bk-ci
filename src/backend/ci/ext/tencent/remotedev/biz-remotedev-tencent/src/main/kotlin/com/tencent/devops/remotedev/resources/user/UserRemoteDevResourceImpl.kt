@@ -148,7 +148,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(clientUpgradeService.checkUpgrade(userId, data))
     }
 
-    override fun clientTips(userId: String, projectId: String): Result<List<ClientTips>> {
+    override fun clientTips(userId: String, projectId: String?): Result<List<ClientTips>> {
         return Result(clientTipsService.fetchTips(projectId = projectId, userId = userId))
     }
 
