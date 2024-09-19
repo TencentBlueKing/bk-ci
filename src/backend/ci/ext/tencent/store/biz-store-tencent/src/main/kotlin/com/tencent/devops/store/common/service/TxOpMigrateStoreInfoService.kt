@@ -27,10 +27,15 @@
 
 package com.tencent.devops.store.common.service
 
-interface TxOpMigrateStoreDescriptionService {
+interface TxOpMigrateStoreInfoService {
 
     /**
      * 迁移商店组件描述引用文件
      */
     fun migrateStoreDescription(): Boolean
+
+    /**
+     * 从组件特性到组件扩展迁移组件urlScheme数据
+     */
+    fun migrateStoreUrlScheme(): Boolean
 }

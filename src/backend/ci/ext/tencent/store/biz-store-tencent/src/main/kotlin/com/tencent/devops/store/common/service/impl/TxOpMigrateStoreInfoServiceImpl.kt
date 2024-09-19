@@ -39,8 +39,13 @@ import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TIdeAtom
 import com.tencent.devops.model.store.tables.TImage
 import com.tencent.devops.model.store.tables.TTemplate
+import com.tencent.devops.store.common.dao.StoreBaseExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
+import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.TxOpMigrateStoreDescriptionDao
-import com.tencent.devops.store.common.service.TxOpMigrateStoreDescriptionService
+import com.tencent.devops.store.common.service.TxOpMigrateStoreInfoService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.StoreBaseExtDataPO
 import java.nio.file.Files
 import java.util.concurrent.Executors
 import java.util.regex.Matcher
@@ -51,7 +56,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class TxOpMigrateStoreDescriptionServiceImpl : TxOpMigrateStoreDescriptionService {
+class TxOpMigrateStoreInfoServiceImpl : TxOpMigrateStoreInfoService {
 
     @Autowired
     lateinit var dslContext: DSLContext
@@ -60,10 +65,19 @@ class TxOpMigrateStoreDescriptionServiceImpl : TxOpMigrateStoreDescriptionServic
     lateinit var txOpMigrateStoreDescriptionDao: TxOpMigrateStoreDescriptionDao
 
     @Autowired
+    lateinit var storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao
+
+    @Autowired
+    lateinit var storeBaseQueryDao: StoreBaseQueryDao
+
+    @Autowired
+    lateinit var storeBaseExtManageDao: StoreBaseExtManageDao
+
+    @Autowired
     lateinit var client: Client
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TxOpMigrateStoreDescriptionServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(TxOpMigrateStoreInfoServiceImpl::class.java)
         private const val DEFAULT_PAGE_SIZE = 100
         private const val BK_CI_PATH_REGEX = "(!\\[(.*?)]\\()(http[s]?://radosgw.open.oa.com(.*?))(\\))"
     }
@@ -80,6 +94,55 @@ class TxOpMigrateStoreDescriptionServiceImpl : TxOpMigrateStoreDescriptionServic
         // 迁移微扩展描述信息引用资源
         migrateExtServiceDescription()
         return true
+    }
+
+    override fun migrateStoreUrlScheme(): Boolean {
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin migrateStoreUrlScheme!!")
+            val fieldName = "urlScheme"
+            migrateBaseFeatureExtToBaseExtByFieldName(fieldName)
+            logger.info("end migrateStoreUrlScheme!!")
+        }
+        return true
+    }
+
+    private fun migrateBaseFeatureExtToBaseExtByFieldName(fieldName: String) {
+        var page = 1
+        val pageSize = 50
+        do {
+            val storeBaseExtDataPOs = mutableListOf<StoreBaseExtDataPO>()
+            val storeBaseFeatureExtRecords = storeBaseFeatureExtQueryDao.queryStoreCodeByFieldName(
+                dslContext = dslContext,
+                fieldName = fieldName,
+                page = page,
+                pageSize = pageSize
+            )
+            storeBaseFeatureExtRecords.forEach {
+                val storeIds = storeBaseQueryDao.getComponentIds(
+                    dslContext = dslContext,
+                    storeCode = it.storeCode,
+                    storeType = it.storeType
+                )
+                storeBaseExtDataPOs.addAll(
+                    storeIds.map { storeId ->
+                        StoreBaseExtDataPO(
+                            id = UUIDUtil.generate(),
+                            storeId = storeId,
+                            storeCode = it.storeCode,
+                            storeType = StoreTypeEnum.getStoreTypeObj(it.storeType.toInt()),
+                            fieldName = it.fieldName,
+                            fieldValue = it.fieldValue,
+                            creator = it.creator,
+                            modifier = it.creator
+                        )
+                    }
+                )
+            }
+            if (storeBaseExtDataPOs.isNotEmpty()) {
+                storeBaseExtManageDao.batchSave(dslContext, storeBaseExtDataPOs)
+            }
+            page++
+        } while (storeBaseFeatureExtRecords.size >= pageSize)
     }
 
     private fun migrateAtomDescription() {

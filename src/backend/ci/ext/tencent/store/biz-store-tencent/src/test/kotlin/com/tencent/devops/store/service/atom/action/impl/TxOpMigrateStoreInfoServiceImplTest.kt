@@ -27,15 +27,15 @@
 
 package com.tencent.devops.store.service.atom.action.impl
 
-import com.tencent.devops.store.common.service.impl.TxOpMigrateStoreDescriptionServiceImpl
+import com.tencent.devops.store.common.service.impl.TxOpMigrateStoreInfoServiceImpl
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
-class TxOpMigrateStoreDescriptionServiceImplTest {
+class TxOpMigrateStoreInfoServiceImplTest {
 
     @Test
     fun checkLogoUrlConditionTest() {
-        val t = TxOpMigrateStoreDescriptionServiceImpl()
+        val t = TxOpMigrateStoreInfoServiceImpl()
         val pathList = t.checkLogoUrlCondition(description)
         Assertions.assertEquals(
             "http://radosgw.open.oa.com/xxx/xx/xx/file/png/xxxxx.png?v=xxxx",
@@ -49,7 +49,7 @@ class TxOpMigrateStoreDescriptionServiceImplTest {
 
     @Test
     fun replaceDescriptionTest() {
-        val t = TxOpMigrateStoreDescriptionServiceImpl()
+        val t = TxOpMigrateStoreInfoServiceImpl()
         val pathMap = mapOf(
             "http://radosgw.open.oa.com/xxx/xx/xx/file/png/xxxxx.png?v=xxxx".replace("?", "\\?")
                     to "https://test.open.oa.com/xxx/xx/xx/file/png/xxsxax.png?v=aas",
