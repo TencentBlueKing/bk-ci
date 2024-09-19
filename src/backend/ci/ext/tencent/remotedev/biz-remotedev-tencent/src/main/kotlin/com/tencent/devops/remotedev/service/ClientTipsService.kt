@@ -47,7 +47,7 @@ class ClientTipsService @Autowired constructor(
             }
         }
 
-        return result
+        return result.sortedByDescending { it.weight }
     }
 
     fun createOrUpdateTips(
