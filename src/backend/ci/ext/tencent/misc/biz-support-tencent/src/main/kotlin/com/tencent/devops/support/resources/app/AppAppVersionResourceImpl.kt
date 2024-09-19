@@ -33,23 +33,21 @@ import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic.BK_CI_APP_LOGIN_TOPIC
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.EXCHANGE_PROJECT_COUNT_LOGIN
-import com.tencent.devops.project.ROUTE_PROJECT_COUNT_LOGIN
 import com.tencent.devops.project.pojo.UserCountLogin
 import com.tencent.devops.project.pojo.enums.OS
 import com.tencent.devops.support.api.app.AppAppVersionResource
 import com.tencent.devops.support.model.app.pojo.AppVersion
 import com.tencent.devops.support.services.AppVersionService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 
 @RestResource
 class AppAppVersionResourceImpl @Autowired constructor(
     private val appVersionService: AppVersionService,
     private val kafkaClient: KafkaClient,
     private val profile: Profile,
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) :
     AppAppVersionResource {
     override fun getAllAppVersion(channelType: Byte): Result<List<AppVersion>> {
@@ -78,11 +76,7 @@ class AppAppVersionResourceImpl @Autowired constructor(
         }
         // APP 登录刷新用户信息
         val os = if (channelType.toInt() == 1) OS.ANDROID else OS.IOS
-        rabbitTemplate.convertAndSend(
-            EXCHANGE_PROJECT_COUNT_LOGIN,
-            ROUTE_PROJECT_COUNT_LOGIN,
-            UserCountLogin(userId, os, "")
-        )
+        UserCountLogin(userId, os, "").sendTo(streamBridge)
         return Result(data = appVersionService.getLastAppVersion(channelType, appVersion ?: "1.0.0"))
     }
 
