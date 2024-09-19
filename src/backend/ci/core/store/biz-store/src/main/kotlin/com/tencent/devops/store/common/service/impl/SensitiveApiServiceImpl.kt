@@ -105,7 +105,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
         return JsonUtil.to(
             json = businessConfigRecord.configValue,
             typeReference = object : TypeReference<List<SensitiveApiConfig>>() {}
-        )
+        ).filter { !it.hideFlag }
     }
 
     override fun apply(
