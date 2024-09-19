@@ -196,6 +196,6 @@ interface UserRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("projectId")
-        projectId: String
+        projectId: String?
     ): Result<List<ClientTips>>
 }
