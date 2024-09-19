@@ -1793,7 +1793,11 @@ class PipelineRepositoryService constructor(
                 )
                     .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, pipelineModelVersion.projectId)
                     .scopeId = pipelineModelVersion.projectId
-                pipelineResourceDao.updatePipelineModel(dslContext, userId, pipelineModelVersion)
+                dslContext.transaction { configuration ->
+                    val transactionContext = DSL.using(configuration)
+                    pipelineResourceDao.updatePipelineModel(transactionContext, userId, pipelineModelVersion)
+                    pipelineResourceVersionDao.updatePipelineModel(transactionContext, userId, pipelineModelVersion)
+                }
             } finally {
                 lock.unlock()
             }
