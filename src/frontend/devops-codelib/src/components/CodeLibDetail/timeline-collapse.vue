@@ -12,17 +12,28 @@
                         :class="{
                             'collapse-item-header': true,
                             'active': activeIndex === index
-                        }" @click="handleShowDetail(item, index)">
+                        }"
+                        @click="handleShowDetail(item, index)"
+                    >
                         <div class="title">
-                            <StatusIcon class="icon" :status="item.total === item.success ? 'normal' : 'error'"></StatusIcon>
-                            <span class="desc" :title="getEventDescTitle(item.eventDesc)" v-html="item.eventDesc"></span>
+                            <StatusIcon
+                                class="icon"
+                                :status="item.total === item.success ? 'normal' : 'error'"
+                            ></StatusIcon>
+                            <span
+                                class="desc"
+                                :title="getEventDescTitle(item.eventDesc)"
+                                v-html="item.eventDesc"
+                            ></span>
                             <span class="trigger-time">
                                 {{ new Date(item.eventTime).toLocaleString().split('.').join('-') }}
                             </span>
-                            <span :class="{
-                                'success-num': true,
-                                'red': item.success !== item.total
-                            }">
+                            <span
+                                :class="{
+                                    'success-num': true,
+                                    'red': item.success !== item.total
+                                }"
+                            >
                                 ({{ item.success }}/{{ item.total }})
                             </span>
                         </div>
@@ -53,9 +64,11 @@
                                 type="angle-right"
                             />
                         </div>
-                        
                     </div>
-                    <div v-if="activeIndex === index" class="filter-tab">
+                    <div
+                        v-if="activeIndex === index"
+                        class="filter-tab"
+                    >
                         <div
                             v-for="(tab, tabIndex) in filterTabList"
                             :key="tabIndex"
@@ -63,7 +76,8 @@
                                 'tab-item': true,
                                 'active': filterTab === tab.id
                             }"
-                            @click="handleToggleTab(tab)">
+                            @click="handleToggleTab(tab)"
+                        >
                             {{ tab.name }}
                             <span class="num">{{ reasonNumMap[tab.key] }}</span>
                         </div>
@@ -76,20 +90,33 @@
                             :class="{
                                 'is-show-table': activeIndex === index
                             }"
-                            v-bkloading="{ isLoading }">
+                            v-bkloading="{ isLoading }"
+                        >
                             <tbody>
-                                <tr v-for="detail in eventDetailList" :key="detail.detailId">
+                                <tr
+                                    v-for="detail in eventDetailList"
+                                    :key="detail.detailId"
+                                >
                                     <td width="25%">
                                         <div class="cell">{{ detail.pipelineName }}</div>
                                     </td>
                                     <td width="75%">
-                                        <div class="cell" v-if="detail.status === 'SUCCEED'">
+                                        <div
+                                            class="cell"
+                                            v-if="detail.status === 'SUCCEED'"
+                                        >
                                             <StatusIcon :status="detail.status"></StatusIcon>
                                             {{ detail.reason }}  |
                                             <span v-html="detail.buildNum"></span>
                                         </div>
-                                        <div class="cell" v-else>
-                                            <div v-for="i in detail.reasonDetailList" :key="i">
+                                        <div
+                                            class="cell"
+                                            v-else
+                                        >
+                                            <div
+                                                v-for="i in detail.reasonDetailList"
+                                                :key="i"
+                                            >
                                                 <StatusIcon :status="detail.status"></StatusIcon>
                                                 <span style="color: red;">{{ detail.reason }}</span>  |
                                                 <span>{{ i }}</span>
@@ -128,18 +155,24 @@
                             small
                             v-bind="pagination"
                             @change="handleChangePage"
-                            @limit-change="handleChangeLimit">
+                            @limit-change="handleChangeLimit"
+                        >
                         </bk-pagination>
                     </div>
                     <div
                         class="trigger-list-table"
-                        v-else-if="activeIndex === index && !eventDetailList.length">
+                        v-else-if="activeIndex === index && !eventDetailList.length"
+                    >
                         <table
                             :class="{
                                 'is-show-table': activeIndex === index
                             }"
-                            v-bkloading="{ isLoading }">
-                            <EmptyTableStatusVue class="empty-table" type="empty" />
+                            v-bkloading="{ isLoading }"
+                        >
+                            <EmptyTableStatusVue
+                                class="empty-table"
+                                type="empty"
+                            />
                         </table>
                     </div>
                 </div>

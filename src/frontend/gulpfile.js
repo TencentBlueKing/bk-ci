@@ -30,7 +30,7 @@ const argv = yargs.alias({
     lsVersion: 'localStorage version',
     type: 'bkdevops version 【ee | tencent】'
 }).argv
-const { dist, env, lsVersion, type, scope } = argv
+const { dist, env, lsVersion, scope } = argv
 
 const svgSpriteConfig = {
     mode: {
@@ -98,8 +98,7 @@ function getScopeStr (scope) {
             default:
                 scopeArray = scope
         }
-        const isMultiple = scopeArray.length > 1
-        return `--scope=devops-${isMultiple ? `{${scopeArray.join(',')}}` : scopeArray.join(',')}`
+        return `-p ${scopeArray.map(item => `devops-${item}`).join(' ')}`
     } catch (e) {
         console.error(e)
         return ''
@@ -117,18 +116,8 @@ task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
 task('build', async () => {
     const assetJson = await getAssetsJSON(ASSETS_JSON_URL)
     fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(assetJson))
-    const scopeStr = getScopeStr(scope)
-    const envConfMap = {
-        dist,
-        version: type,
-        lsVersion
-    }
-    const envQueryStr = Object.keys(envConfMap).reduce((acc, key) => {
-        acc += ` --env ${key}=${envConfMap[key]}`
-        return acc
-    }, '')
-    console.log(envQueryStr)
-    await execAsync(`lerna run public:master ${scopeStr}`)
+    
+    await execAsync()
 })
 
 task('generate-assets-json', () => {
@@ -161,20 +150,33 @@ task('inject-asset', parallel(['console', 'pipeline'].map(prefix => {
 }
 )))
 
-async function execAsync (cmd) {
+async function execAsync () {
     const spinner = new Ora('building bk-ci frontend project').start()
+    
     return new Promise((resolve, reject) => {
-        require('child_process').exec(cmd, {
-            maxBuffer: 5000 * 1024,
+        const scopeStr = getScopeStr(scope)
+        const cmd = scopeStr ? `run-many -t public:master ${scopeStr}` : 'affected -t public:master '
+        console.log('gulp cmd: ', cmd, cmd.split(' '))
+        const { spawn } = require('node:child_process')
+        const spawnCmd = spawn('pnpm', [
+            'exec',
+            'nx',
+            '--parallel=16',
+            ...cmd.split(' ')
+        ], {
+            stdio: 'inherit',
             env: {
                 ...process.env,
                 dist,
                 lsVersion
             }
-        }, (err, res) => {
-            if (err) {
-                console.error(err)
-                reject(err)
+        })
+        
+        spawnCmd.on('close', (code) => {
+            console.log(`child process exited with code ${code}`)
+            if (code) {
+                reject(Error('build failed'))
+                spinner.fail('Failed bk-ci frontend project')
                 process.exit(1)
             }
             spinner.succeed('Finished building bk-ci frontend project')

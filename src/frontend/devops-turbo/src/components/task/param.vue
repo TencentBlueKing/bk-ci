@@ -1,8 +1,14 @@
 <template>
     <section class="g-turbo-box task-param">
         <h3 class="create-title g-turbo-deep-black-font"> {{ $t('turbo.加速参数') }} </h3>
-        <bk-form class="g-turbo-form-left" :label-width="138" :model="copyFormData.configParam" ref="paramForm">
-            <bk-form-item :label="config.paramName"
+        <bk-form
+            class="g-turbo-form-left"
+            :label-width="138"
+            :model="copyFormData.configParam"
+            ref="paramForm"
+        >
+            <bk-form-item
+                :label="config.paramName"
                 :property="config.paramKey"
                 v-for="config in paramConfig"
                 :key="config.paramKey"
@@ -11,7 +17,8 @@
                 :rules="requireRule(config)"
                 error-display-type="normal"
             >
-                <component :is="'param-' + config.paramType"
+                <component
+                    :is="'param-' + config.paramType"
                     v-bind="config"
                     v-if="config.displayed"
                     :disabled="!isEdit"
@@ -21,9 +28,29 @@
                 ></component>
             </bk-form-item>
         </bk-form>
-        <bk-button v-if="isEdit && !onlyEdit" theme="primary" class="g-turbo-bottom-button" @click="save"> {{ $t('turbo.保存') }} </bk-button>
-        <bk-button v-if="isEdit && !onlyEdit" class="g-turbo-bottom-button" @click="cancel"> {{ $t('turbo.取消') }} </bk-button>
-        <span class="g-turbo-edit-button" @click="isEdit = !isEdit" v-if="!onlyEdit && (paramConfig || []).length && !isEdit"><logo name="edit" size="16"></logo> {{ $t('turbo.编辑') }} </span>
+        <bk-button
+            v-if="isEdit && !onlyEdit"
+            theme="primary"
+            class="g-turbo-bottom-button"
+            @click="save"
+        >
+            {{ $t('turbo.保存') }}
+        </bk-button>
+        <bk-button
+            v-if="isEdit && !onlyEdit"
+            class="g-turbo-bottom-button"
+            @click="cancel"
+        >
+            {{ $t('turbo.取消') }}
+        </bk-button>
+        <span
+            class="g-turbo-edit-button"
+            @click="isEdit = !isEdit"
+            v-if="!onlyEdit && (paramConfig || []).length && !isEdit"
+        ><logo
+            name="edit"
+            size="16"
+        ></logo> {{ $t('turbo.编辑') }} </span>
     </section>
 </template>
 

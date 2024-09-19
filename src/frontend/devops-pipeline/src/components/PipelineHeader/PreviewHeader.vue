@@ -1,6 +1,12 @@
 <template>
-    <div v-if="pipelineName" class="pipeline-preview-header">
-        <pipeline-bread-crumb :is-loading="!pipelineName" :pipeline-name="pipelineName">
+    <div
+        v-if="pipelineName"
+        class="pipeline-preview-header"
+    >
+        <pipeline-bread-crumb
+            :is-loading="!pipelineName"
+            :pipeline-name="pipelineName"
+        >
             <span class="build-num-switcher-wrapper">
                 {{ title }}
             </span>
@@ -65,7 +71,11 @@
             </span>
         </aside>
     </div>
-    <i v-else class="devops-icon icon-circle-2-1 spin-icon" style="margin-left: 20px;" />
+    <i
+        v-else
+        class="devops-icon icon-circle-2-1 spin-icon"
+        style="margin-left: 20px;"
+    />
 </template>
 
 <script>

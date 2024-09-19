@@ -30,14 +30,14 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.TxOpMigrateStoreResource
-import com.tencent.devops.store.common.service.TxOpMigrateStoreDescriptionService
+import com.tencent.devops.store.common.service.TxOpMigrateStoreInfoService
 import com.tencent.devops.store.common.service.TxOpMigrateStoreLogoService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class TxOpMigrateStoreResourceImpl @Autowired constructor(
     private val txOpMigrateStoreLogoService: TxOpMigrateStoreLogoService,
-    private val txOpMigrateStoreDescriptionService: TxOpMigrateStoreDescriptionService
+    private val txOpMigrateStoreInfoService: TxOpMigrateStoreInfoService
 ) : TxOpMigrateStoreResource {
 
     override fun migrateStoreLogo(): Result<Boolean> {
@@ -45,6 +45,10 @@ class TxOpMigrateStoreResourceImpl @Autowired constructor(
     }
 
     override fun migrateStoreDescription(): Result<Boolean> {
-        return Result(txOpMigrateStoreDescriptionService.migrateStoreDescription())
+        return Result(txOpMigrateStoreInfoService.migrateStoreDescription())
+    }
+
+    override fun migrateStoreUrlScheme(): Result<Boolean> {
+        return Result(txOpMigrateStoreInfoService.migrateStoreUrlScheme())
     }
 }

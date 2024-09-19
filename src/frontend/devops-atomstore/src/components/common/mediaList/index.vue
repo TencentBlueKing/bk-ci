@@ -1,14 +1,26 @@
 <template>
-    <section class="media-List" ref="mediaList">
-        <ul class="detail-swiper" :style="{ width: maxTransferWidth + 'px', left: `${swiperTransfer}px` }">
-            <li v-for="media in list" :key="media.id" class="media-item">
-                <span v-if="media.mediaType === 'PICTURE'"
+    <section
+        class="media-List"
+        ref="mediaList"
+    >
+        <ul
+            class="detail-swiper"
+            :style="{ width: maxTransferWidth + 'px', left: `${swiperTransfer}px` }"
+        >
+            <li
+                v-for="media in list"
+                :key="media.id"
+                class="media-item"
+            >
+                <span
+                    v-if="media.mediaType === 'PICTURE'"
                     class="media-image"
                     :style="`background-image: url(${media.mediaUrl})`"
                     @click="imgSrc = media.mediaUrl"
                 >
                 </span>
-                <video v-else
+                <video
+                    v-else
                     controls="true"
                     preload="auto"
                     webkit-playsinline="true"
@@ -18,18 +30,21 @@
                     x5-video-player-fullscreen="true"
                     x5-video-orientation="portraint"
                     style="object-fit: fill; width: 100%; height: 100%"
-                    :src="media.mediaUrl">
+                    :src="media.mediaUrl"
+                >
                 </video>
             </li>
         </ul>
-        <span :class="[{ disabled: swiperTransfer >= 0 }, 'nav-left', 'swiper-nav']"
+        <span
+            :class="[{ disabled: swiperTransfer >= 0 }, 'nav-left', 'swiper-nav']"
             @click="() => {
                 if (swiperTransfer < 0) changeIndex(1)
             }"
         >
             <i class="nav-icon"></i>
         </span>
-        <span :class="[{ disabled: swiperTransfer <= -maxTransferWidth + containWidth }, 'nav-right', 'swiper-nav']"
+        <span
+            :class="[{ disabled: swiperTransfer <= -maxTransferWidth + containWidth }, 'nav-right', 'swiper-nav']"
             @click="() => {
                 if (swiperTransfer > -maxTransferWidth + containWidth) changeIndex(-1)
             }"

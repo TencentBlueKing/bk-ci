@@ -1,12 +1,35 @@
 <template>
     <div class="bk-form bk-form-vertical">
         <section v-if="appId">
-            <form-field :desc="$t('editPage.atomForm.appidDesc')" :label="$t('editPage.atomForm.appidLabel')">
-                <vuex-input readonly :value="appName" disabled />
+            <form-field
+                :desc="$t('editPage.atomForm.appidDesc')"
+                :label="$t('editPage.atomForm.appidLabel')"
+            >
+                <vuex-input
+                    readonly
+                    :value="appName"
+                    disabled
+                />
             </form-field>
             <template v-for="(obj, key) of atomPropsModel">
-                <form-field v-if="!isHidden(obj, element)" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                    <component :is="obj.component" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateElement" :value="element[key]" v-bind="obj" :placeholder="getPlaceholder(obj, element)"></component>
+                <form-field
+                    v-if="!isHidden(obj, element)"
+                    :key="key"
+                    :desc="obj.desc"
+                    :required="obj.required"
+                    :label="obj.label"
+                    :is-error="errors.has(key)"
+                    :error-msg="errors.first(key)"
+                >
+                    <component
+                        :is="obj.component"
+                        :name="key"
+                        v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                        :handle-change="handleUpdateElement"
+                        :value="element[key]"
+                        v-bind="obj"
+                        :placeholder="getPlaceholder(obj, element)"
+                    ></component>
                     <route-tips v-bind="getComponentTips(obj, element)"></route-tips>
                 </form-field>
             </template>

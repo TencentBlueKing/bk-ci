@@ -1,8 +1,15 @@
 <template>
-    <main class="delegation-permission" v-bkloading="{ isLoading }">
+    <main
+        class="delegation-permission"
+        v-bkloading="{ isLoading }"
+    >
         <section class="content-warpper">
             <header class="header">
-                <logo class="mr5" name="help-document-fill" size="20" />
+                <logo
+                    class="mr5"
+                    name="help-document-fill"
+                    size="20"
+                />
                 {{ $t('delegationPermission') }}
             </header>
             <div class="content">
@@ -10,18 +17,21 @@
                 <i18n
                     class="mt10"
                     tag="p"
-                    path="delegation.tips2">
+                    path="delegation.tips2"
+                >
                     <span class="highlight">{{ $t('delegation.pipelineExecPermission') }}</span>
                 </i18n>
                 <i18n
                     tag="p"
-                    path="delegation.tips3">
+                    path="delegation.tips3"
+                >
                     <span class="highlight">{{ 'BK_CI_AUTHORIZER' }}</span>
                 </i18n>
                 <p class="mt20">{{ $t('delegation.tips4') }}</p>
                 <i18n
                     tag="p"
-                    path="delegation.tips5">
+                    path="delegation.tips5"
+                >
                     <span class="highlight">{{ $t('delegation.newOperator') }}</span>
                 </i18n>
             </div>
@@ -35,7 +45,8 @@
                         :class="{
                             'block-row-value': true,
                             'reset-row': !resourceAuthData.executePermission
-                        }">
+                        }"
+                    >
                         <span
                             :class="{
                                 'name': true,
@@ -48,7 +59,10 @@
                         >
                             {{ resourceAuthData.handoverFrom }}
                         </span>
-                        <bk-tag theme="danger" v-if="!resourceAuthData?.executePermission && !isLoading">{{ $t('delegation.expired') }}</bk-tag>
+                        <bk-tag
+                            theme="danger"
+                            v-if="!resourceAuthData?.executePermission && !isLoading"
+                        >{{ $t('delegation.expired') }}</bk-tag>
                         <span
                             class="refresh-auth"
                             v-perm="{
@@ -61,8 +75,13 @@
                                     action: RESOURCE_ACTION.MANAGE
                                 }
                             }"
-                            @click="handleShowResetDialog">
-                            <logo class="refresh-icon" name="refresh" size="14" />
+                            @click="handleShowResetDialog"
+                        >
+                            <logo
+                                class="refresh-icon"
+                                name="refresh"
+                                size="14"
+                            />
                             {{ $t('delegation.resetAuthorization') }}
                         </span>
                     </span>
@@ -86,7 +105,8 @@
             <span class="reset-dialog-tips">
                 <i18n
                     tag="p"
-                    path="delegation.resetAuthTips1">
+                    path="delegation.resetAuthTips1"
+                >
                     <span class="highlight">{{ $t('delegation.yourPermission') }}</span>
                 </i18n>
                 <p>{{ $t('delegation.resetAuthTips2') }}</p>
@@ -103,7 +123,8 @@
                 <bk-button
                     class="btn"
                     :loading="resetLoading"
-                    @click="showResetDialog = !showResetDialog">
+                    @click="showResetDialog = !showResetDialog"
+                >
                     {{ $t('delegation.cancel') }}
                 </bk-button>
             </span>
@@ -134,7 +155,8 @@
                     class="btn"
                     theme="primary"
                     :loading="resetLoading"
-                    @click="showFailedDialog = !showFailedDialog">
+                    @click="showFailedDialog = !showFailedDialog"
+                >
                     {{ $t('delegation.confirm') }}
                 </bk-button>
             </span>

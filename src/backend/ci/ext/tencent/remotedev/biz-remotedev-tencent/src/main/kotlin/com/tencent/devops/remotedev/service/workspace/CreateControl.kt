@@ -604,7 +604,7 @@ class CreateControl @Autowired constructor(
             return false
         }
 
-        val vm = workspaceCommon.syncStartCloudResourceList().find { it.cgsId == taskInfo.vmCreateResp?.cgsIp }
+        val vm = workspaceCommon.realtimeStartCloudResourceList().find { it.cgsId == taskInfo.vmCreateResp?.cgsIp }
             ?: kotlin.run {
                 logger.warn("createWinWorkspaceByVm not find cgsIp ${taskInfo.vmCreateResp?.cgsIp}")
                 return false
@@ -868,7 +868,7 @@ class CreateControl @Autowired constructor(
     }
 
     private fun startCloudResourceCountCheck(type: String) =
-        workspaceCommon.syncStartCloudResourceList().filter {
+        workspaceCommon.realtimeStartCloudResourceList().filter {
             it.status == 11 &&
                 it.machineType == type
         }

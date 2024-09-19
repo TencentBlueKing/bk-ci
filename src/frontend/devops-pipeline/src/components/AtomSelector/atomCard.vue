@@ -5,13 +5,28 @@
         v-bk-tooltips="atomOsTooltips"
     >
         <div class="atom-logo">
-            <honer-img v-if="atom.logoUrl" :detail="atom" />
-            <logo v-else class="devops-icon" :name="getIconByCode(atom.atomCode)" size="50" />
+            <honer-img
+                v-if="atom.logoUrl"
+                :detail="atom"
+            />
+            <logo
+                v-else
+                class="devops-icon"
+                :name="getIconByCode(atom.atomCode)"
+                size="50"
+            />
         </div>
         <div class="atom-info-content">
             <p class="atom-name">
-                <span :class="[atomNameCls, 'mr16', 'text-overflow']" :title="atomNameTitle" v-bk-overflow-tips="{ extCls: 'tippy-padding', zIndex: 10000 }">{{ atom.name }}</span>
-                <honer-tag :detail="atom" :max-num="1" />
+                <span
+                    :class="[atomNameCls, 'mr16', 'text-overflow']"
+                    :title="atomNameTitle"
+                    v-bk-overflow-tips="{ extCls: 'tippy-padding', zIndex: 10000 }"
+                >{{ atom.name }}</span>
+                <honer-tag
+                    :detail="atom"
+                    :max-num="1"
+                />
                 <img
                     v-for="indexInfo in atom.indexInfos"
                     v-bk-tooltips="{
@@ -29,7 +44,7 @@
                     }"
                 >
             </p>
-            <p class="desc">{{atom.summary || $t('editPage.noDesc')}}</p>
+            <p class="desc">{{ atom.summary || $t('editPage.noDesc') }}</p>
             <section class="atom-rate">
                 <p class="score-group">
                     <rate
@@ -50,8 +65,16 @@
                     />
                 </p>
                 <span class="ml6">{{ atom.score }}</span>
-                <img v-if="atom.hotFlag" class="hot-icon" src="../../images/hot-red.png">
-                <img v-else class="hot-icon" src="../../images/hot.png">
+                <img
+                    v-if="atom.hotFlag"
+                    class="hot-icon"
+                    src="../../images/hot-red.png"
+                >
+                <img
+                    v-else
+                    class="hot-icon"
+                    src="../../images/hot.png"
+                >
                 <span class="ml3">{{ getShowNum(atom.recentExecuteNum) }}</span>
             </section>
         </div>
@@ -63,7 +86,7 @@
                 :disabled="atom.disabled || atom.atomCode === atomCode"
                 v-if="atom.installed || atom.defaultFlag"
             >
-                {{atom.atomCode === atomCode ? $t('editPage.selected') : $t('editPage.select')}}
+                {{ atom.atomCode === atomCode ? $t('editPage.selected') : $t('editPage.select') }}
             </bk-button>
             <bk-button
                 v-else
@@ -73,10 +96,21 @@
                 :disabled="!atom.installFlag"
                 :title="atom.installFlag ? '' : $t('editPage.noPermToInstall')"
                 :loading="isInstalling"
-            >{{ $t('editPage.install') }}
+            >
+                {{ $t('editPage.install') }}
             </bk-button>
-            <p class="atom-from" :title="`${atom.publisher} ${$t('editPage.provided')}`">{{`${atom.publisher} ${$t('editPage.provided')}`}}</p>
-            <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">{{ $t('newlist.knowMore') }}</a>
+            <p
+                class="atom-from"
+                :title="`${atom.publisher} ${$t('editPage.provided')}`"
+            >
+                {{ `${atom.publisher} ${$t('editPage.provided')}` }}
+            </p>
+            <a
+                v-if="atom.docsLink"
+                target="_blank"
+                class="atom-link"
+                :href="atom.docsLink"
+            >{{ $t('newlist.knowMore') }}</a>
         </div>
     </div>
 </template>

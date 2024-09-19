@@ -531,6 +531,10 @@ class ExperienceDownloadService @Autowired constructor(
         }
     }
 
+    fun getDownloadUsers(experienceId: Long): List<String> {
+        return experienceDownloadDao.listUserIdsByExperienceId(dslContext, experienceId)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceDownloadService::class.java)
         private const val EXPERIENCE_TASK_DOWNLOAD_OPERATE = "experience_task_download"

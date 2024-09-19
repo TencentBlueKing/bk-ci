@@ -4,16 +4,35 @@
         v-bkloading="{
             isLoading,
             opacity: .1
-        }">
+        }"
+    >
         <div class="log-wraper">
-            <div v-once id="executeScriptLog" style="height: 100%;" />
+            <div
+                v-once
+                id="executeScriptLog"
+                style="height: 100%;"
+            />
         </div>
         <div class="log-action-box">
-            <div class="action-item" v-bk-tooltips="backTopTips" @click="handleScrollTop">
-                <icon name="up-to-top" size="20" />
+            <div
+                class="action-item"
+                v-bk-tooltips="backTopTips"
+                @click="handleScrollTop"
+            >
+                <icon
+                    name="up-to-top"
+                    size="20"
+                />
             </div>
-            <div class="action-item action-bottom" v-bk-tooltips="backBottomTips" @click="handleScrollBottom">
-                <icon name="up-to-top" size="20" />
+            <div
+                class="action-item action-bottom"
+                v-bk-tooltips="backBottomTips"
+                @click="handleScrollBottom"
+            >
+                <icon
+                    name="up-to-top"
+                    size="20"
+                />
             </div>
         </div>
     </div>

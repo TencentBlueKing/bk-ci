@@ -2,7 +2,8 @@
     <div
         ref="detailLayout"
         class="bkci-detail-layout"
-        :class="[mode, layout]">
+        :class="[mode, layout]"
+    >
         <slot />
     </div>
 </template>

@@ -1,6 +1,10 @@
 <template>
-    <div class="bk-selector" :class="{ 'is-required': required }">
-        <input type="text"
+    <div
+        class="bk-selector"
+        :class="{ 'is-required': required }"
+    >
+        <input
+            type="text"
             class="bk-form-input"
             autocomplete="off"
             :name="name"
@@ -10,17 +14,25 @@
             @input="input"
             @keydown="keydown"
             @mousedown="focus"
-            @blur="hideAll" />
+            @blur="hideAll"
+        />
 
-        <div class="bk-selector-list" v-show="showList && list.length">
+        <div
+            class="bk-selector-list"
+            v-show="showList && list.length"
+        >
             <ul>
                 <li
                     v-for="(data, index) in list"
                     class="bk-selector-list-item"
                     :class="activeClass(index)"
                     :key="index"
-                    @click.stop="selectList(data)">
-                    <div class="bk-selector-node" :class="activeClass(index)">
+                    @click.stop="selectList(data)"
+                >
+                    <div
+                        class="bk-selector-node"
+                        :class="activeClass(index)"
+                    >
                         <div class="text">{{ data }}</div>
                     </div>
                 </li>

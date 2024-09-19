@@ -12,7 +12,8 @@
                 :element="atom.taskParams"
                 :atom-props-model="atomPropsModel"
                 :disabled="true"
-                class="atom-content">
+                class="atom-content"
+            >
             </div>
         </div>
     </bk-sideslider>

@@ -1,12 +1,17 @@
 <template>
     <div class="param-env-item">
         <div class="var-con">
-            <div class="var-names"
+            <div
+                class="var-names"
                 :class="{ 'desc-param': desc }"
-                v-bk-tooltips="{ content: desc, disabled: !desc, allowHTML: true }">
+                v-bk-tooltips="{ content: desc, disabled: !desc, allowHTML: true }"
+            >
                 <span>{{ name }}</span>
             </div>
-            <div class="var-operate" v-if="editable">
+            <div
+                class="var-operate"
+                v-if="editable"
+            >
                 <i
                     v-bk-tooltips="{
                         content: disabledCopyTips,

@@ -422,7 +422,10 @@
                                             "
                                         ></key-value-normal>
                                     </bk-form-item>
-                                    <bk-form-item label-width="auto" :label="$t('desc')">
+                                    <bk-form-item
+                                        label-width="auto"
+                                        :label="$t('desc')"
+                                    >
                                         <vuex-input
                                             :disabled="disabled"
                                             :handle-change="(name, value) => handleUpdateParam(name, value, index)"
