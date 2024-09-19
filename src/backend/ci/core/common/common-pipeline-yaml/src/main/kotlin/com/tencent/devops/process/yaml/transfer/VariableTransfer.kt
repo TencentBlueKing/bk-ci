@@ -164,16 +164,15 @@ class VariableTransfer {
 
     fun makeRecommendedVersion(model: Model): RecommendedVersion? {
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val res = if (triggerContainer.buildNo != null) {
-            with(triggerContainer.buildNo) {
-                RecommendedVersion(
-                    enabled = true, allowModifyAtStartup = this!!.required, buildNo = RecommendedVersion.BuildNo(
-                        this.buildNo,
-                        RecommendedVersion.Strategy.parse(this.buildNoType).alis
-                    )
+        val res = triggerContainer.buildNo?.let {
+            RecommendedVersion(
+                enabled = true,
+                allowModifyAtStartup = it.required,
+                buildNo = RecommendedVersion.BuildNo(
+                    it.buildNo, RecommendedVersion.Strategy.parse(it.buildNoType).alis
                 )
-            }
-        } else return null
+            )
+        } ?: return null
 
         (model.stages[0].containers[0] as TriggerContainer).params.forEach {
             if (it.id == MAJORVERSION || it.id == "MajorVersion") {

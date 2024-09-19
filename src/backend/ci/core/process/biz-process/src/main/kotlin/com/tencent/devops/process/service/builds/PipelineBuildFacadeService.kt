@@ -308,12 +308,11 @@ class PipelineBuildFacadeService(
 
         BuildPropertyCompatibilityTools.fix(params)
 
-        val currentBuildNo = triggerContainer.buildNo
-        if (currentBuildNo != null) {
-            currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(
+        val currentBuildNo = triggerContainer.buildNo?.apply {
+            currentBuildNo = pipelineRepositoryService.getBuildNo(
                 projectId = projectId,
                 pipelineId = pipelineId
-            ) ?: currentBuildNo.buildNo
+            ) ?: buildNo
         }
 
         return BuildManualStartupInfo(
@@ -664,7 +663,7 @@ class PipelineBuildFacadeService(
 
             if (buildNo != null) {
                 pipelineRuntimeService.updateBuildNo(
-                    projectId, pipelineId, buildNo, version != null
+                    projectId, pipelineId, buildNo, debug
                 )
                 logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }

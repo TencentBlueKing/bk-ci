@@ -247,9 +247,11 @@ class PipelineRepositoryService constructor(
             channelCode = channelCode,
             yamlInfo = yamlInfo
         )
-
-        val buildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val buildNo = triggerContainer.buildNo?.apply {
+            // #10958 每次存储model都需要忽略当前的推荐版本号值，在返回前端时重查
+            currentBuildNo = null
+        }
         var canManualStartup = false
         var canElementSkip = false
         run lit@{

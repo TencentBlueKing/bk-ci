@@ -1501,14 +1501,12 @@ class TemplateFacadeService @Autowired constructor(
                 )
                 logger.info("[$userId|$projectId|$templateId|$version] Get the param ($instanceParams)")
 
-                val buildNo = templateTriggerContainer.buildNo
-                var instanceBuildNoObj: BuildNo? = null
                 // 模板中的buildNo存在才需要回显
-                if (buildNo != null) {
-                    instanceBuildNoObj = BuildNo(
-                        buildNoType = buildNo.buildNoType,
-                        required = buildNo.required ?: instanceTriggerContainer.buildNo?.required,
-                        buildNo = buildNos[pipelineId] ?: buildNo.buildNo
+                val instanceBuildNoObj = templateTriggerContainer.buildNo?.let { no ->
+                    BuildNo(
+                        buildNoType = no.buildNoType,
+                        required = no.required ?: instanceTriggerContainer.buildNo?.required,
+                        buildNo = buildNos[pipelineId] ?: no.buildNo
                     )
                 }
 

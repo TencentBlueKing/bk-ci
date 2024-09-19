@@ -27,15 +27,10 @@
 
 package com.tencent.devops.common.pipeline.pojo
 
-data class BuildNo(
-    var buildNo: Int, // 用于保存编排中定义的构建号初始值
-    val buildNoType: BuildNoType,
-    var required: Boolean? = false,
-    var currentBuildNo: Int? = null // 用于替换当前的最新值，如果是创建流水线则不传值
-)
+import io.swagger.v3.oas.annotations.media.Schema
 
-enum class BuildNoType {
-    CONSISTENT,
-    SUCCESS_BUILD_INCREMENT,
-    EVERY_BUILD_INCREMENT
-}
+@Schema(title = "流水线构建推荐版本号更新")
+data class BuildNoUpdateReq(
+    @get:Schema(title = "推荐版本号buildNo当前值", required = true)
+    val currentBuildNo: Int
+)

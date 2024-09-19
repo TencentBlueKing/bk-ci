@@ -471,7 +471,10 @@ class PipelineVersionFacadeService @Autowired constructor(
                     )
                 }
             }
-            pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
+            // 查询编排中的基准值，并把调试的版本号刷为基准值
+            val debugBuildNo = (draftVersion.model.stages[0].containers[0] as TriggerContainer)
+                .buildNo?.buildNo ?: 0
+            pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId, debugBuildNo)
             pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId)
 
             var targetUrl: String? = null

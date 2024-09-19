@@ -232,12 +232,12 @@ class PipelineBuildRecordService @Autowired constructor(
         }
         watcher.start("fixModel")
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        triggerContainer.buildNo?.let {
-            it.buildNo = if (buildInfo.debug) {
+        triggerContainer.buildNo?.apply {
+            currentBuildNo = if (buildInfo.debug) {
                 buildSummaryRecord?.debugBuildNo
             } else {
                 buildSummaryRecord?.buildNo
-            } ?: it.buildNo
+            } ?: buildNo
         }
         val params = triggerContainer.params
         val newParams = ArrayList<BuildFormProperty>(params.size)
