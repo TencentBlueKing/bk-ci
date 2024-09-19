@@ -238,7 +238,9 @@ class StageTransfer @Autowired(required = false) constructor(
                 stage.ifField == null -> StageRunCondition.AFTER_LAST_FINISHED
                 !stage.ifField.expression.isNullOrBlank() -> StageRunCondition.CUSTOM_CONDITION_MATCH
                 stage.ifField.mode == Mode.RUN_WHEN_ALL_PARAMS_MATCH -> StageRunCondition.CUSTOM_VARIABLE_MATCH
-                stage.ifField.mode == Mode.NOT_RUN_WHEN_ALL_PARAMS_MATCH -> StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+                stage.ifField.mode == Mode.NOT_RUN_WHEN_ALL_PARAMS_MATCH ->
+                    StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+
                 else -> StageRunCondition.AFTER_LAST_FINISHED
             }
             StageControlOption(
