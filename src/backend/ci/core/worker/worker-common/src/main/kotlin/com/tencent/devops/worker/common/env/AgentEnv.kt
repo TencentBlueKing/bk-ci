@@ -61,8 +61,6 @@ object AgentEnv {
     const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
     const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
     const val BK_TAG = "devops_bk_tag"
-    const val PUBLIC_HOST_MAX_FILE_CACHE_SIZE = "devops.public.host.maxFileCacheSize"
-    const val THIRD_HOST_MAX_FILE_CACHE_SIZE = "devops.public.third.maxFileCacheSize"
 
     private var projectId: String? = null
     private var agentId: String? = null
