@@ -50,6 +50,20 @@ class ClientTipsService @Autowired constructor(
         return result.sortedByDescending { it.weight }
     }
 
+    fun fetchAll(): List<ClientTipsInfo> {
+        val records = clientTipsDao.fetchAll(dslContext)
+        return records.map {
+            ClientTipsInfo(
+                id = it.id,
+                title = it.title,
+                content = it.content,
+                weight = it.weight,
+                effectiveUsers = it.effectiveUsers,
+                effectiveProjects = it.effectiveProjects
+            )
+        }
+    }
+
     fun createOrUpdateTips(
         id: Long?,
         info: ClientTipsInfo
@@ -70,6 +84,7 @@ class ClientTipsService @Autowired constructor(
     companion object {
         private fun genTips(r: ClientTipsRecordM): ClientTips {
             return ClientTips(
+                id = r.id,
                 title = r.title,
                 content = r.content,
                 weight = r.weight

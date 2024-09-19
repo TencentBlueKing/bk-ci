@@ -11,6 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpClientTipsResourceImpl @Autowired constructor(
     private val clientTipsService: ClientTipsService
 ) : OpClientTipsResource {
+    override fun fetch(): Result<List<ClientTipsInfo>> {
+        return Result(clientTipsService.fetchAll())
+    }
+
     override fun createOrUpdate(id: Long?, data: ClientTipsInfo): Result<Boolean> {
         clientTipsService.createOrUpdateTips(id, data)
         return Result(true)

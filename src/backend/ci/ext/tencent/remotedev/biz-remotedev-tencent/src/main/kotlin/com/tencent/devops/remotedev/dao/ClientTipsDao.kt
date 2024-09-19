@@ -83,6 +83,7 @@ class ClientTipsDao {
         override fun map(record: TClientTipsRecord?): ClientTipsRecordM? {
             return record?.run {
                 ClientTipsRecordM(
+                    id = id,
                     title = title,
                     content = content,
                     weight = weight,
@@ -107,6 +108,7 @@ class ClientTipsDao {
 }
 
 data class ClientTipsRecordM(
+    val id: Long,
     val title: String,
     val content: String,
     val weight: Int,

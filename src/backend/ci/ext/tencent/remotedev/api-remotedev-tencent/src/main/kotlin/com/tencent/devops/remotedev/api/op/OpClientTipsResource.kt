@@ -12,12 +12,18 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import com.tencent.devops.project.pojo.Result
+import javax.ws.rs.GET
 
 @Tag(name = "OP_CLIENT_TIPS", description = "OP_CLIENT_TIPS")
 @Path("/op/clientips")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpClientTipsResource {
+    @Operation(summary = "获取所有Tips")
+    @GET
+    @Path("/")
+    fun fetch(): Result<List<ClientTipsInfo>>
+
     @Operation(summary = "新增或修改tips")
     @POST
     @Path("/create_or_update")
