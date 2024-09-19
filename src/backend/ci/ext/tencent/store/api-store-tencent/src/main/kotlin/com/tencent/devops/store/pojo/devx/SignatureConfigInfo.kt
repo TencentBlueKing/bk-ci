@@ -25,39 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.resources
+package com.tencent.devops.store.pojo.devx
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.service.ServiceSensitiveApiPermissionResource
-import com.tencent.devops.store.common.service.SensitiveApiService
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.v3.oas.annotations.media.Schema
 
-@RestResource
-class ServiceSensitiveApiPermissionResourceImpl @Autowired constructor(
-    private val sensitiveApiService: SensitiveApiService
-) : ServiceSensitiveApiPermissionResource {
-
-    override fun verifyApi(
-        signFileName: String?,
-        fileShaContent: String?,
-        osName: String?,
-        osArch: String?,
-        storeCode: String,
-        apiName: String,
-        storeType: String,
-        version: String?
-    ): Result<Boolean> {
-        return sensitiveApiService.verifyApi(
-            signFileName = signFileName,
-            fileShaContent = fileShaContent,
-            osName = osName,
-            osArch = osArch,
-            storeType = StoreTypeEnum.valueOf(storeType),
-            storeCode = storeCode,
-            apiName = apiName,
-            version = version
-        )
-    }
-}
+@Schema(title = "签名配置信息")
+data class SignatureConfigInfo(
+    @get:Schema(title = "安装包中需要进行sha1签名的文件相对路径列表", required = false)
+    val originFilePaths: List<String>? = null
+)

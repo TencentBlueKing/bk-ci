@@ -25,39 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.resources
+package com.tencent.devops.store.pojo.devx
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.service.ServiceSensitiveApiPermissionResource
-import com.tencent.devops.store.common.service.SensitiveApiService
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.v3.oas.annotations.media.Schema
 
-@RestResource
-class ServiceSensitiveApiPermissionResourceImpl @Autowired constructor(
-    private val sensitiveApiService: SensitiveApiService
-) : ServiceSensitiveApiPermissionResource {
-
-    override fun verifyApi(
-        signFileName: String?,
-        fileShaContent: String?,
-        osName: String?,
-        osArch: String?,
-        storeCode: String,
-        apiName: String,
-        storeType: String,
-        version: String?
-    ): Result<Boolean> {
-        return sensitiveApiService.verifyApi(
-            signFileName = signFileName,
-            fileShaContent = fileShaContent,
-            osName = osName,
-            osArch = osArch,
-            storeType = StoreTypeEnum.valueOf(storeType),
-            storeCode = storeCode,
-            apiName = apiName,
-            version = version
-        )
-    }
-}
+@Schema(title = "配置信息")
+data class BkConfigInfo(
+    @get:Schema(title = "标识", required = true)
+    val storeCode: String,
+    @get:Schema(title = "操作系统配置列表", required = true)
+    val os: List<OsConfigInfo>
+)

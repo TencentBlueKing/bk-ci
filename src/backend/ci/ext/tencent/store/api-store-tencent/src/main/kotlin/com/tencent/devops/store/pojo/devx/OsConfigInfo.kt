@@ -25,39 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.resources
+package com.tencent.devops.store.pojo.devx
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.service.ServiceSensitiveApiPermissionResource
-import com.tencent.devops.store.common.service.SensitiveApiService
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.v3.oas.annotations.media.Schema
 
-@RestResource
-class ServiceSensitiveApiPermissionResourceImpl @Autowired constructor(
-    private val sensitiveApiService: SensitiveApiService
-) : ServiceSensitiveApiPermissionResource {
-
-    override fun verifyApi(
-        signFileName: String?,
-        fileShaContent: String?,
-        osName: String?,
-        osArch: String?,
-        storeCode: String,
-        apiName: String,
-        storeType: String,
-        version: String?
-    ): Result<Boolean> {
-        return sensitiveApiService.verifyApi(
-            signFileName = signFileName,
-            fileShaContent = fileShaContent,
-            osName = osName,
-            osArch = osArch,
-            storeType = StoreTypeEnum.valueOf(storeType),
-            storeCode = storeCode,
-            apiName = apiName,
-            version = version
-        )
-    }
-}
+@Schema(title = "操作系统配置信息")
+data class OsConfigInfo(
+    @get:Schema(title = "软件包相对于压缩包中的位置", required = true)
+    val packagePath: String,
+    @get:Schema(title = "支持的操作系统名称", required = true)
+    val osName: String,
+    @get:Schema(title = "支持的操作系统CPU架构", required = false)
+    val osArch: String? = null,
+    @get:Schema(title = "签名配置信息", required = false)
+    val signature: SignatureConfigInfo? = null,
+    @get:Schema(title = "是否为默认环境信息（每种操作系统默认环境配置有且只有1个,没有匹配的操作系统名称和cpu架构就使用该默认环境配置）", required = true)
+    val defaultFlag: Boolean
+)
