@@ -207,6 +207,9 @@ class ContainerTransfer @Autowired(required = false) constructor(
 
     private fun jobIfField(jobControlOption: JobControlOption?): Any? {
         return when (jobControlOption?.runCondition) {
+            JobRunCondition.PREVIOUS_STAGE_SUCCESS -> IfType.SUCCESS.name
+            JobRunCondition.PREVIOUS_STAGE_FAILED -> IfType.FAILURE.name
+            JobRunCondition.PREVIOUS_STAGE_CANCEL -> IfType.CANCELED.name
             JobRunCondition.CUSTOM_CONDITION_MATCH -> jobControlOption.customCondition
             JobRunCondition.CUSTOM_VARIABLE_MATCH -> IfField(
                 mode = Mode.RUN_WHEN_ALL_PARAMS_MATCH,
