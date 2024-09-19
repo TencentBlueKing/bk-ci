@@ -516,30 +516,39 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             )
         }
         return iamGroupPermissionDetailList.map { detail ->
+            val actionId = detail.id
             val relatedResourceTypesDTO = detail.resourceGroups[0].relatedResourceTypesDTO[0]
-            // 将resourceType转化为对应的资源类型名称
-            buildRelatedResourceTypesName(
-                iamSystemId = iamSystemId,
-                instancesDTO = relatedResourceTypesDTO.condition[0].instances[0]
-            )
-            val relatedResourceInfo = RelatedResourceInfo(
-                type = relatedResourceTypesDTO.type,
-                name = I18nUtil.getCodeLanMessage(
-                    relatedResourceTypesDTO.type + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX
-                ),
-                instances = relatedResourceTypesDTO.condition[0].instances[0]
-            )
-            val actionName = if (iamSystemId == monitorSystemId) {
-                monitorSpaceService.getMonitorActionName(action = detail.id)
+            val instances = relatedResourceTypesDTO.condition[0].instances
+            val relatedResourceInfos = mutableListOf<RelatedResourceInfo>()
+            instances.forEach { instance ->
+                // 将resourceType转化为对应的资源类型名称
+                buildRelatedResourceTypesName(
+                    iamSystemId = iamSystemId,
+                    instancesDTO = instance
+                )
+                relatedResourceInfos.add(
+                    RelatedResourceInfo(
+                        type = instance.type,
+                        name = I18nUtil.getCodeLanMessage(
+                            instance.type + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX
+                        ),
+                        instance = instance.path
+                    )
+                )
+            }
+            val (actionName, actionRelatedResourceType) = if (iamSystemId == monitorSystemId) {
+                Pair(monitorSpaceService.getMonitorActionName(action = actionId), monitorSystemId)
             } else {
-                rbacCacheService.getActionInfo(action = detail.id).actionName
+                val actionInfo = rbacCacheService.getActionInfo(action = actionId)
+                Pair(actionInfo.actionName, actionInfo.relatedResourceType)
             }
             GroupPermissionDetailVo(
-                actionId = detail.id,
+                actionId = actionId,
                 name = actionName!!,
-                relatedResourceInfo = relatedResourceInfo
+                actionRelatedResourceType = actionRelatedResourceType,
+                relatedResourceInfos = relatedResourceInfos
             )
-        }.sortedBy { it.relatedResourceInfo.type }
+        }.sortedBy { it.actionId }
     }
 
     private fun buildRelatedResourceTypesName(iamSystemId: String, instancesDTO: InstancesDTO) {

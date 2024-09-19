@@ -88,17 +88,26 @@ class ShardingRoutingRuleFacadeServiceImpl @Autowired constructor(
                     ruleType = dbRuleType,
                     routingName = routingName
                 )
-                if (dbShardingRoutingRule != null) {
-                    // 分片数据库表分片规则
-                    shardingRoutingRule = shardingRoutingRuleAssignService.assignTableShardingRoutingRule(
-                        tableShardingConfig = tableShardingConfig,
-                        dataSourceName = dbShardingRoutingRule.dataSourceName,
-                        routingName = routingName,
-                        ruleType = ruleType
-                    )
-                }
+                val dataSourceName = dbShardingRoutingRule?.dataSourceName
+                    ?: if (dbRuleType == ShardingRuleTypeEnum.ARCHIVE_DB) {
+                        DEFAULT_ARCHIVE_DATA_SOURCE_NAME
+                    } else {
+                        DEFAULT_DATA_SOURCE_NAME
+                    }
+                // 分片数据库表分片规则
+                shardingRoutingRule = shardingRoutingRuleAssignService.assignTableShardingRoutingRule(
+                    tableShardingConfig = tableShardingConfig,
+                    dataSourceName = dataSourceName,
+                    routingName = routingName,
+                    ruleType = ruleType
+                )
             }
         }
         return shardingRoutingRule
+    }
+
+    companion object {
+        private const val DEFAULT_ARCHIVE_DATA_SOURCE_NAME = "archive_ds_0"
+        private const val DEFAULT_DATA_SOURCE_NAME = "ds_0"
     }
 }
