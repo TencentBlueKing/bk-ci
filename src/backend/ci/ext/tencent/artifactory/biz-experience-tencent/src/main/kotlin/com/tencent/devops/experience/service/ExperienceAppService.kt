@@ -79,7 +79,6 @@ import java.time.LocalDateTime
 import java.util.concurrent.Executors
 import javax.ws.rs.core.Response
 import org.apache.commons.lang3.StringUtils
-import org.aspectj.weaver.tools.cache.SimpleCacheFactory.path
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -533,7 +532,7 @@ class ExperienceAppService(
             userId = userId,
             projectId = experience.projectId,
             artifactoryType = ArtifactoryType.valueOf(experience.artifactoryType),
-            path = path
+            path = experience.artifactoryPath
         ).data!!
         val stage = properties.firstOrNull { it.key == ARCHIVE_PROPS_BK_CI_APP_STAGE }?.value
         if (experienceBaseService.isDefendProject(stage, experience.projectId)) {
