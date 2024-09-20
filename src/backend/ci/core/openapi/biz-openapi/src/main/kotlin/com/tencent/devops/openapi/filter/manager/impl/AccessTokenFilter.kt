@@ -13,11 +13,11 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class SampleApiFilter constructor(
+class AccessTokenFilter constructor(
     private val client: Client
 ) : ApiFilterManager {
     companion object {
-        private val logger = LoggerFactory.getLogger(SampleApiFilter::class.java)
+        private val logger = LoggerFactory.getLogger(AccessTokenFilter::class.java)
     }
 
     @Value("\${auth.accessToken.enabled:#{null}}")

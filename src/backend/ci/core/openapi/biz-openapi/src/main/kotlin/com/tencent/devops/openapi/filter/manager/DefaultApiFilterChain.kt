@@ -27,15 +27,12 @@
 
 package com.tencent.devops.openapi.filter.manager
 
+import com.tencent.devops.openapi.filter.manager.impl.AccessTokenFilter
 import com.tencent.devops.openapi.filter.manager.impl.ApiPathFilter
 import com.tencent.devops.openapi.filter.manager.impl.NoPermissionFilter
-import com.tencent.devops.openapi.filter.manager.impl.SampleApiFilter
 import javax.ws.rs.container.ContainerRequestContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class SampleApiFilterChain @Autowired constructor(
+class DefaultApiFilterChain(
     private val managerCache: ApiFilterManagerCache
 ) : ApiFilterManagerChain {
 
@@ -44,7 +41,7 @@ class SampleApiFilterChain @Autowired constructor(
             requestContext = FilterContext(requestContext),
             chain = listOf(
                 managerCache.getFilter(ApiPathFilter::class.java),
-                managerCache.getFilter(SampleApiFilter::class.java),
+                managerCache.getFilter(AccessTokenFilter::class.java),
                 managerCache.getFilter(NoPermissionFilter::class.java)
 //                managerCache.getFilter(BlueKingApiFilter::class.java) 内部分支暂时去掉，因为加解密包内外不一致
             ).iterator()
