@@ -46,6 +46,7 @@ data class WorkspaceOperateEvent(
     val gameId: String?,
     val machineType: String? = null,
     val projectId: String? = null,
+    val formatDataDisk: Boolean? = null,
     override val workspaceName: String,
     override val delayMills: Int = 0,
     override val retryTime: Int = 0

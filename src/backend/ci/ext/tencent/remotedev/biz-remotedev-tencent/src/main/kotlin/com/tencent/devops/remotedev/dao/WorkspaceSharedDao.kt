@@ -203,6 +203,15 @@ class WorkspaceSharedDao {
         }
     }
 
+    fun deleteOwner(
+        dslContext: DSLContext,
+        workspaceName: String
+    ): Int {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.deleteFrom(this).where(ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)).execute()
+        }
+    }
+
     class TSharedRecordJooqMapper : RecordMapper<TWorkspaceSharedRecord, WorkspaceShared> {
         override fun map(record: TWorkspaceSharedRecord?): WorkspaceShared? {
             return record?.run {
