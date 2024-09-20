@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.store.pojo.common.InstalledPkgShaContentRequest
+import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
 import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
@@ -221,10 +221,10 @@ interface OpStoreComponentResource {
         storeOfflineRequest: StoreOfflineRequest
     ): Result<Boolean>
 
-    @Operation(summary = "更新组件已安装包sha1摘要值")
+    @Operation(summary = "更新组件已安装包文件sha1摘要值")
     @PUT
-    @Path("/types/{storeType}/codes/{storeCode}/versions/{version}/component/installed/pkg/sha/update")
-    fun updateComponentInstalledPkgShaContent(
+    @Path("/types/{storeType}/codes/{storeCode}/versions/{version}/component/installed/pkg/file/sha/update")
+    fun updateComponentInstalledPkgFileShaContent(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -239,7 +239,7 @@ interface OpStoreComponentResource {
         @Parameter(description = "组件版本", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(description = "更新组件已安装包sha1摘要值请求报文", required = true)
-        installedPkgShaContentRequest: InstalledPkgShaContentRequest
+        @Parameter(description = "更新组件已安装包文件sha1摘要值请求报文", required = true)
+        installedPkgFileShaContentRequest: InstalledPkgFileShaContentRequest
     ): Result<Boolean>
 }
