@@ -72,8 +72,7 @@ class AuthorizationCodeTokenGranterTest : BkCiAbstractTest() {
         expiredAccessTokenInfo.accessToken = "testAccessToken"
         expiredAccessTokenInfo.clientId = "testClientId"
         expiredAccessTokenInfo.userName = "testUserName"
-        expiredAccessTokenInfo.grantType = "",
-        "testGrantType"
+        expiredAccessTokenInfo.grantType = "testGrantType"
         expiredAccessTokenInfo.expiredTime = System.currentTimeMillis() / 1000 - 1000
         expiredAccessTokenInfo.refreshToken = "testRefreshToken"
         expiredAccessTokenInfo.scopeId = 1
