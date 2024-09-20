@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
-import com.tencent.devops.common.api.constant.NODEJS
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.enums.FrontendTypeEnum

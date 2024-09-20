@@ -72,13 +72,22 @@ class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         osType: OSType,
         postEntryParam: String?
     ): String {
-        logger.info("handleAtomTarget|target:$target,osType:$osType,postEntryParam:$postEntryParam")
         val executePath = System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)
-        // java插件先统一采用agent带的jre执行
-        var convertTarget = target.replace("\$" + JAVA_PATH_ENV, executePath)
+        logger.info("handleAtomTarget|target:$target,osType:$osType,postEntryParam:$postEntryParam,executePath:$executePath")
+        var convertTarget = target
+        if (!executePath.isNullOrBlank()) {
+            convertTarget = if (target.startsWith("\$$JAVA_PATH_ENV")) {
+                target.replace("\$$JAVA_PATH_ENV", executePath)
+            } else {
+                target.replace("java ", "$executePath ")
+            }
+        } else if (osType == OSType.WINDOWS) {
+            convertTarget = target.replace("\$$JAVA_PATH_ENV", "%$JAVA_PATH_ENV%")
+        }
         if (postEntryParam != null) {
-            convertTarget = convertTarget.replace(oldValue = " -jar ",
-                newValue = " -D$ATOM_POST_ENTRY_PARAM=$postEntryParam -jar ")
+            convertTarget = convertTarget.replace(
+                oldValue = " -jar ", newValue = " -D$ATOM_POST_ENTRY_PARAM=$postEntryParam -jar "
+            )
         }
         logger.info("handleAtomTarget convertTarget:$convertTarget")
         return convertTarget
