@@ -133,7 +133,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         pageSize: Int?,
         search: WorkspaceSearch
     ): Result<Page<Workspace>> {
-        return Result(workspaceService.getWorkspaceList(userId, page, pageSize, search.also { it.notStatus?.plus(WorkspaceStatus.DISTRIBUTING) }))
+        val updatedSearch = search.apply {
+            notStatus = notStatus?.plus(WorkspaceStatus.DISTRIBUTING) ?: listOf(WorkspaceStatus.DISTRIBUTING)
+        }
+        return Result(workspaceService.getWorkspaceList(userId, page, pageSize, updatedSearch))
     }
 
     @AuditEntry(actionId = ActionId.CGS_VIEW)
