@@ -136,6 +136,7 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
+import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
@@ -252,12 +253,12 @@ class PipelineBuildFacadeService(
             val latestParamsMap = lastTimeInfo.buildParameters!!.associate { it.key to it.value }
             triggerContainer.params.forEach { param ->
                 val realValue = latestParamsMap[param.id]
-                // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
+                // 入参、推荐版本号参数有上一次的构建参数的时候才设置成默认值，否者依然使用默认值
                 // 当值是boolean类型的时候，需要转为boolean类型
                 param.value = if (param.constant == true) {
                     param.readOnly = true
                     param.defaultValue
-                } else if (!param.required) {
+                } else if (!param.required || !recommendVersionKey(param.id)) {
                     param.defaultValue
                 } else if (param.defaultValue is Boolean) {
                     realValue?.toString()?.toBoolean()
