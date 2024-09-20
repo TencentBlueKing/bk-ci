@@ -808,7 +808,7 @@
                 'resetHistoryFilterCondition'
             ]),
             updateTableHeight () {
-                this.tableHeight = this.$refs.tableBox.offsetHeight
+                this.tableHeight = this.$refs.tableBox?.offsetHeight
             },
             handleColumnChange (columns) {
                 this.tableColumnKeys = columns
