@@ -1,14 +1,33 @@
 <template>
-    <section class="pp-min-map" ref="minMapMain">
-        <main v-show="showMap" class="min-map-main">
+    <section
+        class="pp-min-map"
+        ref="minMapMain"
+    >
+        <main
+            v-show="showMap"
+            class="min-map-main"
+        >
             <canvas ref="minMapCanvas"></canvas>
-            <span class="min-map-nav"
+            <span
+                class="min-map-nav"
                 :style="`width: ${navWidth}px; height: ${navHeight}px; top: ${navTop}px; left: ${navLeft}px`"
                 @mousedown="startMove"
             ></span>
         </main>
-        <Logo name="mapSee" size="20" class="min-map-logo" v-if="showMap" @click.native="showMap = false"></Logo>
-        <Logo name="mapUnSee" size="20" class="min-map-logo" v-else @click.native="showMap = true"></Logo>
+        <Logo
+            name="mapSee"
+            size="20"
+            class="min-map-logo"
+            v-if="showMap"
+            @click.native="showMap = false"
+        ></Logo>
+        <Logo
+            name="mapUnSee"
+            size="20"
+            class="min-map-logo"
+            v-else
+            @click.native="showMap = true"
+        ></Logo>
     </section>
 </template>
 

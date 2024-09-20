@@ -3,13 +3,17 @@
         <section
             v-if="curRepo && !errorCode"
             class="content-wrapper"
-            v-bkloading="{ isLoading }">
+            v-bkloading="{ isLoading }"
+        >
             <div class="detail-header">
                 <div
                     v-if="!isEditing"
                     class="codelib-name"
                 >
-                    <span v-bk-overflow-tips class="name mr5">{{ repoInfo.aliasName }}</span>
+                    <span
+                        v-bk-overflow-tips
+                        class="name mr5"
+                    >{{ repoInfo.aliasName }}</span>
                     <span
                         v-perm="{
                             hasPermission: curRepo.canEdit,
@@ -118,11 +122,16 @@
                     </span>
                 </div>
             </div>
-            <bk-tab ext-cls="detail-tab" :active.sync="active" type="unborder-card">
+            <bk-tab
+                ext-cls="detail-tab"
+                :active.sync="active"
+                type="unborder-card"
+            >
                 <bk-tab-panel
                     v-for="(panel, index) in panels"
                     v-bind="panel"
-                    :key="index">
+                    :key="index"
+                >
                     <component
                         ref="tabCom"
                         v-if="panel.name === active"
@@ -267,6 +276,9 @@
             userId () {
                 return this.$route.query.userId || ''
             },
+            resetType () {
+                return this.$route.query.resetType || ''
+            },
             scmType () {
                 return this.$route.query.scmType || ''
             },
@@ -367,7 +379,7 @@
                         this.errorCode = e.httpStatus || 404
                     }).finally(() => {
                         if (this.userId) {
-                            this.isLoading = loading
+                            this.isLoading = this.resetType ? loading : false
                         } else {
                             this.isLoading = false
                         }

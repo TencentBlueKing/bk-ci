@@ -9,21 +9,40 @@
             :model="subscription"
             :rules="notifyRules"
         >
-            <bk-form-item property="types" :label="$t('settings.noticeType')" error-display-type="normal" :required="true">
-                <bk-checkbox-group :value="subscription.types" @change="value => updateSubscription('types', value)">
-                    <bk-checkbox v-for="item in noticeList" :key="item.id" :value="item.value">
+            <bk-form-item
+                property="types"
+                :label="$t('settings.noticeType')"
+                error-display-type="normal"
+                :required="true"
+            >
+                <bk-checkbox-group
+                    :value="subscription.types"
+                    @change="value => updateSubscription('types', value)"
+                >
+                    <bk-checkbox
+                        v-for="item in noticeList"
+                        :key="item.id"
+                        :value="item.value"
+                    >
                         {{ item.name }}
                     </bk-checkbox>
                 </bk-checkbox-group>
             </bk-form-item>
             <bk-form-item :label="$t('settings.additionUser')">
-                <staff-input
+                <user-input
+                    name="additionUser"
                     :handle-change="(name, value) => subscription.users = value.join(',')"
                     :value="subscription.users.split(',').filter(Boolean)"
-                    :placeholder="$t('settings.additionUserPlaceholder')">
-                </staff-input>
+                    :placeholder="$t('settings.additionUserPlaceholder')"
+                >
+                </user-input>
             </bk-form-item>
-            <bk-form-item property="content" :label="$t('settings.noticeContent')" error-display-type="normal" :required="true">
+            <bk-form-item
+                property="content"
+                :label="$t('settings.noticeContent')"
+                error-display-type="normal"
+                :required="true"
+            >
                 <bk-input
                     type="textarea"
                     :value="subscription.content"
@@ -32,15 +51,17 @@
             </bk-form-item>
 
             <bk-form-item class="checkbox-item">
-                <atom-checkbox style="width: auto"
+                <atom-checkbox
+                    style="width: auto"
                     :handle-change="updateSubscription"
                     name="detailFlag"
                     :text="$t('settings.pipelineLink')"
                     :desc="$t('settings.pipelineLinkDesc')"
-                    :value="subscription.detailFlag">
+                    :value="subscription.detailFlag"
+                >
                 </atom-checkbox>
             </bk-form-item>
-            
+
             <template v-if="subscription.types.includes('WEWORK_GROUP')">
                 <bk-form-item :label="$t('settings.groupIdLabel')">
                     <group-id-selector
@@ -50,7 +71,8 @@
                         :value="subscription.wechatGroup"
                         :placeholder="$t('settings.groupIdTips')"
                         icon-class="icon-question-circle"
-                        desc-direction="top">
+                        desc-direction="top"
+                    >
                     </group-id-selector>
                 </bk-form-item>
                 <bk-form-item class="checkbox-item">
@@ -59,7 +81,8 @@
                         name="wechatGroupMarkdownFlag"
                         :text="$t('settings.wechatGroupMarkdownFlag')"
                         :handle-change="updateSubscription"
-                        :value="subscription.wechatGroupMarkdownFlag">
+                        :value="subscription.wechatGroupMarkdownFlag"
+                    >
                     </atom-checkbox>
                 </bk-form-item>
             </template>
@@ -68,15 +91,15 @@
 </template>
 
 <script>
-    import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
-    import StaffInput from '@/components/atomFormField/StaffInput'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
+    import UserInput from '@/components/atomFormField/UserInput/index.vue'
     export default {
         name: 'notify-setting',
         components: {
             GroupIdSelector,
-            StaffInput,
-            AtomCheckbox
+            AtomCheckbox,
+            UserInput
         },
         props: {
             subscription: Object,

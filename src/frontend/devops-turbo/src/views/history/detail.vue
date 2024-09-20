@@ -1,18 +1,27 @@
 <template>
     <article class="history-detail-home">
         <template v-if="hasPermission">
-            <bk-breadcrumb separator-class="bk-icon icon-angle-right" class="bread-crumb">
+            <bk-breadcrumb
+                separator-class="bk-icon icon-angle-right"
+                class="bread-crumb"
+            >
                 <bk-breadcrumb-item :to="{ name: 'history' }"> {{ $t('turbo.历史列表') }}</bk-breadcrumb-item>
                 <bk-breadcrumb-item :to="{ name: 'history', query: { pipelineId: detail.pipelineId, clientIp: detail.clientIp } }">{{ detail.pipelineName || detail.clientIp }}</bk-breadcrumb-item>
                 <bk-breadcrumb-item>#{{ detail.executeCount }}</bk-breadcrumb-item>
             </bk-breadcrumb>
 
-            <section class="g-turbo-box hisory-detail-data" v-bkloading="{ isloading }">
+            <section
+                class="g-turbo-box hisory-detail-data"
+                v-bkloading="{ isloading }"
+            >
                 <header class="detail-header">
                     <span class="header-title">
                         【#{{ detail.executeCount }}】
                         <span class="header-name">{{ detail.pipelineName || detail.clientIp }}</span>
-                        <task-status :status="detail.status" :show-name="false"></task-status>
+                        <task-status
+                            :status="detail.status"
+                            :show-name="false"
+                        ></task-status>
                     </span>
                     <span class="header-time">
                         <span><span> {{ $t('turbo.开始时间：') }} </span><span>{{ detail.startTime }}</span></span>
@@ -21,19 +30,40 @@
                 </header>
                 <bk-divider></bk-divider>
                 <ul class="detail-list">
-                    <li class="task-item" v-for="task in detail.displayFields" :key="task.fieldName">
+                    <li
+                        class="task-item"
+                        v-for="task in detail.displayFields"
+                        :key="task.fieldName"
+                    >
                         <span class="task-title">{{ task.fieldName }}:</span>
                         <span class="task-value">{{ task.fieldValue }}</span>
-                        <logo name="cc-jump-link" class="task-link" @click.native="openLink(task.linkAddress)" v-if="task.linkAddress"></logo>
+                        <logo
+                            name="cc-jump-link"
+                            class="task-link"
+                            @click.native="openLink(task.linkAddress)"
+                            v-if="task.linkAddress"
+                        ></logo>
                     </li>
                 </ul>
-                <bk-link theme="primary" :href="detail.recordViewUrl" target="_blank" class="detail-link" v-if="detail.recordViewUrl">
+                <bk-link
+                    theme="primary"
+                    :href="detail.recordViewUrl"
+                    target="_blank"
+                    class="detail-link"
+                    v-if="detail.recordViewUrl"
+                >
                     {{ $t('turbo.查看编译过程数据') }}
-                    <logo name="cc-jump-link" size="14"></logo>
+                    <logo
+                        name="cc-jump-link"
+                        size="14"
+                    ></logo>
                 </bk-link>
             </section>
         </template>
-        <permission-exception v-else :message="errMessage" />
+        <permission-exception
+            v-else
+            :message="errMessage"
+        />
     </article>
 </template>
 

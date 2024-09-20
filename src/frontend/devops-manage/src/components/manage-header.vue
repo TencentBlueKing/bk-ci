@@ -54,14 +54,12 @@ const goToManage = () => {
   z-index: 100;
 }
 .manage-breadcrumb {
-  position: absolute;
-  max-width: 40%;
+  padding-left: 20px;
   .bk-breadcrumb-item {
     max-width: 80%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    display: inline-block;
   }
 }
 .manage-icon {

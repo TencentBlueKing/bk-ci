@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_OS_ARCH
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_OS_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SHA_CONTENT
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_FILE_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_STORE_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_STORE_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_STORE_VERSION
@@ -120,7 +121,8 @@ class SensitiveApiPermissionAspect constructor(
         val version = request.getHeader(AUTH_HEADER_DEVOPS_STORE_VERSION)
         val checkParamFlag = !storeType.isNullOrBlank() && !version.isNullOrBlank()
         if (checkParamFlag && !apiName.isNullOrBlank() && !storeCode.isNullOrBlank()) {
-            val installedPkgShaContent = request.getHeader(AUTH_HEADER_DEVOPS_SHA_CONTENT)
+            val signFileName = request.getHeader(AUTH_HEADER_DEVOPS_SIGN_FILE_NAME)
+            val fileShaContent = request.getHeader(AUTH_HEADER_DEVOPS_SHA_CONTENT)
             val osName = request.getHeader(AUTH_HEADER_DEVOPS_OS_NAME)
             val osArch = request.getHeader(AUTH_HEADER_DEVOPS_OS_ARCH)
             return verifyApi(
@@ -128,9 +130,10 @@ class SensitiveApiPermissionAspect constructor(
                 storeCode = storeCode,
                 apiName = apiName,
                 version = version,
-                installedPkgShaContent = installedPkgShaContent,
                 osName = osName,
-                osArch = osArch
+                osArch = osArch,
+                signFileName = signFileName,
+                fileShaContent = fileShaContent
             )
         }
         return false
@@ -142,14 +145,16 @@ class SensitiveApiPermissionAspect constructor(
         storeCode: String,
         apiName: String,
         version: String? = null,
-        installedPkgShaContent: String? = null,
         osName: String? = null,
-        osArch: String? = null
+        osArch: String? = null,
+        signFileName: String? = null,
+        fileShaContent: String? = null
     ): Boolean {
-        val cacheKey = "$storeType:$storeCode:$apiName:$version:$installedPkgShaContent:$osName:$osArch"
+        val cacheKey = "$storeType:$storeCode:$apiName:$version:$osName:$osArch:$signFileName:$fileShaContent"
         return apiPermissionCache.getIfPresent(cacheKey) ?: run {
             val apiPermission = client.get(ServiceSensitiveApiPermissionResource::class).verifyApi(
-                installedPkgShaContent = installedPkgShaContent,
+                signFileName = signFileName,
+                fileShaContent = fileShaContent,
                 osName = osName,
                 osArch = osArch,
                 storeCode = storeCode,
@@ -204,6 +209,6 @@ class SensitiveApiPermissionAspect constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(SensitiveApiPermissionAspect::class.java)
-        private const val CACHE_MAX_SIZE = 1000L
+        private const val CACHE_MAX_SIZE = 2000L
     }
 }

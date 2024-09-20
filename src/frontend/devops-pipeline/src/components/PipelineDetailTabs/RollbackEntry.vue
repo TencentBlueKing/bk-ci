@@ -28,11 +28,17 @@
             footer-position="center"
             theme="primary"
         >
-            <header class="draft-hint-title" slot="header">
+            <header
+                class="draft-hint-title"
+                slot="header"
+            >
                 <i class="devops-icon icon-exclamation"></i>
                 {{ draftHintTitle }}
             </header>
-            <div v-if="hasDraftPipeline" class="draft-hint-content">
+            <div
+                v-if="hasDraftPipeline"
+                class="draft-hint-content"
+            >
                 {{ $t('dropDraftTips', [versionName]) }}
             </div>
             <footer slot="footer">
@@ -42,7 +48,10 @@
                 >
                     {{ $t('newVersion') }}
                 </bk-button>
-                <bk-button v-if="hasDraftPipeline" @click="goEdit(draftVersion)">
+                <bk-button
+                    v-if="hasDraftPipeline"
+                    @click="goEdit(draftVersion)"
+                >
                     {{ $t('editDraft') }}
                 </bk-button>
                 <bk-button @click="close">
@@ -125,6 +134,9 @@
             },
             draftHintTitle () {
                 return this.hasDraftPipeline ? this.$t('hasDraftTips', [this.draftBaseVersionName]) : this.$t('createDraftTips', [this.versionName])
+            },
+            isTemplatePipeline () {
+                return this.pipelineInfo?.instanceFromTemplate ?? false
             }
         },
         methods: {
@@ -133,7 +145,24 @@
             ]),
             handleClick () {
                 if (this.isRollback) {
-                    this.showDraftConfirmDialog()
+                    if (this.isTemplatePipeline) {
+                        this.$bkInfo({
+                            subTitle: this.$t('templateRollbackBackTips'),
+                            confirmFn: () => {
+                                this.$router.push({
+                                    name: 'createInstance',
+                                    params: {
+                                        projectId: this.projectId,
+                                        templateId: this.pipelineInfo?.templateId,
+                                        curVersionId: this.pipelineInfo?.templateVersion
+                                    },
+                                    hash: `#${this.pipelineId}`
+                                })
+                            }
+                        })
+                    } else {
+                        this.showDraftConfirmDialog()
+                    }
                 } else {
                     this.goEdit(this.draftVersion ?? this.version)
                 }

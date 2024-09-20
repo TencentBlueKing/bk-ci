@@ -167,6 +167,12 @@
                 "items" : {
                   "type" : "string"
                 }
+              },
+              "report-commit-check" : {
+                "type" : "boolean"
+              },
+              "block-mr" : {
+                "type" : "boolean"
               }
             }
           } ]
@@ -481,6 +487,12 @@
                           "items" : {
                             "type" : "string"
                           }
+                        },
+                        "report-commit-check" : {
+                          "type" : "boolean"
+                        },
+                        "block-mr" : {
+                          "type" : "boolean"
                         }
                       }
                     } ]
@@ -589,6 +601,10 @@
           }
         },
         "manual" : {
+          "type" : "string",
+          "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+        },
+        "openapi" : {
           "type" : "string",
           "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
         }
@@ -1010,6 +1026,10 @@
                             "type" : "string"
                           }
                         }
+                      },
+                      "image-pull-policy" : {
+                        "type" : "string",
+                        "pattern" : "(\\balways\\b|\\bif-not-present\\b)"
                       }
                     }
                   },
@@ -1096,6 +1116,16 @@
         },
         "cancel-in-progress" : {
           "type" : "boolean"
+        },
+        "queue-length" : {
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 20
+        },
+        "queue-timeout-minutes" : {
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 1440
         }
       }
     }
@@ -1177,6 +1207,12 @@
             },
             "description" : {
               "type" : "string"
+            },
+            "chat-id" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
             }
           }
         },
@@ -1307,6 +1343,10 @@
                             "type" : "string"
                           }
                         }
+                      },
+                      "image-pull-policy" : {
+                        "type" : "string",
+                        "pattern" : "(\\balways\\b|\\bif-not-present\\b)"
                       }
                     }
                   },
@@ -1591,10 +1631,7 @@
         }, {
           "type" : "boolean"
         }, {
-          "type" : "array",
-          "items" : {
-            "type" : "string"
-          }
+          "type" : "array"
         } ]
       }
     },

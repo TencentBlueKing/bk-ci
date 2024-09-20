@@ -124,7 +124,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             if (element is ManualTriggerElement) {
                 triggerOn.value.manual = ManualRule(
                     name = element.name,
-                    enable = element.isElementEnable().nullIfDefault(true),
+                    enable = element.elementEnabled().nullIfDefault(true),
                     canElementSkip = element.canElementSkip.nullIfDefault(false),
                     useLatestParameters = element.useLatestParameters.nullIfDefault(false)
                 )
@@ -179,13 +179,13 @@ class ElementTransfer @Autowired(required = false) constructor(
                         repoName = repoName,
                         branches = element.branches,
                         always = (element.noScm != true).nullIfDefault(false),
-                        enable = element.isElementEnable().nullIfDefault(true)
+                        enable = element.elementEnabled().nullIfDefault(true)
                     )
                 )
                 return@forEach
             }
             if (element is RemoteTriggerElement) {
-                triggerOn.value.remote = if (element.isElementEnable()) {
+                triggerOn.value.remote = if (element.elementEnabled()) {
                     RemoteRule(element.name, EnableType.TRUE.value)
                 } else {
                     RemoteRule(element.name, EnableType.FALSE.value)
@@ -222,7 +222,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = gitElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "Git事件触发"
+                defaultName = "Git"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_GIT })
         }
@@ -236,7 +236,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = tGitElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "TGit事件触发"
+                defaultName = "TGit"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_TGIT })
         }
@@ -250,7 +250,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = githubElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "GitHub事件触发"
+                defaultName = "GitHub"
             )
             res.putAll(gitTrigger.groupBy { ScmType.GITHUB })
         }
@@ -264,7 +264,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = svnElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "SVN事件触发"
+                defaultName = "SVN"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_SVN })
         }
@@ -278,7 +278,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = p4Element,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "P4事件触发"
+                defaultName = "P4"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_P4 })
         }
@@ -292,7 +292,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = gitlabElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "Gitlab变更触发"
+                defaultName = "Gitlab"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_GITLAB })
         }
@@ -562,10 +562,11 @@ class ElementTransfer @Autowired(required = false) constructor(
 
             else -> element.transferYaml(transferCache.getAtomDefaultValue(uses))
         }?.apply {
-            this.enable = element.isElementEnable().nullIfDefault(true)
-            this.timeoutMinutes = element.additionalOptions?.timeoutVar.nullIfDefault(
-                VariableDefault.DEFAULT_TASK_TIME_OUT.toString()
-            ) ?: element.additionalOptions?.timeout.nullIfDefault(VariableDefault.DEFAULT_TASK_TIME_OUT)?.toString()
+            this.enable = element.elementEnabled().nullIfDefault(true)
+            this.timeoutMinutes =
+                (element.additionalOptions?.timeoutVar ?: element.additionalOptions?.timeout?.toString()).nullIfDefault(
+                    VariableDefault.DEFAULT_TASK_TIME_OUT.toString()
+                )
 
             this.continueOnError = when {
                 element.additionalOptions?.manualSkip == true -> Step.ContinueOnErrorType.MANUAL_SKIP.alis

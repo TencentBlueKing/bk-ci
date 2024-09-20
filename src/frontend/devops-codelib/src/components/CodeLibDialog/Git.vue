@@ -34,7 +34,10 @@
                 </bk-radio>
             </bk-radio-group>
 
-            <div class="codelib-oauth" v-if="!hasPower && isOAUTH">
+            <div
+                class="codelib-oauth"
+                v-if="!hasPower && isOAUTH"
+            >
                 <bk-button
                     theme="primary"
                     @click="openValidate"
@@ -109,7 +112,10 @@
                     <p>1. {{ $t('codelib.同一个代码库可以关联到多个蓝盾项目，但仅支持在一个蓝盾项目下开启 PAC (Pipeline As Code) 模式') }}</p>
                     <p>
                         2. {{ $t('codelib.PAC 模式下，使用代码库 ci 目录下的 YAML 文件编排流水线，且 YAML 文件变更将自动同步到对应的蓝盾流水线。') }}
-                        <bk-popover width="380" placement="right-end">
+                        <bk-popover
+                            width="380"
+                            placement="right-end"
+                        >
                             <a>{{ $t('codelib.查看同步规则') }}</a>
                             <div slot="content">
                                 <p>{{ $t('codelib.同步规则：') }}</p>
@@ -133,7 +139,10 @@
                     v-model.trim="codelib.url"
                 >
                 </bk-input>
-                <span class="error-tips" v-if="urlErrMsg">
+                <span
+                    class="error-tips"
+                    v-if="urlErrMsg"
+                >
                     {{ urlErrMsg }}
                 </span>
             </bk-form-item>
@@ -170,8 +179,12 @@
                         v-for="(option, index) in credentialList"
                         :key="option.credentialId"
                         :id="option.credentialId"
-                        :name="option.credentialId">
-                        <span class="name" :title="option.credentialId">
+                        :name="option.credentialId"
+                    >
+                        <span
+                            class="name"
+                            :title="option.credentialId"
+                        >
                             {{ option.credentialId }}
                         </span>
                         <i
@@ -181,7 +194,10 @@
                         </i>
                     </bk-option>
                 </bk-select>
-                <span class="add-cred-btn" @click="addCredential">{{ $t('codelib.new') }}</span>
+                <span
+                    class="add-cred-btn"
+                    @click="addCredential"
+                >{{ $t('codelib.new') }}</span>
             </bk-form-item>
         </template>
     </bk-form>

@@ -389,14 +389,14 @@ class PipelineSettingDao {
                     val list = JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
                     if (list.isNotEmpty()) {
                         oldSuccessSubscription = list.first()
-                        list
+                        list.map { s -> s.fixWeworkGroupType() }
                     } else null
                 } ?: oldSuccessSubscription?.let { listOf(it) }
                 val failSubscriptionList = t.failureSubscription?.let {
                     val list = JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
                     if (list.isNotEmpty()) {
                         oldFailSubscription = list.first()
-                        list
+                        list.map { s -> s.fixWeworkGroupType() }
                     } else null
                 } ?: oldFailSubscription?.let { listOf(it) }
                 PipelineSetting(
@@ -420,7 +420,8 @@ class PipelineSettingDao {
                     cleanVariablesWhenRetry = t.cleanVariablesWhenRetry,
                     pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
                         JsonUtil.to(self, PipelineAsCodeSettings::class.java)
-                    }
+                    },
+                    version = t.version ?: 1
                 )
             }
         }
