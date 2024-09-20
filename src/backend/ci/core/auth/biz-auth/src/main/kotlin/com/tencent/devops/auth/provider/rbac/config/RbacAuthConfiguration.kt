@@ -48,6 +48,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupApplyDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
+import com.tencent.devops.auth.dao.AuthResourceGroupPermissionDao
 import com.tencent.devops.auth.dao.AuthResourceSyncDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
@@ -63,6 +64,7 @@ import com.tencent.devops.auth.provider.rbac.service.RbacPermissionExtService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionItsmCallbackService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionProjectService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceCallbackService
+import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupPermissionService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupSyncService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceMemberService
@@ -144,7 +146,6 @@ class RbacAuthConfiguration {
     ) = AuthHelper(tokenService, iamV2PolicyService, iamConfiguration)
 
     @Bean
-    @SuppressWarnings("LongParameterList")
     fun permissionResourceService(
         authResourceService: AuthResourceService,
         permissionGradeManagerService: PermissionGradeManagerService,
@@ -166,7 +167,6 @@ class RbacAuthConfiguration {
     )
 
     @Bean
-    @SuppressWarnings("LongParameterList")
     fun permissionResourceGroupService(
         iamV2ManagerService: V2ManagerService,
         authResourceService: AuthResourceService,
@@ -174,9 +174,6 @@ class RbacAuthConfiguration {
         permissionGroupPoliciesService: PermissionGroupPoliciesService,
         authResourceGroupDao: AuthResourceGroupDao,
         dslContext: DSLContext,
-        v2ManagerService: V2ManagerService,
-        rbacCacheService: RbacCacheService,
-        monitorSpaceService: AuthMonitorSpaceService,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
         authResourceGroupMemberDao: AuthResourceGroupMemberDao
     ) = RbacPermissionResourceGroupService(
@@ -186,11 +183,27 @@ class RbacAuthConfiguration {
         permissionGroupPoliciesService = permissionGroupPoliciesService,
         authResourceGroupDao = authResourceGroupDao,
         dslContext = dslContext,
+        authResourceGroupConfigDao = authResourceGroupConfigDao,
+        authResourceGroupMemberDao = authResourceGroupMemberDao
+    )
+
+    @Bean
+    fun permissionResourceGroupPermissionService(
+        v2ManagerService: V2ManagerService,
+        rbacCacheService: RbacCacheService,
+        monitorSpaceService: AuthMonitorSpaceService,
+        authResourceGroupDao: AuthResourceGroupDao,
+        dslContext: DSLContext,
+        resourceGroupPermissionDao: AuthResourceGroupPermissionDao,
+        converter: AuthResourceCodeConverter
+    ) = RbacPermissionResourceGroupPermissionService(
         v2ManagerService = v2ManagerService,
         rbacCacheService = rbacCacheService,
         monitorSpaceService = monitorSpaceService,
-        authResourceGroupConfigDao = authResourceGroupConfigDao,
-        authResourceGroupMemberDao = authResourceGroupMemberDao
+        authResourceGroupDao = authResourceGroupDao,
+        dslContext = dslContext,
+        resourceGroupPermissionDao = resourceGroupPermissionDao,
+        converter = converter
     )
 
     @Bean
@@ -260,7 +273,6 @@ class RbacAuthConfiguration {
 
     @Bean
     @Primary
-    @Suppress("LongParameterList")
     fun rbacPermissionProjectService(
         authHelper: AuthHelper,
         authResourceService: AuthResourceService,
@@ -293,7 +305,6 @@ class RbacAuthConfiguration {
 
     @Bean
     @Primary
-    @Suppress("LongParameterList")
     fun rbacPermissionApplyService(
         dslContext: DSLContext,
         v2ManagerService: V2ManagerService,

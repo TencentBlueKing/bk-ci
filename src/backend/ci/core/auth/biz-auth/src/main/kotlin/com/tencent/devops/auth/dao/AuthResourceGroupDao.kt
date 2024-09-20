@@ -92,7 +92,7 @@ class AuthResourceGroupDao {
     ) {
         val now = LocalDateTime.now()
         with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
-            dslContext.batch(authResourceGroups.map {
+            authResourceGroups.forEach {
                 dslContext.insertInto(
                     this,
                     PROJECT_CODE,
@@ -125,7 +125,8 @@ class AuthResourceGroupDao {
                 ).onDuplicateKeyUpdate()
                     .set(GROUP_NAME, it.groupName)
                     .set(UPDATE_TIME, now)
-            }).execute()
+                    .execute()
+            }
         }
     }
 
@@ -160,7 +161,7 @@ class AuthResourceGroupDao {
     ) {
         val now = LocalDateTime.now()
         with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
-            dslContext.batch(authResourceGroups.map {
+            authResourceGroups.forEach {
                 dslContext.update(this)
                     .set(GROUP_NAME, it.groupName)
                     .set(DESCRIPTION, it.description)
@@ -168,7 +169,8 @@ class AuthResourceGroupDao {
                     .set(UPDATE_TIME, now)
                     .where(PROJECT_CODE.eq(it.projectCode))
                     .and(ID.eq(it.id!!))
-            }).execute()
+                    .execute()
+            }
         }
     }
 

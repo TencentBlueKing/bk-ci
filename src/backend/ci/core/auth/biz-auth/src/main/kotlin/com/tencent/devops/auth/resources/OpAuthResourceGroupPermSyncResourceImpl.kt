@@ -23,30 +23,24 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.provider.sample.service
+package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
+import com.tencent.devops.auth.api.sync.OpAuthResourceGroupPermSyncResource
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPermissionService {
-    override fun getGroupPermissionDetail(
-        groupId: Int
-    ): Map<String, List<GroupPermissionDetailVo>> = emptyMap()
-
-    override fun getGroupPermissionDetailBySystem(
-        iamSystemId: String,
-        groupId: Int
-    ): List<GroupPermissionDetailVo> = emptyList()
-
-    override fun syncGroup(
-        projectCode: String,
-        groupId: Int
-    ): Boolean = true
-
-    override fun syncProject(
-        projectCode: String
-    ): Boolean = true
+@RestResource
+class OpAuthResourceGroupPermSyncResourceImpl @Autowired constructor(
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService
+) : OpAuthResourceGroupPermSyncResource {
+    override fun syncProject(projectIds: List<String>): Result<Boolean> {
+        projectIds.forEach {
+            permissionResourceGroupPermissionService.syncProject(it)
+        }
+        return Result(true)
+    }
 }

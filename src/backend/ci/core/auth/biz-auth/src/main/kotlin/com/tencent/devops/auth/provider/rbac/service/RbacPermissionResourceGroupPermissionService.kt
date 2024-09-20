@@ -32,20 +32,32 @@ import com.tencent.bk.sdk.iam.dto.InstancesDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.dao.AuthResourceGroupPermissionDao
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
+import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
-@Suppress("LongParameterList", "IMPLICIT_CAST_TO_ANY")
-class RbacPermissionResourceGroupPermissionService constructor(
+@Suppress("LongParameterList")
+class RbacPermissionResourceGroupPermissionService(
     private val v2ManagerService: V2ManagerService,
     private val rbacCacheService: RbacCacheService,
-    private val monitorSpaceService: AuthMonitorSpaceService
+    private val monitorSpaceService: AuthMonitorSpaceService,
+    private val authResourceGroupDao: AuthResourceGroupDao,
+    private val dslContext: DSLContext,
+    private val resourceGroupPermissionDao: AuthResourceGroupPermissionDao,
+    private val converter: AuthResourceCodeConverter,
+    private val client: Client
 ) : PermissionResourceGroupPermissionService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -58,6 +70,7 @@ class RbacPermissionResourceGroupPermissionService constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupPermissionService::class.java)
+        private const val AUTH_RESOURCE_GROUP_PERMISSION_ID_TAG = "AUTH_RESOURCE_GROUP_PERMISSION_ID"
     }
 
     override fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>> {
@@ -120,9 +133,83 @@ class RbacPermissionResourceGroupPermissionService constructor(
         }.sortedBy { it.actionId }
     }
 
-    override fun syncGroupPermission(groupId: Int) {
-        // 查询用户组详情信息
+    override fun syncGroup(projectCode: String, groupId: Int): Boolean {
+        val resourceGroupInfo = authResourceGroupDao.get(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            relationId = groupId.toString(),
+        ) ?: return true
 
+        val groupPermissionDetails = getGroupPermissionDetailBySystem(systemId, groupId)
+        // 获取用户组最新的权限
+        val newResourceGroupPermissions = groupPermissionDetails.flatMap { permissionDetail ->
+            permissionDetail.relatedResourceInfos.flatMap { relatedResourceInfo ->
+                relatedResourceInfo.instance.map { instancePathDTOs ->
+                    ResourceGroupPermissionDTO(
+                        id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId(AUTH_RESOURCE_GROUP_PERMISSION_ID_TAG).data!!,
+                        projectCode = projectCode,
+                        resourceType = resourceGroupInfo.resourceType,
+                        resourceCode = resourceGroupInfo.resourceCode,
+                        iamResourceCode = resourceGroupInfo.iamResourceCode,
+                        groupCode = resourceGroupInfo.groupCode,
+                        iamGroupId = groupId,
+                        action = permissionDetail.actionId,
+                        actionRelatedResourceType = permissionDetail.actionRelatedResourceType,
+                        relatedResourceType = instancePathDTOs.last().type,
+                        relatedResourceCode = converter.iamCode2Code(
+                            projectCode = projectCode,
+                            resourceType = instancePathDTOs.last().type,
+                            iamResourceCode = instancePathDTOs.last().id
+                        ),
+                        relatedIamResourceCode = instancePathDTOs.last().id
+                    )
+                }
+            }
+        }
+        // 获取用户组老权限数据
+        val oldResourceGroupPermissions = resourceGroupPermissionDao.listByGroupId(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupId = groupId
+        )
+
+        val toDeleteRecords = oldResourceGroupPermissions.filter {
+            !newResourceGroupPermissions.contains(it)
+        }
+        val toAddRecords = newResourceGroupPermissions.filter {
+            !oldResourceGroupPermissions.contains(it)
+        }
+
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            if (toDeleteRecords.isNotEmpty()) {
+                resourceGroupPermissionDao.batchDeleteByIds(
+                    dslContext = transactionContext,
+                    projectCode = projectCode,
+                    ids = toDeleteRecords.map { it.id }
+                )
+            }
+            resourceGroupPermissionDao.batchCreate(
+                dslContext = dslContext,
+                records = toAddRecords
+            )
+        }
+        return true
+    }
+
+    override fun syncProject(projectCode: String): Boolean {
+        val iamGroupIds = authResourceGroupDao.listIamGroupIdsByConditions(
+            dslContext = dslContext,
+            projectCode = projectCode
+        )
+        iamGroupIds.forEach {
+            syncGroup(
+                projectCode = projectCode,
+                groupId = it
+            )
+        }
+        return true
     }
 
     private fun buildRelatedResourceTypesName(iamSystemId: String, instancesDTO: InstancesDTO) {

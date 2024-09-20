@@ -23,30 +23,31 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.provider.sample.service
+package com.tencent.devops.auth.api.sync
 
-import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPermissionService {
-    override fun getGroupPermissionDetail(
-        groupId: Int
-    ): Map<String, List<GroupPermissionDetailVo>> = emptyMap()
+@Tag(name = "AUTH_PERMISSION_SYNC", description = "组权限-同步IAM")
+@Path("/op/auth/resource/group/permission/sync/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpAuthResourceGroupPermSyncResource {
 
-    override fun getGroupPermissionDetailBySystem(
-        iamSystemId: String,
-        groupId: Int
-    ): List<GroupPermissionDetailVo> = emptyList()
-
-    override fun syncGroup(
-        projectCode: String,
-        groupId: Int
-    ): Boolean = true
-
-    override fun syncProject(
-        projectCode: String
-    ): Boolean = true
+    @POST
+    @Path("/syncProject")
+    @Operation(summary = "按条件同步组和成员")
+    fun syncProject(
+        @Parameter(description = "按条件迁移项目实体", required = true)
+        projectIds: List<String>
+    ): Result<Boolean>
 }

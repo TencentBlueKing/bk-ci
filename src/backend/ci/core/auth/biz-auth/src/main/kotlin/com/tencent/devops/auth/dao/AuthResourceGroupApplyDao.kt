@@ -32,15 +32,14 @@ class AuthResourceGroupApplyDao {
         applyToGroupStatus: ApplyToGroupStatus
     ) {
         with(TAuthResourceGroupApply.T_AUTH_RESOURCE_GROUP_APPLY) {
-            dslContext.batch(
-                ids.map { id ->
-                    dslContext.update(this)
-                        .set(STATUS, applyToGroupStatus.value)
-                        .set(NUMBER_OF_CHECKS, NUMBER_OF_CHECKS + 1)
-                        .set(UPDATE_TIME, LocalDateTime.now())
-                        .where(ID.eq(id))
-                }
-            ).execute()
+            ids.forEach { id ->
+                dslContext.update(this)
+                    .set(STATUS, applyToGroupStatus.value)
+                    .set(NUMBER_OF_CHECKS, NUMBER_OF_CHECKS + 1)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .where(ID.eq(id))
+                    .execute()
+            }
         }
     }
 
@@ -49,16 +48,15 @@ class AuthResourceGroupApplyDao {
         applyJoinGroupInfo: ApplyJoinGroupInfo
     ) {
         with(TAuthResourceGroupApply.T_AUTH_RESOURCE_GROUP_APPLY) {
-            dslContext.batch(
-                applyJoinGroupInfo.groupIds.map { groupId ->
-                    dslContext.insertInto(this)
-                        .set(PROJECT_CODE, applyJoinGroupInfo.projectCode)
-                        .set(MEMBER_ID, applyJoinGroupInfo.applicant)
-                        .set(IAM_GROUP_ID, groupId)
-                        .set(STATUS, ApplyToGroupStatus.PENDING.value)
-                        .set(NUMBER_OF_CHECKS, 0)
-                }
-            ).execute()
+            applyJoinGroupInfo.groupIds.forEach { groupId ->
+                dslContext.insertInto(this)
+                    .set(PROJECT_CODE, applyJoinGroupInfo.projectCode)
+                    .set(MEMBER_ID, applyJoinGroupInfo.applicant)
+                    .set(IAM_GROUP_ID, groupId)
+                    .set(STATUS, ApplyToGroupStatus.PENDING.value)
+                    .set(NUMBER_OF_CHECKS, 0)
+                    .execute()
+            }
         }
     }
 }

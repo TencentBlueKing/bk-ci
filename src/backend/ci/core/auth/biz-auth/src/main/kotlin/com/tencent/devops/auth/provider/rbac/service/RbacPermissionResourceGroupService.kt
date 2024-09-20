@@ -56,6 +56,7 @@ import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Pagination
@@ -70,7 +71,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
-@Suppress("LongParameterList", "IMPLICIT_CAST_TO_ANY")
+@Suppress("LongParameterList")
 class RbacPermissionResourceGroupService @Autowired constructor(
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceService: AuthResourceService,
@@ -78,21 +79,9 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
-    private val v2ManagerService: V2ManagerService,
-    private val rbacCacheService: RbacCacheService,
-    private val monitorSpaceService: AuthMonitorSpaceService,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao
 ) : PermissionResourceGroupService {
-    @Value("\${auth.iamSystem:}")
-    private val systemId = ""
-
-    @Value("\${monitor.register:false}")
-    private val registerMonitor: Boolean = false
-
-    @Value("\${monitor.iamSystem:}")
-    private val monitorSystemId = ""
-
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupService::class.java)
         private const val MAX_GROUP_NAME_LENGTH = 32
@@ -443,20 +432,6 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         }
     }
 
-    override fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>> {
-        val groupPermissionMap = mutableMapOf<String, List<GroupPermissionDetailVo>>()
-        groupPermissionMap[I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_DEVOPS_NAME)] =
-            getGroupPermissionDetailBySystem(systemId, groupId)
-        if (registerMonitor) {
-            val monitorGroupPermissionDetail = getGroupPermissionDetailBySystem(monitorSystemId, groupId)
-            if (monitorGroupPermissionDetail.isNotEmpty()) {
-                groupPermissionMap[I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_MONITOR_NAME)] =
-                    getGroupPermissionDetailBySystem(monitorSystemId, groupId)
-            }
-        }
-        return groupPermissionMap
-    }
-
     override fun createProjectGroupByGroupCode(
         projectId: String,
         groupCode: String
@@ -503,67 +478,5 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             iamGroupId = iamGroupId
         )
         return true
-    }
-
-    override fun getGroupPermissionDetailBySystem(iamSystemId: String, groupId: Int): List<GroupPermissionDetailVo> {
-        val iamGroupPermissionDetailList = try {
-            v2ManagerService.getGroupPermissionDetail(groupId, iamSystemId)
-        } catch (e: Exception) {
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.GET_GROUP_PERMISSION_DETAIL_FAIL,
-                params = arrayOf(groupId.toString()),
-                defaultMessage = "Failed to get group($groupId) permission info"
-            )
-        }
-        return iamGroupPermissionDetailList.map { detail ->
-            val actionId = detail.id
-            val relatedResourceTypesDTO = detail.resourceGroups[0].relatedResourceTypesDTO[0]
-            val instances = relatedResourceTypesDTO.condition[0].instances
-            val relatedResourceInfos = mutableListOf<RelatedResourceInfo>()
-            instances.forEach { instance ->
-                // 将resourceType转化为对应的资源类型名称
-                buildRelatedResourceTypesName(
-                    iamSystemId = iamSystemId,
-                    instancesDTO = instance
-                )
-                relatedResourceInfos.add(
-                    RelatedResourceInfo(
-                        type = instance.type,
-                        name = I18nUtil.getCodeLanMessage(
-                            instance.type + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX
-                        ),
-                        instance = instance.path
-                    )
-                )
-            }
-            val (actionName, actionRelatedResourceType) = if (iamSystemId == monitorSystemId) {
-                Pair(monitorSpaceService.getMonitorActionName(action = actionId), monitorSystemId)
-            } else {
-                val actionInfo = rbacCacheService.getActionInfo(action = actionId)
-                Pair(actionInfo.actionName, actionInfo.relatedResourceType)
-            }
-            GroupPermissionDetailVo(
-                actionId = actionId,
-                name = actionName!!,
-                actionRelatedResourceType = actionRelatedResourceType,
-                relatedResourceInfos = relatedResourceInfos
-            )
-        }.sortedBy { it.actionId }
-    }
-
-    private fun buildRelatedResourceTypesName(iamSystemId: String, instancesDTO: InstancesDTO) {
-        instancesDTO.let {
-            val resourceTypeName = if (iamSystemId == systemId) {
-                rbacCacheService.getResourceTypeInfo(it.type).name
-            } else {
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_MONITOR_SPACE)
-            }
-            it.name = resourceTypeName
-            it.path.forEach { element1 ->
-                element1.forEach { element2 ->
-                    element2.typeName = resourceTypeName
-                }
-            }
-        }
     }
 }

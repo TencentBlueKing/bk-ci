@@ -9,7 +9,7 @@ import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.web.RestResource
@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserAuthApplyResourceImpl @Autowired constructor(
     val permissionApplyService: PermissionApplyService,
-    val permissionResourceGroupService: PermissionResourceGroupService
+    val resourceGroupPermissionService: PermissionResourceGroupPermissionService
 ) : UserAuthApplyResource {
     override fun listResourceTypes(userId: String): Result<List<ResourceTypeInfoVo>> {
         return Result(
@@ -64,7 +64,7 @@ class UserAuthApplyResourceImpl @Autowired constructor(
         groupId: Int
     ): Result<Map<String, List<GroupPermissionDetailVo>>> {
         return Result(
-            permissionResourceGroupService.getGroupPermissionDetail(
+            resourceGroupPermissionService.getGroupPermissionDetail(
                 groupId = groupId
             )
         )

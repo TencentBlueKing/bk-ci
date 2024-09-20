@@ -86,15 +86,8 @@ interface PermissionResourceGroupService {
         renameGroupDTO: RenameGroupDTO
     ): Boolean
 
-    fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>>
-
     fun createProjectGroupByGroupCode(
         projectId: String,
         groupCode: String
     ): Boolean
-
-    fun getGroupPermissionDetailBySystem(
-        iamSystemId: String,
-        groupId: Int
-    ): List<GroupPermissionDetailVo>
 }

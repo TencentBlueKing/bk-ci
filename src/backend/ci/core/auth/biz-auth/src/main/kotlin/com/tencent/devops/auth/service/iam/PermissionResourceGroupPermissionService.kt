@@ -28,22 +28,21 @@
 
 package com.tencent.devops.auth.service.iam
 
-import com.tencent.devops.auth.pojo.dto.GroupAddDTO
-import com.tencent.devops.auth.pojo.dto.ListGroupConditionDTO
-import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
-import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
-import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
-import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
-import com.tencent.devops.common.api.pojo.Pagination
 
 interface PermissionResourceGroupPermissionService {
-
     fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>>
     fun getGroupPermissionDetailBySystem(
         iamSystemId: String,
         groupId: Int
     ): List<GroupPermissionDetailVo>
 
-    fun syncGroupPermission(groupId: Int)
+    fun syncGroup(
+        projectCode: String,
+        groupId: Int
+    ): Boolean
+
+    fun syncProject(
+        projectCode: String,
+    ): Boolean
 }

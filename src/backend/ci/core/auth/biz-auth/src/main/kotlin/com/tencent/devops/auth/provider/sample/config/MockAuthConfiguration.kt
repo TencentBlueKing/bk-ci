@@ -1,5 +1,11 @@
 package com.tencent.devops.auth.provider.sample.config
 
+import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.dao.AuthResourceGroupPermissionDao
+import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
+import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
+import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupPermissionService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceAuthorizationService
 import com.tencent.devops.auth.provider.sample.service.SampleAuthAuthorizationScopesService
 import com.tencent.devops.auth.provider.sample.service.SampleAuthMonitorSpaceService
@@ -12,6 +18,7 @@ import com.tencent.devops.auth.provider.sample.service.SamplePermissionExtServic
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionGradeService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionItsmCallbackService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionMigrateService
+import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceGroupPermissionService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceGroupService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceGroupSyncService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceMemberService
@@ -35,6 +42,7 @@ import com.tencent.devops.auth.service.iam.PermissionGrantService
 import com.tencent.devops.auth.service.iam.PermissionItsmCallbackService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
@@ -44,6 +52,7 @@ import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.iam.PermissionUrlService
+import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 
@@ -110,6 +119,10 @@ class MockAuthConfiguration {
     @Bean
     @ConditionalOnMissingBean(PermissionResourceGroupService::class)
     fun samplePermissionResourceGroupService() = SamplePermissionResourceGroupService()
+
+    @Bean
+    @ConditionalOnMissingBean(PermissionResourceGroupPermissionService::class)
+    fun samplePermissionResourceGroupPermissionService() = SamplePermissionResourceGroupPermissionService()
 
     @Bean
     @ConditionalOnMissingBean(PermissionResourceMemberService::class)
