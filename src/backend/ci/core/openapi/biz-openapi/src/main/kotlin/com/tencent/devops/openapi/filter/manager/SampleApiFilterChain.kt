@@ -24,12 +24,31 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.filter
 
+package com.tencent.devops.openapi.filter.manager
+
+import com.tencent.devops.openapi.filter.manager.impl.ApiPathFilter
+import com.tencent.devops.openapi.filter.manager.impl.BlueKingApiFilter
+import com.tencent.devops.openapi.filter.manager.impl.NoPermissionFilter
+import com.tencent.devops.openapi.filter.manager.impl.SampleApiFilter
 import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.ContainerRequestFilter
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-interface ApiFilter : ContainerRequestFilter {
+@Service
+class SampleApiFilterChain @Autowired constructor(
+    private val managerCache: ApiFilterManagerCache
+) : ApiFilterManagerChain {
 
-    fun verifyJWT(requestContext: ContainerRequestContext): Boolean
+    override fun doFilterCheck(requestContext: ContainerRequestContext) {
+        doFilterCheck(
+            requestContext = FilterContext(requestContext),
+            chain = listOf(
+                managerCache.getFilter(ApiPathFilter::class.java),
+                managerCache.getFilter(SampleApiFilter::class.java),
+                managerCache.getFilter(NoPermissionFilter::class.java),
+                managerCache.getFilter(BlueKingApiFilter::class.java)
+            ).iterator()
+        )
+    }
 }
