@@ -50,8 +50,7 @@ class AuthorizationCodeTokenGranterTest : BkCiAbstractTest() {
         accessTokenInfo.accessToken = "testAccessToken"
         accessTokenInfo.clientId = "testClientId"
         accessTokenInfo.userName = "testUserName"
-        accessTokenInfo.grantType = "",
-            "testGrantType"
+        accessTokenInfo.grantType = "testGrantType"
         accessTokenInfo.expiredTime = System.currentTimeMillis() / 1000 + 1000
         accessTokenInfo.refreshToken = "testRefreshToken"
         accessTokenInfo.scopeId = 1
@@ -74,7 +73,7 @@ class AuthorizationCodeTokenGranterTest : BkCiAbstractTest() {
         expiredAccessTokenInfo.clientId = "testClientId"
         expiredAccessTokenInfo.userName = "testUserName"
         expiredAccessTokenInfo.grantType = "",
-            "testGrantType"
+        "testGrantType"
         expiredAccessTokenInfo.expiredTime = System.currentTimeMillis() / 1000 - 1000
         expiredAccessTokenInfo.refreshToken = "testRefreshToken"
         expiredAccessTokenInfo.scopeId = 1
