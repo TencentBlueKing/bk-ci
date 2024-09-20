@@ -28,8 +28,8 @@
 package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -51,4 +51,9 @@ interface TxOpMigrateStoreResource {
     @PUT
     @Path("/description")
     fun migrateStoreDescription(): Result<Boolean>
+
+    @Operation(summary = "从组件特性到组件扩展迁移组件urlScheme数据")
+    @PUT
+    @Path("/scheme")
+    fun migrateStoreUrlScheme(): Result<Boolean>
 }

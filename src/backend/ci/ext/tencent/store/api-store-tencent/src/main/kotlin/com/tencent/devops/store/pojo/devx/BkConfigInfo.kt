@@ -25,11 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.sensitive
+package com.tencent.devops.store.pojo.devx
 
-data class SensitiveApiConfig(
-    val apiName: String,
-    val apiUrl: String,
-    val aliasNames: Map<String /*language*/, String /*aliasName*/>? = null,
-    val hideFlag: Boolean = false
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "配置信息")
+data class BkConfigInfo(
+    @get:Schema(title = "标识", required = true)
+    val storeCode: String,
+    @get:Schema(title = "操作系统配置列表", required = true)
+    val os: List<OsConfigInfo>
 )

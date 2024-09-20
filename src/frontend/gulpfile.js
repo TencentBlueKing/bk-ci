@@ -174,6 +174,11 @@ async function execAsync () {
         
         spawnCmd.on('close', (code) => {
             console.log(`child process exited with code ${code}`)
+            if (code) {
+                reject(Error('build failed'))
+                spinner.fail('Failed bk-ci frontend project')
+                process.exit(1)
+            }
             spinner.succeed('Finished building bk-ci frontend project')
             resolve()
         })

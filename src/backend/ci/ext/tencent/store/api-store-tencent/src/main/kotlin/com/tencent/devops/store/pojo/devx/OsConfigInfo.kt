@@ -25,11 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.sensitive
+package com.tencent.devops.store.pojo.devx
 
-data class SensitiveApiConfig(
-    val apiName: String,
-    val apiUrl: String,
-    val aliasNames: Map<String /*language*/, String /*aliasName*/>? = null,
-    val hideFlag: Boolean = false
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "操作系统配置信息")
+data class OsConfigInfo(
+    @get:Schema(title = "软件包相对于压缩包中的位置", required = true)
+    val packagePath: String,
+    @get:Schema(title = "支持的操作系统名称", required = true)
+    val osName: String,
+    @get:Schema(title = "支持的操作系统CPU架构", required = false)
+    val osArch: String? = null,
+    @get:Schema(title = "签名配置信息", required = false)
+    val signature: SignatureConfigInfo? = null,
+    @get:Schema(title = "是否为默认环境信息（每种操作系统默认环境配置有且只有1个,没有匹配的操作系统名称和cpu架构就使用该默认环境配置）", required = true)
+    val defaultFlag: Boolean
 )

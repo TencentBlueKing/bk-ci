@@ -31,6 +31,7 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.dispatch.constants.ENV_PUBLIC_HOST_MAX_ATOM_FILE_CACHE_SIZE
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.pojo.Action
@@ -76,6 +77,9 @@ abstract class StartupContainerHandler @Autowired constructor(
     @Value("\${atom.fuse.atom-code}")
     val fuseAtomCode: String? = null
 
+    @Value("\${atom.maxFileCacheSize:2147483648}")
+    val maxAtomFileCacheSize: String = "2147483648"
+
     @Value("\${devCloud.entrypoint}")
     val entrypoint: String = "devcloud_init.sh"
 
@@ -109,7 +113,8 @@ abstract class StartupContainerHandler @Autowired constructor(
                     ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage,
                     ENV_DEVCLOUD_CPU to cpu.toString(),
                     ENV_DEVCLOUD_MEM to memory,
-                    ENV_DEVCLOUD_DISK to disk
+                    ENV_DEVCLOUD_DISK to disk,
+                    ENV_PUBLIC_HOST_MAX_ATOM_FILE_CACHE_SIZE to maxAtomFileCacheSize
                 )
             )
 

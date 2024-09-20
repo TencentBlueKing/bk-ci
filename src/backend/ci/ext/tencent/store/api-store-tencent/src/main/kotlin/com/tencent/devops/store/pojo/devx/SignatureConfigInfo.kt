@@ -25,12 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.pojo.devx
 
-interface TxOpMigrateStoreDescriptionService {
+import io.swagger.v3.oas.annotations.media.Schema
 
-    /**
-     * 迁移商店组件描述引用文件
-     */
-    fun migrateStoreDescription(): Boolean
-}
+@Schema(title = "签名配置信息")
+data class SignatureConfigInfo(
+    @get:Schema(title = "安装包中需要进行sha1签名的文件相对路径列表", required = false)
+    val originFilePaths: List<String>? = null
+)
