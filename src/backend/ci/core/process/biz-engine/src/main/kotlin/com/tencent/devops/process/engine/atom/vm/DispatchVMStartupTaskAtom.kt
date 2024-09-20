@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.atom.vm
 
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ENV_NOT_YET_SUPPORTED
-import com.tencent.devops.common.api.exception.VariableNotFoundException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
@@ -67,7 +66,6 @@ import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailServ
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
@@ -94,7 +92,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeBuilder: DispatchTypeBuilder,
-    private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineContextService: PipelineContextService,
     private val pipelineTaskService: PipelineTaskService
 ) : IAtomTask<VMBuildContainer> {
@@ -302,25 +299,11 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 if (!env.value.startsWith("$")) {
                     return@forEach
                 }
-                val version = try {
-                    EnvReplacementParser.parse(
-                        value = env.value,
-                        contextMap = variables,
-                        dialect = asCode.first,
-                        contextPair = asCode.second
-                    )
-                } catch (ignored: VariableNotFoundException) {
-                    buildLogPrinter.addRedLine(
-                        buildId = task.buildId,
-                        message = "variable ${ignored.variableKey} not found",
-                        tag = task.taskId,
-                        containerHashId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1,
-                        jobId = null,
-                        stepId = task.stepId
-                    )
-                    return false
-                }
+                val version = EnvReplacementParser.parse(
+                    value = env.value,
+                    contextMap = variables,
+                    contextPair = asCode.second
+                )
                 val res = client.get(ServiceContainerAppResource::class).getBuildEnv(
                     name = env.key,
                     version = version,

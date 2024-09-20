@@ -181,18 +181,20 @@ data class StagePauseCheck(
     /**
      *  进入审核流程前完成所有审核人变量替换
      */
-    fun parseReviewVariables(variables: Map<String, String>, dialect: IPipelineDialect) {
+    fun parseReviewVariables(variables: Map<String, String>) {
+        val contextPair = EnvReplacementParser.getCustomExecutionContextByMap(variables)
         reviewGroups?.forEach { group ->
             if (group.status == null) {
                 val reviewers = group.reviewers.joinToString(",")
-                val realReviewers = EnvReplacementParser.parse(reviewers, variables, dialect)
-                    .split(",").toList()
+                val realReviewers = EnvReplacementParser.parse(
+                    value = reviewers, contextMap = variables, contextPair = contextPair
+                ).split(",").toList()
                 group.reviewers = realReviewers
             }
         }
-        reviewDesc = EnvReplacementParser.parse(reviewDesc, variables, dialect)
+        reviewDesc = EnvReplacementParser.parse(value = reviewDesc, contextMap = variables, contextPair = contextPair)
         notifyGroup = notifyGroup?.map {
-            EnvReplacementParser.parse(it, variables, dialect)
+            EnvReplacementParser.parse(value = it, contextMap = variables, contextPair = contextPair)
         }?.toMutableList()
         reviewParams?.forEach { it.parseValueWithType(variables) }
     }

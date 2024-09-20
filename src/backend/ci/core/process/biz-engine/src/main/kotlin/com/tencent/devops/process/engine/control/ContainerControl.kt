@@ -180,9 +180,6 @@ class ContainerControl @Autowired constructor(
             onlyMatrixGroup = true
         )
         val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(projectId, pipelineId)
-        val dialect = variables[PIPELINE_DIALECT]?.let {
-            PipelineDialectType.valueOf(it).dialect
-        } ?: PipelineDialectType.CLASSIC.dialect
 
         val context = ContainerContext(
             buildStatus = this.status, // 初始状态为容器状态，中间流转会切换状态，并最终赋值给该容器状态
@@ -194,8 +191,7 @@ class ContainerControl @Autowired constructor(
             containerTasks = containerTasks,
             variables = variables,
             pipelineAsCodeEnabled = asCodeSettings?.enable,
-            executeCount = executeCount,
-            dialect = dialect
+            executeCount = executeCount
         )
 
         if (status.isReadyToRun()) {

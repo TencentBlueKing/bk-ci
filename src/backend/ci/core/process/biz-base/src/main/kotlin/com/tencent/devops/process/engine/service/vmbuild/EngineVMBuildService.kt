@@ -30,7 +30,6 @@ package com.tencent.devops.process.engine.service.vmbuild
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.exception.VariableNotFoundException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -51,7 +50,6 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -203,9 +201,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
             projectId = projectId, pipelineId = buildInfo.pipelineId
         )
-        val dialect = variables[PIPELINE_DIALECT]?.let {
-            PipelineDialectType.valueOf(it).dialect
-        } ?: PipelineDialectType.CLASSIC.dialect
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
 
         model!!.stages.forEachIndexed { index, s ->
@@ -236,8 +231,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     )
                     // #4518 填充构建机环境变量、构建上下文、获取超时时间
                     val (containerEnv, context, timeoutMills) = getContainerContext(
-                        executeCount = buildInfo.executeCount ?: 1,
-                        vmSeqId = vmSeqId,
                         container = c,
                         buildContainer = container,
                         variables = variables,
@@ -247,7 +240,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         stage = s,
                         model = model,
                         buildInfo = buildInfo,
-                        dialect = dialect,
                         variablesWithType = variablesWithType,
                         vmName = vmName
                     )
@@ -287,8 +279,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     }
 
     private fun getContainerContext(
-        executeCount: Int,
-        vmSeqId: String,
         container: Container,
         buildContainer: PipelineBuildContainer,
         variables: Map<String, String>,
@@ -298,48 +288,33 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         stage: Stage,
         model: Model?,
         buildInfo: BuildInfo,
-        dialect: IPipelineDialect,
         variablesWithType: MutableList<BuildParameters>,
         vmName: String
     ): Triple<MutableList<BuildEnv>, MutableMap<String, String>, Long> {
-        try {
-            return when (container) {
-                is VMBuildContainer -> {
-                    getVMBuildContainerContext(
-                        container = container,
-                        buildContainer = buildContainer,
-                        variables = variables,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        stage = stage,
-                        model = model,
-                        buildInfo = buildInfo,
-                        dialect = dialect,
-                        variablesWithType = variablesWithType
-                    )
-                }
-
-                is NormalContainer -> {
-                    val tm = transMinuteTimeoutToMills(buildContainer.controlOption.jobControlOption.timeout)
-                    val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
-                    fillContainerContext(contextMap, null, container.matrixContext, dialect)
-                    Triple(mutableListOf(), contextMap, tm)
-                }
-
-                else -> throw OperationException("vmName($vmName) is an illegal container type: $container")
+        return when (container) {
+            is VMBuildContainer -> {
+                getVMBuildContainerContext(
+                    container = container,
+                    buildContainer = buildContainer,
+                    variables = variables,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stage = stage,
+                    model = model,
+                    buildInfo = buildInfo,
+                    variablesWithType = variablesWithType
+                )
             }
-        } catch (exception: VariableNotFoundException) {
-            buildLogPrinter.addRedLine(
-                buildId = buildId,
-                message = "variable ${exception.variableKey} not found",
-                containerHashId = container.containerHashId,
-                tag = VMUtils.genStartVMTaskId(vmSeqId),
-                executeCount = executeCount,
-                jobId = null,
-                stepId = null
-            )
-            throw exception
+
+            is NormalContainer -> {
+                val tm = transMinuteTimeoutToMills(buildContainer.controlOption.jobControlOption.timeout)
+                val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
+                fillContainerContext(contextMap, null, container.matrixContext)
+                Triple(mutableListOf(), contextMap, tm)
+            }
+
+            else -> throw OperationException("vmName($vmName) is an illegal container type: $container")
         }
     }
 
@@ -353,7 +328,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         stage: Stage,
         model: Model?,
         buildInfo: BuildInfo,
-        dialect: IPipelineDialect,
         variablesWithType: MutableList<BuildParameters>
     ): Triple<MutableList<BuildEnv>, MutableMap<String, String>, Long> {
         val containerAppResource = client.get(ServiceContainerAppResource::class)
@@ -366,7 +340,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 variables = variables, model = model, executeCount = buildInfo.executeCount
             )
         ).toMutableMap()
-        fillContainerContext(contextMap, container.customEnv, container.matrixContext, dialect)
+        fillContainerContext(contextMap, container.customEnv, container.matrixContext)
         val contextPair by lazy {
             EnvReplacementParser.getCustomExecutionContextByMap(contextMap)
         }
@@ -376,7 +350,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 version = EnvReplacementParser.parse(
                     value = env.value,
                     contextMap = contextMap,
-                    dialect = dialect,
                     contextPair = contextPair
                 ),
                 os = container.baseOS.name.lowercase()
@@ -391,7 +364,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             val value = EnvReplacementParser.parse(
                 value = nameAndValue.value,
                 contextMap = contextMap,
-                dialect = dialect,
                 contextPair = contextPair
             )
             contextMap[key] = value
@@ -416,8 +388,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private fun fillContainerContext(
         context: MutableMap<String, String>,
         customBuildEnv: List<NameAndValue>?,
-        matrixContext: Map<String, String>?,
-        dialect: IPipelineDialect
+        matrixContext: Map<String, String>?
     ) {
         val contextPair by lazy {
             EnvReplacementParser.getCustomExecutionContextByMap(context)
@@ -428,7 +399,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     "$ENV_CONTEXT_KEY_PREFIX${it.key}" to EnvReplacementParser.parse(
                         value = it.value,
                         contextMap = context,
-                        dialect = dialect,
                         contextPair = contextPair
                     )
                 }

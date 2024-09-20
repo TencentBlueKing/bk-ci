@@ -57,7 +57,6 @@ data class StageContext(
     // Agent复用互斥的最后一波job，如果是不为空且为0就可以解锁互斥锁
     var agentReuseMutexEndJob: MutableMap<String, Int>? = null,
     val debug: Boolean, // 是否为调试构建
-    val dialect: IPipelineDialect, // 流水线语言风格
     override var cmdFlowSeq: Int = 0, // 命令序号
     override val variables: Map<String, String>, // 变量
     override val watcher: Watcher, // 监控对象

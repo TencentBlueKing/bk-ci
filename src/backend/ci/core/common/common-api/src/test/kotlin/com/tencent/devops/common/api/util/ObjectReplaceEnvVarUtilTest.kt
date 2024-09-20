@@ -194,6 +194,11 @@ class ObjectReplaceEnvVarUtilTest {
         originSubDataMapObj = cpb["originSubDataMapObj"] as MutableMap<String?, Any?>?
         // 判断嵌套的map中jsonStrEnvVarKey2对应的值进行变量替换后能否正常转换为json串
         assertEquals(envMap["jsonStrEnvVar"], originSubDataMapObj!!["jsonStrEnvVarKey2"]!!)
+
+        assertEquals(
+            toJson(ObjectReplaceEnvVarUtil.replaceEnvVar(toJson(originDataMapObj), envMap)),
+            toJson(ObjectReplaceEnvVarUtil.replaceEnvVar(originDataMapObj, envMap)),
+        )
     }
 
     @Test

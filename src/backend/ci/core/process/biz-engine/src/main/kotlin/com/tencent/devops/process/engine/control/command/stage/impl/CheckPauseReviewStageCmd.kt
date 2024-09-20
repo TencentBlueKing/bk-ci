@@ -27,8 +27,6 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
-import com.tencent.devops.common.api.exception.VariableNotFoundException
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
@@ -52,8 +50,7 @@ import org.springframework.stereotype.Service
 @Service
 class CheckPauseReviewStageCmd(
     private val buildVariableService: BuildVariableService,
-    private val pipelineStageService: PipelineStageService,
-    private val buildLogPrinter: BuildLogPrinter
+    private val pipelineStageService: PipelineStageService
 ) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
@@ -94,8 +91,7 @@ class CheckPauseReviewStageCmd(
                 // #3742 进入暂停状态则刷新完状态后直接返回，等待手动触发
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_PAUSE|${event.stageId}")
 
-                // 如果解析stage人工审核变量失败,那么直接终止构建
-                if (!parseReviewVariables(commandContext)) return
+                stage.checkIn?.parseReviewVariables(commandContext.variables)
 
                 pipelineStageService.pauseStageNotify(
                     userId = event.userId,
@@ -210,29 +206,6 @@ class CheckPauseReviewStageCmd(
             buildStage = commandContext.stage,
             inOrOut = true
         )
-    }
-
-    private fun parseReviewVariables(commandContext: StageContext): Boolean {
-        val stage = commandContext.stage
-        val buildId = commandContext.event.buildId
-        try {
-            stage.checkIn?.parseReviewVariables(commandContext.variables, commandContext.dialect)
-        } catch (ignored: VariableNotFoundException) {
-            buildLogPrinter.addRedLine(
-                buildId = buildId,
-                message = "variable ${ignored.variableKey} not found",
-                tag = stage.stageId,
-                containerHashId = null,
-                executeCount = commandContext.executeCount,
-                jobId = null,
-                stepId = null
-            )
-            commandContext.buildStatus = BuildStatus.FAILED
-            commandContext.latestSummary = "s(${stage.stageId}) failed with variable ${ignored.variableKey} not found"
-            commandContext.cmdFlowState = CmdFlowState.FINALLY
-            return false
-        }
-        return true
     }
 
     private fun saveStageReviewParams(stage: PipelineBuildStage) {

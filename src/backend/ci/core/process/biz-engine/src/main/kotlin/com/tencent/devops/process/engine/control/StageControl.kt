@@ -32,7 +32,6 @@ import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -55,7 +54,6 @@ import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
-import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -143,9 +141,6 @@ class StageControl @Autowired constructor(
         )
         val executeCount = buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId)
         val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(projectId, pipelineId)
-        val dialect = variables[PIPELINE_DIALECT]?.let {
-            PipelineDialectType.valueOf(it).dialect
-        } ?: PipelineDialectType.CLASSIC.dialect
         // #10082 过滤Agent复用互斥的endJob信息
         val mutexJobs = containers.filter {
             it.controlOption.agentReuseMutex?.endJob == true &&
@@ -164,8 +159,7 @@ class StageControl @Autowired constructor(
             executeCount = executeCount,
             previousStageStatus = addPreviousStageStatus(stage),
             agentReuseMutexEndJob = mutexJobs,
-            debug = buildInfo.debug,
-            dialect = dialect
+            debug = buildInfo.debug
         )
         watcher.stop()
 
