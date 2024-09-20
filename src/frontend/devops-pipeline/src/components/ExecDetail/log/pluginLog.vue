@@ -188,7 +188,9 @@
 
             handleGetPraiseAiInfo (item) {
                 const scrollRef = this.$refs.scroll
-                this.getPraiseAiInfo()
+                this.getPraiseAiInfo({
+                    ...this.postData
+                })
                     .then((res) => {
                         item.goodUsers = res.goodUsers
                         item.badUsers = res.badUsers
