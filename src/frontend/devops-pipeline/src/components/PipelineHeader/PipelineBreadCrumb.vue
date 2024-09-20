@@ -1,26 +1,44 @@
 <template>
     <aside class="pipeline-bread-crumb-aside">
-        <bk-breadcrumb class="pipeline-bread-crumb" separator-class="devops-icon icon-angle-right" :back-router="manageRoute">
+        <bk-breadcrumb
+            class="pipeline-bread-crumb"
+            separator-class="devops-icon icon-angle-right"
+            :back-router="manageRoute"
+        >
             <template #prefix>
                 <span class="devops-icon icon-pipeline"></span>
             </template>
             <template v-if="!isLoading">
-                <bk-breadcrumb-item v-for="(crumb, index) in breadCrumbs" :key="index" :to="crumb.to">
-                    <component v-if="crumb.slot" :is="crumb.slot" v-bind="crumb.slotProps" />
+                <bk-breadcrumb-item
+                    v-for="(crumb, index) in breadCrumbs"
+                    :key="index"
+                    :to="crumb.to"
+                >
+                    <component
+                        v-if="crumb.slot"
+                        :is="crumb.slot"
+                        v-bind="crumb.slotProps"
+                    />
                     <span v-else>{{ crumb.title }}</span>
                 </bk-breadcrumb-item>
             </template>
-            <i v-else class="devops-icon icon-circle-2-1 spin-icon" />
+            <i
+                v-else
+                class="devops-icon icon-circle-2-1 spin-icon"
+            />
         </bk-breadcrumb>
-        <span v-if="!!$slots.default" class="gap-line">|</span>
+        <span
+            v-if="!!$slots.default"
+            class="gap-line"
+        >|</span>
         <slot></slot>
     </aside>
 </template>
 
 <script>
-    import PipelineNameCrumbItem from './PipelineNameCrumbItem'
-    import BuildNumSwitcher from './BuildNumSwitcher'
     import { mapGetters, mapState } from 'vuex'
+    import BuildNumSwitcher from './BuildNumSwitcher'
+    import PipelineNameCrumbItem from './PipelineNameCrumbItem'
 
     export default {
         components: {
@@ -29,6 +47,7 @@
         },
         props: {
             showRecordEntry: Boolean,
+            showBuildNumSwitch: Boolean,
             pipelineName: String,
             isLoading: Boolean,
             showPacTag: {
@@ -80,17 +99,13 @@
                                 ? [{
                                     title: this.$t('draftExecRecords'),
                                     to: {
-                                        name: 'draftDebugRecord',
-                                        params: {
-                                            ...this.$route.params,
-                                            version: this.pipelineInfo?.version
-                                        }
+                                        name: 'draftDebugRecord'
                                     }
                                 }]
                                 : []
                         ),
                         ...(
-                            this.$route.name === 'pipelinesDetail'
+                            this.showBuildNumSwitch
                                 ? [{
                                     slot: BuildNumSwitcher,
                                     slotProps: {

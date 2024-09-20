@@ -80,6 +80,12 @@ class OpStoreMemberResourceImpl : OpStoreMemberResource {
     }
 
     private fun getStoreMemberService(storeType: StoreTypeEnum): StoreMemberService {
-        return SpringContextUtil.getBean(StoreMemberService::class.java, "${storeType.name.lowercase()}MemberService")
+        val beanName = "${storeType.name.lowercase()}MemberService"
+        return if (SpringContextUtil.isBeanExist(beanName)) {
+            SpringContextUtil.getBean(StoreMemberService::class.java, beanName)
+        } else {
+            // 获取默认的成员bean对象
+            SpringContextUtil.getBean(StoreMemberService::class.java)
+        }
     }
 }

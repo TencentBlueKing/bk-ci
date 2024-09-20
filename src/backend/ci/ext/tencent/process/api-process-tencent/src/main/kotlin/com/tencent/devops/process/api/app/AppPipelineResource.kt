@@ -140,9 +140,9 @@ interface AppPipelineResource {
         @Parameter(description = "分支", required = false)
         @QueryParam("materialBranch")
         materialBranch: List<String>?,
-        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
-        @QueryParam("version")
-        customVersion: Int?,
+        @Parameter(description = "指定调试数据", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = null,
         @Parameter(description = "触发代码库", required = false)
         @QueryParam("triggerAlias")
         triggerAlias: List<String>?,

@@ -1,7 +1,7 @@
 <template>
     <div class="notice-group-wrapper">
         <div class="inner-header">
-            <div class="title">{{$t('quality.通知组')}}</div>
+            <div class="title">{{ $t('quality.通知组') }}</div>
         </div>
 
         <section
@@ -9,8 +9,8 @@
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title
-            }">
-
+            }"
+        >
             <div class="group-content">
                 <bk-button
                     v-perm="{
@@ -26,42 +26,71 @@
                     v-if="showContent && noticeGroupList.length"
                     @click="toCreateGroup"
                 >
-                    {{$t('quality.新增通知组')}}
+                    {{ $t('quality.新增通知组') }}
                 </bk-button>
-                <div class="table-container" v-if="showContent && noticeGroupList.length">
+                <div
+                    class="table-container"
+                    v-if="showContent && noticeGroupList.length"
+                >
                     <bk-table
                         size="small"
                         class="experience-table"
-                        :data="noticeGroupList">
-                        <bk-table-column :label="$t('quality.名称')" prop="name">
+                        :data="noticeGroupList"
+                    >
+                        <bk-table-column
+                            :label="$t('quality.名称')"
+                            prop="name"
+                        >
                             <template slot-scope="props">
-                                <span>{{props.row.name}}</span>
+                                <span>{{ props.row.name }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('quality.通知人员')" prop="innerUsersCount">
+                        <bk-table-column
+                            :label="$t('quality.通知人员')"
+                            prop="innerUsersCount"
+                        >
                             <template slot-scope="props">
-                                <bk-popover placement="bottom" v-if="props.row.innerUsersCount">
-                                    <span class="handler-inner">{{props.row.innerUsersCount}}</span>
+                                <bk-popover
+                                    placement="bottom"
+                                    v-if="props.row.innerUsersCount"
+                                >
+                                    <span class="handler-inner">{{ props.row.innerUsersCount }}</span>
                                     <template slot="content">
                                         <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
-                                            <span v-for="(entry, index) in props.row.innerUsers" :key="index">{{entry.replace('"', '')}}<span v-if="index !== (props.row.innerUsers.length - 1)">,</span></span>
+                                            <span
+                                                v-for="(entry, index) in props.row.innerUsers"
+                                                :key="index"
+                                            >{{ entry.replace('"', '') }}<span v-if="index !== (props.row.innerUsers.length - 1)">,</span></span>
                                         </p>
                                     </template>
                                 </bk-popover>
-                                <span class="handler-inner" v-else>{{props.row.innerUsersCount}}</span>
+                                <span
+                                    class="handler-inner"
+                                    v-else
+                                >{{ props.row.innerUsersCount }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('quality.创建人')" prop="creator">
+                        <bk-table-column
+                            :label="$t('quality.创建人')"
+                            prop="creator"
+                        >
                             <template slot-scope="props">
-                                <span>{{props.row.creator}}</span>
+                                <span>{{ props.row.creator }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('quality.描述')" prop="remark" min-width="160">
+                        <bk-table-column
+                            :label="$t('quality.描述')"
+                            prop="remark"
+                            min-width="160"
+                        >
                             <template slot-scope="props">
-                                <span>{{props.row.remark}}</span>
+                                <span>{{ props.row.remark }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('quality.操作')" width="150">
+                        <bk-table-column
+                            :label="$t('quality.操作')"
+                            width="150"
+                        >
                             <template slot-scope="props">
                                 <bk-button
                                     v-perm="{
@@ -78,7 +107,7 @@
                                     text
                                     @click="toEditGroup(props.row)"
                                 >
-                                    {{$t('quality.编辑')}}
+                                    {{ $t('quality.编辑') }}
                                 </bk-button>
                                 <bk-button
                                     v-perm="{
@@ -94,19 +123,22 @@
                                     text
                                     @click="toDeleteGruop(props.row)"
                                 >
-                                    {{$t('quality.删除')}}
+                                    {{ $t('quality.删除') }}
                                 </bk-button>
                             </template>
                         </bk-table-column>
                     </bk-table>
                 </div>
-                <empty-data v-if="showContent && !noticeGroupList.length"
+                <empty-data
+                    v-if="showContent && !noticeGroupList.length"
                     :empty-info="emptyInfo"
-                    :to-create-fn="toCreateGroup">
+                    :to-create-fn="toCreateGroup"
+                >
                 </empty-data>
             </div>
 
-            <createGroup :node-select-conf="nodeSelectConf"
+            <createGroup
+                :node-select-conf="nodeSelectConf"
                 :create-group-form="createGroupForm"
                 :loading="dialogLoading"
                 :on-change="onChange"
@@ -114,7 +146,8 @@
                 :error-handler="errorHandler"
                 :display-result="displayResult"
                 @confirmFn="confirmFn"
-                :cancel-fn="cancelFn"></createGroup>
+                :cancel-fn="cancelFn"
+            ></createGroup>
         </section>
     </div>
 </template>

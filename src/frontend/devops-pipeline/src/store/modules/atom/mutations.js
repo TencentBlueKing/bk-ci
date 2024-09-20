@@ -44,6 +44,7 @@ import {
     SELECT_PIPELINE_VERSION,
     SET_ATOMS,
     SET_ATOMS_CLASSIFY,
+    SET_ATOMS_OUTPUT_MAP,
     SET_ATOM_EDITING,
     SET_ATOM_MODAL,
     SET_ATOM_MODAL_FETCHING,
@@ -212,6 +213,12 @@ export default {
     [SET_ATOM_VERSION_LIST]: (state, atomVersionList) => {
         Object.assign(state, {
             atomVersionList
+        })
+        return state
+    },
+    [SET_ATOMS_OUTPUT_MAP]: (state, atomsOutputMap) => {
+        Object.assign(state, {
+            atomsOutputMap
         })
         return state
     },

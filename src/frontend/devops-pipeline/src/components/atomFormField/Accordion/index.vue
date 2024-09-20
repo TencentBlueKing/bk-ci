@@ -1,17 +1,27 @@
 <template>
     <div :class="{ 'devops-accordion': true, 'is-danger': isError, 'showCheckbox': showCheckbox }">
-        <header :active="isShow" @click="toggleContent" class="header">
+        <header
+            :active="isShow"
+            @click="toggleContent"
+            class="header"
+        >
             <i class="devops-icon icon-angle-right" />
             <slot name="header"></slot>
         </header>
         <transition name="slideLeft">
             <section v-if="condition">
-                <section v-if="isShow" class="content">
+                <section
+                    v-if="isShow"
+                    class="content"
+                >
                     <slot name="content"></slot>
                 </section>
             </section>
             <section v-else>
-                <section v-show="isShow" class="content">
+                <section
+                    v-show="isShow"
+                    class="content"
+                >
                     <slot name="content"></slot>
                 </section>
             </section>

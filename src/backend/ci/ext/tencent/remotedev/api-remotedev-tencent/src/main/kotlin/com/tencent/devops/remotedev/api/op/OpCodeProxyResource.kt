@@ -2,11 +2,13 @@ package com.tencent.devops.remotedev.api.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.gitproxy.CallbackLinktgitData
+import com.tencent.devops.remotedev.pojo.gitproxy.DeleteTGitLinkData
 import com.tencent.devops.remotedev.pojo.gitproxy.UpdateTgitAclIpData
 import com.tencent.devops.remotedev.pojo.gitproxy.UpdateTgitAclUserData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
@@ -38,4 +40,11 @@ interface OpCodeProxyResource {
     fun updateTgitAclUser(
         data: UpdateTgitAclUserData
     )
+
+    @Operation(summary = "删除工蜂链接")
+    @DELETE
+    @Path("/delete_tgit_link")
+    fun deleteTGitLink(
+        data: DeleteTGitLinkData
+    ): Result<Boolean>
 }

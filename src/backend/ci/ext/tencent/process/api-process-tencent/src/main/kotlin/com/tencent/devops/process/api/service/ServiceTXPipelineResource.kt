@@ -30,20 +30,17 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineExportV2YamlData
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
-import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
-import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_PIPELINE", description = "服务-流水线资源")
@@ -75,21 +72,4 @@ interface ServiceTXPipelineResource {
         @Parameter(description = "流水线自增id", required = true)
         id: Long
     ): Result<SimplePipeline>
-
-    @Operation(summary = "用模板实例化一条AM流水线并且触发运行")
-    @POST
-    @Path("/{projectId}/run_pipeline_with_template")
-    fun runPipelineWithTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "项目ID", required = true)
-        @QueryParam("templateVersionId")
-        templateVersionId: Long,
-        @Parameter(description = "实例化所需参数", required = true)
-        parameters: Map<String, String>
-    ): Result<BuildId>
 }

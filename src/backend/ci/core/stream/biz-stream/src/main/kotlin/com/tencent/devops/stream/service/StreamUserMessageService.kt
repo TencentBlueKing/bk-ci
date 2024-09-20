@@ -199,7 +199,6 @@ class StreamUserMessageService @Autowired constructor(
         id: Int,
         projectCode: String?
     ): Boolean {
-        websocketService.pushNotifyWebsocket(userId, projectCode)
         return streamUserMessageDao.readMessage(dslContext, id) >= 0
     }
 
@@ -207,7 +206,6 @@ class StreamUserMessageService @Autowired constructor(
         projectCode: String?,
         userId: String
     ): Boolean {
-        websocketService.pushNotifyWebsocket(userId, projectCode)
         return if (projectCode != null) {
             streamUserMessageDao.readAllMessage(
                 dslContext = dslContext,

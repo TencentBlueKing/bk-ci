@@ -50,7 +50,7 @@ object ElementUtils {
         val elementPostInfo = element.additionalOptions?.elementPostInfo
         val qualityAtomFlag = element is QualityGateInElement || element is QualityGateOutElement
         // 当插件已启用或者插件是post插件或者插件是质量红线的插件才允许往Task表添加记录
-        val enableFlag = stageEnableFlag && containerEnableFlag && element.isElementEnable()
+        val enableFlag = stageEnableFlag && containerEnableFlag && element.elementEnabled()
         return enableFlag || elementPostInfo != null || qualityAtomFlag
     }
 }

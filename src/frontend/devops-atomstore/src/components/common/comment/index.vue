@@ -1,7 +1,13 @@
 <template>
     <section>
-        <reply :comment-data="comment.data" :parent-id="comment.commentId" @replyComment="replyComment" ref="reply"></reply>
-        <reply :comment-data="child"
+        <reply
+            :comment-data="comment.data"
+            :parent-id="comment.commentId"
+            @replyComment="replyComment"
+            ref="reply"
+        ></reply>
+        <reply
+            :comment-data="child"
             :parent-id="comment.commentId"
             @replyComment="replyComment"
             :is-reply="true"
@@ -9,8 +15,17 @@
             :key="child.commentId"
         >
         </reply>
-        <div class="comment-reply-text" v-if="showWriteReply">
-            <textarea :placeholder="$t('store.请输入你的回复内容（字数上限为500字）')" v-model="reply" class="reply-content g-input-border" ref="replyText" autofocus></textarea>
+        <div
+            class="comment-reply-text"
+            v-if="showWriteReply"
+        >
+            <textarea
+                :placeholder="$t('store.请输入你的回复内容（字数上限为500字）')"
+                v-model="reply"
+                class="reply-content g-input-border"
+                ref="replyText"
+                autofocus
+            ></textarea>
             <h3 class="g-confirm-buttom reply-button">
                 <button @click="cancleComment"> {{ $t('store.取消') }} </button><button @click="confirmComment"> {{ $t('store.发布') }} </button>
             </h3>

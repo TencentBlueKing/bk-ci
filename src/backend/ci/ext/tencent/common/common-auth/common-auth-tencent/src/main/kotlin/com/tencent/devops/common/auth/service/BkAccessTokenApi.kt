@@ -3,6 +3,7 @@ package com.tencent.devops.common.auth.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BkAuthResponse
@@ -14,12 +15,12 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import javax.annotation.PostConstruct
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import jakarta.annotation.PostConstruct
 
 /**
  * 获取蓝鲸accessToken服务类
@@ -77,11 +78,15 @@ class BkAccessTokenApi @Autowired constructor(
             idProvider = v0IdProvider,
             grantType = bkAuthProperties.grantType!!
         )
+        val headerStr = JsonUtil.toJson(
+            mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
+        ).replace("\\s".toRegex(), "")
         val content = objectMapper.writeValueAsString(bkAuthTokenRequest)
         val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder()
             .url(url)
+            .header("X-Bkapi-Authorization", headerStr)
             .post(requestBody)
             .build()
 

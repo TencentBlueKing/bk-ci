@@ -37,6 +37,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.pipeline.element.SendEmailNotifyElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
@@ -46,7 +47,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_RECIPIENT_EMPTY
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.util.ServiceHomeUrlUtils
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -63,10 +64,19 @@ class EmailTaskAtom @Autowired constructor(
         return JsonUtil.mapTo(task.taskParams, SendEmailNotifyElement::class.java)
     }
 
-    override fun execute(task: PipelineBuildTask, param: SendEmailNotifyElement, runVariables: Map<String, String>): AtomResponse {
+    companion object {
+        val logger = LoggerFactory.getLogger(EmailTaskAtom::class.java)!!
+    }
+
+    override fun execute(
+        task: PipelineBuildTask,
+        param: SendEmailNotifyElement,
+        runVariables: Map<String, String>
+    ): AtomResponse {
         val buildId = task.buildId
         val taskId = task.taskId
         val containerId = task.containerHashId
+        logger.warn("Deprecated_Plugin|EmailTaskAtom|${task.projectId}|${task.pipelineId}")
         if (param.receivers.isEmpty()) {
             buildLogPrinter.addRedLine(
                 buildId = buildId,
@@ -161,7 +171,7 @@ class EmailTaskAtom @Autowired constructor(
     }
 
     private fun detailUrl(projectId: String, pipelineId: String, buildId: String) =
-            "${ServiceHomeUrlUtils.server()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+            "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
 
     private fun getSet(receiverStr: String): Set<String> {
         val set = mutableSetOf<String>()

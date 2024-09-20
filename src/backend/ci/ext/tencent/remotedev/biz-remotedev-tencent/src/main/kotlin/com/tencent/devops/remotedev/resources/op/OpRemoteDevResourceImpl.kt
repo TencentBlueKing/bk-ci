@@ -20,6 +20,7 @@ import com.tencent.devops.remotedev.pojo.windows.WindowsPoolListFetchData
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
 import com.tencent.devops.remotedev.service.WhiteListService
+import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
@@ -39,7 +40,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
-    private val workspaceWindowsDao: WorkspaceWindowsDao
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
+    private val windowsResourceConfigService: WindowsResourceConfigService
 ) : OpRemoteDevResource {
     override fun updateUserSetting(userId: String, data: List<OPUserSetting>): Result<Boolean> {
         data.forEach {
@@ -114,7 +116,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         userId: String,
         data: WindowsPoolListFetchData
     ): Result<Page<Map<String, Any>>> {
-        val resourceList = workspaceCommon.syncStartCloudResourceList()
+        val resourceList = workspaceCommon.realtimeStartCloudResourceList()
         val pageNotNull = data.page ?: 1
         val pageSizeNotNull = data.pageSize ?: 6666
         val filteredResources = resourceList.filter {
@@ -144,7 +146,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun getCgsConfig(userId: String): Result<CgsResourceConfig> {
-        return Result(workspaceCommon.getCgsConfig())
+        return Result(windowsResourceConfigService.getCgsConfig())
     }
 
     override fun initTaiUserInfo(userId: String, taiUsers: List<String>): Result<Boolean> {

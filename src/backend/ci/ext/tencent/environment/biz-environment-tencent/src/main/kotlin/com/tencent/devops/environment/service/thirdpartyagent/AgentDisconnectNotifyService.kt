@@ -38,7 +38,6 @@ import com.tencent.devops.environment.dao.thirdpartyagent.AgentDisconnectNotifyD
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
-import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -135,13 +134,8 @@ class AgentDisconnectNotifyService @Autowired constructor(
             it.userId
         }.toSet()
 
-        val wechatUserIds = users.filter { it.notifyTypes.contains(NotifyType.WECHAT) }.map {
-            it.userId
-        }.toSet()
-
         sendEmail(emailUserIds, mapData, type)
         sendRTX(rtxUserIds, mapData, type)
-        sendWechat(wechatUserIds, mapData, type)
     }
 
     private fun sendEmail(users: Set<String>, mapData: Map<String, String>, type: Type) {
@@ -179,22 +173,6 @@ class AgentDisconnectNotifyService @Autowired constructor(
         val result = client.get(ServiceNotifyResource::class).sendRtxNotify(message)
         if (result.isNotOk() || result.data == null) {
             logger.warn("Fail to send the rtx message($message) because of ${result.message}")
-        }
-    }
-
-    private fun sendWechat(users: Set<String>, mapData: Map<String, String>, type: Type) {
-        if (users.isEmpty()) {
-            return
-        }
-        val wechatBody = if (type == Type.ONLINE) WECHAT_ONLINE_BODY else WECHAT_OFFLINE_BODY
-        val message = WechatNotifyMessage().apply {
-            addAllReceivers(users)
-            body = parseMessageTemplate(wechatBody, mapData)
-        }
-        logger.info("Send the wechat for agent $type notify")
-        val result = client.get(ServiceNotifyResource::class).sendWechatNotify(message)
-        if (result.isNotOk() || result.data == null) {
-            logger.warn("Fail to send the email message($message) because of ${result.message}")
         }
     }
 
@@ -391,8 +369,5 @@ class AgentDisconnectNotifyService @Autowired constructor(
 
         private const val RTX_OFFLINE_TITLE = "❌【#{projectName}】- 主机【#{ip}】#{hostname} #{os} 导入人【#{username}】断线"
         private const val RTX_OFFLINE_BODY = "<a href=\"#{url}\">查看详情</a>"
-
-        private const val WECHAT_ONLINE_BODY = "✔️【#{projectName}】- 主机【#{ip}】#{hostname} #{os} 导入人【#{username}】上线"
-        private const val WECHAT_OFFLINE_BODY = "❌【#{projectName}】- 主机【#{ip}】#{hostname} #{os} 导入人【#{username}】断线"
     }
 }

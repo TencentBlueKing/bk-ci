@@ -61,7 +61,7 @@ data class QualityGateOutElement(
         taskVar[QualityGateOutElement::version.name] = version
         taskVar[KEY_TASK_ATOM] = getTaskAtom()
         taskVar[QualityGateInElement::classType.name] = getClassType()
-        taskVar[KEY_ELEMENT_ENABLE] = isElementEnable()
+        taskVar[KEY_ELEMENT_ENABLE] = elementEnabled()
         interceptTask?.let {
             taskVar[QualityGateOutElement::interceptTask.name] = it
         }

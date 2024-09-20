@@ -341,6 +341,7 @@ class StreamYamlBaseBuild @Autowired constructor(
             gitRequestEventDao.updateChangeYamlList(dslContext, action.data.context.requestEventId!!, forkMrYamlList)
         }
 
+        action.data.watcherStart("streamYamlBaseBuild.startBuild.StreamBuildLock.locked")
         // 修改流水线并启动构建，需要加锁保证事务性
         val buildLock = StreamBuildLock(
             redisOperation = redisOperation,
@@ -350,6 +351,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         var buildId = ""
         try {
             buildLock.lock()
+            action.data.watcherStart("streamYamlBaseBuild.startBuild.StreamBuildLock")
             logger.info(
                 "StreamYamlBaseBuild|startBuild|start|gitProjectId|${action.data.getGitProjectId()}|" +
                     "pipelineId|${pipeline.pipelineId}|gitBuildId|$gitBuildId"
@@ -433,6 +435,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         ignore: Throwable,
         yamlTransferData: YamlTransferData?
     ) {
+        action.data.watcherStart("streamYamlBaseBuild.errorStartBuild")
         logger.warn(
             "StreamYamlBaseBuild|errorStartBuild|${action.data.getGitProjectId()}|" +
                 "${pipeline.pipelineId}|$gitBuildId",
@@ -471,6 +474,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         gitBuildId: Long,
         yamlTransferData: YamlTransferData?
     ) {
+        action.data.watcherStart("streamYamlBaseBuild.afterStartBuild")
         try {
             val event = gitRequestEventDao.getWithEvent(
                 dslContext = dslContext, id = action.data.context.requestEventId!!
@@ -480,8 +484,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 projectCode = action.getProjectCode(),
                 event = event,
                 gitProjectId = action.data.getGitProjectId().toLong(),
-                messageType = UserMessageType.ONLY_SUCCESS,
-                isSave = true
+                messageType = UserMessageType.ONLY_SUCCESS
             )
 
             if (action is StreamRepoTriggerAction) {

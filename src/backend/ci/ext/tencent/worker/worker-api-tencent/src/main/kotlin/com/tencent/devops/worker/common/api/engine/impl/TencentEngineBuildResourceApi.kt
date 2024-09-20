@@ -30,6 +30,7 @@ package com.tencent.devops.worker.common.api.engine.impl
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.api.ApiPriority
@@ -70,7 +71,12 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
         return context
     }
 
-    override fun endTask(variables: Map<String, String>, envBuildId: String, retryCount: Int): Result<Boolean> {
+    override fun endTask(
+        variables: Map<String, String>,
+        envBuildId: String,
+        retryCount: Int,
+        result: BuildJobResult
+    ): Result<Boolean> {
         // #5277 对所有job下变量做收尾处理，可以在try区域内逐步追加
         try {
             val projectId = AgentEnv.getProjectId()
@@ -85,14 +91,14 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
                         language = AgentEnv.getLocaleLanguage()
                     )
                 )
-                val result = objectMapper.readValue<Result<Boolean>>(responseContent)
-                if (result.data == true) {
+                val responseResult = objectMapper.readValue<Result<Boolean>>(responseContent)
+                if (responseResult.data == true) {
                     logger.info("ci token for project[$projectId] is cleared.")
                 }
             }
         } catch (e: Exception) {
             logger.error("get context failed: ", e)
         }
-        return super.endTask(variables, envBuildId, retryCount)
+        return super.endTask(variables = variables, envBuildId = envBuildId, retryCount = retryCount, result = result)
     }
 }

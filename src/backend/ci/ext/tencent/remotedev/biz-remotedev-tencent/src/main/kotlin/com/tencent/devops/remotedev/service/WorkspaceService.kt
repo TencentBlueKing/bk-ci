@@ -47,11 +47,12 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
+import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
@@ -64,8 +65,8 @@ import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
-import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
@@ -123,6 +124,8 @@ class WorkspaceService @Autowired constructor(
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val remoteDevGitTransfer: RemoteDevGitTransfer,
+    private val workspaceResourceTypeDao: WindowsResourceTypeDao,
+    private val workspaceResourceZoneDao: WindowsResourceZoneDao,
     private val permissionService: PermissionService,
     private val client: Client,
     private val remoteDevSettingDao: RemoteDevSettingDao,
@@ -446,7 +449,8 @@ class WorkspaceService @Autowired constructor(
         }
 
         val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
-        val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
+        val defaultZoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
+        val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUsers)
             .mapValues {
                 if ((it.value["USER_NAME"] as String).isNotBlank()) {
@@ -507,7 +511,13 @@ class WorkspaceService @Autowired constructor(
                     workspaceMountType = it.workspaceMountType,
                     workspaceSystemType = it.workspaceSystemType,
                     winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
-                    zoneConfig = detail?.hostIp?.let { ip -> zoneConfig[ip.replace(Regex("[\\d\\.]+"), "")] },
+                    zoneConfig = if (detail?.hostIp != null) {
+                        /*后续直接取windows表中的zoneId，不通过ip进行解析*/
+                        val zoneId = detail.hostIp!!.substringBefore(".")
+                        specZoneConfig[zoneId] ?: defaultZoneConfig[zoneId.removeSuffixNumb()]
+                    } else {
+                        null
+                    },
                     owner = owners[it.workspaceName],
                     viewers = viewers[it.workspaceName],
                     ownerCN = taiUserCN[owners[it.workspaceName]] ?: owners[it.workspaceName],
@@ -518,7 +528,9 @@ class WorkspaceService @Autowired constructor(
                     expertSupportList = expertMap?.get(it.workspaceName),
                     macAddress = allWindows[it.workspaceName]?.macAddress,
                     remark = it.remark,
-                    labels = it.labels
+                    labels = it.labels,
+                    createTime = it.createTime.timestamp(),
+                    imageId = detail?.imageId ?: ""
                 )
             )
         }
@@ -585,6 +597,12 @@ class WorkspaceService @Autowired constructor(
             null
         }
 
+        val loginUserMap = if (hasCurrentUser == true) {
+            startWorkspaceService.loginUsers(result.map { it.hostIp ?: "" }.toSet())
+        } else {
+            null
+        }
+
         val data = result.map { res ->
             val name = res.workspaceName
 
@@ -613,11 +631,6 @@ class WorkspaceService @Autowired constructor(
             } else {
                 null
             }
-            val currUser = if (hasCurrentUser == true && ip != null) {
-                startWorkspaceService.loginUsers(setOf(res.hostIp ?: "")).values.flatten().toSet()
-            } else {
-                null
-            }
             WeSecProjectWorkspace(
                 workspaceName = name,
                 projectId = res.projectId,
@@ -630,7 +643,7 @@ class WorkspaceService @Autowired constructor(
                 status = res.status,
                 displayName = res.displayName,
                 ownerDepartments = depInfo,
-                currentLoginUsers = currUser,
+                currentLoginUsers = res.hostIp?.let { ip -> loginUserMap?.get(ip) }?.toSet() ?: emptySet(),
                 machineType = workspaceWindows[name]?.let { win -> allConfig[win.winConfigId.toString()]?.size },
                 macAddress = workspaceWindows[name]?.macAddress,
                 viewers = viewers[name]
@@ -709,7 +722,9 @@ class WorkspaceService @Autowired constructor(
             } else it.key
         }
         val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
-        val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
+        val defaultZoneConfig = windowsResourceConfigService.getAllZone(WindowsResourceZoneConfigType.DEFAULT)
+            .associateBy { it.zoneShortName }
+        val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
             dslContext,
@@ -728,8 +743,10 @@ class WorkspaceService @Autowired constructor(
                     shared.type == WorkspaceShared.AssignType.OWNER
                 }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null
                 val hostIp = windowsWorkspace[it.workspaceName]?.hostIp
-                val zone = if (it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
-                    hostIp?.let { ip -> zoneConfig[ip.replace(Regex("[\\d\\.]+"), "")] }
+                val zone = if (hostIp != null && it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
+                    /*后续直接取windows表中的zoneId，不通过ip进行解析*/
+                    val zoneId = hostIp.substringBefore(".")
+                    specZoneConfig[zoneId] ?: defaultZoneConfig[zoneId.removeSuffixNumb()]
                 } else {
                     null
                 }
@@ -860,18 +877,14 @@ class WorkspaceService @Autowired constructor(
             .scopeId = workspace.projectId
 
         val now = LocalDateTime.now()
-
         val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceName)
-
         val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: DISCOUNT_TIME
-
         val usageTime = workspace.usageTime + if (workspace.status.checkRunning()) {
             // 如果正在运行，需要加上目前距离该次启动的时间
             Duration.between(lastHistory?.startTime ?: now, now).seconds
         } else {
             0
         }
-
         val sleepingTime = workspace.sleepingTime + if (workspace.status.checkSleeping()) {
             // 如果正在休眠，需要加上目前距离上次结束的时间
             Duration.between(lastHistory?.endTime ?: now, now).seconds
@@ -879,21 +892,52 @@ class WorkspaceService @Autowired constructor(
             0
         }
 
-        return with(workspace) {
-            WorkspaceDetail(
-                workspaceId = workspaceId,
-                workspaceName = workspaceName,
-                displayName = displayName,
-                status = workspace.status,
-                lastUpdateTime = updateTime.timestamp(),
-                chargeableTime = 0,
-                usageTime = usageTime,
-                sleepingTime = sleepingTime,
-                systemType = workspaceSystemType,
-                workspaceMountType = workspaceMountType,
-                ownerType = ownerType
-            )
+        val winInfo = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)
+        val workspaceConf = if (winInfo != null) {
+            workspaceResourceTypeDao.fetchAny(dslContext, winInfo.winConfigId)
+        } else {
+            null
         }
+        val zone = if (winInfo != null) {
+            workspaceResourceZoneDao.fetchAll(dslContext)
+                .firstOrNull { it.zoneShortName == winInfo.zoneId.removeSuffixNumb() }?.zone
+        } else {
+            null
+        }
+
+        val sharedList = workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
+
+        val currentLoginUser = if (winInfo != null) {
+            startWorkspaceService.loginUsers(setOf(winInfo.hostIp)).values.flatten().toSet()
+        } else {
+            null
+        }
+
+        return WorkspaceDetail(
+            workspaceId = workspace.workspaceId,
+            workspaceName = workspaceName,
+            displayName = workspace.displayName,
+            status = workspace.status,
+            lastUpdateTime = workspace.updateTime.timestamp(),
+            chargeableTime = 0,
+            usageTime = usageTime,
+            sleepingTime = sleepingTime,
+            systemType = workspace.workspaceSystemType,
+            workspaceMountType = workspace.workspaceMountType,
+            ownerType = workspace.ownerType,
+            ip = winInfo?.hostIp,
+            macAddress = winInfo?.macAddress,
+            machineType = workspaceConf?.size,
+            region = zone,
+            owner = sharedList.filter { it.type == WorkspaceShared.AssignType.OWNER }.map { it.sharedUser }.toSet(),
+            sharedUsers = sharedList.filter { it.type != WorkspaceShared.AssignType.OWNER }.map { it.sharedUser }
+                .toSet(),
+            creator = workspace.createUserId,
+            createTime = workspace.createTime.timestamp(),
+            imageId = winInfo?.imageId,
+            remark = workspace.remark,
+            currentLoginUser = currentLoginUser
+        )
     }
 
     @ActionAuditRecord(
@@ -967,7 +1011,13 @@ class WorkspaceService @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
+
+        if (!permissionService.hasManagerOrViewerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to get $workspaceName info")
+            )
+        }
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: DEFAULT_PAGE_SIZE
         val count = workspaceOpHistoryDao.countOpHistory(dslContext, workspaceName)
@@ -988,24 +1038,6 @@ class WorkspaceService @Autowired constructor(
                 )
             }
         )
-    }
-
-    fun checkDevfile(
-        userId: String,
-        pathWithNamespace: String,
-        branch: String,
-        gitType: RemoteDevGitType
-    ): List<String> {
-        logger.info("$userId get devfile list from git. $pathWithNamespace|$branch")
-        return permissionService.checkOauthIllegal(userId) {
-            remoteDevGitTransfer.load(gitType).getFileNameTree(
-                userId = userId,
-                pathWithNamespace = pathWithNamespace,
-                path = Constansts.devFileDirectoryName, // 根目录
-                ref = branch,
-                recursive = false // 不递归
-            ).map { Constansts.devFileDirectoryName + "/" + it }
-        }
     }
 
     fun getShareWorkspace(workspaceName: String?): List<WorkspaceShared> {
@@ -1166,5 +1198,15 @@ class WorkspaceService @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val DEFAULT_PAGE_SIZE = 20
         private const val DISCOUNT_TIME = 10000
+
+        private fun String.removeSuffixNumb(): String {
+            for (i in this.lastIndex downTo 0) {
+                if (this[i].isDigit()) {
+                    continue
+                }
+                return this.substring(0..i)
+            }
+            return ""
+        }
     }
 }

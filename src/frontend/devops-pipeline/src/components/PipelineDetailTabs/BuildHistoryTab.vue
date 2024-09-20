@@ -1,6 +1,10 @@
 <template>
     <div class="build-history-tab-content">
-        <empty-tips v-if="hasNoPermission" :show-lock="true" v-bind="emptyTipsConfig"></empty-tips>
+        <empty-tips
+            v-if="hasNoPermission"
+            :show-lock="true"
+            v-bind="emptyTipsConfig"
+        ></empty-tips>
         <build-history-table
             v-else
             :show-log="showLog"

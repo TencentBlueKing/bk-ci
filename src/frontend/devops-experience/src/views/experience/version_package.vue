@@ -1,5 +1,6 @@
 <template>
-    <bk-dialog v-model="versionSelectConf.isShow"
+    <bk-dialog
+        v-model="versionSelectConf.isShow"
         width="800"
         ext-cls="version-package-wrapper"
         header-position="left"
@@ -11,8 +12,15 @@
         @confirm="confirmFn"
         @cancel="cancelFn"
     >
-        <div class="artifactory-container" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
-            <bk-form :model="selectInfo" form-type="inline" class="select-nav">
+        <div
+            class="artifactory-container"
+            v-bkloading="{ isLoading: loading.isLoading, title: loading.title }"
+        >
+            <bk-form
+                :model="selectInfo"
+                form-type="inline"
+                class="select-nav"
+            >
                 <bk-form-item label="流水线">
                     <bk-select
                         enable-scroll-load
@@ -24,7 +32,10 @@
                         @scroll-end="handleScrollToBottom"
                         :clearable="false"
                     >
-                        <bk-option v-for="item in pipelineList" :key="item.pipelineId" class="artifactory-option"
+                        <bk-option
+                            v-for="item in pipelineList"
+                            :key="item.pipelineId"
+                            class="artifactory-option"
                             :id="item.pipelineId"
                             :name="item.pipelineName"
                         >
@@ -32,8 +43,20 @@
                     </bk-select>
                 </bk-form-item>
                 <bk-form-item label="构建号">
-                    <bk-select ref="build" searchable :loading="isConstructLoading" :disabled="!selectInfo.pipelineId" v-model="selectInfo.constructId" @toggle="refreshConstructList" @selected="changeBuildNo" :clearable="false">
-                        <bk-option v-for="item in constructList" :key="item.id" class="artifactory-option"
+                    <bk-select
+                        ref="build"
+                        searchable
+                        :loading="isConstructLoading"
+                        :disabled="!selectInfo.pipelineId"
+                        v-model="selectInfo.constructId"
+                        @toggle="refreshConstructList"
+                        @selected="changeBuildNo"
+                        :clearable="false"
+                    >
+                        <bk-option
+                            v-for="item in constructList"
+                            :key="item.id"
+                            class="artifactory-option"
                             :id="item.id"
                             :name="item.buildNum"
                         >
@@ -41,24 +64,49 @@
                     </bk-select>
                 </bk-form-item>
             </bk-form>
-            <bk-table v-bkloading="{ isLoading: listLoading.isLoading, title: listLoading.title }"
+            <bk-table
+                v-bkloading="{ isLoading: listLoading.isLoading, title: listLoading.title }"
                 :max-height="400"
                 :data="fileList"
                 empty-text="暂无数据"
-                
             >
-                <bk-table-column label="名称" prop="name" width="250">
+                <bk-table-column
+                    label="名称"
+                    prop="name"
+                    width="250"
+                >
                     <template slot-scope="props">
                         <label class="bk-form-radio">
-                            <input type="radio" name="selectedFile" :checked="selectedFile.file.path === props.row.path" @change="handleFileSelect(props.row)" />
-                            <i v-if="selectedFile.file.path === props.row.path" class="icon-check"></i>
-                            <span class="bk-radio-text file-name" :title="props.row.name">{{props.row.buildNo}}{{ props.row.name }}</span>
+                            <input
+                                type="radio"
+                                name="selectedFile"
+                                :checked="selectedFile.file.path === props.row.path"
+                                @change="handleFileSelect(props.row)"
+                            />
+                            <i
+                                v-if="selectedFile.file.path === props.row.path"
+                                class="icon-check"
+                            ></i>
+                            <span
+                                class="bk-radio-text file-name"
+                                :title="props.row.name"
+                            >{{ props.row.buildNo }}{{ props.row.name }}</span>
                         </label>
                     </template>
                 </bk-table-column>
-                <bk-table-column label="路径" prop="fullName"></bk-table-column>
-                <bk-table-column label="文件大小" prop="size" width="100"></bk-table-column>
-                <bk-table-column label="仓库类型" prop="artifactoryTypeDesc"></bk-table-column>
+                <bk-table-column
+                    label="路径"
+                    prop="fullName"
+                ></bk-table-column>
+                <bk-table-column
+                    label="文件大小"
+                    prop="size"
+                    width="100"
+                ></bk-table-column>
+                <bk-table-column
+                    label="仓库类型"
+                    prop="artifactoryTypeDesc"
+                ></bk-table-column>
             </bk-table>
         </div>
     </bk-dialog>

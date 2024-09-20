@@ -8,7 +8,7 @@ RESOURCE_TYPE,
 import {
 InfoBox,
 Message,
-Popover,
+Popover
 } from 'bkui-vue';
 import {
 onMounted,
@@ -17,11 +17,13 @@ watch
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-useRoute
+useRoute,
+useRouter,
 } from 'vue-router';
 
 const { t } = useI18n();
 const route = useRoute();
+const router = useRouter();
 const { projectCode } = route.params;
 const projectData = ref<any>({});
 const projectDiffData = ref<any>({});
@@ -571,26 +573,26 @@ onMounted(async () => {
         :width="600"
         header-position="left"
         ext-cls="enable-project-dialog"
-        :title="$t('启用项目失败')"
-        :confirm-text="$t('去关联运营产品')"
+        :title="t('启用项目失败')"
+        :confirm-text="t('去关联运营产品')"
         @confirm="() => handleEdit()"
         @closed="() => showFailedEnableDialog = false">
-        {{ $t('项目尚未关联运营产品，启用失败，请先关联所属运营产品再启用项目。') }}
+        {{ t('项目尚未关联运营产品，启用失败，请先关联所属运营产品再启用项目。') }}
     </bk-dialog>
     <bk-dialog
         :is-show="showDisableProjectDialog"
         :width="600"
         ext-cls="disable-project-dialog"
         header-position="left"
-        :title="$t('确定停用项目吗？')"
+        :title="t('确定停用项目吗？')"
         @confirm="() => toggleEnable()"
         @closed="() => showDisableProjectDialog = false">
         <i18n-t
             tag="div"
             keypath="停用项目后，系统将定期清理已停用项目下流水线产生的构建日志、制品、报告。请备份需要的数据后再停用！"
             class="empty-tips">
-            <span style="color: red">{{$t('流水线产生的构建日志、制品、报告。')}}</span>
-            <span style="color: red">{{$t('备份需要的')}}</span>
+            <span style="color: red">{{t('流水线产生的构建日志、制品、报告。')}}</span>
+            <span style="color: red">{{t('备份需要的')}}</span>
         </i18n-t>
     </bk-dialog>
   </section>

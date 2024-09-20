@@ -1,11 +1,23 @@
 
 <template>
-    <accordion show-checkbox show-content>
-        <header class="var-header" slot="header">
+    <accordion
+        show-checkbox
+        show-content
+    >
+        <header
+            class="var-header"
+            slot="header"
+        >
             <span>{{ $t('storeMap.customEnv') }}</span>
-            <i class="devops-icon icon-angle-down" style="display:block"></i>
+            <i
+                class="devops-icon icon-angle-down"
+                style="display:block"
+            ></i>
         </header>
-        <div slot="content" class="bk-form bk-form-vertical">
+        <div
+            slot="content"
+            class="bk-form bk-form-vertical"
+        >
             <form-field
                 :is-error="errors.has(customEnvModel.key)"
                 :error-msg="errors.first(customEnvModel.key)"

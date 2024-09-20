@@ -37,9 +37,9 @@ open class RedisLock(
     private val redisOperation: RedisOperation,
     private val lockKey: String,
     private val expiredTimeInSeconds: Long,
-    private val sleepTime: Long = 100L
+    private val sleepTime: Long = 100L,
+    private var lockValue: String = UUID.randomUUID().toString()
 ) : AutoCloseable {
-    private val lockValue = UUID.randomUUID().toString()
 
     /**
      * 锁是否已经被占用
@@ -126,6 +126,12 @@ open class RedisLock(
     }
 
     private fun getLocalLock(): Any = localLock.get(lockKey)!!
+
+    fun getLockValue() = lockValue
+
+    fun setLockValue(lockValue: String) {
+        this.lockValue = lockValue
+    }
 
     override fun close() {
         unlock()

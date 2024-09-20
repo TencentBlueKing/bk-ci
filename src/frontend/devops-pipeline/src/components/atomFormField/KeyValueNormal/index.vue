@@ -2,8 +2,16 @@
     <div class="Key-value-nomal">
         <ul>
             <template v-if="paramList.length">
-                <li class="param-item" v-for="(param, index) in paramList" :key="index" :isError="!isMetadataVar && errors.any(`param-${index}`)">
-                    <form-field :is-error="!isMetadataVar && errors.has(`param-${index}.key`)" :error-msg="errors.first(`param-${index}.key`)">
+                <li
+                    class="param-item"
+                    v-for="(param, index) in paramList"
+                    :key="index"
+                    :isError="!isMetadataVar && errors.any(`param-${index}`)"
+                >
+                    <form-field
+                        :is-error="!isMetadataVar && errors.has(`param-${index}.key`)"
+                        :error-msg="errors.first(`param-${index}.key`)"
+                    >
                         <vuex-input
                             :data-vv-scope="`param-${index}`"
                             :disabled="disabled || editValueOnly"
@@ -11,7 +19,8 @@
                             v-validate.initial="keyRules"
                             name="key"
                             :placeholder="paramKeyPlaceholder"
-                            :value="param.key" />
+                            :value="param.key"
+                        />
                     </form-field>
                     <div class="bk-form-item">
                         <vuex-input
@@ -22,7 +31,11 @@
                             :handle-change="(name, value) => handleParamChange(name, value, index)"
                         />
                     </div>
-                    <i @click.stop.prevent="editParam(index, false)" class="devops-icon icon-minus hover-click" v-if="!disabled && !editValueOnly" />
+                    <i
+                        @click.stop.prevent="editParam(index, false)"
+                        class="devops-icon icon-minus hover-click"
+                        v-if="!disabled && !editValueOnly"
+                    />
                 </li>
             </template>
             <a

@@ -39,6 +39,7 @@ import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.utils.PipelineVersionUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -168,5 +169,23 @@ class PipelineSettingVersionService @Autowired constructor(
         ) ?: pipelineSettingDao.getSetting(
             context ?: dslContext, projectId, pipelineId
         )?.let { PipelineSettingVersion.convertFromSetting(it) }
+    }
+
+    fun getSettingVersionAfterUpdate(
+        projectId: String,
+        pipelineId: String,
+        updateVersion: Boolean,
+        setting: PipelineSetting
+    ): Int {
+        return getLatestSettingVersion(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.let { latest ->
+            if (updateVersion) PipelineVersionUtils.getSettingVersion(
+                currVersion = latest.version,
+                originSetting = latest,
+                newSetting = PipelineSettingVersion.convertFromSetting(setting)
+            ) else latest.version
+        } ?: 1
     }
 }

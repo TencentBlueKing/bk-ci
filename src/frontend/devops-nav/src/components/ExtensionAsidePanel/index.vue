@@ -1,8 +1,22 @@
 <template>
-    <bk-sideslider :is-show.sync="show" :quick-close="quickClose" v-bind="asidePanelOption">
+    <bk-sideslider
+        :is-show.sync="show"
+        :quick-close="quickClose"
+        v-bind="asidePanelOption"
+    >
         <div slot="header">{{ header }}</div>
-        <div slot="content" class="extention-aside-panel-content" v-bkloading="{ isLoading: !loaded }">
-            <iframe v-if="show" @load="onload" ref="extensionIframe" class="extention-aside-panel-content-iframe" :src="src" />
+        <div
+            slot="content"
+            class="extention-aside-panel-content"
+            v-bkloading="{ isLoading: !loaded }"
+        >
+            <iframe
+                v-if="show"
+                @load="onload"
+                ref="extensionIframe"
+                class="extention-aside-panel-content-iframe"
+                :src="src"
+            />
         </div>
     </bk-sideslider>
 </template>

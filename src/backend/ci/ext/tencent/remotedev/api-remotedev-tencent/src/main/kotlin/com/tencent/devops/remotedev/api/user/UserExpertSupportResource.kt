@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
+import com.tencent.devops.remotedev.pojo.expert.ExpandDiskTaskDetail
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -55,4 +56,15 @@ interface UserExpertSupportResource {
         @QueryParam("size")
         size: String
     ): Result<ExpandDiskValidateResp?>
+
+    @Operation(summary = "获取磁盘扩容任务详情")
+    @GET
+    @Path("/expanddisk/detail")
+    fun expandDiskDetail(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<ExpandDiskTaskDetail?>
 }

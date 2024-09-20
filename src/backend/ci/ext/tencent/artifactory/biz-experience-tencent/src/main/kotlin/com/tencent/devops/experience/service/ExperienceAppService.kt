@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BK_CI_APP_STAGE
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
@@ -51,6 +52,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.experience.constant.ExperienceConditionEnum
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
+import com.tencent.devops.experience.constant.ExperienceMessageCode.EXCLUSIVE_EXPERIENCE
 import com.tencent.devops.experience.constant.ExperienceMessageCode.GRANT_EXPERIENCE_PERMISSION
 import com.tencent.devops.experience.constant.ExperienceMessageCode.NO_PERMISSION_QUERY_EXPERIENCE
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
@@ -58,26 +60,28 @@ import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
+import com.tencent.devops.experience.dao.ExperienceP2pConnectDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
-import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceInstallPackage
 import com.tencent.devops.experience.pojo.AppExperienceSummary
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
+import com.tencent.devops.experience.pojo.P2PConnectEvent
+import com.tencent.devops.experience.pojo.P2PUserPoolVO
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import org.apache.commons.lang3.StringUtils
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 import java.net.URI
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
 import jakarta.ws.rs.core.Response
+import org.apache.commons.lang3.StringUtils
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
 @Service
 @SuppressWarnings("LongParameterList", "MagicNumber", "TooGenericExceptionThrown", "ComplexCondition")
@@ -90,7 +94,7 @@ class ExperienceAppService(
     private val experienceDownloadService: ExperienceDownloadService,
     private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
-    private val experiencePushSubscribeDao: ExperiencePushSubscribeDao,
+    private val experienceP2pConnectDao: ExperienceP2pConnectDao,
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val experienceService: ExperienceService
@@ -511,6 +515,68 @@ class ExperienceAppService(
                 )
             )
         )
+    }
+
+    fun p2pUserPools(userId: String, experienceHashId: String, organization: String?): P2PUserPoolVO {
+        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        // 检查是否有下载权限
+        if (!experienceBaseService.userCanExperience(userId, experienceId, organization == ORGANIZATION_OUTER)) {
+            throw ErrorCodeException(
+                statusCode = 403,
+                errorCode = NO_PERMISSION_QUERY_EXPERIENCE
+            )
+        }
+        // 检查是否为专属包
+        val experience = experienceDao.get(dslContext, experienceId)
+        val properties = client.get(ServiceArtifactoryResource::class).properties(
+            userId = userId,
+            projectId = experience.projectId,
+            artifactoryType = ArtifactoryType.valueOf(experience.artifactoryType),
+            path = experience.artifactoryPath
+        ).data!!
+        val stage = properties.firstOrNull { it.key == ARCHIVE_PROPS_BK_CI_APP_STAGE }?.value
+        if (experienceBaseService.isDefendProject(stage, experience.projectId)) {
+            throw ErrorCodeException(
+                statusCode = 403,
+                errorCode = EXCLUSIVE_EXPERIENCE
+            )
+        }
+        // 获取最近一周连接过的人
+        val recentUsers = experienceP2pConnectDao.listRecentByUserId(
+            dslContext = dslContext,
+            userId = userId,
+            recentDay = 7,
+            limit = 100
+        ).map {
+            if (it.sender == userId) it.receiver else it.sender
+        }.toSet()
+        // 获取下载过这个体验的人
+        val downloadedUsers = experienceDownloadService.getDownloadUsers(experienceId).toSet()
+        // 获取有该体验权限的人
+        val permissionUsers = experienceBaseService.getInnerReceivers(experienceId, userId)
+        return P2PUserPoolVO(
+            recentUsers = recentUsers,
+            downloadedUsers = downloadedUsers,
+            permissionUsers = permissionUsers
+        )
+    }
+
+    fun p2pConnectEvent(userId: String, connectEvent: P2PConnectEvent, organization: String?): Boolean {
+        if (userId != connectEvent.sender && userId != connectEvent.receiver) {
+            logger.warn("p2p connect event not permission , userId: $userId , connectEvent: $connectEvent")
+            return false
+        }
+        logger.info("p2p connect event , userId: $userId , connectEvent: $connectEvent")
+        val recordId = HashUtil.decodeIdToLong(connectEvent.experienceHashId)
+        experienceP2pConnectDao.create(
+            dslContext = dslContext,
+            recordId = recordId,
+            sender = connectEvent.sender,
+            receiver = connectEvent.receiver
+        )
+        // 创建下载记录
+        experienceDownloadService.addDownloadRecord(experienceDao.get(dslContext, recordId), connectEvent.receiver)
+        return true
     }
 
     companion object {

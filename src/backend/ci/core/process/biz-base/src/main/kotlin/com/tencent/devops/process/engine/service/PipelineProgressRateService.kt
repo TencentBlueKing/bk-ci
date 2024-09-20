@@ -18,7 +18,6 @@ import jakarta.ws.rs.core.Response
 @Suppress("LongParameterList")
 class PipelineProgressRateService constructor(
     private val taskBuildRecordService: TaskBuildRecordService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildRecordService: ContainerBuildRecordService,
@@ -34,7 +33,7 @@ class PipelineProgressRateService constructor(
         logger.info("report progress rate:$projectId|$buildId|$executeCount|$jobHeartbeatRequest")
         val task2ProgressRate = jobHeartbeatRequest?.task2ProgressRate ?: return
         if (task2ProgressRate.isEmpty()) return
-        val pipelineId = pipelineBuildDetailService.getBuildDetailPipelineId(projectId, buildId) ?: return
+        val pipelineId = pipelineRuntimeService.getBuildInfo(projectId, buildId)?.pipelineId ?: return
         task2ProgressRate.forEach { (taskId, progressRate) ->
             taskBuildRecordService.updateTaskRecord(
                 projectId = projectId,

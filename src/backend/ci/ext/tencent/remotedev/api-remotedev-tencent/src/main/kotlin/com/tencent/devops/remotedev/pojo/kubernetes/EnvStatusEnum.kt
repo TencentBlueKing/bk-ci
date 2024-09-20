@@ -51,5 +51,6 @@ enum class EnvStatusEnum {
     restarting,
     rebuilding,
     upgrading,
-    copying
+    copying,
+    readyDelete
 }

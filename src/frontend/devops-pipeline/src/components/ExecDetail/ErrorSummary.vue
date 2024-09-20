@@ -1,10 +1,15 @@
 <template>
     <div class="error-log-summary">
-        <p @click="toggleCollapse" class="error-log-summary-header">
+        <p
+            @click="toggleCollapse"
+            class="error-log-summary-header"
+        >
             <span>
-                <i :class="['devops-icon icon-angle-down', {
-                    collapsed: isCollapse
-                }]"></i>
+                <i
+                    :class="['devops-icon icon-angle-down', {
+                        collapsed: isCollapse
+                    }]"
+                ></i>
                 {{ errorTypeAlias }}
             </span>
             <span>{{ error.errorCode }}</span>
