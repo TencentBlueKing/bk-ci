@@ -190,7 +190,7 @@
             },
             properties: {
                 handler (newValue) {
-                    if (JSON.stringify(newValue) === JSON.stringify(['CONFIG', 'LOG', 'ARTIFACT'])) {
+                    if (newValue.join('') === ['CONFIG', 'LOG', 'ARTIFACT'].join('')) {
                         this.tabList = [
                             { name: 'setting', show: true },
                             { name: 'log', show: true },
