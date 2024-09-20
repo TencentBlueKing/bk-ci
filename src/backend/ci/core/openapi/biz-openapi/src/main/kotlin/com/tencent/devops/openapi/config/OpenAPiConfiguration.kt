@@ -26,7 +26,12 @@
  */
 
 package com.tencent.devops.openapi.config
+
+import com.tencent.devops.openapi.filter.manager.ApiFilterManagerCache
+import com.tencent.devops.openapi.filter.manager.ApiFilterManagerChain
+import com.tencent.devops.openapi.filter.manager.DefaultApiFilterChain
 import com.tencent.devops.openapi.service.op.DefaultOpAppUserService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -39,4 +44,8 @@ class OpenAPiConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = ["opAppUserService"])
     fun opAppUserService() = DefaultOpAppUserService()
+
+    @Bean
+    @ConditionalOnMissingBean(ApiFilterManagerChain::class)
+    fun opAppUserService(@Autowired managerCache: ApiFilterManagerCache) = DefaultApiFilterChain(managerCache)
 }
