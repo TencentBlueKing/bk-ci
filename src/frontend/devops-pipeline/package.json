@@ -99,6 +99,7 @@
             "public:master": {
                 "inputs": [
                     "{workspaceRoot}/locale/pipeline/*.json",
+                    "{workspaceRoot}/locale/index.js",
                     "{projectRoot}"
                 ],
                 "outputs": [

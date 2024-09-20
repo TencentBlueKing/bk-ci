@@ -92,6 +92,7 @@
     "targets": {
       "inputs": [
         "{workspaceRoot}/locale/console/*.json",
+        "{workspaceRoot}/locale/index.js",
         "{projectRoot}"
       ],
       "public:master": {
