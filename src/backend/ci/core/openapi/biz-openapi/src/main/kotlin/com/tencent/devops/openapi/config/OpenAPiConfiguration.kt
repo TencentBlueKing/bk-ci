@@ -47,5 +47,5 @@ class OpenAPiConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(ApiFilterManagerChain::class)
-    fun opAppUserService(@Autowired managerCache: ApiFilterManagerCache) = DefaultApiFilterChain(managerCache)
+    fun defaultApiFilterChain(@Autowired managerCache: ApiFilterManagerCache) = DefaultApiFilterChain(managerCache)
 }
