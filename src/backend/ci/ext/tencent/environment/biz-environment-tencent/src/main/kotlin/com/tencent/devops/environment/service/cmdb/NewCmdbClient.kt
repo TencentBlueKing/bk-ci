@@ -46,7 +46,7 @@ import com.tencent.devops.environment.pojo.cmdb.resp.NewCmdbServer
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
 import java.net.SocketTimeoutException
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 class NewCmdbClient(
     private val newCmdbBaseUrl: String,
