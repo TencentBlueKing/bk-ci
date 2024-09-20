@@ -444,8 +444,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                         params = arrayOf(KEY_OS_NAME)
                     )
                 }
-                val target = osExecutionInfoMap[KEY_TARGET] as? String ?: // 执行入口为空则校验失败
-                throw ErrorCodeException(
+                val target = osExecutionInfoMap[KEY_TARGET] as? String ?: throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, params = arrayOf(KEY_TARGET)
                 )
                 val osArch = osExecutionInfoMap[KEY_OS_ARCH] as? String
@@ -486,8 +485,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 }
             }
         } else {
-            val target = executionInfoMap[KEY_TARGET] as? String ?: // 执行入口为空则校验失败
-            throw ErrorCodeException(
+            val target = executionInfoMap[KEY_TARGET] as? String ?: throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, params = arrayOf(KEY_TARGET)
             )
             val pkgLocalPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: ""
