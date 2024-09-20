@@ -58,6 +58,7 @@ const val CLOSE = "close" // 开关关闭
 const val ATOM_POST = "post" // 插件post
 const val ATOM_POST_FLAG = "postFlag" // 插件post标识
 const val ATOM_POST_ENTRY_PARAM = "postEntryParam" // 插件post操作入口参数
+const val ATOM_POST_PARENT_TASK_ID = "postActionParentTaskId" // 插件后置动作父任务id
 const val ATOM_POST_CONDITION = "postCondition" // 插件post操作执行条件
 const val ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX = "ATOM_POST_NORMAL_PROJECT_FLAG" // 插件对应普通项目的post标识Key前缀
 const val ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX = "ATOM_POST_VERSION_TEST_FLAG" // 插件大版本内是否有测试版本Key前缀
