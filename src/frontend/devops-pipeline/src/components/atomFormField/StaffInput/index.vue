@@ -1,6 +1,9 @@
 <template>
     <div class="staff-input">
-        <div v-if="prependText" class="group-text prepend-box">
+        <div
+            v-if="prependText"
+            class="group-text prepend-box"
+        >
             {{ prependText }}
         </div>
         <bk-tag-input
@@ -13,7 +16,8 @@
             :disabled="disabled"
             :create-tag-validator="checkVariable"
             :paste-fn="paste"
-            :list="list">
+            :list="list"
+        >
         </bk-tag-input>
     </div>
 </template>

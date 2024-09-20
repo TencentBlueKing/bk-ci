@@ -476,7 +476,7 @@ class SubPipelineStartUpService @Autowired constructor(
             pipelineRepositoryService.getPipelineOauthUser(
                 projectId = parentProjectId,
                 pipelineId = parentPipelineId
-            )
+            ) ?: userId
         } else {
             userId
         }

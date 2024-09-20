@@ -1,10 +1,15 @@
 <template>
     <div class="pipeline-edit-header">
-
-        <pipeline-bread-crumb :is-loading="!isPipelineNameReady" :pipeline-name="pipelineSetting?.pipelineName">
+        <pipeline-bread-crumb
+            :is-loading="!isPipelineNameReady"
+            :pipeline-name="pipelineSetting?.pipelineName"
+        >
             <span class="pipeline-edit-header-tag">
                 <bk-tag>
-                    <span v-bk-overflow-tips class="edit-header-draft-tag">
+                    <span
+                        v-bk-overflow-tips
+                        class="edit-header-draft-tag"
+                    >
                         {{ currentVersionName }}
                     </span>
                 </bk-tag>
@@ -296,10 +301,7 @@
             goDraftDebugRecord () {
                 if (this.canDebug) {
                     this.$router.push({
-                        name: 'draftDebugRecord',
-                        params: {
-                            version: this.pipelineInfo?.version
-                        }
+                        name: 'draftDebugRecord'
                     })
                 }
             },

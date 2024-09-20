@@ -517,7 +517,8 @@ object ScriptYmlUtils {
                         )
                     },
                     variables = preCheck.reviews.variables,
-                    description = preCheck.reviews.description
+                    description = preCheck.reviews.description,
+                    notifyGroups = preCheck.reviews.notifyGroups
                 )
             } else {
                 null

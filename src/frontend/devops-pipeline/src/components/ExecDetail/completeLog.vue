@@ -1,11 +1,16 @@
 <template>
-    <detail-container @close="$emit('close')"
+    <detail-container
+        @close="$emit('close')"
         :title="execDetail.pipelineName"
         :status="execDetail.status"
         current-tab="log"
     >
         <template v-slot:content>
-            <plugin-log :build-id="execDetail.id" :exec-detail="execDetail" :execute-count="executeCount" />
+            <plugin-log
+                :build-id="execDetail.id"
+                :exec-detail="execDetail"
+                :execute-count="executeCount"
+            />
         </template>
     </detail-container>
 </template>

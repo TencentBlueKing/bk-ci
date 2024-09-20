@@ -2,11 +2,27 @@
     <section v-if="computedShowParam">
         <span class="review-subtitle">{{ $t('stageReview.customVariables') }}</span>
         <ul>
-            <li v-for="(param, index) in params" :key="index" class="review-params">
-                <bk-input disabled :value="getParamKey(param)" class="review-param-item"></bk-input>
+            <li
+                v-for="(param, index) in params"
+                :key="index"
+                class="review-params"
+            >
+                <bk-input
+                    disabled
+                    :value="getParamKey(param)"
+                    class="review-param-item"
+                ></bk-input>
                 <span :class="{ 'review-param-gap': true, 'param-require': param.required }"></span>
-                <param-value :form="param" :disabled="disabled" class="review-param-item"></param-value>
-                <i class="bk-icon icon-info" v-bk-tooltips="param.desc" v-if="param.desc"></i>
+                <param-value
+                    :form="param"
+                    :disabled="disabled"
+                    class="review-param-item"
+                ></param-value>
+                <i
+                    class="bk-icon icon-info"
+                    v-bk-tooltips="param.desc"
+                    v-if="param.desc"
+                ></i>
             </li>
         </ul>
         <span class="error-message">{{ errMessage }}</span>

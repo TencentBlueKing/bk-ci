@@ -145,6 +145,7 @@ class MetricsUserService @Autowired constructor(
         override fun run() {
             while (true) {
                 kotlin.runCatching { execute() }
+                    .onFailure { logger.error("DeleteDelayProcess error ${it.message}", it) }
                 Thread.sleep(SLEEP)
             }
         }
@@ -195,7 +196,7 @@ class MetricsUserService @Autowired constructor(
             }
 
             CallBackEvent.BUILD_JOB_START -> {
-                if (event.jobId == null) {
+                if (event.jobId.isNullOrBlank()) {
                     // job id 用户没填写将不会上报指标
                     return
                 }
@@ -210,7 +211,7 @@ class MetricsUserService @Autowired constructor(
 
             CallBackEvent.BUILD_TASK_START -> {
                 date.startTime = checkNotNull(event.eventTime)
-                if (event.stepId == null) {
+                if (event.stepId.isNullOrBlank()) {
                     // stepId id 用户没填写将不会上报指标
                     return
                 }
@@ -228,7 +229,7 @@ class MetricsUserService @Autowired constructor(
             }
 
             CallBackEvent.BUILD_JOB_END -> {
-                if (event.jobId == null) {
+                if (event.jobId.isNullOrBlank()) {
                     // job id 用户没填写将不会上报指标
                     return
                 }
@@ -243,7 +244,7 @@ class MetricsUserService @Autowired constructor(
 
             CallBackEvent.BUILD_TASK_END -> {
                 date.endTime = checkNotNull(event.eventTime)
-                if (event.stepId == null) {
+                if (event.stepId.isNullOrBlank()) {
                     // stepId id 用户没填写将不会上报指标
                     return
                 }

@@ -1,6 +1,15 @@
 <template>
-    <section v-if="stage" :class="{ 'readonly': !editable }" class="stage-property-panel bk-form bk-form-vertical">
-        <form-field required :label="$t('name')" :is-error="errors.has('name')" :error-msg="errors.first('name')">
+    <section
+        v-if="stage"
+        :class="{ 'readonly': !editable }"
+        class="stage-property-panel bk-form bk-form-vertical"
+    >
+        <form-field
+            required
+            :label="$t('name')"
+            :is-error="errors.has('name')"
+            :error-msg="errors.first('name')"
+        >
             <div class="stage-name">
                 <vuex-input
                     :disabled="!editable || isFinallyStage"
@@ -13,7 +22,12 @@
                 />
             </div>
         </form-field>
-        <form-field required :label="$t('label')" :is-error="errors.has('tag')" :error-msg="errors.first('tag')">
+        <form-field
+            required
+            :label="$t('label')"
+            :is-error="errors.has('tag')"
+            :error-msg="errors.first('tag')"
+        >
             <div class="stage-tag">
                 <bk-select
                     v-model="stageTag"
@@ -23,7 +37,8 @@
                     multiple
                     searchable
                 >
-                    <bk-option v-for="tag in stageTagList"
+                    <bk-option
+                        v-for="tag in stageTagList"
                         :key="tag.id"
                         :id="tag.id"
                         :name="tag.stageTagName"

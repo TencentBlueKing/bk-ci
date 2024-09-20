@@ -104,6 +104,10 @@ class DispatchTransfer @Autowired(required = false) constructor(
                 else -> null
             }
         }
+        if (dispatchType is ThirdPartyAgentEnvDispatchType) {
+            runsOn.singleNodeConcurrency = job.jobControlOption?.singleNodeConcurrency
+            runsOn.allNodeConcurrency = job.jobControlOption?.allNodeConcurrency
+        }
         runsOn.needs = job.buildEnv?.ifEmpty { null }
         runsOn.queueTimeoutMinutes = job.jobControlOption?.prepareTimeout?.nullIfDefault(DEFAULT_JOB_PREPARE_TIMEOUT)
         return runsOn
@@ -161,6 +165,7 @@ class DispatchTransfer @Autowired(required = false) constructor(
                         workspace = workspace,
                         agentName = nodeName,
                         dockerInfo = getDockerInfo(job, buildTemplateAcrossInfo),
+                        lockResourceWith = lockResourceWith,
                         envProjectId = envProjectId
                     )
                 }

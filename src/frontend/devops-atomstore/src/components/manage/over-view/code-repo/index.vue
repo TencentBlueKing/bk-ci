@@ -1,13 +1,30 @@
 <template>
     <ul class="manage-code-repo">
-        <li v-for="(code, index) in list" :key="index" class="code-item">
+        <li
+            v-for="(code, index) in list"
+            :key="index"
+            class="code-item"
+        >
             <span class="item-name">{{ code.label }}</span>
-            <span :class="[{ 'item-link': code.link }, 'item-value']" :title="code.value" @click="goToLink(code.link)">{{ code.value }}</span>
-            <span v-if="code.tool && code.tool.show" class="item-tool">
-                <span v-bk-tooltips="{ content: code.tool.info, placements: ['top'] }" v-if="code.tool.info">
+            <span
+                :class="[{ 'item-link': code.link }, 'item-value']"
+                :title="code.value"
+                @click="goToLink(code.link)"
+            >{{ code.value }}</span>
+            <span
+                v-if="code.tool && code.tool.show"
+                class="item-tool"
+            >
+                <span
+                    v-bk-tooltips="{ content: code.tool.info, placements: ['top'] }"
+                    v-if="code.tool.info"
+                >
                     <i class="bk-icon icon-info-circle"></i>
                 </span>
-                <span @click="code.tool.click" class="item-tool-label item-link">{{ code.tool.label }}</span>
+                <span
+                    @click="code.tool.click"
+                    class="item-tool-label item-link"
+                >{{ code.tool.label }}</span>
             </span>
         </li>
     </ul>

@@ -451,7 +451,7 @@ class UserBuildResourceImpl @Autowired constructor(
         buildNoEnd: Int?,
         buildMsg: String?,
         archiveFlag: Boolean?,
-        customVersion: Int?,
+        debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
         triggerUser: List<String>?
@@ -483,7 +483,7 @@ class UserBuildResourceImpl @Autowired constructor(
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
             archiveFlag = archiveFlag,
-            customVersion = customVersion,
+            debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
             triggerUser = triggerUser

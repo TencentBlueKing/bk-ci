@@ -40,6 +40,7 @@ import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_MIGRATE", description = "权限-迁移")
@@ -137,6 +138,9 @@ interface OpAuthMigrateResource {
     @Path("/autoRenewal")
     @Operation(summary = "自动续期")
     fun autoRenewal(
+        @Parameter(description = "小于该值才会被续期,若传空,则默认用户在用户组中的过期时间小于180天会被自动续期", required = true)
+        @QueryParam("validExpiredDay")
+        validExpiredDay: Int?,
         @Parameter(description = "按条件迁移项目实体", required = true)
         projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean>
