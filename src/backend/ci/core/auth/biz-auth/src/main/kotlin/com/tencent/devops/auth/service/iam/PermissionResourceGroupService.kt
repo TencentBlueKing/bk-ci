@@ -92,4 +92,9 @@ interface PermissionResourceGroupService {
         projectId: String,
         groupCode: String
     ): Boolean
+
+    fun getGroupPermissionDetailBySystem(
+        iamSystemId: String,
+        groupId: Int
+    ): List<GroupPermissionDetailVo>
 }

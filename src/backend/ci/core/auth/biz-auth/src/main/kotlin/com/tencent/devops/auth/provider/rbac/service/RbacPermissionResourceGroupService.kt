@@ -505,7 +505,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         return true
     }
 
-    private fun getGroupPermissionDetailBySystem(iamSystemId: String, groupId: Int): List<GroupPermissionDetailVo> {
+    override fun getGroupPermissionDetailBySystem(iamSystemId: String, groupId: Int): List<GroupPermissionDetailVo> {
         val iamGroupPermissionDetailList = try {
             v2ManagerService.getGroupPermissionDetail(groupId, iamSystemId)
         } catch (e: Exception) {

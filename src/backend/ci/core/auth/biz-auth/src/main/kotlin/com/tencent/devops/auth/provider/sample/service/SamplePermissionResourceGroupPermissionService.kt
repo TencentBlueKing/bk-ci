@@ -35,68 +35,12 @@ import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.api.pojo.Pagination
 
-class SamplePermissionResourceGroupService : PermissionResourceGroupService {
-
-    override fun listGroup(
-        userId: String,
-        listGroupConditionDTO: ListGroupConditionDTO
-    ): Pagination<IamGroupInfoVo> {
-        return Pagination(false, emptyList())
-    }
-
-    override fun listUserBelongGroup(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ): List<IamGroupMemberInfoVo> {
-        return emptyList()
-    }
-
-    override fun getGroupPolicies(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): List<IamGroupPoliciesVo> {
-        return emptyList()
-    }
-
-    override fun deleteGroup(
-        userId: String?,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): Boolean {
-        return true
-    }
-
-    override fun createGroup(
-        projectId: String,
-        groupAddDTO: GroupAddDTO
-    ): Int = 0
-
-    override fun renameGroup(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int,
-        renameGroupDTO: RenameGroupDTO
-    ): Boolean {
-        return true
-    }
-
-    override fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>> {
-        return emptyMap()
-    }
-
-    override fun createProjectGroupByGroupCode(
-        projectId: String,
-        groupCode: String
-    ) = true
+class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPermissionService {
+    override fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>> = emptyMap()
 
     override fun getGroupPermissionDetailBySystem(
         iamSystemId: String,
