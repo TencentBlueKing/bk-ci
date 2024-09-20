@@ -171,11 +171,13 @@
                 this.copyForm.value = ''
                 this.copyForm.options = []
 
-                if (isMultipleParam(type)) this.copyForm.value = []
-
-                if (isBooleanParam(type)) this.copyForm.value = ''
-
-                if (isCheakboxParam(type)) this.copyForm.value = false
+                if (isMultipleParam(type)) {
+                    this.copyForm.value = []
+                } else if (isBooleanParam(type)) {
+                    this.copyForm.value = ''
+                } else if (isCheakboxParam(type)) {
+                    this.copyForm.value = false
+                }
             },
 
             changeOption (val) {
