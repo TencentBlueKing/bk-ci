@@ -27,12 +27,12 @@
 
 package com.tencent.devops.openapi.filter.manager
 
+import com.tencent.devops.openapi.filter.manager.impl.AccessTokenFilter
 import com.tencent.devops.openapi.filter.manager.impl.ApiPathFilter
 import com.tencent.devops.openapi.filter.manager.impl.ManagerUserApiFilter
 import com.tencent.devops.openapi.filter.manager.impl.NoPermissionFilter
 import com.tencent.devops.openapi.filter.manager.impl.Oauth2ApiFilter
 import com.tencent.devops.openapi.filter.manager.impl.RemoteDevTokenApiFilter
-import com.tencent.devops.openapi.filter.manager.impl.SampleApiFilter
 import com.tencent.devops.openapi.filter.manager.impl.TencentApigwApiFilter
 import javax.ws.rs.container.ContainerRequestContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,7 +50,7 @@ class TencentApiFilterChain @Autowired constructor(
             requestContext = FilterContext(requestContext),
             chain = listOf(
                 managerCache.getFilter(ApiPathFilter::class.java), // 扫描请求路径， 非法将报错
-                managerCache.getFilter(SampleApiFilter::class.java), // 根据access_token换取用户信息，内部暂未开启使用
+                managerCache.getFilter(AccessTokenFilter::class.java), // 根据access_token换取用户信息，内部暂未开启使用
                 managerCache.getFilter(NoPermissionFilter::class.java), // 走无权限校验，内部暂未开启使用
                 managerCache.getFilter(TencentApigwApiFilter::class.java), // 内部蓝鲸网关鉴权
                 managerCache.getFilter(RemoteDevTokenApiFilter::class.java), // 云桌面sdk 换取oauth token
