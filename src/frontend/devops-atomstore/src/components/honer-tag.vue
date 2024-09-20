@@ -5,12 +5,24 @@
             :key="renderHoner.honorId"
             class="honer-tag"
         >
-            <img class="tag-image" src="../images/honer-left.png">
+            <img
+                class="tag-image"
+                src="../images/honer-left.png"
+            >
             <span class="tag-txt">
-                <span class="tag-txt-main text-overflow" v-bk-tooltips="getHonorTips(renderHoner)">{{ renderHoner.honorTitle }}</span>
-                <img class="tag-txt-image" src="../images/honer-center.png">
+                <span
+                    class="tag-txt-main text-overflow"
+                    v-bk-tooltips="getHonorTips(renderHoner)"
+                >{{ renderHoner.honorTitle }}</span>
+                <img
+                    class="tag-txt-image"
+                    src="../images/honer-center.png"
+                >
             </span>
-            <img class="tag-image" src="../images/honer-right.png">
+            <img
+                class="tag-image"
+                src="../images/honer-right.png"
+            >
         </span>
         <span
             v-if="honorInfos.length > +maxNum"
@@ -19,7 +31,10 @@
         >
             +{{ honorInfos.length - maxNum }}
         </span>
-        <span class="honer-gap" v-if="renderHoners.length && indexInfos.length"></span>
+        <span
+            class="honer-gap"
+            v-if="renderHoners.length && indexInfos.length"
+        ></span>
     </section>
 </template>
 

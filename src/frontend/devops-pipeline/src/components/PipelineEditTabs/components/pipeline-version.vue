@@ -18,14 +18,24 @@
                     :handle-change="handleBuildNoChange"
                 />
             </section>
-            <bk-button v-if="showVersions && !disabled" @click="editVersions">
-                {{$t('newui.editVersions')}}
+            <bk-button
+                v-if="showVersions && !disabled"
+                @click="editVersions"
+            >
+                {{ $t('newui.editVersions') }}
             </bk-button>
         </div>
 
         <!-- 展示已有的versionlist -->
-        <section v-show="showVersions" class="version-list">
-            <div v-for="param in renderVersions" :key="param.id" class="version-item">
+        <section
+            v-show="showVersions"
+            class="version-list"
+        >
+            <div
+                v-for="param in renderVersions"
+                :key="param.id"
+                class="version-item"
+            >
                 <div class="version-con">
                     <div class="version-names">
                         <span>{{ param.id }}</span>
@@ -36,8 +46,14 @@
                             {{ param.id === 'BK_CI_BUILD_NO' ? `${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` : versionValues[param.id] }}
                         </span>
                         <div class="version-operate">
-                            <div class="operate-btns" v-if="!disabled">
-                                <i @click.stop="handleCopy(bkVarWrapper(param.id))" class="bk-icon icon-copy"></i>
+                            <div
+                                class="operate-btns"
+                                v-if="!disabled"
+                            >
+                                <i
+                                    @click.stop="handleCopy(bkVarWrapper(param.id))"
+                                    class="bk-icon icon-copy"
+                                ></i>
                             </div>
                         </div>
                     </div>
@@ -46,13 +62,25 @@
         </section>
 
         <!-- 编辑版本号 -->
-        <div v-if="showEditVersion" class="current-edit-param-item">
+        <div
+            v-if="showEditVersion"
+            class="current-edit-param-item"
+        >
             <div class="edit-var-header">
-                <bk-icon style="font-size: 28px;" type="arrows-left" class="back-icon" @click="cancelEditVersion" />
-                {{$t('newui.editVersions')}}
+                <bk-icon
+                    style="font-size: 28px;"
+                    type="arrows-left"
+                    class="back-icon"
+                    @click="cancelEditVersion"
+                />
+                {{ $t('newui.editVersions') }}
             </div>
             <div class="edit-var-content">
-                <bk-form form-type="vertical" :label-width="400" class="new-ui-form">
+                <bk-form
+                    form-type="vertical"
+                    :label-width="400"
+                    class="new-ui-form"
+                >
                     <bk-form-item>
                         <div class="layout-label">
                             <label class="ui-inner-label">
@@ -61,7 +89,15 @@
                             </label>
                         </div>
                         <div class="version-options">
-                            <form-field :hide-colon="true" class="version-form-field" v-for="(v, index) in allVersionKeyList" :key="v" :required="v.required" :is-error="errors.has(`pipelineVersion.${v}`)" :error-msg="errors.first(`pipelineVersion.${v}`)">
+                            <form-field
+                                :hide-colon="true"
+                                class="version-form-field"
+                                v-for="(v, index) in allVersionKeyList"
+                                :key="v"
+                                :required="v.required"
+                                :is-error="errors.has(`pipelineVersion.${v}`)"
+                                :error-msg="errors.first(`pipelineVersion.${v}`)"
+                            >
                                 <vuex-input
                                     v-validate.initial="'required|numeric'"
                                     :data-vv-scope="'pipelineVersion'"
@@ -72,12 +108,22 @@
                                     :value="editVersionValues[v]"
                                     :handle-change="handleEditVersionChange"
                                 />
-                                <span v-if="index < allVersionKeyList.length - 1" class="version-dot">.</span>
+                                <span
+                                    v-if="index < allVersionKeyList.length - 1"
+                                    class="version-dot"
+                                >.</span>
                             </form-field>
                         </div>
                     </bk-form-item>
 
-                    <form-field :hide-colon="true" class="buildno-form-field" :required="true" :label="$t('buildNum')" :is-error="errors.has('pipelineVersion.buildNo')" :error-msg="errors.first('pipelineVersion.buildNo')">
+                    <form-field
+                        :hide-colon="true"
+                        class="buildno-form-field"
+                        :required="true"
+                        :label="$t('buildNum')"
+                        :is-error="errors.has('pipelineVersion.buildNo')"
+                        :error-msg="errors.first('pipelineVersion.buildNo')"
+                    >
                         <vuex-input
                             input-type="number"
                             name="buildNo"
@@ -91,16 +137,41 @@
                         />
                     </form-field>
 
-                    <form-field :hide-colon="true" class="buildno-form-field" :required="true" :is-error="errors.has('pipelineVersion.buildNoType')" :error-msg="errors.first('pipelineVersion.buildNoType')">
-                        <enum-input :list="buildNoRules" :disabled="disabled" name="buildNoType" v-validate.initial="'required|string'" :data-vv-scope="'pipelineVersion'" :value="editBuildNo.buildNoType" :handle-change="handleEditBuildNoChange" />
+                    <form-field
+                        :hide-colon="true"
+                        class="buildno-form-field"
+                        :required="true"
+                        :is-error="errors.has('pipelineVersion.buildNoType')"
+                        :error-msg="errors.first('pipelineVersion.buildNoType')"
+                    >
+                        <enum-input
+                            :list="buildNoRules"
+                            :disabled="disabled"
+                            name="buildNoType"
+                            v-validate.initial="'required|string'"
+                            :data-vv-scope="'pipelineVersion'"
+                            :value="editBuildNo.buildNoType"
+                            :handle-change="handleEditBuildNoChange"
+                        />
                     </form-field>
                 </bk-form>
             </div>
-            <div class="edit-var-footer" slot="footer">
-                <bk-button theme="primary" :disabled="disabled" @click="handleSaveVersion">
+            <div
+                class="edit-var-footer"
+                slot="footer"
+            >
+                <bk-button
+                    theme="primary"
+                    :disabled="disabled"
+                    @click="handleSaveVersion"
+                >
                     {{ $t('confirm') }}
                 </bk-button>
-                <bk-button style="margin-left: 8px;" :disabled="disabled" @click="cancelEditVersion">
+                <bk-button
+                    style="margin-left: 8px;"
+                    :disabled="disabled"
+                    @click="cancelEditVersion"
+                >
                     {{ $t('cancel') }}
                 </bk-button>
             </div>
@@ -115,7 +186,7 @@
     import EnumInput from '@/components/atomFormField/EnumInput'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
-    import { getParamsValuesMap, bkVarWrapper } from '@/utils/util'
+    import { getParamsValuesMap, bkVarWrapper, copyToClipboard } from '@/utils/util'
 
     export default {
         components: {
@@ -209,7 +280,7 @@
         methods: {
             bkVarWrapper,
             handleCopy (con) {
-                window.navigator.clipboard.writeText(con)
+                copyToClipboard(con)
                 this.$bkMessage({
                     theme: 'success',
                     message: this.$t('copySuc'),

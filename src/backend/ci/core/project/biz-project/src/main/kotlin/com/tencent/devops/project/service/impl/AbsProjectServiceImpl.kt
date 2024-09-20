@@ -448,7 +448,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
         }
         val tipsStatus = getAndUpdateTipsStatus(userId = userId, projectId = englishName)
-        return projectInfo.copy(tipsStatus = tipsStatus)
+        return projectInfo.copy(
+            tipsStatus = tipsStatus,
+            productName = projectInfo.productId?.let { getProductByProductId(it)?.productName }
+        )
     }
 
     protected fun getAndUpdateTipsStatus(userId: String, projectId: String): Int {
@@ -474,10 +477,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         val projectApprovalInfo = projectApprovalService.get(englishName)
         val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
+        val beforeProductName = if (record.productId != null) {
+            getProductByProductId(record.productId)
+        } else {
+            null
+        }
         return ProjectUtils.packagingBean(
             tProjectRecord = record,
             projectApprovalInfo = projectApprovalInfo,
-            projectOrganizationInfo = rightProjectOrganization
+            projectOrganizationInfo = rightProjectOrganization,
+            beforeProductName = beforeProductName?.productName
         )
     }
 

@@ -19,7 +19,10 @@
             width="90%"
             :title="$t('diff')"
         >
-            <div class="diff-version-dialog-content" v-bkloading="{ isLoading: isLoadYaml, color: '#1d1d1d' }">
+            <div
+                class="diff-version-dialog-content"
+                v-bkloading="{ isLoading: isLoadYaml, color: '#1d1d1d' }"
+            >
                 <header class="diff-version-header">
                     <VersionSelector
                         ext-cls="dark-theme-select-trigger"
@@ -38,7 +41,6 @@
                         :show-extension="false"
                         v-model="currentVersion"
                         @change="diffCurrentVersion"
-
                     />
                 </header>
                 <div class="pipeline-yaml-diff-wrapper">

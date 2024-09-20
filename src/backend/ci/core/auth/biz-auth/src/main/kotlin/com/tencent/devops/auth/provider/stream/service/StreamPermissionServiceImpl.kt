@@ -30,6 +30,7 @@ package com.tencent.devops.auth.provider.stream.service
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.utils.ActionTypeUtils
 import org.slf4j.LoggerFactory
 
@@ -190,6 +191,8 @@ abstract class StreamPermissionServiceImpl : PermissionService {
     ): Map<String, List<String>> {
         return emptyMap()
     }
+
+    abstract fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String>
 
     /**
      * 是否是开源项目

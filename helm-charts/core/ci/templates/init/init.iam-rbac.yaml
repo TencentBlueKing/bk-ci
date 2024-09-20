@@ -50,6 +50,19 @@ spec:
               sed -i 's/bk-ci.service.consul/{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}/g' ../ms-init/auth/iam-callback-resource-registere.conf
               iam_json_file="../ms-init/auth/iam-callback-resource-registere.conf"
               curl -X POST -H "Content-Type:application/json" -d "@$iam_json_file" "http://{{ include "bkci.names.fullname" . }}-auth.{{ .Release.Namespace }}.svc.cluster.local/api/op/auth/iam/callback/" 
+
+              # 迁移所有项目的特定资源类型资源
+              curl -X 'POST' \
+                'http://{{ include "bkci.names.fullname" . }}-auth.{{ .Release.Namespace }}.svc.cluster.local/api/op/auth/migrate/migrateSpecificResourceOfAllProject' \
+                -H 'accept: application/json' \
+                -H 'Content-Type: application/json' \
+                -d '{
+                "resourceType": "pipeline",
+                "includeNullRouterTag": true,
+                "migrateProjectResource": true,
+                "migrateProjectDefaultGroup": true,
+                "migrateOtherResource": true
+              }'
       restartPolicy: OnFailure
 {{- end -}}
 {{- end -}}

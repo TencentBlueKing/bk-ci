@@ -134,6 +134,7 @@ class StreamTriggerRequestService @Autowired constructor(
             logger.warn("StreamTriggerRequestService|start|request event not support|$event")
             return false
         }
+        action.data.watcherStart("streamTriggerRequestService.start")
         val eventCommon = action.data.eventCommon
 
         // 初始化setting
@@ -205,6 +206,7 @@ class StreamTriggerRequestService @Autowired constructor(
     private fun checkRequest(
         action: BaseAction
     ): Boolean {
+        action.data.watcherStart("streamTriggerRequestService.checkRequest")
         logger.info(
             "StreamTriggerRequestService|checkRequest" +
                 "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
@@ -257,6 +259,7 @@ class StreamTriggerRequestService @Autowired constructor(
         action: BaseAction,
         path2PipelineExists: Map<String, StreamTriggerPipeline>
     ): Boolean {
+        action.data.watcherStart("streamTriggerRequestService.matchAndTriggerPipeline")
         logger.info(
             "StreamTriggerRequestService|matchAndTriggerPipeline" +
                 "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
@@ -349,7 +352,7 @@ class StreamTriggerRequestService @Autowired constructor(
                 }
 
                 // 针对每个流水线处理异常
-                exHandler.handle(action) {
+                exHandler.handle(action, false) {
                     // 目前只针对mr情况下源分支有目标分支没有且变更列表没有
                     if (checkType == CheckType.NO_TRIGGER) {
                         throw StreamTriggerException(

@@ -255,6 +255,9 @@
                         "type" : "string"
                       }
                     }
+                  },
+                  "skip-wip" : {
+                    "type" : "boolean"
                   }
                 }
               } ]
@@ -293,6 +296,9 @@
                           "type" : "array"
                         }
                       }
+                    },
+                    "repo-type" : {
+                      "enum" : [ "ID", "NAME", "SELF", "NONE" ]
                     },
                     "repo-id" : {
                       "type" : "string"
@@ -346,6 +352,9 @@
                         "type" : "array"
                       }
                     }
+                  },
+                  "repo-type" : {
+                    "enum" : [ "ID", "NAME", "SELF", "NONE" ]
                   },
                   "repo-id" : {
                     "type" : "string"
@@ -937,6 +946,9 @@
                       "type" : "string"
                     }
                   }
+                },
+                "skip-wip" : {
+                  "type" : "boolean"
                 }
               }
             } ]
@@ -975,6 +987,9 @@
                         "type" : "array"
                       }
                     }
+                  },
+                  "repo-type" : {
+                    "enum" : [ "ID", "NAME", "SELF", "NONE" ]
                   },
                   "repo-id" : {
                     "type" : "string"
@@ -1028,6 +1043,9 @@
                       "type" : "array"
                     }
                   }
+                },
+                "repo-type" : {
+                  "enum" : [ "ID", "NAME", "SELF", "NONE" ]
                 },
                 "repo-id" : {
                   "type" : "string"
@@ -1514,10 +1532,10 @@
                       }
                     }
                   },
-                  "glob" : {
+                  "filter-rule" : {
                     "type" : "string"
                   },
-                  "properties" : {
+                  "metadata" : {
                     "type" : "object"
                   },
                   "payload" : {
@@ -1673,10 +1691,10 @@
                     }
                   }
                 },
-                "glob" : {
+                "filter-rule" : {
                   "type" : "string"
                 },
-                "properties" : {
+                "metadata" : {
                   "type" : "object"
                 },
                 "payload" : {
@@ -1872,6 +1890,15 @@
                   },
                   "pool-name" : {
                     "type" : "string"
+                  },
+                  "lock-resource-with" : {
+                    "type" : "string"
+                  },
+                  "concurrency-limit-per-node" : {
+                    "type" : "integer"
+                  },
+                  "concurrency-limit-total" : {
+                    "type" : "integer"
                   },
                   "hw-spec" : {
                     "type" : "string"
@@ -2205,10 +2232,16 @@
             "description" : {
               "type" : "string"
             },
-            "send-markdown" : {
-              "type" : "boolean"
+            "content-format" : {
+              "enum" : [ "markdown", "text" ]
             },
             "notify-type" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "chat-id" : {
               "type" : "array",
               "items" : {
                 "type" : "string"
@@ -2300,6 +2333,15 @@
                   },
                   "pool-name" : {
                     "type" : "string"
+                  },
+                  "lock-resource-with" : {
+                    "type" : "string"
+                  },
+                  "concurrency-limit-per-node" : {
+                    "type" : "integer"
+                  },
+                  "concurrency-limit-total" : {
+                    "type" : "integer"
                   },
                   "hw-spec" : {
                     "type" : "string"

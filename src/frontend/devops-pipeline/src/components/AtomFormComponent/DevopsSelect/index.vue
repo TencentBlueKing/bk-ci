@@ -1,5 +1,8 @@
 <template>
-    <div class="select-input" v-bk-clickoutside="handleBlur">
+    <div
+        class="select-input"
+        v-bk-clickoutside="handleBlur"
+    >
         <input
             ref="inputArea"
             class="bk-form-input"
@@ -14,17 +17,32 @@
             @keypress="handleKeyPress"
             @keydown.up.prevent="handleKeyup"
             @keydown.down.prevent="handleKeydown"
-            @keydown.tab.prevent="handleBlur" />
-        <i v-if="loading" class="bk-icon icon-circle-2-1 option-fetching-icon spin-icon" />
-        <i v-else-if="!disabled && value" class="bk-icon icon-close-circle-shape option-fetching-icon" @click.stop="clearValue" />
-        <div class="dropbox-container" v-show="hasOption && optionListVisible && !loading" ref="dropMenu">
+            @keydown.tab.prevent="handleBlur"
+        />
+        <i
+            v-if="loading"
+            class="bk-icon icon-circle-2-1 option-fetching-icon spin-icon"
+        />
+        <i
+            v-else-if="!disabled && value"
+            class="bk-icon icon-close-circle-shape option-fetching-icon"
+            @click.stop="clearValue"
+        />
+        <div
+            class="dropbox-container"
+            v-show="hasOption && optionListVisible && !loading"
+            ref="dropMenu"
+        >
             <ul>
                 <template v-if="hasGroup">
-                    <li v-for="(item, index) in filteredList"
+                    <li
+                        v-for="(item, index) in filteredList"
                         :key="item.id + index"
-                        :disabled="item.disabled">
+                        :disabled="item.disabled"
+                    >
                         <div class="option-group-name">{{ item.name }}</div>
-                        <div class="option-group-item"
+                        <div
+                            class="option-group-item"
                             v-for="(child, childIndex) in item.children"
                             :key="child.id"
                             :class="{
@@ -35,7 +53,9 @@
                             @click.stop="selectOption(child)"
                             @mouseover="setSelectGroupPointer(index, childIndex)"
                             :title="item.name"
-                        >{{ child.name }}</div>
+                        >
+                            {{ child.name }}
+                        </div>
                     </li>
                 </template>
                 <template v-else>
@@ -53,7 +73,10 @@
                         @mouseover="setSelectPointer(index)"
                     >
                         {{ item.name }}
-                        <i v-if="isMultiple && item.active" class="devops-icon icon-check-1"></i>
+                        <i
+                            v-if="isMultiple && item.active"
+                            class="devops-icon icon-check-1"
+                        ></i>
                     </li>
                 </template>
             </ul>
@@ -62,10 +85,10 @@
 </template>
 
 <script>
+    import { debounce, isObject } from '@/utils/util'
     import mixins from '../mixins'
     import scrollMixins from '../SelectInput/scrollMixins'
     import selectorMixins from '../selectorMixins'
-    import { debounce, isObject } from '@/utils/util'
 
     export default {
         name: 'devops-select',
@@ -240,6 +263,7 @@
             },
 
             handleBlur () {
+                if (!this.optionListVisible) return
                 this.optionListVisible = false
                 this.resetSelectPointer()
                 this.isFocused = false
@@ -356,7 +380,8 @@
             showValValidTips (val) {
                 this.$bkMessage({
                     theme: 'error',
-                    message: `${this.$t('editPage.invalidValue', [this.label])}: ${val}`
+                    message: `${this.$t('editPage.invalidValue', [this.label])}: ${val}`,
+                    limit: 1
                 })
             },
             async getOptionList () {

@@ -1,6 +1,9 @@
 <template>
     <span class="insert-stage direction">
-        <div class="click-item" @click.stop="handleClick(false)">
+        <div
+            class="click-item"
+            @click.stop="handleClick(false)"
+        >
             <span>
                 {{ t('insertStage') }}
             </span>

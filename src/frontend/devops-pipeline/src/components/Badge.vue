@@ -1,12 +1,31 @@
 <template>
-    <bk-popover style="font-size: 0;" theme="light" trigger="click">
-        <img class="pipeline-exec-badge" :src="badgeImageUrl" />
-        <section class="badge-link-content" slot="content">
-            <span @click="copy('markdownLink')" class="pointer">
+    <bk-popover
+        style="font-size: 0;"
+        theme="light"
+        trigger="click"
+    >
+        <img
+            class="pipeline-exec-badge"
+            :src="badgeImageUrl"
+        />
+        <section
+            class="badge-link-content"
+            slot="content"
+        >
+            <span
+                @click="copy('markdownLink')"
+                class="pointer"
+            >
                 {{ $t('copyBadgeMarkdownLink') }}
-                <i class="bk-icon icon-info-circle" v-bk-tooltips="badgeTips" />
+                <i
+                    class="bk-icon icon-info-circle"
+                    v-bk-tooltips="badgeTips"
+                />
             </span>
-            <span @click="copy('picLink')" class="pointer">
+            <span
+                @click="copy('picLink')"
+                class="pointer"
+            >
                 {{ $t('copyBadgePicLink') }}
             </span>
         </section>
@@ -14,6 +33,7 @@
 </template>
 
 <script>
+    import { copyToClipboard } from '@/utils/util'
     export default {
         props: {
             projectId: {
@@ -54,7 +74,7 @@
             copy (ref) {
                 try {
                     const copyUrl = ref === 'markdownLink' ? this.markdownLinkUrl : this.badgeImageUrl
-                    window.navigator.clipboard.writeText(copyUrl)
+                    copyToClipboard(copyUrl)
                     this.$bkMessage({
                         theme: 'success',
                         message: this.$t('copySuc'),

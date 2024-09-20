@@ -1,6 +1,10 @@
 <template>
     <form class="enum-input-main">
-        <bk-radio-group @change="handleSelect" :value="value" :name="name">
+        <bk-radio-group
+            @change="handleSelect"
+            :value="value"
+            :name="name"
+        >
             <template v-for="item in list">
                 <bk-popover
                     v-if="!item.hidden"
@@ -13,12 +17,15 @@
                     <bk-radio
                         :class="['bkdevops-radio', { mr15: lineNumber <= 0 }]"
                         :value="item.value"
-                        :disabled="disabled || item.disabled"
+                        :disabled="disabled || item.disabled || readOnly"
                     >
-                        <span :class="{
-                            'overflow': true,
-                            'tip-style': item.tips
-                        }" v-bk-overflow-tips>
+                        <span
+                            :class="{
+                                'overflow': true,
+                                'tip-style': item.tips
+                            }"
+                            v-bk-overflow-tips
+                        >
                             {{ item.label }}
                         </span>
                     </bk-radio>

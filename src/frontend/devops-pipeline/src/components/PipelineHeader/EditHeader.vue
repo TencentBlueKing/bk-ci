@@ -1,10 +1,15 @@
 <template>
     <div class="pipeline-edit-header">
-        <pipeline-bread-crumb :is-loading="!isPipelineNameReady" :pipeline-name="pipelineSetting?.pipelineName">
+        <pipeline-bread-crumb
+            :is-loading="!isPipelineNameReady"
+            :pipeline-name="pipelineSetting?.pipelineName"
+        >
             <span class="pipeline-edit-header-tag">
-                <PacTag v-if="pacEnabled" :info="pipelineInfo?.yamlInfo" />
                 <bk-tag>
-                    <span v-bk-overflow-tips class="edit-header-draft-tag">
+                    <span
+                        v-bk-overflow-tips
+                        class="edit-header-draft-tag"
+                    >
                         {{ currentVersionName }}
                     </span>
                 </bk-tag>
@@ -81,7 +86,6 @@
 
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
-    import PacTag from '@/components/PacTag.vue'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import {
         RESOURCE_ACTION
@@ -96,8 +100,7 @@
         components: {
             PipelineBreadCrumb,
             ReleaseButton,
-            ModeSwitch,
-            PacTag
+            ModeSwitch
         },
         props: {
             isSwitchPipeline: Boolean
@@ -125,8 +128,7 @@
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isEditing: 'atom/isEditing',
                 checkPipelineInvalid: 'atom/checkPipelineInvalid',
-                draftBaseVersionName: 'atom/getDraftBaseVersionName',
-                pacEnabled: 'atom/pacEnabled'
+                draftBaseVersionName: 'atom/getDraftBaseVersionName'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -299,10 +301,7 @@
             goDraftDebugRecord () {
                 if (this.canDebug) {
                     this.$router.push({
-                        name: 'draftDebugRecord',
-                        params: {
-                            version: this.pipelineInfo?.version
-                        }
+                        name: 'draftDebugRecord'
                     })
                 }
             },
@@ -357,6 +356,7 @@
     grid-auto-flow: column;
     height: 100%;
     align-items: center;
+    justify-content: center;
   }
 }
 .pipeline-save-error-list-box {

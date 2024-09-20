@@ -1,47 +1,90 @@
 <template>
     <section>
-        <bk-card v-for="card in notifyList" :key="card.type" :is-collapse="true" :collapse-icons="icons" :border="false" class="notify-item">
-            <div slot="header" class="item-header">
-                <span class="notify-title">{{card.name}}</span>
-                <bk-link v-if="editable" theme="primary" icon="bk-icon icon-plus" @click.stop="handleEdit(card.type, -1)">
-                    {{$t('newui.addNotice')}}
+        <bk-card
+            v-for="card in notifyList"
+            :key="card.type"
+            :is-collapse="true"
+            :collapse-icons="icons"
+            :border="false"
+            class="notify-item"
+        >
+            <div
+                slot="header"
+                class="item-header"
+            >
+                <span class="notify-title">{{ card.name }}</span>
+                <bk-link
+                    v-if="editable"
+                    theme="primary"
+                    icon="bk-icon icon-plus"
+                    @click.stop="handleEdit(card.type, -1)"
+                >
+                    {{ $t('newui.addNotice') }}
                 </bk-link>
             </div>
             <div class="item-content-area">
                 <template v-for="(item, index) in getRenderInfo(card.type)">
-                    <div :key="index" class="item-content">
-                        <div v-if="editable" class="operate-icons">
-                            <i class="devops-icon icon-edit" @click="handleEdit(card.type, index)"></i>
-                            <bk-popover class="setting-more-dot-menu"
+                    <div
+                        :key="index"
+                        class="item-content"
+                    >
+                        <div
+                            v-if="editable"
+                            class="operate-icons"
+                        >
+                            <i
+                                class="devops-icon icon-edit"
+                                @click="handleEdit(card.type, index)"
+                            ></i>
+                            <bk-popover
+                                class="setting-more-dot-menu"
                                 placement="bottom-start"
                                 theme="project-manage-more-dot-menu light"
                                 trigger="click"
                                 :arrow="false"
-                                :distance="0">
+                                :distance="0"
+                            >
                                 <span class="more-menu-trigger">
-                                    <i class="devops-icon icon-more" style="display: inline-block;margin-top: 2px;font-size: 18px"></i>
+                                    <i
+                                        class="devops-icon icon-more"
+                                        style="display: inline-block;margin-top: 2px;font-size: 18px"
+                                    ></i>
                                 </span>
-                                <ul class="setting-menu-list" slot="content">
-                                    <li @click="handleDelete(card.type, index)" style="padding: 0 2px;cursor: pointer;">{{$t('delete')}}</li>
+                                <ul
+                                    class="setting-menu-list"
+                                    slot="content"
+                                >
+                                    <li
+                                        @click="handleDelete(card.type, index)"
+                                        style="padding: 0 2px;cursor: pointer;"
+                                    >
+                                        {{ $t('delete') }}
+                                    </li>
                                 </ul>
                             </bk-popover>
                         </div>
                         <template v-for="field in renderFields">
-                            <div class="item-info" :key="field.col">
+                            <div
+                                class="item-info"
+                                :key="field.col"
+                            >
                                 <div class="info-label">
-                                    {{field.label}}
+                                    {{ field.label }}
                                 </div>
                                 <div class="info-content">
-                                    {{getShowContent(field.col, item[field.col])}}
+                                    {{ getShowContent(field.col, item[field.col]) }}
                                 </div>
                             </div>
                         </template>
-                        <div class="item-info" v-if="item.wechatGroupFlag && item.wechatGroup && item.types && item.types.includes('WEWORK')">
+                        <div
+                            class="item-info"
+                            v-if="item.wechatGroupFlag && item.wechatGroup && item.types && item.types.includes('WEWORK')"
+                        >
                             <div class="info-label">
-                                {{$t('weChatGroupID')}}
+                                {{ $t('weChatGroupID') }}
                             </div>
                             <div class="info-content">
-                                {{item.wechatGroup}}
+                                {{ item.wechatGroup }}
                             </div>
                         </div>
                     </div>
@@ -56,19 +99,31 @@
             :is-show.sync="showSlider"
             ext-cls="edit-notify-container"
         >
-            <div class="edit-notify-content" slot="content">
+            <div
+                class="edit-notify-content"
+                slot="content"
+            >
                 <notify-setting
                     ref="notifySettingTab"
                     :subscription="sliderEditItem"
                     :update-subscription="updateEditItem"
                 />
             </div>
-            <div class="edit-notify-footer" slot="footer">
-                <bk-button theme="primary" @click="handleSaveNotify">
-                    {{$t('confirm')}}
+            <div
+                class="edit-notify-footer"
+                slot="footer"
+            >
+                <bk-button
+                    theme="primary"
+                    @click="handleSaveNotify"
+                >
+                    {{ $t('confirm') }}
                 </bk-button>
-                <bk-button style="margin-left: 4px;" @click="hideSlider">
-                    {{$t('cancel')}}
+                <bk-button
+                    style="margin-left: 4px;"
+                    @click="hideSlider"
+                >
+                    {{ $t('cancel') }}
                 </bk-button>
             </div>
         </bk-sideslider>
@@ -154,6 +209,7 @@
                     EMAIL: this.$t('settings.emailNotice'),
                     WEWORK: this.$t('settings.rtxNotice'),
                     RTX: this.$t('settings.rtxNotice'),
+                    WEWORK_GROUP: this.$t('settings.weworkGroup'),
                     VOICE: this.$t('settings.voice'),
                     WECHAT: this.$t('settings.wechatNotice'),
                     SMS: this.$t('settings.smsNotice')
