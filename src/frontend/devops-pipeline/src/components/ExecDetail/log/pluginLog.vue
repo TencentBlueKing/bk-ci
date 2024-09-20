@@ -192,8 +192,8 @@
                     ...this.postData
                 })
                     .then((res) => {
-                        item.goodUsers = res.goodUsers
-                        item.badUsers = res.badUsers
+                        item.goodUsers = res.data.goodUsers
+                        item.badUsers = res.data.badUsers
                         scrollRef.setSingleLogData(item)
                     })
             },
