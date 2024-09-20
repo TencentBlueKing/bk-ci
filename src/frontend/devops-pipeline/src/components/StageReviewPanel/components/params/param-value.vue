@@ -28,11 +28,16 @@
         </bk-option>
     </bk-select>
 
-    <bk-checkbox
-        v-model="form.value"
+    <div
         v-else-if="isCheakboxParam(form.valueType)"
+        class="clear"
     >
-    </bk-checkbox>
+        <bk-checkbox
+            v-model="form.value"
+        >
+        </bk-checkbox>
+        <span class="clear-name">{{ form.chineseName }}</span>
+    </div>
 
     <bk-radio-group
         v-model="form.value"
@@ -83,3 +88,16 @@
         }
     }
 </script>
+
+<style lang="scss" scoped>
+.clear {
+    display: flex;
+    align-items: center;
+    .bk-form-item label {
+        line-height: 30px;
+    }
+    .clear-name {
+        margin-left: 5px;
+    }
+}
+</style>
