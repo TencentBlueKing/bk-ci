@@ -792,6 +792,14 @@ export default {
         return request.post(url)
     },
 
+    getPraiseAiInfo ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=true`
+        if (executeCount) {
+            url += `&executeCount=${executeCount}`
+        }
+        return request.get(url)
+    },
+
     getLogAIMessage ({ commit }, { projectId, pipelineId, buildId, tag, executeCount, refresh, callBack }) {
         let url = `/misc/api/user/gpt/script_error_analysis/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&refresh=${refresh}`
         if (executeCount) {

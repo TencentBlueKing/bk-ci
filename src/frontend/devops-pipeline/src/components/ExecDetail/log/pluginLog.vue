@@ -6,10 +6,18 @@
             class="log-tools"
         >
             <template v-slot:tool>
-                <li class="more-button" @click="toggleShowDebugLog">
+                <li
+                    class="more-button"
+                    @click="toggleShowDebugLog"
+                >
                     {{ showDebug ? $t("hideDebugLog") : $t("showDebugLog") }}
                 </li>
-                <li class="more-button" @click="downloadLog">{{ $t("downloadLog") }}</li>
+                <li
+                    class="more-button"
+                    @click="downloadLog"
+                >
+                    {{ $t("downloadLog") }}
+                </li>
             </template>
         </bk-log-search>
         <bk-log
@@ -154,30 +162,44 @@
                 'getLogStatus',
                 'getDownloadLogFromArtifactory',
                 'praiseAi',
+                'getPraiseAiInfo',
                 'getLogAIMessage'
             ]),
 
-            handlePraiseAi () {
+            handlePraiseAi (item) {
                 this.praiseAi({
                     ...this.postData,
                     score: true
                 }).then(() => {
-                    this.$bkMessage({ theme: 'error', message: this.$t('successPraise') })
+                    this.handleGetPraiseAiInfo(item)
+                    this.$bkMessage({ theme: 'success', message: this.$t('successPraise') })
                 })
             },
 
-            handleDownPraiseAi () {
+            handleDownPraiseAi (item) {
                 this.praiseAi({
                     ...this.postData,
                     score: false
                 }).then(() => {
-                    this.$bkMessage({ theme: 'error', message: this.$t('successDownPraise') })
+                    this.handleGetPraiseAiInfo(item)
+                    this.$bkMessage({ theme: 'success', message: this.$t('successDownPraise') })
                 })
+            },
+
+            handleGetPraiseAiInfo (item) {
+                const scrollRef = this.$refs.scroll
+                this.getPraiseAiInfo()
+                    .then((res) => {
+                        item.goodUsers = res.goodUsers
+                        item.badUsers = res.badUsers
+                        scrollRef.setSingleLogData(item)
+                    })
             },
 
             handleLoadAiMessage (item) {
                 item.aiMessage = ''
                 const scrollRef = this.$refs.scroll
+                this.handleGetPraiseAiInfo(item)
                 this.getLogAIMessage({
                     ...this.postData,
                     refresh: false,

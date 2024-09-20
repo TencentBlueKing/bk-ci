@@ -149,8 +149,8 @@
   "downloadLog": "下载日志",
   "hideDebugLog": "隐藏调试日志",
   "showDebugLog": "展示调试日志",
-  "successPraise": "点赞成功",
-  "successDownPraise": "点踩成功",
+  "successPraise": "已赞",
+  "successDownPraise": "已踩",
   "stageReview": {
     "stageInConditions": "准入规则",
     "approvalFlow": "审核流",
