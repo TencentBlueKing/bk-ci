@@ -62,7 +62,7 @@
             </bk-form-item>
             <bk-form-item
                 :label="$t('stageReview.defaultValue')"
-                v-if="copyForm.valueType"
+                v-if="copyForm.valueType && !isCheakboxParam(copyForm.valueType)"
                 :key="copyForm.valueType"
             >
                 <param-value :form="copyForm"></param-value>

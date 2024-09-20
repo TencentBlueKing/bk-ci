@@ -93,7 +93,7 @@
 .clear {
     display: flex;
     align-items: center;
-    .bk-form-item label {
+    .bk-form-item {
         line-height: 30px;
     }
     .clear-name {
