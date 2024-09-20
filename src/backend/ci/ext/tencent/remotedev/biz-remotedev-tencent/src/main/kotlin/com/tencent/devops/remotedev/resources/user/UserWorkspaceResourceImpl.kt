@@ -42,6 +42,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
@@ -132,7 +133,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         pageSize: Int?,
         search: WorkspaceSearch
     ): Result<Page<Workspace>> {
-        return Result(workspaceService.getWorkspaceList(userId, page, pageSize, search))
+        return Result(workspaceService.getWorkspaceList(userId, page, pageSize, search.also { it.notStatus?.plus(WorkspaceStatus.DISTRIBUTING) }))
     }
 
     @AuditEntry(actionId = ActionId.CGS_VIEW)
