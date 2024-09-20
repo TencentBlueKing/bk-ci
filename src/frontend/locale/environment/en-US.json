@@ -119,6 +119,8 @@
         "value": "Value",
         "devEnvType": "Deploy-Test Pools",
         "testEnvType": "Deploy-Prod Pools",
+        "cloudDesktopType": "Deploy-DEVX Pools",
+        "DEVX": "DEVX",
         "buildEnvType": "Build Pools",
         "nodeCount": "Agent Count",
         "creationTime": "Created at",
