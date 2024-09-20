@@ -60,14 +60,19 @@ class AcrossProjectDistributionAtom @Autowired constructor(
         return JsonUtil.mapTo(task.taskParams, AcrossProjectDistributionElement::class.java)
     }
 
-    override fun execute(task: PipelineBuildTask, param: AcrossProjectDistributionElement, runVariables: Map<String, String>): AtomResponse {
+    override fun execute(
+        task: PipelineBuildTask,
+        param: AcrossProjectDistributionElement,
+        runVariables: Map<String, String>
+    ): AtomResponse {
+        logger.warn("Deprecated_Plugin|AcrossProjectDistributionAtom|${task.projectId}|${task.pipelineId}")
         val pipelineId = task.pipelineId
         val projectId = task.projectId
         val buildId = task.buildId
 //        val param: AcrossProjectDistributionElement = JsonUtil.mapTo(task.taskParams)
         val path = parseVariable(param.path, runVariables) // parseVariable(getTaskParams("path", task), task)
         val customized = param.customized // parseVariable(getTaskParams("customized", task), task)
-        val targetProjectId = parseVariable(param.targetProjectId, runVariables) // getTaskParams("targetProjectId", task), task)
+        val targetProjectId = parseVariable(param.targetProjectId, runVariables)
         val targetPath = if (param.targetPath.isNotEmpty()) {
             parseVariable(param.targetPath, runVariables)
         } else {

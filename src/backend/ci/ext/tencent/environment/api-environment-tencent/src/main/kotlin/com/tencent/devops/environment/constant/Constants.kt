@@ -28,16 +28,6 @@
 package com.tencent.devops.environment.constant
 
 object Constants {
-    /**
-     * 请求新CMDB接口的请求参数
-     */
-    const val NEW_COLUMN_MAINTAINER = "maintainer" // 主负责人
-    const val NEW_COLUMN_BAK_MAINTAINER = "maintainerBak" // 备份负责人(多个人用;分隔)
-    const val NEW_COLUMN_SERVER_ID = "serverId" // 服务器ID
-    const val NEW_COLUMN_OS_NAME = "osName" // 操作系统名称
-    const val NEW_COLUMN_HOST_NAME = "hostName" // 主机名称
-    const val NEW_COLUMN_DEPT_ID = "maintenanceDepartmentId" // 运维部门ID
-    const val NEW_COLUMN_INNER_SERVER_IPV4 = "innerServerIpv4" // 服务器的内网Ipv4地址列表
 
     /**
      * 请求ESB-CMDB接口的请求参数

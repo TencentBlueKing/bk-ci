@@ -1,7 +1,6 @@
 import store from '@/store'
 import eventBus from './eventBus'
 import { goToPage, showLoginPopup, toggleAsidePanel, toggleDialog } from './util'
-const { platformInfo } = (store.state as any).platFormConfig
 interface UrlParam {
     url: string
     refresh: boolean
@@ -28,6 +27,7 @@ function iframeUtil (router: any) {
         }, '*')
     }
     utilMap.updateTabTitle = function (title: string): void {
+        const { platformInfo } = (store.state as any).platFormConfig
         if (title) {
             document.title = title
         } else if (!title && platformInfo) {

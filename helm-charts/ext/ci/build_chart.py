@@ -18,7 +18,6 @@ def write_application_tpl(config_path, tpl_path):
             yaml.dump(common_yaml, tpl_path)
             tpl_path.write('---\n')
 
-
 # 生成value.yaml
 image_gateway_tag = '0.0'
 image_backend_tag = '0.0'

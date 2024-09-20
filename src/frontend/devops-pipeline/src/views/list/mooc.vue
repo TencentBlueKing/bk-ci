@@ -1,19 +1,28 @@
 <template>
-    <article class="pipeline-list" v-bkloading="{ isLoading: pageLoading, title: loading.title }">
+    <article
+        class="pipeline-list"
+        v-bkloading="{ isLoading: pageLoading, title: loading.title }"
+    >
         <section class="loading-wrapper">
-            <div class="pipeline-list-wrapper" v-if="showContent && !pageLoading">
+            <div
+                class="pipeline-list-wrapper"
+                v-if="showContent && !pageLoading"
+            >
                 <template>
                     <template v-if="pipelineList.length <= 0">
-                        <empty-tips v-if="hasFilter"
+                        <empty-tips
+                            v-if="hasFilter"
                             :title="filterNoResultTipsConfig.title"
                             :desc="filterNoResultTipsConfig.desc"
-                            :btns="filterNoResultTipsConfig.btns">
+                            :btns="filterNoResultTipsConfig.btns"
+                        >
                         </empty-tips>
                         <empty-tips
                             v-else
                             :title="mypipelineEmptyTipsConfig.title"
                             :desc="mypipelineEmptyTipsConfig.desc"
-                            :btns="mypipelineEmptyTipsConfig.btns">
+                            :btns="mypipelineEmptyTipsConfig.btns"
+                        >
                         </empty-tips>
                     </template>
                     <section v-else>
@@ -24,24 +33,33 @@
                             @showSlide="showSlide"
                             @changeLayout="changeLayoutType"
                             @changeOrder="changeOrderType"
-                            @showCreate="toggleTemplatePopup">
+                            @showCreate="toggleTemplatePopup"
+                        >
                         </list-create-header>
 
                         <section class="pipeline-list-content">
-                            <div class="pipeline-list-cards clearfix" v-if="layout === 'card'">
+                            <div
+                                class="pipeline-list-cards clearfix"
+                                v-if="layout === 'card'"
+                            >
                                 <task-card
                                     v-for="(card, index) of pipelineList"
                                     :has-permission="card.hasPermission"
                                     :config="card.feConfig"
                                     :index="index"
                                     :key="`taskCard${card.pipelineId}`"
-                                    :can-manual-startup="card.canManualStartup">
+                                    :can-manual-startup="card.canManualStartup"
+                                >
                                 </task-card>
                             </div>
 
-                            <div class="pipeline-list-table" v-if="layout === 'table'">
+                            <div
+                                class="pipeline-list-table"
+                                v-if="layout === 'table'"
+                            >
                                 <task-table
-                                    :list="pipelineList">
+                                    :list="pipelineList"
+                                >
                                 </task-table>
                             </div>
                         </section>
@@ -49,8 +67,19 @@
                 </template>
             </div>
 
-            <mooc-pipeline-popup :toggle-popup="toggleTemplatePopup" :is-show="templatePopupShow"></mooc-pipeline-popup>
-            <pipeline-filter v-if="slideShow" :is-show="slideShow" @showSlide="showSlide" :is-disabled="isDisabled" :selected-filter="currentFilter" @filter="filterCommit" class="pipeline-filter"></pipeline-filter>
+            <mooc-pipeline-popup
+                :toggle-popup="toggleTemplatePopup"
+                :is-show="templatePopupShow"
+            ></mooc-pipeline-popup>
+            <pipeline-filter
+                v-if="slideShow"
+                :is-show="slideShow"
+                @showSlide="showSlide"
+                :is-disabled="isDisabled"
+                :selected-filter="currentFilter"
+                @filter="filterCommit"
+                class="pipeline-filter"
+            ></pipeline-filter>
             <bk-dialog
                 width="800"
                 v-model="copyDialogConfig.isShow"
@@ -63,34 +92,53 @@
                 @cancel="copyCancelHandler"
             >
                 <template>
-                    <section class="copy-pipeline bk-form" v-bkloading="{ isLoading: copyConfig.loading }">
+                    <section
+                        class="copy-pipeline bk-form"
+                        v-bkloading="{ isLoading: copyConfig.loading }"
+                    >
                         <div class="bk-form-item">
                             <label class="bk-label">{{ $t('name') }}：</label>
                             <div class="bk-form-content">
-                                <input type="text" class="bk-form-input" :placeholder="$t('pipelineNameInputTips')"
+                                <input
+                                    type="text"
+                                    class="bk-form-input"
+                                    :placeholder="$t('pipelineNameInputTips')"
                                     name="newPipelineName"
-                                    v-validate="&quot;required|max:40&quot;"
+                                    v-validate="'required|max:40'"
                                     v-model="copyConfig.newPipelineName"
                                     :class="{
                                         'is-danger': errors.has('newPipelineName')
                                     }"
                                 >
-                                <p class="error-tips" v-if="errors.has('newPipelineName')">{{ $t('pipelineNameInputTips') }}</p>
+                                <p
+                                    class="error-tips"
+                                    v-if="errors.has('newPipelineName')"
+                                >
+                                    {{ $t('pipelineNameInputTips') }}
+                                </p>
                             </div>
                         </div>
 
                         <div class="bk-form-item">
                             <label class="bk-label">{{ $t('desc') }}：</label>
                             <div class="bk-form-content">
-                                <input type="text" class="bk-form-input" :placeholder="$t('pipelineDescInputTips')"
+                                <input
+                                    type="text"
+                                    class="bk-form-input"
+                                    :placeholder="$t('pipelineDescInputTips')"
                                     name="newPipelineDesc"
                                     v-model="copyConfig.newPipelineDesc"
-                                    v-validate.initial="&quot;max:100&quot;"
+                                    v-validate.initial="'max:100'"
                                     :class="{
                                         'is-danger': errors.has('newPipelineDesc')
                                     }"
                                 >
-                                <p class="error-tips" v-if="errors.has('newPipelineDesc')"> {{ errors.first("newPipelineDesc") }}</p>
+                                <p
+                                    class="error-tips"
+                                    v-if="errors.has('newPipelineDesc')"
+                                >
+                                    {{ errors.first("newPipelineDesc") }}
+                                </p>
                             </div>
                         </div>
                     </section>
@@ -106,33 +154,53 @@
                 :auto-close="false"
                 header-position="left"
                 @confirm="saveAsConfirmHandler"
-                @cancel="saveAsCancelHandler">
-                <section class="copy-pipeline bk-form" ref="saveAsTemp">
+                @cancel="saveAsCancelHandler"
+            >
+                <section
+                    class="copy-pipeline bk-form"
+                    ref="saveAsTemp"
+                >
                     <div class="bk-form-item">
                         <label class="bk-label">{{ $t('template.name') }}</label>
                         <div class="bk-form-content">
-                            <input type="text"
+                            <input
+                                type="text"
                                 class="bk-form-input"
                                 :placeholder="$t('template.nameInputTips')"
                                 v-model="saveAsTemp.templateName"
                                 :class="{ 'is-danger': errors.has('saveTemplateName') }"
                                 name="saveTemplateName"
-                                v-validate="&quot;required|max:30&quot;"
+                                v-validate="'required|max:30'"
                                 maxlength="30"
                             >
                         </div>
-                        <div v-if="errors.has('saveTemplateName')" class="error-tips err-name">{{ $t('template.nameInputTips') }}</div>
+                        <div
+                            v-if="errors.has('saveTemplateName')"
+                            class="error-tips err-name"
+                        >
+                            {{ $t('template.nameInputTips') }}
+                        </div>
                     </div>
 
                     <div class="bk-form-item">
                         <label class="bk-label tip-bottom">{{ $t('template.applySetting') }}
-                            <span v-bk-tooltips.bottom="$t('template.tipsSetting')" class="bottom-start">
+                            <span
+                                v-bk-tooltips.bottom="$t('template.tipsSetting')"
+                                class="bottom-start"
+                            >
                                 <i class="bk-icon icon-info-circle"></i>
                             </span>
                         </label>
                         <div class="bk-form-content">
                             <bk-radio-group v-model="saveAsTemp.isCopySetting">
-                                <bk-radio v-for="(entry, key) in copySettings" :key="key" :value="entry.value" class="auth-radio">{{ entry.label }}</bk-radio>
+                                <bk-radio
+                                    v-for="(entry, key) in copySettings"
+                                    :key="key"
+                                    :value="entry.value"
+                                    class="auth-radio"
+                                >
+                                    {{ entry.label }}
+                                </bk-radio>
                             </bk-radio-group>
                         </div>
                     </div>
@@ -144,24 +212,24 @@
 
 <script>
     // import pipelineWebsocket from '@/utils/pipelineWebSocket'
-    import webSocketMessage from '@/utils/webSocketMessage'
-    import { mapGetters, mapState } from 'vuex'
-    import moocPipelinePopup from '@/components/pipelineList/moocPipelinePopup'
-    import { bus } from '@/utils/bus'
-    import taskCard from '@/components/pipelineList/taskCard'
-    import taskTable from '@/components/pipelineList/taskTable'
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import listCreateHeader from '@/components/pipelineList/listCreateHeader'
+    import moocPipelinePopup from '@/components/pipelineList/moocPipelinePopup'
     import pipelineFilter from '@/components/pipelineList/PipelineFilter'
+    import taskCard from '@/components/pipelineList/taskCard'
+    import taskTable from '@/components/pipelineList/taskTable'
+    import { bus } from '@/utils/bus'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import {
         convertMStoString,
         convertMStoStringByRule,
         navConfirm
     } from '@/utils/util'
-    import {
-        handlePipelineNoPermission,
-        RESOURCE_ACTION
-    } from '@/utils/permission'
+    import webSocketMessage from '@/utils/webSocketMessage'
+    import { mapGetters, mapState } from 'vuex'
 
     export default {
         components: {

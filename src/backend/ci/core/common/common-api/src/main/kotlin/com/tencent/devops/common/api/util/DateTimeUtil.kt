@@ -137,6 +137,9 @@ object DateTimeUtil {
         return localDateTime?.toEpochSecond(ZoneOffset.ofHours(8)) ?: 0L
     }
 
+    /*
+    * 用于转化秒级时间戳，非毫秒级
+    * */
     fun convertTimestampToLocalDateTime(timestamp: Long): LocalDateTime {
         return LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault())
     }
@@ -245,7 +248,7 @@ object DateTimeUtil {
      */
     fun formatDay(mss: Long): String {
         if (mss == 0L) return "0"
-        return (mss / (1000 * 60 * 60 * 24)).toString()
+        return ((mss / (1000 * 60 * 60 * 24)) + 1).toString()
     }
 
     /**

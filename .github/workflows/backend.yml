@@ -55,7 +55,7 @@ jobs:
       run: |
         ./gradlew clean test build :core:worker:worker-agent:shadowJar \
         -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       if: ${{ inputs.upload == 'true'  }}
       with:
         name: backend-jar
@@ -95,7 +95,7 @@ jobs:
       run: |
         ./gradlew clean test build :core:worker:worker-agent:shadowJar -Ddevops.assemblyMode=KUBERNETES \
         -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       if: ${{ inputs.upload == 'true'  }}
       with:
         name: backend-docker

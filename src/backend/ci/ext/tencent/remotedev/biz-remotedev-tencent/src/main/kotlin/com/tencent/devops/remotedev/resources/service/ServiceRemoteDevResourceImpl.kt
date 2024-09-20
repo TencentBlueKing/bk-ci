@@ -35,6 +35,7 @@ import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
@@ -203,7 +204,6 @@ class ServiceRemoteDevResourceImpl(
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
         val projectId = checkNotNull(data.projectId)
-        workspaceCommon.syncStartCloudResourceList()
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
         // 增加可以分配的配额
         if (!data.ips.isNullOrEmpty() || !data.cgsIds.isNullOrEmpty()) {
@@ -275,11 +275,11 @@ class ServiceRemoteDevResourceImpl(
             }
             AsyncExecute.dispatch(
                 rabbitTemplate, AsyncPipelineEvent(
-                    userId = info.userId ?: operator,
-                    projectId = info.projectId,
-                    pipelineId = info.pipelineId,
-                    values = newParam
-                )
+                userId = info.userId ?: operator,
+                projectId = info.projectId,
+                pipelineId = info.pipelineId,
+                values = newParam
+            )
             )
         } catch (e: Exception) {
             logger.warn("execute assignWorkspace pipeline error", e)
@@ -288,10 +288,12 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun notifyWorkspaceInfo(operator: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
-        notifyControl.notifyWorkspaceInfo(
-            userId = operator,
-            notifyData = notifyData,
-            enableSendDesktop = true
+        logger.info("notify workspace|notifyData|$notifyData")
+        AsyncExecute.dispatch(
+            rabbitTemplate, AsyncNotify(
+            operator = operator,
+            notifyData = notifyData
+        )
         )
         return Result(true)
     }
@@ -301,13 +303,17 @@ class ServiceRemoteDevResourceImpl(
         if (!ok) {
             return Result(false)
         }
-        startWorkspaceService.sendMessage(
-            operator = notifyData.operator,
-            userIdList = notifyData.userIdList,
-            dataType = notifyData.dataType,
-            data = notifyData.data,
-            messageStartTime = notifyData.messageEndTime,
-            messageEndTime = notifyData.messageEndTime
+        notifyControl.notify4User(
+            userIds = notifyData.userIdList,
+            notifyType = setOf(notifyData.dataType),
+            bodyParams = mutableMapOf(
+                "operator" to notifyData.operator,
+                "messageContent" to notifyData.data,
+                "messageStartTime" to notifyData.messageStartTime.toString(),
+                "messageEndTime" to notifyData.messageEndTime.toString(),
+                "clientMsg" to notifyData.data,
+                "notifyTemplateCode" to notifyData.notifyTemplateCode
+            )
         )
         return Result(true)
     }
@@ -430,7 +436,8 @@ class ServiceRemoteDevResourceImpl(
         return Result(
             workspaceService.getWorkspaceList4WeSec(
                 workspaceName = workspace.workspaceName,
-                notStatus = null
+                notStatus = null,
+                hasCurrentUser = true
             ).firstOrNull()
         )
     }
@@ -528,13 +535,13 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
-    override fun getWorkspaceImageList(projectId: String?): Result<Map<String, Any>> {
+    override fun getWorkspaceImageList(projectId: String?, imageId: String?): Result<Map<String, Any>> {
         // 获取基础镜像
         val baseImages = imageManageService.getVmStandardImages().map { JsonUtil.toMap(it) }
 
         // 获取项目特定镜像（如果有）
         val projectImageMap = if (!projectId.isNullOrBlank()) {
-            val projectImages = imageManageService.getProjectImageList(projectId).map { JsonUtil.toMap(it) }
+            val projectImages = imageManageService.getProjectImageList(projectId, imageId).map { JsonUtil.toMap(it) }
             mapOf(projectId to projectImages)
         } else {
             emptyMap()
@@ -681,6 +688,9 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun opCvm(data: OperateCvmData): Result<Boolean> {
+        if (!tGitService.checkProjectExist(data.projectId)) {
+            return Result(false)
+        }
         tGitService.addOrRemoveAclIp(
             projectId = data.projectId,
             ips = data.ipList,

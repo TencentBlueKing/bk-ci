@@ -83,7 +83,7 @@ class WhiteListDao {
             return record?.run {
                 WhiteList(
                     name = name,
-                    type = WhiteListType.valueOf(type),
+                    type = WhiteListType.parse(type),
                     windowsGpuLimit = windowsGpuLimit
                 )
             }

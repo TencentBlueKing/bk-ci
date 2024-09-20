@@ -87,7 +87,7 @@ object PipelineVersionUtils {
                 originTrigger.elements.forEachIndexed { index, origin ->
                     val new = newTrigger.elements[index]
                     if (origin != new) changed = true
-                    if (origin.isElementEnable() != new.isElementEnable()) changed = true
+                    if (origin.elementEnabled() != new.elementEnabled()) changed = true
                 }
             } else {
                 changed = true

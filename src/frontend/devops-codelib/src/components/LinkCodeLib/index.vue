@@ -1,10 +1,19 @@
 <template>
-    <bk-dropdown-menu class="devops-button-dropdown" :disabled="!isListReady">
-        <bk-button theme="primary" slot="dropdown-trigger">
+    <bk-dropdown-menu
+        class="devops-button-dropdown"
+        :disabled="!isListReady"
+    >
+        <bk-button
+            theme="primary"
+            slot="dropdown-trigger"
+        >
             <i class="devops-icon icon-plus"></i>
             <span>{{ $t('codelib.linkCodelib') }}</span>
         </bk-button>
-        <ul class="devops-button-dropdown-menu" slot="dropdown-content">
+        <ul
+            class="devops-button-dropdown-menu"
+            slot="dropdown-content"
+        >
             <li
                 v-for="item in codelibTypes"
                 :key="item.scmType"

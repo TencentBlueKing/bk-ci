@@ -151,38 +151,43 @@ class TxStoreIndexCronService(
                         result
                     )
                     val elementValue = if (atomSlaIndexValue > 0) String.format("%.2f", atomSlaIndexValue) else "0.0"
-                    val tStoreIndexResultRecord = TStoreIndexResultRecord()
-                    tStoreIndexResultRecord.id = UUIDUtil.generate()
-                    tStoreIndexResultRecord.storeCode = atomCode
-                    tStoreIndexResultRecord.storeType = StoreTypeEnum.ATOM.type.toByte()
-                    tStoreIndexResultRecord.indexId = storeIndexBaseInfoId
-                    tStoreIndexResultRecord.indexCode = indexCode
-                    tStoreIndexResultRecord.levelId = indexLevelInfo?.id
-                    tStoreIndexResultRecord.iconTips =
-                        "<span style=\"line-height: 18px\"><span>${
-                            I18nUtil.getCodeLanMessage(
-                                messageCode = BK_ATOM_SLA,
-                                language = I18nUtil.getDefaultLocaleLanguage()
-                            )
-                        } ： $elementValue%（$result）</span>"
-                    tStoreIndexResultRecord.creator = SYSTEM_USER
-                    tStoreIndexResultRecord.modifier = SYSTEM_USER
-                    tStoreIndexResultRecord.createTime = LocalDateTime.now()
-                    tStoreIndexResultRecord.updateTime = LocalDateTime.now()
-                    tStoreIndexResultRecords.add(tStoreIndexResultRecord)
-                    val tStoreIndexElementDetailRecord = TStoreIndexElementDetailRecord()
-                    tStoreIndexElementDetailRecord.id = UUIDUtil.generate()
-                    tStoreIndexElementDetailRecord.storeCode = atomCode
-                    tStoreIndexElementDetailRecord.storeType = StoreTypeEnum.ATOM.type.toByte()
-                    tStoreIndexElementDetailRecord.indexId = storeIndexBaseInfoId
-                    tStoreIndexElementDetailRecord.indexCode = indexCode
-                    tStoreIndexElementDetailRecord.elementName = indexCode
-                    tStoreIndexElementDetailRecord.elementValue = elementValue
-                    tStoreIndexElementDetailRecord.creator = SYSTEM_USER
-                    tStoreIndexElementDetailRecord.modifier = SYSTEM_USER
-                    tStoreIndexElementDetailRecord.createTime = LocalDateTime.now()
-                    tStoreIndexElementDetailRecord.updateTime = LocalDateTime.now()
-                    tStoreIndexElementDetailRecords.add(tStoreIndexElementDetailRecord)
+                    tStoreIndexResultRecords.add(
+                        TStoreIndexResultRecord().apply {
+                            this.id = UUIDUtil.generate()
+                            this.storeCode = atomCode
+                            this.storeType = StoreTypeEnum.ATOM.type.toByte()
+                            this.indexId = storeIndexBaseInfoId
+                            this.indexCode = indexCode
+                            this.levelId = indexLevelInfo?.id
+                            this.iconTips =
+                                "<span style=\"line-height: 18px\"><span>${
+                                    I18nUtil.getCodeLanMessage(
+                                        messageCode = BK_ATOM_SLA,
+                                        language = I18nUtil.getDefaultLocaleLanguage()
+                                    )
+                                } ： $elementValue%（$result）</span>"
+                            this.creator = SYSTEM_USER
+                            this.modifier = SYSTEM_USER
+                            this.createTime = LocalDateTime.now()
+                            this.updateTime = LocalDateTime.now()
+                        }
+                    )
+                    tStoreIndexElementDetailRecords.add(
+                        TStoreIndexElementDetailRecord().apply {
+                            this.id = UUIDUtil.generate()
+                            this.storeCode = atomCode
+                            this.storeType = StoreTypeEnum.ATOM.type.toByte()
+                            this.indexId = storeIndexBaseInfoId
+                            this.indexCode = indexCode
+                            this.elementCode = indexCode
+                            this.elementName = indexCode
+                            this.elementValue = elementValue
+                            this.creator = SYSTEM_USER
+                            this.modifier = SYSTEM_USER
+                            this.createTime = LocalDateTime.now()
+                            this.updateTime = LocalDateTime.now()
+                        }
+                    )
                 }
                 storeIndexManageInfoDao.batchCreateStoreIndexResult(dslContext, tStoreIndexResultRecords)
                 storeIndexManageInfoDao.batchCreateElementDetail(dslContext, tStoreIndexElementDetailRecords)
@@ -285,72 +290,78 @@ class TxStoreIndexCronService(
                             )
                         }）"
                     }
-                    val tStoreIndexElementDetailRecord1 = TStoreIndexElementDetailRecord()
-                    tStoreIndexElementDetailRecord1.id = UUIDUtil.generate()
-                    tStoreIndexElementDetailRecord1.storeType = StoreTypeEnum.ATOM.type.toByte()
-                    tStoreIndexElementDetailRecord1.storeCode = atomCode
-                    tStoreIndexElementDetailRecord1.indexCode = indexCode
-                    tStoreIndexElementDetailRecord1.elementName = I18nUtil.getCodeLanMessage(
-                        messageCode = BK_COMPLIANCE_RATE,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
-                    tStoreIndexElementDetailRecord1.elementValue = elementValue
-                    tStoreIndexElementDetailRecord1.indexId = storeIndexBaseInfoId
-                    tStoreIndexElementDetailRecord1.creator = SYSTEM_USER
-                    tStoreIndexElementDetailRecord1.modifier = SYSTEM_USER
-                    tStoreIndexElementDetailRecord1.createTime = LocalDateTime.now()
-                    tStoreIndexElementDetailRecord1.updateTime = LocalDateTime.now()
-                    val tStoreIndexElementDetailRecord2 = TStoreIndexElementDetailRecord()
-                    tStoreIndexElementDetailRecord2.id = UUIDUtil.generate()
-                    tStoreIndexElementDetailRecord2.storeType = StoreTypeEnum.ATOM.type.toByte()
-                    tStoreIndexElementDetailRecord2.storeCode = atomCode
-                    tStoreIndexElementDetailRecord2.indexCode = indexCode
-                    tStoreIndexElementDetailRecord2.elementName = I18nUtil.getCodeLanMessage(
-                        messageCode = BK_CODE_QUALITY,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
-                    tStoreIndexElementDetailRecord2.elementValue = "$codeccOpensourceMeasurement"
-                    tStoreIndexElementDetailRecord2.indexId = storeIndexBaseInfoId
-                    tStoreIndexElementDetailRecord2.creator = SYSTEM_USER
-                    tStoreIndexElementDetailRecord2.modifier = SYSTEM_USER
-                    tStoreIndexElementDetailRecord2.createTime = LocalDateTime.now()
-                    tStoreIndexElementDetailRecord2.updateTime = LocalDateTime.now()
+                    val tStoreIndexElementDetailRecord1 = TStoreIndexElementDetailRecord().apply {
+                        this.id = UUIDUtil.generate()
+                        this.storeType = StoreTypeEnum.ATOM.type.toByte()
+                        this.storeCode = atomCode
+                        this.indexCode = indexCode
+                        this.elementCode = BK_COMPLIANCE_RATE
+                        this.elementName = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_COMPLIANCE_RATE,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
+                        this.elementValue = elementValue
+                        this.indexId = storeIndexBaseInfoId
+                        this.creator = SYSTEM_USER
+                        this.modifier = SYSTEM_USER
+                        this.createTime = LocalDateTime.now()
+                        this.updateTime = LocalDateTime.now()
+                    }
+
+                    val tStoreIndexElementDetailRecord2 = TStoreIndexElementDetailRecord().apply {
+                        this.id = UUIDUtil.generate()
+                        this.storeType = StoreTypeEnum.ATOM.type.toByte()
+                        this.storeCode = atomCode
+                        this.indexCode = indexCode
+                        this.elementCode = BK_CODE_QUALITY
+                        this.elementName = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_CODE_QUALITY,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
+                        this.elementValue = "$codeccOpensourceMeasurement"
+                        this.indexId = storeIndexBaseInfoId
+                        this.creator = SYSTEM_USER
+                        this.modifier = SYSTEM_USER
+                        this.createTime = LocalDateTime.now()
+                        this.updateTime = LocalDateTime.now()
+                    }
                     tStoreIndexElementDetailRecords.add(tStoreIndexElementDetailRecord1)
                     tStoreIndexElementDetailRecords.add(tStoreIndexElementDetailRecord2)
-                    val tStoreIndexResultRecord = TStoreIndexResultRecord()
-                    tStoreIndexResultRecord.id = UUIDUtil.generate()
-                    tStoreIndexResultRecord.indexId = storeIndexBaseInfoId
-                    tStoreIndexResultRecord.indexCode = indexCode
-                    tStoreIndexResultRecord.storeCode = atomCode
-                    tStoreIndexResultRecord.storeType = StoreTypeEnum.ATOM.type.toByte()
-                    val indexResult = if (codeccOpensourceMeasurement == 100.0) {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_UP_TO_PAR,
-                            language = I18nUtil.getDefaultLocaleLanguage()
-                        )
-                    } else {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_NOT_UP_TO_PAR,
-                            language = I18nUtil.getDefaultLocaleLanguage()
-                        )
+                    val tStoreIndexResultRecord = TStoreIndexResultRecord().apply {
+                        this.id = UUIDUtil.generate()
+                        this.indexId = storeIndexBaseInfoId
+                        this.indexCode = indexCode
+                        this.storeCode = atomCode
+                        this.storeType = StoreTypeEnum.ATOM.type.toByte()
+                        val indexResult = if (codeccOpensourceMeasurement == 100.0) {
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = BK_UP_TO_PAR,
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
+                        } else {
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = BK_NOT_UP_TO_PAR,
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
+                        }
+                        this.iconTips =
+                            "<span style=\"line-height: 18px\"><span>${
+                                I18nUtil.getCodeLanMessage(
+                                    messageCode = BK_COMPLIANCE_RATE,
+                                    I18nUtil.getDefaultLocaleLanguage()
+                                )
+                            } ： $indexInfo</span></br><span>${
+                                I18nUtil.getCodeLanMessage(
+                                    messageCode = BK_CODE_QUALITY,
+                                    language = I18nUtil.getDefaultLocaleLanguage()
+                                )
+                            } ： $codeccOpensourceMeasurement（$indexResult）</span></span>"
+                        this.levelId = indexLevelInfo?.id
+                        this.creator = SYSTEM_USER
+                        this.modifier = SYSTEM_USER
+                        this.createTime = LocalDateTime.now()
+                        this.updateTime = LocalDateTime.now()
                     }
-                    tStoreIndexResultRecord.iconTips =
-                        "<span style=\"line-height: 18px\"><span>${
-                                    I18nUtil.getCodeLanMessage(
-                                        messageCode = BK_COMPLIANCE_RATE,
-                                        I18nUtil.getDefaultLocaleLanguage()
-                                    )
-                                } ： $indexInfo</span></br><span>${
-                                    I18nUtil.getCodeLanMessage(
-                                        messageCode = BK_CODE_QUALITY,
-                                        language = I18nUtil.getDefaultLocaleLanguage()
-                                    )
-                                } ： $codeccOpensourceMeasurement（$indexResult）</span></span>"
-                    tStoreIndexResultRecord.levelId = indexLevelInfo?.id
-                    tStoreIndexResultRecord.creator = SYSTEM_USER
-                    tStoreIndexResultRecord.modifier = SYSTEM_USER
-                    tStoreIndexResultRecord.createTime = LocalDateTime.now()
-                    tStoreIndexResultRecord.updateTime = LocalDateTime.now()
                     tStoreIndexResultRecords.add(tStoreIndexResultRecord)
                     storeIndexManageInfoDao.batchCreateStoreIndexResult(dslContext, tStoreIndexResultRecords)
                     storeIndexManageInfoDao.batchCreateElementDetail(dslContext, tStoreIndexElementDetailRecords)

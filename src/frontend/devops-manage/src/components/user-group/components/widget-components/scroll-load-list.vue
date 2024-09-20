@@ -15,7 +15,9 @@
             list: Array,
             hasLoadEnd: Boolean,
             getDataMethod: Function,
-            page: Number
+            page: Number,
+            projectCode: String,
+            isNotProject: Boolean
         },
 
         data () {
@@ -25,8 +27,13 @@
             }
         },
 
-        created () {
-            this.getListData()
+        watch: {
+            projectCode: {
+                handler () {
+                    this.getListData()
+                },
+                immediate: true
+            }
         },
 
         methods: {
@@ -37,6 +44,7 @@
             },
 
             getListData () {
+                if (this.isNotProject) return
                 this.isLoadingMore = true
                 this
                     .getDataMethod(this.pageSize)

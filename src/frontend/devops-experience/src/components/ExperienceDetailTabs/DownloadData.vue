@@ -1,9 +1,13 @@
 <template>
-    <section style="width: 100%" v-bkloading="{ isLoading }">
+    <section
+        style="width: 100%"
+        v-bkloading="{ isLoading }"
+    >
         <div class="download-statics">
             共 {{ downloadInfo.total }} 人下载 {{ downloadInfo.account }} 次
         </div>
-        <bk-table v-if="list.length"
+        <bk-table
+            v-if="list.length"
             ref="downloadTable"
             class="download-statics-table"
             :data="list"
@@ -11,9 +15,19 @@
             @page-change="handlePageChange"
             @page-limit-change="handleLimitChange"
         >
-            <bk-table-column label="用户名" prop="userId"></bk-table-column>
-            <bk-table-column label="下载次数" prop="times"></bk-table-column>
-            <bk-table-column label="最近下载时间" prop="latestTime" :formatter="formatTime"></bk-table-column>
+            <bk-table-column
+                label="用户名"
+                prop="userId"
+            ></bk-table-column>
+            <bk-table-column
+                label="下载次数"
+                prop="times"
+            ></bk-table-column>
+            <bk-table-column
+                label="最近下载时间"
+                prop="latestTime"
+                :formatter="formatTime"
+            ></bk-table-column>
         </bk-table>
     </section>
 </template>

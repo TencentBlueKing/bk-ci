@@ -1,5 +1,9 @@
 <template>
-    <bk-input readonly :value="appName" disabled />
+    <bk-input
+        readonly
+        :value="appName"
+        disabled
+    />
 </template>
 
 <script>

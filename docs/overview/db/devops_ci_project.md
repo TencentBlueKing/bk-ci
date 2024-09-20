@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_project
 
-**文档版本：** 1.0.2
+**文档版本：** 1.0.4
 
 **文档描述：** devops_ci_project 的数据库文档
 | 表名                  | 说明       |
@@ -392,6 +392,7 @@
 |  26   | new_window |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否打开新标签页  |
 |  27   | new_windowUrl |   varchar   | 200 |   0    |    Y     |  N   |       | 新标签页地址  |
 |  28   | cluster_type |   varchar   | 32 |   0    |    N     |  N   |       | 集群类型  |
+|  29   | DOC_URL |   varchar   | 255 |   0    |    N     |  N   |       | 文档链接  |
 
 **表名：** <a>T_SERVICE_TYPE</a>
 

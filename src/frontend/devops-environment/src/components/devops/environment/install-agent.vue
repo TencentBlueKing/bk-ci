@@ -6,12 +6,23 @@
         :width="700"
         :before-close="handleBeforeClose"
     >
-        <div class="sideslider-title" slot="header">
+        <div
+            class="sideslider-title"
+            slot="header"
+        >
             {{ $t('environment.installGseAgent') }}
             <span class="node-title">{{ $t('environment.nodeTitle') }}: {{ ip }}</span>
         </div>
-        <div slot="content" v-show="isEditing" v-bkloading="{ isLoading, title: $t('environment.正在生成手动安装命令') }">
-            <bk-alert type="info" :title="$t('environment.installAgentTips')" closable></bk-alert>
+        <div
+            slot="content"
+            v-show="isEditing"
+            v-bkloading="{ isLoading, title: $t('environment.正在生成手动安装命令') }"
+        >
+            <bk-alert
+                type="info"
+                :title="$t('environment.installAgentTips')"
+                closable
+            ></bk-alert>
             <bk-form
                 ref="form"
                 class="mt20"
@@ -24,7 +35,10 @@
                     :required="true"
                     property="isManual"
                 >
-                    <div class="bk-button-group" style="display: block;">
+                    <div
+                        class="bk-button-group"
+                        style="display: block;"
+                    >
                         <bk-button
                             :class="{
                                 'is-selected': formData.isManual === false,
@@ -57,9 +71,24 @@
                             v-model="formData.osType"
                             @change="handleChangeData"
                         >
-                            <bk-radio value="LINUX" class="mr20">Linux</bk-radio>
-                            <bk-radio value="WINDOWS" class="mr20">Windows</bk-radio>
-                            <bk-radio value="AIX" class="mr20">Aix</bk-radio>
+                            <bk-radio
+                                value="LINUX"
+                                class="mr20"
+                            >
+                                Linux
+                            </bk-radio>
+                            <bk-radio
+                                value="WINDOWS"
+                                class="mr20"
+                            >
+                                Windows
+                            </bk-radio>
+                            <bk-radio
+                                value="AIX"
+                                class="mr20"
+                            >
+                                Aix
+                            </bk-radio>
                             <bk-radio value="SOLARIS">Solaris</bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
@@ -84,8 +113,18 @@
                             v-model="formData.authType"
                             @change="handleChangeData"
                         >
-                            <bk-radio value="PASSWORD" class="mr20">{{ $t('environment.password') }}</bk-radio>
-                            <bk-radio value="KEY" class="mr20">{{ $t('environment.key') }}</bk-radio>
+                            <bk-radio
+                                value="PASSWORD"
+                                class="mr20"
+                            >
+                                {{ $t('environment.password') }}
+                            </bk-radio>
+                            <bk-radio
+                                value="KEY"
+                                class="mr20"
+                            >
+                                {{ $t('environment.key') }}
+                            </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
                     <bk-form-item
@@ -101,7 +140,12 @@
                             :placeholder="$t('environment.passwordPlaceholder')"
                             @change="handleChangeData"
                         />
-                        <div v-if="formData.authType === 'PASSWORD'" class="password-tips">{{ $t('environment.passwordTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}</div>
+                        <div
+                            v-if="formData.authType === 'PASSWORD'"
+                            class="password-tips"
+                        >
+                            {{ $t('environment.passwordTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}
+                        </div>
                     </bk-form-item>
                     <bk-form-item
                         v-else
@@ -119,7 +163,12 @@
                             :multiple="false"
                         >
                         </bk-upload>
-                        <div v-if="formData.authType === 'PASSWORD'" class="keyFile-tips">{{ $t('environment.keyFileTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}</div>
+                        <div
+                            v-if="formData.authType === 'PASSWORD'"
+                            class="keyFile-tips"
+                        >
+                            {{ $t('environment.keyFileTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}
+                        </div>
                     </bk-form-item>
                     <bk-form-item
                         :label="$t('environment.端口')"
@@ -141,10 +190,12 @@
                             v-model="formData.installChannelId"
                             @change="handleChangeData"
                         >
-                            <bk-option v-for="option in channelList"
+                            <bk-option
+                                v-for="option in channelList"
                                 :key="option.id"
                                 :id="option.id"
-                                :name="option.name">
+                                :name="option.name"
+                            >
                             </bk-option>
                         </bk-select>
                     </bk-form-item>
@@ -159,10 +210,33 @@
                             v-model="formData.osType"
                             @change="handleChangeData"
                         >
-                            <bk-radio value="LINUX" class="mr20" :disabled="isLoading">Linux</bk-radio>
-                            <bk-radio value="WINDOWS" class="mr20" :disabled="isLoading">Windows</bk-radio>
-                            <bk-radio value="AIX" class="mr20" :disabled="isLoading">Aix</bk-radio>
-                            <bk-radio value="SOLARIS" :disabled="isLoading">Solaris</bk-radio>
+                            <bk-radio
+                                value="LINUX"
+                                class="mr20"
+                                :disabled="isLoading"
+                            >
+                                Linux
+                            </bk-radio>
+                            <bk-radio
+                                value="WINDOWS"
+                                class="mr20"
+                                :disabled="isLoading"
+                            >
+                                Windows
+                            </bk-radio>
+                            <bk-radio
+                                value="AIX"
+                                class="mr20"
+                                :disabled="isLoading"
+                            >
+                                Aix
+                            </bk-radio>
+                            <bk-radio
+                                value="SOLARIS"
+                                :disabled="isLoading"
+                            >
+                                Solaris
+                            </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
                     <bk-form-item
@@ -175,20 +249,29 @@
                             :disabled="isLoading"
                             @change="handleChangeData"
                         >
-                            <bk-option v-for="option in channelList"
+                            <bk-option
+                                v-for="option in channelList"
                                 :key="option.id"
                                 :id="option.id"
-                                :name="option.name">
+                                :name="option.name"
+                            >
                             </bk-option>
                         </bk-select>
                     </bk-form-item>
                 </template>
             </bk-form>
         </div>
-        <div class="sideslider-content" slot="content" v-show="!isEditing && !isManualCommand">
+        <div
+            class="sideslider-content"
+            slot="content"
+            v-show="!isEditing && !isManualCommand"
+        >
             <div class="install-status">
                 <template v-if="['PENDING', 'RUNNING'].includes(installStatus)">
-                    <Icon class="icon" name="loading" />
+                    <Icon
+                        class="icon"
+                        name="loading"
+                    />
                     <span>{{ $t('environment.installingTips') }}</span>
                 </template>
                 <template v-else-if="installStatus === 'SUCCESS'">
@@ -207,11 +290,23 @@
                     </bk-button>
                 </template>
             </div>
-            <div ref="editor" class="log-wrapper">
-                <div ref="executeScriptLog1" v-once id="executeScriptLog1" style="height: 100%;" />
+            <div
+                ref="editor"
+                class="log-wrapper"
+            >
+                <div
+                    ref="executeScriptLog1"
+                    v-once
+                    id="executeScriptLog1"
+                    style="height: 100%;"
+                />
             </div>
         </div>
-        <div class="command-sideslider-content" slot="content" v-show="!isEditing && isManualCommand">
+        <div
+            class="command-sideslider-content"
+            slot="content"
+            v-show="!isEditing && isManualCommand"
+        >
             <manual-install-detail
                 :install-status="installStatus"
                 :step-status="stepStatus"
@@ -246,16 +341,22 @@
                 </bk-button>
             </template>
         </div>
-        <section v-once id="executeScriptLog1" />
-        <section v-once id="executeScriptLog2" />
+        <section
+            v-once
+            id="executeScriptLog1"
+        />
+        <section
+            v-once
+            id="executeScriptLog2"
+        />
     </bk-sideslider>
 </template>
 
 <script>
     import ace from 'ace-builds/src-noconflict/ace'
+    import 'ace-builds/src-noconflict/ext-searchbox'
     import 'ace-builds/src-noconflict/mode-text'
     import 'ace-builds/src-noconflict/theme-monokai'
-    import 'ace-builds/src-noconflict/ext-searchbox'
     import ManualInstallDetail from './manual-install-detail.vue'
 
     export default {

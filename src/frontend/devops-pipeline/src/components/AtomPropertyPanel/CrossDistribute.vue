@@ -1,7 +1,23 @@
 <template>
     <div class="bk-form bk-form-vertical">
-        <form-field v-for="(obj, key) in newModel" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-            <component :is="obj.component" :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: obj.required })" :handle-change="handleUpdateElement" :value="element[key]" v-bind="obj" :placeholder="getPlaceholder(obj, element)"></component>
+        <form-field
+            v-for="(obj, key) in newModel"
+            :key="key"
+            :desc="obj.desc"
+            :required="obj.required"
+            :label="obj.label"
+            :is-error="errors.has(key)"
+            :error-msg="errors.first(key)"
+        >
+            <component
+                :is="obj.component"
+                :name="key"
+                v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: obj.required })"
+                :handle-change="handleUpdateElement"
+                :value="element[key]"
+                v-bind="obj"
+                :placeholder="getPlaceholder(obj, element)"
+            ></component>
             <route-tips v-bind="getComponentTips(obj, element)"></route-tips>
         </form-field>
     </div>

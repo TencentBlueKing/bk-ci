@@ -60,12 +60,13 @@ class ImageManageService @Autowired constructor(
     }
 
     // 获取工作空间模板
-    fun getProjectImageList(projectId: String): List<ProjectImage> {
+    fun getProjectImageList(projectId: String, imageId: String?): List<ProjectImage> {
         logger.info("ImageManageService|getProjectImageList|projectId|$projectId")
         val result = mutableListOf<ProjectImage>()
         imageManageDao.queryImageList(
             projectId = projectId,
-            dslContext = dslContext
+            dslContext = dslContext,
+            imageId = imageId
         ).forEach {
             val sourceCgsZoneShortName = it.sourceCgsZone.replace(Regex("[^a-zA-Z]"), "")
             val sourceCgsZoneName = windowsResourceZoneDao.fetchAny(dslContext, sourceCgsZoneShortName)

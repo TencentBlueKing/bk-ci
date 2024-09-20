@@ -1,10 +1,15 @@
 <template>
     <div class="node-details-tab">
-        <bk-tab :active.sync="activeName" :type="currentType" style="margin-top: 20px;">
+        <bk-tab
+            :active.sync="activeName"
+            :type="currentType"
+            style="margin-top: 20px;"
+        >
             <bk-tab-panel
                 v-for="(panel, index) in menuList"
                 v-bind="panel"
-                :key="index">
+                :key="index"
+            >
                 <basic-information v-if="panel.name === 'base'"></basic-information>
                 <env-variable v-if="panel.name === 'envVariable'"></env-variable>
                 <pipeline-list v-if="panel.name === 'pipeline'"></pipeline-list>

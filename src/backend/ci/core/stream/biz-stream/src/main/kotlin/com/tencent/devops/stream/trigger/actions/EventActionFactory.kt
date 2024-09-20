@@ -30,8 +30,10 @@ package com.tencent.devops.stream.trigger.actions
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
@@ -79,6 +81,7 @@ import com.tencent.devops.stream.trigger.service.StreamTriggerTokenService
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -111,7 +114,6 @@ class EventActionFactory @Autowired constructor(
 
     fun load(event: CodeWebhookEvent): BaseAction? {
         val action = loadEvent(event) ?: return null
-
         return action.init()
     }
 
@@ -133,6 +135,7 @@ class EventActionFactory @Autowired constructor(
                     return null
                 }
             }
+
             ScmType.GITHUB -> {
                 when (actionCommonData.eventType) {
                     GithubPushEvent.classType -> objectMapper.readValue<GithubPushEvent>(eventStr)
@@ -143,6 +146,7 @@ class EventActionFactory @Autowired constructor(
                     }
                 }
             }
+
             else -> TODO("对接其他Git平台时需要补充")
         }
 
@@ -177,6 +181,7 @@ class EventActionFactory @Autowired constructor(
         ScmType.CODE_GIT -> {
             objectMapper.readValue<GitEvent>(event)
         }
+
         ScmType.GITHUB -> {
             when (objectKind) {
                 StreamObjectKind.PULL_REQUEST.value -> objectMapper.readValue<GithubPullRequestEvent>(event)
@@ -185,6 +190,7 @@ class EventActionFactory @Autowired constructor(
                 else -> throw IllegalArgumentException("$objectKind in github load action not support yet")
             }
         }
+
         else -> TODO("对接其他Git平台时需要补充")
     }
 
@@ -206,6 +212,7 @@ class EventActionFactory @Autowired constructor(
                 )
                 tGitPushAction
             }
+
             is GitMergeRequestEvent -> {
                 val tGitMrAction = TGitMrActionGit(
                     dslContext = dslContext,
@@ -218,6 +225,7 @@ class EventActionFactory @Autowired constructor(
                 )
                 tGitMrAction
             }
+
             is GitTagPushEvent -> {
                 val tGitTagPushAction = TGitTagPushActionGit(
                     apiService = tGitApiService,
@@ -225,6 +233,7 @@ class EventActionFactory @Autowired constructor(
                 )
                 tGitTagPushAction
             }
+
             is GitIssueEvent -> {
                 val tGitIssueAction = TGitIssueActionGit(
                     dslContext = dslContext,
@@ -234,6 +243,7 @@ class EventActionFactory @Autowired constructor(
                 )
                 tGitIssueAction
             }
+
             is GitReviewEvent -> {
                 val tGitReviewAction = TGitReviewActionGit(
                     dslContext = dslContext,
@@ -243,6 +253,7 @@ class EventActionFactory @Autowired constructor(
                 )
                 tGitReviewAction
             }
+
             is GitNoteEvent -> {
                 val tGitNoteAction = TGitNoteActionGit(
                     dslContext = dslContext,
@@ -252,6 +263,7 @@ class EventActionFactory @Autowired constructor(
                 )
                 tGitNoteAction
             }
+
             is GithubPushEvent -> {
                 when {
                     event.ref.startsWith("refs/heads/") -> GithubPushActionGit(
@@ -266,13 +278,16 @@ class EventActionFactory @Autowired constructor(
                         pipelineDelete = pipelineDelete,
                         gitCheckService = gitCheckService
                     )
+
                     event.ref.startsWith("refs/tags/") -> GithubTagPushActionGit(
                         apiService = githubApiService,
                         gitCheckService = gitCheckService
                     )
+
                     else -> return null
                 }
             }
+
             is GithubPullRequestEvent -> {
                 GithubPRActionGit(
                     apiService = githubApiService,
@@ -284,6 +299,7 @@ class EventActionFactory @Autowired constructor(
                     dslContext = dslContext
                 )
             }
+
             else -> {
                 return null
             }
@@ -295,9 +311,11 @@ class EventActionFactory @Autowired constructor(
             gitAction.isStreamDeleteAction() -> {
                 StreamDeleteAction(gitAction)
             }
+
             else -> gitAction
         }
 
+        action.data.watcher = Watcher("stream_action_watcher|${MDC.get(TraceTag.BIZID)}")
         return action
     }
 

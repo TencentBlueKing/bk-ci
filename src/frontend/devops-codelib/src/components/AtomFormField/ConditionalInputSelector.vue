@@ -15,7 +15,10 @@
                 :id="item[settingKey]"
                 :name="item[displayKey]"
             >
-                <slot name="option-item" v-bind="item"></slot>
+                <slot
+                    name="option-item"
+                    v-bind="item"
+                ></slot>
             </bk-option>
         </bk-select>
         <component
@@ -25,7 +28,8 @@
             v-validate.initial="Object.assign({}, { required: !!curComponent.required })"
             :handle-change="handleChange"
             :value="element[curComponent.key]"
-            v-bind="curComponent">
+            v-bind="curComponent"
+        >
         </component>
     </div>
 </template>

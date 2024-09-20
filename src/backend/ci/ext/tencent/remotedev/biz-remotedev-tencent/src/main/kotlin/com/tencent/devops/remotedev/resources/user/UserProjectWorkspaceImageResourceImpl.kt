@@ -60,7 +60,7 @@ class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
             )
         }
         logger.info("UserImageManageResourceImpl|getProjectImageList|userId|$userId|projectId|$projectId")
-        return Result(projectImageManageService.getProjectImageList(projectId))
+        return Result(projectImageManageService.getProjectImageList(projectId, null))
     }
 
     @AuditEntry(actionId = ActionId.IMAGE_DELETE)

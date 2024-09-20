@@ -78,7 +78,6 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("op assignWorkspace|$userId|$data")
         // 分配之前先同步下最新的数据
-        workspaceCommon.syncStartCloudResourceList()
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
         when (data.type) {
             WorkspaceOwnerType.PROJECT -> assignProjectWorkspace(
@@ -87,7 +86,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 cgsData = cgsData,
                 zoneType = zoneType
             )
-            WorkspaceOwnerType.PERSONAL -> assignPersonalWorkspace(data = data, cgsData = cgsData, zoneType = zoneType)
+
+            WorkspaceOwnerType.PERSONAL -> assignPersonalWorkspace(data = data, cgsData = cgsData)
         }
 
         // 启动流水线完成剩下的分配工作
@@ -244,8 +244,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
 
     private fun assignPersonalWorkspace(
         data: OpProjectWorkspaceAssignData,
-        cgsData: List<EnvironmentResourceData>,
-        zoneType: WindowsResourceZoneConfigType?
+        cgsData: List<EnvironmentResourceData>
     ) {
         val owner = checkNotNull(data.owner)
         cgsData.forEach { cgs ->
@@ -274,8 +273,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                     baseImageId = 0,
                     count = 1
                 ),
-                cgsId = cgs.cgsId,
-                zoneType = zoneType
+                cgsId = cgs.cgsId
             )
             Thread.sleep(200)
         }
@@ -306,8 +304,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     override fun notify(userId: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
         notifyControl.notifyWorkspaceInfo(
             userId = userId,
-            notifyData = notifyData,
-            enableSendDesktop = true
+            notifyData = notifyData
         )
         return Result(true)
     }
