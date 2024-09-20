@@ -32,7 +32,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 /**
  * 存放第三方构建机环境相关逻辑
