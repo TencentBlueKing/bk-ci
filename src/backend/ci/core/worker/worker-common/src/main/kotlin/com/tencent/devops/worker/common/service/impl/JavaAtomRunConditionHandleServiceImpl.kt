@@ -29,7 +29,10 @@ package com.tencent.devops.worker.common.service.impl
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
+import com.tencent.devops.worker.common.BK_CI_ATOM_EXECUTE_ENV_PATH
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
+import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -44,6 +47,23 @@ class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         runtimeVersion: String,
         workspace: File
     ): Boolean {
+        val runtimeJdkVersion = AgentEnv.getRuntimeJdkVersion()
+        val runtimeJdkPath = AgentEnv.getRuntimeJdkPath()
+        // 这里首先使用的是插件配置的jdk版本，如果构建机没有该jdk环境，那么打印日志提示并使用worker的jdk版本执行
+        val atomJdkVersion = runtimeVersion
+        var javaPath = runtimeJdkPath
+        if (atomJdkVersion != runtimeJdkVersion) {
+            val atomJdkPath = System.getenv(String.format(AgentEnv.AGENT_JDK_PATH, atomJdkVersion))
+            if (atomJdkPath.isNullOrBlank()) {
+                LoggerService.addWarnLine(
+                    "the java$atomJdkVersion environment required by the plugin is not available, " +
+                            "so it is run using the agent's java$runtimeJdkVersion environment."
+                )
+            } else {
+                javaPath = atomJdkPath
+            }
+        }
+        System.setProperty(BK_CI_ATOM_EXECUTE_ENV_PATH, javaPath)
         return true
     }
 
@@ -53,11 +73,9 @@ class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         postEntryParam: String?
     ): String {
         logger.info("handleAtomTarget|target:$target,osType:$osType,postEntryParam:$postEntryParam")
-        var convertTarget = target
-        // java插件先统一采用agent带的jre执行，如果是windows构建机需把target的启动命令替换下
-        if (osType == OSType.WINDOWS) {
-            convertTarget = target.replace("\$" + JAVA_PATH_ENV, "%$JAVA_PATH_ENV%")
-        }
+        val executePath = System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)
+        // java插件先统一采用agent带的jre执行
+        var convertTarget = target.replace("\$" + JAVA_PATH_ENV, executePath)
         if (postEntryParam != null) {
             convertTarget = convertTarget.replace(oldValue = " -jar ",
                 newValue = " -D$ATOM_POST_ENTRY_PARAM=$postEntryParam -jar ")

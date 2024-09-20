@@ -264,7 +264,7 @@ open class MarketAtomTask : ITask() {
                 DIR_ENV to atomTmpSpace.absolutePath,
                 INPUT_ENV to inputFile,
                 OUTPUT_ENV to outputFile,
-                JAVA_PATH_ENV to getJavaFile().absolutePath
+                JAVA_PATH_ENV to AgentEnv.getRuntimeJdkPath()
             )
         ).toMutableMap()
 
@@ -1068,8 +1068,6 @@ open class MarketAtomTask : ITask() {
             throw TaskExecuteExceptionDecorator.decorate(t)
         }
     }
-
-    private fun getJavaFile() = File(System.getProperty("java.home"), "/bin/java")
 
     private fun getContainerVariables(
         buildTask: BuildTask,
