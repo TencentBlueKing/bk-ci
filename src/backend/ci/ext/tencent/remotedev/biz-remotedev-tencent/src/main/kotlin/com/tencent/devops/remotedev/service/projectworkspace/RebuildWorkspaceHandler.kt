@@ -323,7 +323,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
         userId: String
     ): RebuildOptions? {
         val dataStr = redisOperation.get(genRebuildOptionsKey(workspaceName, userId))?.ifBlank { null } ?: return null
-        return JsonUtil.to(dataStr,object : TypeReference<RebuildOptions>() {})
+        return JsonUtil.to(dataStr, object : TypeReference<RebuildOptions>() {})
     }
 
     fun deleteRebuildOptions(
