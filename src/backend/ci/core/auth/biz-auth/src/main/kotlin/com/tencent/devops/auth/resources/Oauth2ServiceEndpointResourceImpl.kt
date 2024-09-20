@@ -2,16 +2,19 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.oauth2.Oauth2ServiceEndpointResource
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
+import com.tencent.devops.auth.pojo.dto.ClientDetailsDTO
 import com.tencent.devops.auth.pojo.dto.Oauth2AuthorizationCodeDTO
 import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.auth.pojo.vo.Oauth2AuthorizationInfoVo
+import com.tencent.devops.auth.service.oauth2.Oauth2ClientService
 import com.tencent.devops.auth.service.oauth2.Oauth2EndpointService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 
 @RestResource
-class Oauth2ServiceEndpointResourceImpl constructor(
-    private val endpointService: Oauth2EndpointService
+class Oauth2ServiceEndpointResourceImpl(
+    private val endpointService: Oauth2EndpointService,
+    private val clientService: Oauth2ClientService
 ) : Oauth2ServiceEndpointResource {
     override fun getAuthorizationInformation(
         userId: String,
@@ -47,7 +50,7 @@ class Oauth2ServiceEndpointResourceImpl constructor(
         clientId: String,
         clientSecret: String,
         accessTokenRequest: Oauth2AccessTokenRequest
-    ): Result<Oauth2AccessTokenVo?> {
+    ): Result<Oauth2AccessTokenVo> {
         return Result(
             endpointService.getAccessToken(
                 clientId = clientId,
@@ -68,6 +71,20 @@ class Oauth2ServiceEndpointResourceImpl constructor(
                 clientSecret = clientSecret,
                 accessToken = accessToken
             )
+        )
+    }
+
+    override fun createClientDetails(clientDetailsDTO: ClientDetailsDTO): Result<Boolean> {
+        return Result(
+            clientService.createClientDetails(
+                clientDetailsDTO = clientDetailsDTO
+            )
+        )
+    }
+
+    override fun deleteClientDetails(clientId: String): Result<Boolean> {
+        return Result(
+            clientService.deleteClientDetails(clientId = clientId)
         )
     }
 }
