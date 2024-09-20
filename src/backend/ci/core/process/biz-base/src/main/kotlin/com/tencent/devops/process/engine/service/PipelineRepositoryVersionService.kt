@@ -107,17 +107,17 @@ class PipelineRepositoryVersionService(
         val pipelineVersionLock = PipelineVersionLock(redisOperation, pipelineId, version)
         try {
             pipelineVersionLock.lock()
-            val count = pipelineBuildDao.countBuildNumByVersion(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version
-            )
-            if (count > 0) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD
-                )
-            }
+//            val count = pipelineBuildDao.countBuildNumByVersion(
+//                dslContext = dslContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId,
+//                version = version
+//            )
+//            if (count > 0) {
+//                throw ErrorCodeException(
+//                    errorCode = ProcessMessageCode.ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD
+//                )
+//            }
             dslContext.transaction { t ->
                 val transactionContext = DSL.using(t)
                 // #8161 软删除数据，前端无法查询到该版本
