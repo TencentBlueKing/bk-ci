@@ -258,7 +258,7 @@ class PipelineBuildFacadeService(
                 param.value = if (param.constant == true) {
                     param.readOnly = true
                     param.defaultValue
-                } else if (!param.required || !recommendVersionKey(param.id)) {
+                } else if (!param.required && !recommendVersionKey(param.id)) {
                     param.defaultValue
                 } else if (param.defaultValue is Boolean) {
                     realValue?.toString()?.toBoolean()
