@@ -63,7 +63,7 @@ data class EnvReplacementContext(
         value = value,
         contextMap = contextMap,
         useSingleCurlyBraces = dialect.supportUseSingleCurlyBracesVar(),
-        contextNotNull = dialect.supportMissingVar(),
+        contextNotNull = !dialect.supportMissingVar(),
         contextPair = contextPair,
         functions = functions,
         output = output

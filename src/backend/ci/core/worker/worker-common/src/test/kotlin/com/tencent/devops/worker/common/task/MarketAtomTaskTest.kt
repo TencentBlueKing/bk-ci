@@ -95,7 +95,6 @@ internal class MarketAtomTaskTest {
             EnvReplacementParser.parse(
                 value = "\${{ settings.a.password }}",
                 contextMap = variables,
-                onlyExpression = true,
                 contextPair = r,
                 functions = SpecialFunctions.functions
             )

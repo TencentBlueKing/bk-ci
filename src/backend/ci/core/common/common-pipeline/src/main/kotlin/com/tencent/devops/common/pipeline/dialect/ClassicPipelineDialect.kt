@@ -33,8 +33,6 @@ package com.tencent.devops.common.pipeline.dialect
 class ClassicPipelineDialect : IPipelineDialect {
     override fun supportUseSingleCurlyBracesVar() = true
 
-    override fun supportDirectAccessVar() = true
-
     override fun supportLongVarValue() = true
 
     override fun supportChineseVarName() = true

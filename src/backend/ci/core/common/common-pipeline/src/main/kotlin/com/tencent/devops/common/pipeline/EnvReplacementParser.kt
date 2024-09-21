@@ -66,48 +66,6 @@ object EnvReplacementParser {
 
     /**
      * 根据环境变量map进行object处理并保持原类型
-     * @param value 等待进行环境变量替换的对象，可以是任意类型
-     * @param contextMap 环境变量map值
-     * @param contextPair 自定义表达式计算上下文（如果指定则不使用表达式替换或默认替换逻辑）
-     * @param onlyExpression 只进行表达式替换（若指定了自定义替换逻辑此字段无效，为false）
-     * @param functions 用户自定义的拓展用函数
-     * @param output 表达式计算时输出
-     */
-    fun parse(
-        value: String?,
-        contextMap: Map<String, String>,
-        onlyExpression: Boolean? = false,
-        contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null,
-        functions: Iterable<IFunctionInfo>? = null,
-        output: ExpressionOutput? = null
-    ): String {
-        if (value.isNullOrBlank()) return ""
-        return if (onlyExpression == true) {
-            try {
-                val (context, nameValues) = contextPair
-                    ?: getCustomExecutionContextByMap(contextMap)
-                    ?: return value
-                parseExpression(
-                    value = value,
-                    context = context,
-                    nameValues = nameValues,
-                    functions = functions,
-                    output = output,
-                    contextNotNull = false
-                )
-            } catch (ignore: Throwable) {
-                logger.warn("[$value]|EnvReplacementParser expression invalid: ", ignore)
-                value
-            }
-        } else {
-            ObjectReplaceEnvVarUtil.replaceEnvVar(value, contextMap).let {
-                JsonUtil.toJson(it, false)
-            }
-        }
-    }
-
-    /**
-     * 根据环境变量map进行object处理并保持原类型
      * 根据方言的配置判断是否能够使用${}或者变量值是否存在
      */
     fun parse(
