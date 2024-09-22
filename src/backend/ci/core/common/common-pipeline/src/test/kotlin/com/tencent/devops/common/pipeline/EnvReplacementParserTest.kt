@@ -265,7 +265,8 @@ internal class EnvReplacementParserTest {
         parseAndEquals(
             data = data,
             template = "abcd_\${{center中}}_ffs",
-            expect = "abcd_\${{center中}}_ffs"
+            expect = "abcd_\${{center中}}_ffs",
+            onlyExpression = true
         )
 
         data["blank"] = ""
@@ -368,11 +369,11 @@ internal class EnvReplacementParserTest {
         )
         Assertions.assertEquals(
             command6,
-            EnvReplacementParser.parse(command6, data)
+            EnvReplacementParser.parse(command6, data, true)
         )
         Assertions.assertEquals(
             "hello\$variables.abc}}",
-            EnvReplacementParser.parse(command7, data)
+            EnvReplacementParser.parse(command7, data, true),
         )
         Assertions.assertEquals(
             "echo hahahahaha",
@@ -427,7 +428,7 @@ internal class EnvReplacementParserTest {
         Assertions.assertEquals("hellovariables.value", EnvReplacementParser.parse(command3, data))
         Assertions.assertEquals("hello\${{variables.abc", EnvReplacementParser.parse(command4, data))
         Assertions.assertEquals("hello\${{variables.abc}", EnvReplacementParser.parse(command5, data))
-        Assertions.assertEquals("hello\${variables.abc}}", EnvReplacementParser.parse(command6, data))
+        Assertions.assertEquals("hello\${variables.abc}}", EnvReplacementParser.parse(command6, data, true))
         Assertions.assertEquals("hello\$variables.abc}}", EnvReplacementParser.parse(command7, data))
         Assertions.assertEquals("echo hahahahaha", EnvReplacementParser.parse(command8, data))
         Assertions.assertEquals(
@@ -551,9 +552,10 @@ echo true"""
         data: Map<String, String>,
         template: String,
         expect: String,
-        contextMap: Map<String, String> = emptyMap()
+        contextMap: Map<String, String> = emptyMap(),
+        onlyExpression: Boolean? = false
     ) {
-        val buff = EnvReplacementParser.parse(template, contextMap.plus(data))
+        val buff = EnvReplacementParser.parse(template, contextMap.plus(data), onlyExpression)
         println("template=$template\nreplaced=$buff\n")
         Assertions.assertEquals(expect, buff)
     }

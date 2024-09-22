@@ -66,6 +66,34 @@ object EnvReplacementParser {
 
     /**
      * 根据环境变量map进行object处理并保持原类型
+     * @param value 等待进行环境变量替换的对象，可以是任意类型
+     * @param contextMap 环境变量map值
+     * @param contextPair 自定义表达式计算上下文（如果指定则不使用表达式替换或默认替换逻辑）
+     * @param onlyExpression 只进行表达式替换（若指定了自定义替换逻辑此字段无效，为false）
+     * @param functions 用户自定义的拓展用函数
+     * @param output 表达式计算时输出
+     */
+    fun parse(
+        value: String?,
+        contextMap: Map<String, String>,
+        onlyExpression: Boolean? = false,
+        contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null,
+        functions: Iterable<IFunctionInfo>? = null,
+        output: ExpressionOutput? = null
+    ): String {
+        val context = EnvReplacementContext(
+            value = value,
+            contextMap = contextMap,
+            useSingleCurlyBraces = !(onlyExpression ?: false),
+            contextPair = contextPair,
+            functions = functions,
+            output = output
+        )
+        return parse(context)
+    }
+
+    /**
+     * 根据环境变量map进行object处理并保持原类型
      * 根据方言的配置判断是否能够使用${}或者变量值是否存在
      */
     fun parse(
@@ -87,54 +115,14 @@ object EnvReplacementParser {
         return parse(context)
     }
 
-    /**
-     * 根据环境变量map进行object处理并保持原类型
-     * 能够使用${}占位符替换,变量值不存在不抛异常
-     */
-    fun parse(
-        value: String?,
-        contextMap: Map<String, String>,
-        contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null,
-        functions: Iterable<IFunctionInfo>? = null,
-        output: ExpressionOutput? = null
-    ): String {
-        val context = EnvReplacementContext(
-            value = value,
-            contextMap = contextMap,
-            contextPair = contextPair,
-            functions = functions,
-            output = output
-        )
-        return parse(context)
-    }
-
     fun parse(context: EnvReplacementContext): String {
-        with (context) {
+        with(context) {
             if (value.isNullOrBlank()) return ""
-            var newValue = value
-            if (useSingleCurlyBraces) {
-                newValue = ObjectReplaceEnvVarUtil.replaceEnvVar(newValue, contextMap).let {
+            val newValue = parseExpression()
+
+            return if (useSingleCurlyBraces) {
+                ObjectReplaceEnvVarUtil.replaceEnvVar(newValue, contextMap).let {
                     JsonUtil.toJson(it, false)
-                }
-            }
-            return if (containsExpressions(newValue)) {
-                try {
-                    val (executeContext, nameValues) = contextPair
-                        ?: getCustomExecutionContextByMap(contextMap)
-                        ?: return value
-                    parseExpression(
-                        value = newValue,
-                        context = executeContext,
-                        nameValues = nameValues,
-                        functions = functions,
-                        output = output,
-                        contextNotNull = contextNotNull
-                    )
-                } catch (ex: VariableNotFoundException) {
-                    throw ex
-                } catch (ignore: Throwable) {
-                    logger.warn("[$value]|EnvReplacementParser expression invalid: ", ignore)
-                    value
                 }
             } else {
                 newValue
@@ -159,8 +147,31 @@ object EnvReplacementParser {
             ExpressionParser.fillContextByMap(variables, context, nameValue)
             return Pair(context, nameValue)
         } catch (ignore: Throwable) {
+            println("EnvReplacementParser context invalid: $variables")
             logger.warn("EnvReplacementParser context invalid: $variables", ignore)
             return null
+        }
+    }
+
+    private fun EnvReplacementContext.parseExpression(): String {
+        if (value.isNullOrBlank()) return ""
+        return try {
+            val (executeContext, nameValues) = contextPair
+                ?: getCustomExecutionContextByMap(contextMap)
+                ?: return value
+            parseExpression(
+                value = value,
+                context = executeContext,
+                nameValues = nameValues,
+                functions = functions,
+                output = output,
+                contextNotNull = contextNotNull
+            )
+        } catch (ex: VariableNotFoundException) {
+            throw ex
+        } catch (ignore: Throwable) {
+            logger.warn("[$value]|EnvReplacementParser expression invalid: ", ignore)
+            value
         }
     }
 
