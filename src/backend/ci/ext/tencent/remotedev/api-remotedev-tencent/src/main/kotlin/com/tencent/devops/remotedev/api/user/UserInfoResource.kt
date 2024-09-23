@@ -16,7 +16,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "USER_INFO", description = "用户-用户信息相关")
-@Path("/user/info")
+@Path("/{apiType:user|desktop}/info")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserInfoResource {
