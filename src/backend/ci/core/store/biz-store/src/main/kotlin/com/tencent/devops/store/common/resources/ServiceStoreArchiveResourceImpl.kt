@@ -65,11 +65,10 @@ class ServiceStoreArchiveResourceImpl @Autowired constructor(
 
     override fun updateComponentPkgInfo(
         userId: String,
-        storeId: String,
         storePkgInfoUpdateRequest: StorePkgInfoUpdateRequest
     ): Result<Boolean> {
         return Result(
-            storeArchiveService.updateComponentPkgInfo(userId, storeId, storePkgInfoUpdateRequest)
+            storeArchiveService.updateComponentPkgInfo(userId, storePkgInfoUpdateRequest)
         )
     }
 
@@ -79,7 +78,8 @@ class ServiceStoreArchiveResourceImpl @Autowired constructor(
         storeCode: String,
         version: String,
         osName: String?,
-        osArch: String?
+        osArch: String?,
+        queryConfigFileFlag: Boolean?
     ): Result<List<StorePkgEnvInfo>> {
         val storeReleaseSpecBusService = SpringContextUtil.getBean(
             StoreReleaseSpecBusService::class.java,
@@ -90,7 +90,10 @@ class ServiceStoreArchiveResourceImpl @Autowired constructor(
                 userId = userId,
                 storeType = storeType,
                 storeCode = storeCode,
-                version = version
+                version = version,
+                osName = osName,
+                osArch = osArch,
+                queryConfigFileFlag = queryConfigFileFlag
             )
         )
     }

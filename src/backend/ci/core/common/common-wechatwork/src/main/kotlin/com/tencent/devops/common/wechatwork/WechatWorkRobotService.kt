@@ -37,7 +37,8 @@ class WechatWorkRobotService @Autowired constructor(
     fun sendByRobot(
         chatId: String,
         content: String,
-        markerDownFlag: Boolean
+        markerDownFlag: Boolean,
+        mentionUsers: List<String> = emptyList()
     ) {
         logger.info("send group msg by robot: $chatId, $content")
         val msg: Any = if (markerDownFlag) {
@@ -51,7 +52,8 @@ class WechatWorkRobotService @Autowired constructor(
             RobotTextSendMsg(
                 chatId = chatId,
                 text = MsgInfo(
-                    content = content
+                    content = content,
+                    mentionedList = mentionUsers
                 )
             )
         }

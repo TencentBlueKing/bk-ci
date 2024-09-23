@@ -1,9 +1,11 @@
 <template>
-    <div class="pipeline-code-check"
+    <div
+        class="pipeline-code-check"
         v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
-        }">
+        }"
+    >
         <template v-if="!faildCodeCCScript && dataList.length && showContent">
             <!-- overview start -->
             <!-- <p class="update-time">更新时间 :
@@ -48,47 +50,68 @@
             </section> -->
             <section class="code-check-header">
                 <div class="code-check-header-wrapper">
-                    <div class="code-check-head"
+                    <div
+                        class="code-check-head"
                         v-for="tool of dataList"
                         :key="tool.tool_name_en"
-                        @click="toLinkCodecc(tool.defect_detail_url)">
+                        @click="toLinkCodecc(tool.defect_detail_url)"
+                    >
                         <div class="code-check-title">{{ tool.tool_name_cn }}</div>
                         <!-- <chart class="chart-wrapper"
                             v-if="tool.result_status === 'success'"
                             :options="setOptions(tool)"
                             auto-resize>
                         </chart> -->
-                        <div class="tool-display-circle" v-if="tool.result_status === 'success'">
+                        <div
+                            class="tool-display-circle"
+                            v-if="tool.result_status === 'success'"
+                        >
                             <div class="circle-content"></div>
                         </div>
-                        <div class="no-data-right" v-else>
+                        <div
+                            class="no-data-right"
+                            v-else
+                        >
                             <img src="../../images/500.png">
                             <p>分析异常</p>
                         </div>
-                        <div class="center-content value-item" v-if="tool.result_status === 'success'">
+                        <div
+                            class="center-content value-item"
+                            v-if="tool.result_status === 'success'"
+                        >
                             <div class="check-value">{{ tool[codeccOptions[tool.tool_name_en].mainVal] }}</div>
                         </div>
-                        <div class="center-content label-item" v-if="tool.result_status === 'success'">
+                        <div
+                            class="center-content label-item"
+                            v-if="tool.result_status === 'success'"
+                        >
                             <div class="check-item">{{ codeccOptions[tool.tool_name_en].mainKey }}</div>
                         </div>
-                        <div class="charts-legend" v-if="tool.result_status === 'success'">
+                        <div
+                            class="charts-legend"
+                            v-if="tool.result_status === 'success'"
+                        >
                             <div class="legend-item">
                                 <i class="first-index-icon"></i>
                                 <label>{{ codeccOptions[tool.tool_name_en].activeKey }}</label>
                                 <span class="legend-data">{{ tool[codeccOptions[tool.tool_name_en].activeVal] }}</span>
-                                <i v-if="![&quot;KLOCWORK&quot;, &quot;COVERITY&quot;].includes(tool.tool_name_cn)"
-                                    :class="{ &quot;devops-icon&quot;: true,
-                                              &quot;icon-arrows-up&quot;: parseFloat(tool[codeccOptions[tool.tool_name_en].activeChange]) > 0,
-                                              &quot;icon-arrows-down&quot;: parseFloat(tool[codeccOptions[tool.tool_name_en].activeChange]) < 0 }"></i>
+                                <i
+                                    v-if="!['KLOCWORK', 'COVERITY'].includes(tool.tool_name_cn)"
+                                    :class="{ 'devops-icon': true,
+                                              'icon-arrows-up': parseFloat(tool[codeccOptions[tool.tool_name_en].activeChange]) > 0,
+                                              'icon-arrows-down': parseFloat(tool[codeccOptions[tool.tool_name_en].activeChange]) < 0 }"
+                                ></i>
                             </div>
                             <div class="legend-item">
                                 <i class="second-index-icon"></i>
                                 <label>{{ codeccOptions[tool.tool_name_en].normalKey }}</label>
                                 <span class="legend-data">{{ tool[codeccOptions[tool.tool_name_en].normalVal] }}</span>
-                                <i v-if="![&quot;KLOCWORK&quot;, &quot;COVERITY&quot;].includes(tool.tool_name_cn)"
-                                    :class="{ &quot;devops-icon&quot;: true,
-                                              &quot;icon-arrows-up&quot;: parseFloat(tool[codeccOptions[tool.tool_name_en].normalChange]) > 0,
-                                              &quot;icon-arrows-down&quot;: parseFloat(tool[codeccOptions[tool.tool_name_en].normalChange]) < 0 }"></i>
+                                <i
+                                    v-if="!['KLOCWORK', 'COVERITY'].includes(tool.tool_name_cn)"
+                                    :class="{ 'devops-icon': true,
+                                              'icon-arrows-up': parseFloat(tool[codeccOptions[tool.tool_name_en].normalChange]) > 0,
+                                              'icon-arrows-down': parseFloat(tool[codeccOptions[tool.tool_name_en].normalChange]) < 0 }"
+                                ></i>
                             </div>
                         </div>
                     </div>
@@ -96,32 +119,50 @@
             </section>
             <!-- overview end -->
             <template v-for="item of dataList">
-                <section class="code-check-row" :key="item.tool_name_en" v-if="item.result_status === 'success'"
-                    :class="{ 'lint-check-row': lintReportArr.includes(item.tool_name_en) }">
+                <section
+                    class="code-check-row"
+                    :key="item.tool_name_en"
+                    v-if="item.result_status === 'success'"
+                    :class="{ 'lint-check-row': lintReportArr.includes(item.tool_name_en) }"
+                >
                     <div class="row-head">
                         <div class="row-head-text">
                             {{ codeccOptions[item.tool_name_en].title }}
                         </div>
                         <div class="row-head-link">
-                            <a class="text-link" @click="toLinkCodecc(item.defect_report_url)">查看详情</a>
+                            <a
+                                class="text-link"
+                                @click="toLinkCodecc(item.defect_report_url)"
+                            >查看详情</a>
                         </div>
                     </div>
 
                     <div class="code-check-row-wrapper">
-                        <div class="code-check-item"
-                            v-for="(chart, index) in codeccOptions[item.tool_name_en].charts" :key="index">
-                            <chart class="chart-wrapper"
+                        <div
+                            class="code-check-item"
+                            v-for="(chart, index) in codeccOptions[item.tool_name_en].charts"
+                            :key="index"
+                        >
+                            <chart
+                                class="chart-wrapper"
                                 v-if="chart.enable !== false"
                                 :option="processOptions(chart, item)"
-                                autoresize>
+                                autoresize
+                            >
                             </chart>
-                            <empty v-if="chart.enable === false" :is-code-check="true"
-                                :empty-title="chart.title">
+                            <empty
+                                v-if="chart.enable === false"
+                                :is-code-check="true"
+                                :empty-title="chart.title"
+                            >
                             </empty>
                         </div>
                     </div>
 
-                    <p class="lint-tool-tips" v-if="lintReportArr.includes(item.tool_name_en)">
+                    <p
+                        class="lint-tool-tips"
+                        v-if="lintReportArr.includes(item.tool_name_en)"
+                    >
                         注：以上均为接入后新增告警数据，CodeCC鼓励该工具新告警清零。
                     </p>
                 </section>
@@ -133,12 +174,14 @@
             <empty-tips
                 :title="faildExcuCongig.title"
                 :desc="faildExcuCongig.desc"
-                :btns="faildExcuCongig.btns">
+                :btns="faildExcuCongig.btns"
+            >
                 <section slot="btns">
                     <bk-button
                         :theme="faildExcuCongig.btns[0].theme"
                         :size="faildExcuCongig.btns[0].size"
-                        @click="faildExcuCongig.btns[0].handler">
+                        @click="faildExcuCongig.btns[0].handler"
+                    >
                         {{ faildExcuCongig.btns[0].text }}
                     </bk-button>
                 </section>
@@ -150,12 +193,14 @@
             <empty-tips
                 :title="emptyTipsConfig.title"
                 :desc="emptyTipsConfig.desc"
-                :btns="emptyTipsConfig.btns">
+                :btns="emptyTipsConfig.btns"
+            >
                 <section slot="btns">
                     <bk-button
                         :theme="emptyTipsConfig.btns[0].theme"
                         :size="emptyTipsConfig.btns[0].size"
-                        @click="emptyTipsConfig.btns[0].handler">
+                        @click="emptyTipsConfig.btns[0].handler"
+                    >
                         {{ emptyTipsConfig.btns[0].text }}
                     </bk-button>
                 </section>
@@ -183,31 +228,32 @@
             v-if="hasNoPermission"
             :title="noPermissionTipsConfig.title"
             :desc="noPermissionTipsConfig.desc"
-            :btns="noPermissionTipsConfig.btns">
+            :btns="noPermissionTipsConfig.btns"
+        >
         </empty-tips>
     </div>
 </template>
 
 <script>
-    import { use } from 'echarts/core'
-    import VChart from 'vue-echarts'
-    import { CanvasRenderer } from 'echarts/renderers'
-    import { LineChart, BarChart, PieChart } from 'echarts/charts'
-    import {
-        GridComponent,
-        TooltipComponent,
-        TitleComponent,
-        LegendComponent
-    } from 'echarts/components'
     import empty from '@/components/common/empty'
     import emptyTips from '@/components/devops/emptyTips'
     import {
-        pieOption,
         barOption,
         lineOption,
-        overViewOption
+        overViewOption,
+        pieOption
     } from '@/utils/chart-options'
     import codeccOptions from '@/utils/codecc-options'
+    import { BarChart, LineChart, PieChart } from 'echarts/charts'
+    import {
+        GridComponent,
+        LegendComponent,
+        TitleComponent,
+        TooltipComponent
+    } from 'echarts/components'
+    import { use } from 'echarts/core'
+    import { CanvasRenderer } from 'echarts/renderers'
+    import VChart from 'vue-echarts'
     import { mapGetters, mapState } from 'vuex'
 
     use([

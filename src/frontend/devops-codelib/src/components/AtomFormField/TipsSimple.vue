@@ -1,6 +1,9 @@
 <template>
     <h3 class="component-tip pointer-events-auto">
-        <span class="tip-message" v-html="tip"></span>
+        <span
+            class="tip-message"
+            v-html="tip"
+        ></span>
     </h3>
 </template>
 

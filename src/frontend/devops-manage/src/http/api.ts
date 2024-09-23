@@ -233,7 +233,7 @@ export default {
       ...params,
     }).toString();
     return http.get(`${IAM_PERFIX}/member/${projectId}/listProjectMembers?${query}`, {
-      globalError: false
+      globalError: false,
     });
   },
   /**
@@ -242,7 +242,7 @@ export default {
   async getProjectMembersByCondition(projectId: string, params: any) {
     return http.post(`${IAM_PERFIX}/member/${projectId}/listProjectMembersByCondition`, {
       ...params,
-      globalError: false
+      globalError: false,
     });
   },
   /**

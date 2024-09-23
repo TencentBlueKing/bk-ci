@@ -1,7 +1,9 @@
 <template>
-    <section :class="['iframe-report-section', {
-        'pipeline-report-full-screen': fullScreenView
-    }]">
+    <section
+        :class="['iframe-report-section', {
+            'pipeline-report-full-screen': fullScreenView
+        }]"
+    >
         <div class="pipeline-exec-report-header">
             <span class="pipeline-exec-report-header-name">
                 <i :class="`devops-icon icon-${reportIcon}`" />

@@ -1,8 +1,27 @@
 <template>
-    <div v-bkloading="{ isLoading }" class="pull-code-panel bk-form bk-form-vertical">
+    <div
+        v-bkloading="{ isLoading }"
+        class="pull-code-panel bk-form bk-form-vertical"
+    >
         <section v-if="hasAppId && isOpenBcs">
-            <form-field v-if="!obj.hidden" v-for="(obj, key) of newModel" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                <component :is="obj.component" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleChange" :value="element[key]" v-bind="obj"></component>
+            <form-field
+                v-if="!obj.hidden"
+                v-for="(obj, key) of newModel"
+                :key="key"
+                :desc="obj.desc"
+                :required="obj.required"
+                :label="obj.label"
+                :is-error="errors.has(key)"
+                :error-msg="errors.first(key)"
+            >
+                <component
+                    :is="obj.component"
+                    :name="key"
+                    v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                    :handle-change="handleChange"
+                    :value="element[key]"
+                    v-bind="obj"
+                ></component>
             </form-field>
         </section>
         <section v-if="!hasAppId || !isOpenBcs">

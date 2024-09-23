@@ -1418,7 +1418,7 @@
 }
 .build-artifact-list-ul {
     border-top: 1px solid #EAEBF0;
-    max-height: 100vh / 3;
+    max-height: calc(100vh / 3);
     overflow: auto;
     > li {
         height: 38px;

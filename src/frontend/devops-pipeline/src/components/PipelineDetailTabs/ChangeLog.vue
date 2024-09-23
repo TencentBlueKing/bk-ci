@@ -1,5 +1,8 @@
 <template>
-    <main class="pipeline-changelog" v-bkloading="{ isLoading }">
+    <main
+        class="pipeline-changelog"
+        v-bkloading="{ isLoading }"
+    >
         <header class="pipeline-changelog-header">
             <bk-select
                 v-model="filterCreator"
@@ -14,7 +17,10 @@
                 />
             </bk-select>
         </header>
-        <section class="pipeline-changelog-content" ref="tableBox">
+        <section
+            class="pipeline-changelog-content"
+            ref="tableBox"
+        >
             <bk-table
                 :max-height="$refs?.tableBox?.offsetHeight"
                 :data="operateLogs"
@@ -22,7 +28,11 @@
                 @page-change="handlePageChange"
                 @page-limit-change="handlePageLimitChange"
             >
-                <bk-table-column v-for="column in columns" :key="column.key" v-bind="column" />
+                <bk-table-column
+                    v-for="column in columns"
+                    :key="column.key"
+                    v-bind="column"
+                />
             </bk-table>
         </section>
     </main>

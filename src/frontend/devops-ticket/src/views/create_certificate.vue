@@ -6,8 +6,12 @@
             </template>
         </content-header>
 
-        <section class="sub-view-port" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
-            <empty-tips v-if="!hasPermission && showContent"
+        <section
+            class="sub-view-port"
+            v-bkloading="{ isLoading: loading.isLoading, title: loading.title }"
+        >
+            <empty-tips
+                v-if="!hasPermission && showContent"
                 :title="emptyTipsConfig.title"
                 :desc="emptyTipsConfig.desc"
                 :btns="emptyTipsConfig.btns"
@@ -15,17 +19,36 @@
             </empty-tips>
             <!-- <div class="bk-form cert-setting" v-if="certType">
                 <div class="bk-form-wrapper" v-if="hasPermission && showContent"> -->
-            <div class="cert-setting" v-if="certType">
-                <div class="bk-form" v-if="hasPermission && showContent">
+            <div
+                class="cert-setting"
+                v-if="certType"
+            >
+                <div
+                    class="bk-form"
+                    v-if="hasPermission && showContent"
+                >
                     <!-- 证书类型 start -->
                     <div class="bk-form-item is-required cert-input-item">
                         <label class="bk-label">{{ $t('ticket.cert.certType') }}：</label>
                         <div class="bk-form-content">
                             <!-- <bk-radio-group v-model="certType" @change="changeType">
                                 <bk-radio v-for="(item, index) in certTypeList" :key="index" :value="item.value" :disabled="isEdit"> -->
-                            <bk-radio-group class="cert-type-group" v-model="certType" @change="changeType">
-                                <bk-radio class="cert-type-group-item" v-for="(item, index) in certTypeList" :key="index" :value="item.value" :disabled="isEdit">
-                                    <i class="devops-icon" :class="item.icon"></i>
+                            <bk-radio-group
+                                class="cert-type-group"
+                                v-model="certType"
+                                @change="changeType"
+                            >
+                                <bk-radio
+                                    class="cert-type-group-item"
+                                    v-for="(item, index) in certTypeList"
+                                    :key="index"
+                                    :value="item.value"
+                                    :disabled="isEdit"
+                                >
+                                    <i
+                                        class="devops-icon"
+                                        :class="item.icon"
+                                    ></i>
                                     {{ item.label }}
                                 </bk-radio>
                             </bk-radio-group>
@@ -33,7 +56,8 @@
                     </div>
 
                     <transition name="fade">
-                        <ios v-if="certType === 'ios'"
+                        <ios
+                            v-if="certType === 'ios'"
                             @requestCertDetail="requestCertDetail"
                             :is-edit="isEdit"
                             :apply-cre-url="applyCreUrl"
@@ -43,7 +67,8 @@
                         </ios>
                     </transition>
                     <transition name="fade">
-                        <android v-if="certType === 'android'"
+                        <android
+                            v-if="certType === 'android'"
                             @requestCertDetail="requestCertDetail"
                             :is-edit="isEdit"
                             :apply-cre-url="applyCreUrl"
@@ -53,7 +78,8 @@
                         </android>
                     </transition>
                     <transition name="fade">
-                        <ssl v-if="certType === 'tls'"
+                        <ssl
+                            v-if="certType === 'tls'"
                             @requestCertDetail="requestCertDetail"
                             :is-edit="isEdit"
                             :cert-data="certData"
@@ -62,7 +88,8 @@
                         </ssl>
                     </transition>
                     <transition name="fade">
-                        <enterprise v-if="certType === 'enterprise'"
+                        <enterprise
+                            v-if="certType === 'enterprise'"
                             @requestCertDetail="requestCertDetail"
                             :is-edit="isEdit"
                             :cert-data="certData"
@@ -81,7 +108,11 @@
                                     action: isEdit ? CERT_RESOURCE_ACTION.EDIT : CERT_RESOURCE_ACTION.CREATE
                                 }
                             }"
-                            theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
+                            theme="primary"
+                            @click="submit"
+                        >
+                            {{ $t('ticket.comfirm') }}
+                        </bk-button>
                         <bk-button @click="cancel">{{ $t('ticket.cancel') }}</bk-button>
                     </div>
                 </div>

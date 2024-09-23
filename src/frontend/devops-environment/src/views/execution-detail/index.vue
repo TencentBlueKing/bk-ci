@@ -1,11 +1,17 @@
 <template>
-    <div class="execution-detail" v-bkloading="{ isLoading }">
+    <div
+        class="execution-detail"
+        v-bkloading="{ isLoading }"
+    >
         <header class="header-wrapper">
             <bk-breadcrumb separator=">">
                 <bk-breadcrumb-item :to="{ path: '/console/environment' }">{{ $t('environment.environmentManage') }}</bk-breadcrumb-item>
                 <bk-breadcrumb-item v-bk-overflow-tips>{{ stepInstanceData.name }}</bk-breadcrumb-item>
             </bk-breadcrumb>
-            <div class="status-box" :class="statusStyleMap[checkStatus(stepInstanceData.status)]">
+            <div
+                class="status-box"
+                :class="statusStyleMap[checkStatus(stepInstanceData.status)]"
+            >
                 <div class="status">
                     <span>{{ $t('environment.状态') }}：</span>
                     <span class="status-text">{{ stepStatusMap[stepInstanceData.status] }}</span>
@@ -28,7 +34,10 @@
                 <div class="step-info-wrapper">
                     <div class="step-type-text">{{ stepTypeText }}</div>
                     <div class="step-name-box">
-                        <div class="step-name-text" v-bk-overflow-tips>
+                        <div
+                            class="step-name-text"
+                            v-bk-overflow-tips
+                        >
                             {{ stepInstanceData.name }}
                         </div>
                         <div class="step-action-box">
@@ -37,13 +46,16 @@
                                     <bk-select
                                         v-model="searchModel"
                                         :clearable="false"
-                                        style="width: 100px;">
+                                        style="width: 100px;"
+                                    >
                                         <bk-option
                                             id="log"
-                                            :name="$t('environment.搜索日志')" />
+                                            :name="$t('environment.搜索日志')"
+                                        />
                                         <bk-option
                                             id="ip"
-                                            :name="$t('environment.搜索 IP')" />
+                                            :name="$t('environment.搜索 IP')"
+                                        />
                                     </bk-select>
                                     <bk-input
                                         v-if="searchModel === 'log'"
@@ -57,7 +69,8 @@
                                         }"
                                         :value="keyword"
                                         @right-icon-click="handleLogSearch"
-                                        @keyup="handleLogSearch" />
+                                        @keyup="handleLogSearch"
+                                    />
                                     <bk-input
                                         v-if="searchModel === 'ip'"
                                         key="ip"
@@ -65,7 +78,8 @@
                                         style="width: 292px;"
                                         :value="searchIp"
                                         @right-icon-click="handleIPSearch"
-                                        @keyup="handleIPSearch" />
+                                        @keyup="handleIPSearch"
+                                    />
                                 </compose-form-item>
                             </div>
                             <div class="task-instance-action">
@@ -74,7 +88,10 @@
                                     @click="handleShowDetail"
                                     v-bk-tooltips.bottom="$t('environment.步骤内容')"
                                 >
-                                    <icon name="detail-line" size="14" />
+                                    <icon
+                                        name="detail-line"
+                                        size="14"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -83,15 +100,21 @@
             </div>
             <div class="step-execute-host-group">
                 <div class="group-tab">
-                    <div :class="{
-                             'tab-item': true,
-                             'active': activeGroupIndex === index
-                         }"
+                    <div
+                        :class="{
+                            'tab-item': true,
+                            'active': activeGroupIndex === index
+                        }"
                         v-for="(item, index) in stepResultGroupList"
                         :key="index"
                         @click="handleChangeGroup(index)"
                     >
-                        <div class="group-name" v-bk-overflow-tips>{{ `${item.resultTypeDesc}` }} {{ item.tag ? `(${item.tag})` : '' }}</div>
+                        <div
+                            class="group-name"
+                            v-bk-overflow-tips
+                        >
+                            {{ `${item.resultTypeDesc}` }} {{ item.tag ? `(${item.tag})` : '' }}
+                        </div>
                         <div class="group-nums">{{ item.hostSize }}</div>
                     </div>
                 </div>
@@ -100,8 +123,12 @@
         <div
             ref="detailContainer"
             class="detail-container"
-            :style="defailContainerStyles">
-            <div class="container-left" v-bkloading="{ isLoading: isHostLoading }">
+            :style="defailContainerStyles"
+        >
+            <div
+                class="container-left"
+                v-bkloading="{ isLoading: isHostLoading }"
+            >
                 <!-- 主机列表 -->
                 <ip-list
                     :list="ipList"
@@ -133,11 +160,13 @@
             ext-cls="step-detail-sideslider"
             :show-footer="false"
             :title="$t('environment.查看步骤内容')"
-            :width="960">
+            :width="960"
+        >
             <div slot="content">
                 <step-detail-view
                     :step-instance-id="stepInstanceId"
-                    :job-instance-id="jobInstanceId" />
+                    :job-instance-id="jobInstanceId"
+                />
             </div>
         </bk-sideslider>
     </div>

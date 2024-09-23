@@ -1,18 +1,35 @@
 <template>
-    <div class="biz-container pipeline-subpages instance-manage-wrapper"
+    <div
+        class="biz-container pipeline-subpages instance-manage-wrapper"
         v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
-        }">
+        }"
+    >
         <inner-header>
-            <div class="instance-header" slot="left">
-                <span class="inner-header-title" slot="left">{{ $t('template.instanceManage') }}</span>
+            <div
+                class="instance-header"
+                slot="left"
+            >
+                <span
+                    class="inner-header-title"
+                    slot="left"
+                >{{ $t('template.instanceManage') }}</span>
             </div>
         </inner-header>
-        <div class="sub-view-port" v-if="showContent && showInstanceList">
+        <div
+            class="sub-view-port"
+            v-if="showContent && showInstanceList"
+        >
             <section class="info-header">
                 <div class="instance-handle-row">
-                    <bk-button class="batch-update" :disabled="!selectItemList.length" @click="handleBatch()"><span>{{ $t('template.batchUpdate') }}</span></bk-button>
+                    <bk-button
+                        class="batch-update"
+                        :disabled="!selectItemList.length"
+                        @click="handleBatch()"
+                    >
+                        <span>{{ $t('template.batchUpdate') }}</span>
+                    </bk-button>
                     <bk-button
                         v-if="isEnabledPermission"
                         theme="primary"
@@ -45,7 +62,8 @@
                     right-icon="icon-search"
                     v-model="searchKey"
                     @enter="query"
-                    @clear="query">
+                    @clear="query"
+                >
                 </bk-input>
             </section>
             <section class="instance-table">
@@ -59,20 +77,41 @@
                     @select="selectItem"
                     @select-all="selectItem"
                 >
-
-                    <bk-table-column type="selection" width="60" align="center" :selectable="isUpdating"></bk-table-column>
-                    <bk-table-column :label="$t('pipelineName')" prop="pipelineName">
+                    <bk-table-column
+                        type="selection"
+                        width="60"
+                        align="center"
+                        :selectable="isUpdating"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('pipelineName')"
+                        prop="pipelineName"
+                    >
                         <template slot-scope="props">
-                            <span class="pipeline-name" :title="props.row.pipelineName" @click="toPipelineHistory(props.row.pipelineId)">{{ props.row.pipelineName }}</span>
+                            <span
+                                class="pipeline-name"
+                                :title="props.row.pipelineName"
+                                @click="toPipelineHistory(props.row.pipelineId)"
+                            >{{ props.row.pipelineName }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('version')" prop="versionName"></bk-table-column>
-                    <bk-table-column :label="$t('template.newestVersion')" :formatter="currentVersionFormatter">
+                    <bk-table-column
+                        :label="$t('version')"
+                        prop="versionName"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('template.newestVersion')"
+                        :formatter="currentVersionFormatter"
+                    >
                         <template>
                             <span>{{ currentVersionName }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('status')" :render-header="statusHeader" prop="status">
+                    <bk-table-column
+                        :label="$t('status')"
+                        :render-header="statusHeader"
+                        prop="status"
+                    >
                         <template slot-scope="props">
                             <div
                                 class="status-card"
@@ -83,12 +122,18 @@
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('lastUpdateTime')" prop="updateTime">
+                    <bk-table-column
+                        :label="$t('lastUpdateTime')"
+                        prop="updateTime"
+                    >
                         <template slot-scope="props">
                             <span>{{ localConvertTime(props.row.updateTime) }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('operate')" width="250">
+                    <bk-table-column
+                        :label="$t('operate')"
+                        width="250"
+                    >
                         <template slot-scope="props">
                             <bk-button
                                 v-if="isEnabledPermission"
@@ -147,16 +192,24 @@
                             >
                                 {{ $t('copy') }}
                             </bk-button>
-                            <bk-button theme="primary" text @click="toCompared(props.row)">{{ $t('template.diff') }}</bk-button>
+                            <bk-button
+                                theme="primary"
+                                text
+                                @click="toCompared(props.row)"
+                            >
+                                {{ $t('template.diff') }}
+                            </bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>
             </section>
         </div>
-        <empty-tips v-if="showContent && !showInstanceList"
+        <empty-tips
+            v-if="showContent && !showInstanceList"
             :title="emptyTipsConfig.title"
             :desc="emptyTipsConfig.desc"
-            :btns="emptyTipsConfig.btns">
+            :btns="emptyTipsConfig.btns"
+        >
         </empty-tips>
         <instance-compared
             :show-compared-instance="showComparedInstance"

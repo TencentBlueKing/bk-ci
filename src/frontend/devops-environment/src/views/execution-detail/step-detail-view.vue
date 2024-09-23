@@ -1,9 +1,11 @@
 <template>
     <div
         v-bkloading="{ isLoading }"
-        class="history-step-detail-view">
+        class="history-step-detail-view"
+    >
         <task-step-view
-            :data="stepInfo">
+            :data="stepInfo"
+        >
         </task-step-view>
     </div>
 </template>

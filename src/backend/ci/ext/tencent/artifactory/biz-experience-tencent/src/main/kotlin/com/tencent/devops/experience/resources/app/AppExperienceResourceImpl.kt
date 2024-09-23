@@ -44,6 +44,8 @@ import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceLastParams
 import com.tencent.devops.experience.pojo.ExperienceList
+import com.tencent.devops.experience.pojo.P2PConnectEvent
+import com.tencent.devops.experience.pojo.P2PUserPoolVO
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import com.tencent.devops.experience.service.ExperienceAppService
@@ -93,7 +95,7 @@ class AppExperienceResourceImpl @Autowired constructor(
             emptyList()
         }
         val redPointCount = privateExperiences.count { it.redPointEnabled } +
-            publicExperiences.count { it.redPointEnabled }
+                publicExperiences.count { it.redPointEnabled }
         return Result(ExperienceList(privateExperiences, publicExperiences, redPointCount))
     }
 
@@ -160,6 +162,32 @@ class AppExperienceResourceImpl @Autowired constructor(
 
     override fun outerList(userId: String, projectId: String): Result<List<OuterSelectorVO>> {
         return Result(emptyList())
+    }
+
+    @AllowOuter
+    override fun p2pUserPools(userId: String, experienceHashId: String, organization: String?): Result<P2PUserPoolVO> {
+        return Result(
+            experienceAppService.p2pUserPools(
+                userId = userId,
+                experienceHashId = experienceHashId,
+                organization = organization
+            )
+        )
+    }
+
+    @AllowOuter
+    override fun p2pConnectEvent(
+        userId: String,
+        connectEvent: P2PConnectEvent,
+        organization: String?
+    ): Result<Boolean> {
+        return Result(
+            experienceAppService.p2pConnectEvent(
+                userId = userId,
+                connectEvent = connectEvent,
+                organization = organization
+            )
+        )
     }
 
     @AllowOuter

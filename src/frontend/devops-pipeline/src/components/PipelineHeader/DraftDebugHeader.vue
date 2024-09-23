@@ -1,12 +1,19 @@
 <template>
-    <div v-if="!isLoading" class="pipeline-draft-debug-header">
+    <div
+        v-if="!isLoading"
+        class="pipeline-draft-debug-header"
+    >
         <pipeline-bread-crumb :pipeline-name="pipelineName">
             <span>
-                {{$t('draftExecRecords')}}
+                {{ $t('draftExecRecords') }}
             </span>
         </pipeline-bread-crumb>
     </div>
-    <i v-else class="devops-icon icon-circle-2-1 spin-icon" style="margin-left: 20px;" />
+    <i
+        v-else
+        class="devops-icon icon-circle-2-1 spin-icon"
+        style="margin-left: 20px;"
+    />
 </template>
 
 <script>
