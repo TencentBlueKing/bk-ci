@@ -1599,6 +1599,7 @@
 
   "variableNotFound": "变量不存在",
   "traditionalNotFoundMode": "未报错，继续执行，依赖执行逻辑自行检查",
+  "constraintReadOnlyMode": "将报错，运行失败",
 
   "variableStandard": "变量 ID 规范",
   "traditionalStandardMode": "未限制",

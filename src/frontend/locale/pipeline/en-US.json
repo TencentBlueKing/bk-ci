@@ -1597,6 +1597,7 @@
 
   "variableNotFound": "Variable Not Found",
   "traditionalNotFoundMode": "No Error, Continue Execution, Check Execution Logic as Needed",
+  "constraintReadOnlyMode": "It will cause errors and the run will fail",
 
   "variableStandard": "Variable ID Standard",
   "traditionalStandardMode": "No Restriction",
