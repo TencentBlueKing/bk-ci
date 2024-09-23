@@ -463,7 +463,6 @@ object Runner {
                     val value = EnvReplacementParser.parse(
                         value = it.value ?: "",
                         contextMap = jobVariables,
-                        dialect = dialect,
                         functions = SpecialFunctions.functions,
                         output = SpecialFunctions.output
                     )
