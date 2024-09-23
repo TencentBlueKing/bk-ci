@@ -82,7 +82,7 @@
                     ...this.logPostData[id],
                     score: true
                 }).then(() => {
-                    this.handleGetPraiseAiInfo(item)
+                    this.handleGetPraiseAiInfo({ id, item })
                     this.$bkMessage({ theme: 'success', message: this.$t('successPraise') })
                 })
             },
@@ -92,7 +92,7 @@
                     ...this.logPostData[id],
                     score: false
                 }).then(() => {
-                    this.handleGetPraiseAiInfo(item)
+                    this.handleGetPraiseAiInfo({ id, item })
                     this.$bkMessage({ theme: 'success', message: this.$t('successDownPraise') })
                 })
             },
@@ -102,7 +102,7 @@
                     ...this.logPostData[id],
                     score: true
                 }).then(() => {
-                    this.handleGetPraiseAiInfo(item)
+                    this.handleGetPraiseAiInfo({ id, item })
                     this.$bkMessage({ theme: 'success', message: this.$t('successCancelPraise') })
                 })
             },
@@ -112,7 +112,7 @@
                     ...this.logPostData[id],
                     score: false
                 }).then(() => {
-                    this.handleGetPraiseAiInfo(item)
+                    this.handleGetPraiseAiInfo({ id, item })
                     this.$bkMessage({ theme: 'success', message: this.$t('successCancelDownPraise') })
                 })
             },
@@ -132,7 +132,7 @@
             handleLoadAiMessage ({ id, item }) {
                 item.aiMessage = ''
                 const ref = this.$refs.multipleLog
-                this.handleGetPraiseAiInfo(item)
+                this.handleGetPraiseAiInfo({ id, item })
                 this.getLogAIMessage({
                     ...this.logPostData[id],
                     refresh: false,
