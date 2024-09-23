@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.remotedev.config.BkConfig
+import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionResult
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -37,7 +39,32 @@ class TaiClient @Autowired constructor(
             .header("X-Bkapi-Authorization", authorization)
             .post(requestBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
-        val res = OkhttpUtils.doHttp(request).resolveResponse<TaiUserInfoResponse>()
+        val res = OkhttpUtils.doHttp(request).resolveResponse<TaiResponse<List<TaiUserInfo>>>()
+        return res.data
+    }
+
+    fun realTimeUser(userId: String): UserRealTime {
+        val url = "${bkConfig.remoteDevUrl}/api/v1/open/odc/real-time/users/$userId"
+        val authorization = """{"bk_app_code":"${bkConfig.appCode}","bk_app_secret":"${bkConfig.appSecret}"}"""
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .header("X-Bkapi-Authorization", authorization)
+            .build()
+        val res = OkhttpUtils.doHttp(request).resolveResponse<TaiResponse<UserRealTime>>()
+        return res.data
+    }
+
+    fun faceCheck(userId: String, data: FaceCheckData): FaceRecognitionResult {
+        val url = "${bkConfig.remoteDevUrl}/api/v1/open/odc/users/$userId/face-check/"
+        val authorization = """{"bk_app_code":"${bkConfig.appCode}","bk_app_secret":"${bkConfig.appSecret}"}"""
+        val requestBody = JsonUtil.toJson(bean = data, formatted = false)
+        val request = Request.Builder()
+            .url(url)
+            .header("X-Bkapi-Authorization", authorization)
+            .post(requestBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        val res = OkhttpUtils.doHttp(request).resolveResponse<TaiResponse<FaceRecognitionResult>>()
         return res.data
     }
 
@@ -69,8 +96,8 @@ data class TaiUserInfoRequest(
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class TaiUserInfoResponse(
-    val data: List<TaiUserInfo>
+data class TaiResponse<T>(
+    val data: T
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -102,3 +129,15 @@ data class TaiUserInfo(
         val name: String
     )
 }
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class UserRealTime(
+    @JsonProperty("face_recognized")
+    val faceRecognized: Boolean
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class FaceCheckData(
+    @JsonProperty("face_image_base64_encoded")
+    val faceImageBase64Encoded: String
+)

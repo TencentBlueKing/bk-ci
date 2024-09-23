@@ -1,129 +1,51 @@
 package com.tencent.devops.remotedev.service
 
-import com.tencent.devops.remotedev.pojo.userinfo.CheckType
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionData
-import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionNoPassType
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionResult
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckData
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckResult
+import com.tencent.devops.remotedev.service.client.FaceCheckData
 import com.tencent.devops.remotedev.service.client.TaiClient
-import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
-import com.tencentcloudapi.common.Credential
-import com.tencentcloudapi.common.exception.TencentCloudSDKException
-import com.tencentcloudapi.common.profile.ClientProfile
-import com.tencentcloudapi.common.profile.HttpProfile
-import com.tencentcloudapi.iai.v20180301.IaiClient
-import com.tencentcloudapi.iai.v20180301.IaiErrorCode
-import com.tencentcloudapi.iai.v20180301.models.CreatePersonRequest
-import com.tencentcloudapi.iai.v20180301.models.GetPersonBaseInfoRequest
-import com.tencentcloudapi.iai.v20180301.models.VerifyPersonRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class UserInfoCertService @Autowired constructor(
-    private val taiClient: TaiClient
+    private val taiClient: TaiClient,
+    private val apiGwService: ApiGwService
 ) {
-    @Value("\${tcloud.apiSecretId:}")
-    val secretId = ""
-
-    @Value("\${tcloud.apiSecretKey:}")
-    val secretKey = ""
-
-    @Value("\${tcloud.personGroupId}")
-    val personGroupId = ""
-
     fun needRealNameCert(username: String): Boolean {
-        val taiInfo = taiClient.taiUserInfo(TaiUserInfoRequest(setOf(username))).filter { it.username == username }
-        // TODO: 校验是否进行了实名认证，接口暂无等待接口
-        return false
+        val res = try {
+            taiClient.realTimeUser(username)
+        } catch (e: Exception) {
+            logger.error("$USER_CERT_LOG_PREFIX|realTimeUser error", e)
+            return true
+        }
+        return res.faceRecognized
     }
 
-    /**
-     * 人脸=no & moa=no 直接通过
-     * 人脸=no & moa=yes moa 二次认证
-     * 人脸=yes & moa=yes, 人脸=yes & moa=no 内部员工打开，CP人脸
-     */
     fun multipleCert(data: UserInfoCheckData): UserInfoCheckResult {
-        // TODO: 调用 wesec 判断这个实例使用什么方式认证，接口暂无等待接口
-        val face: Boolean = true
-        val moa: Boolean = false
-
-        if (face) {
-            if (!data.username.endsWith("@tai")) {
-                return UserInfoCheckResult(false, null)
-            }
-            return UserInfoCheckResult(true, CheckType.FACE_RECOGNITION)
-        } else {
-            if (moa) {
-                return UserInfoCheckResult(true, CheckType.MOA_DOUBLE)
-            }
-            return UserInfoCheckResult(false, null)
+        try {
+            return apiGwService.workspaceAccessManageControl(data.projectId, data.workspaceName)
+                ?: return UserInfoCheckResult.noCheck()
+        } catch (e: Exception) {
+            logger.error("$USER_CERT_LOG_PREFIX|workspaceAccessManageControl error", e)
+            return UserInfoCheckResult.noCheck()
         }
     }
 
     fun faceRecognition(data: FaceRecognitionData): FaceRecognitionResult {
-        val client = buildIaiClient()
-        val personInfo = try {
-            client.GetPersonBaseInfo(GetPersonBaseInfoRequest().apply { this.personId = data.username })
-        } catch (e: TencentCloudSDKException) {
-            // 只有人员不存在的情况才能往下走
-            if (e.errorCode != IaiErrorCode.INVALIDPARAMETERVALUE_PERSONIDNOTEXIST.value) {
-                logger.warn("faceRecognition|GetPersonBaseInfo|${data.toLog()}|$e")
-                return FaceRecognitionResult(false, FaceRecognitionNoPassType.NO_PASS, e.toString())
-            }
-            null
-        }
-        if (personInfo != null) {
-            val verifyInfo = try {
-                client.VerifyPerson(VerifyPersonRequest().apply {
-                    this.personId = data.username
-                    this.image = data.base64FaceData
-                    this.qualityControl = 3
-                })
-            } catch (e: TencentCloudSDKException) {
-                logger.warn("faceRecognition|VerifyPerson|${data.toLog()}|$e")
-                return FaceRecognitionResult(false, FaceRecognitionNoPassType.NO_PASS, e.toString())
-            }
-            logger.info("faceRecognition|${data.toLog()}|$verifyInfo")
-            return if (verifyInfo.isMatch) {
-                FaceRecognitionResult.pass()
-            } else {
-                FaceRecognitionResult(false, FaceRecognitionNoPassType.NO_PASS, null)
-            }
-        }
         try {
-            client.CreatePerson(CreatePersonRequest().apply {
-                this.groupId = personGroupId
-                this.personName = data.username
-                this.personId = data.username
-                this.image = data.base64FaceData
-                this.qualityControl = 3
-            })
-        } catch (e: TencentCloudSDKException) {
-            logger.warn("faceRecognition|CreatePerson|${data.toLog()}|$e")
-            return FaceRecognitionResult(false, FaceRecognitionNoPassType.REUPLOAD_AVATAR, e.toString())
+            return taiClient.faceCheck(data.username, FaceCheckData(data.base64FaceData))
+        } catch (e: Exception) {
+            logger.error("$USER_CERT_LOG_PREFIX|faceCheck error", e)
+            return FaceRecognitionResult.noCheck()
         }
-        return FaceRecognitionResult.pass()
-    }
-
-    private fun buildIaiClient(): IaiClient {
-        val cred = Credential(secretId, secretKey)
-        val profile = HttpProfile().apply {
-            this.endpoint = IAI_TCLOUD_DOMAIN
-        }
-        return IaiClient(
-            cred,
-            // 内网地域不用写，就近接入
-            "",
-            ClientProfile().apply { this.httpProfile = profile }
-        )
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(UserInfoCertService::class.java)
-        private const val IAI_TCLOUD_DOMAIN = "iai.internal.tencentcloudapi.com"
+        private const val USER_CERT_LOG_PREFIX = "USER_CERT_LOG"
     }
 }

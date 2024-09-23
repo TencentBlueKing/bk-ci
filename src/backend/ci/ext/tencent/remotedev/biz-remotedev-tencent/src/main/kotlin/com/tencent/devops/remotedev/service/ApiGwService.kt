@@ -5,11 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
+import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckResult
+import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -32,17 +35,11 @@ class ApiGwService @Autowired constructor(
         val request = Request.Builder()
             .url(url)
             .get()
-            .header(
-                name = "X-Bkapi-Authorization",
-                value = JsonUtil.toJson(
-                    mapOf("bk_app_code" to bkConfig.appCode, "bk_app_secret" to bkConfig.appSecret),
-                    false
-                )
-            )
+            .headers(genCommonHeader())
             .build()
         return OkhttpUtils.doHttp(request).use { response ->
             val data = response.body!!.string()
-            logger.debug("projectAccessDevicePermissions|{}|{}|{}", request.url, response.code, data)
+            logger.info("projectAccessDevicePermissions|{}|{}|{}", request.url, response.code, data)
             if (!response.isSuccessful) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.PROJECT_ACCESS_DEVICE_PERMISSION.errorCode,
@@ -50,7 +47,7 @@ class ApiGwService @Autowired constructor(
                 )
             }
 
-            val resp = objectMapper.readValue<AccessDevicePermissionsResp>(data)
+            val resp = objectMapper.readValue<RemoteDevApiGwResp<AccessDevicePermissionsRespData>>(data)
             if (!resp.result) {
                 logger.error("projectAccessDevicePermissions|{}|{}|{}", request.url, response.code, data)
                 throw ErrorCodeException(
@@ -58,8 +55,43 @@ class ApiGwService @Autowired constructor(
                     defaultMessage = "code ${resp.code} msg ${resp.message}"
                 )
             }
-            resp.data.result
+            resp.data?.result
         }
+    }
+
+    fun workspaceAccessManageControl(
+        projectId: String,
+        workspaceName: String
+    ): UserInfoCheckResult? {
+        val url = "${bkConfig.remoteDevUrl}/apigw/v1/remote_dev/workspace_access_manage_control" +
+                "?project_code=$projectId&workspace_name=$workspaceName"
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .headers(genCommonHeader())
+            .build()
+        return OkhttpUtils.doHttp(request).use { response ->
+            val data = response.body!!.string()
+            logger.info("workspaceAccessManageControl|{}|{}|{}", request.url, response.code, data)
+            if (!response.isSuccessful) {
+                throw RemoteServiceException("request $url fail, code ${response.code}", response.code)
+            }
+
+            val resp = objectMapper.readValue<RemoteDevApiGwResp<UserInfoCheckResult>>(data)
+            if (!resp.result) {
+                logger.error("workspaceAccessManageControl|{}|{}|{}", request.url, response.code, data)
+                throw RemoteServiceException("request $url error, code ${resp.code} msg ${resp.message}", response.code)
+            }
+            resp.data
+        }
+    }
+
+    fun genCommonHeader(): Headers {
+        val res = mapOf(
+            "X-Bkapi-Authorization" to
+                    """{"bk_app_code":"${bkConfig.appCode}","bk_app_secret":"${bkConfig.appSecret}"}"""
+        )
+        return res.toHeaders()
     }
 
     companion object {
@@ -68,10 +100,10 @@ class ApiGwService @Autowired constructor(
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class AccessDevicePermissionsResp(
+data class RemoteDevApiGwResp<T>(
     val result: Boolean,
     val code: Int,
-    val data: AccessDevicePermissionsRespData,
+    val data: T?,
     val message: String?,
     @JsonProperty("request_id")
     val requestId: String?,
