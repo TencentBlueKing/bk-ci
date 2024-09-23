@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.dialect
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 
 /**
  * 流水线语法风格
@@ -67,6 +68,28 @@ enum class PipelineDialectType(val dialect: IPipelineDialect) {
                     projectDialect = projectDialect,
                     pipelineDialect = pipelineDialect
                 )
+            }
+        }
+
+        fun getPipelineDialectType(
+            channelCode: ChannelCode,
+            asCodeSettings: PipelineAsCodeSettings?
+        ): PipelineDialectType {
+            return when {
+                asCodeSettings == null -> CLASSIC
+                // stream并且开启pac需要使用制约模式
+                channelCode == ChannelCode.GIT && asCodeSettings.enable ->
+                    CONSTRAINED
+
+                else -> {
+                    with(asCodeSettings) {
+                        getPipelineDialectType(
+                            inheritedDialect = inheritedDialect,
+                            projectDialect = projectDialect,
+                            pipelineDialect = pipelineDialect
+                        )
+                    }
+                }
             }
         }
 

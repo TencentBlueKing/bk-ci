@@ -42,7 +42,6 @@ import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -67,7 +66,6 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.PipelineContextService
-import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -288,12 +286,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         variables: Map<String, String>
     ): Boolean {
         param.buildEnv?.let { buildEnv ->
-            val asCode by lazy {
-                val dialect = variables[PIPELINE_DIALECT]?.let {
-                    PipelineDialectType.valueOf(it).dialect
-                } ?: PipelineDialectType.CLASSIC.dialect
-                val contextPair = EnvReplacementParser.getCustomExecutionContextByMap(variables)
-                Pair(dialect, contextPair)
+            val contextPair by lazy {
+                EnvReplacementParser.getCustomExecutionContextByMap(variables)
             }
             buildEnv.forEach { env ->
                 if (!env.value.startsWith("$")) {
@@ -302,7 +296,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 val version = EnvReplacementParser.parse(
                     value = env.value,
                     contextMap = variables,
-                    contextPair = asCode.second
+                    contextPair = contextPair
                 )
                 val res = client.get(ServiceContainerAppResource::class).getBuildEnv(
                     name = env.key,

@@ -373,7 +373,7 @@ internal class EnvReplacementParserTest {
         )
         Assertions.assertEquals(
             "hello\$variables.abc}}",
-            EnvReplacementParser.parse(command7, data, true),
+            EnvReplacementParser.parse(command7, data, true)
         )
         Assertions.assertEquals(
             "echo hahahahaha",

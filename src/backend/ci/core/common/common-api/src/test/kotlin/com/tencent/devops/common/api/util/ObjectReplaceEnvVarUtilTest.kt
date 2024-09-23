@@ -197,7 +197,7 @@ class ObjectReplaceEnvVarUtilTest {
 
         assertEquals(
             toJson(ObjectReplaceEnvVarUtil.replaceEnvVar(toJson(originDataMapObj), envMap)),
-            toJson(ObjectReplaceEnvVarUtil.replaceEnvVar(originDataMapObj, envMap)),
+            toJson(ObjectReplaceEnvVarUtil.replaceEnvVar(originDataMapObj, envMap))
         )
     }
 

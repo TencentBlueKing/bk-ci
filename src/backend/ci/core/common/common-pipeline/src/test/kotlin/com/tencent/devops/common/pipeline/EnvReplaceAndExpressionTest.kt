@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.JsonUtil.toJson
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -71,34 +72,23 @@ class EnvReplaceAndExpressionTest {
         dataMapObj["dataMapKey"] = "变量替换测试_\${specStrEnvVar}"
         dataMapObj["testBean"] = testBean
         originDataListObj.add(dataMapObj)
-        val convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataListObj, envMap) as List<*>
-        val convertDataObj2 = JsonUtil.to(
-            EnvReplacementParser.parse(value = toJson(originDataListObj), envMap),
-            List::class.java
-        )
-
-        assertEquals(convertDataObj[0], convertDataObj2[0])
-        assertEquals(convertDataObj[1], convertDataObj2[1])
-        assertEquals(convertDataObj[2], convertDataObj2[2])
-        assertEquals(convertDataObj[3], convertDataObj2[3])
-        assertEquals(convertDataObj[4], convertDataObj2[4])
-
-        val convertTestBean = convertDataObj[5] as TestBean
-        assertEquals("bean变量替换测试_${envMap["specStrEnvVar"]}", convertTestBean.testBeanKey)
-        assertEquals(jsonExcept, convertTestBean.testBeanValue)
+        val convertDataObj = toJson(ObjectReplaceEnvVarUtil.replaceEnvVar(originDataListObj, envMap))
+        val convertDataObj2 = EnvReplacementParser.parse(value = toJson(originDataListObj), envMap)
+        assertEquals(convertDataObj, convertDataObj2)
     }
 
     @Test
     fun replaceIllegalJson() {
         val objectJson = "{\"abc:\"变量替换测试_\${normalStrEnvVar}\""
         val convertDataObj1 = ObjectReplaceEnvVarUtil.replaceEnvVar(objectJson, envMap)
-        println(convertDataObj1)
-        assertEquals("{\"abc:\"变量替换测试_${envMap["normalStrEnvVar"]}\"", convertDataObj1)
+        val convertDataObj11 = EnvReplacementParser.parse(objectJson, envMap)
+
+        assertEquals(convertDataObj1, convertDataObj11)
 
         val arrayJson = "[1, \"变量替换测试_\${normalStrEnvVar}\""
         val convertDataObj2 = ObjectReplaceEnvVarUtil.replaceEnvVar(arrayJson, envMap)
-        println(convertDataObj2)
-        assertEquals("[1, \"变量替换测试_${envMap["normalStrEnvVar"]}\"", convertDataObj2)
+        val convertDataObj21 = EnvReplacementParser.parse(arrayJson, envMap)
+        assertEquals(convertDataObj2, convertDataObj21)
     }
 
     @Test
@@ -121,53 +111,9 @@ class EnvReplaceAndExpressionTest {
         setDataMapObj["dataMapKey"] = "变量替换测试_\${specStrEnvVar}"
         setDataMapObj["testBean"] = testBean
         originDataSetObj.add(setDataMapObj)
-        val convertDataObj = (ObjectReplaceEnvVarUtil.replaceEnvVar(originDataSetObj, envMap) as Set<*>)
-
-        convertDataObj.forEach { member ->
-            when {
-                member is Map<*, *> -> {
-                    member.forEach { sm ->
-                        when {
-                            sm.key.toString() == "testBean" -> {
-                                assertEquals(
-                                    "bean变量替换测试_${envMap["specStrEnvVar"]}",
-                                    (sm.value as TestBean).testBeanKey
-                                )
-                                assertEquals(jsonExcept, (sm.value as TestBean).testBeanValue)
-                            }
-                            sm.key.toString() == "dataMapKey" -> {
-                                assertEquals("变量替换测试_${envMap["specStrEnvVar"]}", sm.value)
-                            }
-                            else -> {
-                                assertEquals(member.toString(), "setDataMapObj")
-                            }
-                        }
-                    }
-                }
-                member is TestBean -> {
-                    assertEquals("bean变量替换测试_${envMap["specStrEnvVar"]}", member.testBeanKey)
-                    assertEquals(jsonExcept, member.testBeanValue)
-                }
-                member.toString().startsWith("1") -> {
-                    assertEquals("1变量替换测试_${envMap["normalStrEnvVar"]}", member)
-                }
-                member.toString().startsWith("2") -> {
-                    assertEquals("2变量替换测试_${envMap["specStrEnvVar"]}", member)
-                }
-                member.toString().startsWith("3") -> {
-                    assertEquals("3变量替换测试_${envMap["jsonStrEnvVar"]}", member)
-                }
-                member.toString().startsWith("{") -> {
-                    assertEquals(jsonExcept, member)
-                }
-                member.toString().startsWith("[") -> {
-                    assertEquals(arrayJsonExcept, member)
-                }
-                else -> {
-                    assertEquals(member.toString(), "convertDataObj")
-                }
-            }
-        }
+        val convertDataObj = toJson(ObjectReplaceEnvVarUtil.replaceEnvVar(originDataSetObj, envMap))
+        val convertDataObj2 = EnvReplacementParser.parse(toJson(originDataSetObj), envMap)
+        assertEquals(convertDataObj, convertDataObj2)
     }
 
     @Test
@@ -191,20 +137,25 @@ class EnvReplaceAndExpressionTest {
         )
         originSubDataMapObj["testBean"] = testBean
         originDataMapObj["originSubDataMapObj"] = originSubDataMapObj
+
         val cpb = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataMapObj, envMap)
         val testBeanMap = ((cpb as Map<String, Any>)["originSubDataMapObj"] as Map<String, Any>)["testBean"] as TestBean
-        assertEquals("变量替换测试_${envMap["specStrEnvVar"]}", testBeanMap.testBeanKey)
-        assertEquals(jsonExcept, testBeanMap.testBeanValue)
-        // 判断map中jsonStrEnvVarKey3对应的值进行变量替换后能否正常转换为json串
-        assertEquals(envMap["jsonStrEnvVar"], (cpb as Map<String?, Any?>)["jsonStrEnvVarKey3"]!!)
-        originSubDataMapObj = cpb["originSubDataMapObj"] as MutableMap<String?, Any?>?
-        // 判断嵌套的map中jsonStrEnvVarKey2对应的值进行变量替换后能否正常转换为json串
-        assertEquals(envMap["jsonStrEnvVar"], originSubDataMapObj!!["jsonStrEnvVarKey2"]!!)
 
-        assertEquals(
-            toJson(ObjectReplaceEnvVarUtil.replaceEnvVar(toJson(originDataMapObj), envMap)),
-            toJson(ObjectReplaceEnvVarUtil.replaceEnvVar(originDataMapObj, envMap)),
+        val cpb2 = JsonUtil.to(EnvReplacementParser.parse(toJson(originDataMapObj), envMap), Map::class.java)
+        val testBeanMap2 = JsonUtil.to(
+            toJson(JsonUtil.to(toJson(cpb2["originSubDataMapObj"]!!), Map::class.java)["testBean"]!!),
+            TestBean::class.java
         )
+        assertEquals(testBeanMap.testBeanKey, testBeanMap2.testBeanKey)
+        assertEquals(testBeanMap.testBeanValue, testBeanMap2.testBeanValue)
+        // EnvReplacementParser对格式进行了压缩
+        assertNotEquals(
+            (cpb as Map<String?, Any?>)["jsonStrEnvVarKey3"]!!,
+            (cpb2 as Map<String?, Any?>)["jsonStrEnvVarKey3"]!!
+        )
+        originSubDataMapObj = cpb["originSubDataMapObj"] as MutableMap<String?, Any?>?
+        val originSubDataMapObj2 = cpb2["originSubDataMapObj"] as MutableMap<String?, Any?>?
+        assertNotEquals(originSubDataMapObj!!["jsonStrEnvVarKey2"]!!, originSubDataMapObj2!!["jsonStrEnvVarKey2"]!!)
     }
 
     @Test
@@ -251,31 +202,33 @@ class EnvReplaceAndExpressionTest {
         testComplexBean.dataSet = dataSet
 
         // start to test
-        var convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(testComplexBean, envMap)
-        val convertBean = convertDataObj as TestComplexBean
-        assertEquals("变量替换测试_${envMap["specStrEnvVar"]}", convertBean.testBeanKey)
+        var convertDataObj1 = ObjectReplaceEnvVarUtil.replaceEnvVar(testComplexBean, envMap)
+        val convertBean1 = convertDataObj1 as TestComplexBean
+        val convertBean2 = JsonUtil.to(EnvReplacementParser.parse(toJson(testComplexBean), envMap), TestComplexBean::class.java)
 
-        assertEquals("变量替换测试_${envMap["normalStrEnvVar"]}", convertBean.dataList!![0])
-        assertEquals("变量替换测试_${envMap["specStrEnvVar"]}", convertBean.dataList!![1])
-        assertEquals("变量替换测试_${envMap["jsonStrEnvVar"]}", convertBean.dataList!![2])
-        assertEquals(jsonExcept, convertBean.dataList!![3])
-        assertEquals("[ \"变量替换测试_{\\\"abc\\\":\\\"123\\\"}\" ]", convertBean.dataList!![4])
+        assertEquals(convertBean1.testBeanKey, convertBean2.testBeanKey)
 
-        assertEquals(" 变量替换测试_${envMap["normalStrEnvVar"]} ", convertBean.dataMap!!["normalStrEnvVarKey"])
-        assertEquals("变量替换测试_${envMap["specStrEnvVar"]}", convertBean.dataMap!!["specStrEnvVarKey"])
-        assertEquals("变量替换测试_${envMap["jsonStrEnvVar"]}", convertBean.dataMap!!["jsonStrEnvVarKey1"])
-        assertEquals(jsonExcept, convertBean.dataMap!!["jsonStrEnvVarKey2"])
-        assertEquals(arrayJsonExcept, convertBean.dataMap!!["jsonStrEnvVarKey3"])
+        assertEquals(convertBean1.dataList!![0], convertBean2.dataList!![0])
+        assertEquals(convertBean1.dataList!![1], convertBean2.dataList!![1])
+        assertEquals(convertBean1.dataList!![2], convertBean2.dataList!![2])
+        assertEquals(convertBean1.dataList!![3], convertBean2.dataList!![3])
+        assertEquals(convertBean1.dataList!![4], convertBean2.dataList!![4])
+
+        assertEquals(convertBean1.dataMap!!["normalStrEnvVarKey"], convertBean2.dataMap!!["normalStrEnvVarKey"])
+        assertEquals(convertBean1.dataMap!!["specStrEnvVarKey"], convertBean2.dataMap!!["specStrEnvVarKey"])
+        assertEquals(convertBean1.dataMap!!["jsonStrEnvVarKey1"], convertBean2.dataMap!!["jsonStrEnvVarKey1"])
+        assertEquals(convertBean1.dataMap!!["jsonStrEnvVarKey2"], convertBean2.dataMap!!["jsonStrEnvVarKey2"])
+        assertEquals(convertBean1.dataMap!!["jsonStrEnvVarKey3"], convertBean2.dataMap!!["jsonStrEnvVarKey3"])
 
         // 替换包含null的对象
         dataMap = HashMap()
         dataMap["key1"] = "变量"
         dataMap["key2"] = arrayOf<Any?>(null, "哈哈")
 
-        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(dataMap, envMap) as Map<*, *>
-        assertEquals(dataMap["key1"], convertDataObj["key1"])
-        assertEquals(toJson(dataMap["key2"]!!), convertDataObj["key2"])
-        println("convertDataObj=$convertDataObj")
+        convertDataObj1 = ObjectReplaceEnvVarUtil.replaceEnvVar(dataMap, envMap) as Map<*, *>
+        var convertDataObj2 = JsonUtil.to(EnvReplacementParser.parse(toJson(dataMap), envMap), Map::class.java)
+        assertEquals(convertDataObj1["key1"], convertDataObj2["key1"])
+        assertEquals(convertDataObj1["key2"], convertDataObj2["key2"])
     }
 
     @Test
@@ -283,34 +236,44 @@ class EnvReplaceAndExpressionTest {
 
         // 对普通字符串进行普通字符串变量替换
         var originDataObj: Any = "变量替换测试_\${normalStrEnvVar}"
-        var convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap)
-        assertEquals("变量替换测试_123", toJson(convertDataObj))
+        var convertDataObj = toJson(ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap))
+        var convertDataObj2 = EnvReplacementParser.parse(toJson(originDataObj), envMap)
+        assertEquals(convertDataObj, convertDataObj2)
 
         // 对普通字符串进行带特殊字符字符串变量替换
         originDataObj = "变量替换测试_\${specStrEnvVar}"
-        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap)
-        assertEquals("变量替换测试_D:\\tmp\\hha", toJson(convertDataObj))
+        convertDataObj = toJson(ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap))
+        convertDataObj2 = EnvReplacementParser.parse(toJson(originDataObj), envMap)
+        assertEquals(convertDataObj, convertDataObj2)
 
         // 对普通字符串进行json字符串变量替换
         originDataObj = "变量替换测试_\${jsonStrEnvVar}"
-        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap)
-        assertEquals("变量替换测试_{\"abc\":\"123\"}", toJson(convertDataObj))
+        convertDataObj = toJson(ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap))
+        convertDataObj2 = EnvReplacementParser.parse(toJson(originDataObj), envMap)
+        assertEquals(convertDataObj, convertDataObj2)
 
         // number类型变量替换
         originDataObj = "[1,2,3]"
-        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap)
-        println(toJson(convertDataObj))
-        assertEquals(toJson(JsonUtil.to(originDataObj, List::class.java)), toJson(convertDataObj))
+        convertDataObj = toJson(ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap))
+        convertDataObj2 = EnvReplacementParser.parse(toJson(originDataObj), envMap)
+        assertEquals(convertDataObj, convertDataObj2)
 
         // 魔法数字符创测试
-        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar("12E2", envMap)
-        assertEquals("12E2", toJson(convertDataObj))
+        convertDataObj = toJson(ObjectReplaceEnvVarUtil.replaceEnvVar("12E2", envMap))
+        convertDataObj2 = EnvReplacementParser.parse("12E2", envMap)
+        assertEquals(convertDataObj, convertDataObj2)
         // 替换”[133]-[sid-${normalStrEnvVar}]-[sid-zhiliang-test1]“带多个[]的字符串
-        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(
+        convertDataObj = toJson(
+            ObjectReplaceEnvVarUtil.replaceEnvVar(
+                "[133]-[sid-\${normalStrEnvVar}]-[sid-zhiliang-test1]",
+                envMap
+            )
+        )
+        convertDataObj2 = EnvReplacementParser.parse(
             "[133]-[sid-\${normalStrEnvVar}]-[sid-zhiliang-test1]",
             envMap
         )
-        assertEquals("[133]-[sid-123]-[sid-zhiliang-test1]", toJson(convertDataObj))
+        assertEquals(convertDataObj, convertDataObj2)
     }
 
     internal data class TestBean(

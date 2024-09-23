@@ -1,7 +1,6 @@
 package com.tencent.devops.stream.trigger.actions.streamActions
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.EnvReplacementContext
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_CREATE_TIME
@@ -332,11 +331,9 @@ class StreamRepoTriggerAction(
             it.forEach { condition ->
                 // 进行表达式计算
                 if (EnvReplacementParser.parse(
-                        EnvReplacementContext(
-                            value = "\${{ $condition }}",
-                            contextMap = supportVar,
-                            useSingleCurlyBraces = false
-                        )
+                        value = "\${{ $condition }}",
+                        contextMap = supportVar,
+                        onlyExpression = true
                     ).contains("true")
                 ) {
                     return TriggerBody().triggerFail(
