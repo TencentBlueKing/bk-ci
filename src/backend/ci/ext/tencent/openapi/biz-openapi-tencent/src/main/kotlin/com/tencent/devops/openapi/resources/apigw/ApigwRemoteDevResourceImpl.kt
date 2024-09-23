@@ -417,4 +417,12 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             ip = ip
         )
     }
+
+    override fun checkUserViewWorkspacePermission(
+        userId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        logger.info("checkUserViewWorkspacePermission |$userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).checkUserViewWorkspacePermission(userId, workspaceName)
+    }
 }
