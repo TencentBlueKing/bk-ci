@@ -70,9 +70,6 @@ interface UserProjectWorkspaceResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "bkTicket", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
-        bkTicket: String,
         @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,

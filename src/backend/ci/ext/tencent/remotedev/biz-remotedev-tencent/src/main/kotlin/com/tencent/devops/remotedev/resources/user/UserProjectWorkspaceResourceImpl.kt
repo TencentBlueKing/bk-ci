@@ -87,7 +87,6 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     @AuditEntry(actionId = ActionId.CGS_CREATE)
     override fun createWorkspace(
         userId: String,
-        bkTicket: String,
         projectId: String,
         workspace: WindowsWorkspaceCreate
     ): Result<Boolean> {
