@@ -56,6 +56,7 @@ import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_RUN
 import com.tencent.devops.dispatch.constants.ENV_PUBLIC_HOST_MAX_ATOM_FILE_CACHE_SIZE
@@ -153,7 +154,6 @@ open class MarketAtomTask : ITask() {
         val map = JsonUtil.toMutableMap(data)
         // 该插件执行的工作空间绝对路径
         val workspacePath = workspace.absolutePath
-        val additionalOptions = taskParams["additionalOptions"]
         // 输出参数的用户命名空间：防止重名窘况
         val namespace: String? = map["namespace"] as String?
         val asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable == true
@@ -259,7 +259,6 @@ open class MarketAtomTask : ITask() {
             // 开关关闭则不再写入插件私有配置到input.json中
             inputVariables.putAll(getAtomSensitiveConfMap(atomCode))
         }
-//        writeInputFile(atomTmpSpace, inputVariables)
         writeSdkEnv(atomTmpSpace, buildTask, buildVariables)
         writeParamEnv(atomCode, atomTmpSpace, workspace, buildTask, buildVariables)
 
@@ -321,6 +320,7 @@ open class MarketAtomTask : ITask() {
                 }
             }
             // 获取插件post操作入口参数
+            val additionalOptions = taskParams[Element::additionalOptions.name]
             var postEntryParam: String? = null
             if (additionalOptions != null) {
                 val additionalOptionMap = JsonUtil.toMutableMap(additionalOptions)
