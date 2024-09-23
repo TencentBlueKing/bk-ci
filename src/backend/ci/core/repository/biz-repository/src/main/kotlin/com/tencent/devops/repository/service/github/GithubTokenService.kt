@@ -30,6 +30,7 @@ package com.tencent.devops.repository.service.github
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -44,6 +45,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.ZoneOffset
 import javax.ws.rs.core.Response
 
 @Service
@@ -84,7 +86,8 @@ class GithubTokenService @Autowired constructor(
         return GithubToken(
             BkCryptoUtil.decryptSm4OrAes(aesKey, githubTokenRecord.accessToken),
             githubTokenRecord.tokenType,
-            githubTokenRecord.scope
+            githubTokenRecord.scope,
+            githubTokenRecord.createTime.timestampmilli()
         )
     }
 

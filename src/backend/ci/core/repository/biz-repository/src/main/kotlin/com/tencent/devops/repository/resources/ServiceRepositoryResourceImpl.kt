@@ -41,6 +41,7 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
+import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
@@ -245,5 +246,35 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
 
     override fun updateStoreRepoProject(userId: String, projectId: String, repositoryId: Long): Result<Boolean> {
         return repositoryService.updateStoreRepoProject(userId, projectId, repositoryId)
+    }
+
+    override fun listOauthRepo(
+        userId: String,
+        projectId: String,
+        scmType: ScmType,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<RepoOauthRefVo>> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 20
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val result = repositoryService.listOauthRepo(
+            userId = userId,
+            projectId = projectId,
+            scmType = scmType,
+            limit = limit.limit,
+            offset = limit.offset
+        )
+        return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
+    }
+
+    override fun countOauthRepo(userId: String, projectId: String, scmType: ScmType): Result<Long> {
+        return Result(
+            repositoryService.countOauthRepo(
+                userId = userId,
+                projectId = projectId,
+                scmType = scmType
+            )
+        )
     }
 }

@@ -71,6 +71,7 @@ import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
+import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.RepoRename
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
@@ -1557,6 +1558,42 @@ class RepositoryService @Autowired constructor(
             repositoryHashId = repository.repoHashId!!,
             repository = targetRepo,
             record = repositoryRecord
+        )
+    }
+
+    fun listOauthRepo(
+        userId: String,
+        projectId: String,
+        scmType: ScmType,
+        limit: Int,
+        offset: Int
+    ): SQLPage<RepoOauthRefVo> {
+        val list = repositoryDao.listOauthRepo(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            scmType = scmType,
+            limit = limit,
+            offset = offset
+        )
+        val count = countOauthRepo(
+            userId = userId,
+            projectId = projectId,
+            scmType = scmType
+        )
+        return SQLPage(records = list, count = count)
+    }
+
+    fun countOauthRepo(
+        userId: String,
+        projectId: String,
+        scmType: ScmType
+    ): Long {
+        return repositoryDao.countOauthRepo(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            scmType = scmType
         )
     }
 

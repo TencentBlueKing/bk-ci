@@ -34,14 +34,17 @@ import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.TRepository
 import com.tencent.devops.model.repository.tables.TRepositoryCodeGit
+import com.tencent.devops.model.repository.tables.TRepositoryGithub
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_NOT_FOUND
+import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.DataType
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
@@ -648,5 +651,66 @@ class RepositoryDao {
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
+    }
+
+    fun listOauthRepo(
+        dslContext: DSLContext,
+        projectId: String,
+        userId: String,
+        limit: Int,
+        offset: Int,
+        scmType: ScmType
+    ): List<RepoOauthRefVo> {
+        val t1 = TRepository.T_REPOSITORY
+        val t2 = when (scmType) {
+            ScmType.CODE_GIT -> TRepositoryCodeGit.T_REPOSITORY_CODE_GIT
+            ScmType.GITHUB -> TRepositoryGithub.T_REPOSITORY_GITHUB
+            else -> return listOf()
+        }
+        return dslContext.select(t1.ALIAS_NAME, t1.URL)
+            .from(t1)
+            .leftJoin(t2)
+            .on(t1.REPOSITORY_ID.eq(t2.field(t1.REPOSITORY_ID.name, Long::class.java)))
+            .where(
+                listOf(
+                    t1.IS_DELETED.eq(false),
+                    t1.PROJECT_ID.eq(projectId),
+                    t2.field("USER_NAME", String::class.java)?.eq(userId)
+                )
+            )
+            .limit(limit).offset(offset)
+            .fetch()
+            .map {
+                RepoOauthRefVo(
+                    aliasName = it.get(0).toString(),
+                    url = it.get(1).toString()
+                )
+            }
+    }
+
+    fun countOauthRepo(
+        dslContext: DSLContext,
+        projectId: String,
+        userId: String,
+        scmType: ScmType
+    ): Long {
+        val t1 = TRepository.T_REPOSITORY
+        val t2 = when (scmType) {
+            ScmType.CODE_GIT -> TRepositoryCodeGit.T_REPOSITORY_CODE_GIT
+            ScmType.GITHUB -> TRepositoryGithub.T_REPOSITORY_GITHUB
+            else -> return 0
+        }
+        return dslContext.selectCount()
+            .from(t1)
+            .leftJoin(t2)
+            .on(t1.REPOSITORY_ID.eq(t2.field(t1.REPOSITORY_ID.name, Long::class.java)))
+            .where(
+                listOf(
+                    t1.IS_DELETED.eq(false),
+                    t1.PROJECT_ID.eq(projectId),
+                    t2.field("USER_NAME", String::class.java)?.eq(userId)
+                )
+            )
+            .fetchOne(0, Long::class.java)!!
     }
 }
