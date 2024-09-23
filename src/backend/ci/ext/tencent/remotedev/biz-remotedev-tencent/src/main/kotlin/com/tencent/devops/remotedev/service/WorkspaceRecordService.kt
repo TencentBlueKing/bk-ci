@@ -4,7 +4,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.config.BkRepoConfig
 import com.tencent.devops.remotedev.config.BkRepoRegion
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -27,7 +26,6 @@ class WorkspaceRecordService @Autowired constructor(
     private val workspaceRecordUserApprovalDao: WorkspaceRecordUserApprovalDao,
     private val workspaceDao: WorkspaceDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val bkRepoConfig: BkRepoConfig,
     private val remotedevBkRepoClient: RemotedevBkRepoClient,
     private val bkItsmService: BKItsmService,
     private val windowsResourceConfigService: WindowsResourceConfigService

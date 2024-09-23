@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class BkRepoConfig {
+class RemoteDevBkRepoConfig {
     @Value("\${bkrepo.devx.url:}")
     val bkrepoDevxUrl: String = ""
 

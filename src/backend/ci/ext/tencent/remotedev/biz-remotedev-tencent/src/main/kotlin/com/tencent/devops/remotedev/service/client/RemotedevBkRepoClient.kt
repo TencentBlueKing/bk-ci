@@ -13,8 +13,8 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.remotedev.config.BkRepoConfig
 import com.tencent.devops.remotedev.config.BkRepoRegion
+import com.tencent.devops.remotedev.config.RemoteDevBkRepoConfig
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateProjectData
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -29,7 +29,7 @@ import java.io.IOException
 @Service
 class RemotedevBkRepoClient @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val bkRepoConfig: BkRepoConfig
+    private val bkRepoConfig: RemoteDevBkRepoConfig
 ) {
     fun repoStreamCreate(
         region: BkRepoRegion,
