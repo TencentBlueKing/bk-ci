@@ -42,7 +42,6 @@ import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WatermarkService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
-import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -54,7 +53,6 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("ALL")
 class UserRemoteDevResourceImpl @Autowired constructor(
     private val remoteDevSettingService: RemoteDevSettingService,
-    private val workspaceService: WorkspaceService,
     private val watermarkService: WatermarkService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val permissionService: PermissionService,
