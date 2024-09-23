@@ -4,7 +4,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.certName') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     name="sslTlsId"
                     v-validate="{ required: isValidSSL, regex: /^[a-zA-Z0-9\.\_]{1,100}$/ }"
@@ -21,7 +22,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.serverCertFile') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     readonly
                     name="serverCrtFileName"
@@ -30,9 +32,18 @@
                     v-model="formData.serverCrtFileName"
                     :class="{ 'is-danger': errors.has('serverCrtFileName') }"
                 />
-                <a href="javascript:void(0);" class="file-input" :title="$t('ticket.cert.selectFile')">
+                <a
+                    href="javascript:void(0);"
+                    class="file-input"
+                    :title="$t('ticket.cert.selectFile')"
+                >
                     <div class="file-input-wrap">
-                        <input type="file" class="file-input-btn" accept=".crt" @change="handleFileUpload" />
+                        <input
+                            type="file"
+                            class="file-input-btn"
+                            accept=".crt"
+                            @change="handleFileUpload"
+                        />
                         <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
@@ -44,7 +55,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.serverKeyFile') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     readonly
                     name="serverKeyFileName"
@@ -53,9 +65,18 @@
                     v-model="formData.serverKeyFileName"
                     :class="{ 'is-danger': errors.has('serverKeyFileName') }"
                 />
-                <a href="javascript:void(0);" class="file-input" :title="$t('ticket.cert.selectFile')">
+                <a
+                    href="javascript:void(0);"
+                    class="file-input"
+                    :title="$t('ticket.cert.selectFile')"
+                >
                     <div class="file-input-wrap">
-                        <input type="file" class="file-input-btn" accept=".key" @change="handleFileUpload" />
+                        <input
+                            type="file"
+                            class="file-input-btn"
+                            accept=".key"
+                            @change="handleFileUpload"
+                        />
                         <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
@@ -68,16 +89,26 @@
         <div class="bk-form-item cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.userCertFile') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     readonly
                     name="clientCrtFileName"
                     :placeholder="$t('ticket.cert.emptyFile')"
                     v-model="formData.clientCrtFileName"
                 />
-                <a href="javascript:void(0);" class="file-input" :title="$t('ticket.cert.selectFile')">
+                <a
+                    href="javascript:void(0);"
+                    class="file-input"
+                    :title="$t('ticket.cert.selectFile')"
+                >
                     <div class="file-input-wrap">
-                        <input type="file" class="file-input-btn" accept=".crt" @change="handleFileUpload($event, true)" />
+                        <input
+                            type="file"
+                            class="file-input-btn"
+                            accept=".crt"
+                            @change="handleFileUpload($event, true)"
+                        />
                         <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
@@ -89,16 +120,26 @@
         <div class="bk-form-item cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.userKeyFile') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     readonly
                     name="clientKeyFileName"
                     :placeholder="$t('ticket.cert.emptyFile')"
                     v-model="formData.clientKeyFileName"
                 />
-                <a href="javascript:void(0);" class="file-input" :title="$t('ticket.cert.selectFile')">
+                <a
+                    href="javascript:void(0);"
+                    class="file-input"
+                    :title="$t('ticket.cert.selectFile')"
+                >
                     <div class="file-input-wrap">
-                        <input type="file" class="file-input-btn" accept=".key" @change="handleFileUpload($event, true)" />
+                        <input
+                            type="file"
+                            class="file-input-btn"
+                            accept=".key"
+                            @change="handleFileUpload($event, true)"
+                        />
                         <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
@@ -111,7 +152,11 @@
         <div class="bk-form-item cert-textarea-item">
             <label class="bk-label">{{ $t('ticket.cert.certRemark') }}：</label>
             <div class="bk-form-content">
-                <textarea class="bk-form-textarea" :placeholder="$t('ticket.cert.certRemarkPlaceHolder')" v-model="formData.remark"></textarea>
+                <textarea
+                    class="bk-form-textarea"
+                    :placeholder="$t('ticket.cert.certRemarkPlaceHolder')"
+                    v-model="formData.remark"
+                ></textarea>
             </div>
         </div>
     </section>

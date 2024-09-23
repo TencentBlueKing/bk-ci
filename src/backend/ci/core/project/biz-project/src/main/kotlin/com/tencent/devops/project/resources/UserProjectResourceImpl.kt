@@ -120,8 +120,7 @@ class UserProjectResourceImpl @Autowired constructor(
                 userId = userId,
                 englishName = projectId,
                 accessToken = accessToken
-            )
-                ?: throw OperationException("project $projectId not found")
+            ) ?: throw OperationException("project $projectId not found")
         )
     }
 

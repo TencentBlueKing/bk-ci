@@ -30,11 +30,14 @@ package com.tencent.devops.remotedev.resources.user
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeData
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeResp
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.service.clientupgrade.ClientUpgradeService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WatermarkService
@@ -57,7 +60,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val permissionService: PermissionService,
     private val expertSupportService: ExpertSupportService,
     private val txcService: TxcService,
-    private val redisCache: RedisCacheService
+    private val redisCache: RedisCacheService,
+    private val clientUpgradeService: ClientUpgradeService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -74,14 +78,6 @@ class UserRemoteDevResourceImpl @Autowired constructor(
 
     override fun getWatermark(userId: String, watermark: Watermark): Result<Any> {
         return Result(watermarkService.getWatermark(userId, watermark))
-    }
-
-    override fun preCiAgent(
-        userId: String,
-        workspaceName: String,
-        agentId: String
-    ): Result<Boolean> {
-        return Result(workspaceService.preCiAgent(agentId, workspaceName))
     }
 
     override fun getUser(userId: String): Result<String> {
@@ -106,12 +102,14 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         userId: String,
         searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>> {
-        return Result(windowsResourceConfigService.allWindowsQuota(
-            userId = userId,
-            searchCustom = searchCustom,
-            quotaType = QuotaType.OFFSHORE,
-            withProjectLimit = projectId
-        ))
+        return Result(
+            windowsResourceConfigService.allWindowsQuota(
+                userId = userId,
+                searchCustom = searchCustom,
+                quotaType = QuotaType.OFFSHORE,
+                withProjectLimit = projectId
+            )
+        )
     }
 
     override fun onePassword(userId: String, workspaceName: String): Result<String> {
@@ -141,6 +139,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         } else {
             Result(message, res)
         }
+    }
+
+    override fun clientUpgrade(userId: String, data: ClientUpgradeData): Result<ClientUpgradeResp> {
+        return Result(clientUpgradeService.checkUpgrade(userId, data))
     }
 
     override fun getTxcToken(userId: String, openId: String, nickName: String, avatar: String): Result<String> {

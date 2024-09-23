@@ -40,5 +40,20 @@ data class WindowsResourceZoneConfig(
     @get:Schema(title = "区域简称，SZ,NJ")
     var zoneShortName: String,
     @get:Schema(title = "描述")
-    val description: String
+    val description: String,
+    @get:Schema(title = "类型")
+    val type: WindowsResourceZoneConfigType
 )
+
+enum class WindowsResourceZoneConfigType {
+    DEFAULT,
+    INTERNAL_USE, /*内部使用专区*/
+    CSIG_USE, /*csig使用专区*/
+    DEVCLOUD; /*devcloud使用专区*/
+
+    companion object {
+        fun parse(value: String): WindowsResourceZoneConfigType {
+            return values().find { it.name == value } ?: DEFAULT
+        }
+    }
+}

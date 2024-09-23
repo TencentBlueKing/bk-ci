@@ -6,7 +6,12 @@
 
         <section class="sub-view-port">
             <template v-if="service">
-                <iframe class="environment-view-port-iframe" ref="extensionIframe" :src="iframeUrl" @load="handlePageLoad"></iframe>
+                <iframe
+                    class="environment-view-port-iframe"
+                    ref="extensionIframe"
+                    :src="iframeUrl"
+                    @load="handlePageLoad"
+                ></iframe>
             </template>
         </section>
     </div>

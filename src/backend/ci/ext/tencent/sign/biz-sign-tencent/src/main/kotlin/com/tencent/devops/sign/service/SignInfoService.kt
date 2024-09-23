@@ -27,6 +27,9 @@
 
 package com.tencent.devops.sign.service
 
+import com.dd.plist.NSDictionary
+import com.dd.plist.NSString
+import com.dd.plist.PropertyListParser
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
@@ -41,10 +44,13 @@ import com.tencent.devops.sign.api.pojo.SignHistory
 import com.tencent.devops.sign.dao.SignHistoryDao
 import com.tencent.devops.sign.dao.SignIpaInfoDao
 import com.tencent.devops.sign.utils.IpaFileUtil
+import com.tencent.devops.sign.utils.SignUtils.APP_INFO_PLIST_FILENAME
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.util.regex.Pattern
+import org.apache.commons.lang3.StringUtils
 import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -111,6 +117,7 @@ class SignInfoService(
             pipelineId = info.pipelineId,
             buildId = info.buildId,
             taskId = info.taskId,
+            appId = info.appId,
             archiveType = info.archiveType,
             archivePath = info.archivePath,
             md5 = info.md5
@@ -222,6 +229,18 @@ class SignInfoService(
         return info
     }
 
+    /**
+     * 校验appId是否存在(keystore应用关联签名)
+     * */
+    fun checkAppIdIsExist(ipaSignInfo: IpaSignInfo) {
+        if (StringUtils.isBlank(ipaSignInfo.appId)) {
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER,
+                defaultMessage = "keystore appId不能为空"
+            )
+        }
+    }
+
     fun decodeIpaSignInfo(ipaSignInfoHeader: String, objectMapper: ObjectMapper): IpaSignInfo {
         try {
             val ipaSignInfoHeaderDecode = String(Base64Util.decode(ipaSignInfoHeader))
@@ -243,6 +262,80 @@ class SignInfoService(
         } catch (ignored: Throwable) {
             logger.warn("Failed to encode signature information header：$ignored")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ENCODE_SIGN_INFO, defaultMessage = "编码签名信息失败")
+        }
+    }
+
+    @Suppress("NestedBlockDepth")
+    fun checkInfoPlist(resignId: String, ipaUnzipDir: File) {
+        try {
+            // 遍历Frameworks下的framework和PlugIns下的xctest
+            val bundleIdPattern = Pattern.compile("^[A-Za-z0-9\\-\\.]+\$")
+            val list = mutableListOf<File>()
+            val warnInfo = StringBuilder()
+            scanFrameworksAndPlugIns(ipaUnzipDir, list)
+
+            list.forEach {
+                val infoPlist = File(it, APP_INFO_PLIST_FILENAME)
+                if (infoPlist.exists()) {
+                    // bundleid 做格式校验，校验的正则为：^[A-Za-z0-9\-\.]+$，如果不符合这个规则只打印warn日志，不打断流程
+                    // 关键字：CFBundleIdentifier, CFBundleName, CFBundleShortVersionString, CFBundleVersion
+                    val rootDict = PropertyListParser.parse(infoPlist) as NSDictionary
+                    var parameters = rootDict.objectForKey("CFBundleIdentifier") as NSString
+                    var exeParam = rootDict.objectForKey("CFBundleExecutable") as NSString
+                    if (it.nameWithoutExtension != exeParam.toString()) throw ErrorCodeException(
+                        errorCode = SignMessageCode.ERROR_PARS_INFO_PLIST,
+                        defaultMessage = "$it name is not equal to $exeParam"
+                    )
+                    if (!rootDict.containsKey("CFBundleIdentifier"))
+                        warnInfo.append("[WARN]").append("CFBundleIdentifier is empty,").append(infoPlist)
+                    if (!rootDict.containsKey("CFBundleName"))
+                        warnInfo.append("[WARN]").append("CFBundleName is empty,").append(infoPlist)
+                    if (!rootDict.containsKey("CFBundleShortVersionString"))
+                        warnInfo.append("[WARN]").append("CFBundleShortVersionString is empty,").append(infoPlist)
+                    if (!rootDict.containsKey("CFBundleVersion"))
+                        warnInfo.append("[WARN]").append("CFBundleVersion is empty,").append(infoPlist)
+                    if (!bundleIdPattern.matcher(parameters.toString()).matches())
+                        warnInfo.append("[WARN]").append("bundleIdentifier not conform to specification,")
+                            .append(infoPlist)
+                }
+            }
+
+            if (warnInfo.toString().isNotEmpty())
+                signHistoryDao.writeWarnInfo(dslContext, resignId, warnInfo.toString())
+        } catch (default: ErrorCodeException) {
+            throw default
+        } catch (e: Exception) {
+            logger.error("resignId=$resignId|checkInfoPlist|Failed to check info.plist")
+        }
+    }
+
+    /**
+     * 扫描ipa解压目录下frameworks和plugins下的info.plist
+     *
+     * @param ipaUnzipDir IPA包解压目录
+     * @param list framework目录和xctest目录
+     *
+     * */
+    private fun scanFrameworksAndPlugIns(ipaUnzipDir: File, list: MutableList<File>) {
+        val payload = File(ipaUnzipDir, "payload")
+        val appPattern = Pattern.compile(".+\\.app")
+        var appDir: File? = null
+        payload.listFiles()?.forEach {
+            if (appPattern.matcher(it.name).matches()) appDir = it
+        }
+        val frameworks = File(appDir, "Frameworks")
+        val plugins = File(appDir, "Plugins")
+
+        if (frameworks.exists()) {
+            frameworks.listFiles().forEach {
+                if (it.name.endsWith("framework") && it.isDirectory) list.add(it)
+            }
+        }
+
+        if (plugins.exists()) {
+            plugins.listFiles().forEach {
+                if (it.name.endsWith("xctest") && it.isDirectory) list.add(it)
+            }
         }
     }
 

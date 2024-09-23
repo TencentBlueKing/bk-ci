@@ -110,7 +110,7 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
                     if (nodeRecord == null || nodeRecord.nodeStatus == NodeStatus.DELETED.name) {
                         deleteAgent(context, record.projectId, record.id)
                     }
-                    nodeDao.updateNodeStatus(context, record.nodeId, NodeStatus.ABNORMAL)
+                    nodeDao.updateNodeStatus(context, setOf(record.nodeId), NodeStatus.ABNORMAL)
                 }
             }
         }

@@ -30,26 +30,6 @@ class HolidayHelper @Autowired constructor(
         val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     }
 
-    /**
-     * 返回最近几次工作日
-     */
-    fun getLastWorkingDays(days: Int): List<LocalDateTime> {
-        var now = LocalDateTime.now()
-        val result = mutableListOf<LocalDateTime>()
-        var max = 128
-        while (max-- > 0 && result.size < days + 1) {
-            if (isWorkingDay(now)) {
-                result.add(now)
-            }
-            now = now.plusDays(-1)
-        }
-        logger.info(
-            "getLastWorkingDays|$days|" +
-                    "${LocalDateTime.now().format(formatter)}|${result.last().format(formatter)}"
-        )
-        return result
-    }
-
     fun isWorkingDay(now: LocalDateTime): Boolean {
         val holidays = getOrInitHolidays(now.year).plus(getOrInitHolidays(now.year - 1))
         val workingDays = getOrInitWorkingDays(now.year).plus(getOrInitWorkingDays(now.year - 1))

@@ -44,7 +44,7 @@ import (
 
 var localizer *localizerType
 
-var defaultLocalTag = language.Make(constant.DEFAULT_LANGUAGE_TYPE)
+var defaultLocalTag = language.Make(constant.DefaultLanguageType)
 
 type localizerType struct {
 	nowLocalizer language.Tag

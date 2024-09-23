@@ -57,6 +57,7 @@ class ContainerCustomizedRunHandler(
     override fun handlerRequest(handlerContext: ContainerHandlerContext) {
         with(handlerContext) {
             try {
+                val containerStartTime = (System.currentTimeMillis() / 1000).toInt()
                 val env = generateEnv(dockerRunParam, this)
                 logger.info("[$buildId]|[$vmSeqId] env is $env")
 
@@ -101,7 +102,7 @@ class ContainerCustomizedRunHandler(
 
                 dockerRunResponse = DockerRunResponse(
                     containerId = container.id,
-                    startTimeStamp = (System.currentTimeMillis() / 1000).toInt(),
+                    startTimeStamp = containerStartTime,
                     dockerRunPortBindings = dockerRunPortBindingList
                 )
             } catch (er: Throwable) {

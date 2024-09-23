@@ -121,7 +121,8 @@ class PipelineInfoDao {
         taskCount: Int = 0,
         latestVersion: Int = 0,
         updateLastModifyUser: Boolean? = true,
-        latestVersionStatus: VersionStatus? = null
+        latestVersionStatus: VersionStatus? = null,
+        locked: Boolean? = null
     ): Boolean {
         return with(T_PIPELINE_INFO) {
             val update = dslContext.update(this)
@@ -142,6 +143,9 @@ class PipelineInfoDao {
             }
             if (taskCount > 0) {
                 update.set(TASK_COUNT, taskCount)
+            }
+            if (locked != null) {
+                update.set(LOCKED, locked)
             }
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
@@ -632,7 +636,8 @@ class PipelineInfoDao {
                     id = id,
                     latestVersionStatus = latestVersionStatus?.let {
                         VersionStatus.valueOf(it)
-                    } ?: VersionStatus.RELEASED
+                    } ?: VersionStatus.RELEASED,
+                    locked = t.locked
                 )
             }
         } else {

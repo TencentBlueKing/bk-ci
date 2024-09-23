@@ -30,7 +30,7 @@ type Manager interface {
 	Start() error
 	CreateExecNoHttp(*WebSocketConfig) (*docker.Exec, error)
 
-	// handler container web console
+	// StartExec handler container web console
 	StartExec(http.ResponseWriter, *http.Request, *WebSocketConfig)
 	CreateExec(http.ResponseWriter, *http.Request, *WebSocketConfig)
 	ResizeExec(http.ResponseWriter, *http.Request, *WebSocketConfig)

@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package fs
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 	"io"
 	"os"
@@ -41,7 +42,7 @@ import (
 )
 
 // fs contains a copy of a few functions from dep tool code to avoid a dependency on golang/dep.
-// This code is copied from https://github.com/golang/dep/blob/a5440af88cd9b4507810256f8845a297936868a2/internal/fs/fs.go
+// This code is copied from https://github.com/golang/dep/blob/master/internal/fs/fs.go
 // No changes to the code were made other than removing some unused functions
 
 // RenameWithFallback attempts to rename a file or directory, but falls back to
@@ -50,7 +51,7 @@ import (
 func RenameWithFallback(src, dst string) error {
 	_, err := os.Stat(src)
 	if err != nil {
-		return errors.Wrapf(err, "cannot stat %s", src)
+		return errors.Wrapf(err, "cannot stat %s error", src)
 	}
 
 	err = os.Rename(src, dst)
@@ -91,7 +92,7 @@ func IsDir(name string) (bool, error) {
 		return false, err
 	}
 	if !fi.IsDir() {
-		return false, errors.Errorf("%q is not a directory", name)
+		return false, fmt.Errorf("%q is not a directory", name)
 	}
 	return true, nil
 }

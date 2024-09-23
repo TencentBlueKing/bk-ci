@@ -31,6 +31,7 @@ package com.tencent.devops.metrics.service
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectVO
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -39,16 +40,16 @@ import java.util.concurrent.TimeUnit
 class CacheProjectInfoService @Autowired constructor(
     private val client: Client
 ) {
-    private val productIdCache = Caffeine.newBuilder()
+    private val projectVOCache = Caffeine.newBuilder()
         .maximumSize(10000)
-        .expireAfterWrite(1, TimeUnit.DAYS)
-        .build<String, Int>()
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build<String, ProjectVO>()
 
-    fun getProjectId(projectId: String): Int {
-        return productIdCache.getIfPresent(projectId) ?: run {
-            val productId = client.get(ServiceProjectResource::class).get(projectId).data?.productId ?: 0
-            productIdCache.put(projectId, productId)
-            productId
+    fun getProject(projectId: String): ProjectVO? {
+        return projectVOCache.getIfPresent(projectId) ?: run {
+            val projectVO = client.get(ServiceProjectResource::class).get(projectId).data ?: return null
+            projectVOCache.put(projectId, projectVO)
+            projectVO
         }
     }
 }

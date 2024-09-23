@@ -38,10 +38,9 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -54,8 +53,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.service.PermissionService
-import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
@@ -76,12 +75,11 @@ class RestartWorkspaceHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val permissionService: PermissionService,
-    private val sshService: SshPublicKeysService,
     private val dispatcher: RemoteDevDispatcher,
-    private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val workspaceJoinDao: WorkspaceJoinDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(RestartWorkspaceHandler::class.java)
@@ -106,12 +104,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        if (!permissionService.hasOwnerPermission(
-                userId = userId,
-                workspaceName = workspaceName,
-                projectId = workspace.projectId
-            ) && !permissionService.hasUserManager(userId, workspace.projectId)
-        ) {
+        if (!permissionService.hasManagerOrOwnerPermission(userId, workspace.projectId, workspace.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You do not have permission to restart $workspaceName")
@@ -123,6 +116,13 @@ class RestartWorkspaceHandler @Autowired constructor(
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).tryLock().use {
+            /*处理异常的情况*/
+            workspaceCommon.checkAndFixExceptionWS(
+                status = workspace.status,
+                userId = userId,
+                workspaceName = workspaceName,
+                mountType = workspace.workspaceMountType
+            )
             if (workspaceCommon.notOk2doNextAction(workspace)) {
                 logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
                 throw ErrorCodeException(
@@ -165,15 +165,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                     userId = userId,
                     traceId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz(),
                     type = UpdateEventType.RESTART,
-                    sshKeys = sshService.getSshPublicKeys4Ws(
-                        workspaceDao.fetchWorkspaceUser(
-                            dslContext,
-                            workspaceName
-                        ).toSet()
-                    ),
                     workspaceName = workspaceName,
-                    settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
-                    bkTicket = "",
                     mountType = WorkspaceMountType.START,
                     gameId = gameId.first
                 )
@@ -204,7 +196,7 @@ class RestartWorkspaceHandler @Autowired constructor(
     }
 
     fun restartWorkspaceCallback(event: RemoteDevUpdateEvent) {
-        val workspace = workspaceDao.fetchAnyWorkspace(
+        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(
             dslContext = dslContext,
             workspaceName = event.workspaceName
         ) ?: throw ErrorCodeException(
@@ -232,14 +224,14 @@ class RestartWorkspaceHandler @Autowired constructor(
                 )
                 notifyControl.notify4User(
                     userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
-                    notifyTemplateCode = WINDOWS_GPU_RESTART_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.CLIENT_PUSH),
                     bodyParams = mutableMapOf(
                         "workspaceName" to workspace.workspaceName,
                         "projectId" to workspace.projectId,
-                        "cgsId" to (workspace.hostName ?: workspace.workspaceName),
+                        "cgsId" to (workspace.hostIp ?: workspace.workspaceName),
                         "displayName" to workspace.displayName,
-                        "time" to DateTimeUtil.formatDate(Date())
+                        "time" to DateTimeUtil.formatDate(Date()),
+                        "notifyTemplateCode" to WINDOWS_GPU_RESTART_NOTIFY
                     )
                 )
             }

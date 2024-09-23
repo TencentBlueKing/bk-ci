@@ -1,10 +1,47 @@
 <template>
-    <ul class="param-main" v-bkloading="{ isLoading }">
-        <li class="param-input" v-for="(parameter, index) in parameters" :key="index">
-            <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'key')" :param-values="paramValues" :url-query="parameter.keyUrlQuery" :multiple="parameter.keyMultiple" :value="parameter.key" :disabled="!parameter.enable || parameter.keyDisable" :type="parameter.keyType" :list-type="parameter.keyListType" :url="parameter.keyUrl" :list="parameter.keyList"></parameter-input>
+    <ul
+        class="param-main"
+        v-bkloading="{ isLoading }"
+    >
+        <li
+            class="param-input"
+            v-for="(parameter, index) in parameters"
+            :key="index"
+        >
+            <parameter-input
+                class="input-com"
+                @updateValue="(newValue) => updateValue(parameter, newValue, 'key')"
+                :param-values="paramValues"
+                :url-query="parameter.keyUrlQuery"
+                :multiple="parameter.keyMultiple"
+                :value="parameter.key"
+                :disabled="!parameter.enable || parameter.keyDisable"
+                :type="parameter.keyType"
+                :list-type="parameter.keyListType"
+                :url="parameter.keyUrl"
+                :list="parameter.keyList"
+            ></parameter-input>
             <span class="input-seg">=</span>
-            <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'value')" :param-values="paramValues" :url-query="parameter.valueUrlQuery" :multiple="parameter.valueMultiple" :value="parameter.value" :disabled="!parameter.enable || parameter.valueDisable" :type="parameter.valueType" :list-type="parameter.valueListType" :url="parameter.valueUrl" :list="parameter.valueList"></parameter-input>
-            <bk-checkbox @change="updateParameters" v-model="parameter.enable" class="param-enable" v-if="param.showEnable" v-bk-tooltips="{ content: param.enableTips, disabled: !param.enableTips, allowHTML: false }"></bk-checkbox>
+            <parameter-input
+                class="input-com"
+                @updateValue="(newValue) => updateValue(parameter, newValue, 'value')"
+                :param-values="paramValues"
+                :url-query="parameter.valueUrlQuery"
+                :multiple="parameter.valueMultiple"
+                :value="parameter.value"
+                :disabled="!parameter.enable || parameter.valueDisable"
+                :type="parameter.valueType"
+                :list-type="parameter.valueListType"
+                :url="parameter.valueUrl"
+                :list="parameter.valueList"
+            ></parameter-input>
+            <bk-checkbox
+                @change="updateParameters"
+                v-model="parameter.enable"
+                class="param-enable"
+                v-if="param.showEnable"
+                v-bk-tooltips="{ content: param.enableTips, disabled: !param.enableTips, allowHTML: false }"
+            ></bk-checkbox>
         </li>
     </ul>
 </template>
@@ -89,7 +126,7 @@
                 //     if (typeof value === 'undefined') isErrorParam = true
                 //     return value
                 // })
-                
+
                 let [url] = this.generateReqUrl(this.param.url, this.paramValues)
 
                 if (!url) return
@@ -126,8 +163,8 @@
                         }
                     }) || {}
                     const defaultValue = defaultValues.find(x => x.key === key) || {}
-                    param.value = value.value || defaultValue.value || param.value
-                    param.key = value.key || defaultValue.key || param.key
+                    param.value = value.value ?? defaultValue.value ?? param.value
+                    param.key = value.key ?? defaultValue.key ?? param.key
                     param.enable = value.enable === undefined ? true : value.enable
                     if (Array.isArray(param.value)) { // 去掉空字符串, 空字符串无意义
                         param.value = param.value.filter(v => v !== '')

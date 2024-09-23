@@ -61,6 +61,7 @@ import org.springframework.stereotype.Component
 
 @Component
 @Scope(SCOPE_PROTOTYPE)
+@Suppress("ALL")
 class BcsContainerOpByNameAtom @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val bkAccessTokenApi: BkAccessTokenApi
@@ -81,7 +82,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
         param: BcsContainerOpByNameElement,
         runVariables: Map<String, String>
     ): AtomResponse {
-
+        logger.warn("Deprecated_Plugin|BcsContainerOpByNameAtom|${task.projectId}|${task.pipelineId}")
         if (param.opType.isBlank()) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,

@@ -69,10 +69,14 @@ class BkDataQueryDataService @Autowired constructor() {
             sql = bkDataQueryParam.sql,
             preferStorage = bkDataQueryParam.preferStorage
         )
+        val headerStr = JsonUtil.toJson(
+            mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
+        ).replace("\\s".toRegex(), "")
         // 调用数据平台查询接口
         val resp = OkhttpUtils.doPost(
             url = queryDataUrl,
-            jsonParam = JsonUtil.toJson(bkDataQueryRequest)
+            jsonParam = JsonUtil.toJson(bkDataQueryRequest),
+            headers = mapOf("X-Bkapi-Authorization" to headerStr)
         )
         if (!resp.isSuccessful) {
             logger.warn("bkDataQueryParam:$bkDataQueryParam queryData fail: $resp")

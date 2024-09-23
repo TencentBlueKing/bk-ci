@@ -6,13 +6,20 @@
         :arrow="false"
         ref="popoverRef"
         :on-hide="handleHide"
-        :on-show="handleShow">
+        :on-show="handleShow"
+    >
         <div
             class="user-entry"
         >
             {{ username }}
-            <span v-if="!isHideHint" class="user-header-hint" />
-            <i v-if="!disabled" class="devops-icon icon-down-shape" />
+            <span
+                v-if="!isHideHint"
+                class="user-header-hint"
+            />
+            <i
+                v-if="!disabled"
+                class="devops-icon icon-down-shape"
+            />
         </div>
         <template slot="content">
             <li
@@ -33,7 +40,10 @@
                     class="user-menu-item"
                     @click.stop="item.cb"
                 >{{ item.label }}</span>
-                <span v-if="!isHideHint && item.isShowHint" class="user-hint" />
+                <span
+                    v-if="!isHideHint && item.isShowHint"
+                    class="user-hint"
+                />
             </li>
         </template>
     </bk-popover>

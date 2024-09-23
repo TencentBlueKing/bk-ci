@@ -41,6 +41,9 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
+import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
@@ -184,10 +187,10 @@ class ExperienceDownloadService @Autowired constructor(
         val url = if (path.endsWith(".ipa", true)) {
             val tail = ttl?.let { "&ttl=$ttl" } ?: ""
             "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories" +
-                    "/$projectId/$artifactoryType/filePlist" +
-                    "?experienceHashId=$experienceHashId&path=${
-                        URLEncoder.encode(path, Charsets.UTF_8.toString()).replace("+", "%20")
-                    }&x-devops-project-id=$projectId$tail"
+                "/$projectId/$artifactoryType/filePlist" +
+                "?experienceHashId=$experienceHashId&path=${
+                    URLEncoder.encode(path, Charsets.UTF_8.toString()).replace("+", "%20")
+                }&x-devops-project-id=$projectId$tail"
         } else {
             client.get(ServiceArtifactoryResource::class)
                 .externalUrl(
@@ -290,7 +293,7 @@ class ExperienceDownloadService @Autowired constructor(
     fun getQrCodeUrl(experienceHashId: String): String {
         val url =
             "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +
-                    "?flag=experienceDetail&experienceId=$experienceHashId"
+                "?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
     }
@@ -332,11 +335,23 @@ class ExperienceDownloadService @Autowired constructor(
                 recordId = experienceRecord.id
             )
             if (experiencePublicDao.countByRecordId(dslContext = dslContext, recordId = experienceRecord.id) == 0) {
+                val projectId = experienceRecord.projectId
+                val projectUserOperateMetricsKey = ProjectUserOperateMetricsData(
+                    projectId = projectId,
+                    userId = userId,
+                    operate = EXPERIENCE_TASK_DOWNLOAD_OPERATE,
+                    theDate = LocalDate.now()
+                ).getProjectUserOperateMetricsKey()
                 measureEventDispatcher.dispatch(
                     ProjectUserDailyEvent(
-                        projectId = experienceRecord.projectId,
+                        projectId = projectId,
                         userId = userId,
                         theDate = LocalDate.now()
+                    ),
+                    ProjectUserOperateMetricsEvent(
+                        userOperateCounterData = UserOperateCounterData().apply {
+                            this.increment(projectUserOperateMetricsKey)
+                        }
                     )
                 )
             }
@@ -484,10 +499,10 @@ class ExperienceDownloadService @Autowired constructor(
 
         val scheme = if (platform == "ANDROID") {
             "bkdevopsapp://bkdevopsapp/app/experience/expDetail/" +
-                    HashUtil.encodeLongId(experiencePublicRecord.recordId)
+                HashUtil.encodeLongId(experiencePublicRecord.recordId)
         } else {
             "bkdevopsapp://app/experience/expDetail/" +
-                    HashUtil.encodeLongId(experiencePublicRecord.id)
+                HashUtil.encodeLongId(experiencePublicRecord.id)
         }
 
         val shortUrlRequest = CreateShortUrlRequest(
@@ -516,7 +531,12 @@ class ExperienceDownloadService @Autowired constructor(
         }
     }
 
+    fun getDownloadUsers(experienceId: Long): List<String> {
+        return experienceDownloadDao.listUserIdsByExperienceId(dslContext, experienceId)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceDownloadService::class.java)
+        private const val EXPERIENCE_TASK_DOWNLOAD_OPERATE = "experience_task_download"
     }
 }

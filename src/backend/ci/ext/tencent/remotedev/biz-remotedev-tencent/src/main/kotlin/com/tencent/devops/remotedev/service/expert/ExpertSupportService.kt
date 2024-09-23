@@ -1,15 +1,22 @@
 package com.tencent.devops.remotedev.service.expert
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
@@ -18,20 +25,32 @@ import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentActionStatus
+import com.tencent.devops.remotedev.dispatch.kubernetes.service.RemoteDevService
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.expert.CreateExpertSupportConfigData
 import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
+import com.tencent.devops.remotedev.pojo.expert.ExpandDiskTaskDetail
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
 import com.tencent.devops.remotedev.pojo.expert.FetchExpertSupResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
+import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
+import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -53,19 +72,34 @@ class ExpertSupportService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val rabbitTemplate: RabbitTemplate
+    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
+    private val permissionService: PermissionService,
+    private val rabbitTemplate: RabbitTemplate,
+    private val notifyControl: NotifyControl,
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val remoteDevService: RemoteDevService
 ) {
     @Suppress("ComplexMethod")
     fun createSupport(
+        userId: String,
         data: CreateSupportData
     ) {
         // 校验机器在不在
-        val record = workspaceDao.fetchAnyWorkspace(
+        val record = workspaceJoinDao.fetchAnyWindowsWorkspace(
             dslContext = dslContext,
-            workspaceName = data.workspaceName,
-            mountType = WorkspaceMountType.START
+            workspaceName = data.workspaceName
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(data.workspaceName)
         )
-        if (record == null || record.status.checkDeleted() || record.status.checkInProcess()) {
+
+        if (!permissionService.hasManagerOrViewerPermission(userId, record.projectId, record.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to apply for assistance in ${record.workspaceName}")
+            )
+        }
+        if (record.status.checkDeleted() || record.status.checkInProcess()) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
                 params = arrayOf(data.workspaceName)
@@ -117,11 +151,6 @@ class ExpertSupportService @Autowired constructor(
             .getOrElse { null }?.data ?: throw RemoteServiceException(
             "not find project ${data.projectId}", HTTP_400
         )
-        val detail = workspaceCommon.getWorkspaceDetail(record.workspaceName)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
-                params = arrayOf(record.workspaceName)
-            )
 
         // 异步执行流水线完成其他动作
         /**
@@ -155,7 +184,7 @@ class ExpertSupportService @Autowired constructor(
 
         info.buildParam.forEach { (k, v) ->
             when (v) {
-                "ip" -> newParam[k] = detail.regionId.toString().plus(":").plus(ip)
+                "ip" -> newParam[k] = record.regionId.toString().plus(":").plus(ip)
                 "projectId" -> newParam[k] = data.projectId
                 "projectName" -> newParam[k] = projectInfo.projectName
                 "ticketId" -> newParam[k] = id.toString()
@@ -167,7 +196,7 @@ class ExpertSupportService @Autowired constructor(
                     LocalDateTime.now(), DateTimeUtil.YYYY_MM_DD_HH_MM_SS
                 )
 
-                "zone" -> newParam[k] = detail.regionId.toString()
+                "zone" -> newParam[k] = record.regionId.toString()
                 "workspaceName" -> newParam[k] = data.workspaceName
                 "phone" -> newParam[k] = taiUserCN[data.creator]?.second ?: ""
                 "phoneCountryCode" -> newParam[k] = taiUserCN[data.creator]?.third ?: ""
@@ -176,8 +205,10 @@ class ExpertSupportService @Autowired constructor(
                 } else {
                     ""
                 }
+
                 "managers" -> newParam[k] = projectInfo.properties?.remotedevManager ?: ""
                 "requestIp" -> newParam[k] = requestIp ?: ""
+                "displayName" -> newParam[k] = record.displayName
 
                 else -> newParam[k] = v
             }
@@ -364,6 +395,134 @@ class ExpertSupportService @Autowired constructor(
         data: CreateExpertSupportConfigData
     ) {
         expertSupportDao.deleteExpertSupportConfigWithData(dslContext, data.type, data.content)
+    }
+
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_EXPAND_DISK,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = ActionAuditContent.CGS_EXPAND_DISK_CONTENT
+    )
+    fun expandDisk(
+        workspaceName: String,
+        userId: String,
+        size: String
+    ): ExpandDiskValidateResp? {
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+
+        if (!permissionService.hasManagerOrOwnerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to expand disk in $workspaceName")
+            )
+        }
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .scopeId = workspace.projectId
+
+        // 暂时定死 mountType
+        val data = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java).expandDisk(
+            workspaceName = workspaceName,
+            userId = userId,
+            size = size,
+            mountType = WorkspaceMountType.START
+        ).data ?: return null
+        if (!data.valid) {
+            return data
+        }
+        workspaceOpHistoryDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            operator = userId,
+            action = WorkspaceAction.EXPAND_DISK,
+            actionMessage = size
+        )
+        return data
+    }
+
+    fun expandDiskCallback(
+        taskId: String,
+        workspaceName: String,
+        operator: String
+    ) {
+        val taskInfo = kotlin.runCatching {
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getTaskInfoByUid(taskId).data!!
+        }.onFailure {
+            logger.warn("expandDiskCallback not find uid $taskId")
+            return
+        }.getOrThrow()
+
+        val owner = permissionService.getWorkspaceOwner(workspaceName)
+        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName) ?: run {
+            logger.warn("expandDiskCallback workspace is null $workspaceName")
+            return
+        }
+        val projectId = workspace.projectId
+        val cc = kotlin.runCatching {
+            client.get(ServiceProjectResource::class)
+                .listByProjectCodeList(listOf(projectId))
+        }.onFailure {
+            logger.warn("expandDiskCallback get project $projectId info error|${it.message}")
+        }.getOrElse { null }?.data?.map {
+            it.properties?.remotedevManager?.split(";")?.toSet() ?: emptySet()
+        }?.flatten()?.toMutableSet() ?: mutableSetOf()
+        cc.addAll(owner)
+
+        val dSize = workspaceOpHistoryDao.fetchLastOp(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            action = WorkspaceAction.EXPAND_DISK
+        )?.actionMsg ?: ""
+
+        notifyControl.notify4UserAndCCRemoteDevManager(
+            userIds = mutableSetOf(operator),
+            cc = cc,
+            projectId = null,
+            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+            bodyParams = mutableMapOf(
+                "projectId" to projectId,
+                "operator" to operator,
+                "taskStatus" to (taskInfo.status?.name ?: ""),
+                "taskLogs" to taskInfo.logs.joinToString(";"),
+                "host" to (workspace.hostIp ?: ""),
+                "notifyTemplateCode" to "REMOTEDEV_EXPAND_DISK_DONE",
+                "dsize" to dSize
+            )
+        )
+    }
+
+    fun expandDiskDetail(workspaceName: String): ExpandDiskTaskDetail? {
+        val record =
+            workspaceOpHistoryDao.fetchLastOp(dslContext, workspaceName, WorkspaceAction.EXPAND_DISK) ?: return null
+        val (status, updateTime) = remoteDevService.getLastExpandDiskStatusAndTime(workspaceName)
+
+        val rStatus = if (status != null) {
+            when (status) {
+                EnvironmentActionStatus.PENDING -> "RUNNING"
+                EnvironmentActionStatus.SUCCEEDED -> "SUCCEEDED"
+                else -> "FAILED"
+            }
+        } else {
+            "UNKNOW"
+        }
+        return ExpandDiskTaskDetail(
+            expandSize = record.actionMsg,
+            operator = record.operator,
+            operateDate = record.createdTime,
+            status = rStatus,
+            completeDate = if (rStatus == "FAILED" || rStatus == "SUCCEEDED") {
+                updateTime
+            } else {
+                null
+            }
+        )
     }
 
     companion object {

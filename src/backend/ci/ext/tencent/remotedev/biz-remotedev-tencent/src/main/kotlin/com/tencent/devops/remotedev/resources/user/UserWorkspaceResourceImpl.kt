@@ -33,27 +33,30 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
-import com.tencent.devops.remotedev.pojo.BkTicketInfo
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
-import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
-import com.tencent.devops.remotedev.service.BkTicketService
+import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
+import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceService
-import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.StartControl
 import com.tencent.devops.repository.pojo.AuthorizeResult
@@ -65,25 +68,14 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserWorkspaceResourceImpl @Autowired constructor(
     private val gitTransfer: RemoteDevGitTransfer,
     private val workspaceService: WorkspaceService,
-    private val redisHeartBeat: RedisHeartBeat,
     private val permissionService: PermissionService,
     private val repositoryService: RepositoryService,
-    private val bkTicketService: BkTicketService,
     private val createControl: CreateControl,
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
-    private val deleteControl: DeleteControl
+    private val deleteControl: DeleteControl,
+    private val notifyControl: NotifyControl
 ) : UserWorkspaceResource {
-
-    @AuditEntry(actionId = ActionId.CGS_CREATE)
-    override fun createWorkspace(
-        userId: String,
-        bkTicket: String,
-        projectId: String,
-        workspace: WorkspaceCreate
-    ): Result<WorkspaceResponse> {
-        return Result(createControl.createWorkspace(userId, bkTicket, projectId, workspace))
-    }
 
     @AuditEntry(actionId = ActionId.CGS_START)
     override fun startWorkspace(
@@ -91,7 +83,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         bkTicket: String,
         workspaceName: String
     ): Result<WorkspaceResponse> {
-        return Result(startControl.startWorkspace(userId, bkTicket, workspaceName))
+        return Result(startControl.startWorkspace(userId, workspaceName))
     }
 
     @AuditEntry(actionId = ActionId.CGS_STOP)
@@ -99,18 +91,31 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(sleepControl.stopWorkspace(userId, workspaceName))
     }
 
-    @AuditEntry(actionId = ActionId.CGS_SHARE)
-    override fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Result<Boolean> {
-        return Result(workspaceService.shareWorkspace(userId, workspaceName, sharedUser))
-    }
-
     @AuditEntry(actionId = ActionId.CGS_EDIT)
     override fun editWorkspace(userId: String, workspaceName: String, displayName: String): Result<Boolean> {
-        return Result(workspaceService.editWorkspace(userId, workspaceName, displayName))
+        return Result(
+            workspaceService.modifyWorkspaceProperty(
+                userId = userId,
+                workspaceName = workspaceName,
+                ip = null,
+                workspaceProperty = WorkspaceProperty(displayName)
+            )
+        )
     }
 
-    override fun modifyWorkspaceProperty(userId: String, workspaceName: String, workspaceProperty: WorkspaceProperty): Result<Boolean> {
-        return Result(workspaceService.modifyWorkspaceProperty(userId, workspaceName, workspaceProperty))
+    override fun modifyWorkspaceProperty(
+        userId: String,
+        workspaceName: String,
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean> {
+        return Result(
+            workspaceService.modifyWorkspaceProperty(
+                userId = userId,
+                workspaceName = workspaceName,
+                ip = null,
+                workspaceProperty = workspaceProperty
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.CGS_DELETE)
@@ -128,7 +133,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         pageSize: Int?,
         search: WorkspaceSearch
     ): Result<Page<Workspace>> {
-        return Result(workspaceService.getWorkspaceList(userId, page, pageSize, search))
+        val updatedSearch = search.apply {
+            notStatus = notStatus?.plus(WorkspaceStatus.DISTRIBUTING) ?: listOf(WorkspaceStatus.DISTRIBUTING)
+        }
+        return Result(workspaceService.getWorkspaceList(userId, page, pageSize, updatedSearch))
     }
 
     @AuditEntry(actionId = ActionId.CGS_VIEW)
@@ -188,22 +196,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun checkDevfile(
-        userId: String,
-        pathWithNamespace: String,
-        branch: String,
-        gitType: RemoteDevGitType
-    ): Result<List<String>> {
-        return Result(
-            workspaceService.checkDevfile(
-                userId = userId,
-                pathWithNamespace = pathWithNamespace,
-                branch = branch,
-                gitType = gitType
-            )
-        )
-    }
-
     override fun isOAuth(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
@@ -220,27 +212,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun workspaceHeartbeat(userId: String, workspaceName: String): Result<Boolean> {
-        redisHeartBeat.refreshHeartbeat(workspaceName)
-        return Result(true)
-    }
-
     override fun checkUserPermission(userId: String, workspaceName: String): Result<Boolean> {
         return Result(permissionService.checkUserPermission(userId, workspaceName))
-    }
-
-    override fun checkUserCreate(userId: String): Result<Boolean> {
-        return Result(permissionService.checkUserCreate(userId))
-    }
-
-    override fun updateBkTicket(userId: String, bkTicketInfo: BkTicketInfo): Result<Boolean> {
-        bkTicketService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName, bkTicketInfo.mountType)
-        return Result(true)
-    }
-
-    override fun updateAllBkTicket(userId: String, bkTicket: String): Result<Boolean> {
-        bkTicketService.updateAllBkTicket(userId, bkTicket)
-        return Result(true)
     }
 
     @AuditEntry(actionId = ActionId.CGS_VIEW)
@@ -253,5 +226,25 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         macAddress: String
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>> {
         return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress))
+    }
+
+    override fun checkMoa2fa(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(workspaceService.checkMoa2fa(userId, workspaceName))
+    }
+
+    override fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Result<Moa2faRespData> {
+        return Result(workspaceService.createMoa2faRequest(userId = userId, moa2faReqData = moa2faReqData))
+    }
+
+    override fun verifyMoa2faResult(
+        userId: String,
+        moa2faVerifyReqData: Moa2faVerifyReqData
+    ): Result<Moa2faVerifyRespData> {
+        return Result(workspaceService.verifyMoa2faResult(userId = userId, moa2faVerifyReqData = moa2faVerifyReqData))
+    }
+
+    override fun messageResend(userId: String, type: RemoteDevNotifyType): Result<Boolean> {
+        notifyControl.resendByUserId(userId, type)
+        return Result(true)
     }
 }

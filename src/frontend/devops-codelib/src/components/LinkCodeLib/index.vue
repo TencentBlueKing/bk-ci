@@ -1,24 +1,35 @@
 <template>
-    <bk-dropdown-menu class="devops-button-dropdown">
-        <bk-button :disabled="disabled" theme="primary" slot="dropdown-trigger">
+    <bk-dropdown-menu
+        class="devops-button-dropdown"
+        :disabled="!isListReady"
+    >
+        <bk-button
+            theme="primary"
+            slot="dropdown-trigger"
+        >
             <i class="devops-icon icon-plus"></i>
             <span>{{ $t('codelib.linkCodelib') }}</span>
         </bk-button>
-        <ul class="devops-button-dropdown-menu" slot="dropdown-content">
-            <template v-for="typeLabel in codelibTypes">
-                <li
-                    v-if="!isExtendTx || typeLabel !== 'Gitlab' || isBlueKing"
-                    :key="typeLabel" @click="createCodelib(typeLabel)"
-                >
-                    {{ $t('codelib.typeCodelib', [typeLabel])}}
-                </li>
-            </template>
+        <ul
+            class="devops-button-dropdown-menu"
+            slot="dropdown-content"
+        >
+            <li
+                v-for="item in codelibTypes"
+                :key="item.scmType"
+                @click="createCodelib(item.scmType)"
+                :class="{
+                    'disabled-codelib-type': item.status !== 'OK'
+                }"
+            >
+                {{ item.name }}
+            </li>
         </ul>
     </bk-dropdown-menu>
 </template>
 
 <script>
-    import { codelibTypes } from '../../config'
+    import { mapState } from 'vuex'
     export default {
         name: 'link-code-lib',
         props: {
@@ -36,15 +47,11 @@
             }
         },
         computed: {
-            isExtendTx () {
-                return VERSION_TYPE === 'tencent'
-            },
-            codelibTypes () {
-                let typeList = codelibTypes
-                if (!this.isExtendTx) {
-                    typeList = typeList.filter(type => !['Git', 'TGit'].includes(type))
-                }
-                return typeList
+            ...mapState('codelib', [
+                'codelibTypes'
+            ]),
+            isListReady () {
+                return this.codelibTypes?.length > 0 && !this.disabled
             }
         }
     }
@@ -70,6 +77,10 @@
                 &:hover {
                     background: $bgColor;
                     color: $primaryColor;
+                }
+                &.disabled-codelib-type {
+                    color: #c4c6cc;
+                    cursor: not-allowed;
                 }
             }
         }

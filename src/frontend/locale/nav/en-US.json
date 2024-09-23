@@ -227,5 +227,9 @@
     "关联运营产品": "Associate Operational Products",
     "检测到您尚未将蓝盾项目关联运营产品，将影响正常使用，请立即前往关联。": "It has been detected that you have not yet associated your Blue Shield project with operational products, which will affect normal use. Please go associate it immediately.",
     "立即前往": "To associate",
-    "已关联": "Associated"
+    "已关联": "Associated",
+    "undeployTitle": "The {0} service has not been deployed yet",
+    "turboServiceDesc": "Turbo compilation acceleration service is based on distributed compilation, caching, and container technologies. It aims to provide efficient, stable, and convenient acceleration services for businesses, thereby improving development efficiency. To use this feature, the acceleration service needs to be deployed.",
+    "bkci": "BK-CI",
+    "tencentBlueKing": "Tencent BlueKing"
 }

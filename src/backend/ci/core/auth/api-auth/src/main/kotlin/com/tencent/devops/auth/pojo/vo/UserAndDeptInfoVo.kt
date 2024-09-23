@@ -11,6 +11,8 @@ data class UserAndDeptInfoVo(
     val id: Int,
     @get:Schema(title = "名称")
     val name: String,
+    @get:Schema(title = "别名")
+    val displayName: String,
     @get:Schema(title = "信息类型")
     val type: ManagerScopesEnum,
     @get:Schema(title = "是否拥有子级")

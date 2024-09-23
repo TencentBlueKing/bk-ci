@@ -1,6 +1,17 @@
 <template>
-    <bk-sideslider class="bkci-property-panel" :class="{ 'with-variable-open': showVariable }" :z-index="2016" width="876" :is-show.sync="visible" :quick-close="true">
-        <header :title="stageTitle" class="stage-panel-header" slot="header">
+    <bk-sideslider
+        class="bkci-property-panel"
+        :class="{ 'with-variable-open': showVariable }"
+        :z-index="2016"
+        width="876"
+        :is-show.sync="visible"
+        :quick-close="true"
+    >
+        <header
+            :title="stageTitle"
+            class="stage-panel-header"
+            slot="header"
+        >
             {{ stageTitle }}
         </header>
 
@@ -85,6 +96,14 @@
             stageControl () {
                 return this.stage[this.stageReviewType] || {}
             }
+        },
+        mounted () {
+            this.preZIndex = window.__bk_zIndex_manager.zIndex
+            console.log(this.preZIndex)
+            window.__bk_zIndex_manager.zIndex = 2020
+        },
+        beforeDestroy () {
+            window.__bk_zIndex_manager.zIndex = this.preZIndex
         },
         methods: {
             ...mapActions('atom', [

@@ -17,13 +17,15 @@
             </select-input>
             <i
                 class="bk-icon icon-plus-circle"
-                @click="plusParam()" />
+                @click="plusParam()"
+            />
             <i
                 :class="{
                     'bk-icon icon-minus-circle': true,
                     'disabled': curValue.length <= 1
                 }"
-                @click="minusParam(index)" />
+                @click="minusParam(index)"
+            />
         </li>
     </ul>
 </template>

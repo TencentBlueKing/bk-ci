@@ -85,9 +85,13 @@ class MessageApproveService @Autowired constructor() {
             backUrl = createMoaApproveRequest.backUrl,
             sysUrl = createMoaApproveRequest.sysUrl
         )
+        val headerStr = JsonUtil.toJson(
+            mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
+        ).replace("\\s".toRegex(), "")
         val requestBody = JsonUtil.toJson(createEsbMoaApproveParam)
         val request = Request.Builder()
             .url(urlPrefix + moaPushDataUrl)
+            .header("X-Bkapi-Authorization", headerStr)
             .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { res ->
@@ -113,9 +117,13 @@ class MessageApproveService @Autowired constructor() {
             operator = "DevOps",
             workItems = moaWorkItemElementList
         )
+        val headerStr = JsonUtil.toJson(
+            mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
+        ).replace("\\s".toRegex(), "")
         val requestBody = JsonUtil.toJson(createEsbMoaWorkItem)
         val request = Request.Builder()
             .url(urlPrefix + moaPushWorkItemUrl)
+            .header("X-Bkapi-Authorization", headerStr)
             .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { res ->
@@ -146,8 +154,12 @@ class MessageApproveService @Autowired constructor() {
             processName = completeMoaWorkItemRequest.processName
         )
         val requestBody = JsonUtil.toJson(completeEsbMoaWorkItem)
+        val headerStr = JsonUtil.toJson(
+            mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
+        ).replace("\\s".toRegex(), "")
         val request = Request.Builder()
             .url(urlPrefix + moaCompleteWorkItemUrl)
+            .header("X-Bkapi-Authorization", headerStr)
             .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { res ->
@@ -174,9 +186,13 @@ class MessageApproveService @Autowired constructor() {
             operator = "DevOps",
             taskId = taskId
         )
+        val headerStr = JsonUtil.toJson(
+            mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
+        ).replace("\\s".toRegex(), "")
         val requestBody = JsonUtil.toJson(createEsbMoaCompleteParam)
         val request = Request.Builder()
             .url(urlPrefix + moaCompleteUrl)
+            .header("X-Bkapi-Authorization", headerStr)
             .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { res ->
@@ -184,7 +200,8 @@ class MessageApproveService @Autowired constructor() {
             logger.info("the response>> $data")
             if (!res.isSuccessful) return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
             val response: Map<String, Any> = JsonUtil.toMap(data)
             val code = response["code"]
             if (code != "00") {

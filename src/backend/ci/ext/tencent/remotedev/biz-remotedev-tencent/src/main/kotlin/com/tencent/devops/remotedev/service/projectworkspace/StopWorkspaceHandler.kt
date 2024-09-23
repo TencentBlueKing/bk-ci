@@ -37,9 +37,7 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
@@ -52,8 +50,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.service.PermissionService
-import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
@@ -72,9 +70,7 @@ class StopWorkspaceHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val permissionService: PermissionService,
-    private val sshService: SshPublicKeysService,
     private val dispatcher: RemoteDevDispatcher,
-    private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val workspaceCommon: WorkspaceCommon,
     private val notifyControl: NotifyControl
@@ -109,6 +105,13 @@ class StopWorkspaceHandler @Autowired constructor(
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).tryLock().use {
+            /*处理异常的情况*/
+            workspaceCommon.checkAndFixExceptionWS(
+                status = workspace.status,
+                userId = userId,
+                workspaceName = workspaceName,
+                mountType = workspace.workspaceMountType
+            )
             if (workspaceCommon.notOk2doNextAction(workspace)) {
                 logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
                 throw ErrorCodeException(
@@ -152,15 +155,7 @@ class StopWorkspaceHandler @Autowired constructor(
                     userId = userId,
                     traceId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz(),
                     type = UpdateEventType.STOP,
-                    sshKeys = sshService.getSshPublicKeys4Ws(
-                        workspaceDao.fetchWorkspaceUser(
-                            dslContext,
-                            workspaceName
-                        ).toSet()
-                    ),
                     workspaceName = workspaceName,
-                    settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
-                    bkTicket = "",
                     mountType = WorkspaceMountType.START,
                     gameId = gameId.first
                 )

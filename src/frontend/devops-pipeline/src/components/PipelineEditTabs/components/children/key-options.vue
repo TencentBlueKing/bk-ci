@@ -1,44 +1,66 @@
 <template>
     <section>
-        <form-field :hide-colon="true" :desc="$t('editPage.batchAddTips')" :label="$t('editPage.batchAdd')">
-            <bk-input class="key-val" :type="'textarea'" v-model="batchInput" :row="3" :placeholder="$t('editPage.optionTips')" />
-        </form-field>
-        <div class="batch-confirm-div">
-            <span @click="handleBatchInput">{{$t('editPage.batchAddBtn')}}</span>
-        </div>
-        <div class="Key-value-nomal" style="margin-top: 16px;">
-            <form-field :hide-colon="true" :label="$t('editPage.optionSetting')">
+        <batch-add-options :submit-batch-add="handleBatchInput" />
+        <div
+            class="Key-value-nomal"
+            style="margin-top: 16px;"
+        >
+            <form-field
+                :hide-colon="true"
+                :label="$t('editPage.optionSetting')"
+            >
                 <template v-if="list.length">
-                    <li class="param-item" v-for="(param, index) in list" :key="index" :isError="errors.any(`option-${index}`)">
-                        <form-field :is-error="errors.has(`option-${index}.key`)" :error-msg="errors.first(`option-${index}.key`)">
+                    <li
+                        class="param-item"
+                        v-for="(param, index) in list"
+                        :key="index"
+                    >
+                        <form-field
+                            :is-error="keyErrs[index]"
+                            :error-msg="keyErrs[index]"
+                        >
                             <vuex-input
-                                :data-vv-scope="`option-${index}`"
                                 :disabled="disabled"
                                 :handle-change="(name, value) => handleEdit(name, value, index)"
-                                v-validate="keyRule"
                                 name="key"
                                 :placeholder="$t('editPage.optionValTips')"
-                                :value="param.key" />
+                                :value="param.key"
+                            />
                         </form-field>
-                        <form-field :is-error="errors.has(`option-${index}.value`)" :error-msg="errors.first(`option-${index}.value`)">
+                        <form-field
+                            :is-error="valueErrs[index]"
+                            :error-msg="valueErrs[index]"
+                        >
                             <vuex-input
-                                :data-vv-scope="`option-${index}`"
                                 :disabled="disabled"
                                 :handle-change="(name, value) => handleEdit(name, value, index)"
-                                v-validate="valueRule"
                                 name="value"
                                 :placeholder="$t('editPage.optionNameTips')"
-                                :value="param.value" />
+                                :value="param.value"
+                            />
                         </form-field>
-                        <div class="operate-icon-div" v-if="!disabled">
-                            <i @click.stop.prevent="handleAdd(index)" class="bk-icon icon-plus-circle-shape" />
-                            <i @click.stop.prevent="handleDelete(index)" class="bk-icon icon-minus-circle-shape" />
+                        <div
+                            class="operate-icon-div"
+                            v-if="!disabled"
+                        >
+                            <i
+                                @click.stop.prevent="handleAdd(index)"
+                                class="bk-icon icon-plus-circle-shape"
+                            />
+                            <i
+                                @click.stop.prevent="handleDelete(index)"
+                                class="bk-icon icon-minus-circle-shape"
+                            />
                         </div>
                     </li>
                 </template>
-                <a :class="['text-link', 'hover-click']" v-if="!disabled && list.length === 0" @click.stop.prevent="handleAdd">
+                <a
+                    :class="['text-link', 'hover-click']"
+                    v-if="!disabled && list.length === 0"
+                    @click.stop.prevent="handleAdd"
+                >
                     <i class="devops-icon icon-plus-circle" />
-                    <span>{{$t('newui.pipelineParam.addItem')}}</span>
+                    <span>{{ $t('newui.pipelineParam.addItem') }}</span>
                 </a>
             </form-field>
         </div>
@@ -50,10 +72,12 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import validMixins from '@/components/validMixins'
+    import BatchAddOptions from './batch-add-options'
     export default {
         components: {
             VuexInput,
-            FormField
+            FormField,
+            BatchAddOptions
         },
         mixins: [atomFieldMixin, validMixins],
         props: {
@@ -72,27 +96,21 @@
         },
         data () {
             return {
-                batchInput: '',
-                list: []
-            }
-        },
-        computed: {
-            keyRule () {
-                return `required|unique:${this.list.map(p => p.key).join(',')}`
-            },
-            valueRule () {
-                return `unique:${this.list.map(p => p.value).join(',')}|max: 100`
+                list: [],
+                keyErrs: {},
+                valueErrs: {}
             }
         },
         created () {
             this.list = this.options || []
         },
         methods: {
-            handleBatchInput () {
-                if (!this.batchInput) return
+            // 批量增加
+            handleBatchInput (batchStr) {
+                if (!batchStr) return
                 let opts = []
-                if (this.batchInput && typeof this.batchInput === 'string') {
-                    opts = this.batchInput.split('\n').map(opt => {
+                if (batchStr && typeof batchStr === 'string') {
+                    opts = batchStr.split('\n').map(opt => {
                         const v = opt.trim()
                         const equalPos = v.indexOf('=')
                         const res = equalPos > -1
@@ -107,14 +125,13 @@
                 }
                 this.list.splice(this.list.length, 0, ...opts)
                 this.handleChangeOptions('options', this.list)
-                this.batchInput = ''
                 this.validateAllOptions()
             },
+            // 触发验证
             validateAllOptions () {
                 this.$nextTick(() => {
-                    this.list.forEach((option, index) => {
-                        this.$validator.validate(`option-${index}.*`)
-                    })
+                    this.keyErrs = this.findInvalidItems('key', 'value')
+                    this.valueErrs = this.findInvalidItems('value', 'name')
                 })
             },
             handleEdit (name, val, index) {
@@ -138,20 +155,37 @@
                 this.list.splice(index, 1)
                 this.handleChangeOptions('options', this.list)
                 this.validateAllOptions()
+            },
+            // 找出校验有错误的选项
+            findInvalidItems (key, errPrefix) {
+                const seen = new Map()
+                const result = {}
+
+                for (let i = 0; i < this.list.length; i++) {
+                    const value = this.list[i][key]
+
+                    if (!value) {
+                        if (key === 'key') {
+                            result[i] = this.$t('editPage.requiredTips', [errPrefix])
+                        }
+                    } else {
+                        if (seen.has(value)) {
+                            result[i] = result[i] = this.$t('editPage.noRepeatTips', [errPrefix])
+                            if (!result[seen.get(value)]) {
+                                result[seen.get(value)] = result[i] = this.$t('editPage.noRepeatTips', [errPrefix])
+                            }
+                        } else {
+                            seen.set(value, i)
+                        }
+                    }
+                }
+                return result
             }
         }
     }
 </script>
 
 <style lang="scss" scoped>
-    .batch-confirm-div {
-        width: 100%;
-        padding: 8px 0 16px 0;
-        border-bottom: 1px solid #DCDEE5;
-        color: #3A84FF;
-        cursor: pointer;
-        font-size: 12px;
-    }
     .key-item {
         display: flex;
         align-items: center;
@@ -164,8 +198,6 @@
         .key-val {
             flex: 1;
             background: #FFFFFF;
-            /* border: 1px solid #C4C6CC;
-            border-radius: 2px; */
         }
         .key-del {
             width: 32px;

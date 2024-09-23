@@ -101,7 +101,8 @@ const infoBoxInstance = ref();
 const updateProject = async () => {
   infoBoxInstance.value?.hide();
   btnLoading.value = true;
-  productIdChange({
+  await fetchOperationalList(projectData.value.bgName);
+  await checkProductIdName({
     id: projectData.value?.productId,
     list: operationalList.value,
   });
@@ -149,6 +150,10 @@ const fetchOperationalList = async (bgName) => {
   }));
 };
 
+const checkProductIdName = ({ id, list }) => {
+  projectData.value.productName = list.find(i => i.ProductId === id)?.ProductName || '';
+};
+
 const showNeedApprovedTips = () => {
   infoBoxInstance.value = InfoBox({
     isShow: true,
@@ -182,10 +187,6 @@ const initProjectForm = (value) => {
   projectForm.value = value;
 };
 
-const productIdChange = ({ id, list }) => {
-  projectData.value.productName = list.find(i => i.ProductId === id)?.ProductName;
-};
-
 const handleNoPermission = () => {
   handleProjectManageNoPermission({
     action: RESOURCE_ACTION.VIEW,
@@ -196,7 +197,6 @@ const handleNoPermission = () => {
 
 onMounted(async () => {
   await fetchProjectData();
-  await fetchOperationalList(projectData.value.bgName);
 });
 </script>
 

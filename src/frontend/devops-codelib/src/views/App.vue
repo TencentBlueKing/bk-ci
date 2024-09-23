@@ -1,10 +1,11 @@
 <template>
     <div class="devops-codelib">
         <header class="devops-codelib-header">
-            <logo size="32" :name="logo" />
-            <span>
-                {{title}}
-            </span>
+            <logo
+                size="32"
+                :name="logo"
+            />
+            <span>{{ title }}</span>
         </header>
         <main>
             <router-view />
@@ -13,6 +14,7 @@
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
     export default {
         name: 'app',
         computed: {
@@ -22,6 +24,14 @@
             title () {
                 return this.$t('codelib.codelib')
             }
+        },
+        created () {
+            this.fetchCodeTypeList()
+        },
+        methods: {
+            ...mapActions('codelib', [
+                'fetchCodeTypeList'
+            ])
         }
     }
 </script>

@@ -419,11 +419,14 @@ class GroupService @Autowired constructor(
             if (DateUtil.isExpired(experienceRecord.endDate) || !experienceRecord.online) {
                 return@continuing
             }
+
+            val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
             when (userType) {
                 NEW_ADD_OUTER_USERS -> {
                     experienceService.sendMessageToOuterReceivers(
                         outerReceivers = newAddUsers,
-                        experienceRecord = experienceRecord
+                        experienceRecord = experienceRecord,
+                        notifyTypeList = notifyTypeList
                     )
                 }
 

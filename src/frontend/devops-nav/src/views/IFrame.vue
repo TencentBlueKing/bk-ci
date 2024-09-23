@@ -1,7 +1,16 @@
 <template>
-    <div class="devops-iframe-content" :class="{ showTopPrompt: showAnnounce }">
-        <div v-if="isAnyPopupShow" class="iframe-over-layout" />
-        <div v-bkloading="{ isLoading }" :style="{ height: '100%' }">
+    <div
+        class="devops-iframe-content"
+        :class="{ showTopPrompt: showAnnounce }"
+    >
+        <div
+            v-if="isAnyPopupShow"
+            class="iframe-over-layout"
+        />
+        <div
+            v-bkloading="{ isLoading }"
+            :style="{ height: '100%' }"
+        >
             <iframe
                 v-if="src"
                 id="iframe-box"
@@ -25,7 +34,7 @@
 
     Component.registerHooks(['beforeRouteEnter', 'beforeRouteLeave', 'beforeRouteUpdate'])
 
-    @Component
+    @Component()
     export default class IframeView extends Vue {
         isLoading: boolean = true;
         initPath: string = '';

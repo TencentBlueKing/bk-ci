@@ -44,5 +44,7 @@ data class WorkspaceResponse(
     @get:Schema(title = "挂载平台类型")
     val workspaceMountType: WorkspaceMountType? = null,
     @get:Schema(title = "工作空间归属")
-    val ownerType: WorkspaceOwnerType? = null
+    val ownerType: WorkspaceOwnerType? = null,
+    @get:Schema(title = "项目ID")
+    val projectId: String? = null
 )

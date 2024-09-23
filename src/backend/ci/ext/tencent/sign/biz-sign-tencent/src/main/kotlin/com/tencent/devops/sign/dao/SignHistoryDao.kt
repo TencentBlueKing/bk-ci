@@ -50,6 +50,7 @@ class SignHistoryDao {
         pipelineId: String?,
         buildId: String?,
         taskId: String?,
+        appId: String?,
         archiveType: String?,
         archivePath: String?,
         md5: String?
@@ -73,6 +74,7 @@ class SignHistoryDao {
                 PIPELINE_ID,
                 BUILD_ID,
                 TASK_ID,
+                KEYSTORE_APP_ID,
                 TASK_EXECUTE_COUNT,
                 ARCHIVE_TYPE,
                 ARCHIVE_PATH,
@@ -92,6 +94,7 @@ class SignHistoryDao {
                 pipelineId,
                 buildId,
                 taskId,
+                appId,
                 executeCount,
                 archiveType,
                 archivePath,
@@ -266,6 +269,15 @@ class SignHistoryDao {
                 errorMessage = errorMessage,
                 ipaSignInfoStr = null
             )
+        }
+    }
+
+    fun writeWarnInfo(dslContext: DSLContext, resignId: String, warnInfo: String) {
+        with(TSignHistory.T_SIGN_HISTORY) {
+            dslContext.update(this)
+                .set(ERROR_MESSAGE, warnInfo)
+                .where(RESIGN_ID.eq(resignId))
+                .execute()
         }
     }
 }

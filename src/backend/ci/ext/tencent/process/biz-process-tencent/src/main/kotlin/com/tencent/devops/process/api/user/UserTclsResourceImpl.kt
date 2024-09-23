@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
@@ -45,13 +46,13 @@ import com.tencent.devops.process.pojo.third.tcls.TclsEnv
 import com.tencent.devops.process.pojo.third.tcls.TclsType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import java.util.Base64
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.tools.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.Base64
 
 @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught", "MagicNumber")
 @RestResource
@@ -121,10 +122,17 @@ class UserTclsResourceImpl @Autowired constructor(
             )
         }
 
-        logger.info("POST url: $url")
-        logger.info("requestBody: $requestBody")
+        val headerStr = JsonUtil.toJson(
+            mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
+        ).replace("\\s".toRegex(), "")
 
-        val request = Request.Builder().url(url).post(RequestBody.create(JSON, requestBody)).build()
+        logger.info("POST url: $url , requestBody: $requestBody , headers: $headerStr")
+
+        val request = Request.Builder()
+            .url(url)
+            .header("X-Bkapi-Authorization", headerStr)
+            .post(RequestBody.create(JSON, requestBody))
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 val responseBody = response.body?.string()
@@ -136,9 +144,10 @@ class UserTclsResourceImpl @Autowired constructor(
                     logger.warn("get env list failed: $msg")
                     throw OperationException(
                         MessageUtil.getMessageByLocale(
-                        messageCode = BK_TCLS_ENVIRONMENT_MESSAGE,
-                        language = I18nUtil.getLanguage(userId)
-                    ) + "$msg")
+                            messageCode = BK_TCLS_ENVIRONMENT_MESSAGE,
+                            language = I18nUtil.getLanguage(userId)
+                        ) + "$msg"
+                    )
                 }
 
                 @Suppress("UNCHECKED_CAST")
@@ -179,7 +188,7 @@ class UserTclsResourceImpl @Autowired constructor(
         if (credentialResult.isNotOk() || credentialResult.data == null) {
             logger.error(
                 "Fail to get the credential($credentialId) of " +
-                    "project($projectId) because of ${credentialResult.message}"
+                        "project($projectId) because of ${credentialResult.message}"
             )
             throw OperationException("Fail to get the credential($credentialId) of project($projectId)")
         }

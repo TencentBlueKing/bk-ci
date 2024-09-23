@@ -1,12 +1,17 @@
 <template>
     <div class="param-env-item">
         <div class="var-con">
-            <div class="var-names"
+            <div
+                class="var-names"
                 :class="{ 'desc-param': desc }"
-                v-bk-tooltips="{ content: desc, disabled: !desc, allowHTML: true }">
+                v-bk-tooltips="{ content: desc, disabled: !desc, allowHTML: true }"
+            >
                 <span>{{ name }}</span>
             </div>
-            <div class="var-operate" v-if="editable">
+            <div
+                class="var-operate"
+                v-if="editable"
+            >
                 <i
                     v-bk-tooltips="{
                         content: disabledCopyTips,
@@ -24,7 +29,7 @@
 </template>
 
 <script>
-    import { bkVarWrapper } from '@/utils/util'
+    import { bkVarWrapper, copyToClipboard } from '@/utils/util'
     export default {
         props: {
             name: {
@@ -54,14 +59,22 @@
         },
         methods: {
             bkVarWrapper,
-            handleCopy (con) {
+            async handleCopy (con) {
                 if (this.disabledCopy) return
-                window.navigator.clipboard.writeText(con)
-                this.$bkMessage({
-                    theme: 'success',
-                    message: this.$t('copySuc'),
-                    limit: 1
-                })
+                try {
+                    await copyToClipboard(con)
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('copySuc'),
+                        limit: 1
+                    })
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message,
+                        limit: 1
+                    })
+                }
             }
         }
     }

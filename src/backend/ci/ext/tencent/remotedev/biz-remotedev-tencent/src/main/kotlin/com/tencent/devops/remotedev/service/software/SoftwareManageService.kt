@@ -33,18 +33,33 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.SoftwareManageDao
+import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
+import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
+import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.software.CommonArgs
 import com.tencent.devops.remotedev.pojo.software.InstallSoftwareRes
-import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.pojo.software.SoftwareCreate
 import com.tencent.devops.remotedev.pojo.software.SoftwareInfo
-import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
-import com.tencent.devops.remotedev.pojo.software.UserSoftware
-import com.tencent.devops.remotedev.pojo.software.UserSoftwareInstalledRecord
-import java.net.SocketTimeoutException
+import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
+import com.tencent.devops.remotedev.pojo.windows.WindowsDevCouldCallback
+import com.tencent.devops.remotedev.service.HttpCallBackService
+import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
+import com.tencent.devops.remotedev.service.redis.RedisCallLimit
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_ASSIGN_NOTIFY
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -59,6 +74,14 @@ import org.springframework.stereotype.Service
 @Service
 class SoftwareManageService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
+    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val workspaceCommon: WorkspaceCommon,
+    private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler,
+    private val notifyControl: NotifyControl,
+    private val workspaceDao: WorkspaceDao,
+    private val httpCallBackService: HttpCallBackService,
     private val softwareManageDao: SoftwareManageDao
 ) {
     @Value("\${remoteDev.appCode:}")
@@ -83,105 +106,186 @@ class SoftwareManageService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(SoftwareManageService::class.java)
         private const val IOANAME = "IOA"
+        private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
-    // 获取工作空间模板
-    fun getProjectSoftwareList(projectId: String): List<ProjectSoftware> {
-        logger.info("SoftwareManageService|getProjectSoftwareList|projectId|$projectId")
-        val result = mutableListOf<ProjectSoftware>()
-        softwareManageDao.querySoftwareList(
-            projectId = projectId,
-            dslContext = dslContext
-        ).forEach {
-            result.add(
-                ProjectSoftware(
-                    id = it.id,
-                    projectId = it.projectId,
-                    name = it.name,
-                    logo = it.logo,
-                    version = it.version,
-                    source = it.source,
-                    status = it.status,
-                    classification = it.classification,
-                    installMethod = it.installMethod,
-                    creator = it.creator
-                )
-            )
-        }
-        return result
-    }
-
-    // 安装软件至用户
-    fun batchInstallSoftwareToUser(softwareList: List<UserSoftware>): Boolean {
-        logger.info("SoftwareManageService|installSoftwareToUser|softwareList|$softwareList")
-        softwareManageDao.batchInstallSoftwareToUser(dslContext, softwareList)
-        return true
-    }
-
-    fun getUserSoftwareInstalledRecord(
+    fun safeInitialization(
         projectId: String,
-        user: String?,
-        workspaceName: String?,
-        status: SoftwareInstallStatus?
-    ): List<UserSoftwareInstalledRecord> {
-        logger.info("SoftwareManageService|getUserSoftwareInstalledRecord|projectId|$projectId")
-        val result = mutableListOf<UserSoftwareInstalledRecord>()
-        softwareManageDao.queryUserSoftwareInstalledRecord(
-            dslContext = dslContext,
-            projectId = projectId,
-            user = user,
-            workspaceName = workspaceName,
-            status = status
-        ).forEach {
-            result.add(
-                UserSoftwareInstalledRecord(
-                    projectId = it.projectId,
-                    user = it.creator,
-                    taskId = it.taskId,
-                    softwareName = it.softwareName,
-                    workspaceName = it.workspaceName,
-                    status = SoftwareInstallStatus.values()[it.status],
-                    installTime = it.createTime.toString()
+        userId: String,
+        workspaceName: String
+    ) {
+        logger.info("$userId start workspace $workspaceName")
+        RedisCallLimit(
+            redisOperation,
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
+            expiredTimeInSeconds
+        ).lock().use {
+            val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                    params = arrayOf(workspaceName)
                 )
-            )
-        }
-        return result
-    }
-
-    fun getSoftwareGroupInfo(): Any {
-        val headerStr = ObjectMapper().writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
-            .replace("\\s".toRegex(), "")
-        val request = Request.Builder()
-            .url(softwareGroupUrl)
-            .addHeader("x-bkapi-authorization", headerStr)
-            .get()
-            .build()
-        try {
-            OkhttpUtils.doHttp(request).use { response ->
-                if (!response.isSuccessful) {
-                    throw ErrorCodeException(
-                        statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                        errorCode = ErrorCodeEnum.GET_SOFTWARE_GROUP_FAIL.errorCode
+            // 校验状态
+            when (workspace.status) {
+                WorkspaceStatus.DELIVERING, WorkspaceStatus.PREPARING -> {
+                    workspaceOpHistoryDao.createWorkspaceHistory(
+                        dslContext = dslContext,
+                        workspaceName = workspaceName,
+                        operator = userId,
+                        action = WorkspaceAction.START,
+                        actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.SAFE_INITIALIZATION)
+                    )
+                    // todo job接口执行
+                    logger.info("safeInitialization|$userId|$userId")
+                    installSystemSoftwares(
+                        projectId = projectId,
+                        creator = userId,
+                        regionId = workspace.regionId.toString(),
+                        ip = workspace.hostIp ?: "",
+                        workspaceName = workspaceName
                     )
                 }
-                val data = JsonUtil.to(response.body!!.string(), Any::class.java)
-                logger.info("getWatermark|response code|${response.code}|content|$data")
-                return data
+
+                else -> {
+                    logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
+                }
             }
-        } catch (e: SocketTimeoutException) {
-            logger.error("get software group failed.", e)
-            // 接口超时失败
+        }
+    }
+
+    fun softwareInstallationCompleteCallback(
+        type: String,
+        workspaceName: String,
+        projectId: String,
+        userId: String,
+        softwareList: SoftwareCallbackRes
+    ) {
+        logger.info(
+            "softwareInstallationCompleteCallback|type|$type|workspaceName|$workspaceName" +
+                "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
+        )
+        // 添加软件安装历史
+        updateSoftwareInstalledRecords(
+            type = type,
+            softwareList = softwareList
+        )
+        updateWindowsWorkspaceStatus(workspaceName) { workspace ->
+            when (workspace.status) {
+                // 交付中安装IOA后
+                WorkspaceStatus.DELIVERING, WorkspaceStatus.DELIVERING_FAILED -> {
+                    if (type == "SYSTEM") {
+                        checkSafeInitSuccess(softwareList, workspace)
+                        workspaceCommon.updateStatusAndCreateHistory(
+                            workspace = workspace,
+                            newStatus = WorkspaceStatus.DISTRIBUTING,
+                            action = WorkspaceAction.CREATE
+                        )
+                        workspaceCommon.autoAssignOwner(workspace)
+
+                        upgradeWorkspaceHandler.checkAndUpgradeVm(workspaceName)
+
+                        notifyControl.notify4RemoteDevManager(
+                            projectId = projectId,
+                            cc = mutableSetOf(workspace.createUserId),
+                            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                            bodyParams = mutableMapOf(
+                                "workspaceName" to workspace.workspaceName,
+                                "cgsId" to (workspace.hostIp ?: workspace.workspaceName),
+                                "projectId" to projectId,
+                                "notifyTemplateCode" to WINDOWS_GPU_ASSIGN_NOTIFY,
+                                "creator" to workspace.createUserId
+                            )
+                        )
+                    }
+                }
+
+                WorkspaceStatus.RUNNING -> {
+                    if (type != "SYSTEM") {
+                        workspaceCommon.updateStatusAndCreateHistory(
+                            workspace = workspace,
+                            newStatus = WorkspaceStatus.RUNNING,
+                            action = WorkspaceAction.CREATE
+                        )
+                    }
+                }
+                // 个人云桌面
+                WorkspaceStatus.PREPARING -> {
+                    checkSafeInitSuccess(softwareList, workspace)
+                    workspaceDao.updateWorkspaceStatus(
+                        dslContext = dslContext,
+                        workspaceName = workspaceName,
+                        status = WorkspaceStatus.RUNNING
+                    )
+                    workspaceOpHistoryDao.createWorkspaceHistory(
+                        dslContext = dslContext,
+                        workspaceName = workspaceName,
+                        operator = workspace.createUserId,
+                        action = WorkspaceAction.CREATE,
+                        actionMessage = String.format(
+                            workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                            workspace.status.name,
+                            WorkspaceStatus.RUNNING.name
+                        )
+                    )
+                    upgradeWorkspaceHandler.checkAndUpgradeVm(workspaceName)
+                    httpCallBackService.asyncTask(
+                        WindowsDevCouldCallback(
+                            workspaceName,
+                            WorkspaceStatus.RUNNING,
+                            WorkspaceAction.CREATE
+                        )
+                    )
+                    notifyControl.dispatchWebsocketPushEvent(
+                        userId = workspace.createUserId,
+                        workspaceName = workspace.workspaceName,
+                        workspaceHost = workspace.hostIp,
+                        type = WebSocketActionType.WORKSPACE_CREATE,
+                        status = true,
+                        action = WorkspaceAction.START,
+                        systemType = workspace.workspaceSystemType,
+                        workspaceMountType = workspace.workspaceMountType,
+                        ownerType = workspace.ownerType,
+                        projectId = workspace.projectId
+                    )
+                }
+
+                else -> {
+                    logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
+                }
+            }
+        }
+    }
+
+    private fun checkSafeInitSuccess(
+        softwareList: SoftwareCallbackRes,
+        ws: WorkspaceRecordWithWindows
+    ) {
+        if (softwareList.taskStatus == TaskStatusEnum.FAILED) {
+            workspaceCommon.updateStatus2DeliveringFailed(
+                workspace = ws,
+                action = WorkspaceAction.CREATE,
+                notifyTemplateCode = "WINDOWS_GPU_SAFE_INIT_FAILED"
+            )
             throw ErrorCodeException(
-                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                errorCode = ErrorCodeEnum.GET_SOFTWARE_GROUP_FAIL.errorCode
+                errorCode = ErrorCodeEnum.DELIVERING_FAILED.errorCode
             )
         }
     }
 
-    // 导入软件到项目中
-    fun importSoftwareToProject(software: ProjectSoftware): Boolean {
-        logger.info("SoftwareManageService|installSoftwareToUser|software|$software")
-        return softwareManageDao.importSoftwareToProject(dslContext, software) > 0
+    private fun updateWindowsWorkspaceStatus(workspaceName: String, update: (ws: WorkspaceRecordWithWindows) -> Unit) {
+        RedisCallLimit(
+            redisOperation,
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
+            expiredTimeInSeconds
+        ).lock().use {
+            val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                    params = arrayOf(workspaceName)
+                )
+            // 更新状态
+            update(workspace)
+        }
     }
 
     /** 云桌面创建完成后安全初始化：安装ioa
@@ -216,8 +320,8 @@ class SoftwareManageService @Autowired constructor(
             )
         }
         val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
-                "?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName&" +
-                "projectId=$projectId&userId=$creator&x-devops-project-id=$projectId"
+            "?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName&" +
+            "projectId=$projectId&userId=$creator&x-devops-project-id=$projectId"
         installSoftwareFromXingyun(
             userId = creator,
             ip = regionId + ":" + ip.substringAfter("."),
@@ -262,7 +366,7 @@ class SoftwareManageService @Autowired constructor(
                 val responseContent = response.body!!.string()
                 logger.info(
                     "installSoftwareFromXingyun|response code|$ip" +
-                            "|${response.code}|responseContent|$responseContent"
+                        "|${response.code}|responseContent|$responseContent"
                 )
                 if (!response.isSuccessful) {
                     throw ErrorCodeException(
@@ -272,11 +376,18 @@ class SoftwareManageService @Autowired constructor(
                 }
                 val createSoftwareRes: InstallSoftwareRes = jacksonObjectMapper().readValue(responseContent)
                 logger.info("installSoftwareFromXingyun|createSoftwareRes|$createSoftwareRes")
+                if (response.code == Response.Status.OK.statusCode && !createSoftwareRes.result) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.OK.statusCode,
+                        errorCode = ErrorCodeEnum.INSTALL_SOFTWARE_FAIL.errorCode,
+                        defaultMessage = createSoftwareRes.message
+                    )
+                }
                 createSoftwareRes
             }
         }.onFailure {
             logger.error("install software from xingyun failed.", it)
-        }.getOrNull()
+        }.getOrThrow()
     }
 
     // 添加系统软件安装记录
@@ -284,8 +395,6 @@ class SoftwareManageService @Autowired constructor(
         logger.info("updateSoftwareInstalledRecords|type|$type|softwareList|$softwareList")
         if (type == "SYSTEM") {
             softwareManageDao.updateSystemInstalledRecords(dslContext, softwareList)
-        } else {
-            softwareManageDao.updateUserInstalledRecords(dslContext, softwareList)
         }
     }
 }

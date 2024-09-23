@@ -8,6 +8,7 @@ import com.tencent.devops.remotedev.config.async.AsyncExecuteEvent
 import com.tencent.devops.remotedev.config.async.AsyncExecuteEventType
 import com.tencent.devops.remotedev.pojo.async.AsyncJobEndEvent
 import com.tencent.devops.remotedev.pojo.async.AsyncJobPipeline
+import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.async.AsyncTCloudCfs
 import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclIp
@@ -16,6 +17,7 @@ import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.job.RemoteDevJobActionService
 import com.tencent.devops.remotedev.service.job.RemoteDevJobService
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -27,7 +29,8 @@ class AsyncExecuteListener @Autowired constructor(
     private val remoteDevJobService: RemoteDevJobService,
     private val tCloudCfsService: TCloudCfsService,
     private val gitProxyTGitService: GitProxyTGitService,
-    private val jobActionService: RemoteDevJobActionService
+    private val jobActionService: RemoteDevJobActionService,
+    private val notifyControl: NotifyControl
 ) {
     fun listenAsyncExecuteEvent(event: AsyncExecuteEvent) {
         logger.debug("listenAsyncExecuteEvent|$event")
@@ -73,21 +76,31 @@ class AsyncExecuteListener @Autowired constructor(
                 val data = objectMapper.readValue<AsyncTGitAclIp>(event.eventStr)
                 gitProxyTGitService.doAddOrRemoveAclIp(
                     projectId = data.projectId,
-                    ip = data.ip,
-                    remove = data.remove
+                    ips = data.ips,
+                    remove = data.remove,
+                    tgitId = data.tgitId
                 )
             }
 
             AsyncExecuteEventType.ASYNC_TGIT_ACL_USER -> {
                 val data = objectMapper.readValue<AsyncTGitAclUser>(event.eventStr)
                 gitProxyTGitService.doRefreshProjectTGitSpecUser(
-                    projectId = data.projectId
+                    projectId = data.projectId,
+                    tgitId = data.tgitId
                 )
             }
 
             AsyncExecuteEventType.ASYNC_JOB_PIPELINE -> {
                 val data = objectMapper.readValue<AsyncJobPipeline>(event.eventStr)
                 jobActionService.doStartPipeline(data.projectId, data.id, data.param)
+            }
+
+            AsyncExecuteEventType.ASYNC_NOTIFY -> {
+                val data = objectMapper.readValue<AsyncNotify>(event.eventStr)
+                notifyControl.notifyWorkspaceInfo(
+                    userId = data.operator,
+                    notifyData = data.notifyData
+                )
             }
         }
     }

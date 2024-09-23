@@ -30,5 +30,11 @@ package com.tencent.devops.remotedev.pojo
 enum class WorkspaceMountType {
     DEVCLOUD,
     START,
-    BCS
+    BCS;
+
+    companion object {
+        fun parse(value: String): WorkspaceMountType {
+            return values().find { it.name == value } ?: START
+        }
+    }
 }

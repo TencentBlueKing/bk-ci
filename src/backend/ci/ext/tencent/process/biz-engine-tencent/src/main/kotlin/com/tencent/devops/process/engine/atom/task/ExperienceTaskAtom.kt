@@ -52,12 +52,13 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import java.io.File
-import java.time.LocalDateTime
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
+import java.io.File
+import java.time.LocalDateTime
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -70,11 +71,14 @@ class ExperienceTaskAtom @Autowired constructor(
         return JsonUtil.mapTo(task.taskParams, ExperienceElement::class.java)
     }
 
+    private val logger = LoggerFactory.getLogger(ExperienceTaskAtom::class.java)
+
     override fun execute(
         task: PipelineBuildTask,
         param: ExperienceElement,
         runVariables: Map<String, String>
     ): AtomResponse {
+        logger.warn("Deprecated_Plugin|ExperienceTaskAtom|${task.projectId}|${task.pipelineId}")
         val buildId = task.buildId
         val taskId = task.taskId
         val containerId = task.containerHashId

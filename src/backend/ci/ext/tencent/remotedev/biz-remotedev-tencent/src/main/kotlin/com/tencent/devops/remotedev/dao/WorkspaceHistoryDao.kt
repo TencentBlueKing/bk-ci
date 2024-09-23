@@ -77,17 +77,6 @@ class WorkspaceHistoryDao {
         }
     }
 
-    fun fetchHistory(
-        dslContext: DSLContext,
-        workspaceName: String
-    ): Result<TWorkspaceHistoryRecord> {
-        with(TWorkspaceHistory.T_WORKSPACE_HISTORY) {
-            return dslContext.selectFrom(this)
-                .where(WORKSPACE_NAME.eq(workspaceName))
-                .orderBy(CREATED_TIME.desc()).fetch()
-        }
-    }
-
     fun fetchAnyHistory(
         dslContext: DSLContext,
         workspaceName: String

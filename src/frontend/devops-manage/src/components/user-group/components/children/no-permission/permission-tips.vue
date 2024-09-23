@@ -14,6 +14,7 @@
 </template>
 
 <script>
+import { useI18n } from 'vue-i18n';
 export default {
   props: {
     title: {
@@ -27,33 +28,35 @@ export default {
       type: Number,
     }
   },
-  created () {
-    this.exceptionObj.type = this.errorCode
-    if (this.errorCode === 404)  {
-      this.exceptionObj.showBtn = false;
-      this.exceptionObj.type = '404';
-      this.exceptionObj.title = this.$t('项目不存在');
-      this.exceptionObj.description = '';
-    } else if (this.errorCode === 403) {
-      this.exceptionObj.showBtn = false;
-      this.exceptionObj.type = '403';
-      this.exceptionObj.title = this.$t('无项目权限');
-      this.exceptionObj.description = this.$t('你没有项目的查看权限，请先申请', [this.projectCode]);
-    } else if (this.errorCode === 2119042) {
-      this.exceptionObj.showBtn = false;
-      this.exceptionObj.type = '403';
-      this.exceptionObj.title = this.$t('项目创建中');
-      this.exceptionObj.description = this.$t('项目正在创建审批中，请耐心等待', [this.projectCode]);
-    }
-  },
   data() {
+    const { t } = useI18n();
     return {
       exceptionObj:{
         type: '',
         title: '',
         description: '',
-        showBtn: false
-      }
+        showBtn: false,
+      },
+      t
+    }
+  },
+  created () {
+    this.exceptionObj.type = this.errorCode
+    if (this.errorCode === 404)  {
+      this.exceptionObj.showBtn = false;
+      this.exceptionObj.type = '404';
+      this.exceptionObj.title = this.t('项目不存在');
+      this.exceptionObj.description = '';
+    } else if (this.errorCode === 403) {
+      this.exceptionObj.showBtn = false;
+      this.exceptionObj.type = '403';
+      this.exceptionObj.title = this.t('无项目权限');
+      this.exceptionObj.description = this.t('你没有项目的查看权限，请先申请', [this.projectCode]);
+    } else if (this.errorCode === 2119042) {
+      this.exceptionObj.showBtn = false;
+      this.exceptionObj.type = '403';
+      this.exceptionObj.title = this.t('项目创建中');
+      this.exceptionObj.description = this.t('项目正在创建审批中，请耐心等待', [this.projectCode]);
     }
   },
 };

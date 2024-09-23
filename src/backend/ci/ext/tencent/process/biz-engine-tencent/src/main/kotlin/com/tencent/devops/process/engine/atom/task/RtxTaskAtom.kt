@@ -57,7 +57,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_SEND_WECOM_MESS
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.util.ServiceHomeUrlUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -86,7 +85,7 @@ class RtxTaskAtom @Autowired constructor(
     ): AtomResponse {
         with(task) {
 
-            logger.info("Enter RtxTaskDelegate run...")
+            logger.warn("Deprecated_Plugin|RtxTaskAtom|${task.projectId}|${task.pipelineId}")
             if (param.receivers.isEmpty()) {
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
@@ -247,7 +246,7 @@ class RtxTaskAtom @Autowired constructor(
     }
 
     private fun detailUrl(projectId: String, pipelineId: String, processInstanceId: String) =
-            "${ServiceHomeUrlUtils.server()}/console/pipeline/$projectId/$pipelineId/detail/$processInstanceId"
+            "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$processInstanceId"
 
     private fun detailOuterUrl(projectId: String, pipelineId: String, processInstanceId: String) =
             "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&" +

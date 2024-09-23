@@ -53,7 +53,7 @@ func genHeartInfoAndUpgrade(
 		MasterVersion:     config.AgentVersion,
 		SlaveVersion:      config.GAgentEnv.SlaveVersion,
 		HostName:          config.GAgentEnv.HostName,
-		AgentIp:           config.GAgentEnv.AgentIp,
+		AgentIp:           config.GAgentEnv.GetAgentIp(),
 		ParallelTaskCount: config.GAgentConfig.ParallelTaskCount,
 		AgentInstallPath:  systemutil.GetExecutableDir(),
 		StartedUser:       systemutil.GetCurrentUser().Username,

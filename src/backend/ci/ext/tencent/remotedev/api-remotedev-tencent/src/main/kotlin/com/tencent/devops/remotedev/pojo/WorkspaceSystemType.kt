@@ -31,11 +31,7 @@ enum class WorkspaceSystemType {
     LINUX,
     WINDOWS_GPU;
 
-    fun needHeartbeat() = this == LINUX
-
     fun checkWindows() = this == WINDOWS_GPU
-
-    fun needUpdateBkTicket() = this == LINUX
 
     fun needSafeInitialization() = this == WINDOWS_GPU
 
@@ -53,8 +49,9 @@ enum class WorkspaceSystemType {
         else -> true
     }
 
-    fun display() = when (this) {
-        LINUX -> "Linux动态容器"
-        WINDOWS_GPU -> "Windows GPU 云桌面"
+    companion object {
+        fun parse(value: String): WorkspaceSystemType {
+            return values().find { it.name == value } ?: WINDOWS_GPU
+        }
     }
 }

@@ -34,13 +34,14 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
+import com.tencent.devops.remotedev.service.PermissionService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,10 +49,10 @@ import org.springframework.stereotype.Service
 
 @Service
 class ImageManageService @Autowired constructor(
-    private val client: Client,
     private val dslContext: DSLContext,
     private val imageManageDao: ImageManageDao,
-    private val windowsResourceZoneDao: WindowsResourceZoneDao
+    private val windowsResourceZoneDao: WindowsResourceZoneDao,
+    private val permissionService: PermissionService
 ) {
 
     companion object {
@@ -59,12 +60,13 @@ class ImageManageService @Autowired constructor(
     }
 
     // 获取工作空间模板
-    fun getProjectImageList(projectId: String): List<ProjectImage> {
+    fun getProjectImageList(projectId: String, imageId: String?): List<ProjectImage> {
         logger.info("ImageManageService|getProjectImageList|projectId|$projectId")
         val result = mutableListOf<ProjectImage>()
         imageManageDao.queryImageList(
             projectId = projectId,
-            dslContext = dslContext
+            dslContext = dslContext,
+            imageId = imageId
         ).forEach {
             val sourceCgsZoneShortName = it.sourceCgsZone.replace(Regex("[^a-zA-Z]"), "")
             val sourceCgsZoneName = windowsResourceZoneDao.fetchAny(dslContext, sourceCgsZoneShortName)
@@ -83,7 +85,8 @@ class ImageManageService @Autowired constructor(
                     sourceCgsZoneName = sourceCgsZoneName?.zone ?: "",
                     creator = it.creator,
                     status = ImageStatus.values()[it.status],
-                    createdTime = it.createTime.timestamp()
+                    createdTime = it.createTime.timestamp(),
+                    errMsg = it.errorMsg
                 )
             )
         }
@@ -103,13 +106,14 @@ class ImageManageService @Autowired constructor(
     )
     fun deleteProjectImage(userId: String, projectId: String, imageId: String): Boolean {
         logger.info("$userId delete projectImage: $imageId")
+        permissionService.checkUserManager(userId, projectId)
         imageManageDao.updateWorkspaceImageStatus(projectId, imageId, ImageStatus.DELETED, dslContext)
         return true
     }
 
     fun getVmStandardImages(): List<StandardVmImage> {
         return kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class).getVmStandardImages().data
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getVmStandardImages().data
         }.onFailure {
             logger.warn("Error get vm stanadard image list: ${it.message}")
         }.getOrNull() ?: emptyList()

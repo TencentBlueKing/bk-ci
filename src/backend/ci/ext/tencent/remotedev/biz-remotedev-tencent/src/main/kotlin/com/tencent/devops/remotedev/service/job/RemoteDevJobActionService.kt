@@ -1,14 +1,19 @@
 package com.tencent.devops.remotedev.service.job
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.RemoteDevJobExecRecordDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.async.AsyncJobPipeline
 import com.tencent.devops.remotedev.pojo.job.CronPowerOnParam
+import com.tencent.devops.remotedev.pojo.job.JobPipelineDetail
+import com.tencent.devops.remotedev.pojo.job.JobPipelineSopDetail
 import com.tencent.devops.remotedev.pojo.job.JobRecordStatus
 import com.tencent.devops.remotedev.pojo.job.JobSchemaParam
 import com.tencent.devops.remotedev.pojo.job.JobScope
@@ -16,14 +21,17 @@ import com.tencent.devops.remotedev.pojo.job.NotifyRemoteDevDesktopParam
 import com.tencent.devops.remotedev.pojo.job.PipelineJobReceiptInfo
 import com.tencent.devops.remotedev.pojo.job.PipelineParam
 import org.jooq.DSLContext
+import org.jooq.JSON
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.Base64
 
 @Service
 class RemoteDevJobActionService @Autowired constructor(
+    private val objectMapper: ObjectMapper,
     private val client: Client,
     private val dslContext: DSLContext,
     private val remoteDevJobExecRecordDao: RemoteDevJobExecRecordDao,
@@ -111,9 +119,61 @@ class RemoteDevJobActionService @Autowired constructor(
         }
     }
 
+    @Suppress("NestedBlockDepth")
+    fun fetchPipelineJobDetail(param: PipelineParam, receiptInfo: JSON): JobPipelineDetail? {
+        val receipt = objectMapper.readValue<PipelineJobReceiptInfo>(receiptInfo.data())
+        val detail = JobPipelineDetail(null)
+        PIPELINE_JOB_DETAIL_OUTPUT_SUBTAG_KEYS.forEach { k ->
+            val logs = client.get(ServiceLogResource::class).getInitLogs(
+                userId = param.userId,
+                projectId = param.projectId,
+                pipelineId = param.pipelineId,
+                buildId = receipt.buildId,
+                tag = null,
+                containerHashId = null,
+                executeCount = null,
+                subTag = k,
+                jobId = null,
+                stepId = null
+            ).data?.logs ?: return@forEach
+            when (k) {
+                PIPELINE_JOB_DETAIL_SOP_OUTPUT_SUBTAG_KEY -> {
+                    // 同一个 step 的日志可能存在太长被截断的情况，需要在这里拼接
+                    val sopStrMap = mutableMapOf<String, MutableList<String>>()
+                    logs.forEach { log ->
+                        if (sopStrMap.containsKey(log.tag)) {
+                            sopStrMap[log.tag]?.add(log.message)
+                        } else {
+                            sopStrMap[log.tag] = mutableListOf(log.message)
+                        }
+                    }
+                    val sops = mutableListOf<JobPipelineSopDetail>()
+                    sopStrMap.values.forEach { v ->
+                        kotlin.runCatching {
+                            sops.add(
+                                objectMapper.readValue<JobPipelineSopDetail>(
+                                    Base64.getDecoder().decode(v.joinToString(""))
+                                )
+                            )
+                        }.onFailure {
+                            logger.error("fetchPipelineJobDetail decode sop error", it)
+                        }
+                    }
+                    detail.sopData = sops
+                }
+
+                else -> return@forEach
+            }
+        }
+
+        return detail
+    }
+
     companion object {
         private const val PIPELINE_JOB_CALLBACK_ID = "REMOTEDEV_PIPELINE_JOB_CALLBACK_ID"
         private const val PIPELINE_JOB_IPS = "REMOTEDEV_PIPELINE_JOB_IPS"
         private val logger = LoggerFactory.getLogger(RemoteDevJobActionService::class.java)
+        private const val PIPELINE_JOB_DETAIL_SOP_OUTPUT_SUBTAG_KEY = "SOP_OUTPUT"
+        private val PIPELINE_JOB_DETAIL_OUTPUT_SUBTAG_KEYS = setOf(PIPELINE_JOB_DETAIL_SOP_OUTPUT_SUBTAG_KEY)
     }
 }

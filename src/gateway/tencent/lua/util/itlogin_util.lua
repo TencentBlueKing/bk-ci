@@ -15,7 +15,8 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-]] _M = {}
+]]
+_M = {}
 
 function _M:get_staff_info(ckey)
     if ckey == nil then
@@ -126,16 +127,31 @@ function _M:get_staff_info_new(credentialKey)
         return
     end
 
-    local res, err = httpc:request_uri("https://moa4.woa.com/itlogin/mobile_gate/validate", {
-        method = "POST",
-        body = "key=" .. credentialKey,
-        ssl_verify = false,
-        headers = {
-            ["X-System-Key"]="d4699d2782a6edb09a1837cfdc2df110",
-            ["Content-Type"] = "application/x-www-form-urlencoded",
-            ["Accept"] = "application/json"
-        }
-    })
+    -- TOF 网关签名算法
+    local timestamp = ngx.time()
+    local token = config.itlogin.token
+    local nonce = uuid()
+    local sn = timestamp .. token .. nonce .. timestamp
+    local resty_sha256 = require "resty.sha256"
+    local resty_str = require "resty.string"
+    local sha256 = resty_sha256:new()
+    sha256:update(sn)
+    local digest = sha256:final()
+    local signature = resty_str.str_to_hex(digest)
+
+    local res, err = httpc:request_uri("http://" .. config.itlogin.host .. "/ebus/moa_odc/itlogin/mobile_gate/validate",
+        {
+            method = "POST",
+            body = "key=" .. credentialKey,
+            ssl_verify = false,
+            headers = {
+                ["x-rio-paasid"] = config.itlogin.paasId,
+                ["x-rio-signature"] = signature,
+                ["x-rio-timestamp"] = tostring(timestamp),
+                ["x-rio-nonce"] = nonce,
+                ["Content-Type"] = "application/x-www-form-urlencoded"
+            }
+        })
 
     --- 设置HTTP保持连接
     httpc:set_keepalive(60000, 5)
@@ -156,6 +172,14 @@ function _M:get_staff_info_new(credentialKey)
     local responseBody = res.body
     --- 转换JSON的返回数据为TABLE
     local result = json.decode(responseBody)
+    if result.ReturnFlag ~= 0 then
+        ngx.log(ngx.STDERR, "failed to get info, responseBody: ", responseBody)
+        ngx.exit(500)
+    end
+    if result.Domain:sub(- #"-odc") == "-odc" then
+        result.IsOuter = true
+    end
+
     return result
 end
 

@@ -30,7 +30,6 @@ package com.tencent.devops.common.expression
 import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.PipelineContextData
-import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.ExpressionConstants
 import com.tencent.devops.common.expression.expression.IExpressionNode
 import com.tencent.devops.common.expression.expression.IFunctionInfo
@@ -102,44 +101,22 @@ object ExpressionParser {
         return if (result.value is PipelineContextData) result.value.fetchValue() else result.value
     }
 
+    /**
+     * 将流水线变量转换为表达式上下文类型，存在如下情况
+     * 1、a = str, 直接使用 string 类型的上下文保存即可
+     * 2、a.b.c = str, 将 a.b.c 升格为上下文中的嵌套 map 保存 既 a {b: {c: str}}
+     * 3、a.b.c = str 且 a.b = {"c": "str"}, 需要校验 a.b 所保存的 json 与 a.b.c 结构和数据是否相同后再升格
+     */
     fun fillContextByMap(
         contextMap: Map<String, String>,
         context: ExecutionContext,
         nameValue: MutableList<NamedValueInfo>
     ) {
-        contextMap.forEach { (key, value) ->
-            var data: DictionaryContextData? = null
-            val tokens = key.split('.')
-            if (tokens.size > 1) {
-                tokens.forEachIndexed { index, token ->
-                    if (index == tokens.size - 1) {
-                        data!!.add(token, StringContextData(value))
-                        return@forEachIndexed
-                    }
-
-                    if (index == 0) {
-                        if (context.expressionValues[token] != null) {
-                            data = context.expressionValues[token] as DictionaryContextData
-                            return@forEachIndexed
-                        }
-                        nameValue.add(NamedValueInfo(token, ContextValueNode()))
-                        context.expressionValues[token] = DictionaryContextData()
-                        data = context.expressionValues[token] as DictionaryContextData
-                        return@forEachIndexed
-                    }
-
-                    data!![token]?.let {
-                        data = it as DictionaryContextData
-                        return@forEachIndexed
-                    }
-                    data!![token] = DictionaryContextData()
-                    data = data!![token] as DictionaryContextData
-                }
-            } else {
-                nameValue.add(NamedValueInfo(key, ContextValueNode()))
-                context.expressionValues[key] = StringContextData(value)
-            }
+        val contextTree = ContextTree()
+        contextMap.forEach { (k, v) ->
+            contextTree.addNode(k, v)
         }
+        contextTree.toContext(context.expressionValues, nameValue)
     }
 
     fun createTree(

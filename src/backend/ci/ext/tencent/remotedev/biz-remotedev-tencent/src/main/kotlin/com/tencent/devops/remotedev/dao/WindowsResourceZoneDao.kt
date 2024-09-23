@@ -32,6 +32,7 @@ import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceZone
 import com.tencent.devops.model.remotedev.tables.records.TWindowsResourceZoneRecord
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
@@ -49,23 +50,40 @@ class WindowsResourceZoneDao {
                 this,
                 ZONE,
                 SHORT_NAME,
-                DESCRIPTION
+                DESCRIPTION,
+                TYPE
             ).values(
                 config.zone,
                 config.zoneShortName,
-                config.description
+                config.description,
+                config.type.name
             ).returning(ID).fetchOne()!!.id
         }
     }
 
     fun fetchAll(
         dslContext: DSLContext,
-        withUnavailable: Boolean = false
+        withUnavailable: Boolean = false,
+        type: WindowsResourceZoneConfigType = WindowsResourceZoneConfigType.DEFAULT
     ): List<WindowsResourceZoneConfig> {
         return with(TWindowsResourceZone.T_WINDOWS_RESOURCE_ZONE) {
-            dslContext.selectFrom(this).let {
-                if (!withUnavailable) it.where(AVAILABLED.eq(1)) else it
-            }
+            dslContext.selectFrom(this)
+                .where(TYPE.eq(type.name))
+                .let {
+                    if (!withUnavailable) it.and(AVAILABLED.eq(1)) else it
+                }
+                .skipCheck()
+                .fetch(mapper)
+        }
+    }
+
+    fun fetchAllSpec(
+        dslContext: DSLContext
+    ): List<WindowsResourceZoneConfig> {
+        return with(TWindowsResourceZone.T_WINDOWS_RESOURCE_ZONE) {
+            dslContext.selectFrom(this)
+                .where(TYPE.notEqual(WindowsResourceZoneConfigType.DEFAULT.name))
+                .and(AVAILABLED.eq(1))
                 .skipCheck()
                 .fetch(mapper)
         }
@@ -119,7 +137,8 @@ class WindowsResourceZoneDao {
                     available = ByteUtils.byte2Bool(availabled),
                     zone = zone,
                     zoneShortName = shortName,
-                    description = description
+                    description = description,
+                    type = WindowsResourceZoneConfigType.parse(type)
                 )
             }
         }

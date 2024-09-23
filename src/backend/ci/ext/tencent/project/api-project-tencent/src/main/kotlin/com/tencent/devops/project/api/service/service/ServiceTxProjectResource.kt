@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
+import com.tencent.devops.project.api.pojo.ProjectProductInfo
 import com.tencent.devops.project.pojo.AddManagerRequest
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
@@ -455,4 +456,16 @@ interface ServiceTxProjectResource {
         @QueryParam("projectCode")
         projectCode: String?
     ): Result<Map<String, String>>
+
+    @Operation(summary = "获取项目运营产品相关信息")
+    @Path("/listProjectProductInfos/")
+    @GET
+    fun listProjectProductInfos(
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<List<ProjectProductInfo>>
 }

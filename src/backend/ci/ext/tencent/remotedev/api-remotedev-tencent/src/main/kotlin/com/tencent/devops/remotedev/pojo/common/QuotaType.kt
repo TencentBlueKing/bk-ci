@@ -27,6 +27,8 @@
 
 package com.tencent.devops.remotedev.pojo.common
 
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
+
 enum class QuotaType {
     DEVCLOUD,
     OFFSHORE;
@@ -34,5 +36,12 @@ enum class QuotaType {
     fun getInternal(): Boolean = when (this) {
         DEVCLOUD -> true
         OFFSHORE -> false
+    }
+
+    companion object {
+        fun parse(zoneType: WindowsResourceZoneConfigType?) = when (zoneType) {
+            WindowsResourceZoneConfigType.DEVCLOUD -> DEVCLOUD
+            else -> OFFSHORE
+        }
     }
 }

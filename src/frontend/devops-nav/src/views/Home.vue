@@ -18,7 +18,11 @@
                                     :key="service.key"
                                     :to="addConsole(service.link_new)"
                                 >
-                                    <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="recent-logo-icon" />
+                                    <img
+                                        v-if="isAbsoluteUrl(service.logoUrl)"
+                                        :src="service.logoUrl"
+                                        class="recent-logo-icon"
+                                    />
                                     <Logo
                                         v-else
                                         :name="service.logoUrl"
@@ -80,7 +84,10 @@
                     </div>
                 </div>
 
-                <div class="devops-news" v-if="news.length > 0">
+                <div
+                    class="devops-news"
+                    v-if="news.length > 0"
+                >
                     <header>
                         <p class="title">
                             {{ $t("latestNews") }}
@@ -109,7 +116,13 @@
                 <article>
                     <h2>
                         {{ $t("bkdevopsTitle") }}
-                        <bk-tag v-if="BK_CI_VERSION" theme="info" type="stroke">{{ BK_CI_VERSION.trim() }}</bk-tag>
+                        <bk-tag
+                            v-if="BK_CI_VERSION"
+                            theme="info"
+                            type="stroke"
+                        >
+                            {{ BK_CI_VERSION.trim() }}
+                        </bk-tag>
                     </h2>
                     <p>
                         {{ $t("bkdevopsDesc") }}
@@ -136,7 +149,32 @@
             </aside>
         </div>
         <section class="devops-home-footer">
-            <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved {{ BK_CI_VERSION.trim() }}</p>
+            <template v-if="hasSharedResUrl">
+                <p
+                    class="item"
+                    v-html="platformInfo.i18n.footerInfoHTML"
+                />
+                <p class="bkci-copyright">{{ platformInfo.footerCopyrightContent }}</p>
+            </template>
+            <template v-else>
+                <section class="devops-home-footer">
+                    <div class="item">
+                        <a
+                            href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true"
+                            target="_blank"
+                        >{{ $t('technicalSupport') }}</a> |
+                        <a
+                            href="https://bk.tencent.com/s-mart/community/"
+                            target="_blank"
+                        >{{ $t('communityForum') }}</a> |
+                        <a
+                            href="https://bk.tencent.com/index/"
+                            target="_blank"
+                        >{{ $t('ProductOfficialWebsite') }}</a>
+                    </div>
+                    <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved {{ BK_CI_VERSION.trim() }}</p>
+                </section>
+            </template>
         </section>
         <consult-tools />
     </div>
@@ -146,7 +184,7 @@
     import { isAbsoluteUrl, urlJoin } from '@/utils/util'
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { Action, State } from 'vuex-class'
+    import { Action, Getter, State } from 'vuex-class'
     import { Accordion, AccordionItem } from '../components/Accordion/index'
     import ConsultTools from '../components/ConsultTools/index.vue'
     import Logo from '../components/Logo/index.vue'
@@ -166,9 +204,11 @@
         @State news
         @State related
         @Action fetchLinks
+        @Getter platformInfo
         isAllServiceListShow: boolean = false
         isAbsoluteUrl = isAbsoluteUrl
         BK_CI_VERSION: string = window.BK_CI_VERSION
+        hasSharedResUrl: boolean = !!(window.BK_SHARED_RES_URL)
 
         get funcArray (): any[] {
             const funcArray = ['issueLabel', 'developLabel', 'testLabel', 'deployLabel', 'operationLabel']

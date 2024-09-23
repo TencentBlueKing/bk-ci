@@ -7,12 +7,12 @@ import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import java.util.regex.Pattern
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.util.regex.Pattern
 
 @Component
 class WeworkGroupNotifier @Autowired constructor(
@@ -31,7 +31,7 @@ class WeworkGroupNotifier @Autowired constructor(
         commonNotifyMessageTemplateRecord: TCommonNotifyMessageTemplateRecord
     ) {
         logger.info("send WEWORK_GROUP msg: $commonNotifyMessageTemplateRecord.id")
-        val groups = request.bodyParams?.get(NotifyUtils.WEWORK_GROUP_KEY)?.split(",")
+        val groups = request.bodyParams?.get(NotifyUtils.WEWORK_GROUP_KEY)?.split("[,;]".toRegex())
         if (groups.isNullOrEmpty()) {
             logger.info("wework group is empty, so return.")
             return
@@ -53,19 +53,25 @@ class WeworkGroupNotifier @Autowired constructor(
         )
 
         val content = title + "\n\n" + body
-
+        val mentionUsers = if (request.mentionReceivers == true) {
+            request.receivers.toList()
+        } else {
+            emptyList()
+        }
         groups.forEach {
             if (it.startsWith("ww")) { // 应用号逻辑
                 wechatWorkService.sendByApp(
                     chatId = it,
                     content = content,
-                    markerDownFlag = request.markdownContent ?: false
+                    markerDownFlag = request.markdownContent ?: false,
+                    mentionUsers = mentionUsers
                 )
             } else if (Pattern.matches(chatPatten, it)) { // 机器人逻辑
                 wechatWorkRobotService.sendByRobot(
                     chatId = it,
                     content = content,
-                    markerDownFlag = request.markdownContent ?: false
+                    markerDownFlag = request.markdownContent ?: false,
+                    mentionUsers = mentionUsers
                 )
             }
         }

@@ -3,15 +3,21 @@
         <header class="manage-detail-header">
             <span @click="$router.back()">{{ $t('store.取消编辑') }}</span>
         </header>
-        <component :is="`${$route.params.type}Edit`" :user-info="userInfo" :detail="detail" class="edit-main" ref="edit"></component>
+        <component
+            :is="`${$route.params.type}Edit`"
+            :user-info="userInfo"
+            :detail="detail"
+            class="edit-main"
+            ref="edit"
+        ></component>
     </article>
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import atomEdit from '@/components/manage/detail/atom-detail/edit.vue'
     import imageEdit from '@/components/manage/detail/image-detail/edit.vue'
     import serviceEdit from '@/components/manage/detail/service-detail/edit.vue'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {

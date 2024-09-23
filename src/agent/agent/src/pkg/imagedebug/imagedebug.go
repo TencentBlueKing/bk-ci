@@ -227,7 +227,7 @@ func CreateDebugContainer(
 			RegistryAuth: auth,
 		})
 		if err != nil {
-			imageDebugLogs.Errorf("pull new image %s error %s", imageName, err.Error())
+			imageDebugLogs.WithError(err).Errorf("pull new image %s error", imageName)
 			return errors.New(i18n.Localize("PullImageError", map[string]interface{}{"name": imageName, "err": err.Error()}))
 		}
 		defer reader.Close()
@@ -245,7 +245,7 @@ func CreateDebugContainer(
 	}
 
 	// 解析docker options
-	dockerConfig, err := job_docker.ParseDockeroptions(cli, debugInfo.Options)
+	dockerConfig, err := job_docker.ParseDockerOptions(cli, debugInfo.Options)
 	if err != nil {
 		imageDebugLogs.Error(err.Error())
 		return err
@@ -515,7 +515,7 @@ func CreateExecServer(
 		Cmd:         conf.Cmd,
 	})
 
-	url := fmt.Sprintf("ws://%s:%d/start_exec?exec_id=%s&container_id=%s", config.GAgentEnv.AgentIp, conf.Port, exec.ID, containerId)
+	url := fmt.Sprintf("ws://%s:%d/start_exec?exec_id=%s&container_id=%s", config.GAgentEnv.GetAgentIp(), conf.Port, exec.ID, containerId)
 
 	// 上报结束并附带 url
 	imageDebugLogs.Infof("ws url: %s", url)

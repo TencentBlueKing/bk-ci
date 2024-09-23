@@ -17,8 +17,16 @@
             />
         </section>
         <template v-if="container">
-            <YamlPreviewPopup v-if="showAtomYaml" @close="resetPreviewAtomYaml" :yaml="atomYaml" />
-            <atom-selector v-else v-bind="editingElementPos" :container="container" />
+            <YamlPreviewPopup
+                v-if="showAtomYaml"
+                @close="resetPreviewAtomYaml"
+                :yaml="atomYaml"
+            />
+            <atom-selector
+                v-else
+                v-bind="editingElementPos"
+                :container="container"
+            />
         </template>
         <template v-if="editingElementPos">
             <template v-if="(typeof editingElementPos.elementIndex !== 'undefined')">
@@ -30,18 +38,35 @@
                     :is-instance-template="instanceFromTemplate"
                 >
                     <footer slot="footer">
-                        <bk-button v-if="isUpdateElement" :disabled="isUpdating" :loading="isUpdating"
-                            @click="syncModelToYaml">
+                        <bk-button
+                            v-if="isUpdateElement"
+                            :disabled="isUpdating"
+                            :loading="isUpdating"
+                            @click="syncModelToYaml"
+                        >
                             {{ $t('applyToYaml') }}
                         </bk-button>
-                        <bk-button v-else theme="primary" :loading="isAdding" :disabled="isAdding" @click="confirmAdd">
+                        <bk-button
+                            v-else
+                            theme="primary"
+                            :loading="isAdding"
+                            :disabled="isAdding"
+                            @click="confirmAdd"
+                        >
                             {{ $t('editPage.append') }}
                         </bk-button>
 
-                        <bk-button @click="previewAtom" :disabled="!canPreviewYaml" :loading="isPreviewingAtomYAML">
+                        <bk-button
+                            @click="previewAtom"
+                            :disabled="!canPreviewYaml"
+                            :loading="isPreviewingAtomYAML"
+                        >
                             {{ $t('previewYaml') }}
                         </bk-button>
-                        <bk-button :disabled="isAdding || isUpdating" @click="cancelAdd">
+                        <bk-button
+                            :disabled="isAdding || isUpdating"
+                            @click="cancelAdd"
+                        >
                             {{ $t('cancel') }}
                         </bk-button>
                     </footer>
@@ -230,7 +255,6 @@
             },
             async handleStepClick (editingElementPos) {
                 const { stageIndex, containerIndex, elementIndex } = editingElementPos
-                
                 try {
                     // TODO: 需要先把当前的yaml转化为Model,展示侧边栏
                     const model = await this.transfer({
@@ -253,7 +277,6 @@
                         this.isUpdateElement = true
                         return
                     }
-               
                     this.isUpdateElement = true
                     this.togglePropertyPanel({
                         isShow: true,

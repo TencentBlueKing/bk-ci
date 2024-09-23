@@ -1,19 +1,38 @@
 <template>
     <div class="side-nav">
         <div class="side-menu-nav clearfix">
-            <div @click.stop="backUrl(nav.backUrl)" v-if="nav.backUrl" class="back-icon"><i class="devops-icon icon-angle-left"></i></div>
-            <logo :name="nav.icon" size="32" class="nav-icon" />
+            <div
+                @click.stop="backUrl(nav.backUrl)"
+                v-if="nav.backUrl"
+                class="back-icon"
+            >
+                <i class="devops-icon icon-angle-left"></i>
+            </div>
+            <logo
+                :name="nav.icon"
+                size="32"
+                class="nav-icon"
+            />
             <span class="side-menu-title">{{ nav.title }}</span>
         </div>
         <section class="side-menu-list">
-            <div class="side-menu-item"
-                v-for="(menu, index) of sideMenuList" :key="index">
-                <p class="title" v-if="menu.title">{{ menu.title }}</p>
+            <div
+                class="side-menu-item"
+                v-for="(menu, index) of sideMenuList"
+                :key="index"
+            >
+                <p
+                    class="title"
+                    v-if="menu.title"
+                >
+                    {{ menu.title }}
+                </p>
                 <bk-menu
                     v-if="sideMenuList.length"
                     :key="`devopsSideMenu${index}`"
                     :list="menu.list"
-                    @item-selected="menuSelected">
+                    @item-selected="menuSelected"
+                >
                 </bk-menu>
             </div>
         </section>

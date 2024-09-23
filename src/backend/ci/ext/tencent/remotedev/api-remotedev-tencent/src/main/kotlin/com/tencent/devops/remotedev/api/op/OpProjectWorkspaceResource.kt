@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
@@ -64,6 +65,9 @@ interface OpProjectWorkspaceResource {
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "zoneType", required = false)
+        @QueryParam("zoneType")
+        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "分配数据")
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
@@ -100,17 +104,6 @@ interface OpProjectWorkspaceResource {
         @Parameter(description = "修改数据")
         data: OpUpdateCCHostData
     ): Result<Boolean>
-
-    @Operation(summary = "刷新 codeproxy 数据")
-    @POST
-    @Path("/refreshCodeProxy")
-    fun refreshCodeProxy(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @QueryParam("projectId")
-        projectId: String
-    )
 
     @Operation(summary = "导出实例页面查询结果")
     @POST

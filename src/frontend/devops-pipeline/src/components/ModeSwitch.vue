@@ -21,10 +21,26 @@
         >
             {{ $t('saveBeforeSwitch') }}
             <template slot="footer">
-                <bk-button theme="primary" :loading="isSaving" @click="handleConfirm(false)">{{ $t('saveDraft&Switch')
-                }}</bk-button>
-                <bk-button @click="handleConfirm(true)" :loading="isSaving">{{ $t('dropDraft') }}</bk-button>
-                <bk-button @click="handleClose" :loading="isSaving">{{ $t('cancel') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    :loading="isSaving"
+                    @click="handleConfirm(false)"
+                >
+                    {{ $t('saveDraft&Switch')
+                    }}
+                </bk-button>
+                <bk-button
+                    @click="handleConfirm(true)"
+                    :loading="isSaving"
+                >
+                    {{ $t('dropDraft') }}
+                </bk-button>
+                <bk-button
+                    @click="handleClose"
+                    :loading="isSaving"
+                >
+                    {{ $t('cancel') }}
+                </bk-button>
             </template>
         </bk-dialog>
     </div>
