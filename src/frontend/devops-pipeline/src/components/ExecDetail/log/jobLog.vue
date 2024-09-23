@@ -155,6 +155,8 @@
                         ref.setSingleLogData(item, id)
                         ref.scrollAILogToBottom(id)
                     }
+                }).then(() => {
+                    this.handleGetPraiseAiInfo({ id, item })
                 })
             },
 

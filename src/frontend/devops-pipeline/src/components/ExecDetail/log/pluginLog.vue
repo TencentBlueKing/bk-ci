@@ -247,6 +247,8 @@
                         scrollRef.setSingleLogData(item)
                         scrollRef.scrollAILogToBottom()
                     }
+                }).then(() => {
+                    this.handleGetPraiseAiInfo(item)
                 })
             },
 

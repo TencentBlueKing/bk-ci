@@ -813,9 +813,9 @@ export default {
         if (currentExe) {
             url += `&executeCount=${currentExe}`
         }
-        window.fetch(url, {
+        return window.fetch(url, {
             method: 'post'
-        }).then(async (response) => {
+        }).then((response) => {
             const reader = response.body.getReader()
             const decoder = new TextDecoder()
 
