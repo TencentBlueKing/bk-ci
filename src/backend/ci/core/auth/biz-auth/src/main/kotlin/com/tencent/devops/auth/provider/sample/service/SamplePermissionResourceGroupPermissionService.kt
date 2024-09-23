@@ -30,6 +30,7 @@ package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 
 class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPermissionService {
     override fun getGroupPermissionDetail(
@@ -49,4 +50,6 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
     override fun syncProject(
         projectCode: String
     ): Boolean = true
+
+    override fun syncByCondition(projectConditionDTO: ProjectConditionDTO): Boolean = true
 }

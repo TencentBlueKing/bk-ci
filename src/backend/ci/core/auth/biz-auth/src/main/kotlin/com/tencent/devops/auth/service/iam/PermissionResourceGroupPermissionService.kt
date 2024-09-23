@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 
 interface PermissionResourceGroupPermissionService {
     fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>>
@@ -44,5 +45,9 @@ interface PermissionResourceGroupPermissionService {
 
     fun syncProject(
         projectCode: String,
+    ): Boolean
+
+    fun syncByCondition(
+        projectConditionDTO: ProjectConditionDTO
     ): Boolean
 }

@@ -30,6 +30,7 @@ package com.tencent.devops.auth.resources
 import com.tencent.devops.auth.api.sync.OpAuthResourceGroupPermSyncResource
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -41,6 +42,11 @@ class OpAuthResourceGroupPermSyncResourceImpl @Autowired constructor(
         projectIds.forEach {
             permissionResourceGroupPermissionService.syncProject(it)
         }
+        return Result(true)
+    }
+
+    override fun syncByCondition(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
+        permissionResourceGroupPermissionService.syncByCondition(projectConditionDTO)
         return Result(true)
     }
 }

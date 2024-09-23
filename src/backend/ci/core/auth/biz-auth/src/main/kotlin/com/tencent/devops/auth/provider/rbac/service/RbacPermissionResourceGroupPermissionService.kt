@@ -40,14 +40,20 @@ import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
+import java.util.concurrent.Executors
 
 @Suppress("LongParameterList")
 class RbacPermissionResourceGroupPermissionService(
@@ -73,6 +79,8 @@ class RbacPermissionResourceGroupPermissionService(
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupPermissionService::class.java)
         private const val AUTH_RESOURCE_GROUP_PERMISSION_ID_TAG = "AUTH_RESOURCE_GROUP_PERMISSION_ID"
         private const val ALL_RESOURCE = "*"
+        private val syncExecutorService = Executors.newFixedThreadPool(5)
+        private val syncProjectsExecutorService = Executors.newFixedThreadPool(10)
     }
 
     override fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>> {
@@ -211,17 +219,43 @@ class RbacPermissionResourceGroupPermissionService(
     }
 
     override fun syncProject(projectCode: String): Boolean {
-        logger.info("sync project group permissions:$projectCode")
-        val iamGroupIds = authResourceGroupDao.listIamGroupIdsByConditions(
-            dslContext = dslContext,
-            projectCode = projectCode
-        )
-        logger.debug("sync project group permissions iamGroupIds:{}", iamGroupIds)
-        iamGroupIds.forEach {
-            syncGroup(
-                projectCode = projectCode,
-                groupId = it
+        val traceId = MDC.get(TraceTag.BIZID)
+        syncProjectsExecutorService.submit {
+            MDC.put(TraceTag.BIZID, traceId)
+            logger.info("sync project group permissions:$projectCode")
+            val iamGroupIds = authResourceGroupDao.listIamGroupIdsByConditions(
+                dslContext = dslContext,
+                projectCode = projectCode
             )
+            logger.debug("sync project group permissions iamGroupIds:{}", iamGroupIds)
+            iamGroupIds.forEach {
+                syncGroup(
+                    projectCode = projectCode,
+                    groupId = it
+                )
+            }
+        }
+        return true
+    }
+
+    override fun syncByCondition(projectConditionDTO: ProjectConditionDTO): Boolean {
+        logger.info("start to sync group permissions by condition by condition|$projectConditionDTO")
+        val traceId = MDC.get(TraceTag.BIZID)
+        syncExecutorService.submit {
+            MDC.put(TraceTag.BIZID, traceId)
+            var offset = 0
+            val limit = PageUtil.MAX_PAGE_SIZE / 2
+            do {
+                val projectCodes = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                    projectConditionDTO = projectConditionDTO,
+                    limit = limit,
+                    offset = offset
+                ).data ?: break
+                projectCodes.forEach {
+                    syncProject(it.englishName)
+                }
+                offset += limit
+            } while (projectCodes.size == limit)
         }
         return true
     }

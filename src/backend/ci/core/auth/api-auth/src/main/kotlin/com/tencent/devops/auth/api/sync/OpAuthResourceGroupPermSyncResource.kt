@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.api.sync
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -42,12 +43,19 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpAuthResourceGroupPermSyncResource {
-
     @POST
     @Path("/syncProject")
     @Operation(summary = "按条件同步组和成员")
     fun syncProject(
         @Parameter(description = "按条件迁移项目实体", required = true)
         projectIds: List<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/syncByCondition")
+    @Operation(summary = "按条件同步组和成员")
+    fun syncByCondition(
+        @Parameter(description = "按条件迁移项目实体", required = true)
+        projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean>
 }
