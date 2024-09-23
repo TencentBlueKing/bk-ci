@@ -73,7 +73,9 @@ class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         postEntryParam: String?
     ): String {
         val executePath = System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)
-        logger.info("handleAtomTarget|target:$target,osType:$osType,postEntryParam:$postEntryParam,executePath:$executePath")
+        logger.info(
+            "handleAtomTarget|target:$target,osType:$osType,postEntryParam:$postEntryParam,executePath:$executePath"
+        )
         var convertTarget = target
         if (!executePath.isNullOrBlank()) {
             convertTarget = if (target.startsWith("\$$JAVA_PATH_ENV")) {
