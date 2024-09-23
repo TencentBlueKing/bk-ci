@@ -47,6 +47,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import kotlin.math.log
 
 @Suppress("LongParameterList")
 class RbacPermissionResourceGroupPermissionService(
@@ -139,8 +140,8 @@ class RbacPermissionResourceGroupPermissionService(
             projectCode = projectCode,
             relationId = groupId.toString(),
         ) ?: return true
-
         val groupPermissionDetails = getGroupPermissionDetailBySystem(systemId, groupId)
+        logger.debug("sync group permissions:{}|{}|{}", projectCode, groupId, groupPermissionDetails)
         // 获取用户组最新的权限
         val latestResourceGroupPermissions = groupPermissionDetails.flatMap { permissionDetail ->
             permissionDetail.relatedResourceInfos.flatMap { relatedResourceInfo ->
@@ -167,20 +168,22 @@ class RbacPermissionResourceGroupPermissionService(
                 }
             }
         }
+        logger.debug("sync group | latest group permissions :{}", latestResourceGroupPermissions)
         // 获取用户组老权限数据
         val oldResourceGroupPermissions = resourceGroupPermissionDao.listByGroupId(
             dslContext = dslContext,
             projectCode = projectCode,
             iamGroupId = groupId
         )
-
+        logger.debug("sync group | old group permissions :{}", oldResourceGroupPermissions)
         val toDeleteRecords = oldResourceGroupPermissions.filter {
             !latestResourceGroupPermissions.contains(it)
         }
+        logger.debug("sync group | to delete group permissions :{}", toDeleteRecords)
         val toAddRecords = latestResourceGroupPermissions.filter {
             !oldResourceGroupPermissions.contains(it)
         }
-
+        logger.debug("sync group | to add group permissions :{}", toAddRecords)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             if (toDeleteRecords.isNotEmpty()) {
@@ -199,10 +202,12 @@ class RbacPermissionResourceGroupPermissionService(
     }
 
     override fun syncProject(projectCode: String): Boolean {
+        logger.info("sync project group permissions:$projectCode")
         val iamGroupIds = authResourceGroupDao.listIamGroupIdsByConditions(
             dslContext = dslContext,
             projectCode = projectCode
         )
+        logger.debug("sync project group permissions iamGroupIds:{}", iamGroupIds)
         iamGroupIds.forEach {
             syncGroup(
                 projectCode = projectCode,
