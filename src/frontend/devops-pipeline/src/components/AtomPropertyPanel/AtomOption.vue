@@ -1,13 +1,46 @@
 <template>
-    <accordion show-checkbox show-content key="otherChoice" v-if="showPanelType !== 'PAUSE'">
-        <header class="var-header" slot="header">
+    <accordion
+        show-checkbox
+        show-content
+        key="otherChoice"
+        v-if="showPanelType !== 'PAUSE'"
+    >
+        <header
+            class="var-header"
+            slot="header"
+        >
             <span>{{ $t('editPage.atomOption') }}</span>
-            <i class="devops-icon icon-angle-down" style="display:block"></i>
+            <i
+                class="devops-icon icon-angle-down"
+                style="display:block"
+            ></i>
         </header>
-        <div slot="content" class="bk-form bk-form-vertical atom-control-option">
+        <div
+            slot="content"
+            class="bk-form bk-form-vertical atom-control-option"
+        >
             <template v-for="(obj, key) in optionModel">
-                <form-field :key="key" v-if="(!isHidden(obj, element) && container['@type'] !== 'trigger') || key === 'enable'" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)" :class="obj.extCls">
-                    <component :disabled="disabled" :is="obj.component" :container="container" :element="element" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateElementOption" :value="atomOption[key]" v-bind="getBindObj(obj)"></component>
+                <form-field
+                    :key="key"
+                    v-if="(!isHidden(obj, element) && container['@type'] !== 'trigger') || key === 'enable'"
+                    :desc="obj.desc"
+                    :required="obj.required"
+                    :label="obj.label"
+                    :is-error="errors.has(key)"
+                    :error-msg="errors.first(key)"
+                    :class="obj.extCls"
+                >
+                    <component
+                        :disabled="disabled"
+                        :is="obj.component"
+                        :container="container"
+                        :element="element"
+                        :name="key"
+                        v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                        :handle-change="handleUpdateElementOption"
+                        :value="atomOption[key]"
+                        v-bind="getBindObj(obj)"
+                    ></component>
                 </form-field>
             </template>
         </div>

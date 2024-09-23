@@ -1,42 +1,69 @@
 <template>
     <transition name="selector-slide">
-        <section class="selector-popup" v-bk-clickoutside="closeImageSelect" v-show="isShow">
+        <section
+            class="selector-popup"
+            v-bk-clickoutside="closeImageSelect"
+            v-show="isShow"
+        >
             <main class="selector-main">
                 <header class="selector-header">
-                    <h3>{{ $t('editPage.selectImage') }}<i @click="freshList(searchKey)" :class="[{ 'spin-icon': isLoading }, 'devops-icon', 'icon-refresh', 'fresh']" /></h3>
-                    <bk-input class="search-input"
+                    <h3>
+                        {{ $t('editPage.selectImage') }}<i
+                            @click="freshList(searchKey)"
+                            :class="[{ 'spin-icon': isLoading }, 'devops-icon', 'icon-refresh', 'fresh']"
+                        />
+                    </h3>
+                    <bk-input
+                        class="search-input"
                         ref="searchStr"
                         :clearable="true"
                         :placeholder="$t('editPage.enterSearch')"
                         right-icon="icon-search"
                         :value="searchKey"
                         @input="handleClear"
-                        @enter="handleSearch">
+                        @enter="handleSearch"
+                    >
                     </bk-input>
                 </header>
-                <bk-tab v-if="!searchKey" size="small" ref="imageTab" :active.sync="currentTab" type="unborder-card" class="select-tab">
+                <bk-tab
+                    v-if="!searchKey"
+                    size="small"
+                    ref="imageTab"
+                    :active.sync="currentTab"
+                    type="unborder-card"
+                    class="select-tab"
+                >
                     <bk-tab-panel
                         v-for="tab in tabList"
                         :key="tab.classifyCode"
                         :name="tab.classifyCode"
                         v-bkloading="{ isLoading }"
                     >
-                        <span slot="label" @click="getInstallImageList(tab)" class="tab-label">{{ tab.classifyName }}</span>
+                        <span
+                            slot="label"
+                            @click="getInstallImageList(tab)"
+                            class="tab-label"
+                        >{{ tab.classifyName }}</span>
                         <template v-if="!isLoading">
                             <ul v-if="tab.recommendData.length">
-                                <card :current-item.sync="currentItem"
+                                <card
+                                    :current-item.sync="currentItem"
                                     :card="card"
                                     v-for="card in tab.recommendData"
                                     :key="card"
                                     :type="tab.classifyCode"
                                     :code="code"
-                                    @choose="choose">
+                                    @choose="choose"
+                                >
                                 </card>
                             </ul>
 
                             <section v-if="tab.unRecommendData.length">
-                                <h3 :class="[{ 'expand': tab.expandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="tab.expandObtained = !tab.expandObtained">
-                                    {{ $t('editPage.unRecommend') }}（{{tab.unRecommendData.length}}）
+                                <h3
+                                    :class="[{ 'expand': tab.expandObtained }, 'search-title', 'gap-border', 'uninstall']"
+                                    @click="tab.expandObtained = !tab.expandObtained"
+                                >
+                                    {{ $t('editPage.unRecommend') }}（{{ tab.unRecommendData.length }}）
                                     <bk-popover placement="top">
                                         <i class="bk-icon icon-info-circle "></i>
                                         <div slot="content">
@@ -45,50 +72,66 @@
                                     </bk-popover>
                                 </h3>
                                 <ul v-if="tab.expandObtained">
-                                    <card :current-item.sync="currentItem"
+                                    <card
+                                        :current-item.sync="currentItem"
                                         :card="card"
                                         v-for="card in tab.unRecommendData"
                                         :key="card"
                                         :type="tab.classifyCode"
                                         :code="code"
-                                        @choose="choose">
+                                        @choose="choose"
+                                    >
                                     </card>
                                 </ul>
                             </section>
 
-                            <p v-if="!tab.unRecommendData.length && !tab.recommendData.length" class="list-empty"></p>
+                            <p
+                                v-if="!tab.unRecommendData.length && !tab.recommendData.length"
+                                class="list-empty"
+                            ></p>
                         </template>
                     </bk-tab-panel>
                 </bk-tab>
 
-                <section v-else class="search-result" v-bkloading="{ isLoading }">
+                <section
+                    v-else
+                    class="search-result"
+                    v-bkloading="{ isLoading }"
+                >
                     <template v-if="!isLoading">
                         <template v-if="searchInstallList.length">
                             <h3 class="search-title">{{ $t('editPage.installed') }}</h3>
-                            <card :current-item.sync="currentItem"
+                            <card
+                                :current-item.sync="currentItem"
                                 :card="card"
                                 v-for="card in searchInstallList"
                                 type="store"
                                 :key="card"
                                 :code="code"
-                                @choose="choose">
+                                @choose="choose"
+                            >
                             </card>
                         </template>
                         
                         <template v-if="searchUninstallList.length">
                             <h3 class="search-title gap-border">{{ $t('editPage.unInstalled') }}</h3>
-                            <card :current-item.sync="currentItem"
+                            <card
+                                :current-item.sync="currentItem"
                                 :card="card"
                                 v-for="card in searchUninstallList"
                                 type="store"
                                 :key="card"
                                 :code="code"
-                                @choose="choose">
+                                @choose="choose"
+                            >
                             </card>
                         </template>
                         
                         <section v-if="searchUnrecomandList.length">
-                            <h3 :class="[{ 'expand': searchExpandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="searchExpandObtained = !searchExpandObtained">
+                            <h3
+                                :class="[{ 'expand': searchExpandObtained }, 'search-title', 'gap-border', 'uninstall']"
+                                @click="searchExpandObtained = !searchExpandObtained"
+                            >
                                 {{ $t('editPage.unRecommend') }}
                                 <bk-popover placement="top">
                                     <i class="bk-icon icon-info-circle "></i>
@@ -98,18 +141,23 @@
                                 </bk-popover>
                             </h3>
                             <ul v-if="searchExpandObtained">
-                                <card :current-item.sync="currentItem"
+                                <card
+                                    :current-item.sync="currentItem"
                                     :card="card"
                                     v-for="card in searchUnrecomandList"
                                     :key="card"
                                     type="store"
                                     :code="code"
-                                    @choose="choose">
+                                    @choose="choose"
+                                >
                                 </card>
                             </ul>
                         </section>
 
-                        <p v-if="!searchInstallList.length && !searchUninstallList.length && !searchUnrecomandList.length" class="list-empty"></p>
+                        <p
+                            v-if="!searchInstallList.length && !searchUninstallList.length && !searchUnrecomandList.length"
+                            class="list-empty"
+                        ></p>
                     </template>
                 </section>
             </main>

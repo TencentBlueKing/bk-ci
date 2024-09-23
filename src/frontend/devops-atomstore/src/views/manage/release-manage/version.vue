@@ -1,7 +1,11 @@
 <template>
     <article class="release-version">
-        <main v-bkloading="{ isLoading }" class="version-main">
-            <component :is="`${$route.params.type}Version`"
+        <main
+            v-bkloading="{ isLoading }"
+            class="version-main"
+        >
+            <component
+                :is="`${$route.params.type}Version`"
                 v-if="!isLoading"
                 class="release-show"
                 :detail="detail"

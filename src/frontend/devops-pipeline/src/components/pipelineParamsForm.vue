@@ -1,8 +1,12 @@
 <template>
-    <bk-form form-type="vertical" class="pipeline-execute-params-form">
+    <bk-form
+        form-type="vertical"
+        class="pipeline-execute-params-form"
+    >
         <form-field
             v-for="param in paramList"
-            :key="param.id" :required="param.required"
+            :key="param.id"
+            :required="param.required"
             :is-error="errors.has('devops' + param.name)"
             :error-msg="errors.first('devops' + param.name)"
             :label="param.label || param.id"
@@ -36,33 +40,33 @@
 </template>
 
 <script>
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import Selector from '@/components/atomFormField/Selector'
-    import RequestSelector from '@/components/atomFormField/RequestSelector'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
     import FileParamInput from '@/components/FileParamInput'
     import {
-        BOOLEAN_LIST,
-        isMultipleParam,
-        isEnumParam,
-        isSvnParam,
-        isGitParam,
-        isCodelibParam,
-        isFileParam,
-        isRemoteType,
-        ParamComponentMap,
-        STRING,
         BOOLEAN,
-        MULTIPLE,
-        ENUM,
-        SVN_TAG,
-        GIT_REF,
+        BOOLEAN_LIST,
         CODE_LIB,
         CONTAINER_TYPE,
+        ENUM,
+        GIT_REF,
+        isCodelibParam,
+        isEnumParam,
+        isFileParam,
+        isGitParam,
+        isMultipleParam,
+        isRemoteType,
+        isSvnParam,
+        MULTIPLE,
+        ParamComponentMap,
+        STRING,
         SUB_PIPELINE,
+        SVN_TAG,
         TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
 

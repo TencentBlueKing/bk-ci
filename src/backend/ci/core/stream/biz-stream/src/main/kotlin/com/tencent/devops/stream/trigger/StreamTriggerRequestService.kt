@@ -352,7 +352,7 @@ class StreamTriggerRequestService @Autowired constructor(
                 }
 
                 // 针对每个流水线处理异常
-                exHandler.handle(action) {
+                exHandler.handle(action, false) {
                     // 目前只针对mr情况下源分支有目标分支没有且变更列表没有
                     if (checkType == CheckType.NO_TRIGGER) {
                         throw StreamTriggerException(
