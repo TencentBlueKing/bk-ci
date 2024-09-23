@@ -2,7 +2,6 @@
     <div class="pipeline-edit-header">
         <pipeline-bread-crumb
             :is-loading="!isPipelineNameReady"
-            :pipeline-name="pipelineSetting?.pipelineName"
         >
             <span class="pipeline-edit-header-tag">
                 <bk-tag>
