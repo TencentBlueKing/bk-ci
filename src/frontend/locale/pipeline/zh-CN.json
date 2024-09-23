@@ -373,7 +373,8 @@
     "voice": "语音",
     "concurrentMaxConcurrency": "最大可并发数",
     "concurrentTimeout": "超限时排队，排队超时时间",
-    "maxConRunningQueueSizeTips": "最大可并发数范围在1-200之间"
+    "maxConRunningQueueSizeTips": "最大可并发数范围在1-200之间",
+    "maxConcurrencyPlaceholder": "缺省时以系统设置为准"
   },
   "template": {
     "addTemplate": "新建模板",

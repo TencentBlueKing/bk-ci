@@ -62,7 +62,6 @@
                     :key="pipelineSetting.runLockType"
                 >
                     <bk-form-item
-                        :required="isMultipleLock"
                         :label="$t('settings.concurrentMaxConcurrency')"
                         error-display-type="normal"
                         property="maxConRunningQueueSize"
@@ -70,14 +69,13 @@
                         <bk-input
                             type="number"
                             :disabled="!editable"
-                            :placeholder="$t('settings.itemPlaceholder')"
+                            :placeholder="$t('settings.maxConcurrencyPlaceholder')"
                             v-model="pipelineSetting.maxConRunningQueueSize"
                             @change="val => handleBaseInfoChange('maxConRunningQueueSize', val)"
                         />
                     </bk-form-item>
 
                     <bk-form-item
-                        :required="isMultipleLock"
                         :label="$t('settings.concurrentTimeout')"
                         error-display-type="normal"
                         property="waitQueueTimeMinute"
