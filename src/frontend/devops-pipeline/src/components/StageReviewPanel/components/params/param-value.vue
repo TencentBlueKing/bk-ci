@@ -28,6 +28,17 @@
         </bk-option>
     </bk-select>
 
+    <div
+        v-else-if="isCheakboxParam(form.valueType)"
+        class="clear"
+    >
+        <bk-checkbox
+            v-model="form.value"
+        >
+        </bk-checkbox>
+        <span class="clear-name">{{ form.chineseName }}</span>
+    </div>
+
     <bk-radio-group
         v-model="form.value"
         v-else-if="isBooleanParam(form.valueType)"
@@ -54,7 +65,8 @@
         isMultipleParam,
         isTextareaParam,
         isStringParam,
-        isBooleanParam
+        isBooleanParam,
+        isCheakboxParam
     } from '@/store/modules/atom/paramsConfig'
 
     export default {
@@ -68,6 +80,7 @@
             isStringParam,
             isTextareaParam,
             isMultipleParam,
+            isCheakboxParam,
 
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
@@ -75,3 +88,16 @@
         }
     }
 </script>
+
+<style lang="scss" scoped>
+.clear {
+    display: flex;
+    align-items: center;
+    .bk-form-item {
+        line-height: 30px;
+    }
+    .clear-name {
+        margin-left: 5px;
+    }
+}
+</style>

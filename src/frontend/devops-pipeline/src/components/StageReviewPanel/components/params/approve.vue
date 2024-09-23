@@ -7,22 +7,32 @@
                 :key="index"
                 class="review-params"
             >
-                <bk-input
-                    disabled
-                    :value="getParamKey(param)"
-                    class="review-param-item"
-                ></bk-input>
-                <span :class="{ 'review-param-gap': true, 'param-require': param.required }"></span>
+                <template v-if="!isCheakboxParam(param.valueType)">
+                    <bk-input
+                        disabled
+                        :value="getParamKey(param)"
+                        class="review-param-item"
+                    ></bk-input>
+                    <span
+                        :class="{ 'review-param-gap': true, 'param-require': param.required }"
+                    ></span>
+                </template>
                 <param-value
                     :form="param"
                     :disabled="disabled"
-                    class="review-param-item"
+                    :class="['review-param-item', {
+                        'checkbox-name': isCheakboxParam(param.valueType)
+                    }]"
                 ></param-value>
                 <i
                     class="bk-icon icon-info"
                     v-bk-tooltips="param.desc"
                     v-if="param.desc"
                 ></i>
+                <span
+                    v-if="isCheakboxParam(param.valueType)"
+                    :class="{ 'review-param-gap': true, 'param-require': param.required }"
+                ></span>
             </li>
         </ul>
         <span class="error-message">{{ errMessage }}</span>
@@ -31,6 +41,7 @@
 
 <script>
     import paramValue from './param-value'
+    import { isCheakboxParam } from '@/store/modules/atom/paramsConfig'
 
     export default {
         components: {
@@ -66,6 +77,7 @@
         },
 
         methods: {
+            isCheakboxParam,
             updateParams () {
                 const params = this.showReviewGroup.params && this.showReviewGroup.params.length ? this.showReviewGroup.params : this.reviewParams
                 this.params = params || []
@@ -108,6 +120,9 @@
         margin-bottom: 12px;
         .review-param-item {
             width: 380px;
+        }
+        .checkbox-name{
+            width: auto;
         }
         .review-param-gap {
             display: inline-block;
