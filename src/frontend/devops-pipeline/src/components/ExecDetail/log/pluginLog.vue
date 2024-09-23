@@ -28,6 +28,8 @@
             @down-praise-ai="handleDownPraiseAi"
             @load-ai-message="handleLoadAiMessage"
             @reload-ai-message="handleReloadAiMessage"
+            @cancel-praise-ai="handleCancelPraiseAI"
+            @cancel-down-praise-ai="handleCancelDownPraiseAI"
         />
     </section>
 </template>
@@ -162,6 +164,7 @@
                 'getLogStatus',
                 'getDownloadLogFromArtifactory',
                 'praiseAi',
+                'cancelPraiseAi',
                 'getPraiseAiInfo',
                 'getLogAIMessage'
             ]),
@@ -183,6 +186,26 @@
                 }).then(() => {
                     this.handleGetPraiseAiInfo(item)
                     this.$bkMessage({ theme: 'success', message: this.$t('successDownPraise') })
+                })
+            },
+
+            handleCancelPraiseAI (item) {
+                this.cancelPraiseAi({
+                    ...this.postData,
+                    score: true
+                }).then(() => {
+                    this.handleGetPraiseAiInfo(item)
+                    this.$bkMessage({ theme: 'success', message: this.$t('successCancelPraise') })
+                })
+            },
+
+            handleCancelDownPraiseAI (item) {
+                this.cancelPraiseAi({
+                    ...this.postData,
+                    score: false
+                }).then(() => {
+                    this.handleGetPraiseAiInfo(item)
+                    this.$bkMessage({ theme: 'success', message: this.$t('successCancelDownPraise') })
                 })
             },
 

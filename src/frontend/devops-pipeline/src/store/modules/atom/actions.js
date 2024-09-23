@@ -784,26 +784,34 @@ export default {
         })
     },
 
-    praiseAi ({ commit }, { projectId, pipelineId, buildId, tag, executeCount, score }) {
+    praiseAi ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, score }) {
         let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=${score}`
-        if (executeCount) {
-            url += `&executeCount=${executeCount}`
+        if (currentExe) {
+            url += `&executeCount=${currentExe}`
         }
         return request.post(url)
     },
 
-    getPraiseAiInfo ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
+    cancelPraiseAi ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, score }) {
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=${score}`
+        if (currentExe) {
+            url += `&executeCount=${currentExe}`
+        }
+        return request.delete(url)
+    },
+
+    getPraiseAiInfo ({ commit }, { projectId, pipelineId, buildId, tag, currentExe }) {
         let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=true`
-        if (executeCount) {
-            url += `&executeCount=${executeCount}`
+        if (currentExe) {
+            url += `&executeCount=${currentExe}`
         }
         return request.get(url)
     },
 
-    getLogAIMessage ({ commit }, { projectId, pipelineId, buildId, tag, executeCount, refresh, callBack }) {
+    getLogAIMessage ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, refresh, callBack }) {
         let url = `/misc/api/user/gpt/script_error_analysis/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&refresh=${refresh}`
-        if (executeCount) {
-            url += `&executeCount=${executeCount}`
+        if (currentExe) {
+            url += `&executeCount=${currentExe}`
         }
         window.fetch(url, {
             method: 'post'

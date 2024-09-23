@@ -151,6 +151,8 @@
   "showDebugLog": "Show Debug Log",
   "successPraise": "Like Success",
   "successDownPraise": "Down Like Success",
+  "successCancelPraise": "Cancel Like",
+  "successCancelDownPraise": "Cancel Down Like",
   "stageReview": {
     "stageInConditions": "Stage-In conditions",
     "approvalFlow": "Approval flow",
