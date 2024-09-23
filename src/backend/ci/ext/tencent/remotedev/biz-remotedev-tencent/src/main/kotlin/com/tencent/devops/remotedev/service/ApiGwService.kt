@@ -104,13 +104,7 @@ class ApiGwService @Autowired constructor(
         val request = Request.Builder()
             .url(url)
             .get()
-            .header(
-                name = "X-Bkapi-Authorization",
-                value = JsonUtil.toJson(
-                    mapOf("bk_app_code" to bkConfig.appCode, "bk_app_secret" to bkConfig.appSecret),
-                    false
-                )
-            )
+            .headers(genCommonHeader())
             .build()
         return OkhttpUtils.doHttp(request).use { response ->
             val data = response.body!!.string()
@@ -123,7 +117,7 @@ class ApiGwService @Autowired constructor(
                 )
             }
 
-            val resp = objectMapper.readValue<MoaVerifyResp>(data)
+            val resp = objectMapper.readValue<RemoteDevApiGwResp<MoaVerifyRespData>>(data)
             if (!resp.result) {
                 logger.error("checkMoa2fa|{}|{}|{}", request.url, response.code, data)
                 throw ErrorCodeException(
@@ -131,7 +125,7 @@ class ApiGwService @Autowired constructor(
                     defaultMessage = "code ${resp.code} msg ${resp.message}"
                 )
             }
-            resp.data.result
+            resp.data?.result
         }
     }
 
@@ -139,6 +133,7 @@ class ApiGwService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ApiGwService::class.java)
     }
 }
+
 // permission check相关
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class RemoteDevApiGwResp<T>(
@@ -155,18 +150,6 @@ data class RemoteDevApiGwResp<T>(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AccessDevicePermissionsRespData(
     val result: Map<String, ProjectAccessDevicePermissionsResp>?
-)
-// moa verify相关
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class MoaVerifyResp(
-    val result: Boolean,
-    val code: Int,
-    val data: MoaVerifyRespData,
-    val message: String?,
-    @JsonProperty("request_id")
-    val requestId: String?,
-    @JsonProperty("trace_id")
-    val traceId: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
