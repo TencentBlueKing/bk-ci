@@ -40,6 +40,7 @@ import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -47,7 +48,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import kotlin.math.log
 
 @Suppress("LongParameterList")
 class RbacPermissionResourceGroupPermissionService(
@@ -72,6 +72,7 @@ class RbacPermissionResourceGroupPermissionService(
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupPermissionService::class.java)
         private const val AUTH_RESOURCE_GROUP_PERMISSION_ID_TAG = "AUTH_RESOURCE_GROUP_PERMISSION_ID"
+        private const val ALL_RESOURCE = "*"
     }
 
     override fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>> {
@@ -146,6 +147,18 @@ class RbacPermissionResourceGroupPermissionService(
         val latestResourceGroupPermissions = groupPermissionDetails.flatMap { permissionDetail ->
             permissionDetail.relatedResourceInfos.flatMap { relatedResourceInfo ->
                 relatedResourceInfo.instance.map { instancePathDTOs ->
+                    val (relatedResourceType, relatedResourceCode, relatedIamResourceCode) =
+                        // 若为项目下某种全部资源类型的资源（如勾选了整个项目下流水线），则直接存储项目级别资源
+                        if (instancePathDTOs.size > 1 && instancePathDTOs.last().id == ALL_RESOURCE) {
+                            Triple(AuthResourceType.PROJECT.value, projectCode, projectCode)
+                        } else {
+                            val relatedIamResourceCode = converter.iamCode2Code(
+                                projectCode = projectCode,
+                                resourceType = instancePathDTOs.last().type,
+                                iamResourceCode = instancePathDTOs.last().id
+                            )
+                            Triple(instancePathDTOs.last().type, relatedIamResourceCode, instancePathDTOs.last().id)
+                        }
                     ResourceGroupPermissionDTO(
                         id = client.get(ServiceAllocIdResource::class)
                             .generateSegmentId(AUTH_RESOURCE_GROUP_PERMISSION_ID_TAG).data!!,
@@ -157,13 +170,9 @@ class RbacPermissionResourceGroupPermissionService(
                         iamGroupId = groupId,
                         action = permissionDetail.actionId,
                         actionRelatedResourceType = permissionDetail.actionRelatedResourceType,
-                        relatedResourceType = instancePathDTOs.last().type,
-                        relatedResourceCode = converter.iamCode2Code(
-                            projectCode = projectCode,
-                            resourceType = instancePathDTOs.last().type,
-                            iamResourceCode = instancePathDTOs.last().id
-                        ),
-                        relatedIamResourceCode = instancePathDTOs.last().id
+                        relatedResourceType = relatedResourceType,
+                        relatedResourceCode = relatedResourceCode,
+                        relatedIamResourceCode = relatedIamResourceCode
                     )
                 }
             }
