@@ -935,6 +935,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         startParams[KEY_INVALID_OS_INFO] = JsonUtil.toJson(invalidOsInfos)
         startParams[KEY_CODE_SRC] = atomRecord.codeSrc
         startParams[KEY_REPOSITORY_PATH] = (buildInfo.value2() ?: "")
+        startParams[KEY_LANGUAGE] = language
+        startParams[KEY_SCRIPT] = StringEscapeUtils.escapeJava(buildInfo.value1())
         runtimeVersion?.let { startParams[KEY_RUNTIME_VERSION] = it }
         validOsNameFlag?.let {
             startParams[KEY_VALID_OS_NAME_FLAG] = it.toString()
@@ -944,17 +946,23 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         val innerPipelineProject = storeInnerPipelineConfig.innerPipelineProject
         val innerPipelineUser = storeInnerPipelineConfig.innerPipelineUser
-        val pipelineName = "atom-build-$innerPipelineProject-$language"
-        var pipelineId = redisOperation.get(pipelineName)
-        if (pipelineId.isNullOrBlank()) {
-            pipelineId = creatAtomPipeline(
+        val pipelineName = "ATOM-PIPELINE-BUILD:PUBLIC"
+        var publicPipelineId = redisOperation.get(pipelineName)
+        var pipelineId: String? = null
+        if (publicPipelineId.isNullOrBlank()) {
+            publicPipelineId = creatAtomPipeline(
                 context = context,
                 userId = innerPipelineUser,
-                projectCode = innerPipelineProject,
-                language = language
+                projectCode = innerPipelineProject
             )
         }
         if (null != atomPipelineRelRecord) {
+            pipelineId = if (atomPipelineRelRecord.pipelineId != publicPipelineId
+                && atomPipelineRelRecord.projectCode == innerPipelineProject) {
+                atomPipelineRelRecord.pipelineId
+            } else {
+                publicPipelineId
+            }
             val projectCode: String
             val userName: String
             if (atomPipelineRelRecord.projectCode == innerPipelineUser) {
@@ -993,7 +1001,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
             userId = innerPipelineUser,
             projectId = innerPipelineProject,
-            pipelineId = pipelineId,
+            pipelineId = pipelineId!!,
             values = startParams,
             channelCode = ChannelCode.AM,
             startType = StartType.SERVICE
@@ -1325,15 +1333,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return Result(true)
     }
 
-    private fun creatAtomPipeline(
+    fun creatAtomPipeline(
         context: DSLContext,
         userId: String,
-        projectCode: String,
-        language: String
+        projectCode: String
     ): String {
         var pipelineId: String?
-        val lock = RedisLock(redisOperation, "creatAtomPipeline-$projectCode-$language", 60L)
-        val pipelineName = "atom-build-$projectCode-$language"
+        val lock = RedisLock(redisOperation, "creatAtomPipeline-$projectCode", 60L)
+        val pipelineName = "ATOM-PIPELINE-BUILD:PUBLIC"
         try {
             lock.lock()
             pipelineId = redisOperation.get(pipelineName)
@@ -1346,23 +1353,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 feature = "initBuildPipeline",
                 businessValue = "PIPELINE_MODEL"
             )
-            val buildInfo = marketAtomBuildInfoDao.getAtomBuildInfo(
-                dslContext = context,
-                storeType = StoreTypeEnum.ATOM,
-                language = language
-            )
-            val script = buildInfo.value1()
-            val paramMap = mapOf(
-                KEY_PIPELINE_NAME to pipelineName,
-                KEY_LANGUAGE to language,
-                KEY_SCRIPT to StringEscapeUtils.escapeJava(script),
-                KEY_REPOSITORY_PATH to (buildInfo.value2() ?: ""),
-            )
-            var pipelineModel = pipelineModelConfig!!.configValue
-            // 将流水线模型中的变量替换成具体的值
-            paramMap.forEach { (key, value) ->
-                pipelineModel = pipelineModel.replace("#{$key}", value)
-            }
+            val pipelineModel =
+                pipelineModelConfig!!.configValue.replace("#{$KEY_PIPELINE_NAME}", pipelineName)
             val model = JsonUtil.to(pipelineModel, Model::class.java)
             pipelineId = client.get(ServicePipelineResource::class).create(
                 userId = userId,
