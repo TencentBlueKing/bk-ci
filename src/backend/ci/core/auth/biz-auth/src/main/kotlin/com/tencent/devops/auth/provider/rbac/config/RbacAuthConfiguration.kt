@@ -195,7 +195,8 @@ class RbacAuthConfiguration {
         authResourceGroupDao: AuthResourceGroupDao,
         dslContext: DSLContext,
         resourceGroupPermissionDao: AuthResourceGroupPermissionDao,
-        converter: AuthResourceCodeConverter
+        converter: AuthResourceCodeConverter,
+        client: Client
     ) = RbacPermissionResourceGroupPermissionService(
         v2ManagerService = v2ManagerService,
         rbacCacheService = rbacCacheService,
@@ -203,7 +204,8 @@ class RbacAuthConfiguration {
         authResourceGroupDao = authResourceGroupDao,
         dslContext = dslContext,
         resourceGroupPermissionDao = resourceGroupPermissionDao,
-        converter = converter
+        converter = converter,
+        client = client
     )
 
     @Bean

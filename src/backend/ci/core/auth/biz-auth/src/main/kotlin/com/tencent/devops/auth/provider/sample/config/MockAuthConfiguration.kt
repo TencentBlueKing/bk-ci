@@ -1,11 +1,5 @@
 package com.tencent.devops.auth.provider.sample.config
 
-import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
-import com.tencent.devops.auth.dao.AuthResourceGroupDao
-import com.tencent.devops.auth.dao.AuthResourceGroupPermissionDao
-import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
-import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
-import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupPermissionService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceAuthorizationService
 import com.tencent.devops.auth.provider.sample.service.SampleAuthAuthorizationScopesService
 import com.tencent.devops.auth.provider.sample.service.SampleAuthMonitorSpaceService
@@ -52,7 +46,6 @@ import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.iam.PermissionUrlService
-import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 
