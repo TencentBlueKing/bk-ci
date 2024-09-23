@@ -292,5 +292,12 @@
 
     "变量 ID 规范": "Variable ID Standard",
     "未限制": "No Restriction",
-    "不支持中文 ID，减少不同构建环境下的兼容问题": "Chinese IDs Not Supported to Reduce Compatibility Issues in Different Build Environments"
+    "不支持中文 ID，减少不同构建环境下的兼容问题": "Chinese IDs Not Supported to Reduce Compatibility Issues in Different Build Environments",
+    "确定升级变量语法风格为制约风格？": "Are you sure you want to upgrade the variable syntax style to constraint style?",
+    "影响流水线(X)": "Affected Pipelines (0)",
+    "项目：": "Project:",
+    "升级后，该项目对变量引用方式将有更严格的要求。": "After the upgrade, this project will have stricter requirements for variable referencing.",
+    "将报错，运行失败": "It will cause errors and the run will fail",
+    "确认离开当前页?": "Are you sure you want to leave this page?",
+    "离开": "Leave"
 }
