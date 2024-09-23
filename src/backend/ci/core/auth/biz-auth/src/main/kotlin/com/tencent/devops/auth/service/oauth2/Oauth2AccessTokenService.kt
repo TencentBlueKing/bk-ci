@@ -3,8 +3,10 @@ package com.tencent.devops.auth.service.oauth2
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthOauth2AccessTokenDao
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.model.auth.tables.records.TAuthOauth2AccessTokenRecord
 import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -12,6 +14,9 @@ class Oauth2AccessTokenService(
     private val oauth2AccessTokenDao: AuthOauth2AccessTokenDao,
     private val dslContext: DSLContext
 ) {
+    @Value("\${aes.auth:#{null}}")
+    private val aesKey = ""
+
     fun get(
         clientId: String,
         accessToken: String
@@ -39,7 +44,7 @@ class Oauth2AccessTokenService(
             clientId = clientId,
             refreshToken = refreshToken,
             userName = userName,
-            passWord = passWord,
+            passWord = passWord?.apply { AESUtil.encrypt(aesKey, passWord) },
             grantType = grantType
         )
     }
@@ -59,7 +64,7 @@ class Oauth2AccessTokenService(
             dslContext = dslContext,
             clientId = clientId,
             userName = userName,
-            passWord = passWord,
+            passWord = passWord?.apply { AESUtil.encrypt(aesKey, passWord) },
             grantType = grantType,
             accessToken = accessToken,
             refreshToken = refreshToken,
