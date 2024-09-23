@@ -71,11 +71,12 @@
                             :disabled="!editable"
                             :placeholder="$t('settings.maxConcurrencyPlaceholder')"
                             v-model="pipelineSetting.maxConRunningQueueSize"
-                            @change="val => handleBaseInfoChange('maxConRunningQueueSize', val)"
+                            @change="val => handleBaseInfoChange('maxConRunningQueueSize', Number(val))"
                         />
                     </bk-form-item>
 
                     <bk-form-item
+                        :required="isMultipleLock"
                         :label="$t('settings.concurrentTimeout')"
                         error-display-type="normal"
                         property="waitQueueTimeMinute"
@@ -85,7 +86,7 @@
                             :disabled="!editable"
                             :placeholder="$t('settings.itemPlaceholder')"
                             v-model="pipelineSetting.waitQueueTimeMinute"
-                            @change="val => handleBaseInfoChange('waitQueueTimeMinute', val)"
+                            @change="val => handleBaseInfoChange('waitQueueTimeMinute', Number(val))"
                         >
                             <template slot="append">
                                 <span class="pipeline-setting-unit">{{ $t('settings.minutes') }}</span>
