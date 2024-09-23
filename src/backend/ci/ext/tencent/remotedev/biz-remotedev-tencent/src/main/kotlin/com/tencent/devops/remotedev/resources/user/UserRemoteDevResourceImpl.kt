@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.pojo.user.ProjectUser
 import com.tencent.devops.project.service.UserService
@@ -60,7 +61,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val expertSupportService: ExpertSupportService,
     private val txcService: TxcService,
     private val redisCache: RedisCacheService,
-    private val userService: UserService
+    private val client: Client
 ) : UserRemoteDevResource {
 
     companion object {
@@ -92,7 +93,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun getUserInfo(userId: String): Result<ProjectUser> {
-        val staff = userService.getStaffInfo(userId)
+        val staff = client.get(UserService::class).getStaffInfo(userId)
         return Result(
             ProjectUser(
                 chineseName = staff.chineseName,
