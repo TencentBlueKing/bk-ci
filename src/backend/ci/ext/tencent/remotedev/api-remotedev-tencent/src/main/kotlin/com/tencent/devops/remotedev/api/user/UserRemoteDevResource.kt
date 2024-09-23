@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.user.ProjectUser
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -106,6 +107,14 @@ interface UserRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<String>
+
+    @Operation(summary = "根据bi_ticket或bk_token获取用户信息")
+    @GET
+    @Path("/get_user_info")
+    fun getUserInfo(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<ProjectUser>
 
     @Operation(summary = "获取所有的WINDOWS GPU资源配置信息")
     @GET

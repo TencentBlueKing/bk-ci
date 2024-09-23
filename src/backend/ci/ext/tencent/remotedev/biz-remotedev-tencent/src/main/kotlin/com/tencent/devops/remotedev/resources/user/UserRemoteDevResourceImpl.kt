@@ -29,6 +29,8 @@ package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.pojo.user.ProjectUser
+import com.tencent.devops.project.service.UserService
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
@@ -57,7 +59,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val permissionService: PermissionService,
     private val expertSupportService: ExpertSupportService,
     private val txcService: TxcService,
-    private val redisCache: RedisCacheService
+    private val redisCache: RedisCacheService,
+    private val userService: UserService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -86,6 +89,17 @@ class UserRemoteDevResourceImpl @Autowired constructor(
 
     override fun getUser(userId: String): Result<String> {
         return Result(userId)
+    }
+
+    override fun getUserInfo(userId: String): Result<ProjectUser> {
+        val staff = userService.getStaffInfo(userId)
+        return Result(
+            ProjectUser(
+                chineseName = staff.chineseName,
+                avatarUrl = "",
+                username = staff.username
+            )
+        )
     }
 
     override fun getAllWindowsResourceConfig(
