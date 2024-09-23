@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "bk-cli-service-webpack dev",
+    "dev": "nx exec -- bk-cli-service-webpack dev",
     "build": "bk-cli-service-webpack build",
     "server": "node ./paas-server/index.js",
     "lint:style": "stylelint **/*.{html,vue,css,sass,scss,less} --fix",
