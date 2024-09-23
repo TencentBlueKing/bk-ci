@@ -70,7 +70,8 @@ class WindowsGpuResourceDao {
                         MEMORY,
                         REGISTER_TIME,
                         INTERNAL,
-                        MAC_ADDRESS
+                        MAC_ADDRESS,
+                        VM_STATUS
                     ).values(
                         it.cgsId,
                         it.zoneId,
@@ -89,7 +90,8 @@ class WindowsGpuResourceDao {
                         it.mem ?: "",
                         it.registerCgsTime,
                         ByteUtils.bool2Byte(it.internal ?: false),
-                        it.macAddress ?: ""
+                        it.macAddress ?: "",
+                        it.vmStatus ?: ""
                     ).onDuplicateKeyUpdate()
                         .set(STATUS, it.status)
                 }
