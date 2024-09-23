@@ -142,7 +142,7 @@ class RbacPermissionResourceGroupPermissionService(
 
         val groupPermissionDetails = getGroupPermissionDetailBySystem(systemId, groupId)
         // 获取用户组最新的权限
-        val newResourceGroupPermissions = groupPermissionDetails.flatMap { permissionDetail ->
+        val latestResourceGroupPermissions = groupPermissionDetails.flatMap { permissionDetail ->
             permissionDetail.relatedResourceInfos.flatMap { relatedResourceInfo ->
                 relatedResourceInfo.instance.map { instancePathDTOs ->
                     ResourceGroupPermissionDTO(
@@ -175,9 +175,9 @@ class RbacPermissionResourceGroupPermissionService(
         )
 
         val toDeleteRecords = oldResourceGroupPermissions.filter {
-            !newResourceGroupPermissions.contains(it)
+            !latestResourceGroupPermissions.contains(it)
         }
-        val toAddRecords = newResourceGroupPermissions.filter {
+        val toAddRecords = latestResourceGroupPermissions.filter {
             !oldResourceGroupPermissions.contains(it)
         }
 
