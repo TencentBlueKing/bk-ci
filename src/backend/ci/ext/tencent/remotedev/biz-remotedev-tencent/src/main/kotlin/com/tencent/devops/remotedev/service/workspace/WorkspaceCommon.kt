@@ -227,7 +227,7 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.STOPPED
             }
 
-            workspaceInfo.status == EnvStatusEnum.deleted -> {
+            workspaceInfo.status == EnvStatusEnum.deleted || workspaceInfo.status == EnvStatusEnum.readyDelete -> {
                 deleteControl.doDeleteWS(true, userId, workspaceName, workspaceInfo.environmentIP)
                 return WorkspaceStatus.DELETED
             }

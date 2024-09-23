@@ -27,10 +27,12 @@
 
 package com.tencent.devops.remotedev.service.projectworkspace
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
@@ -40,6 +42,7 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -76,14 +79,9 @@ class RebuildWorkspaceHandler @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val notifyControl: NotifyControl,
-    private val softwareManageService: SoftwareManageService
+    private val softwareManageService: SoftwareManageService,
+    private val workspaceSharedDao: WorkspaceSharedDao
 ) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(RebuildWorkspaceHandler::class.java)
-        private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
-    }
-
     @ActionAuditRecord(
         actionId = ActionId.CGS_REBUILD_SYSTEM_DISK,
         instance = AuditInstanceRecord(
@@ -161,8 +159,26 @@ class RebuildWorkspaceHandler @Autowired constructor(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                     workspace.status,
                     WorkspaceStatus.REBUILDING
-                )
+                ) + if (rebuildReq.formatDataDisk == true) {
+                    ", 格式化数据盘: " + rebuildReq.formatDataDisk.toString()
+                } else {
+                    ""
+                } + if (rebuildReq.removeOwner == true) {
+                    ", 清空拥有者: " + rebuildReq.removeOwner.toString()
+                } else {
+                    ""
+                }
             )
+
+            // 保存些需要回调才能使用的参数，有配置了参数才进行保存
+            if (rebuildReq.removeOwner == true) {
+                saveRebuildOptions(
+                    workspaceName = workspaceName,
+                    userId = userId,
+                    data = RebuildOptions(removeOwner = true)
+                )
+                logger.debug("rebuildWorkspace|saveRebuildOptions|$workspaceName|$userId")
+            }
 
             val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             dispatcher.dispatch(
@@ -173,7 +189,8 @@ class RebuildWorkspaceHandler @Autowired constructor(
                     workspaceName = workspaceName,
                     mountType = WorkspaceMountType.START,
                     imageCosFile = rebuildReq.imageCosFile,
-                    gameId = gameId.first
+                    gameId = gameId.first,
+                    formatDataDisk = rebuildReq.formatDataDisk ?: false
                 )
             )
 
@@ -202,6 +219,13 @@ class RebuildWorkspaceHandler @Autowired constructor(
     }
 
     fun rebuildWorkspaceCallback(event: RemoteDevUpdateEvent) {
+        // 回调来了先删除缓存的参数
+        val options = getRebuildOptions(workspaceName = event.workspaceName, userId = event.userId)
+        logger.debug("rebuildWorkspace|getRebuildOptions|${event.workspaceName}|${event.userId}")
+        if (options != null) {
+            deleteRebuildOptions(event.workspaceName, event.userId)
+        }
+
         val workspace = workspaceDao.fetchAnyWorkspace(
             dslContext = dslContext,
             workspaceName = event.workspaceName
@@ -212,9 +236,14 @@ class RebuildWorkspaceHandler @Autowired constructor(
         if (event.status) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                var toStatus = WorkspaceStatus.RUNNING
+                if (options?.removeOwner == true) {
+                    workspaceSharedDao.deleteOwner(transactionContext, event.workspaceName)
+                    toStatus = WorkspaceStatus.DISTRIBUTING
+                }
                 workspaceDao.updateWorkspaceStatus(
                     workspaceName = event.workspaceName,
-                    status = WorkspaceStatus.RUNNING,
+                    status = toStatus,
                     dslContext = transactionContext
                 )
                 workspaceOpHistoryDao.createWorkspaceHistory(
@@ -225,7 +254,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
                     actionMessage = String.format(
                         workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                         WorkspaceStatus.REBUILDING,
-                        WorkspaceStatus.RUNNING.name
+                        toStatus.name
                     )
                 )
             }
@@ -275,4 +304,45 @@ class RebuildWorkspaceHandler @Autowired constructor(
             projectId = workspace.projectId
         )
     }
+
+    private fun saveRebuildOptions(
+        workspaceName: String,
+        userId: String,
+        data: RebuildOptions
+    ) {
+        redisOperation.set(
+            key = genRebuildOptionsKey(workspaceName, userId),
+            value = JsonUtil.toJson(data, false),
+            expiredInSecond = null,
+            expired = false
+        )
+    }
+
+    private fun getRebuildOptions(
+        workspaceName: String,
+        userId: String
+    ): RebuildOptions? {
+        val dataStr = redisOperation.get(genRebuildOptionsKey(workspaceName, userId))?.ifBlank { null } ?: return null
+        return JsonUtil.to(dataStr, object : TypeReference<RebuildOptions>() {})
+    }
+
+    fun deleteRebuildOptions(
+        workspaceName: String,
+        userId: String
+    ) {
+        redisOperation.delete(genRebuildOptionsKey(workspaceName, userId))
+    }
+
+    private fun genRebuildOptionsKey(workspaceName: String, userId: String) =
+        "$REBUILD_OPTIONS_REDIS_KEY_PRI:$workspaceName.$userId"
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(RebuildWorkspaceHandler::class.java)
+        private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
+        private const val REBUILD_OPTIONS_REDIS_KEY_PRI = "remotedev:workspace:rebuild"
+    }
 }
+
+data class RebuildOptions(
+    val removeOwner: Boolean
+)
