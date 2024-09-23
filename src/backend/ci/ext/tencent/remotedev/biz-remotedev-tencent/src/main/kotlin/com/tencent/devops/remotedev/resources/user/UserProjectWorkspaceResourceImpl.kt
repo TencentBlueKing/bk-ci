@@ -44,6 +44,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.windows.TimeScope
 import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeResp
@@ -262,5 +263,30 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         permissionService.checkUserProjectManager(userId, projectId)
         workspaceRecordService.approvalRecordView(projectId = projectId, user = userId, workspaceName = workspaceName)
         return Result(true)
+    }
+
+    override fun getViewRecordMetadata(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<WorkspaceRecordMetadata>> {
+        permissionService.checkUserProjectManager(userId, projectId)
+        if (!workspaceRecordService.checkWorkspaceUserApproval(workspaceName, userId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_RECORD_VIEW_NO_PERMISSION_ERROR.errorCode,
+                params = arrayOf(userId, workspaceName)
+            )
+        }
+        return Result(
+            workspaceRecordService.getWorkspaceRecordMetadata(
+                projectId = projectId,
+                userId = userId,
+                workspaceName = workspaceName,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 }

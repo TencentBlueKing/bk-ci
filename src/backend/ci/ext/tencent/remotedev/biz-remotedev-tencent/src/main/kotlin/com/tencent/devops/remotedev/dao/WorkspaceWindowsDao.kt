@@ -159,10 +159,11 @@ class WorkspaceWindowsDao {
         dslContext: DSLContext,
         projectId: String,
         ip: String
-    ): Pair<String, String?>? {
+    ): Triple<String, String?, String>? {
         val dsl = dslContext.select(
             TWorkspace.T_WORKSPACE.NAME,
-            TWorkspaceWindows.T_WORKSPACE_WINDOWS.ENABLE_RECORD_USER
+            TWorkspaceWindows.T_WORKSPACE_WINDOWS.ENABLE_RECORD_USER,
+            TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP
         ).from(TWorkspace.T_WORKSPACE)
             .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
             .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
@@ -174,7 +175,7 @@ class WorkspaceWindowsDao {
                     WorkspaceStatus.DELIVERING_FAILED.ordinal
                 )
             ).and(TWorkspace.T_WORKSPACE.HOST_NAME.like("%.$ip")).fetchAny() ?: return null
-        return Pair(dsl.value1(), dsl.value2())
+        return Triple(dsl.value1(), dsl.value2(), dsl.value3())
     }
 
     fun updateRecord(

@@ -41,6 +41,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.windows.TimeScope
 import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeResp
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -338,4 +339,25 @@ interface UserProjectWorkspaceResource {
         @PathParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
+
+    @Operation(summary = "查看当前工作空间录屏元数据")
+    @GET
+    @Path("/workspace/{workspaceName}/meta_data")
+    fun getViewRecordMetadata(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @PathParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "第几页, 默认1", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页数据条数，默认20", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<WorkspaceRecordMetadata>>
 }
