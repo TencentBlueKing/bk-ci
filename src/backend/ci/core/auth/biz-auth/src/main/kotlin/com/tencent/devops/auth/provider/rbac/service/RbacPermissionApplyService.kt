@@ -40,7 +40,7 @@ import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.api.service.ServicePipelineViewResource
+import com.tencent.devops.process.api.user.UserPipelineViewResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -189,7 +189,8 @@ class RbacPermissionApplyService @Autowired constructor(
                     iamResourceCode = iamResourceCode
                 )
                 // 获取包含该流水线的所有流水线组
-                val viewIds = client.get(ServicePipelineViewResource::class).listViewIdsByPipelineId(
+                val viewIds = client.get(UserPipelineViewResource::class).listViewIdsByPipelineId(
+                    userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId
                 ).data
