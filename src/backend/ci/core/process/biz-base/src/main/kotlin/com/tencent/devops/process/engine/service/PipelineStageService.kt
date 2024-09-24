@@ -413,7 +413,7 @@ class PipelineStageService @Autowired constructor(
         reviewRequest: StageReviewRequest?,
         timeout: Boolean? = false,
         debug: Boolean,
-        system: Boolean? = false,
+        system: Boolean? = false
     ): Boolean {
         with(buildStage) {
             checkIn?.reviewGroup(
