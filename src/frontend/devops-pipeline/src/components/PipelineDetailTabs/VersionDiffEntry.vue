@@ -1,6 +1,7 @@
 <template>
-    <span>
+    <span :class="{ 'display': !showButton }">
         <bk-button
+            v-if="showButton"
             :text="text"
             :outline="outline"
             :theme="theme"
@@ -23,7 +24,10 @@
                 class="diff-version-dialog-content"
                 v-bkloading="{ isLoading: isLoadYaml, color: '#1d1d1d' }"
             >
-                <header class="diff-version-header">
+                <header
+                    class="diff-version-header"
+                    v-if="showButton"
+                >
                     <VersionSelector
                         ext-cls="dark-theme-select-trigger"
                         ext-popover-cls="dark-theme-select-menu"
@@ -91,6 +95,10 @@
                 required: true
             },
             canSwitchVersion: {
+                type: Boolean,
+                default: true
+            },
+            showButton: {
                 type: Boolean,
                 default: true
             }
@@ -201,5 +209,8 @@
                 }
             }
         }
+    }
+    .display{
+        display: none;
     }
 </style>

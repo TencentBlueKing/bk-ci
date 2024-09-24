@@ -107,35 +107,13 @@
             />
         </aside>
 
-        <bk-dialog
-            v-model="showVersionDiffDialog"
-            render-directive="if"
-            header-position="left"
-            :draggable="false"
-            ext-cls="diff-version-dialog"
-            width="90%"
-            :title="$t('diff')"
+        <version-diff-entry
+            ref="diffdialog"
+            :version="currentVersion"
+            :latest-version="activeVersion"
+            :show-button="false"
         >
-            <div
-                class="diff-version-dialog-content"
-                v-bkloading="{ isLoading: isLoadYaml, color: '#1d1d1d' }"
-            >
-                <div class="pipeline-yaml-diff-wrapper">
-                    <yaml-diff
-                        :old-yaml="activeYaml"
-                        height="100%"
-                        :new-yaml="currentYaml"
-                    />
-                </div>
-            </div>
-            <footer slot="footer">
-                <bk-button
-                    @click="showVersionDiffDialog = false"
-                >
-                    {{ $t('close') }}
-                </bk-button>
-            </footer>
-        </bk-dialog>
+        </version-diff-entry>
     </div>
 </template>
 
@@ -150,27 +128,17 @@
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import ReleaseButton from './ReleaseButton'
-    import YamlDiff from '@/components/YamlDiff'
+    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
 
     export default {
         components: {
             PipelineBreadCrumb,
             ReleaseButton,
             ModeSwitch,
-            YamlDiff
+            VersionDiffEntry
         },
         props: {
             isSwitchPipeline: Boolean
-        },
-        data () {
-            return {
-                isLoading: false,
-                isReleaseSliderShow: false,
-                showVersionDiffDialog: false,
-                isLoadYaml: false,
-                activeYaml: '',
-                currentYaml: ''
-            }
         },
         computed: {
             ...mapState([
@@ -189,7 +157,9 @@
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isEditing: 'atom/isEditing',
                 checkPipelineInvalid: 'atom/checkPipelineInvalid',
-                draftBaseVersionName: 'atom/getDraftBaseVersionName'
+                draftBaseVersionName: 'atom/getDraftBaseVersionName',
+                hasDraftPipeline: 'atom/hasDraftPipeline',
+                isCommittingPipeline: 'atom/isCommittingPipeline'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -236,16 +206,17 @@
             activeVersion () {
                 return this.pipelineInfo?.releaseVersion ?? ''
             },
-            diffVersion () {
-                return this.currentVersion !== this.activeVersion
-            },
             actionConfMenus () {
                 const { projectId } = this.$route.params
                 return [
                     {
                         label: this.$t('diff'),
-                        handler: this.initDiff,
-                        disabled: !this.diffVersion,
+                        handler: () => {
+                            if (this.hasDraftPipeline) {
+                                this.$refs.diffdialog.initDiff()
+                            }
+                        },
+                        disabled: !this.hasDraftPipeline,
                         showTooltips: true
                     },
                     {
@@ -267,8 +238,8 @@
                     {
                         label: this.$t('deleteDraft'),
                         handler: this.handelDelete,
-                        disabled: !this.diffVersion && this.currentVersion !== 1,
-                        showTooltips: this.diffVersion || this.currentVersion === 1
+                        disabled: !this.hasDraftPipeline && !this.isCommittingPipeline,
+                        showTooltips: this.hasDraftPipeline || this.isCommittingPipeline
                     }
                 ]
             }
@@ -292,12 +263,10 @@
                 'saveDraftPipeline',
                 'setSaveStatus',
                 'updateContainer',
-                'fetchPipelineByVersion',
-                'requestPipeline'
+                'fetchPipelineByVersion'
             ]),
             ...mapActions('pipelines', [
                 'deletePipelineVersion',
-                'updatePipelineActionState',
                 'patchDeletePipelines'
             ]),
             async exec (debug) {
@@ -426,7 +395,7 @@
                     ])
                 ])
             },
-            async diffVersionDeleteConfirm () {
+            async deleteDraftConfirm () {
                 try {
                     await this.deletePipelineVersion({
                         projectId: this.projectId,
@@ -501,19 +470,6 @@
                     return ''
                 }
             },
-            async initDiff () {
-                if (this.diffVersion) {
-                    this.showVersionDiffDialog = true
-                    this.isLoadYaml = true
-                    const [activeYaml, currentYaml] = await Promise.all([
-                        this.fetchPipelineYaml(this.activeVersion),
-                        this.fetchPipelineYaml(this.currentVersion)
-                    ])
-                    this.activeYaml = activeYaml
-                    this.currentYaml = currentYaml
-                    this.isLoadYaml = false
-                }
-            },
             goDraftDebugRecord () {
                 if (this.canDebug) {
                     this.$router.push({
@@ -533,18 +489,17 @@
                     width: 470,
                     confirmLoading: true
                 }
-                if (this.diffVersion) {
-                    this.$bkInfo({
-                        ...commonConfig,
-                        subHeader: this.createSubHeader(this.pipelineSetting.pipelineName, this.draftBaseVersionName),
-                        confirmFn: this.diffVersionDeleteConfirm
-                    })
-                }
-                if (this.currentVersion === 1) {
+                if (this.isCommittingPipeline) {
                     this.$bkInfo({
                         ...commonConfig,
                         subTitle: this.$t('deleteDraftPipeline'),
                         confirmFn: this.deletePipelineConfirm
+                    })
+                } else if (this.hasDraftPipeline) {
+                    this.$bkInfo({
+                        ...commonConfig,
+                        subHeader: this.createSubHeader(this.pipelineSetting.pipelineName, this.draftBaseVersionName),
+                        confirmFn: this.deleteDraftConfirm
                     })
                 }
             },
