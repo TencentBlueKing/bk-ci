@@ -37,7 +37,7 @@
       </div>
       <div class="line-split" v-if="!isNotProject" />
     </template>
-    <bk-loading v-if="dataLoaded" :loading="fetchGroupLoading">
+    <bk-loading v-if="dataLoaded" :loading="fetchGroupLoading"  class='saide-content'>
       <scroll-load-list
         class="group-list"
         ref="loadList"
@@ -525,6 +525,10 @@ export default {
     font-weight: 700;
     margin-bottom: 5px;
   }
+}
+.saide-content {
+  height: 100%;
+  overflow-y: auto;
 }
 .group-list {
   max-height: calc(100% - 70px);
