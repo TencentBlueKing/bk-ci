@@ -965,7 +965,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             }
             val projectCode: String
             val userName: String
-            if (atomPipelineRelRecord.projectCode == innerPipelineUser) {
+            if (atomPipelineRelRecord.projectCode == innerPipelineProject) {
                 projectCode = innerPipelineProject
                 userName = innerPipelineProject
             } else {
