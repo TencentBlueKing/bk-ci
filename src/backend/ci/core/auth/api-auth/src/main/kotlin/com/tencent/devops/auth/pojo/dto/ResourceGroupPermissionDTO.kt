@@ -6,7 +6,7 @@ import java.util.Objects
 @Schema(title = "资源组权限详情")
 data class ResourceGroupPermissionDTO(
     @get:Schema(title = "id")
-    val id: Long,
+    val id: Long? = null,
     @get:Schema(title = "项目code")
     val projectCode: String,
     @get:Schema(title = "用户组关联的资源类型")
@@ -34,9 +34,11 @@ data class ResourceGroupPermissionDTO(
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         val otherObj = other as ResourceGroupPermissionDTO
-        return projectCode == otherObj.projectCode && iamGroupId == otherObj.iamGroupId
-            && relatedResourceType == otherObj.relatedResourceType && relatedResourceCode == otherObj.relatedResourceCode
-            && action == otherObj.actionRelatedResourceType
+        return projectCode == otherObj.projectCode
+            && iamGroupId == otherObj.iamGroupId
+            && relatedResourceType == otherObj.relatedResourceType
+            && relatedResourceCode == otherObj.relatedResourceCode
+            && action == otherObj.action
     }
 
     override fun hashCode(): Int {

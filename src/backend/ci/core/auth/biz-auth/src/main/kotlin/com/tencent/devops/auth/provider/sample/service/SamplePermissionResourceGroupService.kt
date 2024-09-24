@@ -88,18 +88,8 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
     ): Boolean {
         return true
     }
-
-    override fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>> {
-        return emptyMap()
-    }
-
     override fun createProjectGroupByGroupCode(
         projectId: String,
         groupCode: String
     ) = true
-
-    override fun getGroupPermissionDetailBySystem(
-        iamSystemId: String,
-        groupId: Int
-    ): List<GroupPermissionDetailVo> = emptyList()
 }

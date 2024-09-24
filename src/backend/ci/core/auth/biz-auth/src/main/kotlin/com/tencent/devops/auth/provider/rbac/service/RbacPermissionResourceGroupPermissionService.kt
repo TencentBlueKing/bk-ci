@@ -169,8 +169,6 @@ class RbacPermissionResourceGroupPermissionService(
                                 Triple(instancePathDTOs.last().type, relatedIamResourceCode, instancePathDTOs.last().id)
                             }
                         ResourceGroupPermissionDTO(
-                            id = client.get(ServiceAllocIdResource::class)
-                                .generateSegmentId(AUTH_RESOURCE_GROUP_PERMISSION_ID_TAG).data!!,
                             projectCode = projectCode,
                             resourceType = resourceGroupInfo.resourceType,
                             resourceCode = resourceGroupInfo.resourceCode,
@@ -200,6 +198,11 @@ class RbacPermissionResourceGroupPermissionService(
             logger.debug("sync group | to delete group permissions :{}", toDeleteRecords)
             val toAddRecords = latestResourceGroupPermissions.filter {
                 !oldResourceGroupPermissions.contains(it)
+            }.map {
+                it.copy(
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId(AUTH_RESOURCE_GROUP_PERMISSION_ID_TAG).data!!,
+                )
             }
             logger.debug("sync group | to add group permissions :{}", toAddRecords)
             dslContext.transaction { configuration ->
@@ -208,7 +211,7 @@ class RbacPermissionResourceGroupPermissionService(
                     resourceGroupPermissionDao.batchDeleteByIds(
                         dslContext = transactionContext,
                         projectCode = projectCode,
-                        ids = toDeleteRecords.map { it.id }
+                        ids = toDeleteRecords.map { it.id!! }
                     )
                 }
                 resourceGroupPermissionDao.batchCreate(

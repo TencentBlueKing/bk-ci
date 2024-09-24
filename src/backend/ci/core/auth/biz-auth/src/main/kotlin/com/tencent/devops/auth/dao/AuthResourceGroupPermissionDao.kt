@@ -83,7 +83,7 @@ class AuthResourceGroupPermissionDao {
             iamGroupId = iamGroupId,
             action = action,
             actionRelatedResourceType = actionRelatedResourceType,
-            relatedResourceType = resourceType,
+            relatedResourceType = relatedResourceType,
             relatedResourceCode = relatedResourceCode,
             relatedIamResourceCode = iamResourceCode
         )
