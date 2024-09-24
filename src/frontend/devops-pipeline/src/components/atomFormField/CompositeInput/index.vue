@@ -8,7 +8,10 @@
             :placeholder="placeholder"
             @change="handleChangeValue"
         >
-            <template v-if="prependText" slot="prepend">
+            <template
+                v-if="prependText"
+                slot="prepend"
+            >
                 <div
                     class="group-text"
                     :style="{ 'width': `${labelWidth}px` }"
@@ -17,7 +20,10 @@
                     {{ prependText }}
                 </div>
             </template>
-            <template v-if="appendText" slot="append">
+            <template
+                v-if="appendText"
+                slot="append"
+            >
                 <div
                     class="group-text"
                     :style="{ 'width': labelWidth ? `${labelWidth}px` : 'initial' }"
@@ -32,7 +38,8 @@
             v-bk-tooltips="{
                 content: iconDesc
             }"
-            class="bk-icon icon-question-circle-shape" />
+            class="bk-icon icon-question-circle-shape"
+        />
     </div>
 </template>
 

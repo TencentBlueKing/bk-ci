@@ -10,10 +10,23 @@
             <header class="pipeline-base-config-panel-header">
                 {{ $t(panel.name) }}
             </header>
-            <div class="base-info-panel-content" slot="content">
-                <p v-for="row in panel.rows" :key="row.key">
-                    <ul v-if="row.key === 'parallelConfDetail'" class="parallel-conf-detail">
-                        <li class="parallel-conf-detail-row" v-for="item in prarallelSettingRows" :key="item.key">
+            <div
+                class="base-info-panel-content"
+                slot="content"
+            >
+                <p
+                    v-for="row in panel.rows"
+                    :key="row.key"
+                >
+                    <ul
+                        v-if="row.key === 'parallelConfDetail'"
+                        class="parallel-conf-detail"
+                    >
+                        <li
+                            class="parallel-conf-detail-row"
+                            v-for="item in parallelSettingRows"
+                            :key="item.key"
+                        >
                             <label>
                                 {{ $t(item.label) }}
                             </label>
@@ -27,7 +40,11 @@
                         <span class="base-info-block-row-value">
                             <template v-if="['label', 'pipelineGroup'].includes(row.key)">
                                 <template v-if="row.value.length > 0">
-                                    <bk-tag v-for="label in row.value" :key="label" class="base-info-block-row-value-label">
+                                    <bk-tag
+                                        v-for="label in row.value"
+                                        :key="label"
+                                        class="base-info-block-row-value-label"
+                                    >
                                         {{ label }}
                                     </bk-tag>
                                 </template>
@@ -117,7 +134,7 @@
                     )
                 ]
             },
-            prarallelSettingRows () {
+            parallelSettingRows () {
                 return [
                     {
                         key: 'concurrencyGroup',

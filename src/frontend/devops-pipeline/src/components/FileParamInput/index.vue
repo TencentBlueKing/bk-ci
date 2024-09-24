@@ -35,12 +35,18 @@
                 }"
             />
         </div>
-        <div v-if="!flex" class="upload-tips">{{ $t('sizeLimit', [100]) }}</div>
+        <div
+            v-if="!flex"
+            class="upload-tips"
+        >
+            {{ $t('sizeLimit', [100]) }}
+        </div>
         <div
             :class="{
                 'mt10': !flex,
                 'file-upload': flex
-            }">
+            }"
+        >
             <file-upload
                 name="fileName"
                 :file-path="value"

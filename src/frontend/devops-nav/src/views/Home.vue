@@ -18,7 +18,11 @@
                                     :key="service.key"
                                     :to="addConsole(service.link_new)"
                                 >
-                                    <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="recent-logo-icon" />
+                                    <img
+                                        v-if="isAbsoluteUrl(service.logoUrl)"
+                                        :src="service.logoUrl"
+                                        class="recent-logo-icon"
+                                    />
                                     <Logo
                                         v-else
                                         :name="service.logoUrl"
@@ -82,7 +86,10 @@
                     </div>
                 </div>
 
-                <div class="devops-news" v-if="news.length > 0">
+                <div
+                    class="devops-news"
+                    v-if="news.length > 0"
+                >
                     <header>
                         <p class="title">
                             {{ $t("latestNews") }}
@@ -111,7 +118,13 @@
                 <article>
                     <h2>
                         {{ $t("bkdevopsTitle") }}
-                        <bk-tag v-if="BK_CI_VERSION" theme="info" type="stroke">{{ BK_CI_VERSION.trim() }}</bk-tag>
+                        <bk-tag
+                            v-if="BK_CI_VERSION"
+                            theme="info"
+                            type="stroke"
+                        >
+                            {{ BK_CI_VERSION.trim() }}
+                        </bk-tag>
                     </h2>
                     <p>
                         {{ $t("bkdevopsDesc") }}
@@ -139,15 +152,27 @@
         </div>
         <section class="devops-home-footer">
             <template v-if="hasSharedResUrl">
-                <p class="item" v-html="platformInfo.i18n.footerInfoHTML" />
+                <p
+                    class="item"
+                    v-html="platformInfo.i18n.footerInfoHTML"
+                />
                 <p class="bkci-copyright">{{ platformInfo.footerCopyrightContent }}</p>
             </template>
             <template v-else>
                 <section class="devops-home-footer">
                     <div class="item">
-                        <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">{{ $t('technicalSupport') }}</a> |
-                        <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('communityForum') }}</a> |
-                        <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('ProductOfficialWebsite') }}</a>
+                        <a
+                            href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true"
+                            target="_blank"
+                        >{{ $t('technicalSupport') }}</a> |
+                        <a
+                            href="https://bk.tencent.com/s-mart/community/"
+                            target="_blank"
+                        >{{ $t('communityForum') }}</a> |
+                        <a
+                            href="https://bk.tencent.com/index/"
+                            target="_blank"
+                        >{{ $t('ProductOfficialWebsite') }}</a>
                     </div>
                     <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved {{ BK_CI_VERSION.trim() }}</p>
                 </section>

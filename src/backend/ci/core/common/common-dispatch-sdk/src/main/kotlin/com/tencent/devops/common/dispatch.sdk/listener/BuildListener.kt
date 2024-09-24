@@ -127,7 +127,7 @@ interface BuildListener {
                 buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
-                message = "${I18nUtil.getCodeLanMessage("$BK_FAILED_START_BUILD_MACHINE")}- ${e.message}",
+                message = "${I18nUtil.getCodeLanMessage(BK_FAILED_START_BUILD_MACHINE)}- ${e.message}",
                 executeCount = event.executeCount,
                 jobId = event.jobId
             )
@@ -136,14 +136,14 @@ interface BuildListener {
             errorMessage = e.formatErrorMessage
             errorType = e.errorType
 
-            onFailure(dispatchService, event, e)
+            dispatchService.onFailure(event, e)
         } catch (t: Throwable) {
             logger.warn("Fail to handle the start up message - DispatchService($event)", t)
             dispatchService.logRed(
                 buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
-                message = "${I18nUtil.getCodeLanMessage("$BK_FAILED_START_BUILD_MACHINE")} - ${t.message}",
+                message = "${I18nUtil.getCodeLanMessage(BK_FAILED_START_BUILD_MACHINE)} - ${t.message}",
                 executeCount = event.executeCount,
                 jobId = event.jobId
             )
@@ -152,8 +152,7 @@ interface BuildListener {
             errorMessage = "Fail to handle the start up message"
             errorType = ErrorType.SYSTEM
 
-            onFailure(
-                dispatchService = dispatchService,
+            dispatchService.onFailure(
                 event = event,
                 e = BuildFailureException(
                     errorType = ErrorType.SYSTEM,
@@ -360,15 +359,6 @@ interface BuildListener {
     }
 
     private fun getClient() = SpringContextUtil.getBean(Client::class.java)
-
-    private fun onFailure(
-        dispatchService: DispatchService,
-        event: PipelineAgentStartupEvent,
-        e: BuildFailureException
-    ) {
-        dispatchService.onContainerFailure(event, e)
-        DispatchLogRedisUtils.removeRedisExecuteCount(event.buildId)
-    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(BuildListener::class.java)
