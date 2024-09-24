@@ -144,23 +144,24 @@ class RbacPermissionResourceGroupPermissionService(
     }
 
     override fun syncGroup(projectCode: String, groupId: Int): Boolean {
-        try {
+        return try {
             val resourceGroupInfo = authResourceGroupDao.get(
                 dslContext = dslContext,
                 projectCode = projectCode,
                 relationId = groupId.toString()
             ) ?: return true
             val groupPermissionDetails = getGroupPermissionDetailBySystem(systemId, groupId)
-            logger.debug("sync group permissions:{}|{}|{}", projectCode, groupId, groupPermissionDetails)
-            // 获取用户组最新的权限
+            logger.debug("sync group permissions: {}|{}|{}", projectCode, groupId, groupPermissionDetails)
+
             val latestResourceGroupPermissions = groupPermissionDetails.flatMap { permissionDetail ->
                 permissionDetail.relatedResourceInfos.flatMap { relatedResourceInfo ->
                     relatedResourceInfo.instance.map { instancePathDTOs ->
-                        val (relatedResourceType, relatedResourceCode, relatedIamResourceCode) =
-                            // 若为项目下某种全部资源类型的资源（如勾选了整个项目下流水线），则直接存储项目级别资源
-                            if (instancePathDTOs.size > 1 && instancePathDTOs.last().id == ALL_RESOURCE) {
+                        val (relatedResourceType, relatedResourceCode, relatedIamResourceCode) = when {
+                            instancePathDTOs.size > 1 && instancePathDTOs.last().id == ALL_RESOURCE -> {
                                 Triple(AuthResourceType.PROJECT.value, projectCode, projectCode)
-                            } else {
+                            }
+
+                            else -> {
                                 val relatedIamResourceCode = converter.iamCode2Code(
                                     projectCode = projectCode,
                                     resourceType = instancePathDTOs.last().type,
@@ -168,6 +169,7 @@ class RbacPermissionResourceGroupPermissionService(
                                 )
                                 Triple(instancePathDTOs.last().type, relatedIamResourceCode, instancePathDTOs.last().id)
                             }
+                        }
                         ResourceGroupPermissionDTO(
                             projectCode = projectCode,
                             resourceType = resourceGroupInfo.resourceType,
@@ -184,45 +186,39 @@ class RbacPermissionResourceGroupPermissionService(
                     }
                 }
             }.distinct()
-            logger.debug("sync group | latest group permissions :{}", latestResourceGroupPermissions)
-            // 获取用户组老权限数据
-            val oldResourceGroupPermissions = resourceGroupPermissionDao.listByGroupId(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                iamGroupId = groupId
-            )
-            logger.debug("sync group | old group permissions :{}", oldResourceGroupPermissions)
-            val toDeleteRecords = oldResourceGroupPermissions.filter {
-                !latestResourceGroupPermissions.contains(it)
-            }
-            logger.debug("sync group | to delete group permissions :{}", toDeleteRecords)
-            val toAddRecords = latestResourceGroupPermissions.filter {
-                !oldResourceGroupPermissions.contains(it)
-            }.map {
+            logger.debug("sync group | latest group permissions: {}", latestResourceGroupPermissions)
+
+            val oldResourceGroupPermissions = resourceGroupPermissionDao.listByGroupId(dslContext, projectCode, groupId)
+            logger.debug("sync group | old group permissions: {}", oldResourceGroupPermissions)
+
+            val toDeleteRecords = oldResourceGroupPermissions.filter { it !in latestResourceGroupPermissions }
+            logger.debug("sync group | to delete group permissions: {}", toDeleteRecords)
+
+            val toAddRecords = latestResourceGroupPermissions.filter { it !in oldResourceGroupPermissions }.map {
                 it.copy(
-                    id = client.get(ServiceAllocIdResource::class)
-                        .generateSegmentId(AUTH_RESOURCE_GROUP_PERMISSION_ID_TAG).data!!,
+                    id = client.get(ServiceAllocIdResource::class).generateSegmentId(AUTH_RESOURCE_GROUP_PERMISSION_ID_TAG).data!!
                 )
             }
-            logger.debug("sync group | to add group permissions :{}", toAddRecords)
+            logger.debug("sync group | to add group permissions: {}", toAddRecords)
+
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 if (toDeleteRecords.isNotEmpty()) {
                     resourceGroupPermissionDao.batchDeleteByIds(
                         dslContext = transactionContext,
                         projectCode = projectCode,
-                        ids = toDeleteRecords.map { it.id!! }
-                    )
+                        ids = toDeleteRecords.map { it.id!! })
                 }
                 resourceGroupPermissionDao.batchCreate(
                     dslContext = dslContext,
                     records = toAddRecords
                 )
             }
+            true
         } catch (ex: Exception) {
-            logger.warn("sync group permissions failed !$projectCode|$groupId|$ex")
+            logger.warn("sync group permissions failed! $projectCode|$groupId|$ex")
+            false
         }
-        return true
     }
 
     override fun syncProject(projectCode: String): Boolean {
