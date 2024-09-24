@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
+import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
@@ -11,8 +12,6 @@ import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
 import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
-import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
-import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -57,31 +56,16 @@ interface PermissionResourceMemberService {
         conditionReq: ProjectMembersQueryConditionReq
     ): SQLPage<ResourceMemberInfo>
 
-    /**
-     * 获取用户有权限的用户组数量
-     * */
-    fun getMemberGroupsCount(
+    fun listResourceGroupMembers(
         projectCode: String,
         memberId: String,
-        groupName: String?,
-        minExpiredAt: Long?,
-        maxExpiredAt: Long?
-    ): List<MemberGroupCountWithPermissionsVo>
-
-    /**
-     * 查询成员所在资源用户组详情，直接加入+通过用户组（模板）加入
-     * */
-    fun getMemberGroupsDetails(
-        projectId: String,
-        memberId: String,
-        resourceType: String?,
+        resourceType: String? = null,
         iamGroupIds: List<Int>? = null,
-        groupName: String? = null,
         minExpiredAt: Long? = null,
         maxExpiredAt: Long? = null,
-        start: Int?,
-        limit: Int?
-    ): SQLPage<GroupDetailsInfoVo>
+        start: Int? = null,
+        limit: Int? = null
+    ): Pair<Long, List<AuthResourceGroupMember>>
 
     fun batchDeleteResourceGroupMembers(
         projectCode: String,
@@ -153,7 +137,7 @@ interface PermissionResourceMemberService {
         userId: String,
         projectCode: String,
         renewalConditionReq: GroupMemberSingleRenewalReq
-    ): GroupDetailsInfoVo
+    ): Boolean
 
     fun renewalIamGroupMembers(
         groupId: Int,

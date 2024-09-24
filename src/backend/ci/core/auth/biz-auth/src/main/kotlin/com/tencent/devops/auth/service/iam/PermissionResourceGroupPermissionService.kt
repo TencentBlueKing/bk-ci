@@ -32,7 +32,18 @@ import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 
 interface PermissionResourceGroupPermissionService {
-    fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>>
+    fun listGroupsByPermissionConditions(
+        projectCode: String,
+        filterIamGroupIds: List<Int>? = null,
+        relatedResourceType: String,
+        relatedResourceCode: String? = null,
+        action: String? = null
+    ): List<Int>
+
+    fun getGroupPermissionDetail(
+        groupId: Int
+    ): Map<String, List<GroupPermissionDetailVo>>
+
     fun getGroupPermissionDetailBySystem(
         iamSystemId: String,
         groupId: Int

@@ -12,6 +12,7 @@ import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
+import com.tencent.devops.auth.service.iam.PermissionFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.model.SQLPage
@@ -25,7 +26,8 @@ import com.tencent.devops.common.web.RestResource
 @RestResource
 class UserAuthResourceMemberResourceImpl(
     private val permissionResourceMemberService: PermissionResourceMemberService,
-    private val permissionService: PermissionService
+    private val permissionService: PermissionService,
+    private val permissionFacadeService: PermissionFacadeService
 ) : UserAuthResourceMemberResource {
     override fun listProjectMembers(
         userId: String,
@@ -79,12 +81,17 @@ class UserAuthResourceMemberResourceImpl(
         projectId: String,
         renewalConditionReq: GroupMemberSingleRenewalReq
     ): Result<GroupDetailsInfoVo> {
+        permissionResourceMemberService.renewalGroupMember(
+            userId = userId,
+            projectCode = projectId,
+            renewalConditionReq = renewalConditionReq
+        )
         return Result(
-            permissionResourceMemberService.renewalGroupMember(
-                userId = userId,
-                projectCode = projectId,
-                renewalConditionReq = renewalConditionReq
-            )
+            permissionFacadeService.getMemberGroupsDetails(
+                projectId = projectId,
+                memberId = renewalConditionReq.targetMember.id,
+                iamGroupIds = listOf(renewalConditionReq.groupId)
+            ).records.first { it.groupId == renewalConditionReq.groupId }
         )
     }
 
@@ -187,15 +194,21 @@ class UserAuthResourceMemberResourceImpl(
         memberId: String,
         groupName: String?,
         minExpiredAt: Long?,
-        maxExpiredAt: Long?
+        maxExpiredAt: Long?,
+        relatedResourceType: String?,
+        relatedResourceCode: String?,
+        action: String?
     ): Result<List<MemberGroupCountWithPermissionsVo>> {
         return Result(
-            permissionResourceMemberService.getMemberGroupsCount(
+            permissionFacadeService.getMemberGroupsCount(
                 projectCode = projectId,
                 memberId = memberId,
                 groupName = groupName,
                 minExpiredAt = minExpiredAt,
-                maxExpiredAt = maxExpiredAt
+                maxExpiredAt = maxExpiredAt,
+                relatedResourceType = relatedResourceType,
+                relatedResourceCode = relatedResourceCode,
+                action = action
             )
         )
     }

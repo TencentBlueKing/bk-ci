@@ -9,6 +9,7 @@ import com.tencent.devops.auth.provider.sample.service.SampleGrantPermissionServ
 import com.tencent.devops.auth.provider.sample.service.SampleOrganizationService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionApplyService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionExtService
+import com.tencent.devops.auth.provider.sample.service.SamplePermissionFacadeService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionGradeService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionItsmCallbackService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionMigrateService
@@ -31,6 +32,7 @@ import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionExtService
+import com.tencent.devops.auth.service.iam.PermissionFacadeService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionGrantService
 import com.tencent.devops.auth.service.iam.PermissionItsmCallbackService
@@ -112,6 +114,10 @@ class MockAuthConfiguration {
     @Bean
     @ConditionalOnMissingBean(PermissionResourceGroupService::class)
     fun samplePermissionResourceGroupService() = SamplePermissionResourceGroupService()
+
+    @Bean
+    @ConditionalOnMissingBean(PermissionFacadeService::class)
+    fun samplePermissionFacadeService() = SamplePermissionFacadeService()
 
     @Bean
     @ConditionalOnMissingBean(PermissionResourceGroupPermissionService::class)

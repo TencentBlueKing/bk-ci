@@ -33,6 +33,14 @@ import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionServ
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 
 class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPermissionService {
+    override fun listGroupsByPermissionConditions(
+        projectCode: String,
+        filterIamGroupIds: List<Int>?,
+        relatedResourceType: String,
+        relatedResourceCode: String?,
+        action: String?
+    ): List<Int> = emptyList()
+
     override fun getGroupPermissionDetail(
         groupId: Int
     ): Map<String, List<GroupPermissionDetailVo>> = emptyMap()

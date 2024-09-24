@@ -20,6 +20,12 @@ data class ProjectMembersQueryConditionReq(
     val maxExpiredAt: Long?,
     @get:Schema(title = "离职标识")
     val departedFlag: Boolean? = false,
+    @get:Schema(title = "资源类型")
+    val relatedResourceType: String? = null,
+    @get:Schema(title = "资源ID")
+    val relatedResourceCode: String? = null,
+    @get:Schema(title = "操作")
+    val action: String? = null,
     @get:Schema(title = "第几页")
     val page: Int,
     @get:Schema(title = "页数")
@@ -27,10 +33,13 @@ data class ProjectMembersQueryConditionReq(
 ) {
     // 当查询到权限相关信息时，如组名称，过期时间，操作，资源类型时，走复杂查询逻辑
     fun isComplexQuery(): Boolean {
-        return groupName != null || minExpiredAt != null || maxExpiredAt != null
+        return groupName != null || minExpiredAt != null || maxExpiredAt != null ||
+            relatedResourceType != null || relatedResourceCode != null || action != null
     }
 
-    fun isNeedToQueryIamGroupIds(): Boolean {
-        return groupName != null
+    // 是否需要进行查询用户组，当涉及到查询 组名称，组权限相关，需要进行查询
+    fun isNeedToQueryIamGroups(): Boolean {
+        return groupName != null || relatedResourceType != null ||
+            relatedResourceCode != null || action != null
     }
 }

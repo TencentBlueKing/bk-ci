@@ -61,6 +61,7 @@ import com.tencent.devops.auth.provider.rbac.service.RbacPermissionApplyService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionAuthMonitorSpaceService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionAuthorizationScopesService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionExtService
+import com.tencent.devops.auth.provider.rbac.service.RbacPermissionFacadeServiceImpl
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionItsmCallbackService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionProjectService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceCallbackService
@@ -90,6 +91,8 @@ import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
@@ -185,6 +188,29 @@ class RbacAuthConfiguration {
         dslContext = dslContext,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
         authResourceGroupMemberDao = authResourceGroupMemberDao
+    )
+
+    @Bean
+    fun permissionFacadeService(
+        permissionResourceGroupService: PermissionResourceGroupService,
+        groupPermissionService: PermissionResourceGroupPermissionService,
+        permissionResourceMemberService: PermissionResourceMemberService,
+        authResourceGroupDao: AuthResourceGroupDao,
+        authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+        dslContext: DSLContext,
+        deptService: DeptService,
+        iamV2ManagerService: V2ManagerService,
+        rbacCacheService: RbacCacheService
+    ) = RbacPermissionFacadeServiceImpl(
+        permissionResourceGroupService = permissionResourceGroupService,
+        groupPermissionService = groupPermissionService,
+        permissionResourceMemberService = permissionResourceMemberService,
+        authResourceGroupDao = authResourceGroupDao,
+        authResourceGroupMemberDao = authResourceGroupMemberDao,
+        dslContext = dslContext,
+        deptService = deptService,
+        iamV2ManagerService = iamV2ManagerService,
+        rbacCacheService = rbacCacheService
     )
 
     @Bean

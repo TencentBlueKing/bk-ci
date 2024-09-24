@@ -256,6 +256,17 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         }
     }
 
+    override fun listIamGroupIdsByGroupName(
+        projectId: String,
+        groupName: String
+    ): List<Int> {
+        return authResourceGroupDao.listIamGroupIdsByConditions(
+            dslContext = dslContext,
+            projectCode = projectId,
+            groupName = groupName
+        )
+    }
+
     override fun getGroupPolicies(
         userId: String,
         projectId: String,

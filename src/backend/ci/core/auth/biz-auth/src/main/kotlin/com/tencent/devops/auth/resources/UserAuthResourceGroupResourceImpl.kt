@@ -36,6 +36,7 @@ import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
+import com.tencent.devops.auth.service.iam.PermissionFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.model.SQLPage
@@ -47,7 +48,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserAuthResourceGroupResourceImpl @Autowired constructor(
     private val permissionResourceGroupService: PermissionResourceGroupService,
-    private val permissionResourceMemberService: PermissionResourceMemberService
+    private val permissionResourceMemberService: PermissionResourceMemberService,
+    private val permissionFacadeService: PermissionFacadeService
 ) : UserAuthResourceGroupResource {
     override fun getGroupPolicies(
         userId: String,
@@ -74,17 +76,23 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         groupName: String?,
         minExpiredAt: Long?,
         maxExpiredAt: Long?,
+        relatedResourceType: String?,
+        relatedResourceCode: String?,
+        action: String?,
         start: Int,
         limit: Int
     ): Result<SQLPage<GroupDetailsInfoVo>> {
         return Result(
-            permissionResourceMemberService.getMemberGroupsDetails(
+            permissionFacadeService.getMemberGroupsDetails(
                 projectId = projectId,
                 resourceType = resourceType,
                 memberId = memberId,
                 groupName = groupName,
                 minExpiredAt = minExpiredAt,
                 maxExpiredAt = maxExpiredAt,
+                relatedResourceType = relatedResourceType,
+                relatedResourceCode = relatedResourceCode,
+                action = action,
                 start = start,
                 limit = limit
             )

@@ -55,6 +55,11 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         return emptyList()
     }
 
+    override fun listIamGroupIdsByGroupName(
+        projectId: String,
+        groupName: String
+    ): List<Int> = emptyList()
+
     override fun getGroupPolicies(
         userId: String,
         projectId: String,
@@ -87,6 +92,7 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
     ): Boolean {
         return true
     }
+
     override fun createProjectGroupByGroupCode(
         projectId: String,
         groupCode: String

@@ -40,12 +40,14 @@ import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.api.service.ServicePipelineViewResource
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
@@ -81,6 +83,33 @@ class RbacPermissionResourceGroupPermissionService(
         private const val ALL_RESOURCE = "*"
         private val syncExecutorService = Executors.newFixedThreadPool(5)
         private val syncProjectsExecutorService = Executors.newFixedThreadPool(10)
+    }
+
+    override fun listGroupsByPermissionConditions(
+        projectCode: String,
+        filterIamGroupIds: List<Int>?,
+        relatedResourceType: String,
+        relatedResourceCode: String?,
+        action: String?
+    ): List<Int> {
+        val pipelineGroupIds = if (relatedResourceCode != null && relatedResourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
+            val viewIds = client.get(ServicePipelineViewResource::class).listViewIdsByPipelineId(
+                projectId = projectCode,
+                pipelineId = relatedResourceCode
+            ).data ?: emptyList()
+            viewIds.map { HashUtil.encodeLongId(it) }
+        } else {
+            emptyList()
+        }
+        return resourceGroupPermissionDao.listByConditions(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            filterIamGroupIds = filterIamGroupIds,
+            resourceType = relatedResourceType,
+            resourceCode = relatedResourceCode,
+            pipelineGroupIds = pipelineGroupIds,
+            action = action
+        )
     }
 
     override fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>> {

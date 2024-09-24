@@ -51,7 +51,7 @@ import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.process.api.user.UserPipelineViewResource
+import com.tencent.devops.process.api.service.ServicePipelineViewResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
@@ -534,8 +534,7 @@ class RbacPermissionService constructor(
             AuthResourceType.PIPELINE_DEFAULT.value -> {
                 val parents = mutableListOf<AuthResourceInstance>()
                 parents.add(projectResourceInstance)
-                client.get(UserPipelineViewResource::class).listViewIdsByPipelineId(
-                    userId = userId,
+                client.get(ServicePipelineViewResource::class).listViewIdsByPipelineId(
                     projectId = projectCode,
                     pipelineId = resourceCode
                 ).data?.forEach { viewId ->
@@ -553,6 +552,7 @@ class RbacPermissionService constructor(
                     parents = parents
                 )
             }
+
             else -> {
                 AuthResourceInstance(
                     resourceType = resourceType,
