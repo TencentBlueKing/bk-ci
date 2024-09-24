@@ -31,41 +31,19 @@ import com.tencent.devops.common.expression.ExecutionContext
 import com.tencent.devops.common.expression.expression.ExpressionOutput
 import com.tencent.devops.common.expression.expression.IFunctionInfo
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
-import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 表达式替换上下文
  */
-@Schema(title = "表达式替换上下文")
-data class EnvReplacementContext(
-    @get:Schema(title = "表达式", required = true)
-    val value: String?,
+@Schema(title = "表达式替换参数")
+data class ExprReplacementOptions(
     @get:Schema(title = "环境变量", required = true)
     val contextMap: Map<String, String>,
-    @get:Schema(title = "是否能使用\${}占位符", required = true)
-    val useSingleCurlyBraces: Boolean = true,
     @get:Schema(title = "值是否能不存在", required = true)
     val contextNotNull: Boolean = false,
     @get:Schema(title = "表达式上下文", required = true)
     val contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null,
     val functions: Iterable<IFunctionInfo>? = null,
     val output: ExpressionOutput? = null
-) {
-    constructor(
-        value: String?,
-        contextMap: Map<String, String>,
-        dialect: IPipelineDialect,
-        contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null,
-        functions: Iterable<IFunctionInfo>? = null,
-        output: ExpressionOutput? = null
-    ) : this(
-        value = value,
-        contextMap = contextMap,
-        useSingleCurlyBraces = dialect.supportUseSingleCurlyBracesVar(),
-        contextNotNull = !dialect.supportMissingVar(),
-        contextPair = contextPair,
-        functions = functions,
-        output = output
-    )
-}
+)

@@ -1,8 +1,5 @@
 package com.tencent.devops.common.pipeline
 
-import com.tencent.devops.common.api.exception.VariableNotFoundException
-import com.tencent.devops.common.pipeline.dialect.ClassicPipelineDialect
-import com.tencent.devops.common.pipeline.dialect.ConstrainedPipelineDialect
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -186,19 +183,22 @@ internal class EnvReplacementParserTest {
         parseAndEquals(
             data = map,
             template = "\${{ (variables.TXT == 'txt') }}",
-            expect = true.toString()
+            expect = true.toString(),
+            onlyExpression = true
         )
 
         parseAndEquals(
             data = map,
             template = "\${{ (variables.TXT2 == 'txt2') }}",
-            expect = true.toString()
+            expect = true.toString(),
+            onlyExpression = true
         )
 
         parseAndEquals(
             data = map,
             template = "\${{ ((variables.TXT == 'txt') && (variables.TXT2 == 'txt2')) }}",
-            expect = true.toString()
+            expect = true.toString(),
+            onlyExpression = true
         )
 
         parseAndEquals(
@@ -210,7 +210,8 @@ internal class EnvReplacementParserTest {
             expect = "echo \" 这可是来自master的改动 \"\n" +
                 "          echo \"  true  \"\n" +
                 "          echo \"  true  \"\n" +
-                "          echo \"  true  \""
+                "          echo \"  true  \"",
+            onlyExpression = true
         )
 
         parseAndEquals(
@@ -222,13 +223,15 @@ internal class EnvReplacementParserTest {
             expect = "echo \" 这可是来自master的改动 \"\n" +
                 "echo \"  false  \"\n" +
                 "echo \"  false  \"\n" +
-                "echo \"  false  \""
+                "echo \"  false  \"",
+            onlyExpression = true
         )
 
         parseAndEquals(
             data = map,
             template = "{\"GDP\": \"\${{GDP}}亿\", \"People\": \${{People}} \"Country\": \"\${{twice}}\"}",
-            expect = "{\"GDP\": \"${map["GDP"]}亿\", \"People\": ${map["People"]} \"Country\": \"${map["Country"]}\"}"
+            expect = "{\"GDP\": \"${map["GDP"]}亿\", \"People\": ${map["People"]} \"Country\": \"${map["Country"]}\"}",
+            onlyExpression = true
         )
 
         val data = HashMap<String, String>()
@@ -237,27 +240,30 @@ internal class EnvReplacementParserTest {
         data["t.cd"] = "\${{ab.cd}}"
 
         val template2 = "abcd_\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
-        val buff = EnvReplacementParser.parse(template2, data)
+        val buff = EnvReplacementParser.parse(template2, data, true)
         Assertions.assertEquals(template2, buff)
 
         parseAndEquals(
             data = data,
             template = "中国\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end",
-            expect = "中国\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
+            expect = "中国\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end",
+            onlyExpression = true
         )
 
         parseAndEquals(
             data = data,
             template = "abcd_\${abc}_ffs_\${{ce}}_\${{t.cd}}_ end结束%\n # 这是注释行a1\$ab_^%!#@",
             expect = "abcd_\${abc}_ffs_twice_${data["ab.cd"]}_ end结束%\n # 这是注释行a1\$ab_^%!#@",
-            contextMap = mapOf("ce" to "twice")
+            contextMap = mapOf("ce" to "twice"),
+            onlyExpression = true
         )
 
         data["c_e"] = "\${none}"
         parseAndEquals(
             data = data,
             template = "abcd_\${abc}_ffs_\${{c_e}}_\${{t.cd}}_ end",
-            expect = "abcd_\${abc}_ffs_\${none}_${data["ab.cd"]}_ end"
+            expect = "abcd_\${abc}_ffs_\${none}_${data["ab.cd"]}_ end",
+            onlyExpression = true
         )
 
         data["center中"] = "中国"
@@ -273,14 +279,16 @@ internal class EnvReplacementParserTest {
         parseAndEquals(
             data = data,
             template = "\${{blank}}",
-            expect = ""
+            expect = "",
+            onlyExpression = true
         )
 
         data["all"] = "hello"
         parseAndEquals(
             data = data,
             template = "\${{all}}",
-            expect = "hello"
+            expect = "hello",
+            onlyExpression = true
         )
     }
 
@@ -317,7 +325,8 @@ internal class EnvReplacementParserTest {
                 "echo envs.env_e=e, env_e=\$env_e\n" +
                 "echo envs.a=, a=\$a\n" +
                 "echo settings.sensitive.password=\${{ settings.sensitive.password }}\n" +
-                "echo ::set-output name=a::i am a at step_1"
+                "echo ::set-output name=a::i am a at step_1",
+            onlyExpression = true
         )
     }
 
@@ -337,35 +346,44 @@ internal class EnvReplacementParserTest {
         val command8 = "echo \${{ variables.hello }}"
 
         val command9 = "echo \${{ ci.workspace }}"
+        val command10 = mutableMapOf(
+            "params" to mutableListOf(
+                mutableMapOf(
+                    "key" to "instance",
+                    "value" to "\${{variables.instance}}"
+                )
+            )
+        )
 
         val data = mapOf(
             "variables.abc" to "variables.value",
-            "variables.hello" to "hahahahaha"
+            "variables.hello" to "hahahahaha",
+            "variables.instance" to "{\"instances\":[{\"cluster\":\"ci-prod\",\"pod\":\"ci-123\"}]}"
         )
         // 与EnvUtils的差异点：不支持传可空对象
 //        Assertions.assertEquals("", EnvReplacementParser.parse(null, data))
-        Assertions.assertEquals("", EnvReplacementParser.parse("", data))
-        Assertions.assertEquals("", EnvReplacementParser.parse(null, data))
+        Assertions.assertEquals("", EnvReplacementParser.parse("", data, true))
+        Assertions.assertEquals("", EnvReplacementParser.parse(null, data, true))
 
         Assertions.assertEquals(
             "hello variables.value world",
-            EnvReplacementParser.parse(command1, data)
+            EnvReplacementParser.parse(command1, data, true)
         )
         Assertions.assertEquals(
             "variables.valueworld",
-            EnvReplacementParser.parse(command2, data)
+            EnvReplacementParser.parse(command2, data, true)
         )
         Assertions.assertEquals(
             "hellovariables.value",
-            EnvReplacementParser.parse(command3, data)
+            EnvReplacementParser.parse(command3, data, true)
         )
         Assertions.assertEquals(
             "hello\${{variables.abc",
-            EnvReplacementParser.parse(command4, data)
+            EnvReplacementParser.parse(command4, data, true)
         )
         Assertions.assertEquals(
             "hello\${{variables.abc}",
-            EnvReplacementParser.parse(command5, data)
+            EnvReplacementParser.parse(command5, data, true)
         )
         Assertions.assertEquals(
             command6,
@@ -377,14 +395,22 @@ internal class EnvReplacementParserTest {
         )
         Assertions.assertEquals(
             "echo hahahahaha",
-            EnvReplacementParser.parse(command8, data)
+            EnvReplacementParser.parse(command8, data, true)
         )
         Assertions.assertEquals(
             "echo /data/landun/workspace",
             EnvReplacementParser.parse(
                 value = command9,
-                contextMap = map.plus("ci.workspace" to "/data/landun/workspace")
+                contextMap = map.plus("ci.workspace" to "/data/landun/workspace"),
+                onlyExpression = true
             )
+        )
+        val command10Expected = """
+            {"params":[{"key":"instance","value":"{\"instances\":[{\"cluster\":\"ci-prod\",\"pod\":\"ci-123\"}]}"}]}
+        """.trimIndent()
+        Assertions.assertEquals(
+            command10Expected,
+            EnvReplacementParser.parse(command10, data, true)
         )
     }
 
@@ -397,7 +423,7 @@ internal class EnvReplacementParserTest {
         println("parseEnvTestData $command")
         Assertions.assertEquals(
             "{\"age\": ${map["age"]} , \"sex\": \"boy\", \"name\": ${map["name"]}}",
-            EnvReplacementParser.parse(command, map)
+            EnvReplacementParser.parse(command, map, true)
         )
 
         val command1 = "hello \${{variables.abc}} world"
@@ -423,26 +449,27 @@ internal class EnvReplacementParserTest {
             "{variables.abc" to "jacky"
         )
 
-        Assertions.assertEquals("hello variables.value world", EnvReplacementParser.parse(command1, data))
-        Assertions.assertEquals("variables.valueworld", EnvReplacementParser.parse(command2, data))
-        Assertions.assertEquals("hellovariables.value", EnvReplacementParser.parse(command3, data))
-        Assertions.assertEquals("hello\${{variables.abc", EnvReplacementParser.parse(command4, data))
-        Assertions.assertEquals("hello\${{variables.abc}", EnvReplacementParser.parse(command5, data))
+        Assertions.assertEquals("hello variables.value world", EnvReplacementParser.parse(command1, data, true))
+        Assertions.assertEquals("variables.valueworld", EnvReplacementParser.parse(command2, data, true))
+        Assertions.assertEquals("hellovariables.value", EnvReplacementParser.parse(command3, data, true))
+        Assertions.assertEquals("hello\${{variables.abc", EnvReplacementParser.parse(command4, data, true))
+        Assertions.assertEquals("hello\${{variables.abc}", EnvReplacementParser.parse(command5, data, true))
         Assertions.assertEquals("hello\${variables.abc}}", EnvReplacementParser.parse(command6, data, true))
-        Assertions.assertEquals("hello\$variables.abc}}", EnvReplacementParser.parse(command7, data))
-        Assertions.assertEquals("echo hahahahaha", EnvReplacementParser.parse(command8, data))
+        Assertions.assertEquals("hello\$variables.abc}}", EnvReplacementParser.parse(command7, data, true))
+        Assertions.assertEquals("echo hahahahaha", EnvReplacementParser.parse(command8, data, true))
         Assertions.assertEquals(
             "echo /data/landun/workspace || hahahahaha",
             EnvReplacementParser.parse(
                 value = command9,
-                contextMap = data.plus("ci.workspace" to "/data/landun/workspace")
+                contextMap = data.plus("ci.workspace" to "/data/landun/workspace"),
+                onlyExpression = true
             )
         )
-        Assertions.assertEquals("echo \${{ ci.xyz == 'zzzz' }}", EnvReplacementParser.parse(command10, data))
-        Assertions.assertEquals("echo true", EnvReplacementParser.parse(command11, data))
-        Assertions.assertEquals("echo false", EnvReplacementParser.parse(command12, data))
-        Assertions.assertEquals("echo true", EnvReplacementParser.parse(command13, data))
-        Assertions.assertEquals("true", EnvReplacementParser.parse(command14, data))
+        Assertions.assertEquals("echo \${{ ci.xyz == 'zzzz' }}", EnvReplacementParser.parse(command10, data, true))
+        Assertions.assertEquals("echo true", EnvReplacementParser.parse(command11, data, true))
+        Assertions.assertEquals("echo false", EnvReplacementParser.parse(command12, data, true))
+        Assertions.assertEquals("echo true", EnvReplacementParser.parse(command13, data, true))
+        Assertions.assertEquals("true", EnvReplacementParser.parse(command14, data, true))
     }
 
     @Test
@@ -484,14 +511,7 @@ console.log("全局配置", variables)
 let branch = master
 let branch1 = 
 let branchs = branch.split("/")"""
-        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data))
-        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, ClassicPipelineDialect()))
-        Assertions.assertThrows(VariableNotFoundException::class.java) {
-            EnvReplacementParser.parse(command1, data, ConstrainedPipelineDialect())
-        }
-        Assertions.assertThrows(VariableNotFoundException::class.java) {
-            EnvReplacementParser.parse(command1, mapOf(), ConstrainedPipelineDialect())
-        }
+        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, true))
     }
 
     @Test
@@ -541,11 +561,7 @@ echo true"""
             "variables.is_build" to "false",
             "ci.branch" to "master"
         )
-        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data))
-        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, ClassicPipelineDialect()))
-        Assertions.assertThrows(VariableNotFoundException::class.java) {
-            EnvReplacementParser.parse(command1, mapOf(), ConstrainedPipelineDialect())
-        }
+        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, true))
     }
 
     private fun parseAndEquals(

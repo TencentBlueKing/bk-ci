@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
-import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -46,7 +45,6 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_PREPARE_TO_BUILD
@@ -67,10 +65,10 @@ import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
-import org.slf4j.LoggerFactory
 import kotlin.system.exitProcess
 
 object Runner {
@@ -454,9 +452,6 @@ object Runner {
             }
             if (customEnv.isNullOrEmpty()) return
             val jobVariables = jobBuildVariables.variables.toMutableMap()
-            val dialect = jobBuildVariables.variables[PIPELINE_DIALECT]?.let {
-                PipelineDialectType.valueOf(it).dialect
-            } ?: PipelineDialectType.CLASSIC.dialect
             customEnv.forEach {
                 if (!it.key.isNullOrBlank()) {
                     // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换

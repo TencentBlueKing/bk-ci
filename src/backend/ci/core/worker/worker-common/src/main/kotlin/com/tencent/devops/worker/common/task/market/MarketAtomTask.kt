@@ -506,7 +506,7 @@ open class MarketAtomTask : ITask() {
             }
             inputMap.forEach { (name, value) ->
                 atomParams[name] = EnvReplacementParser.parse(
-                    value = JsonUtil.toJson(value),
+                    value = value,
                     contextMap = variables,
                     dialect = dialect,
                     contextPair = customReplacement,

@@ -25,15 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.common.pipeline
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.JsonUtil.toJson
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 @Suppress("ALL", "UNCHECKED_CAST")
-class ObjectReplaceEnvVarUtilTest {
+class ExprReplaceEnvVarUtilTest {
 
     private val envMap: MutableMap<String, String> = HashMap()
 
@@ -54,22 +55,22 @@ class ObjectReplaceEnvVarUtilTest {
     @Test
     fun replaceList() {
         val testBean = TestBean(
-            testBeanKey = "bean变量替换测试_\${specStrEnvVar}",
-            testBeanValue = "{\"abc\":\"变量替换测试_\${jsonStrEnvVar}\"}"
+            testBeanKey = "bean变量替换测试_\${{specStrEnvVar}}",
+            testBeanValue = "{\"abc\":\"变量替换测试_\${{jsonStrEnvVar}}\"}"
         )
         // 对list对象进行变量替换
         val originDataListObj = ArrayList<Any?>()
-        originDataListObj.add("变量替换测试_\${normalStrEnvVar}")
-        originDataListObj.add("变量替换测试_\${specStrEnvVar}")
-        originDataListObj.add("变量替换测试_\${jsonStrEnvVar}")
-        originDataListObj.add("{\"abc\":\"变量替换测试_\${jsonStrEnvVar}\"}")
-        originDataListObj.add("[\"变量替换测试_\${jsonStrEnvVar}\"]")
+        originDataListObj.add("变量替换测试_\${{normalStrEnvVar}}")
+        originDataListObj.add("变量替换测试_\${{specStrEnvVar}}")
+        originDataListObj.add("变量替换测试_\${{jsonStrEnvVar}}")
+        originDataListObj.add("{\"abc\":\"变量替换测试_\${{jsonStrEnvVar}}\"}")
+        originDataListObj.add("[\"变量替换测试_\${{jsonStrEnvVar}}\"]")
         originDataListObj.add(testBean)
         val dataMapObj: MutableMap<String, Any?> = HashMap()
-        dataMapObj["dataMapKey"] = "变量替换测试_\${specStrEnvVar}"
+        dataMapObj["dataMapKey"] = "变量替换测试_\${{specStrEnvVar}}"
         dataMapObj["testBean"] = testBean
         originDataListObj.add(dataMapObj)
-        val convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataListObj, envMap) as List<*>
+        val convertDataObj = ExprReplaceEnvVarUtil.replaceEnvVar(originDataListObj, envMap) as List<*>
 
         assertEquals("变量替换测试_${envMap["normalStrEnvVar"]}", convertDataObj[0])
         assertEquals("变量替换测试_${envMap["specStrEnvVar"]}", convertDataObj[1])
@@ -84,13 +85,13 @@ class ObjectReplaceEnvVarUtilTest {
 
     @Test
     fun replaceIllegalJson() {
-        val objectJson = "{\"abc:\"变量替换测试_\${normalStrEnvVar}\""
-        val convertDataObj1 = ObjectReplaceEnvVarUtil.replaceEnvVar(objectJson, envMap)
+        val objectJson = "{\"abc:\"变量替换测试_\${{normalStrEnvVar}}\""
+        val convertDataObj1 = ExprReplaceEnvVarUtil.replaceEnvVar(objectJson, envMap)
         println(convertDataObj1)
         assertEquals("{\"abc:\"变量替换测试_${envMap["normalStrEnvVar"]}\"", convertDataObj1)
 
-        val arrayJson = "[1, \"变量替换测试_\${normalStrEnvVar}\""
-        val convertDataObj2 = ObjectReplaceEnvVarUtil.replaceEnvVar(arrayJson, envMap)
+        val arrayJson = "[1, \"变量替换测试_\${{normalStrEnvVar}}\""
+        val convertDataObj2 = ExprReplaceEnvVarUtil.replaceEnvVar(arrayJson, envMap)
         println(convertDataObj2)
         assertEquals("[1, \"变量替换测试_${envMap["normalStrEnvVar"]}\"", convertDataObj2)
     }
@@ -99,23 +100,23 @@ class ObjectReplaceEnvVarUtilTest {
     fun replaceSet() {
 
         val testBean = TestBean(
-            testBeanKey = "bean变量替换测试_\${specStrEnvVar}",
-            testBeanValue = "{\"abc\":\"变量替换测试_\${jsonStrEnvVar}\"}"
+            testBeanKey = "bean变量替换测试_\${{specStrEnvVar}}",
+            testBeanValue = "{\"abc\":\"变量替换测试_\${{jsonStrEnvVar}}\"}"
         )
         // 对set对象进行变量替换
         val originDataSetObj = HashSet<Any>()
-        originDataSetObj.add("1变量替换测试_\${normalStrEnvVar}")
-        originDataSetObj.add("2变量替换测试_\${specStrEnvVar}")
-        originDataSetObj.add("3变量替换测试_\${jsonStrEnvVar}")
-        originDataSetObj.add("{\"abc\":\"变量替换测试_\${jsonStrEnvVar}\"}")
-        originDataSetObj.add("[\"变量替换测试_\${jsonStrEnvVar}\"]")
+        originDataSetObj.add("1变量替换测试_\${{normalStrEnvVar}}")
+        originDataSetObj.add("2变量替换测试_\${{specStrEnvVar}}")
+        originDataSetObj.add("3变量替换测试_\${{jsonStrEnvVar}}")
+        originDataSetObj.add("{\"abc\":\"变量替换测试_\${{jsonStrEnvVar}}\"}")
+        originDataSetObj.add("[\"变量替换测试_\${{jsonStrEnvVar}}\"]")
         originDataSetObj.add(testBean)
 
         val setDataMapObj: MutableMap<String, Any?> = HashMap()
-        setDataMapObj["dataMapKey"] = "变量替换测试_\${specStrEnvVar}"
+        setDataMapObj["dataMapKey"] = "变量替换测试_\${{specStrEnvVar}}"
         setDataMapObj["testBean"] = testBean
         originDataSetObj.add(setDataMapObj)
-        val convertDataObj = (ObjectReplaceEnvVarUtil.replaceEnvVar(originDataSetObj, envMap) as Set<*>)
+        val convertDataObj = (ExprReplaceEnvVarUtil.replaceEnvVar(originDataSetObj, envMap) as Set<*>)
 
         convertDataObj.forEach { member ->
             when {
@@ -168,24 +169,25 @@ class ObjectReplaceEnvVarUtilTest {
     fun replaceMapWithTestBean() {
         // 对map对象进行变量替换
         val originDataMapObj: MutableMap<String, Any?> = HashMap()
-        originDataMapObj["normalStrEnvVarKey"] = "变量替换测试_\${normalStrEnvVar}"
-        originDataMapObj["specStrEnvVarKey"] = "变量替换测试_\${specStrEnvVar}"
-        originDataMapObj["jsonStrEnvVarKey1"] = "变量替换测试_\${jsonStrEnvVar}"
-        originDataMapObj["jsonStrEnvVarKey2"] = "{\"abc\":\"变量替换测试_\${jsonStrEnvVar}\"}"
-        originDataMapObj["jsonStrEnvVarKey3"] = "\${jsonStrEnvVar}"
+        originDataMapObj["normalStrEnvVarKey"] = "变量替换测试_\${{normalStrEnvVar}}"
+        originDataMapObj["specStrEnvVarKey"] = "变量替换测试_\${{specStrEnvVar}}"
+        originDataMapObj["jsonStrEnvVarKey1"] = "变量替换测试_\${{jsonStrEnvVar}}"
+        originDataMapObj["jsonStrEnvVarKey2"] = "{\"abc\":\"变量替换测试_\${{jsonStrEnvVar}}\"}"
+        originDataMapObj["jsonStrEnvVarKey3"] = "\${{jsonStrEnvVar}}"
         var originSubDataMapObj: MutableMap<String?, Any?>? = HashMap()
-        originSubDataMapObj!!["normalStrEnvVarKey"] = "变量替换测试_\${normalStrEnvVar}"
-        originSubDataMapObj["specStrEnvVarKey"] = "变量替换测试_\${specStrEnvVar}"
-        originSubDataMapObj["jsonStrEnvVarKey1"] = "变量替换测试_\${jsonStrEnvVar}"
-        originSubDataMapObj["jsonStrEnvVarKey2"] = "\${jsonStrEnvVar}"
+        originSubDataMapObj!!["normalStrEnvVarKey"] = "变量替换测试_\${{normalStrEnvVar}}"
+        originSubDataMapObj["specStrEnvVarKey"] = "变量替换测试_\${{specStrEnvVar}}"
+        originSubDataMapObj["jsonStrEnvVarKey1"] = "变量替换测试_\${{jsonStrEnvVar}}"
+        originSubDataMapObj["jsonStrEnvVarKey2"] = "\${{jsonStrEnvVar}}"
 
         val testBean = TestBean(
-            testBeanKey = "变量替换测试_\${specStrEnvVar}",
-            testBeanValue = "{\"abc\":\"变量替换测试_\${jsonStrEnvVar}\"}"
+            testBeanKey = "变量替换测试_\${{specStrEnvVar}}",
+            testBeanValue = "{\"abc\":\"变量替换测试_\${{jsonStrEnvVar}}\"}"
         )
         originSubDataMapObj["testBean"] = testBean
         originDataMapObj["originSubDataMapObj"] = originSubDataMapObj
-        val cpb = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataMapObj, envMap)
+
+        val cpb = ExprReplaceEnvVarUtil.replaceEnvVar(originDataMapObj, envMap)
         val testBeanMap = ((cpb as Map<String, Any>)["originSubDataMapObj"] as Map<String, Any>)["testBean"] as TestBean
         assertEquals("变量替换测试_${envMap["specStrEnvVar"]}", testBeanMap.testBeanKey)
         assertEquals(jsonExcept, testBeanMap.testBeanValue)
@@ -200,47 +202,47 @@ class ObjectReplaceEnvVarUtilTest {
     fun replaceTestComplexBean() {
         // 对普通的javaBean对象进行转换
         val testComplexBean = TestComplexBean()
-        testComplexBean.testBeanKey = "变量替换测试_\${specStrEnvVar}"
-        testComplexBean.testBeanValue = "[\"变量替换测试_\${jsonStrEnvVar}\"]"
+        testComplexBean.testBeanKey = "变量替换测试_\${{specStrEnvVar}}"
+        testComplexBean.testBeanValue = "[\"变量替换测试_\${{jsonStrEnvVar}}\"]"
 
         val dataList = ArrayList<Any?>()
-        dataList.add("变量替换测试_\${normalStrEnvVar}")
-        dataList.add("变量替换测试_\${specStrEnvVar}")
-        dataList.add("变量替换测试_\${jsonStrEnvVar}")
-        dataList.add("{\"abc\":\"变量替换测试_\${jsonStrEnvVar}\"}")
-        dataList.add("[\"变量替换测试_\${jsonStrEnvVar}\"]")
+        dataList.add("变量替换测试_\${{normalStrEnvVar}}")
+        dataList.add("变量替换测试_\${{specStrEnvVar}}")
+        dataList.add("变量替换测试_\${{jsonStrEnvVar}}")
+        dataList.add("{\"abc\":\"变量替换测试_\${{jsonStrEnvVar}}\"}")
+        dataList.add("[\"变量替换测试_\${{jsonStrEnvVar}}\"]")
         testComplexBean.dataList = dataList
 
         var dataMap: MutableMap<String?, Any?> = HashMap()
-        dataMap["normalStrEnvVarKey"] = " 变量替换测试_\${normalStrEnvVar} "
-        dataMap["specStrEnvVarKey"] = "变量替换测试_\${specStrEnvVar}"
-        dataMap["jsonStrEnvVarKey1"] = "变量替换测试_\${jsonStrEnvVar}"
-        dataMap["jsonStrEnvVarKey2"] = "{\"abc\":\"变量替换测试_\${jsonStrEnvVar}\"}"
-        dataMap["jsonStrEnvVarKey3"] = "[\"变量替换测试_\${jsonStrEnvVar}\"]"
+        dataMap["normalStrEnvVarKey"] = " 变量替换测试_\${{normalStrEnvVar}} "
+        dataMap["specStrEnvVarKey"] = "变量替换测试_\${{specStrEnvVar}}"
+        dataMap["jsonStrEnvVarKey1"] = "变量替换测试_\${{jsonStrEnvVar}}"
+        dataMap["jsonStrEnvVarKey2"] = "{\"abc\":\"变量替换测试_\${{jsonStrEnvVar}}\"}"
+        dataMap["jsonStrEnvVarKey3"] = "[\"变量替换测试_\${{jsonStrEnvVar}}\"]"
         val subDataMap: MutableMap<String, Any> = HashMap()
-        subDataMap["normalStrEnvVarKey"] = "变量替换测试_\${normalStrEnvVar}"
-        subDataMap["specStrEnvVarKey"] = "变量替换测试_\${specStrEnvVar}"
-        subDataMap["jsonStrEnvVarKey1"] = "变量替换测试_\${jsonStrEnvVar}"
-        subDataMap["jsonStrEnvVarKey2"] = "{\"abc\":\"变量替换测试_\${jsonStrEnvVar}\"}"
+        subDataMap["normalStrEnvVarKey"] = "变量替换测试_\${{normalStrEnvVar}}"
+        subDataMap["specStrEnvVarKey"] = "变量替换测试_\${{specStrEnvVar}}"
+        subDataMap["jsonStrEnvVarKey1"] = "变量替换测试_\${{jsonStrEnvVar}}"
+        subDataMap["jsonStrEnvVarKey2"] = "{\"abc\":\"变量替换测试_\${{jsonStrEnvVar}}\"}"
 
         val testBean = TestBean(
-            testBeanKey = "bean变量替换测试_\${specStrEnvVar}",
-            testBeanValue = "{\"abc\":\"bean变量替换测试_\${jsonStrEnvVar}\"}"
+            testBeanKey = "bean变量替换测试_\${{specStrEnvVar}}",
+            testBeanValue = "{\"abc\":\"bean变量替换测试_\${{jsonStrEnvVar}}\"}"
         )
         subDataMap["testBean"] = testBean
         dataMap["subDataMap"] = subDataMap
         testComplexBean.dataMap = dataMap
 
         val dataSet = HashSet<Any?>()
-        dataSet.add("变量替换测试_\${normalStrEnvVar}")
-        dataSet.add("变量替换测试_\${specStrEnvVar}")
-        dataSet.add("变量替换测试_\${jsonStrEnvVar}")
-        dataSet.add("{\"abc\":\"变量替换测试_\${jsonStrEnvVar}\"}")
-        dataSet.add("[\"变量替换测试_\${jsonStrEnvVar}\"]")
+        dataSet.add("变量替换测试_\${{normalStrEnvVar}}")
+        dataSet.add("变量替换测试_\${{specStrEnvVar}}")
+        dataSet.add("变量替换测试_\${{jsonStrEnvVar}}")
+        dataSet.add("{\"abc\":\"变量替换测试_\${{jsonStrEnvVar}}\"}")
+        dataSet.add("[\"变量替换测试_\${{jsonStrEnvVar}}\"]")
         testComplexBean.dataSet = dataSet
 
         // start to test
-        var convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(testComplexBean, envMap)
+        var convertDataObj = ExprReplaceEnvVarUtil.replaceEnvVar(testComplexBean, envMap)
         val convertBean = convertDataObj as TestComplexBean
         assertEquals("变量替换测试_${envMap["specStrEnvVar"]}", convertBean.testBeanKey)
 
@@ -261,7 +263,7 @@ class ObjectReplaceEnvVarUtilTest {
         dataMap["key1"] = "变量"
         dataMap["key2"] = arrayOf<Any?>(null, "哈哈")
 
-        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(dataMap, envMap) as Map<*, *>
+        convertDataObj = ExprReplaceEnvVarUtil.replaceEnvVar(dataMap, envMap) as Map<*, *>
         assertEquals(dataMap["key1"], convertDataObj["key1"])
         assertEquals(toJson(dataMap["key2"]!!), convertDataObj["key2"])
         println("convertDataObj=$convertDataObj")
@@ -271,32 +273,32 @@ class ObjectReplaceEnvVarUtilTest {
     fun replaceEnvVar() {
 
         // 对普通字符串进行普通字符串变量替换
-        var originDataObj: Any = "变量替换测试_\${normalStrEnvVar}"
-        var convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap)
+        var originDataObj: Any = "变量替换测试_\${{normalStrEnvVar}}"
+        var convertDataObj = ExprReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap)
         assertEquals("变量替换测试_123", toJson(convertDataObj))
 
         // 对普通字符串进行带特殊字符字符串变量替换
-        originDataObj = "变量替换测试_\${specStrEnvVar}"
-        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap)
+        originDataObj = "变量替换测试_\${{specStrEnvVar}}"
+        convertDataObj = ExprReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap)
         assertEquals("变量替换测试_D:\\tmp\\hha", toJson(convertDataObj))
 
         // 对普通字符串进行json字符串变量替换
-        originDataObj = "变量替换测试_\${jsonStrEnvVar}"
-        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap)
+        originDataObj = "变量替换测试_\${{jsonStrEnvVar}}"
+        convertDataObj = ExprReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap)
         assertEquals("变量替换测试_{\"abc\":\"123\"}", toJson(convertDataObj))
 
         // number类型变量替换
         originDataObj = "[1,2,3]"
-        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap)
+        convertDataObj = ExprReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap)
         println(toJson(convertDataObj))
         assertEquals(toJson(JsonUtil.to(originDataObj, List::class.java)), toJson(convertDataObj))
 
         // 魔法数字符创测试
-        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar("12E2", envMap)
+        convertDataObj = ExprReplaceEnvVarUtil.replaceEnvVar("12E2", envMap)
         assertEquals("12E2", toJson(convertDataObj))
         // 替换”[133]-[sid-${normalStrEnvVar}]-[sid-zhiliang-test1]“带多个[]的字符串
-        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(
-            "[133]-[sid-\${normalStrEnvVar}]-[sid-zhiliang-test1]",
+        convertDataObj = ExprReplaceEnvVarUtil.replaceEnvVar(
+            "[133]-[sid-\${{normalStrEnvVar}}]-[sid-zhiliang-test1]",
             envMap
         )
         assertEquals("[133]-[sid-123]-[sid-zhiliang-test1]", toJson(convertDataObj))
