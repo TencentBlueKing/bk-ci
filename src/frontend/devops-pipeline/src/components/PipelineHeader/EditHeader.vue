@@ -60,9 +60,7 @@
                 }"
                 @click="exec(true)"
             >
-                <span class="debug-pipeline-draft-btn">
-                    {{ $t("debug") }}
-                </span>
+                {{ $t("debug") }}
             </bk-button>
             <bk-dropdown-menu
                 trigger="click"
@@ -579,20 +577,6 @@
             @include ellipsis();
             width: 100%;
         }
-    }
-  }
-  .debug-pipeline-draft-btn {
-    display: flex;
-    align-items: center;
-    grid-gap: 8px;
-    > e {
-        color: #DCDEE5;
-    }
-    .icon-txt-disabled {
-        cursor: not-allowed;
-    }
-    > i:not(.icon-txt-disabled):hover {
-        color: $primaryColor;
     }
   }
   .pipeline-edit-right-aside {
