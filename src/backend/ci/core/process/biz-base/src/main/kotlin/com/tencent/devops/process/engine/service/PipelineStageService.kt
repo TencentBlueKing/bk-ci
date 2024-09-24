@@ -397,7 +397,8 @@ class PipelineStageService @Autowired constructor(
                         suggest = "CANCEL"
                     ),
                     timeout = timeout,
-                    debug = buildInfo.debug
+                    debug = buildInfo.debug,
+                    system = timeout
                 )
             }
         }
@@ -411,11 +412,12 @@ class PipelineStageService @Autowired constructor(
         buildStage: PipelineBuildStage,
         reviewRequest: StageReviewRequest?,
         timeout: Boolean? = false,
-        debug: Boolean
+        debug: Boolean,
+        system: Boolean? = false,
     ): Boolean {
         with(buildStage) {
             checkIn?.reviewGroup(
-                userId = if (timeout == true) "SYSTEM" else userId,
+                userId = if (system == true) "SYSTEM" else userId,
                 groupId = reviewRequest?.id,
                 action = ManualReviewAction.ABORT,
                 suggest = if (timeout == true) "TIMEOUT" else reviewRequest?.suggest
@@ -616,7 +618,8 @@ class PipelineStageService @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     )
                 ),
-                debug = debug
+                debug = debug,
+                system = true
             )
             return
         }
