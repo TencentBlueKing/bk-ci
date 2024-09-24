@@ -10,8 +10,8 @@
     <template #content>
       <h3 class="title">{{ t('语法差异') }}</h3>
       <bk-table :data="namingConventionData" show-overflow-tooltip>
-        <bk-table-column :label="$t('差异项')" prop="difference" :width="140" />
-        <bk-table-column :label="$t('传统风格')" prop="classic" :width="290">
+        <bk-table-column :label="t('差异项')" prop="difference" :width="140" />
+        <bk-table-column :label="t('传统风格')" prop="classic" :width="290">
           <template #default="{ row }">
             <div
               class="label-column"
@@ -24,7 +24,7 @@
             </div>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('制约风格')" prop="constrainedMode">
+        <bk-table-column :label="t('制约风格')" prop="constrainedMode">
           <template #default="{ row }">
             <div
               class="label-column"
