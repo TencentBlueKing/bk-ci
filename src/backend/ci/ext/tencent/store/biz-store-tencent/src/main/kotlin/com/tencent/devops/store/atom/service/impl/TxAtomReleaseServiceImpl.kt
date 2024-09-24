@@ -747,7 +747,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 KEY_STORE_CODE to atomCode,
                 KEY_VERSION to version,
                 KEY_LANGUAGE to language,
-                KEY_SCRIPT to StringEscapeUtils.escapeJava(script),
+                KEY_SCRIPT to script,
                 KEY_REPOSITORY_HASH_ID to atomRecord.repositoryHashId,
                 KEY_CODE_SRC to atomRecord.codeSrc,
                 KEY_REPOSITORY_PATH to (buildInfo.value2() ?: ""),
