@@ -146,7 +146,7 @@ class PipelineBuildService(
                 params = arrayOf(projectVO.englishName)
             )
         }
-
+        // 如果调试出现了没有关联setting的老版本，则使用当前的配置
         val setting = if (debug == true) {
             pipelineRepositoryService.getDraftVersionResource(
                 pipeline.projectId, pipeline.pipelineId
@@ -158,7 +158,7 @@ class PipelineBuildService(
                     detailInfo = null,
                     version = it
                 )
-            }
+            } ?: pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
         } else {
             pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
         }
