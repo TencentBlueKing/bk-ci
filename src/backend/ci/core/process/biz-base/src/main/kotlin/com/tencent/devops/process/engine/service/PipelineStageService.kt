@@ -40,7 +40,9 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_STAGE_REVIEW_EMPTY_REVIEWER
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
@@ -609,7 +611,10 @@ class PipelineStageService @Autowired constructor(
                 reviewRequest = StageReviewRequest(
                     reviewParams = listOf(),
                     id = group.id,
-                    suggest = "CANCEL with empty reviewer"
+                    suggest = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_STAGE_REVIEW_EMPTY_REVIEWER,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                 ),
                 debug = debug
             )
