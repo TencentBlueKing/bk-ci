@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.BkRepoRegion
+import com.tencent.devops.remotedev.config.RemoteDevBkRepoConfig
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service
 class WorkspaceRecordService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
+    private val bkRepoConfig: RemoteDevBkRepoConfig,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val startAppLinkDao: ProjectStartAppLinkDao,
     private val workspaceRecordUserApprovalDao: WorkspaceRecordUserApprovalDao,
@@ -175,7 +177,8 @@ class WorkspaceRecordService @Autowired constructor(
 
         val data = resp.records.map {
             WorkspaceRecordMetadata(
-                link = "bkRepoConfig.getRegionConfig(region)/api/user/stream/{projectId}/{repoName}/streams/${it.fullPath}",
+                link = "${bkRepoConfig.getRegionConfig(region)}" +
+                        "/api/user/stream/{projectId}/{repoName}/streams/${it.fullPath}",
                 startTime = it.metadata?.mediaStartTime,
                 stopTime = it.metadata?.mediaStopTime
             )
