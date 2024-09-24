@@ -747,7 +747,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 KEY_STORE_CODE to atomCode,
                 KEY_VERSION to version,
                 KEY_LANGUAGE to language,
-                KEY_SCRIPT to script,
+                KEY_SCRIPT to StringEscapeUtils.escapeJava(script),
                 KEY_REPOSITORY_HASH_ID to atomRecord.repositoryHashId,
                 KEY_CODE_SRC to atomRecord.codeSrc,
                 KEY_REPOSITORY_PATH to (buildInfo.value2() ?: ""),
@@ -936,7 +936,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         startParams[KEY_CODE_SRC] = atomRecord.codeSrc
         startParams[KEY_REPOSITORY_PATH] = (buildInfo.value2() ?: "")
         startParams[KEY_LANGUAGE] = language
-        startParams[KEY_SCRIPT] = StringEscapeUtils.escapeJava(buildInfo.value1())
+        startParams[KEY_SCRIPT] = buildInfo.value1()
         runtimeVersion?.let { startParams[KEY_RUNTIME_VERSION] = it }
         validOsNameFlag?.let {
             startParams[KEY_VALID_OS_NAME_FLAG] = it.toString()
