@@ -29,7 +29,6 @@ package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.user.UserBkRepoStaticResource
 import com.tencent.devops.artifactory.constant.BKREPO_STATIC_PROJECT_ID
-import com.tencent.devops.artifactory.constant.DATE_FORMAT_YYYY_MM_DD
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
@@ -40,9 +39,7 @@ import com.tencent.devops.common.web.RestResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @RestResource
 class UserBkRepoStaticResourceImpl @Autowired constructor(

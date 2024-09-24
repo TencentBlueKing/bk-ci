@@ -32,9 +32,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
 
 @Suppress("ALL")
