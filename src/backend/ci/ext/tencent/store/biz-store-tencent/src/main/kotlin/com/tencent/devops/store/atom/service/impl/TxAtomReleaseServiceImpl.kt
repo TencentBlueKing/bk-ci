@@ -997,11 +997,15 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             }
         }
 
+        if (pipelineId == null) {
+            pipelineId = publicPipelineId
+        }
+
         // 触发执行流水线
         val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
             userId = innerPipelineUser,
             projectId = innerPipelineProject,
-            pipelineId = pipelineId!!,
+            pipelineId = pipelineId,
             values = startParams,
             channelCode = ChannelCode.AM,
             startType = StartType.SERVICE
