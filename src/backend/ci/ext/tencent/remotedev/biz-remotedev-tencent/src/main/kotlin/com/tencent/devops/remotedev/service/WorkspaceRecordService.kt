@@ -177,8 +177,8 @@ class WorkspaceRecordService @Autowired constructor(
 
         val data = resp.records.map {
             WorkspaceRecordMetadata(
-                link = "${bkRepoConfig.getRegionConfig(region)}" +
-                        "/api/user/stream/{projectId}/{repoName}/streams/${it.fullPath}",
+                link = bkRepoConfig.getRegionConfig(region).url +
+                        "/media/api/user/stream/$projectId/$workspaceName/streams/${it.fullPath}",
                 startTime = it.metadata?.mediaStartTime,
                 stopTime = it.metadata?.mediaStopTime
             )
