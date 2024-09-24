@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
 
@@ -74,9 +75,7 @@ object DefaultPathUtils {
 
     fun getUploadPathByTime(filePath: String?, fileType: String?, type: String): String {
         val filePathSb = StringBuilder()
-        val today = LocalDate.now()
-        val formatter = DateTimeFormatter.ofPattern(DateTimeUtil.YYYYMMDD)
-        val nowTime = today.format(formatter)
+        val nowTime = DateTimeUtil.toDateTime(LocalDateTime.now(), DateTimeUtil.YYYYMMDD)
         val baseUrl = "$nowTime/${UUIDUtil.generate()}.$type"
         val path = if (filePath.isNullOrBlank()) {
             filePathSb.append("file/")

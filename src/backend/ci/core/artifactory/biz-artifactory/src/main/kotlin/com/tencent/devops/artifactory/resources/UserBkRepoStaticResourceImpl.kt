@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.user.UserBkRepoStaticResource
 import com.tencent.devops.artifactory.constant.BKREPO_STATIC_PROJECT_ID
+import com.tencent.devops.artifactory.constant.DATE_FORMAT_YYYY_MM_DD
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
@@ -40,6 +41,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @RestResource
@@ -57,9 +59,7 @@ class UserBkRepoStaticResourceImpl @Autowired constructor(
         val index = fileName.lastIndexOf(".")
         val fileSuffix = fileName.substring(index + 1)
         val filePathSb = StringBuilder("file/")
-        val today = LocalDate.now()
-        val formatter = DateTimeFormatter.ofPattern(DateTimeUtil.YYYYMMDD)
-        val nowTime = today.format(formatter)
+        val nowTime = DateTimeUtil.toDateTime(LocalDateTime.now(), DateTimeUtil.YYYYMMDD)
         val baseUrl = "$nowTime/${UUIDUtil.generate()}.$fileSuffix"
         val filePath = if (type.isNullOrBlank()) {
             filePathSb.append(baseUrl)
