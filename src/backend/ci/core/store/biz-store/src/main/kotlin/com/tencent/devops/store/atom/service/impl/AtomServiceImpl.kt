@@ -29,6 +29,7 @@ package com.tencent.devops.store.atom.service.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DEFAULT
 import com.tencent.devops.common.api.constant.KEY_BRANCH_TEST_FLAG
 import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.constant.KEY_DOCSLINK
@@ -136,6 +137,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
+import org.jooq.Record
 
 /**
  * 插件业务逻辑类
@@ -1055,18 +1057,26 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     ): Page<InstalledAtom> {
         // 项目下已安装插件记录
         val result = mutableListOf<InstalledAtom>()
-        val count = atomDao.countInstalledAtoms(dslContext, projectCode, classifyCode, name)
+        val count = if (classifyCode == DEFAULT) {
+            atomDao.countDefaultAtom(dslContext)
+        } else {
+            atomDao.countInstalledAtoms(dslContext, projectCode, classifyCode, name)
+        }
         if (count == 0) {
             return Page(page, pageSize, 0, result)
         }
-        val records = atomDao.getInstalledAtoms(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            classifyCode = classifyCode,
-            name = name,
-            page = page,
-            pageSize = pageSize
-        )
+        val records = if (classifyCode == DEFAULT) {
+            atomDao.batchGetDefaultAtom(dslContext)
+        } else {
+            atomDao.getInstalledAtoms(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                classifyCode = classifyCode,
+                name = name,
+                page = page,
+                pageSize = pageSize
+            )
+        }
         val atomCodeList = mutableListOf<String>()
         records?.forEach {
             atomCodeList.add(it[KEY_ATOM_CODE] as String)
