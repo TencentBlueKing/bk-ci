@@ -211,6 +211,7 @@ class WorkspaceSharedDao {
             return dslContext.deleteFrom(this)
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .and(ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
+                .limit(1)
                 .execute()
         }
     }
