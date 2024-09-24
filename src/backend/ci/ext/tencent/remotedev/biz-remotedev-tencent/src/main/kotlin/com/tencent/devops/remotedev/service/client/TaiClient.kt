@@ -44,7 +44,7 @@ class TaiClient @Autowired constructor(
     }
 
     fun realTimeUser(userId: String): UserRealTime {
-        val url = "$apiUrl/api/v1/open/odc/real-time/users/$userId/"
+        val url = "$apiUrl/prod/api/v1/open/odc/real-time/users/$userId/"
         val authorization = """{"bk_app_code":"${bkConfig.appCode}","bk_app_secret":"${bkConfig.appSecret}"}"""
         val request = Request.Builder()
             .url(url)
@@ -56,7 +56,7 @@ class TaiClient @Autowired constructor(
     }
 
     fun faceCheck(userId: String, data: FaceCheckData): FaceRecognitionResult {
-        val url = "$apiUrl/api/v1/open/odc/users/$userId/face-check/"
+        val url = "$apiUrl/prod/api/v1/open/odc/users/$userId/face-check/"
         val authorization = """{"bk_app_code":"${bkConfig.appCode}","bk_app_secret":"${bkConfig.appSecret}"}"""
         val requestBody = JsonUtil.toJson(bean = data, formatted = false)
         val request = Request.Builder()
