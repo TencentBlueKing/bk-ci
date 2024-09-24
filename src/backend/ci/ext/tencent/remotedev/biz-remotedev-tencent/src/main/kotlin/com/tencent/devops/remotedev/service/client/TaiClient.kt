@@ -44,7 +44,7 @@ class TaiClient @Autowired constructor(
     }
 
     fun realTimeUser(userId: String): UserRealTime {
-        val url = "${apiUrl}/api/v1/open/odc/real-time/users/$userId"
+        val url = "${apiUrl}/api/v1/open/odc/real-time/users/$userId/"
         val authorization = """{"bk_app_code":"${bkConfig.appCode}","bk_app_secret":"${bkConfig.appSecret}"}"""
         val request = Request.Builder()
             .url(url)
