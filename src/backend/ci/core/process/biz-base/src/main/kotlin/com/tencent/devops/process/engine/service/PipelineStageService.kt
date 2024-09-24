@@ -303,7 +303,8 @@ class PipelineStageService @Autowired constructor(
                     triggerUserId = variables[PIPELINE_START_USER_NAME] ?: userId,
                     stage = buildStage,
                     pipelineName = variables[PIPELINE_NAME] ?: pipelineId,
-                    buildNum = variables[PIPELINE_BUILD_NUM] ?: "1"
+                    buildNum = variables[PIPELINE_BUILD_NUM] ?: "1",
+                    debug = debug
                 )
             } else {
                 val allStageStatus = stageBuildRecordService.stageManualStart(
@@ -592,11 +593,28 @@ class PipelineStageService @Autowired constructor(
         triggerUserId: String,
         stage: PipelineBuildStage,
         pipelineName: String,
-        buildNum: String
+        buildNum: String,
+        debug: Boolean
     ) {
         val checkIn = stage.checkIn ?: return
         val group = stage.checkIn?.groupToReview() ?: return
-
+        if (group.reviewers.find { it.isNotBlank() } == null) {
+            /*如果审核人为空，则取消构建*/
+            cancelStage(
+                userId = userId,
+                triggerUserId = triggerUserId,
+                pipelineName = pipelineName,
+                buildNum = buildNum.toIntOrNull() ?: 1,
+                buildStage = stage,
+                reviewRequest = StageReviewRequest(
+                    reviewParams = listOf(),
+                    id = group.id,
+                    suggest = "CANCEL with empty reviewer"
+                ),
+                debug = debug
+            )
+            return
+        }
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "s(${stage.stageId}) waiting for REVIEW",

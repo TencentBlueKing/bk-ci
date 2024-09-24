@@ -105,7 +105,8 @@ class CheckPauseReviewStageCmd(
                     triggerUserId = commandContext.variables[PIPELINE_START_USER_NAME] ?: event.userId,
                     stage = stage,
                     pipelineName = commandContext.variables[PIPELINE_NAME] ?: stage.pipelineId,
-                    buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1"
+                    buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1",
+                    debug = commandContext.debug
                 )
                 commandContext.buildStatus = BuildStatus.STAGE_SUCCESS
                 commandContext.latestSummary = "s(${stage.stageId}) waiting for REVIEW"
