@@ -183,7 +183,7 @@ class RbacPermissionResourceGroupPermissionService(
                         )
                     }
                 }
-            }
+            }.distinct()
             logger.debug("sync group | latest group permissions :{}", latestResourceGroupPermissions)
             // 获取用户组老权限数据
             val oldResourceGroupPermissions = resourceGroupPermissionDao.listByGroupId(
