@@ -262,8 +262,7 @@
                 'setPipelineEditing',
                 'saveDraftPipeline',
                 'setSaveStatus',
-                'updateContainer',
-                'fetchPipelineByVersion'
+                'updateContainer'
             ]),
             ...mapActions('pipelines', [
                 'deletePipelineVersion',
@@ -448,26 +447,6 @@
                         message: err.message || err,
                         theme: 'error'
                     })
-                }
-            },
-            async fetchPipelineYaml (version) {
-                try {
-                    const res = await this.fetchPipelineByVersion({
-                        projectId: this.projectId,
-                        pipelineId: this.pipelineId,
-                        version
-                    })
-                    if (res?.yamlSupported) {
-                        return res.yamlPreview.yaml
-                    }
-                    throw new Error(res?.yamlInvalidMsg)
-                } catch (error) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message,
-                        zIndex: 3000
-                    })
-                    return ''
                 }
             },
             goDraftDebugRecord () {

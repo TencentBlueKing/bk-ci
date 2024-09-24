@@ -1,5 +1,5 @@
 <template>
-    <span :class="{ 'display': !showButton }">
+    <span v-if="showButton">
         <bk-button
             v-if="showButton"
             :text="text"
