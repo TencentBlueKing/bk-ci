@@ -594,7 +594,7 @@ interface ApigwRemoteDevResource {
     ): Result<CheckWorkspaceRecordData>
 
     @Operation(
-        summary = "检查用户是否有产看当前工作空间录像的权限",
+        summary = "检查用户是否有查看当前工作空间录像的权限",
         tags = ["v4_app_check_user_view_workspace_record_permission"]
     )
     @GET
