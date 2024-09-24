@@ -61,13 +61,14 @@ import com.tencent.devops.auth.provider.rbac.service.RbacPermissionApplyService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionAuthMonitorSpaceService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionAuthorizationScopesService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionExtService
-import com.tencent.devops.auth.provider.rbac.service.RbacPermissionFacadeServiceImpl
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionItsmCallbackService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionProjectService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceCallbackService
+import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupFacadeServiceImpl
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupPermissionService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupSyncService
+import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceMemberFacadeServiceImpl
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceMemberService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceValidateService
@@ -91,6 +92,7 @@ import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -191,7 +193,7 @@ class RbacAuthConfiguration {
     )
 
     @Bean
-    fun permissionFacadeService(
+    fun permissionResourceGroupFacadeService(
         permissionResourceGroupService: PermissionResourceGroupService,
         groupPermissionService: PermissionResourceGroupPermissionService,
         permissionResourceMemberService: PermissionResourceMemberService,
@@ -201,7 +203,7 @@ class RbacAuthConfiguration {
         deptService: DeptService,
         iamV2ManagerService: V2ManagerService,
         rbacCacheService: RbacCacheService
-    ) = RbacPermissionFacadeServiceImpl(
+    ) = RbacPermissionResourceGroupFacadeServiceImpl(
         permissionResourceGroupService = permissionResourceGroupService,
         groupPermissionService = groupPermissionService,
         permissionResourceMemberService = permissionResourceMemberService,
@@ -252,9 +254,23 @@ class RbacAuthConfiguration {
         authResourceGroupMemberDao = authResourceGroupMemberDao,
         dslContext = dslContext,
         deptService = deptService,
-        rbacCacheService = rbacCacheService,
         permissionAuthorizationService = permissionAuthorizationService,
         syncIamGroupMemberService = syncIamGroupMemberService
+    )
+
+    @Bean
+    fun permissionResourceMemberFacadeService(
+        permissionResourceGroupFacadeService: PermissionResourceGroupFacadeService,
+        permissionResourceMemberService: PermissionResourceMemberService,
+        authResourceGroupDao: AuthResourceGroupDao,
+        authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+        dslContext: DSLContext
+    ) = RbacPermissionResourceMemberFacadeServiceImpl(
+        permissionResourceGroupFacadeService = permissionResourceGroupFacadeService,
+        permissionResourceMemberService = permissionResourceMemberService,
+        authResourceGroupDao = authResourceGroupDao,
+        authResourceGroupMemberDao = authResourceGroupMemberDao,
+        dslContext = dslContext
     )
 
     @Bean

@@ -49,12 +49,7 @@ interface PermissionResourceMemberService {
         pageSize: Int
     ): SQLPage<ResourceMemberInfo>
 
-    /**
-     * 根据复杂条件进行搜索，用于用户管理界面
-     * */
-    fun listProjectMembersByComplexConditions(
-        conditionReq: ProjectMembersQueryConditionReq
-    ): SQLPage<ResourceMemberInfo>
+    fun addDepartedFlagToMembers(records: List<ResourceMemberInfo>): List<ResourceMemberInfo>
 
     fun listResourceGroupMembers(
         projectCode: String,

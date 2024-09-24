@@ -159,11 +159,9 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         return SQLPage(count = 0, records = emptyList())
     }
 
-    override fun listProjectMembersByComplexConditions(
-        conditionReq: ProjectMembersQueryConditionReq
-    ): SQLPage<ResourceMemberInfo> {
-        return SQLPage(count = 0, records = emptyList())
-    }
+    override fun addDepartedFlagToMembers(
+        records: List<ResourceMemberInfo>
+    ): List<ResourceMemberInfo> = emptyList()
 
     override fun listResourceGroupMembers(
         projectCode: String,

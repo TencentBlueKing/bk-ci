@@ -3,10 +3,10 @@ package com.tencent.devops.auth.provider.sample.service
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
-import com.tencent.devops.auth.service.iam.PermissionFacadeService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupFacadeService
 import com.tencent.devops.common.api.model.SQLPage
 
-class SamplePermissionFacadeService : PermissionFacadeService {
+class SamplePermissionResourceGroupFacadeService : PermissionResourceGroupFacadeService {
     override fun getMemberGroupsDetails(
         projectId: String,
         memberId: String,

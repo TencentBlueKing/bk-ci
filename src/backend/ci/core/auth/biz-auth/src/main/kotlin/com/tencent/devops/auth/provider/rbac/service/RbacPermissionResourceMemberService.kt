@@ -16,20 +16,16 @@ import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
-import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
-import com.tencent.devops.auth.pojo.dto.ProjectMembersQueryConditionDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
-import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionAuthorizationService
-import com.tencent.devops.auth.service.iam.PermissionFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -60,8 +56,7 @@ class RbacPermissionResourceMemberService constructor(
     private val dslContext: DSLContext,
     private val deptService: DeptService,
     private val permissionAuthorizationService: PermissionAuthorizationService,
-    private val syncIamGroupMemberService: PermissionResourceGroupSyncService,
-    private val permissionFacadeService: PermissionFacadeService
+    private val syncIamGroupMemberService: PermissionResourceGroupSyncService
 ) : PermissionResourceMemberService {
     override fun getResourceGroupMembers(
         projectCode: String,
@@ -179,7 +174,7 @@ class RbacPermissionResourceMemberService constructor(
         return SQLPage(count = count, records = addDepartedFlagToMembers(records))
     }
 
-    private fun addDepartedFlagToMembers(records: List<ResourceMemberInfo>): List<ResourceMemberInfo> {
+    override fun addDepartedFlagToMembers(records: List<ResourceMemberInfo>): List<ResourceMemberInfo> {
         val userMembers = records.filter {
             it.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)
         }.map { it.id }
@@ -196,89 +191,6 @@ class RbacPermissionResourceMemberService constructor(
             } else {
                 it.copy(departed = departedMembers.contains(it.id))
             }
-        }
-    }
-
-    override fun listProjectMembersByComplexConditions(
-        conditionReq: ProjectMembersQueryConditionReq
-    ): SQLPage<ResourceMemberInfo> {
-        logger.info("list project members by complex conditions: $conditionReq")
-        // 不允许同时查询部门名称和用户名称
-        if (conditionReq.userName != null && conditionReq.deptName != null) {
-            return SQLPage(count = 0, records = emptyList())
-        }
-
-        // 简单查询直接返回结果
-        if (!conditionReq.isComplexQuery()) {
-            return listProjectMembers(
-                projectCode = conditionReq.projectCode,
-                memberType = conditionReq.memberType,
-                userName = conditionReq.userName,
-                deptName = conditionReq.deptName,
-                departedFlag = conditionReq.departedFlag,
-                page = conditionReq.page,
-                pageSize = conditionReq.pageSize
-            )
-        }
-
-        // 处理复杂查询条件
-        val iamGroupIdsByCondition = if (conditionReq.isNeedToQueryIamGroups()) {
-            permissionFacadeService.listIamGroupIdsByConditions(
-                condition = IamGroupIdsQueryConditionDTO(
-                    projectCode = conditionReq.projectCode,
-                    groupName = conditionReq.groupName,
-                    relatedResourceType = conditionReq.relatedResourceType,
-                    relatedResourceCode = conditionReq.relatedResourceCode,
-                    action = conditionReq.action
-                )
-            )
-        } else {
-            emptyList()
-        }.toMutableList()
-
-        // 查询不到用户组，直接返回空
-        if (conditionReq.isNeedToQueryIamGroups() && iamGroupIdsByCondition.isEmpty()) {
-            return SQLPage(0, emptyList())
-        }
-
-        val conditionDTO = ProjectMembersQueryConditionDTO.build(conditionReq, iamGroupIdsByCondition)
-
-        if (iamGroupIdsByCondition.isNotEmpty()) {
-            // 根据用户组Id查询出对应用户组中的人员模板成员
-            val iamTemplateIds = authResourceGroupMemberDao.listProjectMembersByComplexConditions(
-                dslContext = dslContext,
-                conditionDTO = ProjectMembersQueryConditionDTO(
-                    projectCode = conditionDTO.projectCode,
-                    queryTemplate = true,
-                    iamGroupIds = conditionDTO.iamGroupIds
-                )
-            )
-            if (iamTemplateIds.isNotEmpty()) {
-                // 根据查询出的人员模板ID，查询出对应的组ID
-                val iamGroupIdsFromTemplate = authResourceGroupDao.listIamGroupIdsByConditions(
-                    dslContext = dslContext,
-                    projectCode = conditionDTO.projectCode,
-                    iamTemplateIds = iamTemplateIds.map { it.id.toInt() }
-                )
-                iamGroupIdsByCondition.addAll(iamGroupIdsFromTemplate)
-            }
-        }
-
-        val records = authResourceGroupMemberDao.listProjectMembersByComplexConditions(
-            dslContext = dslContext,
-            conditionDTO = conditionDTO
-        )
-
-        val count = authResourceGroupMemberDao.countProjectMembersByComplexConditions(
-            dslContext = dslContext,
-            conditionDTO = conditionDTO
-        )
-
-        // 添加离职标志
-        return if (conditionDTO.departedFlag == false) {
-            SQLPage(count, records)
-        } else {
-            SQLPage(count, addDepartedFlagToMembers(records))
         }
     }
 

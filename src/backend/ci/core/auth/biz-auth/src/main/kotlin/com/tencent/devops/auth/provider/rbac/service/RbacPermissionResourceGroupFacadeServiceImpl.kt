@@ -13,7 +13,7 @@ import com.tencent.devops.auth.pojo.enum.RemoveMemberButtonControl
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
 import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.service.iam.PermissionFacadeService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
@@ -27,7 +27,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
-class RbacPermissionFacadeServiceImpl(
+class RbacPermissionResourceGroupFacadeServiceImpl(
     private val permissionResourceGroupService: PermissionResourceGroupService,
     private val groupPermissionService: PermissionResourceGroupPermissionService,
     private val permissionResourceMemberService: PermissionResourceMemberService,
@@ -37,7 +37,7 @@ class RbacPermissionFacadeServiceImpl(
     private val deptService: DeptService,
     private val iamV2ManagerService: V2ManagerService,
     private val rbacCacheService: RbacCacheService
-) : PermissionFacadeService {
+) : PermissionResourceGroupFacadeService {
     override fun getMemberGroupsDetails(
         projectId: String,
         memberId: String,

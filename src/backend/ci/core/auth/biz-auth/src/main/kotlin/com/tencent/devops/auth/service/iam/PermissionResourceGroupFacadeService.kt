@@ -5,7 +5,7 @@ import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
 import com.tencent.devops.common.api.model.SQLPage
 
-interface PermissionFacadeService {
+interface PermissionResourceGroupFacadeService {
     /**
      * 查询成员所在资源用户组详情，直接加入+通过用户组（模板）加入
      * */
