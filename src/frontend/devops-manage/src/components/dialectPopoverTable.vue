@@ -16,11 +16,11 @@
             <div
               class="label-column"
               v-bk-tooltips="{
-                content: row.classIcExample ? `${row.classic};  ${row.classIcExample}` : row.classic
+                content: row.classicExample ? `${row.classic};  ${row.classicExample}` : row.classic
               }"
             >
               <p>{{ row.classic }}</p>
-              <p>{{ row.classIcExample }}</p>
+              <p>{{ row.classicExample }}</p>
             </div>
           </template>
         </bk-table-column>
@@ -49,7 +49,7 @@ const namingConventionData = [
     {
         difference: t('表达式格式'),
         classic: t('单花括号或双花括号'),
-        classIcExample: t('如：${var}、${{var}}'),
+        classicExample: t('如：${var}、${{var}}'),
         constrainedMode: t('仅支持双花括号，避免出现 bash 脚本变量在执行前被系统赋值的问题'),
         constrainedExample: t('如：${{variables.var}}'),
     },

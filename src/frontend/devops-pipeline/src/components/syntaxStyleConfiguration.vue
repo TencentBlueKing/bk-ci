@@ -27,7 +27,7 @@
                         <template slot-scope="props">
                             <div class="label-column">
                                 <p>{{ props.row.classic }}</p>
-                                <p>{{ props.row.classIcExample }}</p>
+                                <p>{{ props.row.classicExample }}</p>
                             </div>
                         </template>
                     </bk-table-column>
@@ -87,7 +87,7 @@
                     {
                         difference: this.$t('expressionFormat'),
                         classic: this.$t('traditionalFormat'),
-                        classIcExample: this.$t('traditionalFormatExample'),
+                        classicExample: this.$t('traditionalFormatExample'),
                         constrainedMode: this.$t('constraintFormat'),
                         constrainedExample: this.$t('constraintFormatExample')
                     },
