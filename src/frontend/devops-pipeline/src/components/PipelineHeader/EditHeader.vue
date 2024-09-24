@@ -426,7 +426,7 @@
                     ])
                 ])
             },
-            async diffVersionConfirm () {
+            async diffVersionDeleteConfirm () {
                 try {
                     await this.deletePipelineVersion({
                         projectId: this.projectId,
@@ -537,7 +537,7 @@
                     this.$bkInfo({
                         ...commonConfig,
                         subHeader: this.createSubHeader(this.pipelineSetting.pipelineName, this.draftBaseVersionName),
-                        confirmFn: this.diffVersionConfirm
+                        confirmFn: this.diffVersionDeleteConfirm
                     })
                 }
                 if (this.currentVersion === 1) {
