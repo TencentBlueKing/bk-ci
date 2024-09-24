@@ -27,8 +27,10 @@ class UserInfoCertService @Autowired constructor(
 
     fun multipleCert(data: UserInfoCheckData): UserInfoCheckResult {
         try {
-            return apiGwService.workspaceAccessManageControl(data.projectId, data.workspaceName)
-                ?: return UserInfoCheckResult.noCheck()
+            return apiGwService.workspaceAccessManageControl(data.projectId, data.workspaceName) ?: run {
+                logger.error("$USER_CERT_LOG_PREFIX|workspaceAccessManageControl null")
+                return UserInfoCheckResult.noCheck()
+            }
         } catch (e: Exception) {
             logger.error("$USER_CERT_LOG_PREFIX|workspaceAccessManageControl error", e)
             return UserInfoCheckResult.noCheck()
