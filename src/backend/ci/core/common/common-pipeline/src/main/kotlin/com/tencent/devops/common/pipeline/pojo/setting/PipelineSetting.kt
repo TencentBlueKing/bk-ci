@@ -82,10 +82,10 @@ data class PipelineSetting(
     var concurrencyGroup: String? = PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
     @get:Schema(title = "并发时,是否相同group取消正在执行的流水线", required = false)
     var concurrencyCancelInProgress: Boolean = false,
-
-    // 平台系统控制相关配置 —— 不作为生成版本的配置
     @get:Schema(title = "并发构建数量限制", required = false)
     var maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
+
+    // 平台系统控制相关配置 —— 不作为生成版本的配置
     @get:Schema(title = "保存流水线编排的最大个数", required = false)
     val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
     @get:Schema(title = "重试时清理引擎变量表", required = false)

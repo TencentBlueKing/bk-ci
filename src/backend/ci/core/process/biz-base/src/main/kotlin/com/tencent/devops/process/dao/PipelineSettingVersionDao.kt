@@ -76,7 +76,8 @@ class PipelineSettingVersionDao {
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
                 PIPELINE_AS_CODE_SETTINGS,
-                VERSION
+                VERSION,
+                MAX_CON_RUNNING_QUEUE_SIZE
             ).values(
                 id,
                 setting.projectId,
@@ -98,7 +99,8 @@ class PipelineSettingVersionDao {
                 setting.pipelineAsCodeSettings?.let { self ->
                     JsonUtil.toJson(self, false)
                 },
-                version
+                version,
+                setting.maxConRunningQueueSize
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -111,6 +113,7 @@ class PipelineSettingVersionDao {
                 .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
+                .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
                 .execute()
         }
     }
@@ -219,7 +222,8 @@ class PipelineSettingVersionDao {
                     maxQueueSize = t.maxQueueSize,
                     buildNumRule = t.buildNumRule,
                     concurrencyCancelInProgress = t.concurrencyCancelInProgress,
-                    concurrencyGroup = t.concurrencyGroup
+                    concurrencyGroup = t.concurrencyGroup,
+                    maxConRunningQueueSize = t.maxConRunningQueueSize
                 )
             }
         }
