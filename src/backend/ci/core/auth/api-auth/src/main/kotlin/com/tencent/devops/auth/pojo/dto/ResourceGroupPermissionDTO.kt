@@ -34,11 +34,11 @@ data class ResourceGroupPermissionDTO(
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         val otherObj = other as ResourceGroupPermissionDTO
-        return projectCode == otherObj.projectCode
-            && iamGroupId == otherObj.iamGroupId
-            && relatedResourceType == otherObj.relatedResourceType
-            && relatedResourceCode == otherObj.relatedResourceCode
-            && action == otherObj.action
+        return projectCode == otherObj.projectCode &&
+            iamGroupId == otherObj.iamGroupId &&
+            relatedResourceType == otherObj.relatedResourceType &&
+            relatedResourceCode == otherObj.relatedResourceCode &&
+            action == otherObj.action
     }
 
     override fun hashCode(): Int {

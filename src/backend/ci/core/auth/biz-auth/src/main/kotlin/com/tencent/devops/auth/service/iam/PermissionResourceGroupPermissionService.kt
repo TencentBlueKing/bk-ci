@@ -44,7 +44,7 @@ interface PermissionResourceGroupPermissionService {
     ): Boolean
 
     fun syncProject(
-        projectCode: String,
+        projectCode: String
     ): Boolean
 
     fun syncByCondition(

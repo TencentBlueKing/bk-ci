@@ -148,7 +148,7 @@ class RbacPermissionResourceGroupPermissionService(
             val resourceGroupInfo = authResourceGroupDao.get(
                 dslContext = dslContext,
                 projectCode = projectCode,
-                relationId = groupId.toString(),
+                relationId = groupId.toString()
             ) ?: return true
             val groupPermissionDetails = getGroupPermissionDetailBySystem(systemId, groupId)
             logger.debug("sync group permissions:{}|{}|{}", projectCode, groupId, groupPermissionDetails)
