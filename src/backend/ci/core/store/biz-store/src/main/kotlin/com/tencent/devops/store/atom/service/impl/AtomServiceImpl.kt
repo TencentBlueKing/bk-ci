@@ -1057,6 +1057,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     ): Page<InstalledAtom> {
         return if (classifyCode == DEFAULT) {
             getDefaultAtoms(
+                userId = userId,
                 projectCode = projectCode,
                 name = name,
                 page = page,
@@ -1153,6 +1154,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 获取默认安装的插件列表
      */
     private fun getDefaultAtoms(
+        userId: String,
         projectCode: String,
         name: String?,
         page: Int,
@@ -1174,7 +1176,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             atomCodes = atomCodeList.joinToString(","),
             projectCode = projectCode
         ).data
-
+        val installTime =
+            client.get(ServiceProjectResource::class).getProjectByName(userId, projectCode).data?.createdAt
         records.forEach {
             val atomClassifyCode = DEFAULT
             val classifyLanName = I18nUtil.getCodeLanMessage(
@@ -1196,7 +1199,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     summary = it.summary,
                     publisher = it.publisher,
                     installer = SYSTEM,
-                    installTime = "",
+                    installTime = installTime ?: "",
                     installType = DEFAULT,
                     pipelineCnt = pipelineStat?.get(it.atomCode) ?: 0,
                     hasPermission = false
