@@ -382,7 +382,7 @@ class StoreProjectServiceImpl @Autowired constructor(
             storeProjectRelDao.updateStoreInitProject(context, userId, storeProjectInfo)
             storeProjectRelDao.deleteUserStoreTestProject(
                 dslContext = context,
-                userId = initProjectInfo.creator,
+                userId = userId,
                 storeType = storeProjectInfo.storeType,
                 storeCode = storeProjectInfo.storeCode,
                 storeProjectType = StoreProjectTypeEnum.TEST
