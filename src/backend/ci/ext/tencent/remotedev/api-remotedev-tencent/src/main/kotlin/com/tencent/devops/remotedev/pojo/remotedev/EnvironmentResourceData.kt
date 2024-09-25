@@ -29,8 +29,7 @@ data class EnvironmentResourceData(
     val mem: String?,
     val registerCgsTime: LocalDateTime?,
     val internal: Boolean?,
-    val macAddress: String?,
-    val vmStatus: String?
+    val macAddress: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
