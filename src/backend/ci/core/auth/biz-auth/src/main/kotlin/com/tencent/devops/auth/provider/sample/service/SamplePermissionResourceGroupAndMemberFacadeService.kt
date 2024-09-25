@@ -1,12 +1,14 @@
 package com.tencent.devops.auth.provider.sample.service
 
+import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
+import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupFacadeService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
 import com.tencent.devops.common.api.model.SQLPage
 
-class SamplePermissionResourceGroupFacadeService : PermissionResourceGroupFacadeService {
+class SamplePermissionResourceGroupAndMemberFacadeService : PermissionResourceGroupAndMemberFacadeService {
     override fun getMemberGroupsDetails(
         projectId: String,
         memberId: String,
@@ -36,4 +38,8 @@ class SamplePermissionResourceGroupFacadeService : PermissionResourceGroupFacade
     override fun listIamGroupIdsByConditions(
         condition: IamGroupIdsQueryConditionDTO
     ): List<Int> = emptyList()
+
+    override fun listProjectMembersByComplexConditions(
+        conditionReq: ProjectMembersQueryConditionReq
+    ): SQLPage<ResourceMemberInfo> = SQLPage(0, emptyList())
 }

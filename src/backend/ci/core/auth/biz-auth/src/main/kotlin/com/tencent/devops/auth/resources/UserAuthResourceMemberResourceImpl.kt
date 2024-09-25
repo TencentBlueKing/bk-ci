@@ -12,8 +12,7 @@ import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupFacadeService
-import com.tencent.devops.auth.service.iam.PermissionResourceMemberFacadeService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.model.SQLPage
@@ -28,8 +27,7 @@ import com.tencent.devops.common.web.RestResource
 class UserAuthResourceMemberResourceImpl(
     private val permissionResourceMemberService: PermissionResourceMemberService,
     private val permissionService: PermissionService,
-    private val permissionResourceGroupFacadeService: PermissionResourceGroupFacadeService,
-    private val permissionResourceMemberFacadeService: PermissionResourceMemberFacadeService
+    private val permissionResourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService
 ) : UserAuthResourceMemberResource {
     override fun listProjectMembers(
         userId: String,
@@ -71,7 +69,7 @@ class UserAuthResourceMemberResourceImpl(
         projectMembersQueryConditionReq: ProjectMembersQueryConditionReq
     ): Result<SQLPage<ResourceMemberInfo>> {
         return Result(
-            permissionResourceMemberFacadeService.listProjectMembersByComplexConditions(
+            permissionResourceGroupAndMemberFacadeService.listProjectMembersByComplexConditions(
                 conditionReq = projectMembersQueryConditionReq
             )
         )
@@ -89,7 +87,7 @@ class UserAuthResourceMemberResourceImpl(
             renewalConditionReq = renewalConditionReq
         )
         return Result(
-            permissionResourceGroupFacadeService.getMemberGroupsDetails(
+            permissionResourceGroupAndMemberFacadeService.getMemberGroupsDetails(
                 projectId = projectId,
                 memberId = renewalConditionReq.targetMember.id,
                 iamGroupIds = listOf(renewalConditionReq.groupId)
@@ -202,7 +200,7 @@ class UserAuthResourceMemberResourceImpl(
         action: String?
     ): Result<List<MemberGroupCountWithPermissionsVo>> {
         return Result(
-            permissionResourceGroupFacadeService.getMemberGroupsCount(
+            permissionResourceGroupAndMemberFacadeService.getMemberGroupsCount(
                 projectCode = projectId,
                 memberId = memberId,
                 groupName = groupName,

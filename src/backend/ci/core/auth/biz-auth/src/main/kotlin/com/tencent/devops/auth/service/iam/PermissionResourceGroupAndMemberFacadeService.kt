@@ -1,11 +1,13 @@
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
+import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
 import com.tencent.devops.common.api.model.SQLPage
 
-interface PermissionResourceGroupFacadeService {
+interface PermissionResourceGroupAndMemberFacadeService {
     /**
      * 查询成员所在资源用户组详情，直接加入+通过用户组（模板）加入
      * */
@@ -44,4 +46,11 @@ interface PermissionResourceGroupFacadeService {
     fun listIamGroupIdsByConditions(
         condition: IamGroupIdsQueryConditionDTO
     ): List<Int>
+
+    /**
+     * 根据复杂条件进行搜索，用于用户管理界面
+     * */
+    fun listProjectMembersByComplexConditions(
+        conditionReq: ProjectMembersQueryConditionReq
+    ): SQLPage<ResourceMemberInfo>
 }
