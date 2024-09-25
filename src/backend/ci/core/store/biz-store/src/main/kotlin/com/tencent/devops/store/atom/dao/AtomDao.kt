@@ -1404,24 +1404,37 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun batchGetDefaultAtom(dslContext: DSLContext): Result<TAtomRecord> {
+    fun batchGetDefaultAtom(
+        dslContext: DSLContext,
+        name: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<TAtomRecord> {
         return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(LATEST_FLAG.eq(true))
+            conditions.add(DEFAULT_FLAG.eq(true))
+            if (!name.isNullOrBlank()) {
+                conditions.add(NAME.contains(name))
+            }
             dslContext.selectFrom(this)
-                .where(
-                    LATEST_FLAG.eq(true)
-                        .and(DEFAULT_FLAG.eq(true))
-                )
+                .where(conditions)
+                .orderBy(ATOM_CODE)
+                .limit((page - 1) * pageSize, pageSize)
                 .fetch()
         }
     }
 
-    fun countDefaultAtom(dslContext: DSLContext): Int {
+    fun countDefaultAtom(dslContext: DSLContext, name: String?): Int {
         return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(LATEST_FLAG.eq(true))
+            conditions.add(DEFAULT_FLAG.eq(true))
+            if (!name.isNullOrBlank()) {
+                conditions.add(NAME.contains(name))
+            }
             dslContext.selectCount().from(this)
-                .where(
-                    LATEST_FLAG.eq(true)
-                        .and(DEFAULT_FLAG.eq(true))
-                )
+                .where(conditions)
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }

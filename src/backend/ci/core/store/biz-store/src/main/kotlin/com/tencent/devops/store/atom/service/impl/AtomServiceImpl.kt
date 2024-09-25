@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.constant.KEY_SUMMARY
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
+import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
@@ -1054,21 +1055,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         page: Int,
         pageSize: Int
     ): Page<InstalledAtom> {
-        // 项目下已安装插件记录
-        val result = mutableListOf<InstalledAtom>()
-        val count = if (classifyCode == DEFAULT) {
-            atomDao.countDefaultAtom(dslContext)
+        return if (classifyCode == DEFAULT) {
+            getDefaultAtoms(
+                projectCode = projectCode,
+                name = name,
+                page = page,
+                pageSize = pageSize
+            )
         } else {
-            atomDao.countInstalledAtoms(dslContext, projectCode, classifyCode, name)
-        }
-        if (count == 0) {
-            return Page(page, pageSize, 0, result)
-        }
-        val records = if (classifyCode == DEFAULT) {
-            atomDao.batchGetDefaultAtom(dslContext)
-        } else {
-            atomDao.getInstalledAtoms(
-                dslContext = dslContext,
+            getProjectInstalledAtoms(
+                userId = userId,
                 projectCode = projectCode,
                 classifyCode = classifyCode,
                 name = name,
@@ -1076,6 +1072,33 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 pageSize = pageSize
             )
         }
+    }
+
+    /**
+     * 获取已安装的插件列表
+     */
+    private fun getProjectInstalledAtoms(
+        userId: String,
+        projectCode: String,
+        classifyCode: String?,
+        name: String?,
+        page: Int,
+        pageSize: Int
+    ): Page<InstalledAtom> {
+        // 项目下已安装插件记录
+        val result = mutableListOf<InstalledAtom>()
+        val count = atomDao.countInstalledAtoms(dslContext, projectCode, classifyCode, name)
+        if (count == 0) {
+            return Page(page, pageSize, 0, result)
+        }
+        val records = atomDao.getInstalledAtoms(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            classifyCode = classifyCode,
+            name = name,
+            page = page,
+            pageSize = pageSize
+        )
         val atomCodeList = mutableListOf<String>()
         records?.forEach {
             atomCodeList.add(it[KEY_ATOM_CODE] as String)
@@ -1120,6 +1143,63 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     installType = StoreProjectTypeEnum.getProjectType((it[KEY_INSTALL_TYPE] as Byte).toInt()),
                     pipelineCnt = pipelineStat?.get(atomCode) ?: 0,
                     hasPermission = !isInitTest && (hasManagerPermission || installer == userId)
+                )
+            )
+        }
+        return Page(page, pageSize, count.toLong(), result)
+    }
+
+    /**
+     * 获取默认安装的插件列表
+     */
+    private fun getDefaultAtoms(
+        projectCode: String,
+        name: String?,
+        page: Int,
+        pageSize: Int
+    ): Page<InstalledAtom> {
+        val result = mutableListOf<InstalledAtom>()
+        val count = atomDao.countDefaultAtom(dslContext, name)
+        if (count == 0) {
+            return Page(page, pageSize, 0, result)
+        }
+        val records = atomDao.batchGetDefaultAtom(
+            dslContext = dslContext,
+            name = name,
+            page = page,
+            pageSize = pageSize
+        )
+        val atomCodeList = records.map { it.atomCode }
+        val pipelineStat = client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(
+            atomCodes = atomCodeList.joinToString(","),
+            projectCode = projectCode
+        ).data
+
+        records.forEach {
+            val atomClassifyCode = DEFAULT
+            val classifyLanName = I18nUtil.getCodeLanMessage(
+                messageCode = "${StoreTypeEnum.ATOM.name}.classify.$atomClassifyCode",
+                defaultMessage = atomClassifyCode
+            )
+            result.add(
+                InstalledAtom(
+                    atomId = it.id,
+                    atomCode = it.atomCode,
+                    version = it.version,
+                    name = it.name,
+                    logoUrl = it.logoUrl?.let { logoUrl ->
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
+                    classifyCode = atomClassifyCode,
+                    classifyName = classifyLanName,
+                    category = AtomCategoryEnum.getAtomCategory((it.categroy).toInt()),
+                    summary = it.summary,
+                    publisher = it.publisher,
+                    installer = SYSTEM,
+                    installTime = "",
+                    installType = DEFAULT,
+                    pipelineCnt = pipelineStat?.get(it.atomCode) ?: 0,
+                    hasPermission = false
                 )
             )
         }
