@@ -12,6 +12,7 @@ data class ThirdPartyAgentDockerInfo(
     var credential: Credential?,
     var options: DockerOptions?,
     var imagePullPolicy: String?,
+    // 仅仅前端展示使用，不参与后端计算
     val imageType: ImageType? = ImageType.THIRD,
     val storeImage: ThirdPartyAgentDockerInfoStoreImage?
 )
@@ -70,8 +71,10 @@ data class DockerOptions(
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ThirdPartyAgentDockerInfoStoreImage(
+    // 仅仅前端展示使用，不参与后端计算
+    var imageName: String?,
     val imageCode: String,
-    val imageVersion: String
+    val imageVersion: String?
 )
 
 // 第三方构建机docker类型，调度使用，会带有调度相关信息

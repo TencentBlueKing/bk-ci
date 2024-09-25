@@ -192,11 +192,10 @@ class DispatchTransfer @Autowired(required = false) constructor(
                 ),
                 options = info.options,
                 imagePullPolicy = info.imagePullPolicy,
-                storeImage = if (
-                    info.imageType == ImageType.BKSTORE &&
-                    info.imageCode != null && info.imageVersion != null
-                ) {
+                imageType = info.imageType,
+                storeImage = if (info.imageType == ImageType.BKSTORE && info.imageCode != null) {
                     ThirdPartyAgentDockerInfoStoreImage(
+                        imageName = null,
                         imageCode = info.imageCode,
                         imageVersion = info.imageVersion
                     )
