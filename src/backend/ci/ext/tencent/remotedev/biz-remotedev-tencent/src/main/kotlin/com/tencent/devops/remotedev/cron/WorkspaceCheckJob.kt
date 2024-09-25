@@ -10,7 +10,6 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -30,9 +29,6 @@ class WorkspaceCheckJob @Autowired constructor(
         private const val syncJobLockKey = "remotedev_cron_sync_start_resource_job"
         private const val backupCgsDataLockKey = "remotedev_cron_backup_csg_data_job"
     }
-
-    @Value("\${remoteDev.autoDeletePipeline:}")
-    val autoDeletePipeline = ""
 
     /**
      * 每5min检测一次 30min内没有心跳上报的工作空间，主动stop
