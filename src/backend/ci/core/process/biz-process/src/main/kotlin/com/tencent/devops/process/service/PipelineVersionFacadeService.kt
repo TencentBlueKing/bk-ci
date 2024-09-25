@@ -506,7 +506,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 versionNum = result.versionNum,
                 versionName = result.versionName,
                 targetUrl = targetUrl,
-                yamlInfo = yamlInfo
+                yamlInfo = yamlInfo,
+                updateBuildNo = result.updateBuildNo
             )
         }
     }
