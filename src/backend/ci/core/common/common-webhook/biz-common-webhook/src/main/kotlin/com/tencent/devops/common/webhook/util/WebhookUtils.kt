@@ -222,9 +222,11 @@ object WebhookUtils {
         startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] = DateTimeUtil.zoneDateToTimestamp(mrInfo?.updateTime)
         startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = mrInfo?.mrId ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = mrInfo?.mrNumber ?: ""
-        val mrDesc = (mrInfo?.description ?: "").apply {
-            if (this.length > MR_DESC_MAX_LENGTH) {
-                this.substring(0, MR_DESC_MAX_LENGTH)
+        val mrDesc = (mrInfo?.description ?: "").let {
+            if (it.length > MR_DESC_MAX_LENGTH) {
+                it.substring(0, MR_DESC_MAX_LENGTH)
+            } else {
+                it
             }
         }
         startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = mrDesc
