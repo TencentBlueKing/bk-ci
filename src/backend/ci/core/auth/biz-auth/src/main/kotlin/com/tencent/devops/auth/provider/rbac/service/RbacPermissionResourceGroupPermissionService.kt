@@ -92,7 +92,33 @@ class RbacPermissionResourceGroupPermissionService(
         relatedResourceCode: String?,
         action: String?
     ): List<Int> {
-        val pipelineGroupIds = if (relatedResourceCode != null && relatedResourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
+        val resourceType = if (action != null) {
+            rbacCacheService.getActionInfo(action).relatedResourceType
+        } else {
+            relatedResourceType
+        }
+        val pipelineGroupIds = listPipelineGroupIds(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            relatedResourceCode = relatedResourceCode
+        )
+        return resourceGroupPermissionDao.listByConditions(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            filterIamGroupIds = filterIamGroupIds,
+            resourceType = resourceType,
+            resourceCode = relatedResourceCode,
+            pipelineGroupIds = pipelineGroupIds,
+            action = action
+        )
+    }
+
+    private fun listPipelineGroupIds(
+        projectCode: String,
+        resourceType: String,
+        relatedResourceCode: String?
+    ): List<String> {
+        return if (relatedResourceCode != null && resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
             val viewIds = client.get(ServicePipelineViewResource::class).listViewIdsByPipelineId(
                 projectId = projectCode,
                 pipelineId = relatedResourceCode
@@ -101,15 +127,6 @@ class RbacPermissionResourceGroupPermissionService(
         } else {
             emptyList()
         }
-        return resourceGroupPermissionDao.listByConditions(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            filterIamGroupIds = filterIamGroupIds,
-            resourceType = relatedResourceType,
-            resourceCode = relatedResourceCode,
-            pipelineGroupIds = pipelineGroupIds,
-            action = action
-        )
     }
 
     override fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>> {

@@ -120,9 +120,15 @@ class AuthResourceGroupPermissionDao {
             if (resourceCode != null) {
                 conditions.add(
                     RELATED_RESOURCE_TYPE.eq(AuthResourceType.PROJECT.value).and(RELATED_RESOURCE_CODE.eq(projectCode))
-                        .or(
-                            RELATED_RESOURCE_TYPE.eq(resourceType).and(RELATED_RESOURCE_CODE.eq(resourceCode))
-                        )
+                        .let {
+                            if (resourceType != AuthResourceType.PROJECT.value) {
+                                it.or(
+                                    RELATED_RESOURCE_TYPE.eq(resourceType).and(RELATED_RESOURCE_CODE.eq(resourceCode))
+                                )
+                            } else {
+                                it
+                            }
+                        }
                         .let {
                             if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value && pipelineGroupIds.isNotEmpty()) {
                                 it.or(
