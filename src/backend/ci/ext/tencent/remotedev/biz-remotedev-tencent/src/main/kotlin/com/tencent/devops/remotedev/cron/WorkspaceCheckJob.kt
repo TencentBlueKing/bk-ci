@@ -95,12 +95,4 @@ class WorkspaceCheckJob @Autowired constructor(
             logger.error("sync START resource list failed", e)
         }
     }
-
-    /**
-     * 每 10 分钟检测一次过期的工作空间分享
-     */
-    @Scheduled(cron = "0 */10 * ? * *")
-    fun checkAndUnshared() {
-        workspaceService.checkAndUnshared()
-    }
 }
