@@ -71,6 +71,9 @@ class TaiClient @Autowired constructor(
     private inline fun <reified T> okhttp3.Response.resolveResponse(): T {
         this.use {
             val responseContent = this.body!!.string()
+
+            logger.info("taihu request: ${this.request.url} resp: $responseContent")
+
             if (!this.isSuccessful) {
                 throw RemoteServiceException(
                     "request api[${this.request.url.toUrl()}] error|$responseContent",
