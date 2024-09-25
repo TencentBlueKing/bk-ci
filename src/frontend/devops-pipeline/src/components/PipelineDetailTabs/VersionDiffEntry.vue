@@ -210,7 +210,4 @@
             }
         }
     }
-    .display{
-        display: none;
-    }
 </style>
