@@ -414,11 +414,11 @@ class StorePipelineServiceImpl @Autowired constructor(
                 storeType = StoreTypeEnum.valueOf(storeType)
             )?.pipelineId
         } else {
-            redisOperation.get("$storeType-BUILD-PROJECT:$projectCode")
+            redisOperation.get("$storeType-PIPELINE-BUILD:PUBLIC")
         }
         pipelineId ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-            params = arrayOf(storeCode ?: "$storeType-BUILD-PROJECT:$projectCode")
+            params = arrayOf(storeCode ?: "$storeType-PIPELINE-BUILD:PUBLIC")
         )
         val flag = client.get(ServicePipelineSettingResource::class).getPipelineSetting(
             projectId = projectCode,
