@@ -69,4 +69,8 @@ class ServiceArchiveComponentPkgResourceImpl @Autowired constructor(
         )
         return Result(true)
     }
+
+    override fun getFileContent(storeType: StoreTypeEnum, filePath: String): Result<String> {
+        return Result(archiveStorePkgService.getStoreFileContent(filePath, storeType))
+    }
 }

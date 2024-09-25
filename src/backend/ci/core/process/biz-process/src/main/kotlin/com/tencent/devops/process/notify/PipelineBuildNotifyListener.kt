@@ -108,6 +108,7 @@ class PipelineBuildNotifyListener @Autowired constructor(
             bodyParams = bodyParams,
             notifyType = notifyType,
             markdownContent = markdownContent,
+            mentionReceivers = mentionReceivers,
             callbackData = callbackData
         )
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
@@ -137,6 +138,7 @@ class PipelineBuildNotifyListener @Autowired constructor(
                 bodyParams = bodyParams,
                 notifyType = notifyType,
                 markdownContent = markdownContent,
+                mentionReceivers = mentionReceivers,
                 callbackData = callbackData
             )
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
