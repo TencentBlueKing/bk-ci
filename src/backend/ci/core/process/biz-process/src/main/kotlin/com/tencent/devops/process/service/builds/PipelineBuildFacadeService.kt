@@ -45,7 +45,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -230,7 +229,7 @@ class PipelineBuildFacadeService(
             )
         val (resource, debug) = getModelAndBuildLevel(projectId, pipelineId, version)
         val model = resource.model
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
 
         var canManualStartup = false
         var canElementSkip = false
@@ -636,7 +635,7 @@ class PipelineBuildFacadeService(
             /**
              * 验证流水线参数构建启动参数
              */
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+            val triggerContainer = model.getTriggerContainer()
 
             if (startType == StartType.MANUAL && !debug) {
                 if (!readyToBuildPipelineInfo.canManualStartup) {
@@ -794,7 +793,7 @@ class PipelineBuildFacadeService(
             /**
              * 验证流水线参数构建启动参数
              */
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+            val triggerContainer = model.getTriggerContainer()
 
             val paramPamp = buildParamCompatibilityTransformer.parseTriggerParam(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,
@@ -867,7 +866,7 @@ class PipelineBuildFacadeService(
             /**
              * 验证流水线参数构建启动参数
              */
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+            val triggerContainer = model.getTriggerContainer()
 
             val pipelineParamMap = mutableMapOf<String, BuildParameters>()
             parameters.forEach { (key, value) ->

@@ -79,7 +79,7 @@ interface UserPipelineVersionResource {
         pipelineId: String
     ): Result<PipelineDetail>
 
-    @Operation(summary = "将当前草稿发布为正式版本")
+    @Operation(summary = "草稿发布为正式版本的信息预览")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/releaseVersion/{version}/prefetch")
     fun preFetchDraftVersion(

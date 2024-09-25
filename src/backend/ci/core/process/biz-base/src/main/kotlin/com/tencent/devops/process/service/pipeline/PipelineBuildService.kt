@@ -36,7 +36,6 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -227,7 +226,7 @@ class PipelineBuildService(
                 pipelineParamMap = pipelineParamMap,
                 webHookStartParam = webHookStartParam,
                 // 解析出定义的流水线变量
-                realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id },
+                realStartParamKeys = model.getTriggerContainer().params.map { it.id },
                 debug = debug ?: false,
                 versionName = versionName,
                 yamlVersion = yamlVersion
@@ -301,7 +300,7 @@ class PipelineBuildService(
         )
 
         // 解析出定义的流水线变量
-//        val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
+//        val realStartParamKeys = (model.getTriggerContainer()).params.map { it.id }
 //        val originStartParams = ArrayList<BuildParameters>(realStartParamKeys.size + 4)
 
         // 将用户定义的变量增加上下文前缀的版本，与原变量相互独立

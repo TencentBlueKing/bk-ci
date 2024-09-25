@@ -1291,7 +1291,7 @@ class TemplateFacadeService @Autowired constructor(
             creator = latestTemplate.creator
         )
         val versions = listTemplateVersions(latestTemplate.projectId, latestTemplate.id)
-        val triggerContainer = templateResult.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = templateResult.getTriggerContainer()
         val params = triggerContainer.params
         val templateParams = triggerContainer.templateParams
         return TemplateModelDetail(
@@ -1405,8 +1405,8 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     fun compareModel(versions: List<TemplateVersion>, v1Model: Model, v2Model: Model): TemplateCompareModelResult {
-        val v1TriggerContainer = v1Model.stages[0].containers[0] as TriggerContainer
-        val v2TriggerContainer = v2Model.stages[0].containers[0] as TriggerContainer
+        val v1TriggerContainer = v1Model.getTriggerContainer()
+        val v2TriggerContainer = v2Model.getTriggerContainer()
         return TemplateCompareModelResult(
             versions,
             TemplateCompareModel(
@@ -1482,7 +1482,7 @@ class TemplateFacadeService @Autowired constructor(
                     errorCode = ERROR_TEMPLATE_NOT_EXISTS
                 )
             val templateModel: Model = objectMapper.readValue(template.template)
-            val templateTriggerContainer = templateModel.stages[0].containers[0] as TriggerContainer
+            val templateTriggerContainer = templateModel.getTriggerContainer()
             val latestInstances = listLatestModel(projectId, pipelineIds)
             val settings = pipelineSettingDao.getSettings(dslContext, pipelineIds, projectId)
             val buildNos = pipelineBuildSummaryDao.getSummaries(dslContext, projectId, pipelineIds).map {
@@ -1492,7 +1492,7 @@ class TemplateFacadeService @Autowired constructor(
             return latestInstances.map {
                 val pipelineId = it.key
                 val instanceModel: Model = objectMapper.readValue(it.value)
-                val instanceTriggerContainer = instanceModel.stages[0].containers[0] as TriggerContainer
+                val instanceTriggerContainer = instanceModel.getTriggerContainer()
                 val instanceParams = paramService.filterParams(
                     userId = userId,
                     projectId = projectId,
@@ -1990,11 +1990,11 @@ class TemplateFacadeService @Autowired constructor(
         instance: Model,
         template: Model
     ): Model {
-        val templateParams = (template.stages[0].containers[0] as TriggerContainer).templateParams
+        val templateParams = (template.getTriggerContainer()).templateParams
         if (templateParams.isNullOrEmpty()) {
             return instance
         }
-        val triggerContainer = instance.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = instance.getTriggerContainer()
         val finalParams = ArrayList<BuildFormProperty>()
         val params = triggerContainer.params
         params.forEach { param ->
@@ -2036,7 +2036,7 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     private fun instanceParamModel(userId: String, projectId: String, model: Model): Model {
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
         val params = paramService.filterParams(userId, projectId, null, triggerContainer.params)
         val templateParams =
             if (triggerContainer.templateParams == null || triggerContainer.templateParams!!.isEmpty()) {
@@ -2352,7 +2352,7 @@ class TemplateFacadeService @Autowired constructor(
      * 模板的流水线变量和模板常量不能相同
      */
     private fun checkPipelineParam(template: Model) {
-        val triggerContainer = template.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = template.getTriggerContainer()
 
         if (triggerContainer.params.isEmpty()) {
             return
@@ -2606,7 +2606,7 @@ class TemplateFacadeService @Autowired constructor(
         val templateRecord =
             templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version) ?: return
         val template: Model = objectMapper.readValue(templateRecord.template)
-        val templateParams = (template.stages[0].containers[0] as TriggerContainer).templateParams
+        val templateParams = (template.getTriggerContainer()).templateParams
         if (templateParams.isNullOrEmpty()) {
             return
         }

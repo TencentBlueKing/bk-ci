@@ -54,7 +54,6 @@ import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
@@ -415,7 +414,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             try {
                 val instance = if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
                     // 将模版常量变更实例化为流水线变量
-                    val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+                    val triggerContainer = model.getTriggerContainer()
                     PipelineUtils.instanceModel(
                         templateModel = model,
                         pipelineName = model.name,
@@ -1330,7 +1329,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         pipelineInfo: PipelineInfo
     ): Model {
         try {
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+            val triggerContainer = model.getTriggerContainer()
             // #10958 每次存储model都需要忽略当前的推荐版本号值，在返回前端时重查
             triggerContainer.buildNo?.apply {
                 currentBuildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId)
