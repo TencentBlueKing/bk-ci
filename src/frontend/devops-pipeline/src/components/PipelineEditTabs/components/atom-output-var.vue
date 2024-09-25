@@ -1,6 +1,11 @@
 <template>
     <div class="variable-container">
-        <bk-alert v-if="editable" type="info" :title="$t('newui.atomVarTips')" closable></bk-alert>
+        <bk-alert
+            v-if="editable"
+            type="info"
+            :title="$t('newui.atomVarTips')"
+            closable
+        ></bk-alert>
         <div class="operate-row">
             <bk-input
                 v-model="searchStr"
@@ -20,17 +25,25 @@
                 :class="{ 'disabled-header': group.disableHeader }"
             >
                 <div class="env-name flex-item">
-                    <bk-icon class="toggle-icon" type="right-shape" />
-                    <span class="group-title"
+                    <bk-icon
+                        class="toggle-icon"
+                        type="right-shape"
+                    />
+                    <span
+                        class="group-title"
                         :class="{ 'title-overflow': !group.stepId }"
                         v-bk-tooltips="{ content: group.title, maxWidth: 300, disabled: group.stepId, allowHTML: false }"
                     >
-                        {{group.title}}
+                        {{ group.title }}
                     </span>
                 </div>
-                <div v-if="!group.stepId && editable" @click.stop class="flex-item step-tips">
+                <div
+                    v-if="!group.stepId && editable"
+                    @click.stop
+                    class="flex-item step-tips"
+                >
                     <bk-icon type="exclamation-circle-shape" />
-                    <span>{{$t('newui.noStepidTips')}}
+                    <span>{{ $t('newui.noStepidTips') }}
                         <bk-popconfirm
                             trigger="click"
                             ext-cls="step-pop-confirm"
@@ -60,11 +73,17 @@
                                     </vuex-input>
                                 </form-field>
                             </div>
-                            <a class="edit-step-span" @click="location = group.location">{{$t('newui.setNow')}}</a>
+                            <a
+                                class="edit-step-span"
+                                @click="location = group.location"
+                            >{{ $t('newui.setNow') }}</a>
                         </bk-popconfirm>
                     </span>
                 </div>
-                <span v-else class="flex-item item-num">{{group.params.length}}</span>
+                <span
+                    v-else
+                    class="flex-item item-num"
+                >{{ group.params.length }}</span>
             </div>
             <section slot="content">
                 <template v-for="env in group.params">
@@ -115,7 +134,8 @@
         },
         computed: {
             ...mapState('atom', [
-                'editingElementPos'
+                'editingElementPos',
+                'atomsOutputMap'
             ]),
             ...mapGetters('atom', [
                 'getStage',
@@ -155,7 +175,12 @@
                     if (stage) {
                         (stage.containers || []).forEach((container, containerIndex) => {
                             (container.elements || []).forEach((element, elementIndex) => {
-                                if (element?.data?.output && typeof (element?.data?.output) && Object.keys(element?.data?.output).length) {
+                                // 从api获取的output信息
+                                const apiOutput = this.atomsOutputMap[`${element.atomCode}@${element.version}`] || {}
+                                // 从model解析的output信息
+                                const modelOutput = element?.data?.output || {}
+                                if (Object.keys(modelOutput).length || Object.keys(apiOutput).length) {
+                                    const realOutput = Object.keys(apiOutput).length > 0 ? apiOutput : modelOutput
                                     list.push({
                                         id: element.id,
                                         location: {
@@ -169,9 +194,9 @@
                                         stepId: element.stepId,
                                         stepName: element.name,
                                         envPrefix: `jobs.${container.jobId}.steps.${element.stepId}.outputs.`,
-                                        params: Object.keys(element.data.output).map(item => ({
+                                        params: Object.keys(realOutput).map(item => ({
                                             name: item,
-                                            desc: ''
+                                            desc: realOutput[item]?.description
                                         }))
                                     })
                                 }
@@ -196,9 +221,13 @@
                 }))
             }
         },
+        created () {
+            this.fetchAtomsOutput()
+        },
         methods: {
             ...mapActions('atom', [
-                'updateAtom'
+                'updateAtom',
+                'fetchAtomsOutput'
             ]),
             async handleUpdateStepId () {
                 const valid = await this.$validator.validate('step.*')

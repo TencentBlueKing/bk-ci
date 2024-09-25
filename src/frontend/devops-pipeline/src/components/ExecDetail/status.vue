@@ -1,7 +1,13 @@
 <template>
     <span class="log-status readonly">
-        <i v-if="isRunning" class="devops-icon icon-circle-2-1 executing" />
-        <logo v-else v-bind="statusIconAttrs" />
+        <i
+            v-if="isRunning"
+            class="devops-icon icon-circle-2-1 executing"
+        />
+        <logo
+            v-else
+            v-bind="statusIconAttrs"
+        />
     </span>
 </template>
 

@@ -11,7 +11,9 @@
 <script lang="ts">
 import http from '@/http/api';
 import PermissionMain from '@/components/user-group/components/permission-main.vue';
+import tools from '@/utils/tools';
 import { Message } from 'bkui-vue';
+import { useI18n } from 'vue-i18n';
 
 export default {
   components: {
@@ -19,14 +21,17 @@ export default {
   },
 
   data() {
+    const { t } = useI18n();
     return {
-      resourceType: 'project'
+      resourceType: 'project',
+      t,
     };
   },
 
   computed: {
     projectCode() {
-      return this.$route.params.projectCode || this.$route.query.projectCode;
+      return this.$route.params.projectCode || this.$route.query.projectCode || tools.getCookie('X-DEVOPS-PROJECT-ID') || '';
+      
     },
   },
 
@@ -51,16 +56,10 @@ export default {
         .then(() => {
           Message({
             theme: 'success',
-            message: this.$t('修改成功'),
+            message: this.t('修改成功'),
           })
         })
     }
   },
 };
 </script>
-
-<style lang="postcss" scoped>
-  .permission-main {
-    padding: 24px;
-  }
-</style>

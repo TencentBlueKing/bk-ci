@@ -28,10 +28,13 @@
 
 package com.tencent.devops.auth.dao
 
+import com.tencent.devops.auth.pojo.AuthResourceGroup
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.model.auth.tables.TAuthResourceGroup
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -83,6 +86,49 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun batchCreate(
+        dslContext: DSLContext,
+        authResourceGroups: List<AuthResourceGroup>
+    ) {
+        val now = LocalDateTime.now()
+        with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.batch(authResourceGroups.map {
+                dslContext.insertInto(
+                    this,
+                    PROJECT_CODE,
+                    RESOURCE_TYPE,
+                    RESOURCE_CODE,
+                    RESOURCE_NAME,
+                    IAM_RESOURCE_CODE,
+                    GROUP_CODE,
+                    GROUP_NAME,
+                    DEFAULT_GROUP,
+                    RELATION_ID,
+                    CREATE_TIME,
+                    UPDATE_TIME,
+                    DESCRIPTION,
+                    IAM_TEMPLATE_ID
+                ).values(
+                    it.projectCode,
+                    it.resourceType,
+                    it.resourceCode,
+                    it.resourceName,
+                    it.iamResourceCode,
+                    it.groupCode,
+                    it.groupName,
+                    it.defaultGroup,
+                    it.relationId.toString(),
+                    now,
+                    now,
+                    it.description,
+                    it.iamTemplateId
+                ).onDuplicateKeyUpdate()
+                    .set(GROUP_NAME, it.groupName)
+                    .set(UPDATE_TIME, now)
+            }).execute()
+        }
+    }
+
     fun update(
         dslContext: DSLContext,
         projectCode: String,
@@ -90,19 +136,39 @@ class AuthResourceGroupDao {
         resourceCode: String,
         resourceName: String,
         groupCode: String,
-        groupName: String
+        groupName: String,
+        relationId: String? = null
     ): Int {
         val now = LocalDateTime.now()
         return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
             dslContext.update(this)
                 .set(GROUP_NAME, groupName)
                 .set(RESOURCE_NAME, resourceName)
+                .let { if (relationId != null) it.set(RELATION_ID, relationId) else it }
                 .set(UPDATE_TIME, now)
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_CODE.eq(resourceCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .and(GROUP_CODE.eq(groupCode))
                 .execute()
+        }
+    }
+
+    fun batchUpdate(
+        dslContext: DSLContext,
+        authResourceGroups: List<AuthResourceGroup>
+    ) {
+        val now = LocalDateTime.now()
+        with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.batch(authResourceGroups.map {
+                dslContext.update(this)
+                    .set(GROUP_NAME, it.groupName)
+                    .set(DESCRIPTION, it.description)
+                    .set(IAM_TEMPLATE_ID, it.iamTemplateId)
+                    .set(UPDATE_TIME, now)
+                    .where(PROJECT_CODE.eq(it.projectCode))
+                    .and(ID.eq(it.id!!))
+            }).execute()
         }
     }
 
@@ -184,6 +250,38 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun listIamGroupIdsByConditions(
+        dslContext: DSLContext,
+        projectCode: String,
+        iamGroupIds: List<String>? = null,
+        groupName: String? = null,
+        iamTemplateIds: List<Int>? = null
+    ): List<Int> {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.select(RELATION_ID).from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .let {
+                    if (!iamGroupIds.isNullOrEmpty())
+                        it.and(RELATION_ID.`in`(iamGroupIds))
+                    else it
+                }
+                .let {
+                    if (groupName != null)
+                        it.and(GROUP_NAME.like("%$groupName%"))
+                    else
+                        it
+                }
+                .let {
+                    if (!iamTemplateIds.isNullOrEmpty()) {
+                        it.and(RESOURCE_TYPE.eq(AuthResourceType.PROJECT.value))
+                        it.and(IAM_TEMPLATE_ID.`in`(iamTemplateIds))
+                    } else
+                        it
+                }
+                .fetch().map { it.value1().toInt() }
+        }
+    }
+
     fun getByGroupName(
         dslContext: DSLContext,
         projectCode: String,
@@ -205,11 +303,29 @@ class AuthResourceGroupDao {
         projectCode: String,
         resourceType: String,
         resourceCode: String
-    ): List<TAuthResourceGroupRecord> {
+    ): List<AuthResourceGroup> {
         return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            val result = mutableListOf<AuthResourceGroup>()
             dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_CODE.eq(resourceCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
+                .fetch().forEach {
+                    val authResourceGroup = convert(it)
+                    if (authResourceGroup != null) {
+                        result.add(authResourceGroup)
+                    }
+                }
+            result
+        }
+    }
+
+    fun listRecordsOfNeedToFix(
+        dslContext: DSLContext,
+        projectCode: String
+    ): Result<TAuthResourceGroupRecord> {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RELATION_ID.eq("null"))
                 .fetch()
         }
     }
@@ -240,5 +356,61 @@ class AuthResourceGroupDao {
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .fetchOne(0, Int::class.java)!!
         }
+    }
+
+    fun listGroupByResourceType(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        offset: Int,
+        limit: Int
+    ): List<AuthResourceGroup> {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            val records = dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .offset(offset)
+                .limit(limit)
+                .fetch()
+            val result = mutableListOf<AuthResourceGroup>()
+            records.forEach {
+                val authResourceGroup = convert(it)
+                if (authResourceGroup != null) {
+                    result.add(authResourceGroup)
+                }
+            }
+            result
+        }
+    }
+
+    fun convert(record: TAuthResourceGroupRecord): AuthResourceGroup? {
+        // 同步iam数据时，可能会出现relationId为null的情况，此时转Int类型，会有异常
+        with(record) {
+            return try {
+                AuthResourceGroup(
+                    id = id,
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = resourceName,
+                    iamResourceCode = iamResourceCode,
+                    groupCode = groupCode,
+                    groupName = groupName,
+                    defaultGroup = defaultGroup,
+                    relationId = relationId.toInt(),
+                    createTime = createTime,
+                    updateTime = updateTime
+                )
+            } catch (ignore: Exception) {
+                logger.warn(
+                    "convert Group Record failed!|$projectCode|$resourceType|$resourceCode", ignore
+                )
+                null
+            }
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AuthResourceGroupDao::class.java)
     }
 }

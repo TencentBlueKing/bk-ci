@@ -78,7 +78,7 @@ import java.util.concurrent.TimeUnit
  *
  * @version 1.0
  */
-@Suppress("UNUSED", "LongParameterList")
+@Suppress("LongParameterList", "LongMethod", "MagicNumber")
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class DispatchVMStartupTaskAtom @Autowired constructor(
@@ -401,9 +401,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         ignoreEnvAgentIds = retryThirdAgentEnv.split(",").filter { it.isNotBlank() }.toSet()
                     )
                 }
-                // 发送后就将参数置空防止下次重复发送事件
 
-                thirdPartyAgentMonitorPrint(task)
+                try {
+                    thirdPartyAgentMonitorPrint(task)
+                } catch (ignore: Exception) {
+                    // 忽略掉因调用打印接口出错而导致调度失败的问题
+                }
             }
 
             AtomResponse(

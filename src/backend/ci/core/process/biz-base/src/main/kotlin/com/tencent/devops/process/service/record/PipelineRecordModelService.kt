@@ -239,6 +239,7 @@ class PipelineRecordModelService @Autowired constructor(
         containerVarMap[Container::status.name] = recordContainer.status ?: ""
         containerVarMap[Container::executeCount.name] = recordContainer.executeCount
         containerVarMap[Container::containPostTaskFlag.name] = recordContainer.containPostTaskFlag ?: false
+        containerVarMap[Container::matrixGroupFlag.name] = recordContainer.matrixGroupFlag ?: false
         return containerVarMap
     }
 
@@ -270,15 +271,10 @@ class PipelineRecordModelService @Autowired constructor(
         // 获取开机任务的序号
         val startVMTaskSeq = buildRecordContainer.containerVar[Container::startVMTaskSeq.name]?.toString()?.toInt() ?: 1
         containerRecordTasks.forEach { containerRecordTask ->
-            if (startVMTaskSeq > 1 && startVMTaskSeq > containerRecordTask.taskSeq) {
-                // 当开机任务的序号大于1时，说明第一个任务不是开机任务，job含有内置插件任务，需要重新调整开机任务前面的task任务的taskSeq值
-                containerRecordTask.taskSeq += 1
-            }
+            handleTaskSeq(startVMTaskSeq, containerRecordTask)
             val taskVarMap = generateTaskVarMap(
-                containerRecordTask = containerRecordTask,
-                taskId = containerRecordTask.taskId,
-                containerBaseMap = containerBaseMap,
-                matrixTaskFlag = matrixTaskFlag,
+                containerRecordTask = containerRecordTask, taskId = containerRecordTask.taskId,
+                containerBaseMap = containerBaseMap, matrixTaskFlag = matrixTaskFlag,
                 taskBaseMaps = taskBaseMaps
             )
             while (containerRecordTask.taskSeq - preContainerRecordTaskSeq > 1) {
@@ -319,6 +315,16 @@ class PipelineRecordModelService @Autowired constructor(
         }
     }
 
+    private fun handleTaskSeq(
+        startVMTaskSeq: Int,
+        containerRecordTask: BuildRecordTask
+    ) {
+        if (startVMTaskSeq < 1 || (startVMTaskSeq > 1 && startVMTaskSeq > containerRecordTask.taskSeq)) {
+            // 当开机任务的序号大于1时，说明第一个任务不是开机任务，job含有内置插件任务，需要重新调整开机任务前面的task任务的taskSeq值
+            containerRecordTask.taskSeq += 1
+        }
+    }
+
     private fun generateTaskVarMap(
         containerRecordTask: BuildRecordTask,
         taskId: String,
@@ -330,6 +336,7 @@ class PipelineRecordModelService @Autowired constructor(
         taskVarMap[Element::id.name] = taskId
         taskVarMap[Element::status.name] = containerRecordTask.status ?: ""
         taskVarMap[Element::executeCount.name] = containerRecordTask.executeCount
+        taskVarMap[Element::asyncStatus.name] = containerRecordTask.asyncStatus ?: ""
         val elementPostInfo = containerRecordTask.elementPostInfo
         if (elementPostInfo != null) {
             // 生成post类型task的变量模型

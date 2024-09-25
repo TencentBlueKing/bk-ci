@@ -94,7 +94,9 @@ class ScmOauthService @Autowired constructor(
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String?
+        search: String?,
+        page: Int,
+        pageSize: Int
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list the branches")
         val startEpoch = System.currentTimeMillis()
@@ -110,7 +112,7 @@ class ScmOauthService @Autowired constructor(
                 region = region,
                 userName = userName,
                 event = null
-            ).getBranches(search = search)
+            ).getBranches(search = search, page, pageSize)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list branches")
         }

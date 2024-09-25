@@ -1,5 +1,8 @@
 <template>
-    <div class="devops-app" v-bkloading="{ isLoading: moduleLoading }">
+    <div
+        class="devops-app"
+        v-bkloading="{ isLoading: moduleLoading }"
+    >
         <router-view />
     </div>
 </template>
@@ -9,13 +12,14 @@
     import { Component, Watch } from 'vue-property-decorator'
     import { Action, State } from 'vuex-class'
     
-    @Component
+    @Component()
     export default class App extends Vue {
         @State fetchError
         @State moduleLoading
 
         @Action getAnnouncement
         @Action setAnnouncement
+        @Action getPlatformPreData
 
         @Watch('fetchError')
         handleFetchError (e) {
@@ -29,6 +33,7 @@
         }
 
         async created () {
+            this.getPlatformPreData()
             const announce = await this.getAnnouncement()
             if (announce && announce.id) {
                 this.setAnnouncement(announce)

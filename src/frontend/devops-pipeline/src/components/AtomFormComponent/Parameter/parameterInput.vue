@@ -1,19 +1,36 @@
 <template>
-    <bk-input :clearable="!disabled" v-model="value" v-if="type === 'input'" :disabled="disabled"></bk-input>
-    <section v-else class="parameter-select" v-bk-clickoutside="toggleShowList">
-        <bk-input ref="inputItem"
+    <bk-input
+        :clearable="!disabled"
+        v-model="value"
+        v-if="type === 'input'"
+        :disabled="disabled"
+    ></bk-input>
+    <section
+        v-else
+        class="parameter-select"
+        v-bk-clickoutside="toggleShowList"
+    >
+        <bk-input
+            ref="inputItem"
             :clearable="!disabled"
             :value="Array.isArray(value) ? value.join(',') : value"
             :disabled="disabled"
             @change="inputManually"
-            @focus="toggleShowList(true)">
+            @focus="toggleShowList(true)"
+        >
         </bk-input>
-        <ul v-if="showList && paramList.length" class="parameter-list">
-            <li v-for="(option, index) in paramList"
+        <ul
+            v-if="showList && paramList.length"
+            class="parameter-list"
+        >
+            <li
+                v-for="(option, index) in paramList"
                 :key="index"
                 @click="chooseOption(option)"
                 :class="{ 'is-active': isActive(option.id) }"
-            >{{option.name}}</li>
+            >
+                {{ option.name }}
+            </li>
         </ul>
     </section>
 </template>

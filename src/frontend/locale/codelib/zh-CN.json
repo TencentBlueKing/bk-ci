@@ -2,7 +2,7 @@
   "codelib": "代码库",
   "linkCodelib": "关联代码库",
   "repo": "代码库",
-  "linkCodelibLabel": "关联{0}代码库",
+  "linkCodelibLabel": "关联{0}",
   "typeCodelib": "{0}代码库",
   "link": "关联",
   "linkRepo": "关联{0}代码库",
@@ -214,5 +214,7 @@
   "触发成功": "触发成功",
   "触发失败": "触发失败",
   "触发器不匹配": "触发器不匹配",
-  "触发结果": "触发结果"
+  "触发结果": "触发结果",
+  "codelibUndeployTitle": "{0}连接服务尚未部署完成",
+  "githubUndeployDesc": "如需使用此功能，请联系平台管理员注册 GitHub APP"
 }

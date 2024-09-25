@@ -1,24 +1,29 @@
 <template>
     <main class="pipeline-list-main">
-        <h5 class="current-pipeline-group-name">{{currentViewName}}</h5>
+        <h5 class="current-pipeline-group-name">{{ currentViewName }}</h5>
         <header class="pipeline-list-main-header">
             <div class="pipeline-list-main-header-left-area">
                 <bk-button
                     :disabled="!isSelected"
                     @click="togglePatchAddTo"
                 >
-                    {{$t('patchAddTo')}}
+                    {{ $t('patchAddTo') }}
                 </bk-button>
                 <span v-bk-tooltips="notAllowPatchDeleteTips">
                     <bk-button
                         :disabled="!isSelected || isPacGroup"
                         @click="toggleDeleteConfirm"
                     >
-                        {{$t('patchDelete')}}
+                        {{ $t('patchDelete') }}
                     </bk-button>
                 </span>
-                <bk-button class="exit-patch-text-btn" text @click="exitPatch">{{$t('exitPatch')}}</bk-button>
-
+                <bk-button
+                    class="exit-patch-text-btn"
+                    text
+                    @click="exitPatch"
+                >
+                    {{ $t('exitPatch') }}
+                </bk-button>
             </div>
             <div class="pipeline-list-main-header-right-area">
                 <pipeline-searcher
@@ -26,12 +31,15 @@
                 />
             </div>
         </header>
-        <div class="pipeline-list-box" ref="tableBox">
+        <div
+            class="pipeline-list-box"
+            ref="tableBox"
+        >
             <pipeline-table-view
                 ref="pipelineTable"
                 :fetch-pipelines="getPipelines"
                 :filter-params="filters"
-                :max-height="$refs.tableBox?.offsetHeight"
+                :max-height="tableHeight"
                 @selection-change="handleSelectChange"
                 is-patch-view
             />
@@ -74,7 +82,8 @@
                 selected: [],
                 addToDialogShow: false,
                 filters: restQuery,
-                isConfirmShow: false
+                isConfirmShow: false,
+                tableHeight: null
             }
         },
         computed: {
@@ -102,10 +111,20 @@
         created () {
             moment.locale(this.$i18n.locale)
         },
+        mounted () {
+            this.updateTableHeight()
+            window.addEventListener('resize', this.updateTableHeight)
+        },
+        beforeDestroy () {
+            window.removeEventListener('resize', this.updateTableHeight)
+        },
         methods: {
             ...mapActions('pipelines', [
                 'requestAllPipelinesListByFilter'
             ]),
+            updateTableHeight () {
+                this.tableHeight = this.$refs.tableBox.offsetHeight
+            },
             exitPatch () {
                 this.$router.push({
                     name: 'PipelineManageList',

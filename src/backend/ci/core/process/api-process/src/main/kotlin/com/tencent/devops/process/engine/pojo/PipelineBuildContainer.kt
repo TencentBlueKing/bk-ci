@@ -38,6 +38,7 @@ data class PipelineBuildContainer(
     val containerId: String, // 与seq id同值
     val containerHashId: String?, // 与model中的container.containerHashId同值
     val containPostTaskFlag: Boolean?,
+    val jobId: String?,
     val matrixGroupFlag: Boolean?,
     val matrixGroupId: String?,
     val containerType: String,

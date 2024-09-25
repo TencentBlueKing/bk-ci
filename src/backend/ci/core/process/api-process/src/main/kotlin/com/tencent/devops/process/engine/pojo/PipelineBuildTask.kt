@@ -61,7 +61,8 @@ data class PipelineBuildTask(
     var errorMsg: String? = null,
     val atomCode: String? = null,
     val stepId: String? = null,
-    var totalTime: Long? = null
+    var totalTime: Long? = null,
+    val jobId: String? = null
 ) {
     fun getTaskParam(paramName: String): String {
         return if (taskParams[paramName] != null) {

@@ -212,15 +212,22 @@ class PipelineTaskPauseListener @Autowired constructor(
                 executeCount = task.executeCount,
                 containerType = containerRecord?.containerType ?: "vmBuild"
             ),
+            // pause task 结束
             PipelineBuildStatusBroadCastEvent(
                 source = "pauseCancel-${task.containerId}-${task.buildId}",
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
                 userId = task.starter,
                 buildId = task.buildId,
-                taskId = null,
-                stageId = null,
-                actionType = ActionType.END
+                taskId = task.taskId,
+                stageId = task.stageId,
+                actionType = ActionType.END,
+                containerHashId = task.containerHashId,
+                jobId = task.jobId,
+                stepId = task.stepId,
+                atomCode = task.atomCode,
+                executeCount = task.executeCount,
+                buildStatus = BuildStatus.CANCELED.name
             )
         )
     }

@@ -14,12 +14,15 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator.Companion.START_VM_TASK_ATOM
+import com.tencent.devops.process.pojo.app.StartBuildContext
+import com.tencent.devops.process.utils.PIPELINE_NAME
 
 /**
  * AgentReuseMutexTree 组装流水线时通过生成树可以更好地拿到复用互斥关系
  */
 @Suppress("ComplexCondition")
 data class AgentReuseMutexTree(
+    val executeCount: Int,
     val rootNodes: MutableList<AgentReuseMutexRootNode>,
     var maxStageIndex: Int = 0
 ) {
@@ -37,6 +40,7 @@ data class AgentReuseMutexTree(
         return addNode(
             jobId = container.jobId,
             dispatchType = dispatchType,
+            // 逻辑上可能需要dependOn复用树
             existDep = (container.jobControlOption?.dependOnId?.contains(reuseId) == true) ||
                 (container.jobControlOption?.dependOnName == reuseId),
             stageIndex = stageIndex,
@@ -247,7 +251,9 @@ data class AgentReuseMutexTree(
     // @return false 说明存在节点没填充
     fun checkVirtualRootAndResetJobType() {
         rootNodes.filter { it.children.size > 0 }.forEach { root ->
-            if (root.virtual) {
+            // 如果是重试部分步骤导致 root 节点存在的 stage 或者 job 没有被重试，这时直接放开到下面执行，因为部分重试不会清空
+            // 如果是全部重试，因为重试不会修改 model，所以可以直接放开
+            if (executeCount == 1 && root.virtual) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE,
                     params = arrayOf(root.getAllChildJobId().joinToString("|"), root.jobId)
@@ -268,6 +274,7 @@ data class AgentReuseMutexTree(
     }
 
     fun rewriteModel(
+        context: StartBuildContext,
         buildContainersWithDetail: MutableList<Pair<PipelineBuildContainer, Container>>,
         fullModel: Model,
         buildTaskList: MutableList<PipelineBuildTask>
@@ -276,7 +283,10 @@ data class AgentReuseMutexTree(
 
         buildContainersWithDetail.forEach { (bc, c) ->
             if (treeMap.containsKey(c.jobId)) {
-                bc.controlOption.agentReuseMutex = treeMap[c.jobId]?.first
+                bc.controlOption.agentReuseMutex = treeMap[c.jobId]?.first?.copy(
+                    linkTip = "${context.pipelineId}_Pipeline" +
+                            "[${context.variables[PIPELINE_NAME]}]Job[${c.name}]"
+                )
             }
         }
 

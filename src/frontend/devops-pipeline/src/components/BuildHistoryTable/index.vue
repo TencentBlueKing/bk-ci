@@ -1,7 +1,10 @@
 <template>
-    <div class="build-history-table-container" v-bkloading="{ isLoading }">
+    <div
+        class="build-history-table-container"
+        v-bkloading="{ isLoading }"
+    >
         <filter-bar
-            @query="handlePageChange(1)"
+            @query="handlePageChange"
         />
         <bk-exception
             class="no-build-history-exception"
@@ -12,7 +15,10 @@
                 <span>{{ $t(isDebug ? 'noDebugRecords' : 'noBuildHistory') }}</span>
                 <div class="no-build-history-box-tip">
                     <div class="no-build-history-box-rows">
-                        <p v-for="(row, index) in emptyTips" :key="index">
+                        <p
+                            v-for="(row, index) in emptyTips"
+                            :key="index"
+                        >
                             {{ $t(row) }}
                         </p>
                     </div>
@@ -32,9 +38,12 @@
                             }
                         }"
                     >
-                        {{$t('goEdit')}}
+                        {{ $t('goEdit') }}
                     </bk-button>
-                    <span v-else v-bk-tooltips="tooltip">
+                    <span
+                        v-else
+                        v-bk-tooltips="tooltip"
+                    >
                         <bk-button
                             :disabled="!executable"
                             @click="buildNow"
@@ -51,13 +60,18 @@
                                 }
                             }"
                         >
-                            {{$t(isDebug ? 'debugNow' : 'buildNow')}}
+                            {{ $t(isDebug ? 'debugNow' : 'buildNow') }}
                         </bk-button>
                     </span>
                 </div>
             </div>
         </bk-exception>
-        <div class="bkdevops-build-history-table-wrapper" ref="tableBox" v-else>
+        <div
+            class="bkdevops-build-history-table-wrapper"
+            ref="tableBox"
+            :style="{ height: `${tableHeight}px` }"
+            v-else
+        >
             <bk-table
                 class="bkdevops-build-history-table"
                 :max-height="$refs?.tableBox?.offsetHeight"
@@ -71,8 +85,18 @@
                 @page-change="handlePageChange"
                 @page-limit-change="handleLimitChange"
             >
-                <bk-table-column v-for="col in tableColumnFields" v-bind="col" :prop="col.id" :label="$t(col.label)" :key="col.id" show-overflow-tooltip>
-                    <template v-if="col.id === 'buildNum'" v-slot="props">
+                <bk-table-column
+                    v-for="col in tableColumnFields"
+                    v-bind="col"
+                    :prop="col.id"
+                    :label="$t(col.label)"
+                    :key="col.id"
+                    show-overflow-tooltip
+                >
+                    <template
+                        v-if="col.id === 'buildNum'"
+                        v-slot="props"
+                    >
                         <span class="build-num-status">
                             <router-link
                                 :class="{ [props.row.status]: true }"
@@ -96,16 +120,17 @@
                                 "
                                 :class="{
                                     'devops-icon': true,
-                                    'spin-icon': true,
-                                    'running-icon': true,
-                                    'icon-hourglass': props.row.status === 'QUEUE',
-                                    'icon-circle-2-1': props.row.status === 'RUNNING' || !props.row.endTime
+                                    'icon-hourglass hourglass-queue': props.row.status === 'QUEUE',
+                                    'icon-circle-2-1 spin-icon': props.row.status === 'RUNNING' || !props.row.endTime
                                 }"
                             >
                             </i>
                         </span>
                     </template>
-                    <template v-else-if="col.id === 'stageStatus'" v-slot="props">
+                    <template
+                        v-else-if="col.id === 'stageStatus'"
+                        v-slot="props"
+                    >
                         <stage-steps
                             v-if="props.row.stageStatus"
                             :steps="props.row.stageStatus"
@@ -113,7 +138,10 @@
                         ></stage-steps>
                         <span v-else>--</span>
                     </template>
-                    <template v-else-if="col.id === 'material'" v-slot="props">
+                    <template
+                        v-else-if="col.id === 'material'"
+                        v-slot="props"
+                    >
                         <div
                             class="build-material-cell"
                             v-for="(material, mIndex) in props.row.visibleMaterial"
@@ -125,9 +153,11 @@
                                 :key="material.aliasName"
                                 @click.stop=""
                             />
-                            <span :class="['commit-times', {
-                                'commit-times-visible': material.commitTimes > 1
-                            }]">
+                            <span
+                                :class="['commit-times', {
+                                    'commit-times-visible': material.commitTimes > 1
+                                }]"
+                            >
                                 {{ material.commitTimes }}
                             </span>
                             <span
@@ -142,7 +172,10 @@
                         </div>
                         <span v-if="props.row.visibleMaterial.length === 0">--</span>
                     </template>
-                    <template v-else-if="col.id === 'artifactList'" v-slot="props">
+                    <template
+                        v-else-if="col.id === 'artifactList'"
+                        v-slot="props"
+                    >
                         <template v-if="props.row.hasArtifactories">
                             <div class="artifact-list-cell">
                                 <p
@@ -150,12 +183,25 @@
                                     @click.stop="(e) => showArtifactoriesPopup(e, props.row.index)"
                                     v-html="`${$t('history.fileUnit', [props.row.artifactList.length])}<span>（${props.row.sumSize}）</span>`"
                                 />
-                                <div v-if="props.row.shortUrl" @click.stop="">
-                                    <bk-popover theme="light" trigger="click" placement="bottom-end">
-                                        <bk-button text theme="primary">
+                                <div
+                                    v-if="props.row.shortUrl"
+                                    @click.stop=""
+                                >
+                                    <bk-popover
+                                        theme="light"
+                                        trigger="click"
+                                        placement="bottom-end"
+                                    >
+                                        <bk-button
+                                            text
+                                            theme="primary"
+                                        >
                                             <i class="devops-icon icon-qrcode" />
                                         </bk-button>
-                                        <div class="build-qrcode-popup" slot="content">
+                                        <div
+                                            class="build-qrcode-popup"
+                                            slot="content"
+                                        >
                                             <span v-html="$t('scanQRCodeView')"></span>
                                             <qrcode
                                                 :text="props.row.shortUrl"
@@ -170,28 +216,49 @@
                         </template>
                         <span v-else>--</span>
                     </template>
-                    <template v-else-if="col.id === 'appVersions'" v-slot="props">
+                    <template
+                        v-else-if="col.id === 'appVersions'"
+                        v-slot="props"
+                    >
                         <template v-if="props.row.appVersions.length">
-                            <div class="build-app-version-list" v-bk-tooltips="versionToolTipsConf">
-                                <p v-for="(appVersion, index) in props.row.visibleAppVersions" :key="index">
+                            <div
+                                class="build-app-version-list"
+                                v-bk-tooltips="versionToolTipsConf"
+                            >
+                                <p
+                                    v-for="(appVersion, index) in props.row.visibleAppVersions"
+                                    :key="index"
+                                >
                                     {{ appVersion }}
                                 </p>
                             </div>
                             <div id="app-version-tooltip-content">
-                                <p v-for="(appVersion, index) in props.row.appVersions" :key="index">
+                                <p
+                                    v-for="(appVersion, index) in props.row.appVersions"
+                                    :key="index"
+                                >
                                     {{ appVersion }}
                                 </p>
                             </div>
                         </template>
                         <span v-else>--</span>
                     </template>
-                    <template v-else-if="col.id === 'startType'" v-slot="props">
+                    <template
+                        v-else-if="col.id === 'startType'"
+                        v-slot="props"
+                    >
                         <p class="trigger-cell">
-                            <logo size="14" :name="props.row.startType" />
+                            <logo
+                                size="14"
+                                :name="props.row.startType"
+                            />
                             <span>{{ props.row.userId }}</span>
                         </p>
                     </template>
-                    <template v-else-if="col.id === 'entry'" v-slot="props">
+                    <template
+                        v-else-if="col.id === 'entry'"
+                        v-slot="props"
+                    >
                         <p
                             class="entry-link"
                             @click.stop="showLog(props.row)"
@@ -199,7 +266,10 @@
                             {{ $t("history.completedLog") }}
                         </p>
                     </template>
-                    <template v-else-if="col.id === 'remark'" v-slot="props">
+                    <template
+                        v-else-if="col.id === 'remark'"
+                        v-slot="props"
+                    >
                         <div class="remark-cell">
                             <div
                                 @click.stop=""
@@ -246,10 +316,12 @@
                                     @click.stop="activeRemarkInput(props.row)"
                                 />
                             </template>
-
                         </div>
                     </template>
-                    <template v-else-if="col.id === 'pipelineVersion'" v-slot="props">
+                    <template
+                        v-else-if="col.id === 'pipelineVersion'"
+                        v-slot="props"
+                    >
                         <div>
                             <span>{{ props.row.pipelineVersionName ?? '--' }}</span>
                             <logo
@@ -261,7 +333,10 @@
                             />
                         </div>
                     </template>
-                    <template v-else-if="col.id === 'errorCode'" v-slot="props">
+                    <template
+                        v-else-if="col.id === 'errorCode'"
+                        v-slot="props"
+                    >
                         <div
                             v-if="props.row.errorInfoList.length > 0"
                             class="error-code-cell"
@@ -286,7 +361,12 @@
                         <span v-else>--</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column v-if="!isDebug" :label="$t('operate')" fixed="right" width="80">
+                <bk-table-column
+                    v-if="!isDebug"
+                    :label="$t('operate')"
+                    fixed="right"
+                    width="80"
+                >
                     <template v-slot="props">
                         <bk-button
                             v-if="retryable(props.row)"
@@ -299,7 +379,10 @@
                         </bk-button>
                     </template>
                 </bk-table-column>
-                <bk-table-column type="setting" :tippy-options="{ zIndex: 3000 }">
+                <bk-table-column
+                    type="setting"
+                    :tippy-options="{ zIndex: 3000 }"
+                >
                     <TableColumnSetting
                         ref="tableSetting"
                         :selected-column-keys="tableColumnKeys"
@@ -308,7 +391,11 @@
                         @reset="handleColumnReset"
                     />
                 </bk-table-column>
-                <empty-exception slot="empty" type="search-empty" @clear="clearFilter" />
+                <empty-exception
+                    slot="empty"
+                    type="search-empty"
+                    @clear="clearFilter"
+                />
             </bk-table>
         </div>
 
@@ -328,17 +415,29 @@
                     @click.stop="gotoArtifactoryList"
                 >
                     <span class="go-outputs-btn">
-                        <logo name="tiaozhuan" size="18" />
-                        {{$t("goOutputs")}}
+                        <logo
+                            name="tiaozhuan"
+                            size="18"
+                        />
+                        {{ $t("goOutputs") }}
                     </span>
                 </bk-button>
             </p>
-            <ul class="build-artifact-list-ul" v-if="visibleIndex !== -1">
-                <li v-for="artifactory in actifactories" :key="artifactory.name">
+            <ul
+                class="build-artifact-list-ul"
+                v-if="visibleIndex !== -1"
+            >
+                <li
+                    v-for="artifactory in actifactories"
+                    :key="artifactory.name"
+                >
                     <p class="build-artifact-name">
                         <i :class="['devops-icon', `icon-${artifactory.icon}`]"></i>
-                        <span :title="artifactory.name" class="artifact-name-span">
-                            {{artifactory.name}}
+                        <span
+                            :title="artifactory.name"
+                            class="artifact-name-span"
+                        >
+                            {{ artifactory.name }}
                         </span>
                         <span class="artifact-size">
                             ({{ artifactory.size }})
@@ -352,7 +451,7 @@
                             theme="primary"
                             @click.stop="downloadFile(artifactory)"
                         >
-                            {{$t('download')}}
+                            {{ $t('download') }}
                         </bk-button>
                         <bk-button
                             v-if="artifactory.artifactoryType === 'PIPELINE'"
@@ -361,14 +460,14 @@
                             theme="primary"
                             @click.stop.native="copyToCustom(artifactory)"
                         >
-                            {{$t('history.copyToCustomArtifactory')}}
+                            {{ $t('history.copyToCustomArtifactory') }}
                         </bk-button>
                     </div>
                 </li>
             </ul>
             <footer slot="footer">
                 <bk-button @click="hideArtifactoriesPopup">
-                    {{$t('close')}}
+                    {{ $t('close') }}
                 </bk-button>
             </footer>
         </bk-dialog>
@@ -381,13 +480,21 @@
             @cancel="hideMoreMaterial"
         >
             <template v-if="activeBuild">
-                <div class="all-build-material-row" v-for="material in activeBuild.material" :key="material.aliasName">
-                    <MaterialItem :is-fit-content="false" :material="material" :show-more="false" />
+                <div
+                    class="all-build-material-row"
+                    v-for="material in activeBuild.material"
+                    :key="material.aliasName"
+                >
+                    <MaterialItem
+                        :is-fit-content="false"
+                        :material="material"
+                        :show-more="false"
+                    />
                 </div>
             </template>
             <footer slot="footer">
                 <bk-button @click="hideMoreMaterial">
-                    {{$t('close')}}
+                    {{ $t('close') }}
                 </bk-button>
             </footer>
         </bk-dialog>
@@ -399,9 +506,18 @@
             :title="`#${activeBuild && activeBuild.buildNum} - ${$t('history.errorCode')}`"
             @cancel="hideErrorInfoPopup"
         >
-            <ul class="error-info-list" v-if="activeBuild">
-                <li v-for="item in activeBuild.errorInfoList" :key="item.errCode">
-                    <logo :name="item.icon" size="18" />
+            <ul
+                class="error-info-list"
+                v-if="activeBuild"
+            >
+                <li
+                    v-for="item in activeBuild.errorInfoList"
+                    :key="item.errCode"
+                >
+                    <logo
+                        :name="item.icon"
+                        size="18"
+                    />
                     <p v-bk-tooltips="{ maxWidth: 600, content: item.errorMsg }">
                         {{ $t(item.title) }} (<b>{{ item.errCode }}</b>): {{ item.errorMsg }}
                     </p>
@@ -409,7 +525,7 @@
             </ul>
             <footer slot="footer">
                 <bk-button @click="hideErrorInfoPopup">
-                    {{$t('close')}}
+                    {{ $t('close') }}
                 </bk-button>
             </footer>
         </bk-dialog>
@@ -472,7 +588,8 @@
                 buildHistories: [],
                 stoping: {},
                 isLoading: false,
-                tableColumnKeys: initSortedColumns
+                tableColumnKeys: initSortedColumns,
+                tableHeight: null
             }
         },
         computed: {
@@ -673,23 +790,14 @@
                 deep: true
             }
         },
-        created () {
-            if (this.$route.query) {
-                this.setHistoryPageStatus({
-                    page: this.$route.query?.page ? parseInt(this.$route.query?.page, 10) : 1,
-                    pageSize: this.$route.query?.pageSize ? parseInt(this.$route.query?.pageSize, 10) : 20
-                })
-            }
-            if (this.routePipelineVersion) {
-                this.requestHistory()
-            }
-        },
         mounted () {
             webSocketMessage.installWsMessage(this.requestHistory)
+            window.addEventListener('resize', this.updateTableHeight)
         },
 
         beforeDestroy () {
             webSocketMessage.unInstallWsMessage()
+            window.removeEventListener('resize', this.updateTableHeight)
         },
 
         methods: {
@@ -699,6 +807,9 @@
                 'setHistoryPageStatus',
                 'resetHistoryFilterCondition'
             ]),
+            updateTableHeight () {
+                this.tableHeight = this.$refs.tableBox.offsetHeight
+            },
             handleColumnChange (columns) {
                 this.tableColumnKeys = columns
                 this.$refs.tableSetting.$parent.instance?.hide()
@@ -722,7 +833,7 @@
                     const res = await this.requestPipelinesHistory({
                         projectId,
                         pipelineId,
-                        version
+                        isDebug: this.isDebug
                     })
                     this.setHistoryPageStatus({
                         count: res.count
@@ -1298,6 +1409,8 @@
 }
 .build-artifact-list-ul {
     border-top: 1px solid #EAEBF0;
+    max-height: calc(100vh / 3);
+    overflow: auto;
     > li {
         height: 38px;
         display: flex;

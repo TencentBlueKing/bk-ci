@@ -1,13 +1,20 @@
 <template>
-    <div class="node-detail-wrapper"
+    <div
+        class="node-detail-wrapper"
         v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
-        }">
+        }"
+    >
         <content-header class="info-header">
             <div slot="left">
-                <i class="devops-icon icon-arrows-left" @click="toNodeList"></i>
-                <input type="text" class="bk-form-input display-name-input"
+                <i
+                    class="devops-icon icon-arrows-left"
+                    @click="toNodeList"
+                ></i>
+                <input
+                    type="text"
+                    class="bk-form-input display-name-input"
                     ref="nodeName"
                     v-if="editable"
                     maxlength="30"
@@ -15,23 +22,55 @@
                     v-validate="'required'"
                     v-model="nodeDetails.displayName"
                     @blur="saveName"
-                    :class="{ 'is-danger': errors.has('nodeName') }" />
-                <span class="header-text" v-if="!editable">{{ nodeDetails.displayName }}</span>
-                <i class="devops-icon icon-edit" v-if="!editable && nodeDetails.canEdit" @click="editNodeName"></i>
+                    :class="{ 'is-danger': errors.has('nodeName') }"
+                />
+                <span
+                    class="header-text"
+                    v-if="!editable"
+                >{{ nodeDetails.displayName }}</span>
+                <i
+                    class="devops-icon icon-edit"
+                    v-if="!editable && nodeDetails.canEdit"
+                    @click="editNodeName"
+                ></i>
             </div>
-            <div slot="right" class="node-handle">
-                <span class="copy-btn" @click="copyHandle">
-                    {{ nodeDetails.os === 'WINDOWS' ? $t('environment.nodeInfo.copyDownloadLink') : $t('environment.nodeInfo.copyInstallCommand')}}
+            <div
+                slot="right"
+                class="node-handle"
+            >
+                <span
+                    class="copy-btn"
+                    @click="copyHandle"
+                >
+                    {{ nodeDetails.os === 'WINDOWS' ? $t('environment.nodeInfo.copyDownloadLink') : $t('environment.nodeInfo.copyInstallCommand') }}
                 </span>
-                <span class="download-btn" v-if="nodeDetails.os === 'WINDOWS'" @click="downloadHandle">{{ $t('environment.nodeInfo.downloadInstallationPackage') }}</span>
-                <i class="devops-icon icon-refresh" @click="refresh"></i>
+                <span
+                    class="download-btn"
+                    v-if="nodeDetails.os === 'WINDOWS'"
+                    @click="downloadHandle"
+                >{{ $t('environment.nodeInfo.downloadInstallationPackage') }}</span>
+                <i
+                    class="devops-icon icon-refresh"
+                    @click="refresh"
+                ></i>
             </div>
         </content-header>
-        <div class="sub-view-port" v-show="showContent">
+        <div
+            class="sub-view-port"
+            v-show="showContent"
+        >
             <ul class="base-prototype-list">
-                <li v-for="(entry, index) in basePrototypeList" :key="index">
+                <li
+                    v-for="(entry, index) in basePrototypeList"
+                    :key="index"
+                >
                     <div class="info-title">{{ entry.name }}：</div>
-                    <div class="info-value" :title="entry.value">{{ entry.value }}</div>
+                    <div
+                        class="info-value"
+                        :title="entry.value"
+                    >
+                        {{ entry.value }}
+                    </div>
                 </li>
             </ul>
             <node-overview-chart></node-overview-chart>

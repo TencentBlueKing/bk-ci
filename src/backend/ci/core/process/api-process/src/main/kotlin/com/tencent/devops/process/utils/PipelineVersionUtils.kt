@@ -37,7 +37,7 @@ import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "ComplexCondition")
 object PipelineVersionUtils {
 
     fun getVersionNameByModel(
@@ -87,7 +87,7 @@ object PipelineVersionUtils {
                 originTrigger.elements.forEachIndexed { index, origin ->
                     val new = newTrigger.elements[index]
                     if (origin != new) changed = true
-                    if (origin.isElementEnable() != new.isElementEnable()) changed = true
+                    if (origin.elementEnabled() != new.elementEnabled()) changed = true
                 }
             } else {
                 changed = true
@@ -132,7 +132,11 @@ object PipelineVersionUtils {
         if (this != other && this.size != other.size) return false
         this.forEachIndexed { sIndex, thisStage ->
             val otherStage = other[sIndex]
-            if (thisStage != otherStage && thisStage.containers.size != otherStage.containers.size) {
+            if (
+                thisStage != otherStage || thisStage.containers.size != otherStage.containers.size ||
+                thisStage.checkIn != otherStage.checkIn || thisStage.checkOut != otherStage.checkOut ||
+                thisStage.stageControlOption != otherStage.stageControlOption
+                ) {
                 return false
             }
             thisStage.containers.forEachIndexed { cIndex, thisContainer ->
@@ -141,9 +145,13 @@ object PipelineVersionUtils {
                     return false
                 }
                 if (thisContainer is VMBuildContainer && otherContainer is VMBuildContainer) {
-                    if (thisContainer != otherContainer) return false
+                    if (thisContainer != otherContainer || thisContainer.dispatchType != otherContainer.dispatchType ||
+                        thisContainer.jobControlOption != otherContainer.jobControlOption
+                    ) return false
                 } else if (thisContainer is NormalContainer && otherContainer is NormalContainer) {
-                    if (thisContainer != otherContainer) return false
+                    if (thisContainer != otherContainer ||
+                        thisContainer.jobControlOption != otherContainer.jobControlOption
+                    ) return false
                 } else {
                     return false
                 }

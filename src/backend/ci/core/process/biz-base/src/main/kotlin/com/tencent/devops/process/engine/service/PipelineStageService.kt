@@ -64,12 +64,12 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
+import java.util.Date
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Date
 
 /**
  * 流水线Stage相关的服务
@@ -213,7 +213,8 @@ class PipelineStageService @Autowired constructor(
         with(buildStage) {
             // 兜底保护，若已经被审核过则直接忽略
             if (checkIn?.status == BuildStatus.REVIEW_ABORT.name ||
-                checkIn?.status == BuildStatus.REVIEW_PROCESSED.name) {
+                checkIn?.status == BuildStatus.REVIEW_PROCESSED.name
+            ) {
                 return@with
             }
             checkIn?.status = BuildStatus.REVIEWING.name
@@ -244,9 +245,9 @@ class PipelineStageService @Autowired constructor(
                         dslContext = context, projectId = projectId, buildId = buildId, stageStatus = allStageStatus
                     )
                     // 被暂停的流水线不占构建队列，在执行数-1
-                    if (!debug) pipelineBuildSummaryDao.updateRunningCount(
+                    pipelineBuildSummaryDao.updateRunningCount(
                         dslContext = context, projectId = projectId, pipelineId = pipelineId,
-                        buildId = buildId, runningIncrement = -1
+                        buildId = buildId, runningIncrement = -1, debug = debug
                     )
                 }
             }
@@ -313,9 +314,9 @@ class PipelineStageService @Autowired constructor(
                         pipelineBuildDao.updateBuildStageStatus(
                             dslContext = context, projectId = projectId, buildId = buildId, stageStatus = allStageStatus
                         )
-                        if (!debug) pipelineBuildSummaryDao.updateRunningCount(
+                        pipelineBuildSummaryDao.updateRunningCount(
                             dslContext = context, projectId = projectId, pipelineId = pipelineId,
-                            buildId = buildId, runningIncrement = 1
+                            buildId = buildId, runningIncrement = 1, debug = debug
                         )
                     }
                 }
@@ -426,9 +427,9 @@ class PipelineStageService @Autowired constructor(
                         oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
                     )
                     // #4255 stage审核超时恢复运行状态需要将运行状态+1，即使直接结束也会在finish阶段减回来
-                    if (!debug) pipelineBuildSummaryDao.updateRunningCount(
+                    pipelineBuildSummaryDao.updateRunningCount(
                         dslContext = context, projectId = projectId, pipelineId = pipelineId,
-                        buildId = buildId, runningIncrement = 1
+                        buildId = buildId, runningIncrement = 1, debug = debug
                     )
                 }
             }
@@ -565,6 +566,15 @@ class PipelineStageService @Autowired constructor(
         return pipelineBuildStageDao.getOneByStatus(dslContext, projectId, buildId, pendingStatusSet)
     }
 
+    fun getPendingStages(projectId: String, buildId: String): List<PipelineBuildStage> {
+        return pipelineBuildStageDao.listBuildStages(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            statusSet = pendingStatusSet
+        )
+    }
+
     fun pauseStageNotify(
         userId: String,
         triggerUserId: String,
@@ -607,7 +617,8 @@ class PipelineStageService @Autowired constructor(
                 position = ControlPointPosition.BEFORE_POSITION,
                 stageId = stage.stageId,
                 notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType),
-                markdownContent = checkIn.markdownContent
+                markdownContent = checkIn.markdownContent,
+                mentionReceivers = true
             )
         )
         // #7971 无指定通知类型时、或者触发人是审核人时，不去通知触发人。

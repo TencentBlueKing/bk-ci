@@ -38,13 +38,15 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
-import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
+import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdpartyagent.AskHeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchAgentData
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateAgentEnvVar
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
@@ -57,6 +59,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineSeqI
 import com.tencent.devops.environment.service.NodeService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.service.thirdpartyagent.AgentPipelineService
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentMgrService
 import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentPipelineService
 import com.tencent.devops.environment.service.thirdpartyagent.UpgradeService
@@ -69,8 +72,8 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
     private val agentPipelineService: AgentPipelineService,
     private val slaveGatewayService: SlaveGatewayService,
-    private val permissionService: EnvironmentPermissionService,
-    private val nodeService: NodeService
+    private val nodeService: NodeService,
+    private val agentService: ThirdPartAgentService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgent(projectId, agentId)
@@ -276,5 +279,37 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         envName: String
     ): Result<Pair<Long?, List<EnvNodeAgent>>> {
         return Result(thirdPartyAgentService.getAgentByEnvName(projectId, envName))
+    }
+
+    override fun fetchAgentEnv(
+        userId: String,
+        projectId: String,
+        data: BatchFetchAgentData
+    ): Result<Map<String, List<EnvVar>>> {
+        return Result(
+            agentService.fetchAgentEnv(
+                userId = userId,
+                projectId = projectId,
+                nodeHashIds = data.nodeHashIds,
+                agentHashIds = data.agentHashIds
+            )
+        )
+    }
+
+    override fun batchUpdateEnv(
+        userId: String,
+        projectId: String,
+        data: BatchUpdateAgentEnvVar
+    ): Result<Boolean> {
+        return Result(
+            agentService.batchUpdateAgentEnv(
+                userId = userId,
+                projectId = projectId,
+                nodeHashIds = data.nodeHashIds,
+                agentHashIds = data.agentHashIds,
+                type = data.type,
+                data = data.envVars
+            )
+        )
     }
 }

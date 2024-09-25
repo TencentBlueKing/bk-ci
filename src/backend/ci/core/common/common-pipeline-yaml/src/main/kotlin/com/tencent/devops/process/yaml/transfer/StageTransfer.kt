@@ -298,6 +298,7 @@ class StageTransfer @Autowired(required = false) constructor(
             }
         }
         return PreStage(
+            enable = stage.stageEnabled().nullIfDefault(true),
             name = stage.name,
             label = maskYamlStageLabel(stage.tag).ifEmpty { null },
             ifField = when (stage.stageControlOption?.runCondition) {

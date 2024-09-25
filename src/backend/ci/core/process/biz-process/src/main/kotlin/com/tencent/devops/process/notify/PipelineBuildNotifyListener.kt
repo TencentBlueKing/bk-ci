@@ -34,6 +34,7 @@ import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_IN_REVIEW_STATUS
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
@@ -51,6 +52,16 @@ class PipelineBuildNotifyListener @Autowired constructor(
 ) : BaseListener<PipelineBuildNotifyEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildNotifyEvent) {
+        try {
+            val pipelineNotDeleted = client.get(ServicePipelineResource::class)
+                .getPipelineInfo(projectId = event.projectId, pipelineId = event.pipelineId, channelCode = null).data
+            if (pipelineNotDeleted == null) {
+                logger.warn("NOTIFY|CHECK_PIPE|Pipeline[${event.projectId}/${event.pipelineId}] may be deleted!")
+                return
+            }
+        } catch (ignore: Exception) {
+            logger.warn("NOTIFY|CHECK_PIPE|SKIP_ERROR_CHECK", ignore)
+        }
         when (val notifyTemplateEnumType = PipelineNotifyTemplateEnum.parse(event.notifyTemplateEnum)) {
             PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE,
             PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE,
@@ -77,9 +88,11 @@ class PipelineBuildNotifyListener @Autowired constructor(
                     )
                 }
             }
+
             PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE -> {
                 event.sendReviewReminder()
             }
+
             else -> {
                 // need to add
             }
@@ -95,6 +108,7 @@ class PipelineBuildNotifyListener @Autowired constructor(
             bodyParams = bodyParams,
             notifyType = notifyType,
             markdownContent = markdownContent,
+            mentionReceivers = mentionReceivers,
             callbackData = callbackData
         )
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
@@ -124,6 +138,7 @@ class PipelineBuildNotifyListener @Autowired constructor(
                 bodyParams = bodyParams,
                 notifyType = notifyType,
                 markdownContent = markdownContent,
+                mentionReceivers = mentionReceivers,
                 callbackData = callbackData
             )
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)

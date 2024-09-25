@@ -1,28 +1,26 @@
 <script setup lang="ts">
-import {
-  ref,
-  watch,
-  computed,
-} from 'vue';
-import { useI18n } from 'vue-i18n';
 import http from '@/http/api';
 import {
-  useRoute,
-  useRouter,
-} from 'vue-router';
+handleProjectManageNoPermission,
+RESOURCE_ACTION,
+RESOURCE_TYPE,
+} from '@/utils/permission.js';
 import {
-  Message,
-  InfoBox,
-  Popover
+InfoBox,
+Message,
+Popover
 } from 'bkui-vue';
 import {
-  onMounted
-} from '@vue/runtime-core';
+computed,
+onMounted,
+ref,
+watch
+} from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
-  handleProjectManageNoPermission,
-  RESOURCE_ACTION,
-  RESOURCE_TYPE,
-} from '@/utils/permission.js'
+useRoute,
+useRouter,
+} from 'vue-router';
 
 const { t } = useI18n();
 const router = useRouter();
