@@ -407,6 +407,7 @@ class StoreProjectRelDao {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             dslContext.update(this)
                 .set(PROJECT_CODE, storeProjectInfo.projectId)
+                .set(CREATOR, storeProjectInfo.userId)
                 .set(MODIFIER, userId)
                 .where(STORE_CODE.eq(storeProjectInfo.storeCode))
                 .and(STORE_TYPE.eq(storeProjectInfo.storeType.type.toByte()))
@@ -576,17 +577,23 @@ class StoreProjectRelDao {
         }
     }
 
-    fun getInitProjectInfoByStoreCode(
+    fun getProjectRelByStoreCode(
         dslContext: DSLContext,
         storeCode: String,
-        storeType: Byte
+        storeType: Byte,
+        projectCode: String? = null,
+        type: Byte
     ): TStoreProjectRelRecord? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            conditions.add(TYPE.eq(type))
+            if (!projectCode.isNullOrBlank()) {
+                conditions.add(PROJECT_CODE.eq(projectCode))
+            }
             return dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode)
-                    .and(STORE_TYPE.eq(storeType))
-                    .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
-                )
+                .where(conditions)
                 .fetchOne()
         }
     }
