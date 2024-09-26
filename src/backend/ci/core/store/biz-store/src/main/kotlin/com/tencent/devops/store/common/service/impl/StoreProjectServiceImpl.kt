@@ -373,20 +373,19 @@ class StoreProjectServiceImpl @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             // 获取组件当前初始化项目
-            val initProjectInfo = storeProjectRelDao.getProjectRelByStoreCode(
+            val initProjectInfo = storeProjectRelDao.getInitProjectInfoByStoreCode(
                 dslContext = context,
                 storeCode = storeProjectInfo.storeCode,
-                storeType = storeProjectInfo.storeType.type.toByte(),
-                type = StoreProjectTypeEnum.INIT.type.toByte()
+                storeType = storeProjectInfo.storeType.type.toByte()
             )!!
             // 更新组件关联初始化项目
             storeProjectRelDao.updateStoreInitProject(context, userId, storeProjectInfo)
-            val testProjectInfo = storeProjectRelDao.getProjectRelByStoreCode(
+            val testProjectInfo = storeProjectRelDao.getUserTestProjectRelByStoreCode(
                 dslContext = context,
                 storeCode = storeProjectInfo.storeCode,
                 storeType = storeProjectInfo.storeType.type.toByte(),
-                type = StoreProjectTypeEnum.TEST.type.toByte(),
-                projectCode = storeProjectInfo.projectId
+                projectCode = storeProjectInfo.projectId,
+                userId = storeProjectInfo.userId
             )
             if (testProjectInfo == null) {
                 storeProjectRelDao.deleteUserStoreTestProject(
@@ -398,7 +397,7 @@ class StoreProjectServiceImpl @Autowired constructor(
                 )
                 storeProjectRelDao.addStoreProjectRel(
                     dslContext = context,
-                    userId = userId,
+                    userId = storeProjectInfo.userId,
                     storeType = storeProjectInfo.storeType.type.toByte(),
                     storeCode = storeProjectInfo.storeCode,
                     projectCode = storeProjectInfo.projectId,
