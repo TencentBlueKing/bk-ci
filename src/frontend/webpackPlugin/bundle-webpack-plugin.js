@@ -86,7 +86,7 @@ module.exports = class BundleWebpackPlugin {
                     assetsMap[entryName] = assets
                     
                     fs.writeFileSync(`${SERVICE_ASSETS_DIR}/${entryName}.json`, JSON.stringify(assetsMap))
-                    consle.log(`get assets entry about ${entryName}, ${JSON.stringify(assetsMap)}`)
+                    console.log(`get assets entry about ${entryName}, ${JSON.stringify(assetsMap)}`)
                 }
                 callback()
             }
