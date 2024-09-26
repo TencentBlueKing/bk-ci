@@ -273,21 +273,6 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         )
     }
 
-    override fun getGroupPolicies(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): List<IamGroupPoliciesVo> {
-        logger.info("get group policies|$projectId|$resourceType|$groupId")
-        return permissionResourceGroupPermissionService.getGroupPolices(
-            userId = userId,
-            projectCode = projectId,
-            resourceType = resourceType,
-            groupId = groupId
-        )
-    }
-
     override fun deleteGroup(
         userId: String?,
         projectId: String,

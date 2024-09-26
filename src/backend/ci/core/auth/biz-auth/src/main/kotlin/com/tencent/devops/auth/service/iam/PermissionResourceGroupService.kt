@@ -61,16 +61,6 @@ interface PermissionResourceGroupService {
         groupName: String
     ): List<Int>
 
-    /**
-     * 获取组策略
-     */
-    fun getGroupPolicies(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): List<IamGroupPoliciesVo>
-
     fun deleteGroup(
         userId: String?,
         projectId: String,

@@ -37,6 +37,7 @@ import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.model.SQLPage
@@ -49,7 +50,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserAuthResourceGroupResourceImpl @Autowired constructor(
     private val permissionResourceGroupService: PermissionResourceGroupService,
     private val permissionResourceMemberService: PermissionResourceMemberService,
-    private val permissionResourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService
+    private val permissionResourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService,
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService
 ) : UserAuthResourceGroupResource {
     override fun getGroupPolicies(
         userId: String,
@@ -58,9 +60,9 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         groupId: Int
     ): Result<List<IamGroupPoliciesVo>> {
         return Result(
-            permissionResourceGroupService.getGroupPolicies(
+            permissionResourceGroupPermissionService.getGroupPolices(
                 userId = userId,
-                projectId = projectId,
+                projectCode = projectId,
                 resourceType = resourceType,
                 groupId = groupId
             )

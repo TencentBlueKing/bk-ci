@@ -60,15 +60,6 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         groupName: String
     ): List<Int> = emptyList()
 
-    override fun getGroupPolicies(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): List<IamGroupPoliciesVo> {
-        return emptyList()
-    }
-
     override fun deleteGroup(
         userId: String?,
         projectId: String,
