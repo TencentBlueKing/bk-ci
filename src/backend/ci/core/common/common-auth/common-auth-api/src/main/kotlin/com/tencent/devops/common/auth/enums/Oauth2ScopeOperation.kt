@@ -23,13 +23,20 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
-package com.tencent.devops.openapi.filter
 
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.ContainerRequestFilter
+package com.tencent.devops.common.auth.enums
 
-interface ApiFilter : ContainerRequestFilter {
+/**
+ * 权限中心类型
+ */
+enum class Oauth2ScopeOperation(val id: String, val value: String) {
+    PROJECT_VISIT("project_visit", "获取你有权限的项目列表"),
 
-    fun verifyJWT(requestContext: ContainerRequestContext): Boolean
+    PIPELINE_LIST("pipeline_list", "获取你有权限的流水线列表"),
+
+    PIPELINE_DOWNLOAD("pipeline_download", "下载你有权限的制品"),
+
+    USERINFO_READ("userinfo_read", "获取你的用户信息")
 }
