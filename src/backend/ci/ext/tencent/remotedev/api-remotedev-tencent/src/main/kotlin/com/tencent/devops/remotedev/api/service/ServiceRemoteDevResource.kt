@@ -5,7 +5,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.DesktopTokenSign
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.UserOnePassword
@@ -456,16 +455,6 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "请求报文", required = true)
         makeImageReq: MakeWorkspaceImageReq
     ): Result<Boolean>
-
-    @Operation(summary = "云桌面SDK获取应用token", tags = ["v4_app_desktop_sdk_token"])
-    @POST
-    @Path("/token")
-    fun getToken(
-        @Parameter(description = "IP", required = false)
-        @QueryParam("desktopIP")
-        desktopIP: String,
-        sign: DesktopTokenSign
-    ): Result<String>
 
     @Operation(summary = "修改工作空间属性")
     @POST

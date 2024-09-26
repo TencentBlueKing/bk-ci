@@ -4,39 +4,22 @@ import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.pojo.DesktopTokenSign
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.service.RemotedevSdkService
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 
 class ServiceRemoteDevResourceImplTest {
 
     private val bkConfig = BkConfig()
-    private val workspaceTemplate = ServiceRemoteDevResourceImpl(
-        permissionService = mockk(),
-        workspaceService = mockk(),
-        desktopWorkspaceService = mockk(),
-        createControl = mockk(),
-        deleteControl = mockk(),
-        workspaceCommon = mockk(),
-        windowsResourceConfigService = mockk(),
-        notifyControl = mockk(),
-        client = mockk(),
-        redisOperation = mockk(),
-        workspaceLoginService = mockk(),
-        startWorkspaceService = mockk(),
-        rabbitTemplate = mockk(),
-        expertSupportService = mockk(),
-        devcloudService = mockk(),
-        deliverControl = mockk(),
-        imageManageService = mockk(),
-        whiteListService = mockk(),
-        rebuildWorkspaceHandler = mockk(),
-        startWorkspaceHandler = mockk(),
-        stopWorkspaceHandler = mockk(),
-        restartWorkspaceHandler = mockk(),
-        makeWorkspaceImageHandler = mockk(),
+
+    private val workspaceTemplate = RemotedevSdkService(
+        kafkaClient = mockk(),
         bkConfig = bkConfig,
-        tGitService = mockk(),
-        workspaceRecordService = mockk()
+        workspaceService = mockk(),
+        permissionService = mockk(),
+        workspaceAppOauth2MaterialsDao = mockk(),
+        dslContext = mockk(),
+        client = mockk()
     )
 
     @Test

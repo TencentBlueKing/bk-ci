@@ -693,6 +693,16 @@ CREATE TABLE IF NOT EXISTS T_DISPATCH_WORKSPACE_OP_HIS
     KEY `uni_2` (`UID`),
     KEY `uni_3` (`STATUS`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='KUBERNETES构建集群工作空间操作记录表';
+create table IF NOT EXISTS T_WORKSPACE_APP_OAUTH2_MATERIALS
+(
+    APP_ID     varchar(64)  not null comment '云桌面研发商店应用唯一ID',
+    WORKSPACE_NAME varchar(128) not null comment '工作空间唯一ID',
+    CLIENT_ID               varchar(32)                           not null comment '客户端标识',
+    CLIENT_SECRET           varchar(64)                           not null comment '客户端秘钥',
+    constraint ukey
+        unique (APP_ID, WORKSPACE_NAME)
+)
+    comment '云研发应用oauth原材料';
 
 CREATE TABLE IF NOT EXISTS `T_WORKSPACE_RECORD_USER_APPROVAL` (
 	`WORKSPACE_NAME` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '工作空间名称',

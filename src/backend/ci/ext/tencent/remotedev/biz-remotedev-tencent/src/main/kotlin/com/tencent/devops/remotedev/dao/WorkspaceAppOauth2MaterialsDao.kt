@@ -23,21 +23,52 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.pojo.enum
+package com.tencent.devops.remotedev.dao
 
-enum class Oauth2GrantType(val grantType: String) {
-    // 授权码模式
-    AUTHORIZATION_CODE("authorization_code"),
+import com.tencent.devops.model.remotedev.tables.TWorkspaceAppOauth2Materials
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceAppOauth2MaterialsRecord
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-    // 客户端模式
-    CLIENT_CREDENTIALS("client_credentials"),
+@Repository
+class WorkspaceAppOauth2MaterialsDao {
 
-    // 密码模式
-    PASS_WORD("pass_word"),
+    fun create(
+        dslContext: DSLContext,
+        appId: String,
+        workspaceName: String,
+        clientId: String,
+        clientSecret: String
+    ) {
+        with(TWorkspaceAppOauth2Materials.T_WORKSPACE_APP_OAUTH2_MATERIALS) {
+            dslContext.insertInto(
+                this,
+                APP_ID,
+                WORKSPACE_NAME,
+                CLIENT_ID,
+                CLIENT_SECRET
+            )
+                .values(
+                    appId,
+                    workspaceName,
+                    clientId,
+                    clientSecret
+                ).onDuplicateKeyIgnore().execute()
+        }
+    }
 
-    // 刷新token模式
-    REFRESH_TOKEN("refresh_token");
+    fun fetchAny(
+        dslContext: DSLContext,
+        appId: String,
+        workspaceName: String
+    ): TWorkspaceAppOauth2MaterialsRecord? {
+        with(TWorkspaceAppOauth2Materials.T_WORKSPACE_APP_OAUTH2_MATERIALS) {
+            return dslContext.selectFrom(this)
+                .where(APP_ID.eq(appId))
+                .and(WORKSPACE_NAME.eq(workspaceName))
+                .fetchAny()
+        }
+    }
 }
