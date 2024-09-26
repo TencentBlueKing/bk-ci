@@ -41,7 +41,7 @@ const svgSpriteConfig = {
 
 const envPrefix = ['dev', 'test'].indexOf(env) > -1 ? `${env}.` : ''
 const BUNDLE_NAME = 'assets_bundle.json'
-const ASSETS_JSON_URL = `http://${envPrefix}devnet.devops.oa.com/${BUNDLE_NAME}`
+const ASSETS_JSON_URL = `https://${envPrefix}devnet.devops.woa.com/${BUNDLE_NAME}`
 const FINAL_ASSETS_JSON_FILENAME = `${dist}/assetsBundles.js`
 
 async function generateAssetsJSON (jsonUrl) {
