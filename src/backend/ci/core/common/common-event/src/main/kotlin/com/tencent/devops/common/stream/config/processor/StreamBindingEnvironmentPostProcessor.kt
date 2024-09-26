@@ -30,6 +30,8 @@ package com.tencent.devops.common.stream.config.processor
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.utils.DefaultBindingUtils
+import java.util.Properties
+import java.util.function.Consumer
 import org.apache.pulsar.client.api.SubscriptionMode
 import org.reflections.Reflections
 import org.reflections.scanners.Scanners
@@ -43,8 +45,6 @@ import org.springframework.boot.env.EnvironmentPostProcessor
 import org.springframework.core.Ordered
 import org.springframework.core.env.ConfigurableEnvironment
 import org.springframework.core.env.PropertiesPropertySource
-import java.util.Properties
-import java.util.function.Consumer
 import kotlin.reflect.jvm.kotlinFunction
 
 @Suppress("LongMethod", "MagicNumber", "TooGenericExceptionThrown", "NestedBlockDepth")
@@ -133,15 +133,13 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         consumer: EventConsumer,
         event: Event
     ) {
+        val concurrencyExpression = "\${bkScs.consumer.concurrency.$bindingName:${consumer.defaultConcurrency}}"
         val bindingPrefix = "spring.cloud.stream.bindings.$bindingName-in-0"
         val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName-in-0"
         val pulsarPropPrefix = "spring.cloud.stream.pulsar.bindings.$bindingName-in-0"
         setProperty("$bindingPrefix.destination", event.destination)
         setProperty("$bindingPrefix.binder", event.binder)
-        setProperty(
-            "$bindingPrefix.consumer.concurrency",
-            "\${bkScs.consumer.concurrency.$bindingName:${consumer.defaultConcurrency}}"
-        )
+        setProperty("$bindingPrefix.consumer.concurrency", concurrencyExpression)
         if (consumer.anonymous) {
             // 如果队列匿名则在消费者销毁后删除该队列
             setProperty("$rabbitPropPrefix.consumer.anonymousGroupPrefix", groupName)
@@ -151,6 +149,8 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
             setProperty("$bindingPrefix.group", consumer.groupName.ifBlank { "$groupName-$bindingName" })
         }
 
+        // rabbitmq特殊配置
+        setProperty("$rabbitPropPrefix.consumer.maxConcurrency", concurrencyExpression)
         setProperty("$rabbitPropPrefix.consumer.delayedExchange", "true")
         setProperty("$rabbitPropPrefix.consumer.exchangeType", ExchangeTypes.TOPIC)
     }

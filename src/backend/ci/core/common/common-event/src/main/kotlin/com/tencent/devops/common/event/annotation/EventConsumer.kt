@@ -40,6 +40,6 @@ import org.springframework.context.annotation.Bean
 @Bean
 annotation class EventConsumer(
     val anonymous: Boolean = false, // 匿名队列，每个实例均会消费
-    val defaultConcurrency: Int = 1, // 并发数 ,默认为1, 可以在配置文件中使用bkScs.consumer.concurrency.$bindingName来覆盖
+    val defaultConcurrency: Int = 5, // 并发数 ,默认为5, 可以在配置文件中使用bkScs.consumer.concurrency.$bindingName来覆盖
     val groupName: String = "" // 默认使用${applicationName}-service
 )
