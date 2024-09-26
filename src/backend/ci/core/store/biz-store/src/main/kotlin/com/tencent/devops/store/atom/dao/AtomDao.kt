@@ -1168,6 +1168,7 @@ class AtomDao : AtomBaseDao() {
             ta.CATEGROY.`as`(KEY_CATEGORY),
             ta.SUMMARY.`as`(KEY_SUMMARY),
             ta.PUBLISHER.`as`(KEY_PUBLISHER),
+            ta.DEFAULT_FLAG.`as`(KEY_DEFAULT_FLAG),
             tc.ID.`as`(KEY_CLASSIFY_ID),
             tc.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
             tc.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),

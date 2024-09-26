@@ -1101,6 +1101,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 defaultMessage = classifyName
             )
             val logoUrl = it[KEY_LOGO_URL] as? String
+            val default = it[KEY_DEFAULT_FLAG] as Boolean
             result.add(
                 InstalledAtom(
                     atomId = it[KEY_ID] as String,
@@ -1115,11 +1116,15 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     category = AtomCategoryEnum.getAtomCategory((it[KEY_CATEGORY] as Byte).toInt()),
                     summary = it[KEY_SUMMARY] as? String,
                     publisher = it[KEY_PUBLISHER] as? String,
-                    installer = installer,
+                    installer = if (default) SYSTEM else installer,
                     installTime = DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime),
                     installType = StoreProjectTypeEnum.getProjectType((it[KEY_INSTALL_TYPE] as Byte).toInt()),
                     pipelineCnt = pipelineStat?.get(atomCode) ?: 0,
-                    hasPermission = !isInitTest && (hasManagerPermission || installer == userId)
+                    hasPermission = if (default) {
+                        false
+                    } else {
+                        !isInitTest && (hasManagerPermission || installer == userId)
+                    }
                 )
             )
         }
