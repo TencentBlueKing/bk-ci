@@ -37,6 +37,7 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -47,6 +48,7 @@ import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
+import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
@@ -92,7 +94,8 @@ class ServiceRemoteDevResourceImpl(
     private val startWorkspaceHandler: StartWorkspaceHandler,
     private val stopWorkspaceHandler: StopWorkspaceHandler,
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
-    private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler
+    private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
+    private val workspaceRecordService: WorkspaceRecordService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -622,5 +625,39 @@ class ServiceRemoteDevResourceImpl(
             tgitId = null
         )
         return Result(true)
+    }
+
+    override fun enableWorkspaceRecord(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        permissionService.checkUserProjectManager(userId, projectId)
+        workspaceRecordService.enableRecord(
+            workspaceName = workspaceName,
+            enableUser = if (enable) {
+                userId
+            } else {
+                null
+            }
+        )
+        return Result(true)
+    }
+
+    override fun checkWorkspaceEnableAddress(
+        userId: String,
+        appId: Long,
+        ip: String
+    ): Result<CheckWorkspaceRecordData> {
+        val (enable, address) = workspaceRecordService.checkRecordAndAddress(
+            appId = appId,
+            ip = ip
+        )
+        return Result(CheckWorkspaceRecordData(enable, address))
+    }
+
+    override fun checkUserViewWorkspacePermission(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(workspaceRecordService.checkWorkspaceUserApproval(workspaceName = workspaceName, userId = userId))
     }
 }

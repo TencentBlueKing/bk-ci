@@ -182,6 +182,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132047",
         formatErrorMessage = "req wesec moa verify error {0}"
+    ),
+    WORKSPACE_RECORD_VIEW_NO_PERMISSION_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132048",
+        formatErrorMessage = "user {0} no permission to view workspace {1} record"
     );
 
     fun getErrorMessage(): String {
