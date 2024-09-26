@@ -117,6 +117,12 @@
                             prop="nodeTypeLabel"
                         />
                         <bk-table-column
+                            v-if="isDevxEnv"
+                            :label="$t('environment.nodeInfo.model')"
+                            prop="size"
+                            show-overflow-tooltip
+                        ></bk-table-column>
+                        <bk-table-column
                             :label="$t('environment.nodeInfo.nodeStatus')"
                             prop="nodeStatusLabel"
                         />
