@@ -389,6 +389,13 @@ class StoreProjectServiceImpl @Autowired constructor(
                 projectCode = storeProjectInfo.projectId
             )
             if (testProjectInfo == null) {
+                storeProjectRelDao.deleteUserStoreTestProject(
+                    dslContext = context,
+                    userId = storeProjectInfo.userId,
+                    storeType = storeProjectInfo.storeType,
+                    storeCode = storeProjectInfo.storeCode,
+                    storeProjectType = StoreProjectTypeEnum.TEST
+                )
                 storeProjectRelDao.addStoreProjectRel(
                     dslContext = context,
                     userId = userId,
