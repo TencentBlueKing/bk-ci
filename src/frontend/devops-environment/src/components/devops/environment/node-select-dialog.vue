@@ -219,7 +219,8 @@
                         :key="item.ip"
                         class="preview-selected-li"
                     >
-                        {{ item.ip }}
+                        <p>{{ item.ip }}</p>
+                        <p>{{ item.envNamesStr }}</p>
                     </li>
                 </ul>
             </aside>
@@ -306,7 +307,10 @@
                 return list.splice(limit * (current - 1), limit * current)
             },
             selectedNodeList () {
-                return this.rowList.filter(item => item.isChecked && !item.isEixtEnvNode)
+                return this.rowList.filter(item => item.isChecked).map(item => ({
+                    ...item,
+                    envNamesStr: (item.envNames ?? []).join(',') || '--'
+                }))
             }
 
         },
@@ -445,6 +449,7 @@
 
 <style lang="scss">
   @import './../../../scss/conf';
+  @import '@/scss/mixins/ellipsis';
 
   %flex {
     display: flex;
@@ -498,9 +503,17 @@
                 .preview-selected-li {
                     @extend %flex;
                     background-color: white;
-                    height: 36px;
                     border-bottom: 1px solid #dde4eb;
                     padding: 0 12px;
+                    flex-direction: column;
+                    align-items: start;
+                    > p {
+                        line-height: 22px;
+                        @include ellipsis(100%);
+                        &:nth-child(2) {
+                            color: $fontLighterColor;
+                        }
+                    }
                 }
             }
         }
@@ -656,10 +669,8 @@
     }
 
     .node-bkOperator {
-      max-width: 130px;
+      @include ellipsis(130px);
       text-align: left;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .checkbox-all {

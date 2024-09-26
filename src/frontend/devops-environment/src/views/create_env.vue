@@ -73,11 +73,11 @@
                 >
                     <bk-radio-group v-model="createEnvForm.envType">
                         <bk-radio
-                            v-for="envRadio in envTypeEnums"
-                            :key="envRadio.key"
-                            :value="envRadio.key"
+                            v-for="envType in envTypeEnums"
+                            :key="envType"
+                            :value="envType"
                         >
-                            {{ $t(`environment.envInfo.${envRadio.label}`) }}
+                            {{ $t(`environment.envInfo.${envType}EnvType`) }}
                         </bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
@@ -275,27 +275,18 @@
             },
             envTypeEnums () {
                 return [
-                    {
-                        key: 'BUILD',
-                        label: 'buildEnvType'
-                    },
+                    'BUILD',
                     ...(this.isExtendTx
                         ? [
-                            {
-                                key: 'DEV',
-                                label: 'devEnvType'
-                            },
-                            {
-                                key: 'PROD',
-                                label: 'testEnvType'
-                            },
-                            {
-                                key: 'DEVX',
-                                label: 'cloudDesktopType'
-                            }
+                            'DEV',
+                            'PROD',
+                            'DEVX'
                         ]
                         : [])
                 ]
+            },
+            isDevxEnv () {
+                return this.createEnvForm.envType === 'DEVX'
             },
             previewTableData () {
                 return this.previewNodeList.map(item => ({
@@ -305,7 +296,7 @@
                 }))
             },
             nodeSelectTitle () {
-                const typeLabel = `environment.envInfo.${this.createEnvForm.envType === 'DEVX' ? 'DEVX' : 'buildEnvType'}`
+                const typeLabel = `environment.envInfo.${this.createEnvForm.envType}EnvType`
                 
                 return `${this.createEnvForm?.name || this.$t('environment.createEnvTitle')}-导入${this.$t(typeLabel)}`
             }
@@ -605,7 +596,12 @@
                     const res = await this.$store.dispatch('environment/requestNodeList', {
                         projectId: this.projectId,
                         params: {
-                            page: -1
+                            page: -1,
+                            ...(this.isDevxEnv
+                                ? {
+                                    nodeType: 'DEVX'
+                                }
+                                : {})
                         }
                     })
                     const selectedNodesMap = this.previewNodeList.reduce((acc, item) => {

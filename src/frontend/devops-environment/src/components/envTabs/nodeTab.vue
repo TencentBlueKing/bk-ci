@@ -225,12 +225,16 @@
                 const { limit, current } = this.pagination
                 return this.nodeList.sort((a, b) => a.envEnableNode - b.envEnableNode).slice(limit * (current - 1), limit * current)
             },
+            isDevxEnv () {
+                return this.curEnvDetail?.envType === 'DEVX'
+            },
             nodeSelectTitle () {
                 if (!this.curEnvDetail) return ''
-                const typeLabel = `environment.envInfo.${this.curEnvDetail?.envType === 'DEVX' ? 'DEVX' : 'buildEnvType'}`
+                const typeLabel = `environment.envInfo.${this.curEnvDetail}EnvType`
                 
                 return `${this.curEnvDetail?.name}-导入${this.$t(typeLabel)}`
             }
+            
         },
         watch: {
             importNodeList: {
@@ -315,6 +319,7 @@
                         params: {
                             page: -1
                         }
+                        
                     })
 
                     this.tableLoading = false
@@ -402,7 +407,12 @@
                         projectId: this.projectId,
                         envHashId: this.envHashId,
                         params: {
-                            page: -1
+                            page: -1,
+                            ...(this.isDevxEnv
+                                ? {
+                                    nodeType: 'DEVX'
+                                }
+                                : {})
                         }
                     })
 
