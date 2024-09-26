@@ -44,7 +44,7 @@ class Oauth2AccessTokenService(
             clientId = clientId,
             refreshToken = refreshToken,
             userName = userName,
-            passWord = passWord?.apply { AESUtil.encrypt(aesKey, passWord) },
+            passWord = passWord?.let { AESUtil.encrypt(aesKey, passWord) },
             grantType = grantType
         )
     }
@@ -64,7 +64,7 @@ class Oauth2AccessTokenService(
             dslContext = dslContext,
             clientId = clientId,
             userName = userName,
-            passWord = passWord?.apply { AESUtil.encrypt(aesKey, passWord) },
+            passWord = passWord?.let { AESUtil.encrypt(aesKey, passWord) },
             grantType = grantType,
             accessToken = accessToken,
             refreshToken = refreshToken,
