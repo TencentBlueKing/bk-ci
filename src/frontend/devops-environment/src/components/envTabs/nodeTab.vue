@@ -230,7 +230,7 @@
             },
             nodeSelectTitle () {
                 if (!this.curEnvDetail) return ''
-                const typeLabel = `environment.envInfo.${this.curEnvDetail}EnvType`
+                const typeLabel = `environment.envInfo.${this.curEnvDetail?.envType}EnvType`
                 
                 return `${this.curEnvDetail?.name}-导入${this.$t(typeLabel)}`
             }
