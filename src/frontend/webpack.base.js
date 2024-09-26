@@ -46,10 +46,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     use: [{
                         loader: MiniCssExtractPlugin.loader,
                         options: {
-                            publicPath: (resourcePath, context) => {
-                                console.log(resourcePath, 111)
-                                return ''
-                            }
+                            publicPath: (resourcePath, context) => ''
                         }
                     }, 'css-loader']
                 },
