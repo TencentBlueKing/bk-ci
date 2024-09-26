@@ -605,6 +605,7 @@ class StoreProjectRelDao {
             conditions.add(STORE_TYPE.eq(storeType))
             conditions.add(CREATOR.eq(userId))
             conditions.add(PROJECT_CODE.eq(projectCode))
+            conditions.add(TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .fetchOne()
