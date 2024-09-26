@@ -31,7 +31,7 @@ class ServiceResourceGroupResourceImpl(
         groupCode: BkAuthGroup
     ): Result<Int> {
         return Result(
-            permissionResourceGroupService.createResourceGroupByGroupCode(
+            permissionResourceGroupService.createGroupAndPermissionsByGroupCode(
                 projectId = projectCode,
                 resourceType = resourceType,
                 resourceCode = projectCode,

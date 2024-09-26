@@ -35,6 +35,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -49,6 +50,18 @@ interface OpAuthResourceGroupPermSyncResource {
     fun syncProject(
         @Parameter(description = "按条件迁移项目实体", required = true)
         projectIds: List<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("{projectId}/{groupId}/syncGroup/")
+    @Operation(summary = "按条件同步组和成员")
+    fun syncGroup(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam(value = "projectId")
+        projectId: String,
+        @Parameter(description = "组ID", required = true)
+        @PathParam(value = "groupId")
+        groupId: Int
     ): Result<Boolean>
 
     @POST

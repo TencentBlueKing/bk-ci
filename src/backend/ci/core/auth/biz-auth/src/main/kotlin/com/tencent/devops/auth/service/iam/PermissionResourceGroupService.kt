@@ -91,7 +91,7 @@ interface PermissionResourceGroupService {
         renameGroupDTO: RenameGroupDTO
     ): Boolean
 
-    fun createResourceGroupByGroupCode(
+    fun createGroupAndPermissionsByGroupCode(
         projectId: String,
         resourceType: String = AuthResourceType.PROJECT.value,
         resourceCode: String,

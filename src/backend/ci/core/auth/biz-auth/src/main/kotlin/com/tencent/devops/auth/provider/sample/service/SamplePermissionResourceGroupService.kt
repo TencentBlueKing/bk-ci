@@ -93,7 +93,7 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         return true
     }
 
-    override fun createResourceGroupByGroupCode(
+    override fun createGroupAndPermissionsByGroupCode(
         projectId: String,
         resourceType: String,
         resourceCode: String,
@@ -121,5 +121,5 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         resourceType: String,
         resourceCode: String,
         resourceName: String
-    ) :Boolean = true
+    ): Boolean = true
 }

@@ -28,19 +28,25 @@
 
 package com.tencent.devops.auth.provider.rbac.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.sdk.iam.dto.InstancesDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.AuthActionDao
+import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupPermissionDao
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
 import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
+import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
+import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
@@ -66,7 +72,11 @@ class RbacPermissionResourceGroupPermissionService(
     private val dslContext: DSLContext,
     private val resourceGroupPermissionDao: AuthResourceGroupPermissionDao,
     private val converter: AuthResourceCodeConverter,
-    private val client: Client
+    private val client: Client,
+    private val iamV2ManagerService: V2ManagerService,
+    private val authAuthorizationScopesService: AuthAuthorizationScopesService,
+    private val authActionDao: AuthActionDao,
+    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
 ) : PermissionResourceGroupPermissionService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -83,6 +93,89 @@ class RbacPermissionResourceGroupPermissionService(
         private const val ALL_RESOURCE = "*"
         private val syncExecutorService = Executors.newFixedThreadPool(5)
         private val syncProjectsExecutorService = Executors.newFixedThreadPool(10)
+    }
+
+    override fun grantGroupPermission(
+        authorizationScopesStr: String,
+        projectCode: String,
+        projectName: String,
+        resourceType: String,
+        groupCode: String,
+        iamResourceCode: String,
+        resourceName: String,
+        iamGroupId: Int,
+        registerMonitorPermission: Boolean
+    ): Boolean {
+        var authorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
+            authorizationScopesStr = authorizationScopesStr,
+            projectCode = projectCode,
+            projectName = projectName,
+            iamResourceCode = iamResourceCode,
+            resourceName = resourceName
+        )
+        if (resourceType == AuthResourceType.PROJECT.value && registerMonitorPermission) {
+            // 若为项目下的组授权，默认要加上监控平台用户组的权限资源
+            val monitorAuthorizationScopes = authAuthorizationScopesService.generateMonitorAuthorizationScopes(
+                projectName = projectName,
+                projectCode = projectCode,
+                groupCode = groupCode
+            )
+            authorizationScopes = authorizationScopes.plus(monitorAuthorizationScopes)
+        }
+        authorizationScopes.forEach { authorizationScope ->
+            iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
+        }
+        syncGroupPermissions(projectCode, iamGroupId)
+        return true
+    }
+
+    override fun getGroupPolices(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        groupId: Int
+    ): List<IamGroupPoliciesVo> {
+        val groupInfo = authResourceGroupDao.getByRelationId(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupId = groupId.toString()
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
+            params = arrayOf(groupId.toString()),
+            defaultMessage = "group $groupId not exist"
+        )
+        val groupConfigInfo = authResourceGroupConfigDao.getByGroupCode(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            groupCode = groupInfo.groupCode
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_RESOURCE_GROUP_CONFIG_NOT_EXIST,
+            params = arrayOf("${resourceType}_${groupInfo.groupCode}"),
+            defaultMessage = "${resourceType}_${groupInfo.groupCode} group config  not exist"
+        )
+        val groupActions = JsonUtil.to(groupConfigInfo.actions, object : TypeReference<List<String>>() {})
+        return authActionDao.list(
+            dslContext = dslContext,
+            resourceType = resourceType
+        ).map {
+            IamGroupPoliciesVo(
+                action = it.action,
+                actionName = it.actionName,
+                permission = groupActions.contains(it.action)
+            )
+        }
+    }
+
+    override fun deleteByGroupIds(
+        projectCode: String,
+        iamGroupIds: List<Int>
+    ): Boolean {
+        resourceGroupPermissionDao.deleteByGroupIds(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupIds = iamGroupIds
+        )
+        return true
     }
 
     override fun listGroupsByPermissionConditions(
@@ -229,7 +322,7 @@ class RbacPermissionResourceGroupPermissionService(
         }.sortedBy { it.actionId }
     }
 
-    override fun syncGroup(projectCode: String, groupId: Int): Boolean {
+    override fun syncGroupPermissions(projectCode: String, groupId: Int): Boolean {
         return try {
             val resourceGroupInfo = authResourceGroupDao.get(
                 dslContext = dslContext,
@@ -272,21 +365,15 @@ class RbacPermissionResourceGroupPermissionService(
                     }
                 }
             }.distinct()
-            logger.debug("sync group | latest group permissions: {}", latestResourceGroupPermissions)
 
             val oldResourceGroupPermissions = resourceGroupPermissionDao.listByGroupId(dslContext, projectCode, groupId)
-            logger.debug("sync group | old group permissions: {}", oldResourceGroupPermissions)
 
             val toDeleteRecords = oldResourceGroupPermissions.filter { it !in latestResourceGroupPermissions }
-            logger.debug("sync group | to delete group permissions: {}", toDeleteRecords)
-
             val toAddRecords = latestResourceGroupPermissions.filter { it !in oldResourceGroupPermissions }.map {
                 it.copy(
                     id = client.get(ServiceAllocIdResource::class).generateSegmentId(AUTH_RESOURCE_GROUP_PERMISSION_ID_TAG).data!!
                 )
             }
-            logger.debug("sync group | to add group permissions: {}", toAddRecords)
-
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 if (toDeleteRecords.isNotEmpty()) {
@@ -307,7 +394,7 @@ class RbacPermissionResourceGroupPermissionService(
         }
     }
 
-    override fun syncProject(projectCode: String): Boolean {
+    override fun syncProjectPermissions(projectCode: String): Boolean {
         val traceId = MDC.get(TraceTag.BIZID)
         syncProjectsExecutorService.submit {
             MDC.put(TraceTag.BIZID, traceId)
@@ -318,16 +405,26 @@ class RbacPermissionResourceGroupPermissionService(
             )
             logger.debug("sync project group permissions iamGroupIds:{}", iamGroupIds)
             iamGroupIds.forEach {
-                syncGroup(
+                syncGroupPermissions(
                     projectCode = projectCode,
                     groupId = it
                 )
             }
+            val groupsWithPermissions = resourceGroupPermissionDao.listGroupsWithPermissions(
+                dslContext = dslContext,
+                projectCode = projectCode
+            )
+            val toDeleteGroupIds = groupsWithPermissions.filter { it !in iamGroupIds }
+            resourceGroupPermissionDao.deleteByGroupIds(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                iamGroupIds = toDeleteGroupIds
+            )
         }
         return true
     }
 
-    override fun syncByCondition(projectConditionDTO: ProjectConditionDTO): Boolean {
+    override fun syncPermissionsByCondition(projectConditionDTO: ProjectConditionDTO): Boolean {
         logger.info("start to sync group permissions by condition by condition|$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
         syncExecutorService.submit {
@@ -341,11 +438,31 @@ class RbacPermissionResourceGroupPermissionService(
                     offset = offset
                 ).data ?: break
                 projectCodes.forEach {
-                    syncProject(it.englishName)
+                    syncProjectPermissions(it.englishName)
                 }
                 offset += limit
             } while (projectCodes.size == limit)
         }
+        return true
+    }
+
+    override fun deleteByResource(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean {
+        resourceGroupPermissionDao.deleteByResourceCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        resourceGroupPermissionDao.deleteByRelatedResourceCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            relatedResourceType = resourceType,
+            relatedResourceCode = resourceCode
+        )
         return true
     }
 

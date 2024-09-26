@@ -29,9 +29,34 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
+import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 
 interface PermissionResourceGroupPermissionService {
+    fun grantGroupPermission(
+        authorizationScopesStr: String,
+        projectCode: String,
+        projectName: String,
+        resourceType: String,
+        groupCode: String,
+        iamResourceCode: String,
+        resourceName: String,
+        iamGroupId: Int,
+        registerMonitorPermission: Boolean = true
+    ): Boolean
+
+    fun getGroupPolices(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        groupId: Int
+    ): List<IamGroupPoliciesVo>
+
+    fun deleteByGroupIds(
+        projectCode: String,
+        iamGroupIds: List<Int>
+    ): Boolean
+
     fun listGroupsByPermissionConditions(
         projectCode: String,
         filterIamGroupIds: List<Int>? = null,
@@ -67,16 +92,22 @@ interface PermissionResourceGroupPermissionService {
         groupId: Int
     ): List<GroupPermissionDetailVo>
 
-    fun syncGroup(
+    fun syncGroupPermissions(
         projectCode: String,
         groupId: Int
     ): Boolean
 
-    fun syncProject(
+    fun syncProjectPermissions(
         projectCode: String
     ): Boolean
 
-    fun syncByCondition(
+    fun syncPermissionsByCondition(
         projectConditionDTO: ProjectConditionDTO
+    ): Boolean
+
+    fun deleteByResource(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
     ): Boolean
 }

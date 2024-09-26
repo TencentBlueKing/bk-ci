@@ -61,6 +61,49 @@ class AuthResourceGroupPermissionDao {
         }
     }
 
+    fun deleteByGroupIds(
+        dslContext: DSLContext,
+        projectCode: String,
+        iamGroupIds: List<Int>
+    ) {
+        with(TAuthResourceGroupPermission.T_AUTH_RESOURCE_GROUP_PERMISSION) {
+            dslContext.deleteFrom(this)
+                .where(IAM_GROUP_ID.`in`(iamGroupIds))
+                .and(PROJECT_CODE.eq(projectCode))
+                .execute()
+        }
+    }
+
+    fun deleteByResourceCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ) {
+        with(TAuthResourceGroupPermission.T_AUTH_RESOURCE_GROUP_PERMISSION) {
+            dslContext.deleteFrom(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(PROJECT_CODE.eq(projectCode))
+                .execute()
+        }
+    }
+
+    fun deleteByRelatedResourceCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        relatedResourceType: String,
+        relatedResourceCode: String
+    ) {
+        with(TAuthResourceGroupPermission.T_AUTH_RESOURCE_GROUP_PERMISSION) {
+            dslContext.deleteFrom(this)
+                .where(RELATED_RESOURCE_TYPE.eq(relatedResourceType))
+                .and(RELATED_RESOURCE_CODE.eq(relatedResourceCode))
+                .and(PROJECT_CODE.eq(projectCode))
+                .execute()
+        }
+    }
+
     fun listByGroupId(
         dslContext: DSLContext,
         projectCode: String,
@@ -71,6 +114,18 @@ class AuthResourceGroupPermissionDao {
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(IAM_GROUP_ID.eq(iamGroupId))
                 .fetch().map { it.convert() }
+        }
+    }
+
+    fun listGroupsWithPermissions(
+        dslContext: DSLContext,
+        projectCode: String
+    ): List<Int> {
+        return with(TAuthResourceGroupPermission.T_AUTH_RESOURCE_GROUP_PERMISSION) {
+            dslContext.select(IAM_GROUP_ID).from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .groupBy(IAM_GROUP_ID)
+                .fetch().map { it.value1() }
         }
     }
 

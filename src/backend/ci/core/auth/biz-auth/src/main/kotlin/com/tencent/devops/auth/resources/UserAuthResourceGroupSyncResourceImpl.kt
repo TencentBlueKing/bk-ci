@@ -29,6 +29,7 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.user.UserAuthResourceGroupSyncResource
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -36,7 +37,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserAuthResourceGroupSyncResourceImpl @Autowired constructor(
-    private val permissionResourceGroupSyncService: PermissionResourceGroupSyncService
+    private val permissionResourceGroupSyncService: PermissionResourceGroupSyncService,
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService
 ) : UserAuthResourceGroupSyncResource {
 
     override fun syncGroupAndMember(userId: String, projectId: String): Result<Boolean> {
@@ -52,6 +54,12 @@ class UserAuthResourceGroupSyncResourceImpl @Autowired constructor(
     override fun getStatusOfSync(userId: String, projectId: String): Result<AuthMigrateStatus> {
         return Result(
             permissionResourceGroupSyncService.getStatusOfSync(projectCode = projectId)
+        )
+    }
+
+    override fun syncGroupPermissions(userId: String, projectId: String, groupId: Int): Result<Boolean> {
+        return Result(
+            permissionResourceGroupPermissionService.syncGroupPermissions(projectCode = projectId, groupId = groupId)
         )
     }
 }

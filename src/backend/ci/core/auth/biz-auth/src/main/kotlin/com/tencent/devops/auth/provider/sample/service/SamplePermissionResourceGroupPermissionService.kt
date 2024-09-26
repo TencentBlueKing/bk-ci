@@ -29,10 +29,35 @@
 package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
+import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 
 class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPermissionService {
+    override fun grantGroupPermission(
+        authorizationScopesStr: String,
+        projectCode: String,
+        projectName: String,
+        resourceType: String,
+        groupCode: String,
+        iamResourceCode: String,
+        resourceName: String,
+        iamGroupId: Int,
+        registerMonitorPermission: Boolean
+    ): Boolean = true
+
+    override fun getGroupPolices(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        groupId: Int
+    ): List<IamGroupPoliciesVo> = emptyList()
+
+    override fun deleteByGroupIds(
+        projectCode: String,
+        iamGroupIds: List<Int>
+    ): Boolean = true
+
     override fun listGroupsByPermissionConditions(
         projectCode: String,
         filterIamGroupIds: List<Int>?,
@@ -45,7 +70,8 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         projectCode: String,
         filterIamGroupIds: List<Int>,
         relatedResourceType: String,
-        relatedResourceCode: String, action: String
+        relatedResourceCode: String,
+        action: String
     ): Boolean = true
 
     override fun listGroupResourcesWithPermission(
@@ -64,14 +90,22 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         groupId: Int
     ): List<GroupPermissionDetailVo> = emptyList()
 
-    override fun syncGroup(
+    override fun syncGroupPermissions(
         projectCode: String,
         groupId: Int
     ): Boolean = true
 
-    override fun syncProject(
+    override fun syncProjectPermissions(
         projectCode: String
     ): Boolean = true
 
-    override fun syncByCondition(projectConditionDTO: ProjectConditionDTO): Boolean = true
+    override fun syncPermissionsByCondition(
+        projectConditionDTO: ProjectConditionDTO
+    ): Boolean = true
+
+    override fun deleteByResource(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean = true
 }

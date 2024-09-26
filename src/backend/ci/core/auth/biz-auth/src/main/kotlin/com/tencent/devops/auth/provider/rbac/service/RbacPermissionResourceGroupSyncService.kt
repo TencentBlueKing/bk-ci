@@ -40,6 +40,7 @@ import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.enum.ApplyToGroupStatus
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.lock.SyncGroupAndMemberLock
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -73,7 +74,8 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     private val rbacCacheService: RbacCacheService,
     private val redisOperation: RedisOperation,
     private val authResourceSyncDao: AuthResourceSyncDao,
-    private val authResourceGroupApplyDao: AuthResourceGroupApplyDao
+    private val authResourceGroupApplyDao: AuthResourceGroupApplyDao,
+    private val resourceGroupPermissionService: PermissionResourceGroupPermissionService
 ) : PermissionResourceGroupSyncService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupSyncService::class.java)
@@ -409,6 +411,20 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 authResourceGroupDao.deleteByIds(transactionContext, toDeleteGroups.map { it.id!! })
                 authResourceGroupDao.batchCreate(transactionContext, toAddGroups)
                 authResourceGroupDao.batchUpdate(transactionContext, toUpdateGroups)
+            }
+            if (toDeleteGroups.isNotEmpty()) {
+                resourceGroupPermissionService.deleteByGroupIds(
+                    projectCode = projectCode,
+                    iamGroupIds = toDeleteGroups.map { it.relationId }
+                )
+            }
+            if (toAddGroups.isNotEmpty()) {
+                toAddGroups.forEach {
+                    resourceGroupPermissionService.syncGroupPermissions(
+                        projectCode = projectCode,
+                        groupId = it.relationId
+                    )
+                }
             }
         } finally {
             logger.info(

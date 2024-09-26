@@ -32,7 +32,6 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateSubsetManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
-import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.provider.rbac.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
@@ -211,7 +210,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         resourceGroupConfigs.filter {
             it.groupCode != DefaultGroupType.MANAGER.value
         }.forEach { groupConfig ->
-            val iamGroupId = permissionResourceGroupService.createResourceGroupByGroupCode(
+            val iamGroupId = permissionResourceGroupService.createGroupAndPermissionsByGroupCode(
                 projectId = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,

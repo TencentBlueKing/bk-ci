@@ -62,11 +62,11 @@ interface PermissionResourceMemberService {
     ): Pair<Long, List<AuthResourceGroupMember>>
 
     /**
-    * 获取用户在该项目加入的组
-    * */
+     * 获取用户在该项目加入的组
+     * */
     fun listMemberGroupIdsInProject(
         projectCode: String,
-        memberId: String,
+        memberId: String
     ): List<Int>
 
     fun batchDeleteResourceGroupMembers(

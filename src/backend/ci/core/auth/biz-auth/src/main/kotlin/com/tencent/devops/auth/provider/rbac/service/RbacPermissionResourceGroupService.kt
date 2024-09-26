@@ -52,6 +52,7 @@ import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -72,7 +73,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class RbacPermissionResourceGroupService @Autowired constructor(
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceService: AuthResourceService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
@@ -279,9 +280,9 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         groupId: Int
     ): List<IamGroupPoliciesVo> {
         logger.info("get group policies|$projectId|$resourceType|$groupId")
-        return permissionGroupPoliciesService.getGroupPolices(
+        return permissionResourceGroupPermissionService.getGroupPolices(
             userId = userId,
-            projectId = projectId,
+            projectCode = projectId,
             resourceType = resourceType,
             groupId = groupId
         )
@@ -318,6 +319,10 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                     dslContext = context,
                     projectCode = projectId,
                     iamGroupId = groupId
+                )
+                permissionResourceGroupPermissionService.deleteByGroupIds(
+                    projectCode = projectId,
+                    iamGroupIds = listOf(groupId)
                 )
             }
         }
@@ -444,7 +449,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         }
     }
 
-    override fun createResourceGroupByGroupCode(
+    override fun createGroupAndPermissionsByGroupCode(
         projectId: String,
         resourceType: String,
         resourceCode: String,
@@ -496,7 +501,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             defaultGroup = false,
             relationId = iamGroupId.toString()
         )
-        permissionGroupPoliciesService.grantGroupPermission(
+        permissionResourceGroupPermissionService.grantGroupPermission(
             authorizationScopesStr = groupConfig.authorizationScopes,
             projectCode = projectId,
             projectName = projectInfo.resourceName,
@@ -561,6 +566,11 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 projectCode = projectCode,
                 iamGroupId = iamGroupInfo.id
             )
+            // 同步组权限
+            permissionResourceGroupPermissionService.syncGroupPermissions(
+                projectCode = projectCode,
+                groupId = iamGroupInfo.id
+            )
         }
         return true
     }
@@ -571,16 +581,28 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         resourceType: String,
         resourceCode: String
     ): Boolean {
-        authResourceGroupDao.getByResourceCode(
+        val records = authResourceGroupDao.getByResourceCode(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode
         ).filter {
             it.groupCode != DefaultGroupType.MANAGER.value
-        }.forEach {
+        }
+        records.forEach {
             logger.info("delete subset manage default group|$managerId|${it.relationId}")
             iamV2ManagerService.deleteRoleGroupV2(it.relationId)
+        }
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            authResourceGroupDao.deleteByIds(
+                dslContext = transactionContext,
+                ids = records.map { it.id!! }
+            )
+            permissionResourceGroupPermissionService.deleteByGroupIds(
+                projectCode = projectCode,
+                iamGroupIds = records.map { it.relationId }
+            )
         }
         return true
     }

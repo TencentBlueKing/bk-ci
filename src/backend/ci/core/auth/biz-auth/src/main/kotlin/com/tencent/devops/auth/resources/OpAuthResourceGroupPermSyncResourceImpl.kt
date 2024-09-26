@@ -40,13 +40,22 @@ class OpAuthResourceGroupPermSyncResourceImpl @Autowired constructor(
 ) : OpAuthResourceGroupPermSyncResource {
     override fun syncProject(projectIds: List<String>): Result<Boolean> {
         projectIds.forEach {
-            permissionResourceGroupPermissionService.syncProject(it)
+            permissionResourceGroupPermissionService.syncProjectPermissions(it)
         }
         return Result(true)
     }
 
+    override fun syncGroup(projectId: String, groupId: Int): Result<Boolean> {
+        return Result(
+            permissionResourceGroupPermissionService.syncGroupPermissions(
+                projectCode = projectId,
+                groupId = groupId
+            )
+        )
+    }
+
     override fun syncByCondition(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
-        permissionResourceGroupPermissionService.syncByCondition(projectConditionDTO)
+        permissionResourceGroupPermissionService.syncPermissionsByCondition(projectConditionDTO)
         return Result(true)
     }
 }
