@@ -849,6 +849,23 @@ class PipelineVersionFacadeService @Autowired constructor(
 
         val offset = slqLimit?.offset ?: 0
         var limit = slqLimit?.limit ?: -1
+        val result = mutableListOf<PipelineVersionSimple>()
+        // 如果有草稿版本需要提到第一页，单独查出来放在第一页并顶置
+        if (includeDraft != false && page == 1) {
+            pipelineRepositoryService.getDraftVersionResource(
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.toSimple()?.apply {
+                baseVersionName = baseVersion?.let {
+                    repositoryVersionService.getPipelineVersionSimple(
+                        projectId, pipelineId, it
+                    )?.versionName
+                }
+            }?.let {
+                limit -= 1
+                result.add(it)
+            }
+        }
         // 如果有要插队的版本需要提到第一页，则在查询list时排除，单独查出来放在第一页
         val fromResource = if (fromVersion != null && page == 1) {
             limit -= 1
@@ -858,25 +875,26 @@ class PipelineVersionFacadeService @Autowired constructor(
                 version = fromVersion
             )
         } else null
+
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-        val (size, pipelines) = repositoryVersionService.listPipelineVersion(
+        val (size, pipelines) = repositoryVersionService.listPipelineReleaseVersion(
             pipelineInfo = pipelineInfo,
             projectId = projectId,
             pipelineId = pipelineId,
             creator = creator,
             description = description,
             versionName = versionName,
-            includeDraft = includeDraft,
             excludeVersion = fromVersion,
             offset = offset,
             limit = limit
         )
-        fromResource?.let { pipelines.add(it) }
+        result.addAll(pipelines)
+        fromResource?.let { result.add(it) }
         return Page(
             page = page,
             pageSize = pageSize,
             count = size.toLong(),
-            records = pipelines
+            records = result
         )
     }
 

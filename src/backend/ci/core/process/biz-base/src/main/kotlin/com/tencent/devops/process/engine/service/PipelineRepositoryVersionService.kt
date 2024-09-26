@@ -172,13 +172,12 @@ class PipelineRepositoryVersionService(
         )
     }
 
-    fun listPipelineVersion(
+    fun listPipelineReleaseVersion(
         pipelineInfo: PipelineInfo?,
         projectId: String,
         pipelineId: String,
         offset: Int,
         limit: Int,
-        includeDraft: Boolean?,
         excludeVersion: Int?,
         versionName: String?,
         creator: String?,
@@ -192,27 +191,12 @@ class PipelineRepositoryVersionService(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            includeDraft = includeDraft,
+            includeDraft = false,
             versionName = versionName,
             creator = creator,
             description = description
         )
-        // 草稿单独提出来放在第一页，其他版本后插入结果
-        val result = mutableListOf<PipelineVersionSimple>()
-        if (includeDraft != false && offset == 0) {
-            pipelineResourceVersionDao.getDraftVersionResource(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )?.toSimple()?.apply {
-                baseVersionName = baseVersion?.let {
-                    pipelineResourceVersionDao.getPipelineVersionSimple(
-                        dslContext, projectId, pipelineId, it
-                    )?.versionName
-                }
-            }?.let { result.add(it) }
-        }
-        val others = pipelineResourceVersionDao.listPipelineVersion(
+        val result = pipelineResourceVersionDao.listPipelineVersion(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -224,8 +208,7 @@ class PipelineRepositoryVersionService(
             excludeVersion = excludeVersion,
             offset = offset,
             limit = limit
-        )
-        result.addAll(others)
+        ).toMutableList()
 
         // #8161 当过滤草稿时查到空结果是正常的，只在不过滤草稿时兼容老数据的版本表无记录
         val noSearch = versionName.isNullOrBlank() && creator.isNullOrBlank() && description.isNullOrBlank()
