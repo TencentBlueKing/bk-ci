@@ -23,22 +23,24 @@ module.exports = class BundleWebpackPlugin {
     // Define `apply` as its prototype method which is supplied with compiler as its argument
     constructor (props) {
         const dist = props.dist || '.'
-        const bundleName = props.bundleName || 'assets_bundle'
+        const entryFolderName = props.entryFolderName
         this.isDev = props.isDev || false
-        this.SERVICE_ASSETS_JSON_PATH = path.join(
+        this.SERVICE_ASSETS_DIR = path.join(
             __dirname,
             '..',
             dist,
-            `${bundleName}.json`
+            entryFolderName
         )
-        this.SERVICE_ASSETS_DIR = path.dirname(this.SERVICE_ASSETS_JSON_PATH)
+        if (!fs.existsSync(SERVICE_ASSETS_DIR)) {
+            fs.mkdirSync(SERVICE_ASSETS_DIR)
+        }
     }
 
     apply (compiler) {
         compiler.hooks.done.tapAsync(
             'BundleWebpackPlugin',
             (compilation, callback) => {
-                const { SERVICE_ASSETS_JSON_PATH, SERVICE_ASSETS_DIR, isDev } = this
+                const { SERVICE_ASSETS_DIR } = this
                 const entryNames = Array.from(
                     compilation.compilation.entrypoints.keys()
                 )
@@ -82,24 +84,10 @@ module.exports = class BundleWebpackPlugin {
                         })
 
                     assetsMap[entryName] = assets
+                    
+                    fs.writeFileSync(`${SERVICE_ASSETS_DIR}/${entryName}.json`, JSON.stringify(assetsMap))
+                    consle.log(`get assets entry about ${entryName}, ${JSON.stringify(assetsMap)}`)
                 }
-
-                let json = {}
-                if (!isDev && fs.existsSync(SERVICE_ASSETS_JSON_PATH)) {
-                    json = JSON.parse(
-                        fs.readFileSync(SERVICE_ASSETS_JSON_PATH, 'utf-8').toString()
-                    )
-                }
-                json = {
-                    ...json,
-                    ...assetsMap
-                }
-                if (!fs.existsSync(SERVICE_ASSETS_DIR)) {
-                    fs.mkdirSync(SERVICE_ASSETS_DIR)
-                }
-                console.log('update json', JSON.stringify(json))
-                fs.writeFileSync(SERVICE_ASSETS_JSON_PATH, JSON.stringify(json))
-
                 callback()
             }
         )
