@@ -70,6 +70,7 @@ async function generateAssetsJSON (jsonUrl) {
         console.log(chalk.greenBright.bold('final assets json!'))
         console.table(finalAssets)
         const fileContent = `window.SERVICE_ASSETS = ${JSON.stringify(finalAssets)}`
+        fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(finalAssets))
         
         fs.writeFileSync(FINAL_ASSETS_JSON_FILENAME, fileContent)
         if (fs.existsSync(entryDir)) {
