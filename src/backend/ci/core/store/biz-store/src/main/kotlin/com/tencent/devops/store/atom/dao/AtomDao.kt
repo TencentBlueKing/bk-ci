@@ -1187,8 +1187,7 @@ class AtomDao : AtomBaseDao() {
         val ta = TAtom.T_ATOM
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
         val conditions = mutableListOf<Condition>()
-        conditions.add(tspr.PROJECT_CODE.eq(projectCode))
-        conditions.add(tspr.STORE_TYPE.eq(0))
+        conditions.add(ta.DEFAULT_FLAG.eq(true).or(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0))))
         if (!classifyCode.isNullOrEmpty()) {
             val tClassify = TClassify.T_CLASSIFY
             val classifyId = dslContext.select(tClassify.ID)
