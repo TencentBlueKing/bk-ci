@@ -12,13 +12,10 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.model.remotedev.tables.records.TProjectTgitIdLinkRecord
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.TGitConfig
@@ -324,6 +321,7 @@ class GitProxyTGitService @Autowired constructor(
         val result = repos.map {
             TGitRepoData(
                 repoId = it.tgitId,
+                repoType = it.gitType,
                 url = it.url ?: it.tgitId.toString(),
                 status = TGitRepoStatus.fromStr(it.status)
             )
