@@ -851,7 +851,8 @@ class PipelineVersionFacadeService @Autowired constructor(
         var limit = slqLimit?.limit ?: -1
         val result = mutableListOf<PipelineVersionSimple>()
         // 如果有草稿版本需要提到第一页，单独查出来放在第一页并顶置
-        if (includeDraft != false && page == 1) {
+        val draftResource = if (includeDraft != false && page == 1) {
+            limit -= 1
             pipelineRepositoryService.getDraftVersionResource(
                 projectId = projectId,
                 pipelineId = pipelineId
@@ -861,11 +862,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                         projectId, pipelineId, it
                     )?.versionName
                 }
-            }?.let {
-                limit -= 1
-                result.add(it)
             }
-        }
+        } else null
         // 如果有要插队的版本需要提到第一页，则在查询list时排除，单独查出来放在第一页
         val fromResource = if (fromVersion != null && page == 1) {
             limit -= 1
@@ -875,9 +873,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 version = fromVersion
             )
         } else null
-
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-        val (size, pipelines) = repositoryVersionService.listPipelineReleaseVersion(
+        var (size, pipelines) = repositoryVersionService.listPipelineReleaseVersion(
             pipelineInfo = pipelineInfo,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -888,8 +885,15 @@ class PipelineVersionFacadeService @Autowired constructor(
             offset = offset,
             limit = limit
         )
+        draftResource?.let {
+            size++
+            result.add(it)
+        }
         result.addAll(pipelines)
-        fromResource?.let { result.add(it) }
+        fromResource?.let {
+            size++
+            result.add(it)
+        }
         return Page(
             page = page,
             pageSize = pageSize,
