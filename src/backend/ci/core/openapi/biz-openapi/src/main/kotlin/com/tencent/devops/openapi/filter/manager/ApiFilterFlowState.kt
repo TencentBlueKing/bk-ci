@@ -25,27 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.openapi.config
+package com.tencent.devops.openapi.filter.manager
 
-import com.tencent.devops.openapi.filter.manager.ApiFilterManagerCache
-import com.tencent.devops.openapi.filter.manager.ApiFilterManagerChain
-import com.tencent.devops.openapi.filter.manager.DefaultApiFilterChain
-import com.tencent.devops.openapi.service.op.DefaultOpAppUserService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-
-/**
- * 流水线构建核心配置
- */
-@Configuration
-class OpenAPiConfiguration {
-    @Bean
-    @ConditionalOnMissingBean(name = ["opAppUserService"])
-    fun opAppUserService() = DefaultOpAppUserService()
-
-    @Bean
-    @ConditionalOnMissingBean(ApiFilterManagerChain::class)
-    fun defaultApiFilterChain(@Autowired managerCache: ApiFilterManagerCache) = DefaultApiFilterChain(managerCache)
+enum class ApiFilterFlowState {
+    CONTINUE, // 正常会继续下一指令
+    AUTHORIZED, // 已授权
+    BREAK; // 提前结束指令，会中断Command链路
 }

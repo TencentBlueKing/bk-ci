@@ -25,27 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.openapi.config
+package com.tencent.devops.openapi.filter.manager
 
-import com.tencent.devops.openapi.filter.manager.ApiFilterManagerCache
-import com.tencent.devops.openapi.filter.manager.ApiFilterManagerChain
-import com.tencent.devops.openapi.filter.manager.DefaultApiFilterChain
-import com.tencent.devops.openapi.service.op.DefaultOpAppUserService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import javax.ws.rs.container.ContainerRequestContext
+import javax.ws.rs.core.Response
 
-/**
- * 流水线构建核心配置
- */
-@Configuration
-class OpenAPiConfiguration {
-    @Bean
-    @ConditionalOnMissingBean(name = ["opAppUserService"])
-    fun opAppUserService() = DefaultOpAppUserService()
+interface ApiFilterManagerChain {
 
-    @Bean
-    @ConditionalOnMissingBean(ApiFilterManagerChain::class)
-    fun defaultApiFilterChain(@Autowired managerCache: ApiFilterManagerCache) = DefaultApiFilterChain(managerCache)
+    fun doFilterCheck(
+        requestContext: FilterContext,
+        chain: Iterator<ApiFilterManager>
+    ) {
+        if (chain.hasNext()) {
+            val next = chain.next()
+            if (next.canExecute(requestContext)) {
+                requestContext.setFlowState(next.verify(requestContext))
+            }
+            if (requestContext.flowState == ApiFilterFlowState.BREAK) return
+            doFilterCheck(requestContext, chain)
+            return
+        }
+
+        // 如果需要检查权限，那必须返回AUTHORIZED才表示已授权成功
+        if (requestContext.needCheckPermissions && requestContext.flowState != ApiFilterFlowState.AUTHORIZED) {
+            requestContext.requestContext.abortWith(
+                Response.status(Response.Status.FORBIDDEN)
+                    .entity("You do not have permission to access")
+                    .build()
+            )
+        }
+    }
+
+    fun FilterContext.setFlowState(state: ApiFilterFlowState) {
+        /*只有CONTINUE状态能够流转*/
+        if (flowState == ApiFilterFlowState.CONTINUE) {
+            flowState = state
+        }
+    }
+
+    fun doFilterCheck(requestContext: ContainerRequestContext)
 }

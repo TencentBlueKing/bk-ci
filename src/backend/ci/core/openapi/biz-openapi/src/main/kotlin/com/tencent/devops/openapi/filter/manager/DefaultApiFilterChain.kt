@@ -25,27 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.openapi.config
+package com.tencent.devops.openapi.filter.manager
 
-import com.tencent.devops.openapi.filter.manager.ApiFilterManagerCache
-import com.tencent.devops.openapi.filter.manager.ApiFilterManagerChain
-import com.tencent.devops.openapi.filter.manager.DefaultApiFilterChain
-import com.tencent.devops.openapi.service.op.DefaultOpAppUserService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.openapi.filter.manager.impl.AccessTokenFilter
+import com.tencent.devops.openapi.filter.manager.impl.ApiPathFilter
+import com.tencent.devops.openapi.filter.manager.impl.BlueKingApiFilter
+import com.tencent.devops.openapi.filter.manager.impl.NoPermissionFilter
+import javax.ws.rs.container.ContainerRequestContext
 
-/**
- * 流水线构建核心配置
- */
-@Configuration
-class OpenAPiConfiguration {
-    @Bean
-    @ConditionalOnMissingBean(name = ["opAppUserService"])
-    fun opAppUserService() = DefaultOpAppUserService()
+class DefaultApiFilterChain(
+    private val managerCache: ApiFilterManagerCache
+) : ApiFilterManagerChain {
 
-    @Bean
-    @ConditionalOnMissingBean(ApiFilterManagerChain::class)
-    fun defaultApiFilterChain(@Autowired managerCache: ApiFilterManagerCache) = DefaultApiFilterChain(managerCache)
+    override fun doFilterCheck(requestContext: ContainerRequestContext) {
+        doFilterCheck(
+            requestContext = FilterContext(requestContext),
+            chain = listOf(
+                managerCache.getFilter(ApiPathFilter::class.java),
+                managerCache.getFilter(AccessTokenFilter::class.java),
+                managerCache.getFilter(NoPermissionFilter::class.java),
+                managerCache.getFilter(BlueKingApiFilter::class.java)
+            ).iterator()
+        )
+    }
 }

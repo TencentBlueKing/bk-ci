@@ -24,12 +24,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.filter
 
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.ContainerRequestFilter
+package com.tencent.devops.openapi.filter.manager
 
-interface ApiFilter : ContainerRequestFilter {
+interface ApiFilterManager {
 
-    fun verifyJWT(requestContext: ContainerRequestContext): Boolean
+    fun canExecute(requestContext: FilterContext): Boolean
+
+    fun verify(requestContext: FilterContext): ApiFilterFlowState
 }
