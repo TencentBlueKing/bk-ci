@@ -159,7 +159,6 @@
                             v-if="isDevxEnv"
                             :label="$t('environment.nodeInfo.model')"
                             prop="size"
-                            show-overflow-tooltip
                         ></bk-table-column>
                         <bk-table-column
                             :label="$t('environment.status')"
