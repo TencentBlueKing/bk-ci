@@ -26,18 +26,17 @@
  *
  */
 
-package com.tencent.devops.auth.pojo.enum
+package com.tencent.devops.common.auth.enums
 
-enum class Oauth2GrantType(val grantType: String) {
-    // 授权码模式
-    AUTHORIZATION_CODE("authorization_code"),
+/**
+ * 权限中心类型
+ */
+enum class Oauth2ScopeOperation(val id: String, val value: String) {
+    PROJECT_VISIT("project_visit", "获取你有权限的项目列表"),
 
-    // 客户端模式
-    CLIENT_CREDENTIALS("client_credentials"),
+    PIPELINE_LIST("pipeline_list", "获取你有权限的流水线列表"),
 
-    // 密码模式
-    PASS_WORD("pass_word"),
+    PIPELINE_DOWNLOAD("pipeline_download", "下载你有权限的制品"),
 
-    // 刷新token模式
-    REFRESH_TOKEN("refresh_token");
+    USERINFO_READ("userinfo_read", "获取你的用户信息")
 }
