@@ -113,6 +113,46 @@ class RbacPermissionResourceGroupPermissionService(
         )
     }
 
+    override fun isGroupsHasPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        relatedResourceType: String,
+        relatedResourceCode: String,
+        action: String
+    ): Boolean {
+        val resourceType = rbacCacheService.getActionInfo(action).relatedResourceType
+        val pipelineGroupIds = listPipelineGroupIds(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            relatedResourceCode = relatedResourceCode
+        )
+        return resourceGroupPermissionDao.isGroupsHasPermission(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            filterIamGroupIds = filterIamGroupIds,
+            resourceType = resourceType,
+            resourceCode = relatedResourceCode,
+            pipelineGroupIds = pipelineGroupIds,
+            action = action
+        )
+    }
+
+    override fun listGroupResourcesWithPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        relatedResourceType: String,
+        action: String
+    ): Map<String, List<String>> {
+        val resourceType = rbacCacheService.getActionInfo(action).relatedResourceType
+        return resourceGroupPermissionDao.listGroupResourcesWithPermission(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            filterIamGroupIds = filterIamGroupIds,
+            resourceType = resourceType,
+            action = action
+        )
+    }
+
     private fun listPipelineGroupIds(
         projectCode: String,
         resourceType: String,

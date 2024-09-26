@@ -172,4 +172,9 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         start: Int?,
         limit: Int?
     ): Pair<Long, List<AuthResourceGroupMember>> = Pair(0, emptyList())
+
+    override fun listMemberGroupIdsInProject(
+        projectCode: String,
+        memberId: String
+    ): List<Int> = emptyList()
 }

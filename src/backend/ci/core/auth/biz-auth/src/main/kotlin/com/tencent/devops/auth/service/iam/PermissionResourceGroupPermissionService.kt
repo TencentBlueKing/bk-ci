@@ -40,6 +40,24 @@ interface PermissionResourceGroupPermissionService {
         action: String? = null
     ): List<Int>
 
+    fun isGroupsHasPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        relatedResourceType: String,
+        relatedResourceCode: String,
+        action: String
+    ): Boolean
+
+    /**
+     * 获取用户组有权限的资源
+     * */
+    fun listGroupResourcesWithPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        relatedResourceType: String,
+        action: String
+    ): Map<String/*resourceType*/, List<String>/*resourceCodes*/>
+
     fun getGroupPermissionDetail(
         groupId: Int
     ): Map<String, List<GroupPermissionDetailVo>>

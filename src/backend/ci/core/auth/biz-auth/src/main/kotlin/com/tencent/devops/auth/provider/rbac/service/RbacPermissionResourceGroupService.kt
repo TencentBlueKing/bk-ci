@@ -53,12 +53,15 @@ import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.enums.GroupType
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -69,12 +72,12 @@ import org.springframework.beans.factory.annotation.Autowired
 class RbacPermissionResourceGroupService @Autowired constructor(
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceService: AuthResourceService,
-    private val permissionSubsetManagerService: PermissionSubsetManagerService,
     private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val authResourceGroupMemberDao: AuthResourceGroupMemberDao
+    private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+    private val resourceGroupSyncService: PermissionResourceGroupSyncService
 ) : PermissionResourceGroupService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupService::class.java)
@@ -93,25 +96,27 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 resourceType = resourceType,
                 resourceCode = resourceCode
             )
-            val validPage = PageUtil.getValidPage(page)
-            val validPageSize = PageUtil.getValidPageSize(pageSize)
+
             val iamGroupInfoList = if (resourceType == AuthResourceType.PROJECT.value) {
                 val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
                 val pageInfoDTO = V2PageInfoDTO()
                 pageInfoDTO.page = page
                 pageInfoDTO.pageSize = pageSize
-                val iamGroupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
+                iamV2ManagerService.getGradeManagerRoleGroupV2(
                     resourceInfo.relationId,
                     searchGroupDTO,
                     pageInfoDTO
-                )
-                iamGroupInfoList.results
+                ).results
             } else {
-                permissionSubsetManagerService.listGroup(
-                    subsetManagerId = resourceInfo.relationId,
-                    page = validPage,
-                    pageSize = validPageSize
-                )
+                val pageInfoDTO = V2PageInfoDTO()
+                val validPage = PageUtil.getValidPage(page)
+                val validPageSize = PageUtil.getValidPageSize(pageSize)
+                pageInfoDTO.page = validPage
+                pageInfoDTO.pageSize = validPageSize
+                iamV2ManagerService.getSubsetManagerRoleGroup(
+                    resourceInfo.relationId.toInt(),
+                    pageInfoDTO
+                ).results
             }
             val resourceGroupMap = authResourceGroupDao.getByResourceCode(
                 dslContext = dslContext,
@@ -329,44 +334,46 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectId
         )
-
-        return createProjectGroupToIam(
-            projectCode = projectId,
-            projectName = projectInfo.resourceName,
-            relationId = projectInfo.relationId.toInt(),
-            groupCode = "custom",
+        val iamGroupId = createGroupToIam(
+            managerId = projectInfo.relationId.toInt(),
+            resourceType = AuthResourceType.PROJECT.value,
             groupName = groupAddDTO.groupName,
             description = groupAddDTO.groupDesc
         )
-    }
-
-    private fun createProjectGroupToIam(
-        projectCode: String,
-        projectName: String,
-        relationId: Int,
-        groupCode: String,
-        groupName: String,
-        description: String
-    ): Int {
-        val managerRoleGroup = ManagerRoleGroup(groupName, description, false)
-        val managerRoleGroupDTO = ManagerRoleGroupDTO.builder()
-            .groups(listOf(managerRoleGroup))
-            .createAttributes(false)
-            .syncSubjectTemplate(true)
-            .build()
-        val iamGroupId = iamV2ManagerService.batchCreateRoleGroupV2(relationId, managerRoleGroupDTO)
         authResourceGroupDao.create(
             dslContext = dslContext,
-            projectCode = projectCode,
+            projectCode = projectId,
             resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
-            resourceName = projectName,
-            iamResourceCode = projectCode,
-            groupCode = groupCode,
-            groupName = groupName,
+            resourceCode = projectId,
+            resourceName = projectInfo.resourceName,
+            iamResourceCode = projectId,
+            groupCode = "custom",
+            groupName = groupAddDTO.groupName,
             defaultGroup = false,
             relationId = iamGroupId.toString()
         )
+        return iamGroupId
+    }
+
+    private fun createGroupToIam(
+        resourceType: String,
+        managerId: Int,
+        groupName: String,
+        description: String
+    ): Int {
+        val iamGroupId = if (resourceType == AuthResourceType.PROJECT.value) {
+            val managerRoleGroup = ManagerRoleGroup(groupName, description, false)
+            val managerRoleGroupDTO = ManagerRoleGroupDTO.builder()
+                .groups(listOf(managerRoleGroup))
+                .createAttributes(false)
+                .syncSubjectTemplate(true)
+                .build()
+            iamV2ManagerService.batchCreateRoleGroupV2(managerId, managerRoleGroupDTO)
+        } else {
+            val managerRoleGroup = ManagerRoleGroup(groupName, description, false)
+            val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
+            iamV2ManagerService.batchCreateSubsetRoleGroup(managerId, managerRoleGroupDTO)
+        }
         return iamGroupId
     }
 
@@ -437,18 +444,25 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         }
     }
 
-    override fun createProjectGroupByGroupCode(
+    override fun createResourceGroupByGroupCode(
         projectId: String,
+        resourceType: String,
+        resourceCode: String,
         groupCode: String
-    ): Boolean {
+    ): Int {
         val projectInfo = authResourceService.get(
             projectCode = projectId,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectId
         )
+        val resourceInfo = authResourceService.get(
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
         val groupConfig = authResourceGroupConfigDao.getByGroupCode(
             dslContext = dslContext,
-            resourceType = AuthResourceType.PROJECT.value,
+            resourceType = resourceType,
             groupCode = groupCode
         ) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.DEFAULT_GROUP_CONFIG_NOT_FOUND,
@@ -457,20 +471,30 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         val resourceGroupInfo = authResourceGroupDao.get(
             dslContext = dslContext,
             projectCode = projectId,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
             groupCode = groupConfig.groupCode
         )
         if (resourceGroupInfo != null) {
-            return false
+            return resourceGroupInfo.relationId.toInt()
         }
-        val iamGroupId = createProjectGroupToIam(
-            projectCode = projectId,
-            projectName = projectInfo.resourceName,
-            relationId = projectInfo.relationId.toInt(),
-            groupCode = groupConfig.groupCode,
+        val iamGroupId = createGroupToIam(
+            resourceType = resourceType,
+            managerId = resourceInfo.relationId.toInt(),
             groupName = groupConfig.groupName,
             description = groupConfig.description
+        )
+        authResourceGroupDao.create(
+            dslContext = dslContext,
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            resourceName = resourceInfo.resourceName,
+            iamResourceCode = resourceInfo.iamResourceCode,
+            groupCode = groupCode,
+            groupName = groupConfig.groupName,
+            defaultGroup = false,
+            relationId = iamGroupId.toString()
         )
         permissionGroupPoliciesService.grantGroupPermission(
             authorizationScopesStr = groupConfig.authorizationScopes,
@@ -478,10 +502,111 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             projectName = projectInfo.resourceName,
             resourceType = groupConfig.resourceType,
             groupCode = groupConfig.groupCode,
-            iamResourceCode = projectId,
-            resourceName = projectInfo.resourceName,
+            iamResourceCode = resourceInfo.iamResourceCode,
+            resourceName = resourceInfo.resourceName,
             iamGroupId = iamGroupId
         )
+        return iamGroupId
+    }
+
+    override fun syncManagerGroup(
+        projectCode: String,
+        managerId: Int,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String,
+        iamResourceCode: String
+    ): Boolean {
+        val resourceManageGroupInfo = authResourceGroupDao.get(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            groupCode = DefaultGroupType.MANAGER.value
+        )
+        if (resourceManageGroupInfo != null) {
+            return true
+        }
+        val pageInfoDTO = V2PageInfoDTO()
+        pageInfoDTO.page = PageUtil.DEFAULT_PAGE
+        pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
+        val iamGroupInfoList = if (resourceType == AuthResourceType.PROJECT.value) {
+            val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
+            iamV2ManagerService.getGradeManagerRoleGroupV2(
+                managerId.toString(),
+                searchGroupDTO,
+                pageInfoDTO
+            )
+        } else {
+            iamV2ManagerService.getSubsetManagerRoleGroup(
+                managerId,
+                pageInfoDTO
+            )
+        }
+        iamGroupInfoList.results.forEach { iamGroupInfo ->
+            authResourceGroupDao.create(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName,
+                iamResourceCode = iamResourceCode,
+                groupCode = DefaultGroupType.MANAGER.value,
+                groupName = iamGroupInfo.name,
+                defaultGroup = true,
+                relationId = iamGroupInfo.id.toString()
+            )
+            // 同步拥有者组里面的成员
+            resourceGroupSyncService.syncIamGroupMember(
+                projectCode = projectCode,
+                iamGroupId = iamGroupInfo.id
+            )
+        }
+        return true
+    }
+
+    override fun deleteManagerDefaultGroup(
+        managerId: Int,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean {
+        authResourceGroupDao.getByResourceCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        ).filter {
+            it.groupCode != DefaultGroupType.MANAGER.value
+        }.forEach {
+            logger.info("delete subset manage default group|$managerId|${it.relationId}")
+            iamV2ManagerService.deleteRoleGroupV2(it.relationId)
+        }
+        return true
+    }
+
+    override fun modifyManagerDefaultGroup(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Boolean {
+        val defaultGroupConfigs = authResourceGroupConfigDao.get(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            groupType = GroupType.DEFAULT.value
+        )
+        defaultGroupConfigs.forEach { groupConfig ->
+            authResourceGroupDao.update(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName,
+                groupCode = groupConfig.groupCode,
+                groupName = groupConfig.groupName
+            )
+        }
         return true
     }
 }

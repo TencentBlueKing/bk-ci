@@ -101,11 +101,54 @@ class AuthResourceGroupPermissionDao {
         }
     }
 
+    fun isGroupsHasPermission(
+        dslContext: DSLContext,
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        resourceType: String,
+        resourceCode: String,
+        pipelineGroupIds: List<String>,
+        action: String
+    ): Boolean {
+        return with(TAuthResourceGroupPermission.T_AUTH_RESOURCE_GROUP_PERMISSION) {
+            dslContext.selectCount()
+                .from(this)
+                .where(
+                    buildConditions(
+                        projectCode = projectCode,
+                        filterIamGroupIds = filterIamGroupIds,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode,
+                        pipelineGroupIds = pipelineGroupIds,
+                        action = action
+                    )
+                ).fetchOne(0, Int::class.java)!! > 0
+        }
+    }
+
+    fun listGroupResourcesWithPermission(
+        dslContext: DSLContext,
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        resourceType: String,
+        action: String
+    ): Map<String, List<String>> {
+        return with(TAuthResourceGroupPermission.T_AUTH_RESOURCE_GROUP_PERMISSION) {
+            dslContext.select(RELATED_RESOURCE_TYPE, RELATED_RESOURCE_CODE)
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(ACTION_RELATED_RESOURCE_TYPE.eq(resourceType))
+                .and(ACTION.eq(action))
+                .groupBy(RELATED_RESOURCE_TYPE, RELATED_RESOURCE_CODE)
+                .fetch().groupBy({ it.value1() }, { it.value2() })
+        }
+    }
+
     fun buildConditions(
         projectCode: String,
         filterIamGroupIds: List<Int>?,
         resourceType: String,
-        resourceCode: String?,
+        resourceCode: String? = null,
         pipelineGroupIds: List<String>,
         action: String?
     ): List<Condition> {

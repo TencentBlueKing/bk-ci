@@ -48,7 +48,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Suppress("SpreadOperator", "LongParameterList")
-class RbacPermissionResourceMemberService constructor(
+class RbacPermissionResourceMemberService(
     private val authResourceService: AuthResourceService,
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceGroupDao: AuthResourceGroupDao,
@@ -1263,6 +1263,23 @@ class RbacPermissionResourceMemberService constructor(
             limit = limit
         )
         return Pair(count, resourceGroupMembers)
+    }
+
+    override fun listMemberGroupIdsInProject(
+        projectCode: String,
+        memberId: String
+    ): List<Int> {
+        // 获取用户加入的项目级用户组模板ID
+        val iamTemplateIds = listProjectMemberGroupTemplateIds(
+            projectCode = projectCode,
+            memberId = memberId
+        )
+        return authResourceGroupMemberDao.listMemberGroupIdsInProject(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            memberId = memberId,
+            iamTemplateIds = iamTemplateIds
+        )
     }
 
     // 获取用户加入的项目级用户组模板ID

@@ -556,6 +556,24 @@ class AuthResourceGroupMemberDao {
         }
     }
 
+    fun listMemberGroupIdsInProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        memberId: String,
+        iamTemplateIds: List<String>
+    ): List<Int> {
+        val conditions = buildMemberGroupCondition(
+            projectCode = projectCode,
+            memberId = memberId,
+            iamTemplateIds = iamTemplateIds
+        )
+        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            dslContext.select(IAM_GROUP_ID).from(this)
+                .where(conditions)
+                .fetch().map { it.value1() }
+        }
+    }
+
     /**
      * 获取成员下用户组列表
      */

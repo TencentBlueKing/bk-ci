@@ -411,7 +411,14 @@ class PermissionGradeManagerService @Autowired constructor(
         projectCode: String,
         projectName: String
     ) {
-        syncGradeManagerGroup(gradeManagerId = gradeManagerId, projectCode = projectCode, projectName = projectName)
+        permissionResourceGroupService.syncManagerGroup(
+            projectCode = projectCode,
+            managerId = gradeManagerId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            resourceName = projectName,
+            iamResourceCode = projectCode
+        )
         val defaultGroupConfigs = authResourceGroupConfigDao.get(
             dslContext = dslContext,
             resourceType = AuthResourceType.PROJECT.value,
@@ -419,8 +426,10 @@ class PermissionGradeManagerService @Autowired constructor(
             groupType = GroupType.DEFAULT.value
         )
         defaultGroupConfigs.forEach { groupConfig ->
-            permissionResourceGroupService.createProjectGroupByGroupCode(
+            permissionResourceGroupService.createResourceGroupByGroupCode(
                 projectId = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
                 groupCode = groupConfig.groupCode
             )
         }
@@ -433,65 +442,12 @@ class PermissionGradeManagerService @Autowired constructor(
         projectCode: String,
         projectName: String
     ) {
-        val defaultGroupConfigs = authResourceGroupConfigDao.get(
-            dslContext = dslContext,
-            resourceType = AuthResourceType.PROJECT.value,
-            groupType = GroupType.DEFAULT.value
-        )
-        defaultGroupConfigs.forEach { groupConfig ->
-            authResourceGroupDao.update(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
-                resourceName = projectName,
-                groupCode = groupConfig.groupCode,
-                groupName = groupConfig.groupName
-            )
-        }
-    }
-
-    /**
-     * 同步创建分级管理员时自动创建的组
-     */
-    private fun syncGradeManagerGroup(
-        gradeManagerId: Int,
-        projectCode: String,
-        projectName: String
-    ) {
-        val resourceManageGroupInfo = authResourceGroupDao.get(
-            dslContext = dslContext,
+        permissionResourceGroupService.modifyManagerDefaultGroup(
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode,
-            groupCode = DefaultGroupType.MANAGER.value
+            resourceName = projectName
         )
-        if (resourceManageGroupInfo != null) {
-            return
-        }
-        val pageInfoDTO = V2PageInfoDTO()
-        pageInfoDTO.page = PageUtil.DEFAULT_PAGE
-        pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
-        val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
-        val iamGroupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
-            gradeManagerId.toString(),
-            searchGroupDTO,
-            pageInfoDTO
-        )
-        iamGroupInfoList.results.forEach { iamGroupInfo ->
-            authResourceGroupDao.create(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
-                resourceName = projectName,
-                iamResourceCode = projectCode,
-                groupCode = DefaultGroupType.MANAGER.value,
-                groupName = iamGroupInfo.name,
-                defaultGroup = true,
-                relationId = iamGroupInfo.id.toString()
-            )
-        }
     }
 
     fun deleteGradeManager(gradeManagerId: String) {

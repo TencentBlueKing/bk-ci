@@ -35,6 +35,7 @@ import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.auth.api.AuthResourceType
 
 interface PermissionResourceGroupService {
     /**
@@ -90,8 +91,33 @@ interface PermissionResourceGroupService {
         renameGroupDTO: RenameGroupDTO
     ): Boolean
 
-    fun createProjectGroupByGroupCode(
+    fun createResourceGroupByGroupCode(
         projectId: String,
+        resourceType: String = AuthResourceType.PROJECT.value,
+        resourceCode: String,
         groupCode: String
+    ): Int
+
+    fun syncManagerGroup(
+        projectCode: String,
+        managerId: Int,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String,
+        iamResourceCode: String
+    ): Boolean
+
+    fun deleteManagerDefaultGroup(
+        managerId: Int,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean
+
+    fun modifyManagerDefaultGroup(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
     ): Boolean
 }

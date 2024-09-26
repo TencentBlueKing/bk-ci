@@ -88,19 +88,18 @@ class RbacServiceConfiguration {
         authAuthorizationScopesService: AuthAuthorizationScopesService,
         iamV2ManagerService: V2ManagerService,
         dslContext: DSLContext,
-        authResourceGroupDao: AuthResourceGroupDao,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
         authResourceNameConverter: AuthResourceNameConverter,
-        resourceGroupSyncService: PermissionResourceGroupSyncService
+        resourceGroupSyncService: PermissionResourceGroupSyncService,
+        permissionResourceGroupService: PermissionResourceGroupService
     ) = PermissionSubsetManagerService(
-        permissionGroupPoliciesService = permissionGroupPoliciesService,
         authAuthorizationScopesService = authAuthorizationScopesService,
         iamV2ManagerService = iamV2ManagerService,
         dslContext = dslContext,
-        authResourceGroupDao = authResourceGroupDao,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
         authResourceNameConverter = authResourceNameConverter,
-        resourceGroupSyncService = resourceGroupSyncService
+        resourceGroupSyncService = resourceGroupSyncService,
+        permissionResourceGroupService = permissionResourceGroupService
     )
 
     @Bean

@@ -34,10 +34,10 @@ interface PermissionResourceMemberService {
     fun getProjectMemberCount(projectCode: String): ResourceMemberCountVO
 
     /**
-     *  之所以将简单查询接口抽成单独方法，是因为该方法只用于查询用户名称/部门名称等，
-    一方面，该方法职责比较单一；另一方面，该接口需要连表查询到授权资源表中授权人。
-    复杂查询虽然需要查询各种权限，但是不需要关联授权资源表。
-     * */
+     *之所以将简单查询接口抽成单独方法，是因为该方法只用于查询用户名称/部门名称等，
+     *一方面，该方法职责比较单一；另一方面，该接口需要连表查询到授权资源表中授权人。
+     *复杂查询虽然需要查询各种权限，但是不需要关联授权资源表。
+     **/
     fun listProjectMembers(
         projectCode: String,
         memberType: String?,
@@ -60,6 +60,14 @@ interface PermissionResourceMemberService {
         start: Int? = null,
         limit: Int? = null
     ): Pair<Long, List<AuthResourceGroupMember>>
+
+    /**
+    * 获取用户在该项目加入的组
+    * */
+    fun listMemberGroupIdsInProject(
+        projectCode: String,
+        memberId: String,
+    ): List<Int>
 
     fun batchDeleteResourceGroupMembers(
         projectCode: String,

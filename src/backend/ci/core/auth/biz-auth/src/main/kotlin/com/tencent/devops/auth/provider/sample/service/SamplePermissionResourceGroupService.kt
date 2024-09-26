@@ -93,8 +93,33 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         return true
     }
 
-    override fun createProjectGroupByGroupCode(
+    override fun createResourceGroupByGroupCode(
         projectId: String,
+        resourceType: String,
+        resourceCode: String,
         groupCode: String
-    ) = true
+    ): Int = 0
+
+    override fun syncManagerGroup(
+        projectCode: String,
+        managerId: Int,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String,
+        iamResourceCode: String
+    ): Boolean = true
+
+    override fun deleteManagerDefaultGroup(
+        managerId: Int,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean = true
+
+    override fun modifyManagerDefaultGroup(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ) :Boolean = true
 }

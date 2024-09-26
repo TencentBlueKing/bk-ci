@@ -29,10 +29,12 @@ class ServiceResourceGroupResourceImpl(
         projectCode: String,
         resourceType: String,
         groupCode: BkAuthGroup
-    ): Result<Boolean> {
+    ): Result<Int> {
         return Result(
-            permissionResourceGroupService.createProjectGroupByGroupCode(
+            permissionResourceGroupService.createResourceGroupByGroupCode(
                 projectId = projectCode,
+                resourceType = resourceType,
+                resourceCode = projectCode,
                 groupCode = groupCode.value
             )
         )

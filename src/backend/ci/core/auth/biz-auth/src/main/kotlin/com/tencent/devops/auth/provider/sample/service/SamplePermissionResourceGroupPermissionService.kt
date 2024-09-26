@@ -41,6 +41,20 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         action: String?
     ): List<Int> = emptyList()
 
+    override fun isGroupsHasPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        relatedResourceType: String,
+        relatedResourceCode: String, action: String
+    ): Boolean = true
+
+    override fun listGroupResourcesWithPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        relatedResourceType: String,
+        action: String
+    ): Map<String, List<String>> = emptyMap()
+
     override fun getGroupPermissionDetail(
         groupId: Int
     ): Map<String, List<GroupPermissionDetailVo>> = emptyMap()

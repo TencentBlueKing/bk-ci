@@ -190,7 +190,7 @@ interface ApigwAuthProjectResourceV4 {
         @Parameter(description = "用户组code,CI管理员为CI_MANAGER", required = true)
         @QueryParam("groupCode")
         groupCode: BkAuthGroup
-    ): Result<Boolean>
+    ): Result<Int>
 
     @POST
     @Path("/create_group")
