@@ -32,7 +32,7 @@ module.exports = class BundleWebpackPlugin {
             dist,
             entryFolderName
         )
-        if (!fs.existsSync(this.SERVICE_ASSETS_DIR)) {
+        if (!this.isDev && !fs.existsSync(this.SERVICE_ASSETS_DIR)) {
             fs.mkdirSync(this.SERVICE_ASSETS_DIR)
         }
     }
@@ -85,13 +85,14 @@ module.exports = class BundleWebpackPlugin {
                         })
 
                     assetsMap[entryName] = assets
+                    if (!this.isDev) {
+                        fs.writeFileSync(`${SERVICE_ASSETS_DIR}/${entryName}.json`, JSON.stringify(assetsMap))
+                        console.log(`get assets entry about ${entryName}, ${JSON.stringify(assetsMap)}`)
+                    }
                 }
                 if (this.isDev) {
                     fs.writeFileSync(this.DEBUG_ASSETS_BUNDLE_JSON_FILE, JSON.stringify(assetsMap))
-                } else {
-                    fs.writeFileSync(`${SERVICE_ASSETS_DIR}/${entryName}.json`, JSON.stringify(assetsMap))
-                    console.log(`get assets entry about ${entryName}, ${JSON.stringify(assetsMap)}`)
-                }
+                } 
                 
                 callback()
             }
