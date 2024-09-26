@@ -1438,5 +1438,4 @@ class AtomDao : AtomBaseDao() {
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }
-
 }
