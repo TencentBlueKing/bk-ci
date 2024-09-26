@@ -57,7 +57,6 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
-import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
@@ -169,7 +168,7 @@ open class BaseBuildRecordService(
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 params = arrayOf(buildId)
             )
-            buildInfo.executeCount ?: 1
+            buildInfo.executeCount
         } else {
             executeCount
         }
