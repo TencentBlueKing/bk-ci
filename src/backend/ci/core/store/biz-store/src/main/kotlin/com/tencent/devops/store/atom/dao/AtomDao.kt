@@ -1115,9 +1115,16 @@ class AtomDao : AtomBaseDao() {
         dslContext: DSLContext,
         projectCode: String,
         classifyCode: String? = null,
-        name: String? = null
+        name: String? = null,
+        queryDefaultFlag: Boolean = false
     ): Int {
-        val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, name, dslContext)
+        val (ta, tspr, conditions) = getInstalledConditions(
+            projectCode = projectCode,
+            classifyCode = classifyCode,
+            name = name,
+            dslContext = dslContext,
+            queryDefaultFlag = queryDefaultFlag
+        )
 
         return dslContext.select(DSL.countDistinct(ta.ATOM_CODE))
             .from(ta)
@@ -1136,10 +1143,17 @@ class AtomDao : AtomBaseDao() {
         classifyCode: String? = null,
         name: String? = null,
         page: Int? = null,
-        pageSize: Int? = null
+        pageSize: Int? = null,
+        queryDefaultFlag: Boolean = false
     ): Result<out Record>? {
 
-        val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, name, dslContext)
+        val (ta, tspr, conditions) = getInstalledConditions(
+            projectCode = projectCode,
+            classifyCode = classifyCode,
+            name = name,
+            dslContext = dslContext,
+            queryDefaultFlag = queryDefaultFlag
+        )
         val tc = TClassify.T_CLASSIFY
         // 查找每组atomCode最新的记录
         val t = dslContext.select(ta.ATOM_CODE.`as`(KEY_ATOM_CODE), DSL.max(ta.CREATE_TIME).`as`(KEY_CREATE_TIME))
@@ -1182,12 +1196,17 @@ class AtomDao : AtomBaseDao() {
         projectCode: String,
         classifyCode: String?,
         name: String?,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        queryDefaultFlag: Boolean
     ): Triple<TAtom, TStoreProjectRel, MutableList<Condition>> {
         val ta = TAtom.T_ATOM
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
         val conditions = mutableListOf<Condition>()
-        conditions.add(ta.DEFAULT_FLAG.eq(true).or(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0))))
+        if (queryDefaultFlag) {
+            conditions.add(ta.DEFAULT_FLAG.eq(true).or(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0))))
+        } else {
+            conditions.add(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0)))
+        }
         if (!classifyCode.isNullOrEmpty()) {
             val tClassify = TClassify.T_CLASSIFY
             val classifyId = dslContext.select(tClassify.ID)
@@ -1400,41 +1419,6 @@ class AtomDao : AtomBaseDao() {
                         repositoryHashId = it.value2()
                     )
                 }
-        }
-    }
-
-    fun batchGetDefaultAtom(
-        dslContext: DSLContext,
-        name: String?,
-        page: Int,
-        pageSize: Int
-    ): Result<TAtomRecord> {
-        return with(TAtom.T_ATOM) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(LATEST_FLAG.eq(true))
-            conditions.add(DEFAULT_FLAG.eq(true))
-            if (!name.isNullOrBlank()) {
-                conditions.add(NAME.contains(name))
-            }
-            dslContext.selectFrom(this)
-                .where(conditions)
-                .orderBy(ATOM_CODE)
-                .limit((page - 1) * pageSize, pageSize)
-                .fetch()
-        }
-    }
-
-    fun countDefaultAtom(dslContext: DSLContext, name: String?): Int {
-        return with(TAtom.T_ATOM) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(LATEST_FLAG.eq(true))
-            conditions.add(DEFAULT_FLAG.eq(true))
-            if (!name.isNullOrBlank()) {
-                conditions.add(NAME.contains(name))
-            }
-            dslContext.selectCount().from(this)
-                .where(conditions)
-                .fetchOne(0, Int::class.java) ?: 0
         }
     }
 }
