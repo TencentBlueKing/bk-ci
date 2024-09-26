@@ -156,6 +156,7 @@
             </bk-form>
         </section>
         <node-select
+            is-devx-env
             :title="nodeSelectTitle"
             :node-select-conf="nodeSelectConf"
             :search-info="searchInfo"

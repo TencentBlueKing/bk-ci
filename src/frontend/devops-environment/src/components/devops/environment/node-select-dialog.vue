@@ -156,6 +156,7 @@
                             </template>
                         </bk-table-column>
                         <bk-table-column
+                            v-if="isDevxEnv"
                             :label="$t('environment.nodeInfo.model')"
                             prop="size"
                             show-overflow-tooltip
@@ -261,6 +262,7 @@
                 type: String,
                 default: ''
             },
+            isDevxEnv: Boolean,
             nodeSelectConf: Object,
             loading: Object,
             curUserInfo: Object,

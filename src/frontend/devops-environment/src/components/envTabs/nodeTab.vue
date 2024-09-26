@@ -55,6 +55,12 @@
                     :label="$t('environment.nodeInfo.os')"
                     prop="osName"
                 ></bk-table-column>
+                <bk-table-column
+                    v-if="isDevxEnv"
+                    :label="$t('environment.nodeInfo.model')"
+                    prop="size"
+                    show-overflow-tooltip
+                ></bk-table-column>
                 <bk-table-column :label="$t('environment.nodeInfo.cpuStatus')">
                     <template slot-scope="props">
                         <div class="status-cell">
@@ -129,6 +135,7 @@
             </bk-table>
         </div>
         <node-select
+            is-devx-env
             :title="nodeSelectTitle"
             :node-select-conf="nodeSelectConf"
             :search-info="searchInfo"
