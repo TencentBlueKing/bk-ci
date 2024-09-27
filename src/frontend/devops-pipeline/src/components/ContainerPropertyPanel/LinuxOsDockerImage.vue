@@ -229,7 +229,7 @@
                 return this.container.dispatchType?.dockerInfo?.imageType ?? 'THIRD'
             },
             buildImageCredential () {
-                return this.container.dispatchType?.dockerInfo?.credential ?? ''
+                return this.container.dispatchType?.dockerInfo?.credential?.jobId ?? ''
             },
             buildImagePullPolicy () {
                 return this.container.dispatchType?.dockerInfo?.imagePullPolicy ?? 'always'
