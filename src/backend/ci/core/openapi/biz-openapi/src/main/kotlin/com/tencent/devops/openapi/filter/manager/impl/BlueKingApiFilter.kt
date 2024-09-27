@@ -127,7 +127,7 @@ class BlueKingApiFilter constructor(
             reader = PEMParser(InputStreamReader(bais))
             val publicKeyInfo = reader.readObject() as SubjectPublicKeyInfo
             val publicKey = JcaPEMKeyConverter().getPublicKey(publicKeyInfo)
-            val jwtParser = Jwts.parserBuilder().setSigningKey(publicKey).build()
+            val jwtParser = Jwts.parser().setSigningKey(publicKey).build()
             val parse = jwtParser.parse(bkApiJwt)
             logger.info("Get the parse body(${parse.body}) and header(${parse.header})")
             return JsonUtil.toMap(parse.body)
