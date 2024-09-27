@@ -53,13 +53,11 @@ interface StoreArchiveService {
     /**
      * 更新组件包信息
      * @param userId 流水线ID
-     * @param storeId 组件ID
      * @param storePkgInfoUpdateRequest 组件包更新信息请求
      * @return 布尔值
      */
     fun updateComponentPkgInfo(
         userId: String,
-        storeId: String,
         storePkgInfoUpdateRequest: StorePkgInfoUpdateRequest
     ): Boolean
 }

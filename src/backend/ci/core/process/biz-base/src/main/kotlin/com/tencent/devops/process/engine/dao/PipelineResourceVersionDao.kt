@@ -36,8 +36,10 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.utils.PipelineVersionUtils
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
@@ -520,6 +522,27 @@ class PipelineResourceVersionDao {
                 .set(REFER_COUNT, referCount)
             referFlag?.let { baseStep.set(REFER_FLAG, referFlag) }
             baseStep.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.`in`(versions)))
+                .execute()
+        }
+    }
+
+    fun updatePipelineModel(
+        dslContext: DSLContext,
+        userId: String,
+        pipelineModelVersion: PipelineModelVersion
+    ) {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(pipelineModelVersion.projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineModelVersion.pipelineId))
+            val version = pipelineModelVersion.version
+            if (version != null) {
+                conditions.add(VERSION.eq(version))
+            }
+            dslContext.update(this)
+                .set(MODEL, pipelineModelVersion.model)
+                .set(CREATOR, userId)
+                .where(conditions)
                 .execute()
         }
     }
