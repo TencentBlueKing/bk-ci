@@ -43,7 +43,7 @@ class BuildLessMQConfiguration @Autowired constructor() {
     ) = ScsConsumerBuilder.build<PipelineBuildLessStartupEvent> { buildLessListener.listenAgentStartUpEvent(it) }
 
     @EventConsumer
-    fun buildLessShutdownListener(
+    fun buildLessShutdownConsumer(
         @Autowired buildLessListener: BuildLessListener
     ) = ScsConsumerBuilder.build<PipelineBuildLessShutdownEvent> { buildLessListener.listenAgentShutdownEvent(it) }
 }
