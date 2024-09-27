@@ -106,7 +106,7 @@ class WorkspaceRecordService @Autowired constructor(
             remotedevBkRepoClient.repoStreamCreate(
                 region = region,
                 projectId = projectId,
-                workspaceName = workspaceName,
+                repoName = genRepoName(workspaceName),
                 userId = enableUser
             )
         )
@@ -178,7 +178,7 @@ class WorkspaceRecordService @Autowired constructor(
         val data = resp.records.map {
             WorkspaceRecordMetadata(
                 link = bkRepoConfig.getRegionConfig(region).url +
-                        "/media/api/user/stream/$projectId/$workspaceName${it.fullPath}",
+                        "/web/media/api/user/stream/$projectId/${genRepoName(workspaceName)}${it.fullPath}",
                 startTime = it.metadata?.mediaStartTime,
                 stopTime = it.metadata?.mediaStopTime
             )
@@ -194,6 +194,10 @@ class WorkspaceRecordService @Autowired constructor(
     companion object {
         private const val REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS =
             "remotedev:worksapce.user.approval.expiredDays"
+
+        private const val BKREPO_WORKSPACE_REPONAME_PREFIX = "REMOTEDEV_"
+
+        private fun genRepoName(workspaceName: String) = "$BKREPO_WORKSPACE_REPONAME_PREFIX$workspaceName"
 
         private fun String.removeSuffixNumb(): String {
             for (i in this.lastIndex downTo 0) {

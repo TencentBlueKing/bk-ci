@@ -34,7 +34,7 @@ class RemotedevBkRepoClient @Autowired constructor(
     fun repoStreamCreate(
         region: BkRepoRegion,
         projectId: String,
-        workspaceName: String,
+        repoName: String,
         userId: String
     ): String? {
         val config = bkRepoConfig.getRegionConfig(region)
