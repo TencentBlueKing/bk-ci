@@ -30,6 +30,7 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.process.dao.PipelineSettingDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -100,7 +101,7 @@ class PipelineAsCodeService @Autowired constructor(
      * 获取流水线方言,根据流水线设置
      */
     fun getPipelineDialect(projectId: String, asCodeSettings: PipelineAsCodeSettings?): IPipelineDialect {
-        return PipelineDialectType.getPipelineDialect(
+        return PipelineDialectUtil.getPipelineDialect(
             getPipelineAsCodeSettings(
                 projectId = projectId,
                 asCodeSettings = asCodeSettings
@@ -119,11 +120,11 @@ class PipelineAsCodeService @Autowired constructor(
     ): IPipelineDialect {
         val projectDialect = projectCacheService.getProjectDialect(projectId = projectId)
         return if (asCodeSettings != null) {
-            PipelineDialectType.getPipelineDialect(
+            PipelineDialectUtil.getPipelineDialect(
                 asCodeSettings.copy(projectDialect = projectDialect)
             )
         } else {
-            PipelineDialectType.getPipelineDialect(
+            PipelineDialectUtil.getPipelineDialect(
                 inheritedDialect = inheritedDialectSetting,
                 projectDialect = projectDialect,
                 pipelineDialect = pipelineDialectSetting

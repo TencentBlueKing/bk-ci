@@ -31,6 +31,10 @@ package com.tencent.devops.common.pipeline.dialect
  * 传统模式流水线方言
  */
 class ClassicPipelineDialect : IPipelineDialect {
+    override fun getPipelineDialectType() = PipelineDialectType.CLASSIC.name
+
+    override fun supportUseExpression() = false
+
     override fun supportUseSingleCurlyBracesVar() = true
 
     override fun supportLongVarValue() = true

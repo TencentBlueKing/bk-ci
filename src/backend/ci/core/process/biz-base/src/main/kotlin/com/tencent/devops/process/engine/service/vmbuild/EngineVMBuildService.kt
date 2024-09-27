@@ -51,6 +51,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
@@ -340,6 +341,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 variables = variables, model = model, executeCount = buildInfo.executeCount
             )
         ).toMutableMap()
+        val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
         fillContainerContext(contextMap, container.customEnv, container.matrixContext)
         val contextPair by lazy {
             EnvReplacementParser.getCustomExecutionContextByMap(contextMap)
@@ -350,6 +352,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 version = EnvReplacementParser.parse(
                     value = env.value,
                     contextMap = contextMap,
+                    onlyExpression = dialect.supportUseExpression(),
                     contextPair = contextPair
                 ),
                 os = container.baseOS.name.lowercase()
@@ -364,6 +367,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             val value = EnvReplacementParser.parse(
                 value = nameAndValue.value,
                 contextMap = contextMap,
+                onlyExpression = dialect.supportUseExpression(),
                 contextPair = contextPair
             )
             contextMap[key] = value
@@ -393,12 +397,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val contextPair by lazy {
             EnvReplacementParser.getCustomExecutionContextByMap(context)
         }
+        val dialect = PipelineDialectUtil.getPipelineDialect(context[PIPELINE_DIALECT])
         customBuildEnv?.let {
             context.putAll(
                 customBuildEnv.associate {
                     "$ENV_CONTEXT_KEY_PREFIX${it.key}" to EnvReplacementParser.parse(
                         value = it.value,
                         contextMap = context,
+                        onlyExpression = dialect.supportUseExpression(),
                         contextPair = contextPair
                     )
                 }
@@ -711,8 +717,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     executeCount = task.executeCount,
                     type = task.taskType,
                     params = task.taskParams.map {
-                        // 支持${}变量引用,变量直接在服务端替换
-                        val obj = if (dialect.supportUseSingleCurlyBracesVar()) {
+                        // 表达式在worker端替换
+                        val obj = if (!dialect.supportUseExpression()) {
                             ObjectReplaceEnvVarUtil.replaceEnvVar(
                                 it.value, buildVariable
                             )

@@ -30,49 +30,49 @@ package com.tencent.devops.common.pipeline.dialect
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
-class PipelineDialectTest {
+class PipelineDialectUtilTest {
 
     @Test
     fun testGetDialect() {
-        val actual = PipelineDialectType.getPipelineDialect(null, null, null)
+        val actual = PipelineDialectUtil.getPipelineDialect(null, null, null)
         Assertions.assertEquals(PipelineDialectType.CLASSIC.dialect, actual)
 
-        val actual2 = PipelineDialectType.getPipelineDialect(
+        val actual2 = PipelineDialectUtil.getPipelineDialect(
             inheritedDialect = null,
             projectDialect = PipelineDialectType.CLASSIC.name,
             pipelineDialect = null
         )
         Assertions.assertEquals(PipelineDialectType.CLASSIC.dialect, actual2)
 
-        val actual3 = PipelineDialectType.getPipelineDialect(
+        val actual3 = PipelineDialectUtil.getPipelineDialect(
             inheritedDialect = true,
             projectDialect = null,
             pipelineDialect = null
         )
         Assertions.assertEquals(PipelineDialectType.CLASSIC.dialect, actual3)
 
-        val actual4 = PipelineDialectType.getPipelineDialect(
+        val actual4 = PipelineDialectUtil.getPipelineDialect(
             inheritedDialect = true,
             projectDialect = null,
             pipelineDialect = PipelineDialectType.CONSTRAINED.name
         )
         Assertions.assertEquals(PipelineDialectType.CLASSIC.dialect, actual4)
 
-        val actual5 = PipelineDialectType.getPipelineDialect(
+        val actual5 = PipelineDialectUtil.getPipelineDialect(
             inheritedDialect = false,
             projectDialect = null,
             pipelineDialect = PipelineDialectType.CONSTRAINED.name
         )
         Assertions.assertEquals(PipelineDialectType.CONSTRAINED.dialect, actual5)
 
-        val actual6 = PipelineDialectType.getPipelineDialect(
+        val actual6 = PipelineDialectUtil.getPipelineDialect(
             inheritedDialect = true,
             projectDialect = PipelineDialectType.CLASSIC.name,
             pipelineDialect = PipelineDialectType.CONSTRAINED.name
         )
         Assertions.assertEquals(PipelineDialectType.CLASSIC.dialect, actual6)
 
-        val actual7 = PipelineDialectType.getPipelineDialect(
+        val actual7 = PipelineDialectUtil.getPipelineDialect(
             inheritedDialect = false,
             projectDialect = PipelineDialectType.CLASSIC.name,
             pipelineDialect = PipelineDialectType.CONSTRAINED.name

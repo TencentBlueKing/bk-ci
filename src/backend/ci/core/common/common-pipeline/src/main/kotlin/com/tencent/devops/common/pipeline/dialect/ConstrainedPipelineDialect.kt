@@ -31,6 +31,10 @@ package com.tencent.devops.common.pipeline.dialect
  * 约束模式语法风格
  */
 class ConstrainedPipelineDialect : IPipelineDialect {
+    override fun getPipelineDialectType() = PipelineDialectType.CONSTRAINED.name
+
+    override fun supportUseExpression() = true
+
     override fun supportUseSingleCurlyBracesVar() = false
 
     override fun supportLongVarValue() = false

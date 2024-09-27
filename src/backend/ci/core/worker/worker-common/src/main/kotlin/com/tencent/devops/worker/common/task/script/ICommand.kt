@@ -30,7 +30,7 @@ package com.tencent.devops.worker.common.task.script
 import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.pipeline.EnvReplacementParser
-import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.pojo.app.BuildEnv
@@ -83,13 +83,24 @@ interface ICommand {
         ).toMutableMap()
         // 增加上下文的替换
         PipelineVarUtil.fillContextVarMap(contextMap)
-        val dialect = variables[PIPELINE_DIALECT]?.let {
-            PipelineDialectType.valueOf(it).dialect
-        } ?: PipelineDialectType.CLASSIC.dialect
-
-        var newCommand = command
-        if (dialect.supportUseSingleCurlyBracesVar()) {
-            newCommand = ReplacementUtils.replace(
+        val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
+        return if (dialect.supportUseExpression()) {
+            EnvReplacementParser.parse(
+                value = command,
+                contextMap = contextMap,
+                onlyExpression = true,
+                contextPair = EnvReplacementParser.getCustomExecutionContextByMap(
+                    variables = contextMap,
+                    extendNamedValueMap = listOf(
+                        CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossTargetProjectId),
+                        CIKeywordsService.CIKeywordsRuntimeNamedValue()
+                    )
+                ),
+                functions = SpecialFunctions.functions,
+                output = SpecialFunctions.output
+            )
+        } else {
+            ReplacementUtils.replace(
                 command,
                 object : KeyReplacement {
                     override fun getReplacement(key: String): String? = contextMap[key] ?: try {
@@ -112,22 +123,5 @@ interface ICommand {
                 }
             )
         }
-        if (EnvReplacementParser.containsExpressions(newCommand)) {
-            newCommand = EnvReplacementParser.parse(
-                value = newCommand,
-                contextMap = contextMap,
-                dialect = dialect,
-                contextPair = EnvReplacementParser.getCustomExecutionContextByMap(
-                    variables = contextMap,
-                    extendNamedValueMap = listOf(
-                        CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossTargetProjectId),
-                        CIKeywordsService.CIKeywordsRuntimeNamedValue()
-                    )
-                ),
-                functions = SpecialFunctions.functions,
-                output = SpecialFunctions.output
-            )
-        }
-        return newCommand
     }
 }

@@ -75,8 +75,7 @@ object EnvReplacementParser {
             functions = functions,
             output = output
         )
-        val useSingleCurlyBraces = !(onlyExpression ?: false)
-        return parse(value = value, useSingleCurlyBraces = useSingleCurlyBraces, options = options)
+        return parse(value = value, onlyExpression = onlyExpression, options = options)
     }
 
     /**
@@ -100,24 +99,21 @@ object EnvReplacementParser {
         )
         return parse(
             value = value,
-            useSingleCurlyBraces = dialect.supportUseSingleCurlyBracesVar(),
+            onlyExpression = dialect.supportUseExpression(),
             options = options
         )
     }
 
     fun parse(
         value: Any?,
-        useSingleCurlyBraces: Boolean,
+        onlyExpression: Boolean?,
         options: ExprReplacementOptions
     ): String {
         if (value == null) return ""
-        // 先表达式替换
-        val newValue = ExprReplaceEnvVarUtil.replaceEnvVar(value, options)
-        // 如果支持${}替换,则需要使用旧版变量替换
-        return if (useSingleCurlyBraces) {
-            ObjectReplaceEnvVarUtil.replaceEnvVar(newValue, options.contextMap)
+        return if (onlyExpression == true) {
+            ExprReplaceEnvVarUtil.replaceEnvVar(value, options)
         } else {
-            newValue
+            ObjectReplaceEnvVarUtil.replaceEnvVar(value, options.contextMap)
         }.let {
             JsonUtil.toJson(it, false)
         }

@@ -31,6 +31,13 @@ package com.tencent.devops.common.pipeline.dialect
  * 流水线语法风格
  */
 interface IPipelineDialect {
+
+    fun getPipelineDialectType(): String
+
+    /**
+     * 支持插件变量使用表达式
+     */
+    fun supportUseExpression(): Boolean
     /**
      * 是否支持${}变量引用
      *

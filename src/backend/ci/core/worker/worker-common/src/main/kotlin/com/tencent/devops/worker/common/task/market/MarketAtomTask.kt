@@ -51,12 +51,13 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
-import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_RUN
@@ -227,9 +228,7 @@ open class MarketAtomTask : ITask() {
             )
         )
 
-        val dialect = variables[PIPELINE_DIALECT]?.let {
-            PipelineDialectType.valueOf(it).dialect
-        } ?: PipelineDialectType.CLASSIC.dialect
+        val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
         // 解析并打印插件执行传入的所有参数
         val inputParams = map["input"]?.let { input ->
             parseInputParams(
@@ -495,24 +494,32 @@ open class MarketAtomTask : ITask() {
     ): Map<String, String> {
         val atomParams = mutableMapOf<String, String>()
         try {
-            val customReplacement by lazy {
-                EnvReplacementParser.getCustomExecutionContextByMap(
+            if (dialect.supportUseExpression()) {
+                val customReplacement = EnvReplacementParser.getCustomExecutionContextByMap(
                     variables = variables,
                     extendNamedValueMap = listOf(
                         CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossInfo?.targetProjectId),
                         CIKeywordsService.CIKeywordsRuntimeNamedValue()
                     )
                 )
-            }
-            inputMap.forEach { (name, value) ->
-                atomParams[name] = EnvReplacementParser.parse(
-                    value = value,
-                    contextMap = variables,
-                    dialect = dialect,
-                    contextPair = customReplacement,
-                    functions = SpecialFunctions.functions,
-                    output = SpecialFunctions.output
-                ).parseCredentialValue(null, acrossInfo?.targetProjectId)
+                inputMap.forEach { (name, value) ->
+                    logger.info("parseInputParams|name=$name|value=$value")
+                    atomParams[name] = EnvReplacementParser.parse(
+                        value = JsonUtil.toJson(value),
+                        contextMap = variables,
+                        onlyExpression = true,
+                        contextPair = customReplacement,
+                        functions = SpecialFunctions.functions,
+                        output = SpecialFunctions.output
+                    ).parseCredentialValue(null, acrossInfo?.targetProjectId)
+                }
+            } else {
+                inputMap.forEach { (name, value) ->
+                    // 修复插件input环境变量替换问题 #5682
+                    atomParams[name] = JsonUtil.toJson(
+                        ObjectReplaceEnvVarUtil.replaceEnvVar(value, variables)
+                    ).parseCredentialValue(null, acrossInfo?.targetProjectId)
+                }
             }
         } catch (exception: VariableNotFoundException) {
             val errMessage = "Variable ${exception.variableKey} not found"

@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
-import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
@@ -42,6 +42,7 @@ import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.util.regex.Pattern
 import java.util.stream.Collectors
 
 @Suppress("NestedBlockDepth", "TooManyFunctions")
@@ -64,6 +65,10 @@ abstract class ITask {
     /*  */
     private lateinit var dialect: IPipelineDialect
 
+    companion object {
+        private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9.]*"
+    }
+
     fun run(
         buildTask: BuildTask,
         buildVariables: BuildVariables,
@@ -73,9 +78,7 @@ abstract class ITask {
             .filter { it.readOnly == true }
             .map { it.key }
             .collect(Collectors.toList())
-        dialect = buildVariables.variables[PIPELINE_DIALECT]?.let {
-            PipelineDialectType.valueOf(it).dialect
-        } ?: PipelineDialectType.CLASSIC.dialect
+        dialect = PipelineDialectUtil.getPipelineDialect(buildVariables.variables[PIPELINE_DIALECT])
         execute(buildTask, buildVariables, workspace)
     }
 
@@ -106,6 +109,7 @@ abstract class ITask {
     protected fun addEnv(env: Map<String, String>) {
         var errReadOnlyFlag = false
         var errLongValueFlag = false
+        var errChineseVarName = false
         env.forEach { (key, value) ->
             if (this::constVar.isInitialized && key in constVar) {
                 LoggerService.addErrorLine("Variable $key is read-only and cannot be modified.")
@@ -114,6 +118,14 @@ abstract class ITask {
             if (value.length >= PIPELINE_VARIABLES_STRING_LENGTH_MAX) {
                 LoggerService.addErrorLine("Variable $key value exceeds 4000 length limit.")
                 errLongValueFlag = true
+            }
+            if (!Pattern.matches(ENGLISH_NAME_PATTERN, key)) {
+                LoggerService.addErrorLine(
+                    "Variable $key name is illegal,Variable names can only use letters, " +
+                            "numbers and underscores, " +
+                            "and the first character cannot start with a number"
+                )
+                errChineseVarName = true
             }
         }
         if (errReadOnlyFlag) {
@@ -130,6 +142,15 @@ abstract class ITask {
                     errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
                             "errorCode: ${ErrorCode.USER_INPUT_INVAILD}," +
                             " message: variable value exceeds 4000 length limit.",
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_INPUT_INVAILD
+                )
+            }
+            if (errChineseVarName && !dialect.supportChineseVarName()) {
+                throw TaskExecuteException(
+                    errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
+                            "errorCode: ${ErrorCode.USER_INPUT_INVAILD}," +
+                            " message: variable name is illegal.",
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD
                 )

@@ -100,7 +100,6 @@ object ExprReplacementUtil {
             ExpressionParser.fillContextByMap(variables, context, nameValue)
             return Pair(context, nameValue)
         } catch (ignore: Throwable) {
-            println("EnvReplacementParser context invalid: $variables")
             logger.warn("EnvReplacementParser context invalid: $variables", ignore)
             return null
         }

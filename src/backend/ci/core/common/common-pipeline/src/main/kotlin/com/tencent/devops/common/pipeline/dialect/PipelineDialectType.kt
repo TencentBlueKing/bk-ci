@@ -27,9 +27,6 @@
 
 package com.tencent.devops.common.pipeline.dialect
 
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-
 /**
  * 流水线语法风格
  *
@@ -40,80 +37,4 @@ enum class PipelineDialectType(val dialect: IPipelineDialect) {
 
     // 约束模式
     CONSTRAINED(ConstrainedPipelineDialect());
-
-    companion object {
-        fun getPipelineDialectType(
-            inheritedDialect: Boolean?,
-            projectDialect: String?,
-            pipelineDialect: String?
-        ): PipelineDialectType {
-            return when {
-                // inheritedDialect为空和true都继承项目配置
-                inheritedDialect != false && projectDialect != null ->
-                    PipelineDialectType.valueOf(projectDialect)
-
-                inheritedDialect == false && pipelineDialect != null ->
-                    PipelineDialectType.valueOf(pipelineDialect)
-
-                else ->
-                    CLASSIC
-            }
-        }
-
-        fun getPipelineDialectType(asCodeSettings: PipelineAsCodeSettings?): PipelineDialectType {
-            if (asCodeSettings == null) return CLASSIC
-            return with(asCodeSettings) {
-                getPipelineDialectType(
-                    inheritedDialect = inheritedDialect,
-                    projectDialect = projectDialect,
-                    pipelineDialect = pipelineDialect
-                )
-            }
-        }
-
-        fun getPipelineDialectType(
-            channelCode: ChannelCode,
-            asCodeSettings: PipelineAsCodeSettings?
-        ): PipelineDialectType {
-            return when {
-                asCodeSettings == null -> CLASSIC
-                // stream并且开启pac需要使用制约模式
-                channelCode == ChannelCode.GIT && asCodeSettings.enable ->
-                    CONSTRAINED
-
-                else -> {
-                    with(asCodeSettings) {
-                        getPipelineDialectType(
-                            inheritedDialect = inheritedDialect,
-                            projectDialect = projectDialect,
-                            pipelineDialect = pipelineDialect
-                        )
-                    }
-                }
-            }
-        }
-
-        fun getPipelineDialect(
-            inheritedDialect: Boolean?,
-            projectDialect: String?,
-            pipelineDialect: String?
-        ): IPipelineDialect {
-            return getPipelineDialectType(
-                inheritedDialect = inheritedDialect,
-                projectDialect = projectDialect,
-                pipelineDialect = pipelineDialect
-            ).dialect
-        }
-
-        fun getPipelineDialect(asCodeSettings: PipelineAsCodeSettings?): IPipelineDialect {
-            if (asCodeSettings == null) return CLASSIC.dialect
-            return with(asCodeSettings) {
-                getPipelineDialect(
-                    inheritedDialect = inheritedDialect,
-                    projectDialect = projectDialect,
-                    pipelineDialect = pipelineDialect
-                )
-            }
-        }
-    }
 }
