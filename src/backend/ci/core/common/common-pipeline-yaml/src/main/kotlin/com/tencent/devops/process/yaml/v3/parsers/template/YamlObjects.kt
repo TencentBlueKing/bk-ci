@@ -137,10 +137,6 @@ object YamlObjects {
             payload = propsMap["payload"]
         )
 
-        if (!po.options.isNullOrEmpty() && po.payload != null) {
-            throw YamlFormatException("$fromPath variable format error: options and payload cannot coexist")
-        }
-
         return po
     }
 
