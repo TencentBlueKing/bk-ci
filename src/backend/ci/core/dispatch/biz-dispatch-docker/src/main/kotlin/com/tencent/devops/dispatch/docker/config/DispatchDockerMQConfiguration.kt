@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.docker.config
 
 import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.dispatch.docker.listener.DockerVMListener
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownDemoteEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -35,90 +36,80 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupDemoteEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
-import org.springframework.messaging.Message
-import java.util.function.Consumer
 
 @Configuration
 class DispatchDockerMQConfiguration @Autowired constructor() {
     @EventConsumer
     fun startDockerConsumer(
         @Autowired dockerVMListener: DockerVMListener
-    ): Consumer<Message<PipelineAgentStartupEvent>> {
-        return Consumer { event: Message<PipelineAgentStartupEvent> ->
-            dockerVMListener.handleStartup(event.payload)
-        }
+    ) = ScsConsumerBuilder.build<PipelineAgentStartupEvent> {
+        dockerVMListener.handleStartup(it)
     }
 
     @EventConsumer
     fun shutdownDockerConsumer(
         @Autowired dockerVMListener: DockerVMListener
-    ): Consumer<Message<PipelineAgentShutdownEvent>> {
-        return Consumer { event: Message<PipelineAgentShutdownEvent> ->
-            dockerVMListener.handleShutdownMessage(event.payload)
-        }
+    ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> {
+        dockerVMListener.handleShutdownMessage(it)
     }
 
     @EventConsumer
     fun startDemoteDockerConsumer(
         @Autowired dockerVMListener: DockerVMListener
-    ): Consumer<Message<PipelineAgentStartupDemoteEvent>> {
-        return Consumer { event: Message<PipelineAgentStartupDemoteEvent> ->
-            with(event.payload) {
-                dockerVMListener.handleStartup(
-                    PipelineAgentStartupEvent(
-                        source = source,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        userId = userId,
-                        pipelineName = pipelineName,
-                        buildId = buildId,
-                        buildNo = buildNo,
-                        vmSeqId = vmSeqId,
-                        taskName = taskName,
-                        os = os,
-                        vmNames = vmNames,
-                        channelCode = channelCode,
-                        dispatchType = dispatchType,
-                        containerId = containerId,
-                        containerHashId = containerHashId,
-                        queueTimeoutMinutes = queueTimeoutMinutes,
-                        atoms = atoms,
-                        executeCount = executeCount,
-                        customBuildEnv = customBuildEnv,
-                        dockerRoutingType = dockerRoutingType,
-                        routeKeySuffix = routeKeySuffix,
-                        actionType = actionType,
-                        delayMills = delayMills
-                    )
+    ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
+        with(it) {
+            dockerVMListener.handleStartup(
+                PipelineAgentStartupEvent(
+                    source = source,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    pipelineName = pipelineName,
+                    buildId = buildId,
+                    buildNo = buildNo,
+                    vmSeqId = vmSeqId,
+                    taskName = taskName,
+                    os = os,
+                    vmNames = vmNames,
+                    channelCode = channelCode,
+                    dispatchType = dispatchType,
+                    containerId = containerId,
+                    containerHashId = containerHashId,
+                    queueTimeoutMinutes = queueTimeoutMinutes,
+                    atoms = atoms,
+                    executeCount = executeCount,
+                    customBuildEnv = customBuildEnv,
+                    dockerRoutingType = dockerRoutingType,
+                    routeKeySuffix = routeKeySuffix,
+                    actionType = actionType,
+                    delayMills = delayMills
                 )
-            }
+            )
         }
     }
 
     @EventConsumer
     fun shutdownDemoteDockerConsumer(
         @Autowired dockerVMListener: DockerVMListener
-    ): Consumer<Message<PipelineAgentShutdownDemoteEvent>> {
-        return Consumer { event: Message<PipelineAgentShutdownDemoteEvent> ->
-            with(event.payload) {
-                dockerVMListener.handleShutdownMessage(
-                    PipelineAgentShutdownEvent(
-                        source = source,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        userId = userId,
-                        buildId = buildId,
-                        vmSeqId = vmSeqId,
-                        buildResult = buildResult,
-                        executeCount = executeCount,
-                        dockerRoutingType = dockerRoutingType,
-                        dispatchType = dispatchType,
-                        routeKeySuffix = routeKeySuffix,
-                        actionType = actionType,
-                        delayMills = delayMills
-                    )
+    ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
+        with(it) {
+            dockerVMListener.handleShutdownMessage(
+                PipelineAgentShutdownEvent(
+                    source = source,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    buildResult = buildResult,
+                    executeCount = executeCount,
+                    dockerRoutingType = dockerRoutingType,
+                    dispatchType = dispatchType,
+                    routeKeySuffix = routeKeySuffix,
+                    actionType = actionType,
+                    delayMills = delayMills
                 )
-            }
+            )
         }
     }
 }
