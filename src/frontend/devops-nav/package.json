@@ -5,7 +5,7 @@
   "private": true,
   "main": "index.ts",
   "scripts": {
-    "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
+    "dev": "cross-env NODE_ENV=dev nx exec -- webpack-dev-server --mode development",
     "dll": "webpack --config webpack.dll.config.js --mode production",
     "public": "npm run dll && webpack --mode production",
     "public:dev": "cross-env NODE_ENV=dev  npm run public --",
@@ -92,6 +92,7 @@
     "targets": {
       "inputs": [
         "{workspaceRoot}/locale/console/*.json",
+        "{workspaceRoot}/locale/index.js",
         "{projectRoot}"
       ],
       "public:master": {
