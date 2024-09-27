@@ -4,7 +4,7 @@
   "description": "devops-stream",
   "author": "Blueking",
   "scripts": {
-    "dev": "better-npm-run dev",
+    "dev": "nx exec -- better-npm-run dev",
     "clean": "rimraf dist",
     "build": "better-npm-run build",
     "build:analyzer": "better-npm-run build:analyzer",

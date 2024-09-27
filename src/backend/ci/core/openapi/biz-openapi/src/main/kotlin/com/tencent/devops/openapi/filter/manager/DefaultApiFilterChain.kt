@@ -23,21 +23,29 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.pojo.enum
+package com.tencent.devops.openapi.filter.manager
 
-enum class Oauth2GrantType(val grantType: String) {
-    // 授权码模式
-    AUTHORIZATION_CODE("authorization_code"),
+import com.tencent.devops.openapi.filter.manager.impl.AccessTokenFilter
+import com.tencent.devops.openapi.filter.manager.impl.ApiPathFilter
+import com.tencent.devops.openapi.filter.manager.impl.BlueKingApiFilter
+import com.tencent.devops.openapi.filter.manager.impl.NoPermissionFilter
+import javax.ws.rs.container.ContainerRequestContext
 
-    // 客户端模式
-    CLIENT_CREDENTIALS("client_credentials"),
+class DefaultApiFilterChain(
+    private val managerCache: ApiFilterManagerCache
+) : ApiFilterManagerChain {
 
-    // 密码模式
-    PASS_WORD("pass_word"),
-
-    // 刷新token模式
-    REFRESH_TOKEN("refresh_token");
+    override fun doFilterCheck(requestContext: ContainerRequestContext) {
+        doFilterCheck(
+            requestContext = FilterContext(requestContext),
+            chain = listOf(
+                managerCache.getFilter(ApiPathFilter::class.java),
+                managerCache.getFilter(AccessTokenFilter::class.java),
+                managerCache.getFilter(NoPermissionFilter::class.java),
+                managerCache.getFilter(BlueKingApiFilter::class.java)
+            ).iterator()
+        )
+    }
 }
