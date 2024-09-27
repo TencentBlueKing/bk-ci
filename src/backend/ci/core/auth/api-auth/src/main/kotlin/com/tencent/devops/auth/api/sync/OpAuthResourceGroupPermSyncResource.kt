@@ -46,7 +46,7 @@ import javax.ws.rs.core.MediaType
 interface OpAuthResourceGroupPermSyncResource {
     @POST
     @Path("/syncProject")
-    @Operation(summary = "按条件同步组和成员")
+    @Operation(summary = "同步项目组权限")
     fun syncProject(
         @Parameter(description = "按条件迁移项目实体", required = true)
         projectIds: List<String>
@@ -54,7 +54,7 @@ interface OpAuthResourceGroupPermSyncResource {
 
     @POST
     @Path("{projectId}/{groupId}/syncGroup/")
-    @Operation(summary = "按条件同步组和成员")
+    @Operation(summary = "同步组权限")
     fun syncGroup(
         @Parameter(description = "项目ID", required = true)
         @PathParam(value = "projectId")
@@ -66,7 +66,7 @@ interface OpAuthResourceGroupPermSyncResource {
 
     @POST
     @Path("/syncByCondition")
-    @Operation(summary = "按条件同步组和成员")
+    @Operation(summary = "按条件同步组权限")
     fun syncByCondition(
         @Parameter(description = "按条件迁移项目实体", required = true)
         projectConditionDTO: ProjectConditionDTO

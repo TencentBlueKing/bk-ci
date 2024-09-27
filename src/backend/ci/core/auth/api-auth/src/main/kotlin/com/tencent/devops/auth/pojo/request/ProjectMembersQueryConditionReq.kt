@@ -33,13 +33,11 @@ data class ProjectMembersQueryConditionReq(
 ) {
     // 当查询到权限相关信息时，如组名称，过期时间，操作，资源类型时，走复杂查询逻辑
     fun isComplexQuery(): Boolean {
-        return groupName != null || minExpiredAt != null || maxExpiredAt != null ||
-            relatedResourceType != null || relatedResourceCode != null || action != null
+        return minExpiredAt != null || maxExpiredAt != null || isNeedToQueryIamGroups()
     }
 
     // 是否需要进行查询用户组，当涉及到查询 组名称，组权限相关，需要进行查询
     fun isNeedToQueryIamGroups(): Boolean {
-        return groupName != null || relatedResourceType != null ||
-            relatedResourceCode != null || action != null
+        return groupName != null || relatedResourceType != null || relatedResourceCode != null || action != null
     }
 }
