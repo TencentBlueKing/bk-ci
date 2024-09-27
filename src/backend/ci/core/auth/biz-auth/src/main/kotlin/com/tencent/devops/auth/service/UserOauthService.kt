@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.service
 
-import com.tencent.devops.auth.pojo.OauthRepository
+import com.tencent.devops.auth.pojo.OauthRelResource
+import com.tencent.devops.auth.pojo.OauthResetUrl
 import com.tencent.devops.auth.pojo.UserOauthInfo
 import com.tencent.devops.auth.pojo.enum.OauthType
 import com.tencent.devops.auth.service.self.OauthService
@@ -35,23 +36,12 @@ class UserOauthService @Autowired constructor(
         oauthType: OauthType,
         page: Int,
         pageSize: Int
-    ): Page<OauthRepository> {
-        val relRepo = getService(oauthType).relRepo(
+    ): Page<OauthRelResource> {
+        return getService(oauthType).relSource(
             userId = userId,
             projectId = projectId,
             page = page,
             pageSize = pageSize
-        )
-        return Page(
-            page = relRepo.page,
-            count = relRepo.count,
-            pageSize = relRepo.pageSize,
-            records = relRepo.records.map {
-                OauthRepository(
-                    aliasName = it.aliasName,
-                    url = it.url
-                )
-            }
         )
     }
 
@@ -66,8 +56,8 @@ class UserOauthService @Autowired constructor(
         )
     }
 
-    fun reOauth(userId: String, oauthType: OauthType) {
-        getService(oauthType).reOauth(userId)
+    fun reOauth(userId: String, oauthType: OauthType): OauthResetUrl {
+        return getService(oauthType).reOauth(userId)
     }
 
     private fun getService(oauthType: OauthType): OauthService {

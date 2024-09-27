@@ -1,9 +1,9 @@
 package com.tencent.devops.auth.service.self
 
+import com.tencent.devops.auth.pojo.OauthRelResource
+import com.tencent.devops.auth.pojo.OauthResetUrl
 import com.tencent.devops.auth.pojo.UserOauthInfo
-import com.tencent.devops.auth.pojo.enum.OauthType
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.repository.pojo.RepoOauthRefVo
 
 /**
  * 用户OAUTH资源接口
@@ -15,9 +15,9 @@ interface OauthService {
     fun get(userId: String, projectId: String): UserOauthInfo?
 
     /**
-     * 授权代码库列表
+     * 授权信息关联的资源列表
      */
-    fun relRepo(userId: String, projectId: String, page: Int, pageSize: Int): Page<RepoOauthRefVo>
+    fun relSource(userId: String, projectId: String, page: Int, pageSize: Int): Page<OauthRelResource>
 
     /**
      * 删除授权
@@ -27,5 +27,5 @@ interface OauthService {
     /**
      * 重置授权
      */
-    fun reOauth(userId: String)
+    fun reOauth(userId: String): OauthResetUrl
 }

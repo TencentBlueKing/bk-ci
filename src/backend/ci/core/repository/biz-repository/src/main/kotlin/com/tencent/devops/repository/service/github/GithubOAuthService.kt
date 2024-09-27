@@ -207,6 +207,10 @@ class GithubOAuthService @Autowired constructor(
         }
     }
 
+    fun deleteToken(userId: String) {
+        githubTokenService.deleteAccessToken(userId)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(GithubOAuthService::class.java)
         private const val RANDOM_ALPHA_NUM = 8

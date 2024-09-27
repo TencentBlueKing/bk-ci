@@ -29,6 +29,7 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -38,6 +39,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
@@ -123,4 +125,16 @@ interface ServiceOauthResource {
         @QueryParam("refreshToken")
         refreshToken: Boolean? = false
     ): Result<AuthorizeResult>
+
+    @Operation(summary = "移除代码库OAUTH授权")
+    @DELETE
+    @Path("/users/{userId}")
+    fun deleteOauth(
+        @Parameter(description = "用户ID", required = true)
+        @PathParam("userId")
+        userId: String,
+        @Parameter(description = "代码库类型", required = true)
+        @QueryParam("scmType")
+        scmType: ScmType
+    ): Result<Boolean>
 }

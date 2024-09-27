@@ -28,7 +28,8 @@
 
 package com.tencent.devops.auth.api.user
 
-import com.tencent.devops.auth.pojo.OauthRepository
+import com.tencent.devops.auth.pojo.OauthRelResource
+import com.tencent.devops.auth.pojo.OauthResetUrl
 import com.tencent.devops.auth.pojo.UserOauthInfo
 import com.tencent.devops.auth.pojo.enum.OauthType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -41,6 +42,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -83,7 +85,7 @@ interface UserOauthResource {
         @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int? = null
-    ): Result<Page<OauthRepository>>
+    ): Result<Page<OauthRelResource>>
 
     @DELETE
     @Path("/{projectId}/delete")
@@ -100,7 +102,7 @@ interface UserOauthResource {
         oauthType: OauthType
     ): Result<Boolean>
 
-    @DELETE
+    @POST
     @Path("/reOauth")
     @Operation(summary = "重置授权")
     fun reOauth(
@@ -110,5 +112,5 @@ interface UserOauthResource {
         @Parameter(description = "授权类型", required = true)
         @QueryParam("oauthType")
         oauthType: OauthType
-    ): Result<Boolean>
+    ): Result<OauthResetUrl>
 }

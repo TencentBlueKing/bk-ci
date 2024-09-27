@@ -1,7 +1,8 @@
 package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.user.UserOauthResource
-import com.tencent.devops.auth.pojo.OauthRepository
+import com.tencent.devops.auth.pojo.OauthRelResource
+import com.tencent.devops.auth.pojo.OauthResetUrl
 import com.tencent.devops.auth.pojo.UserOauthInfo
 import com.tencent.devops.auth.pojo.enum.OauthType
 import com.tencent.devops.auth.service.UserOauthService
@@ -24,7 +25,7 @@ class UserOauthResourceImpl @Autowired constructor(
         oauthType: OauthType,
         page: Int?,
         pageSize: Int?
-    ): Result<Page<OauthRepository>> {
+    ): Result<Page<OauthRelResource>> {
         return Result(
             userOauthService.relRepo(
                 userId = userId,
@@ -45,7 +46,9 @@ class UserOauthResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun reOauth(userId: String, oauthType: OauthType): Result<Boolean> {
-        TODO("Not yet implemented")
+    override fun reOauth(userId: String, oauthType: OauthType): Result<OauthResetUrl> {
+        return Result(
+            userOauthService.reOauth(userId = userId, oauthType = oauthType)
+        )
     }
 }

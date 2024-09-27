@@ -1,29 +1,42 @@
 package com.tencent.devops.auth.service.self
 
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.pojo.OauthRelResource
 import com.tencent.devops.auth.pojo.enum.OauthType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.RepoOauthRefVo
 
 /**
- * 代码库OAUTH授权
+ * 代码库OAUTH授权抽象类
  */
 abstract class AbstractRepoOauthService(
     open val client: Client,
     open val oauthType: OauthType
 ) : OauthService {
-    override fun relRepo(userId: String, projectId: String, page: Int, pageSize: Int): Page<RepoOauthRefVo> {
+    override fun relSource(userId: String, projectId: String, page: Int, pageSize: Int): Page<OauthRelResource> {
         return client.get(ServiceRepositoryResource::class).listOauthRepo(
             projectId = projectId,
             userId = userId,
             scmType = convertOauthType(),
             page = page,
             pageSize = pageSize
-        ).data ?: Page(page = page, pageSize = pageSize, records = listOf(), count = 0)
+        ).data?.let { pageInfo ->
+            Page(
+                records = pageInfo.records.map {
+                    OauthRelResource(
+                        name = it.aliasName,
+                        url = it.url
+                    )
+                },
+                count = pageInfo.count,
+                page = pageInfo.page,
+                pageSize = pageSize
+            )
+        } ?: Page(page = page, pageSize = pageSize, records = listOf(), count = 0)
     }
 
     override fun delete(userId: String, projectId: String) {
@@ -33,7 +46,11 @@ abstract class AbstractRepoOauthService(
                 errorCode = AuthMessageCode.OAUTH_INFO_OCCUPIED_CANNOT_DELETE
             )
         }
-        //TODO: 调用接口删除oauth信息
+        // 调用接口删除oauth信息
+        client.get(ServiceOauthResource::class).deleteOauth(
+            userId = userId,
+            scmType = convertOauthType()
+        )
     }
 
     private fun convertOauthType(): ScmType {

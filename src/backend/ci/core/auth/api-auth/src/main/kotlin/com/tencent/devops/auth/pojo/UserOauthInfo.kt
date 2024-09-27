@@ -12,5 +12,7 @@ data class UserOauthInfo(
     @get:Schema(title = "创建时间")
     val createTime: Long?,
     @get:Schema(title = "授权类型")
-    val type: OauthType
+    val type: OauthType,
+    @get:Schema(title = "授权类型")
+    val expired: Boolean
 )
