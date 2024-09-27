@@ -8,17 +8,18 @@
                 />
                 <span>{{ title }}</span>
             </div>
-            <div
+            <a
                 class="devops-codelib-header-copilot"
-                @click="goCopilot"
+                target="_blank"
+                href="https://git.woa.com/help/menu/solutions/copilot.html"
             >
                 <span>{{ $t("体验工蜂 Copilot") }}</span>
                 <icon
                     name="tiaozhuan"
-                    :size="16"
+                    :size="12"
                     class="score-icon"
                 ></icon>
-            </div>
+            </a>
         </header>
         <main>
             <router-view />
@@ -44,11 +45,7 @@
         methods: {
             ...mapActions('codelib', [
                 'fetchCodeTypeList'
-            ]),
-            goCopilot () {
-                const link = 'https://git.woa.com/help/menu/solutions/copilot.html'
-                window.open(link, '_blank')
-            }
+            ])
         }
     }
 </script>
@@ -88,6 +85,7 @@
                 color: #1592ff;
                 cursor: pointer;
                 span {
+                    font-size: 12px;
                     color: #1592ff;
                     vertical-align: middle;
                 }

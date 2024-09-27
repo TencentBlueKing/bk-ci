@@ -29,7 +29,7 @@
                 <icon
                     v-if="code.tool.copilot"
                     name="tiaozhuan"
-                    :size="16"
+                    :size="12"
                     class="item-link"
                 ></icon>
             </span>
@@ -81,7 +81,16 @@
                 if (VERSION_TYPE !== 'ee') {
                     this.list = [
                         { label: this.$t('store.开发语言：'), value: this.detail.language },
-                        { label: this.$t('store.已托管至：'), value: this.$t('store.工蜂'), link: 'https://git.woa.com/' },
+                        {
+                            label: this.$t('store.已托管至：'),
+                            value: this.$t('store.工蜂'),
+                            tool: {
+                                show: true,
+                                copilot: true,
+                                label: this.$t('store.体验工蜂 Copilot'),
+                                click: () => this.goToLink('https://git.woa.com/help/menu/solutions/copilot.html')
+                            }
+                        },
                         { label: this.$t('store.代码库：'), value: this.detail.codeSrc, tool: { show: true, label: this.$t('store.复制'), click: () => copyString(this.detail.codeSrc) } },
                         {
                             label: this.$t('store.授权人：'),
@@ -106,13 +115,12 @@
                         {
                             label: this.$t('store.已托管至：'),
                             value: this.$t('store.工蜂'),
-                            tool:
-                                {
-                                    show: true,
-                                    copilot: true,
-                                    label: this.$t('store.体验工蜂 Copilot'),
-                                    click: () => this.goToLink('https://git.woa.com/help/menu/solutions/copilot.html')
-                                }
+                            tool: {
+                                show: true,
+                                copilot: true,
+                                label: this.$t('store.体验工蜂 Copilot'),
+                                click: () => this.goToLink('https://git.woa.com/help/menu/solutions/copilot.html')
+                            }
                         },
                         { label: this.$t('store.代码库：'), value: this.detail.codeSrc, tool: { show: true, label: this.$t('store.复制'), click: () => copyString(this.detail.codeSrc) } },
                         {
@@ -180,7 +188,10 @@
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                margin-right: 5px;
+                margin-right: 15px;
+            }
+            .item-tool {
+                font-size: 12px;
             }
             .item-link {
                 color: #1592ff;
