@@ -98,7 +98,7 @@
                     :disabled="!editable"
                     name="credential"
                     :value="buildImageCredential"
-                    :handle-change="changeDockerInfo"
+                    :handle-change="changeTicket"
                 ></select-input>
             </form-field>
 
@@ -315,6 +315,21 @@
                         dockerInfo: {
                             ...this.container.dispatchType.dockerInfo,
                             [name]: value
+                        }
+                    })
+                )
+            },
+
+            changeTicket (name, value) {
+                this.handleContainerChange(
+                    'dispatchType',
+                    Object.assign({
+                        ...this.container.dispatchType,
+                        dockerInfo: {
+                            ...this.container.dispatchType.dockerInfo,
+                            [name]: {
+                                jobId: value
+                            }
                         }
                     })
                 )

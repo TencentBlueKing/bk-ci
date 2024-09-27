@@ -49,6 +49,7 @@
         },
         created () {
             this.parameters = this.value
+            if (!this.parameters.length) this.plusParam()
         },
         methods: {
             handleChangeInput (val, index) {
