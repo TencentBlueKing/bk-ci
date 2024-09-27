@@ -330,7 +330,7 @@ class RbacPermissionResourceGroupPermissionService(
                 relationId = iamGroupId.toString()
             ) ?: return true
             val groupPermissionDetails = getGroupPermissionDetailBySystem(systemId, iamGroupId)
-            logger.debug("sync group permissions: {}|{}|{}", projectCode, iamGroupId, groupPermissionDetails)
+            logger.info("sync group permissions: {}|{}|{}", projectCode, iamGroupId, groupPermissionDetails)
 
             val latestResourceGroupPermissions = groupPermissionDetails.flatMap { permissionDetail ->
                 permissionDetail.relatedResourceInfos.flatMap { relatedResourceInfo ->
