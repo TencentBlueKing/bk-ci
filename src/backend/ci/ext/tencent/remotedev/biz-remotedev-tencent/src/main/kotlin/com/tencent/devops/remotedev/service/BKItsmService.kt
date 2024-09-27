@@ -20,16 +20,13 @@ class BKItsmService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val bkConfig: BkConfig
 ) {
-
-    fun createTicket(
+    fun createLinkTicket(
         projectId: String,
         userId: String,
         tData: Map<Long, Pair<String, Boolean>>,
         index: Int?
     ): String {
-        val url = "${bkConfig.itsmHost}/v2/itsm/create_ticket"
-        val body = BKItsmCreateTicketReq(
-            serviceId = bkConfig.tgitLinkServiceId!!,
+        return createTicket(
             creator = userId,
             fields = listOf(
                 mapOf(
@@ -56,32 +53,76 @@ class BKItsmService @Autowired constructor(
                     "key" to "tgit_ids_no_url",
                     "value" to tData.map { it.key.toString() }.toSet().joinToString(";")
                 )
-            )
+            ),
+            serviceId = bkConfig.tgitLinkServiceId!!,
+            errorParam1 = projectId
+        )
+    }
+
+    fun createRecordView(
+        projectId: String,
+        userId: String,
+        workspaceName: String
+    ): String {
+        return createTicket(
+            creator = userId,
+            fields = listOf(
+                mapOf(
+                    "key" to "bkci_project_id",
+                    "value" to projectId
+                ),
+                mapOf(
+                    "key" to "title",
+                    "value" to "申请云桌面录像查看权限|$userId|$workspaceName"
+                ),
+                mapOf(
+                    "key" to "userId",
+                    "value" to userId
+                ),
+                mapOf(
+                    "key" to "workspaceName",
+                    "value" to workspaceName
+                )
+            ),
+            serviceId = bkConfig.recordViewServiceId!!,
+            errorParam1 = "$projectId|$workspaceName"
+        )
+    }
+
+    private fun createTicket(
+        creator: String,
+        fields: List<Map<String, String>>,
+        serviceId: Int,
+        errorParam1: String
+    ): String {
+        val url = "${bkConfig.itsmHost}/v2/itsm/create_ticket"
+        val body = BKItsmCreateTicketReq(
+            serviceId = serviceId,
+            creator = creator,
+            fields = fields
         )
         val request = Request.Builder()
             .url(url)
             .addHeader("x-bkapi-authorization", headerStr())
             .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
-
+        logger.info("createTicket|$url|$body")
         val resp = try {
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body!!.string()
-                logger.debug("createTicket｜{}|{}|{}|{}", url, body, response.code, data)
                 if (!response.isSuccessful) {
-                    logger.error("createTicket｜$url|$body|${response.code}|$data")
+                    logger.error("createTicket|$url|$body|${response.code}|$data")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
-                        params = arrayOf(projectId, userId)
+                        params = arrayOf(errorParam1, creator)
                     )
                 }
-
                 val resp = objectMapper.readValue<BKItsmCreateTicketResp<BKItsmCreateTicketRespData>>(data)
                 if (!resp.result) {
-                    logger.error("createTicket｜$url|$body|${response.code}|$data")
+                    logger.error("createTicket|$url|$body|${response.code}|$data")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
-                        params = arrayOf(projectId, userId)
+                        params = arrayOf(errorParam1, creator)
                     )
                 }
                 resp
@@ -92,7 +133,7 @@ class BKItsmService @Autowired constructor(
             logger.error("createTicket request error", e)
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
-                params = arrayOf(projectId, userId)
+                params = arrayOf(errorParam1, creator)
             )
         }
 
@@ -104,6 +145,7 @@ class BKItsmService @Autowired constructor(
             mapOf("bk_app_code" to bkConfig.appCode, "bk_app_secret" to bkConfig.appSecret)
         ).replace("\\s".toRegex(), "")
     }
+
     companion object {
         private val logger = LoggerFactory.getLogger(BKItsmService::class.java)
     }

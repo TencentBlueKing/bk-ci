@@ -1160,6 +1160,9 @@
                 }
             }
         }
+        .image-tag {
+            width: 50%;
+        }
     }
 
     .container-resource-name {

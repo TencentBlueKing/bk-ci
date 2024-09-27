@@ -42,7 +42,7 @@ class AuthOauth2ClientDetailsDao {
                 clientDetailsDTO.clientName,
                 clientDetailsDTO.scope,
                 clientDetailsDTO.icon,
-                clientDetailsDTO.authorizedGrantTypes,
+                clientDetailsDTO.authorizedGrantTypes.map { it.grantType }.joinToString { "," },
                 clientDetailsDTO.webServerRedirectUri,
                 clientDetailsDTO.accessTokenValidity,
                 clientDetailsDTO.refreshTokenValidity,
