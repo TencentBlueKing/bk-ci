@@ -157,10 +157,9 @@ open class MarketAtomTask : ITask() {
         val workspacePath = workspace.absolutePath
         // 输出参数的用户命名空间：防止重名窘况
         val namespace: String? = map["namespace"] as String?
-        val asCodeSettings = buildVariables.pipelineAsCodeSettings
         logger.info(
             "${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
-                    "|workspace=$workspacePath|asCodeSettings=$asCodeSettings"
+                    "|workspace=$workspacePath"
         )
 
         // 获取插件基本信息
@@ -250,7 +249,7 @@ open class MarketAtomTask : ITask() {
 
         buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }
 
-        val inputVariables = if (asCodeSettings?.enable == true) {
+        val inputVariables = if (dialect.supportUseExpression()) {
             // 如果开启PAC,插件入参增加旧变量，防止开启PAC后,插件获取参数失败
             PipelineVarUtil.mixOldVarAndNewVar(variables.toMutableMap())
         } else {

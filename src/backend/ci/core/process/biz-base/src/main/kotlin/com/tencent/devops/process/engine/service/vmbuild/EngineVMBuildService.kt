@@ -50,7 +50,6 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -703,9 +702,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         expiredInSecond = transMinuteTimeoutToSec(task.additionalOptions?.timeout?.toInt())
                     )
                 }
-                val dialect = buildVariable[PIPELINE_DIALECT]?.let {
-                    PipelineDialectType.valueOf(it).dialect
-                } ?: PipelineDialectType.CLASSIC.dialect
+                val dialect = PipelineDialectUtil.getPipelineDialect(buildVariable[PIPELINE_DIALECT])
                 BuildTask(
                     buildId = buildId,
                     vmSeqId = vmSeqId,

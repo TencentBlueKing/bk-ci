@@ -257,8 +257,9 @@ class InitializeMatrixGroupStageCmd(
                         if (!it.key.isNullOrBlank()) customBuildEnv[it.key!!] = it.value ?: ""
                     }
                     val allContext = customBuildEnv.plus(contextCase)
-                    val contextPair = EnvReplacementParser.getCustomExecutionContextByMap(allContext)
-
+                    val contextPair = if (dialect.supportUseExpression()) {
+                        EnvReplacementParser.getCustomExecutionContextByMap(allContext)
+                    } else null
                     // 对自定义构建环境的做特殊解析
                     // customDispatchType决定customBaseOS是否计算，请勿填充默认值
                     val parsedInfo = matrixOption.customDispatchInfo?.let { self ->
