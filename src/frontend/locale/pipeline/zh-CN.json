@@ -1025,7 +1025,13 @@
     "timerTriggerCodelibTips": "- Git 仓库，分支非必填，缺省时为默认分支\n- SVN 仓库，分支必填，为仓库根路径下的一级子目录",
     "timerTriggerBranchTips": "若多个分支均有变更，满足条件时每个分支将触发一次",
     "filePathTips": "请填写自定义仓库目录，如/a",
-    "fileNameTips": "文件名，留空则自动读取"
+    "fileNameTips": "文件名，留空则自动读取",
+    "enableDocker": "启用 Docker 运行构建任务",
+    "imagePullPolicy": "镜像拉取策略",
+    "alwaysPull": "每次运行时拉取",
+    "ifNotPresent": "当本地不存在时才拉取",
+    "enableDockerTips": "使用此功能时，请确保构建机已经安装Docker运行环境，且第三方构建机Agent的启动用户拥有Docker的操作权限",
+    "enabledPrivileged": "是否开启特权模式"
   },
   "storeMap": {
     "textarea": "文本框",

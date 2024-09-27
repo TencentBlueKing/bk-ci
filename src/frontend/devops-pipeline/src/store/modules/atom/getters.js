@@ -363,7 +363,7 @@ export default {
         return container && container.dispatchType && typeof container.dispatchType.buildType === 'string' && container.dispatchType.buildType === 'PUBLIC_BCS'
     },
     isThirdDockerContainer: state => container => {
-        return container?.dispatchType?.buildType?.indexOf('THIRD_PARTY_') > -1 && container?.dispatchType?.dockerInfo
+        return container?.dispatchType?.buildType?.indexOf('THIRD_PARTY_') > -1 && container?.dispatchType?.dockerInfo && Object.keys(container?.dispatchType?.dockerInfo).length
     },
     checkShowDebugDockerBtn: (state, getters) => (container, routeName, execDetail) => {
         const isDocker = getters.isDockerBuildResource(container)
