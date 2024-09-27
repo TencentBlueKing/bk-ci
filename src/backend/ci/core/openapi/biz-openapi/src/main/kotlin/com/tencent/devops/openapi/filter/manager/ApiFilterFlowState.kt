@@ -23,21 +23,12 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.pojo.enum
+package com.tencent.devops.openapi.filter.manager
 
-enum class Oauth2GrantType(val grantType: String) {
-    // 授权码模式
-    AUTHORIZATION_CODE("authorization_code"),
-
-    // 客户端模式
-    CLIENT_CREDENTIALS("client_credentials"),
-
-    // 密码模式
-    PASS_WORD("pass_word"),
-
-    // 刷新token模式
-    REFRESH_TOKEN("refresh_token");
+enum class ApiFilterFlowState {
+    CONTINUE, // 正常会继续下一指令
+    AUTHORIZED, // 已授权
+    BREAK; // 提前结束指令，会中断Command链路
 }

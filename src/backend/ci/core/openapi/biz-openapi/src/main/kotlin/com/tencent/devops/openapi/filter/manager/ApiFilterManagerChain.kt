@@ -23,21 +23,45 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.pojo.enum
+package com.tencent.devops.openapi.filter.manager
 
-enum class Oauth2GrantType(val grantType: String) {
-    // 授权码模式
-    AUTHORIZATION_CODE("authorization_code"),
+import javax.ws.rs.container.ContainerRequestContext
+import javax.ws.rs.core.Response
 
-    // 客户端模式
-    CLIENT_CREDENTIALS("client_credentials"),
+interface ApiFilterManagerChain {
 
-    // 密码模式
-    PASS_WORD("pass_word"),
+    fun doFilterCheck(
+        requestContext: FilterContext,
+        chain: Iterator<ApiFilterManager>
+    ) {
+        if (chain.hasNext()) {
+            val next = chain.next()
+            if (next.canExecute(requestContext)) {
+                requestContext.setFlowState(next.verify(requestContext))
+            }
+            if (requestContext.flowState == ApiFilterFlowState.BREAK) return
+            doFilterCheck(requestContext, chain)
+            return
+        }
 
-    // 刷新token模式
-    REFRESH_TOKEN("refresh_token");
+        // 如果需要检查权限，那必须返回AUTHORIZED才表示已授权成功
+        if (requestContext.needCheckPermissions && requestContext.flowState != ApiFilterFlowState.AUTHORIZED) {
+            requestContext.requestContext.abortWith(
+                Response.status(Response.Status.FORBIDDEN)
+                    .entity("You do not have permission to access")
+                    .build()
+            )
+        }
+    }
+
+    fun FilterContext.setFlowState(state: ApiFilterFlowState) {
+        /*只有CONTINUE状态能够流转*/
+        if (flowState == ApiFilterFlowState.CONTINUE) {
+            flowState = state
+        }
+    }
+
+    fun doFilterCheck(requestContext: ContainerRequestContext)
 }

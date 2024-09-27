@@ -21,16 +21,14 @@ import java.time.LocalDateTime
 class AuthorizationCodeTokenGranterTest : BkCiAbstractTest() {
 
     private val codeService = mockk<Oauth2CodeService>()
-
     private val accessTokenService = mockk<Oauth2AccessTokenService>()
-
     private val refreshTokenService = mockk<Oauth2RefreshTokenService>()
 
     private val self: AuthorizationCodeTokenGranter = spyk(
         AuthorizationCodeTokenGranter(
             codeService = codeService,
-            accessTokenService = accessTokenService,
-            refreshTokenService = refreshTokenService
+            refreshTokenService = refreshTokenService,
+            accessTokenService = accessTokenService
         ),
         recordPrivateCalls = true
     )
