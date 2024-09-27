@@ -137,4 +137,19 @@ interface ServiceOauthResource {
         @QueryParam("scmType")
         scmType: ScmType
     ): Result<Boolean>
+
+    @Operation(summary = "获取重置授权链接")
+    @GET
+    @Path("/reOauthUrl")
+    fun reOauthUrl(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "回调链接(授权完以后的链接地址)", required = true)
+        @QueryParam("redirectUrl")
+        redirectUrl: String,
+        @Parameter(description = "代码库类型", required = true)
+        @QueryParam("scmType")
+        scmType: ScmType
+    ): Result<String>
 }

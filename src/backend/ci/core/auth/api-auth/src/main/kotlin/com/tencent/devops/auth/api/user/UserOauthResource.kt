@@ -111,6 +111,9 @@ interface UserOauthResource {
         userId: String,
         @Parameter(description = "授权类型", required = true)
         @QueryParam("oauthType")
-        oauthType: OauthType
+        oauthType: OauthType,
+        @Parameter(description = "回调链接(授权完以后的链接地址)", required = true)
+        @QueryParam("redirectUrl")
+        redirectUrl: String
     ): Result<OauthResetUrl>
 }

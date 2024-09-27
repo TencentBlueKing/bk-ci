@@ -2,6 +2,7 @@ package com.tencent.devops.auth.service.self
 
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.OauthRelResource
+import com.tencent.devops.auth.pojo.OauthResetUrl
 import com.tencent.devops.auth.pojo.enum.OauthType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -51,6 +52,15 @@ abstract class AbstractRepoOauthService(
             userId = userId,
             scmType = convertOauthType()
         )
+    }
+
+    override fun reOauth(userId: String, redirectUrl: String): OauthResetUrl {
+        val reOauthUrl = client.get(ServiceOauthResource::class).reOauthUrl(
+            userId = userId,
+            scmType = convertOauthType(),
+            redirectUrl = redirectUrl
+        ).data ?: ""
+        return OauthResetUrl(reOauthUrl)
     }
 
     private fun convertOauthType(): ScmType {

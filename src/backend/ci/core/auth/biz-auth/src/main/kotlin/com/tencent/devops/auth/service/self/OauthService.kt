@@ -27,5 +27,5 @@ interface OauthService {
     /**
      * 重置授权
      */
-    fun reOauth(userId: String): OauthResetUrl
+    fun reOauth(userId: String, redirectUrl: String): OauthResetUrl
 }

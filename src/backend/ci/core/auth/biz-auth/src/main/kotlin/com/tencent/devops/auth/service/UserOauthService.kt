@@ -56,8 +56,15 @@ class UserOauthService @Autowired constructor(
         )
     }
 
-    fun reOauth(userId: String, oauthType: OauthType): OauthResetUrl {
-        return getService(oauthType).reOauth(userId)
+    fun reOauth(
+        userId: String,
+        oauthType: OauthType,
+        redirectUrl: String
+    ): OauthResetUrl {
+        return getService(oauthType).reOauth(
+            userId = userId,
+            redirectUrl = redirectUrl
+        )
     }
 
     private fun getService(oauthType: OauthType): OauthService {

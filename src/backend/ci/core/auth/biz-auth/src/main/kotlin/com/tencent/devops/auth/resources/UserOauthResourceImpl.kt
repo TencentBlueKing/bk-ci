@@ -16,7 +16,12 @@ class UserOauthResourceImpl @Autowired constructor(
     val userOauthService: UserOauthService
 ) : UserOauthResource {
     override fun list(userId: String, projectId: String): Result<List<UserOauthInfo>> {
-        return Result(userOauthService.list(userId = userId, projectId = projectId))
+        return Result(
+            userOauthService.list(
+                userId = userId,
+                projectId = projectId
+            )
+        )
     }
 
     override fun relRepo(
@@ -42,13 +47,25 @@ class UserOauthResourceImpl @Autowired constructor(
         projectId: String,
         oauthType: OauthType
     ): Result<Boolean> {
-        userOauthService.delete(userId = userId,projectId = projectId, oauthType = oauthType)
+        userOauthService.delete(
+            userId = userId,
+            projectId = projectId,
+            oauthType = oauthType
+        )
         return Result(true)
     }
 
-    override fun reOauth(userId: String, oauthType: OauthType): Result<OauthResetUrl> {
+    override fun reOauth(
+        userId: String,
+        oauthType: OauthType,
+        redirectUrl: String
+    ): Result<OauthResetUrl> {
         return Result(
-            userOauthService.reOauth(userId = userId, oauthType = oauthType)
+            userOauthService.reOauth(
+                userId = userId,
+                oauthType = oauthType,
+                redirectUrl = redirectUrl
+            )
         )
     }
 }

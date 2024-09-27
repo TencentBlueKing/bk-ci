@@ -35,7 +35,6 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.repository.pojo.oauth.RepositoryOauthInfo
 import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
@@ -111,6 +110,33 @@ class ServiceOauthResourceImpl @Autowired constructor(
             }
         }
         return Result(true)
+    }
+
+    override fun reOauthUrl(userId: String, redirectUrl: String, scmType: ScmType): Result<String> {
+        val url = when (scmType) {
+            ScmType.CODE_GIT -> {
+                gitOauthService.getOauthUrl(
+                    userId = userId,
+                    redirectUrl = redirectUrl
+                )
+            }
+
+            ScmType.GITHUB -> {
+                githubOAuthService.getGithubOauth(
+                    userId = userId,
+                    projectId = "",
+                    redirectUrlTypeEnum = RedirectUrlTypeEnum.SPEC,
+                    specRedirectUrl = redirectUrl,
+                    repoHashId = null
+                ).redirectUrl
+            }
+
+            else -> {
+                logger.warn("cannot reset oauth, not support scm type $scmType")
+                ""
+            }
+        }
+        return Result(url)
     }
 
     companion object {
