@@ -194,7 +194,8 @@ class GitProxyTGitService @Autowired constructor(
                     pageSize = pageSize,
                     search = null,
                     minAccessLevel = GitAccessLevelEnum.MASTER,
-                    type = type
+                    type = type,
+                    throwE = false
                 )
             } else {
                 emptyList()
@@ -385,7 +386,8 @@ class GitProxyTGitService @Autowired constructor(
                     pageSize = pageSize,
                     search = null,
                     minAccessLevel = GitAccessLevelEnum.MASTER,
-                    type = type
+                    type = type,
+                    throwE = false
                 )
 
                 // 过滤项目信息
@@ -896,9 +898,25 @@ class GitProxyTGitService @Autowired constructor(
     /**
      * 检查关联的TGit仓库的管理员的权限是否过期
      */
-    @Scheduled(cron = "0 50 9 * * ?")
+    @Scheduled(cron = "0 50 3 * * ?")
     fun dailyUserAuthDoCheck() {
-        logger.info("dailyUserAuthDoCheck start")
+        val lock = RedisLock(redisOperation, REDIS_DAILY_USER_AUTHDOCHECK, 3600L)
+        try {
+            if (!lock.tryLock()) {
+                logger.info("dailyUserAuthDoCheck, get lock failed, skip")
+                return
+            }
+            logger.info("dailyUserAuthDoCheck start")
+            doDailyUserAuthDoCheck()
+            logger.info("dailyUserAuthDoCheck end")
+        } catch (ignored: Throwable) {
+            logger.error("${OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG}|dailyUserAuthDoCheck failed", ignored)
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    fun doDailyUserAuthDoCheck() {
         val res = projectTGitLinkDao.fetchAll(dslContext)
         val recordData = mutableMapOf<String, MutableList<TProjectTgitIdLinkRecord>>()
         res.forEach {
@@ -918,12 +936,23 @@ class GitProxyTGitService @Autowired constructor(
 
             val token = client.get(ServiceOauthResource::class).tGitGet(userId).data
             if (token == null) {
-                logger.error("dailyUserAuthDoCheck|get $userId token is null")
+                logger.error(
+                    "${OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG}|dailyUserAuthDoCheck|get $userId token is null"
+                )
                 return@forEach
             }
 
-            filterNoAuthTGitProject(gitRecords, token, result, userId, TGitProjectType.GIT)
-            filterNoAuthTGitProject(svnRecords, token, result, userId, TGitProjectType.SVN)
+            try {
+                filterNoAuthTGitProject(gitRecords, token, result, userId, TGitProjectType.GIT)
+                filterNoAuthTGitProject(svnRecords, token, result, userId, TGitProjectType.SVN)
+            } catch (e: Exception) {
+                logger.error(
+                    "${OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG}|filterNoAuthTGitProject|$userId error",
+                    e
+                )
+                result.remove(userId)
+                return@forEach
+            }
         }
 
         val projectCodes = result.values.flatMap { it.keys }.toSet()
@@ -982,7 +1011,8 @@ class GitProxyTGitService @Autowired constructor(
                 pageSize = pageSize,
                 search = null,
                 minAccessLevel = GitAccessLevelEnum.MASTER,
-                type = type
+                type = type,
+                throwE = true
             )
             projects.forEach projects@{ project ->
                 if (project.id in records.keys) {
@@ -1046,5 +1076,8 @@ class GitProxyTGitService @Autowired constructor(
 
         // 获取工蜂ACL配置的锁，同一时间对同一个项目的配置只能有一个读写
         private const val REDIS_REMOTEDEV_PROJECT_UPDATE_TGIT_ACL = "remotedev:project:update:tgit:acl"
+
+        // 工蜂巡检定时任务锁
+        private const val REDIS_DAILY_USER_AUTHDOCHECK = "remotedev:tgit:daily:check:lock"
     }
 }
