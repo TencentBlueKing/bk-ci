@@ -2,7 +2,8 @@ package com.tencent.devops.auth.service.oauth2
 
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_REFRESH_TOKEN_EXPIRED
 import com.tencent.devops.auth.pojo.ClientDetailsInfo
-import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
+import com.tencent.devops.auth.pojo.Oauth2RefreshTokenRequest
+import com.tencent.devops.auth.pojo.enum.Oauth2GrantType
 import com.tencent.devops.auth.service.oauth2.grant.RefreshTokenGranter
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.test.BkCiAbstractTest
@@ -55,9 +56,9 @@ class RefreshTokenGranterTest : BkCiAbstractTest() {
         createTime = LocalDateTime.now()
     }
 
-    private val accessTokenRequest = Oauth2AccessTokenRequest(
+    private val accessTokenRequest = Oauth2RefreshTokenRequest(
         refreshToken = "testRefreshToken",
-        grantType = "testGrantType"
+        grantType = Oauth2GrantType.REFRESH_TOKEN
     )
 
     @Test

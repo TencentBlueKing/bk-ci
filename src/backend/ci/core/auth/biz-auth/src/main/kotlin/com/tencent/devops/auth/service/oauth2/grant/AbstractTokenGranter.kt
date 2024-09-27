@@ -9,31 +9,24 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.utils.AuthUtils
 
-abstract class AbstractTokenGranter(
-    private val grantType: String,
-    private val accessTokenService: Oauth2AccessTokenService
-) : TokenGranter {
+abstract class AbstractTokenGranter<T : Oauth2AccessTokenRequest>(
+    val accessTokenService: Oauth2AccessTokenService
+) : TokenGranter<T> {
     override fun grant(
-        grantType: String,
         clientDetails: ClientDetailsInfo,
-        accessTokenRequest: Oauth2AccessTokenRequest
-    ): Oauth2AccessTokenVo? {
-        if (this.grantType != grantType) {
-            return null
-        }
+        accessTokenRequest: T
+    ): Oauth2AccessTokenVo {
         val accessTokenDTO = getAccessToken(
             accessTokenRequest = accessTokenRequest,
             clientDetails = clientDetails
         )
         return handleAccessToken(
-            accessTokenRequest = accessTokenRequest,
             accessTokenDTO = accessTokenDTO,
             clientDetails = clientDetails
         )
     }
 
     private fun handleAccessToken(
-        accessTokenRequest: Oauth2AccessTokenRequest,
         accessTokenDTO: Oauth2AccessTokenDTO,
         clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenVo {
@@ -53,7 +46,8 @@ abstract class AbstractTokenGranter(
             accessTokenService.create(
                 clientId = clientId,
                 userName = accessTokenDTO.userName,
-                grantType = grantType,
+                passWord = accessTokenDTO.passWord,
+                grantType = type().grantType,
                 accessToken = newAccessToken,
                 refreshToken = refreshToken,
                 expiredTime = accessTokenExpiredTime,
@@ -72,7 +66,7 @@ abstract class AbstractTokenGranter(
     }
 
     abstract fun getAccessToken(
-        accessTokenRequest: Oauth2AccessTokenRequest,
+        accessTokenRequest: T,
         clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenDTO
 }

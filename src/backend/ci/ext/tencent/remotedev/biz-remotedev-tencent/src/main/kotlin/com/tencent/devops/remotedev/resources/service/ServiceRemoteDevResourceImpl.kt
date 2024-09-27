@@ -1,18 +1,11 @@
 package com.tencent.devops.remotedev.resources.service
 
-import com.tencent.bk.audit.annotations.ActionAuditRecord
-import com.tencent.bk.audit.annotations.AuditAttribute
-import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
@@ -22,9 +15,7 @@ import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.config.async.AsyncExecute
-import com.tencent.devops.remotedev.pojo.DesktopTokenSign
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.OperateCvmDataType
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -46,6 +37,7 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -56,6 +48,7 @@ import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
+import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
@@ -71,11 +64,7 @@ import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import com.tencent.devops.remotedev.utils.RsaUtil
 import java.net.URLDecoder
-import java.util.Base64
-import jakarta.ws.rs.core.Response
-import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
@@ -106,7 +95,7 @@ class ServiceRemoteDevResourceImpl(
     private val stopWorkspaceHandler: StopWorkspaceHandler,
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
     private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
-    private val bkConfig: BkConfig
+    private val workspaceRecordService: WorkspaceRecordService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -598,22 +587,6 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
-    override fun getToken(desktopIP: String, sign: DesktopTokenSign): Result<String> {
-        val ws = workspaceService.getWorkspaceList4WeSec(
-            ip = desktopIP
-        ).firstOrNull() ?: throwTokenFail(desktopIP, "unknown ip", "not find $desktopIP")
-        check(ws, sign, desktopIP)
-        val dToken = permissionService.init1Password(
-            ws.owner ?: throwTokenFail(desktopIP, "unknown owner", "${ws.workspaceName} not has owner"),
-            ws.workspaceName,
-            ws.projectId,
-            600
-        )
-        val rsaPublicKey = kotlin.runCatching { RsaUtil.generatePublicKey(Base64.getDecoder().decode(sign.publicKey)) }
-            .onFailure { throwTokenFail(desktopIP, "wrong publicKey", sign.publicKey) }.getOrThrow()
-        return Result(RsaUtil.rsaEncrypt(dToken, rsaPublicKey))
-    }
-
     override fun modifyWorkspaceProperty(
         userId: String,
         workspaceName: String?,
@@ -628,55 +601,6 @@ class ServiceRemoteDevResourceImpl(
                 workspaceProperty = workspaceProperty
             )
         )
-    }
-
-    @ActionAuditRecord(
-        actionId = ActionId.CGS_TOKEN_GENERATE,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS
-        ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#ws?.projectId")],
-        scopeId = "#ws?.projectId",
-        content = ActionAuditContent.CGS_TOKEN_GENERATE_CONTENT
-    )
-    fun check(
-        ws: WeSecProjectWorkspace,
-        sign: DesktopTokenSign,
-        desktopIP: String
-    ) {
-        // 审计
-        ActionAuditContext.current().addInstanceInfo(
-            ws.workspaceName,
-            desktopIP,
-            null,
-            sign
-        )
-        // 校验指纹
-        val realFingerprint = DigestUtils.md5Hex("${ws.macAddress}${bkConfig.desktopSdkToken}").uppercase()
-        if (realFingerprint != sign.fingerprint) {
-            throwTokenFail(desktopIP, "wrong fingerprint", "$realFingerprint != ${sign.fingerprint}")
-        }
-        // 校验签名
-        // <md5(mac_addr+token)>,<appid>,<原始文件名>,<文件版本>,<修改日期>,<产品名称>,<产品版本>,<exe文件的sha1>,<当前10位时间戳>,<public key>
-        val unsigned = "${sign.fingerprint}," +
-            "${sign.appId}," +
-            "${sign.fileName}," +
-            "${sign.fileVersion}," +
-            "${sign.fileUpdateTime}," +
-            "${sign.productName}," +
-            "${sign.productVersion}," +
-            "${sign.sha1}," +
-            "${sign.timestamp}," +
-            sign.publicKey
-        val realSigned = ShaUtils.hmacSha1(bkConfig.desktopSdkToken.toByteArray(), unsigned.toByteArray()).uppercase()
-        if (realSigned != sign.sign) {
-            throwTokenFail(desktopIP, "wrong sign", "$realSigned != ${sign.sign}")
-        }
-    }
-
-    private fun throwTokenFail(desktopIP: String, failMessage: String, failDetailMessage: String): Nothing {
-        logger.warn("$desktopIP get token fail:$failMessage.<$failDetailMessage>")
-        throw CustomException(Response.Status.FORBIDDEN, failMessage)
     }
 
     override fun workspaceExpandDiskCallback(taskId: String, workspaceName: String, operator: String) {
@@ -701,5 +625,39 @@ class ServiceRemoteDevResourceImpl(
             tgitId = null
         )
         return Result(true)
+    }
+
+    override fun enableWorkspaceRecord(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        permissionService.checkUserProjectManager(userId, projectId)
+        workspaceRecordService.enableRecord(
+            workspaceName = workspaceName,
+            enableUser = if (enable) {
+                userId
+            } else {
+                null
+            }
+        )
+        return Result(true)
+    }
+
+    override fun checkWorkspaceEnableAddress(
+        userId: String,
+        appId: Long,
+        ip: String
+    ): Result<CheckWorkspaceRecordData> {
+        val (enable, address) = workspaceRecordService.checkRecordAndAddress(
+            appId = appId,
+            ip = ip
+        )
+        return Result(CheckWorkspaceRecordData(enable, address))
+    }
+
+    override fun checkUserViewWorkspacePermission(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(workspaceRecordService.checkWorkspaceUserApproval(workspaceName = workspaceName, userId = userId))
     }
 }

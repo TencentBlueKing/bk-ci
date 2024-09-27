@@ -5,6 +5,9 @@
       "dependsOn": [
         "^public:master"
       ],
+      "outputs": [
+        "{projectRoot}/dist"
+      ],
       "cache": true
     },
     "dev": {
@@ -13,5 +16,6 @@
       ],
       "cache": true
     }
-  }
+  },
+  "defaultBase": "master"
 }
