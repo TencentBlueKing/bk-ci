@@ -133,16 +133,16 @@ class RbacPermissionResourceGroupPermissionService(
         userId: String,
         projectCode: String,
         resourceType: String,
-        groupId: Int
+        iamGroupId: Int
     ): List<IamGroupPoliciesVo> {
         val groupInfo = authResourceGroupDao.getByRelationId(
             dslContext = dslContext,
             projectCode = projectCode,
-            iamGroupId = groupId.toString()
+            iamGroupId = iamGroupId.toString()
         ) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
-            params = arrayOf(groupId.toString()),
-            defaultMessage = "group $groupId not exist"
+            params = arrayOf(iamGroupId.toString()),
+            defaultMessage = "group $iamGroupId not exist"
         )
         val groupConfigInfo = authResourceGroupConfigDao.getByGroupCode(
             dslContext = dslContext,
@@ -262,28 +262,28 @@ class RbacPermissionResourceGroupPermissionService(
         }
     }
 
-    override fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>> {
+    override fun getGroupPermissionDetail(iamGroupId: Int): Map<String, List<GroupPermissionDetailVo>> {
         val groupPermissionMap = mutableMapOf<String, List<GroupPermissionDetailVo>>()
         groupPermissionMap[I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_DEVOPS_NAME)] =
-            getGroupPermissionDetailBySystem(systemId, groupId)
+            getGroupPermissionDetailBySystem(systemId, iamGroupId)
         if (registerMonitor) {
-            val monitorGroupPermissionDetail = getGroupPermissionDetailBySystem(monitorSystemId, groupId)
+            val monitorGroupPermissionDetail = getGroupPermissionDetailBySystem(monitorSystemId, iamGroupId)
             if (monitorGroupPermissionDetail.isNotEmpty()) {
                 groupPermissionMap[I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_MONITOR_NAME)] =
-                    getGroupPermissionDetailBySystem(monitorSystemId, groupId)
+                    getGroupPermissionDetailBySystem(monitorSystemId, iamGroupId)
             }
         }
         return groupPermissionMap
     }
 
-    override fun getGroupPermissionDetailBySystem(iamSystemId: String, groupId: Int): List<GroupPermissionDetailVo> {
+    override fun getGroupPermissionDetailBySystem(iamSystemId: String, iamGroupId: Int): List<GroupPermissionDetailVo> {
         val iamGroupPermissionDetailList = try {
-            v2ManagerService.getGroupPermissionDetail(groupId, iamSystemId)
+            v2ManagerService.getGroupPermissionDetail(iamGroupId, iamSystemId)
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_GROUP_PERMISSION_DETAIL_FAIL,
-                params = arrayOf(groupId.toString()),
-                defaultMessage = "Failed to get group($groupId) permission info"
+                params = arrayOf(iamGroupId.toString()),
+                defaultMessage = "Failed to get group($iamGroupId) permission info"
             )
         }
         return iamGroupPermissionDetailList.map { detail ->
@@ -322,15 +322,15 @@ class RbacPermissionResourceGroupPermissionService(
         }.sortedBy { it.actionId }
     }
 
-    override fun syncGroupPermissions(projectCode: String, groupId: Int): Boolean {
+    override fun syncGroupPermissions(projectCode: String, iamGroupId: Int): Boolean {
         return try {
             val resourceGroupInfo = authResourceGroupDao.get(
                 dslContext = dslContext,
                 projectCode = projectCode,
-                relationId = groupId.toString()
+                relationId = iamGroupId.toString()
             ) ?: return true
-            val groupPermissionDetails = getGroupPermissionDetailBySystem(systemId, groupId)
-            logger.debug("sync group permissions: {}|{}|{}", projectCode, groupId, groupPermissionDetails)
+            val groupPermissionDetails = getGroupPermissionDetailBySystem(systemId, iamGroupId)
+            logger.debug("sync group permissions: {}|{}|{}", projectCode, iamGroupId, groupPermissionDetails)
 
             val latestResourceGroupPermissions = groupPermissionDetails.flatMap { permissionDetail ->
                 permissionDetail.relatedResourceInfos.flatMap { relatedResourceInfo ->
@@ -355,7 +355,7 @@ class RbacPermissionResourceGroupPermissionService(
                             resourceCode = resourceGroupInfo.resourceCode,
                             iamResourceCode = resourceGroupInfo.iamResourceCode,
                             groupCode = resourceGroupInfo.groupCode,
-                            iamGroupId = groupId,
+                            iamGroupId = iamGroupId,
                             action = permissionDetail.actionId,
                             actionRelatedResourceType = permissionDetail.actionRelatedResourceType,
                             relatedResourceType = relatedResourceType,
@@ -366,7 +366,7 @@ class RbacPermissionResourceGroupPermissionService(
                 }
             }.distinct()
 
-            val oldResourceGroupPermissions = resourceGroupPermissionDao.listByGroupId(dslContext, projectCode, groupId)
+            val oldResourceGroupPermissions = resourceGroupPermissionDao.listByGroupId(dslContext, projectCode, iamGroupId)
 
             val toDeleteRecords = oldResourceGroupPermissions.filter { it !in latestResourceGroupPermissions }
             val toAddRecords = latestResourceGroupPermissions.filter { it !in oldResourceGroupPermissions }.map {
@@ -389,7 +389,7 @@ class RbacPermissionResourceGroupPermissionService(
             }
             true
         } catch (ex: Exception) {
-            logger.warn("sync group permissions failed! $projectCode|$groupId|$ex")
+            logger.warn("sync group permissions failed! $projectCode|$iamGroupId|$ex")
             false
         }
     }
@@ -407,7 +407,7 @@ class RbacPermissionResourceGroupPermissionService(
             iamGroupIds.forEach {
                 syncGroupPermissions(
                     projectCode = projectCode,
-                    groupId = it
+                    iamGroupId = it
                 )
             }
             val groupsWithPermissions = resourceGroupPermissionDao.listGroupsWithPermissions(

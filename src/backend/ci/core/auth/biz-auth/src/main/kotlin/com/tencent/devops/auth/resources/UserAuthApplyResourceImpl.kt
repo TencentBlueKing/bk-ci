@@ -65,7 +65,7 @@ class UserAuthApplyResourceImpl @Autowired constructor(
     ): Result<Map<String, List<GroupPermissionDetailVo>>> {
         return Result(
             resourceGroupPermissionService.getGroupPermissionDetail(
-                groupId = groupId
+                iamGroupId = groupId
             )
         )
     }

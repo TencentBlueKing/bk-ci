@@ -422,7 +422,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 toAddGroups.forEach {
                     resourceGroupPermissionService.syncGroupPermissions(
                         projectCode = projectCode,
-                        groupId = it.relationId
+                        iamGroupId = it.relationId
                     )
                 }
             }

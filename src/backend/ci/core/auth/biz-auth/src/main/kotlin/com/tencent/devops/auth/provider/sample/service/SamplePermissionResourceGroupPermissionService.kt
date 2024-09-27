@@ -50,7 +50,7 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         userId: String,
         projectCode: String,
         resourceType: String,
-        groupId: Int
+        iamGroupId: Int
     ): List<IamGroupPoliciesVo> = emptyList()
 
     override fun deleteByGroupIds(
@@ -82,17 +82,17 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
     ): Map<String, List<String>> = emptyMap()
 
     override fun getGroupPermissionDetail(
-        groupId: Int
+        iamGroupId: Int
     ): Map<String, List<GroupPermissionDetailVo>> = emptyMap()
 
     override fun getGroupPermissionDetailBySystem(
         iamSystemId: String,
-        groupId: Int
+        iamGroupId: Int
     ): List<GroupPermissionDetailVo> = emptyList()
 
     override fun syncGroupPermissions(
         projectCode: String,
-        groupId: Int
+        iamGroupId: Int
     ): Boolean = true
 
     override fun syncProjectPermissions(

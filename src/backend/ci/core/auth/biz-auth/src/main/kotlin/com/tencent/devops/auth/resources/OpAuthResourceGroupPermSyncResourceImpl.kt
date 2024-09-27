@@ -49,7 +49,7 @@ class OpAuthResourceGroupPermSyncResourceImpl @Autowired constructor(
         return Result(
             permissionResourceGroupPermissionService.syncGroupPermissions(
                 projectCode = projectId,
-                groupId = groupId
+                iamGroupId = groupId
             )
         )
     }

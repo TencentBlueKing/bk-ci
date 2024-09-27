@@ -49,7 +49,7 @@ interface PermissionResourceGroupPermissionService {
         userId: String,
         projectCode: String,
         resourceType: String,
-        groupId: Int
+        iamGroupId: Int
     ): List<IamGroupPoliciesVo>
 
     fun deleteByGroupIds(
@@ -84,17 +84,17 @@ interface PermissionResourceGroupPermissionService {
     ): Map<String/*resourceType*/, List<String>/*resourceCodes*/>
 
     fun getGroupPermissionDetail(
-        groupId: Int
+        iamGroupId: Int
     ): Map<String, List<GroupPermissionDetailVo>>
 
     fun getGroupPermissionDetailBySystem(
         iamSystemId: String,
-        groupId: Int
+        iamGroupId: Int
     ): List<GroupPermissionDetailVo>
 
     fun syncGroupPermissions(
         projectCode: String,
-        groupId: Int
+        iamGroupId: Int
     ): Boolean
 
     fun syncProjectPermissions(

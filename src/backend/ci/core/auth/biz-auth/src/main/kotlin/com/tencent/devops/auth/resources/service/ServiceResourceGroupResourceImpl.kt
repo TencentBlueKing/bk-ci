@@ -20,7 +20,7 @@ class ServiceResourceGroupResourceImpl(
     ): Result<Map<String, List<GroupPermissionDetailVo>>> {
         return Result(
             resourceGroupPermissionService.getGroupPermissionDetail(
-                groupId = groupId
+                iamGroupId = groupId
             )
         )
     }

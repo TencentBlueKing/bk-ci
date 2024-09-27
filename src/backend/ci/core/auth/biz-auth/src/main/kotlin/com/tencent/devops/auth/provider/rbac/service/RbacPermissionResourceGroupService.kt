@@ -51,7 +51,6 @@ import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
-import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -554,7 +553,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             // 同步组权限
             permissionResourceGroupPermissionService.syncGroupPermissions(
                 projectCode = projectCode,
-                groupId = iamGroupInfo.id
+                iamGroupId = iamGroupInfo.id
             )
         }
         return true

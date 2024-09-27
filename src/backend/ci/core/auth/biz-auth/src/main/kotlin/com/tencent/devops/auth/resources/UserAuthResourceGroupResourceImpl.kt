@@ -64,7 +64,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
                 userId = userId,
                 projectCode = projectId,
                 resourceType = resourceType,
-                groupId = groupId
+                iamGroupId = groupId
             )
         )
     }
