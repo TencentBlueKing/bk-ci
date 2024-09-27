@@ -44,7 +44,6 @@ import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.DataType
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result

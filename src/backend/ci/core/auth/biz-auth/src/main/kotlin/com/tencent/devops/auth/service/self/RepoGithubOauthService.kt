@@ -1,6 +1,5 @@
 package com.tencent.devops.auth.service.self
 
-import com.tencent.devops.auth.pojo.OauthResetUrl
 import com.tencent.devops.auth.pojo.UserOauthInfo
 import com.tencent.devops.auth.pojo.enum.OauthType
 import com.tencent.devops.common.client.Client
@@ -44,11 +43,7 @@ class RepoGithubOauthService @Autowired constructor(
         )
     }
 
-    override fun reOauth(userId: String) : OauthResetUrl {
-        TODO("Not yet implemented")
-    }
-
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(RepoGithubOauthService::class.java)
     }
 }
