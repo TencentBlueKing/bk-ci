@@ -41,6 +41,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupDemoteEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
 import org.slf4j.LoggerFactory
@@ -159,7 +160,7 @@ class JobQuotaService constructor(
             if (startupEvent is PipelineAgentStartupEvent) {
                 startupEvent.routeKeySuffix = demoteQueueRouteKeySuffix
             }
-            dispatchService.redispatch(startupEvent)
+            dispatchService.redispatch(transferDemoteEvent(startupEvent))
         } else if (startupEvent.retryTime < maxJobRetry) {
             logger.info("$logPrefix DemoteQueue job quota excess. delay: " +
                     "$RETRY_DELTA and retry. retryTime: ${startupEvent.retryTime}")
@@ -182,7 +183,7 @@ class JobQuotaService constructor(
             if (startupEvent is PipelineAgentStartupEvent) {
                 startupEvent.routeKeySuffix = demoteQueueRouteKeySuffix
             }
-            dispatchService.redispatch(startupEvent)
+            dispatchService.redispatch(transferDemoteEvent(startupEvent))
         } else {
             logger.info("$logPrefix DemoteQueue Job Maximum number of retries reached. " +
                     "RetryTime: ${startupEvent.retryTime}, MaxJobRetry: $maxJobRetry")
@@ -272,6 +273,43 @@ class JobQuotaService constructor(
         } catch (e: Throwable) {
             logger.error("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Check job quota failed.", e)
             true
+        }
+    }
+
+    private fun transferDemoteEvent(event: IEvent): IEvent {
+        if (event is PipelineAgentStartupEvent) {
+            return PipelineAgentStartupDemoteEvent(
+                source = event.source,
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                pipelineName = event.pipelineName,
+                userId = event.userId,
+                buildId = event.buildId,
+                buildNo = event.buildNo,
+                vmSeqId = event.vmSeqId,
+                taskName = event.taskName,
+                os = event.os,
+                vmNames = event.vmNames,
+                channelCode = event.channelCode,
+                dispatchType = event.dispatchType,
+                containerId = event.containerId,
+                containerHashId = event.containerHashId,
+                queueTimeoutMinutes = event.queueTimeoutMinutes,
+                atoms = event.atoms,
+                executeCount = event.executeCount,
+                customBuildEnv = event.customBuildEnv,
+                dockerRoutingType = event.dockerRoutingType,
+                routeKeySuffix = event.routeKeySuffix,
+                jobId = event.jobId,
+                ignoreEnvAgentIds = event.ignoreEnvAgentIds,
+                singleNodeConcurrency = event.singleNodeConcurrency,
+                allNodeConcurrency = event.allNodeConcurrency,
+                dispatchQueueStartTimeMilliSecond = event.dispatchQueueStartTimeMilliSecond,
+                actionType = event.actionType,
+                delayMills = event.delayMills
+            )
+        } else {
+            return event
         }
     }
 }
