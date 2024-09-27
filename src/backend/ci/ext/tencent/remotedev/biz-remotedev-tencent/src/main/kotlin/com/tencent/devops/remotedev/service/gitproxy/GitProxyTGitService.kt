@@ -909,8 +909,8 @@ class GitProxyTGitService @Autowired constructor(
             logger.info("dailyUserAuthDoCheck start")
             doDailyUserAuthDoCheck()
             logger.info("dailyUserAuthDoCheck end")
-        } catch (ignored: Throwable) {
-            logger.error("${OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG}|dailyUserAuthDoCheck failed", ignored)
+        } catch (e: Throwable) {
+            logger.error("${OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG}|dailyUserAuthDoCheck failed", e)
         } finally {
             lock.unlock()
         }
