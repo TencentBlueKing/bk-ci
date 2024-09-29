@@ -1,12 +1,11 @@
 <template>
     <bk-dialog
         class="system-log-dialog"
-        v-model="value"
+        v-model="isShow"
         :width="1105"
         :close-icon="true"
         :show-footer="false"
         :esc-close="true"
-        @value-change="dialogChange"
     >
         <div
             ref="log"
@@ -56,6 +55,7 @@
         },
         data () {
             return {
+                isShow: false,
                 isLoading: false,
                 activeIndex: 0,
                 list: []
@@ -103,43 +103,40 @@
             },
             handleTabChange (index) {
                 this.activeIndex = index
-            },
-            handleClose () {
-                this.$emit('input', false)
-        
-                localStorage.setItem('bkci_latest_version', this.latestBcsVerSion)
-                const $sourceEle = this.$refs.log.cloneNode(true)
-                const {
-                    top: sourceTop,
-                    left: sourceLeft,
-                    width: sourceWidth,
-                    height: sourceHeight
-                } = this.$refs.log.getBoundingClientRect()
-                $sourceEle.classList.add('hide')
-                const styles = $sourceEle.style
-                styles.position = 'fixed'
-                styles.top = `${sourceTop}px`
-                styles.left = `${sourceLeft}px`
-                styles.width = `${sourceWidth}px`
-                styles.height = `${sourceHeight}px`
-                styles.zIndex = window.__bk_zIndex_manager.nextZIndex()
-                document.body.appendChild($sourceEle)
-                setTimeout(() => {
-                    const $targetEle = document.querySelector('#siteHelp')
-                    const {
-                        top: targetTop,
-                        left: targetLeft,
-                        width: targetWidth,
-                        height: targetHeight
-                    } = $targetEle.getBoundingClientRect()
-                    const translateX = targetLeft + targetWidth / 2 - (sourceLeft + sourceWidth / 2)
-                    const translateY = -(sourceTop + sourceHeight / 2 - (targetTop + targetHeight / 2))
-                    styles.transform = `translate(${translateX}px, ${translateY}px) scale(0)`
-                })
-            },
-            dialogChange (val) {
-                if (!val) this.handleClose()
             }
+            // handleClose () {
+            //     this.$emit('input', false)
+        
+            //     localStorage.setItem('bkci_latest_version', this.latestBcsVerSion)
+            //     const $sourceEle = this.$refs.log.cloneNode(true)
+            //     const {
+            //         top: sourceTop,
+            //         left: sourceLeft,
+            //         width: sourceWidth,
+            //         height: sourceHeight
+            //     } = this.$refs.log.getBoundingClientRect()
+            //     $sourceEle.classList.add('hide')
+            //     const styles = $sourceEle.style
+            //     styles.position = 'fixed'
+            //     styles.top = `${sourceTop}px`
+            //     styles.left = `${sourceLeft}px`
+            //     styles.width = `${sourceWidth}px`
+            //     styles.height = `${sourceHeight}px`
+            //     styles.zIndex = window.__bk_zIndex_manager.nextZIndex()
+            //     document.body.appendChild($sourceEle)
+            //     setTimeout(() => {
+            //         const $targetEle = document.querySelector('#siteHelp')
+            //         const {
+            //             top: targetTop,
+            //             left: targetLeft,
+            //             width: targetWidth,
+            //             height: targetHeight
+            //         } = $targetEle.getBoundingClientRect()
+            //         const translateX = targetLeft + targetWidth / 2 - (sourceLeft + sourceWidth / 2)
+            //         const translateY = -(sourceTop + sourceHeight / 2 - (targetTop + targetHeight / 2))
+            //         styles.transform = `translate(${translateX}px, ${translateY}px) scale(0)`
+            //     })
+            // }
         }
     }
 </script>
