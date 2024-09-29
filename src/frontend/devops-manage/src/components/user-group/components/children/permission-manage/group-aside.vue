@@ -330,7 +330,6 @@ export default {
       return this.handleGetData(100)
     },
     handleShowDeleteGroup(group) {
-      console.log(group, '1213123123')
       this.deleteObj.group = group;
       this.deleteObj.isShow = true;
     },
