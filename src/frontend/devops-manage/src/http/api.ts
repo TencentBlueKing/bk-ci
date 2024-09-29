@@ -337,5 +337,9 @@ export default {
 
   removeMemberFromProjectCheck (projectId: string, params: any) {
     return http.post(`${IAM_PERFIX}/member/${projectId}/removeMemberFromProjectCheck`, params);
+  },
+
+  syncGroupPermissions (projectId: string, groupId: any) {
+    return http.put(`${IAM_PERFIX}/group/sync/${projectId}/${groupId}/syncGroupPermissions`);
   }
 };
