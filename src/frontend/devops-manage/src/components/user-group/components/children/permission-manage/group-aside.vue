@@ -330,6 +330,7 @@ export default {
       return this.handleGetData(100)
     },
     handleShowDeleteGroup(group) {
+      console.log(group, '1213123123')
       this.deleteObj.group = group;
       this.deleteObj.isShow = true;
     },
@@ -342,10 +343,10 @@ export default {
       return ajax
         .delete(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/${this.curProjectCode}/${this.resourceType}/${this.deleteObj.group.groupId}`)
         .then(() => {
-          this.handleHiddenDeleteGroup();
           this.refreshList();
           this.syncGroupAndMemberIAM();
           this.syncDeleteGroupPermissions(this.deleteObj.group.groupId);
+          this.handleHiddenDeleteGroup();
           Message({
             theme: 'success',
             message: this.t('删除成功')
@@ -409,6 +410,7 @@ export default {
                 this.handleChooseGroup(group);
               })
               this.syncGroupAndMemberIAM();
+              this.syncGroupPermissions(data.data.id)
             break;
           case 'create_user_group_cancel':
             this.handleChooseGroup(this.groupList[0]);
@@ -461,6 +463,7 @@ export default {
     },
     
     async syncGroupPermissions (groupId) {
+      if (!groupId) return
       try {
         await http.syncGroupPermissions(this.curProjectCode, groupId);
       } catch (error) {
@@ -472,6 +475,7 @@ export default {
     },
     
     async syncGroupIAM(groupId){
+      if (!groupId) return
       try {
         await http.syncGroupMember(this.curProjectCode, groupId);
       } catch (error) {
