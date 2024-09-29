@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class ExperienceMQConfiguration {
     @EventConsumer
-    fun rtxNotifyConsumer(
+    fun pushNotifyConsumer(
         @Autowired experienceNotifyService: ExperienceNotifyService
     ) = ScsConsumerBuilder.build<AppNotifyMessageWithOperation> {
         experienceNotifyService.onReceiveAppNotifyMessage(it)
