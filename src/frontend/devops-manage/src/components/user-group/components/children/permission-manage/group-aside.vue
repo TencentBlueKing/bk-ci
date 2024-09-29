@@ -345,7 +345,7 @@ export default {
           this.handleHiddenDeleteGroup();
           this.refreshList();
           this.syncGroupAndMemberIAM();
-          this.syncGroupPermissions();
+          this.syncDeleteGroupPermissions(this.deleteObj.group.groupId);
           Message({
             theme: 'success',
             message: this.t('删除成功')
@@ -449,6 +449,17 @@ export default {
       }
     },
 
+    async syncDeleteGroupPermissions (groupId) {
+      try {
+        await http.syncDeleteGroupPermissions(this.curProjectCode, groupId);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
+      }
+    },
+    
     async syncGroupPermissions (groupId) {
       try {
         await http.syncGroupPermissions(this.curProjectCode, groupId);

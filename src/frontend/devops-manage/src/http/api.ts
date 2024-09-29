@@ -341,5 +341,9 @@ export default {
 
   syncGroupPermissions (projectId: string, groupId: any) {
     return http.put(`${IAM_PERFIX}/group/sync/${projectId}/${groupId}/syncGroupPermissions`);
-  }
+  },
+
+  syncDeleteGroupPermissions (projectId: string, groupId: any) {
+    return http.put(`${IAM_PERFIX}/group/sync/${projectId}/${groupId}/deleteGroupPermissions`);
+  },
 };
