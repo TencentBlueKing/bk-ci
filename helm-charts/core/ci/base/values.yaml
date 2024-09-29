@@ -182,7 +182,7 @@ rabbitmq:
     username: admin
     password: blueking
     erlangCookie: blueking # 修改此选项必须删除rabbitmq的pvc , 否则会创建rabbitmq失败
-  communityPlugins: "https://bkopen-1252002024.file.myqcloud.com/ce7/files/rabbitmq_delayed_message_exchange-3.8.17.8f537ac.ez"
+  communityPlugins: "https://bkopen-1252002024.file.myqcloud.com/ce7/files/rabbitmq_delayed_message_exchange-3.10.2.ez"
   extraPlugins: "rabbitmq_delayed_message_exchange"
   extraConfiguration: |-
     # ipv6 , 需要开启这些选项
