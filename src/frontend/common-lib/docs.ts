@@ -1,5 +1,5 @@
 // const commonPrefix = `${DOCS_URL_PREFIX}/docs/markdown/持续集成平台/产品白皮书`
-const commonPrefix = `${DOCS_URL_PREFIX}/docs/markdown/Devops/UserGuide`
+const commonPrefix = `${DOCS_URL_PREFIX}/markdown/Devops/UserGuide`
 export const BkciDocs = {
     BKCI_DOC: `${commonPrefix}/intro/README.md`, // 首页跳转文档
     GATE_DOC: `${commonPrefix}/Services/Quailty-gate/quailty-gate.md`, // 质量红线文档
