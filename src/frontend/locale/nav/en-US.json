@@ -219,5 +219,6 @@
     "bkci": "BK-CI",
     "tencentBlueKing": "Tencent BlueKing",
     "openSource": "Open Source",
-    "currentVersion": "Current"
+    "currentVersion": "Current",
+    "releaseNotes": "Release Nodes"
 }
