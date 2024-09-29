@@ -72,7 +72,7 @@ function setLsLocale (locale) {
             cookies.remove(LS_KEY, { domain, path: '/' })
         })
         const domain = window.LOCALE_DOMAIN || (subDomains[0] ?? location.hostname)
-        cookies.set(LS_KEY, formateLocale, { domain, path: '/' })
+        cookies.set(LS_KEY, formateLocale, { domain, path: '/', expires: 365 })
     }
 }
 
