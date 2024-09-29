@@ -2,6 +2,7 @@ package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
+import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.api.pojo.Result
@@ -27,11 +28,23 @@ class ServiceResourceGroupResourceImpl constructor(
         projectCode: String,
         resourceType: String,
         groupCode: BkAuthGroup
-    ): Result<Boolean> {
+    ): Result<Int> {
         return Result(
             permissionResourceGroupService.createProjectGroupByGroupCode(
                 projectId = projectCode,
                 groupCode = groupCode.value
+            )
+        )
+    }
+
+    override fun createCustomGroupAndPermissions(
+        projectCode: String,
+        customGroupCreateReq: CustomGroupCreateReq
+    ): Result<Int> {
+        return Result(
+            permissionResourceGroupService.createCustomGroupAndPermissions(
+                projectId = projectCode,
+                customGroupCreateReq = customGroupCreateReq
             )
         )
     }

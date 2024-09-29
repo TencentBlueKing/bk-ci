@@ -28,9 +28,14 @@
 
 package com.tencent.devops.auth.provider.rbac.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.InstancesDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.manager.Action
+import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
+import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
+import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
@@ -51,6 +56,7 @@ import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.dto.ListGroupConditionDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
+import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
@@ -82,7 +88,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     private val rbacCacheService: RbacCacheService,
     private val monitorSpaceService: AuthMonitorSpaceService,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val authResourceGroupMemberDao: AuthResourceGroupMemberDao
+    private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+    private val objectMapper: ObjectMapper
 ) : PermissionResourceGroupService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -98,6 +105,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         private const val MAX_GROUP_NAME_LENGTH = 32
         private const val MIN_GROUP_NAME_LENGTH = 5
         private const val FIRST_PAGE = 1
+        private const val CUSTOM_GROUP_CODE = "custom"
     }
 
     override fun listGroup(
@@ -340,7 +348,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             projectCode = projectId,
             projectName = projectInfo.resourceName,
             relationId = projectInfo.relationId.toInt(),
-            groupCode = "custom",
+            groupCode = CUSTOM_GROUP_CODE,
             groupName = groupAddDTO.groupName,
             description = groupAddDTO.groupDesc
         )
@@ -460,7 +468,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     override fun createProjectGroupByGroupCode(
         projectId: String,
         groupCode: String
-    ): Boolean {
+    ): Int {
         val projectInfo = authResourceService.get(
             projectCode = projectId,
             resourceType = AuthResourceType.PROJECT.value,
@@ -482,7 +490,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             groupCode = groupConfig.groupCode
         )
         if (resourceGroupInfo != null) {
-            return false
+            return resourceGroupInfo.relationId.toInt()
         }
         val iamGroupId = createProjectGroupToIam(
             projectCode = projectId,
@@ -502,7 +510,79 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceName = projectInfo.resourceName,
             iamGroupId = iamGroupId
         )
-        return true
+        return iamGroupId
+    }
+
+    override fun createCustomGroupAndPermissions(
+        projectId: String,
+        customGroupCreateReq: CustomGroupCreateReq
+    ): Int {
+        val projectInfo = authResourceService.get(
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
+        val resourceGroupInfo = authResourceGroupDao.getByGroupName(
+            dslContext = dslContext,
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId,
+            groupName = customGroupCreateReq.groupName
+        )
+        if (resourceGroupInfo != null)
+            return resourceGroupInfo.relationId.toInt()
+        val authorizationScopes = buildProjectPermissions(
+            projectCode = projectInfo.projectCode,
+            projectName = projectInfo.resourceName,
+            actions = customGroupCreateReq.actions
+        )
+        val iamGroupId = createProjectGroupToIam(
+            projectCode = projectId,
+            projectName = projectInfo.resourceName,
+            relationId = projectInfo.relationId.toInt(),
+            groupCode = CUSTOM_GROUP_CODE,
+            groupName = customGroupCreateReq.groupName,
+            description = customGroupCreateReq.groupDesc
+        )
+        permissionGroupPoliciesService.grantGroupPermission(
+            authorizationScopesStr = authorizationScopes,
+            projectCode = projectId,
+            projectName = projectInfo.resourceName,
+            resourceType = AuthResourceType.PROJECT.value,
+            groupCode = CUSTOM_GROUP_CODE,
+            iamResourceCode = projectId,
+            resourceName = projectInfo.resourceName,
+            iamGroupId = iamGroupId
+        )
+        return iamGroupId
+    }
+
+    private fun buildProjectPermissions(
+        projectCode: String,
+        projectName: String,
+        actions: List<String>
+    ): String {
+        val resourceType2Actions = actions.groupBy { it.substringAfterLast("_") }
+        val authorizationScopes = resourceType2Actions.map { (resourceType, actions) ->
+            val projectPath = ManagerPath().apply {
+                system = systemId
+                id = projectCode
+                name = projectName
+                type = AuthResourceType.PROJECT.value
+            }
+            val resources = ManagerResources.builder()
+                .system(systemId)
+                .type(resourceType)
+                .paths(listOf(listOf(projectPath)))
+                .build()
+            val iamActions = actions.map { Action(it) }
+            AuthorizationScopes().also {
+                it.resources = listOf(resources)
+                it.actions = iamActions
+                it.system = systemId
+            }
+        }
+        return objectMapper.writeValueAsString(authorizationScopes)
     }
 
     private fun getGroupPermissionDetailBySystem(iamSystemId: String, groupId: Int): List<GroupPermissionDetailVo> {

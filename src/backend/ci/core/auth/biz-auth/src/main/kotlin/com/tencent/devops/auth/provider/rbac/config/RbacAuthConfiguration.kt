@@ -178,7 +178,8 @@ class RbacAuthConfiguration {
         rbacCacheService: RbacCacheService,
         monitorSpaceService: AuthMonitorSpaceService,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-        authResourceGroupMemberDao: AuthResourceGroupMemberDao
+        authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+        objectMapper: ObjectMapper
     ) = RbacPermissionResourceGroupService(
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
@@ -190,7 +191,8 @@ class RbacAuthConfiguration {
         rbacCacheService = rbacCacheService,
         monitorSpaceService = monitorSpaceService,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
-        authResourceGroupMemberDao = authResourceGroupMemberDao
+        authResourceGroupMemberDao = authResourceGroupMemberDao,
+        objectMapper = objectMapper
     )
 
     @Bean
