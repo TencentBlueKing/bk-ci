@@ -49,6 +49,7 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.SelectForStep
 import org.jooq.impl.DSL
+import org.jooq.impl.TableImpl
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
@@ -661,23 +662,12 @@ class RepositoryDao {
         scmType: ScmType
     ): List<RepoOauthRefVo> {
         val t1 = TRepository.T_REPOSITORY
-        val t2 = when (scmType) {
-            ScmType.CODE_GIT -> TRepositoryCodeGit.T_REPOSITORY_CODE_GIT
-            ScmType.GITHUB -> TRepositoryGithub.T_REPOSITORY_GITHUB
-            else -> return listOf()
-        }
+        val (t2, conditions, joinConditions) = oauthRepoConditions(t1, projectId, userId, scmType) ?: return listOf()
         return dslContext.select(t1.ALIAS_NAME, t1.URL)
             .from(t1)
             .leftJoin(t2)
-            .on(t1.REPOSITORY_ID.eq(t2.field(t1.REPOSITORY_ID.name, Long::class.java)))
-            .where(
-                listOf(
-                    t1.IS_DELETED.eq(false),
-                    t1.PROJECT_ID.eq(projectId),
-                    t1.TYPE.eq(scmType.name),
-                    t2.field("USER_NAME", String::class.java)?.eq(userId)
-                )
-            )
+            .on(joinConditions)
+            .where(conditions)
             .limit(limit).offset(offset)
             .fetch()
             .map {
@@ -695,23 +685,43 @@ class RepositoryDao {
         scmType: ScmType
     ): Long {
         val t1 = TRepository.T_REPOSITORY
-        val t2 = when (scmType) {
-            ScmType.CODE_GIT -> TRepositoryCodeGit.T_REPOSITORY_CODE_GIT
-            ScmType.GITHUB -> TRepositoryGithub.T_REPOSITORY_GITHUB
-            else -> return 0
-        }
+        val (t2, conditions, joinConditions) = oauthRepoConditions(t1, projectId, userId, scmType) ?: return 0
         return dslContext.selectCount()
             .from(t1)
             .leftJoin(t2)
-            .on(t1.REPOSITORY_ID.eq(t2.field(t1.REPOSITORY_ID.name, Long::class.java)))
-            .where(
-                listOf(
-                    t1.IS_DELETED.eq(false),
-                    t1.PROJECT_ID.eq(projectId),
-                    t1.TYPE.eq(scmType.name),
-                    t2.field("USER_NAME", String::class.java)?.eq(userId)
-                )
-            )
+            .on(joinConditions)
+            .where(conditions)
             .fetchOne(0, Long::class.java)!!
+    }
+
+    fun oauthRepoConditions(
+        t1: TRepository,
+        projectId: String,
+        userId: String,
+        scmType: ScmType
+    ): Triple<TableImpl<*>, List<Condition>, Condition>? {
+        val conditions = mutableListOf(
+            t1.IS_DELETED.eq(false),
+            t1.PROJECT_ID.eq(projectId),
+            t1.TYPE.eq(scmType.name)
+        )
+        val joinConditions: Condition
+        val t2 = when (scmType) {
+            ScmType.CODE_GIT -> {
+                val table = TRepositoryCodeGit.T_REPOSITORY_CODE_GIT
+                joinConditions = t1.REPOSITORY_ID.eq(table.REPOSITORY_ID)
+                conditions.add(table.AUTH_TYPE.eq(RepoAuthType.OAUTH.name))
+                table
+            }
+
+            ScmType.GITHUB -> {
+                val table = TRepositoryGithub.T_REPOSITORY_GITHUB
+                joinConditions = t1.REPOSITORY_ID.eq(table.REPOSITORY_ID)
+                table
+            }
+
+            else -> return null
+        }
+        return Triple(t2, conditions, joinConditions)
     }
 }
