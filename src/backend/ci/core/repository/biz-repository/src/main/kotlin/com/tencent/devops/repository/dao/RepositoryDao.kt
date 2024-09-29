@@ -711,12 +711,14 @@ class RepositoryDao {
                 val table = TRepositoryCodeGit.T_REPOSITORY_CODE_GIT
                 joinConditions = t1.REPOSITORY_ID.eq(table.REPOSITORY_ID)
                 conditions.add(table.AUTH_TYPE.eq(RepoAuthType.OAUTH.name))
+                conditions.add(table.USER_NAME.eq(userId))
                 table
             }
 
             ScmType.GITHUB -> {
                 val table = TRepositoryGithub.T_REPOSITORY_GITHUB
                 joinConditions = t1.REPOSITORY_ID.eq(table.REPOSITORY_ID)
+                conditions.add(table.USER_NAME.eq(userId))
                 table
             }
 
