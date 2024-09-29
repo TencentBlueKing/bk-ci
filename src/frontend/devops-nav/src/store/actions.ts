@@ -165,6 +165,11 @@ const actions: ActionTree<RootState, any> = {
     fetchWithoutPermissionsProjects (_, payload) {
         const { pageSize, page, projectName } = payload
         return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/listProjectsWithoutPermissions?page=${page}&pageSize=${pageSize}&projectName=${projectName}`)
+    },
+
+    fetchVersionsLogList (_, payload) {
+        const { pageSize, page, projectName } = payload
+        return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/versionList`)
     }
 }
 
