@@ -674,6 +674,7 @@ class RepositoryDao {
                 listOf(
                     t1.IS_DELETED.eq(false),
                     t1.PROJECT_ID.eq(projectId),
+                    t1.TYPE.eq(scmType.name),
                     t2.field("USER_NAME", String::class.java)?.eq(userId)
                 )
             )
@@ -707,6 +708,7 @@ class RepositoryDao {
                 listOf(
                     t1.IS_DELETED.eq(false),
                     t1.PROJECT_ID.eq(projectId),
+                    t1.TYPE.eq(scmType.name),
                     t2.field("USER_NAME", String::class.java)?.eq(userId)
                 )
             )
