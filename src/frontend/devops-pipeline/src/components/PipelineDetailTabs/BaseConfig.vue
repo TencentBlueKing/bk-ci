@@ -134,7 +134,7 @@
                     )
                 ]
             },
-            prarallelSettingRows () {
+            parallelSettingRows () {
                 const runLockType = this.basicInfo?.runLockType?.toLowerCase?.()
                 if (runLockType === 'group_lock') {
                     return [
