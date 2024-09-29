@@ -137,9 +137,30 @@
                     <Icon name="help-fill" size="20" />
                 </div>
                 <template slot="content">
-                    <li class="bkci-dropdown-item" @click.stop="goToDocs">{{ $t('documentation') }}</li>
-                    <li class="bkci-dropdown-item" @click.stop="goToFeedBack">{{ $t('feedback') }}</li>
-                    <li class="bkci-dropdown-item" @click.stop="goToGithubSource">{{ $t('openSource') }}</li>
+                    <li
+                        class="bkci-dropdown-item"
+                        @click.stop="goToDocs"
+                    >
+                        {{ $t('documentation') }}
+                    </li>
+                    <li
+                        class="bkci-dropdown-item"
+                        @click.stop="showVersionLog"
+                    >
+                        {{ $t('documentation') }}
+                    </li>
+                    <li
+                        class="bkci-dropdown-item"
+                        @click.stop="goToFeedBack"
+                    >
+                        {{ $t('feedback') }}
+                    </li>
+                    <li
+                        class="bkci-dropdown-item"
+                        @click.stop="goToGithubSource"
+                    >
+                        {{ $t('openSource') }}
+                    </li>
                 </template>
             </bk-popover>
             <User
@@ -153,6 +174,7 @@
             :title="projectDialogTitle"
         />
         <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
+        <system-log v-model="showSystemLog"></system-log>
     </div>
 </template>
 
@@ -166,6 +188,7 @@
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import Logo from '../Logo/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
+    import SystemLog from '../SystemLog/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
@@ -178,7 +201,8 @@
             ApplyProjectDialog,
             Logo,
             DevopsSelect,
-            LocaleSwitcher
+            LocaleSwitcher,
+            SystemLog
         }
     })
     export default class Header extends Vue {
@@ -196,6 +220,7 @@
 
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
+        showSystemLog: boolean = false
         langs: Array<any> = [
             {
                 icon: 'chinese',
@@ -398,6 +423,10 @@
 
         handleHide () {
             this.togglePopupShow(false)
+        }
+
+        showVersionLog () {
+            this.showSystemLog = true
         }
     }
 </script>
