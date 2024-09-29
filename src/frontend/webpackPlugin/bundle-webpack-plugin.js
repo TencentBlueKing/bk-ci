@@ -25,12 +25,16 @@ module.exports = class BundleWebpackPlugin {
         const dist = props.dist || '.'
         const entryFolderName = props.entryFolderName
         this.isDev = props.isDev || false
+        this.DEBUG_ASSETS_BUNDLE_JSON_FILE = path.join( __dirname, '..', dist, 'assets_bundle.json')
         this.SERVICE_ASSETS_DIR = path.join(
             __dirname,
             '..',
             dist,
             entryFolderName
         )
+        if (!this.isDev && !fs.existsSync(this.SERVICE_ASSETS_DIR)) {
+            fs.mkdirSync(this.SERVICE_ASSETS_DIR, { recursive: true })
+        }
     }
 
     apply (compiler) {
@@ -81,11 +85,15 @@ module.exports = class BundleWebpackPlugin {
                         })
 
                     assetsMap[entryName] = assets
-                    if (!fs.existsSync(SERVICE_ASSETS_DIR)) {
-                        fs.mkdirSync(SERVICE_ASSETS_DIR)
+                    if (!this.isDev) {
+                        fs.writeFileSync(`${SERVICE_ASSETS_DIR}/${entryName}.json`, JSON.stringify(assetsMap))
+                        console.log(`get assets entry about ${entryName}, ${JSON.stringify(assetsMap)}`)
                     }
-                    fs.writeFileSync(`${SERVICE_ASSETS_DIR}/${entryName}.json`, JSON.stringify(assetsMap))
                 }
+                if (this.isDev) {
+                    fs.writeFileSync(this.DEBUG_ASSETS_BUNDLE_JSON_FILE, JSON.stringify(assetsMap))
+                } 
+                
                 callback()
             }
         )
