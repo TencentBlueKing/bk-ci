@@ -194,11 +194,7 @@ class PipelineBuildService(
             )
             val pipelineDialectType =
                 PipelineDialectUtil.getPipelineDialectType(channelCode = channelCode, asCodeSettings = asCodeSettings)
-            // 校验流水线启动变量长度
-            checkBuildVariablesLength(
-                pipelineDialect = pipelineDialectType.dialect,
-                startValues = startValues
-            )
+
             // 如果指定了版本号，则设置指定的版本号
             pipeline.version = signPipelineVersion ?: pipeline.version
             val originModelStr = JsonUtil.toJson(model, formatted = false)
@@ -253,6 +249,11 @@ class PipelineBuildService(
                 debug = debug ?: false,
                 versionName = versionName,
                 yamlVersion = yamlVersion
+            )
+            // 校验流水线启动变量长度
+            checkBuildParameterLength(
+                pipelineDialect = pipelineDialectType.dialect,
+                buildParameters = context.buildParameters
             )
 
             val interceptResult = pipelineInterceptorChain.filter(
@@ -430,14 +431,14 @@ class PipelineBuildService(
 //        return originStartParams
     }
 
-    private fun checkBuildVariablesLength(
+    private fun checkBuildParameterLength(
         pipelineDialect: IPipelineDialect,
-        startValues: Map<String, String>?
+        buildParameters: List<BuildParameters>
     ) {
-        val longVarNames = startValues?.filter {
-            it.value.length >= PIPELINE_VARIABLES_STRING_LENGTH_MAX
-        }?.map { it.key }
-        if (!longVarNames.isNullOrEmpty() && !pipelineDialect.supportLongVarValue()) {
+        val longVarNames = buildParameters.filter {
+            it.value.toString().length >= PIPELINE_VARIABLES_STRING_LENGTH_MAX
+        }.map { it.key }
+        if (longVarNames.isNotEmpty() && !pipelineDialect.supportLongVarValue()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_VARIABLES_OUT_OF_LENGTH,
                 params = arrayOf(longVarNames.toString())

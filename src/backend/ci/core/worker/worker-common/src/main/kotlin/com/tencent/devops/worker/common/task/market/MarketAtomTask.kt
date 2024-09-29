@@ -506,7 +506,7 @@ open class MarketAtomTask : ITask() {
                     atomParams[name] = EnvReplacementParser.parse(
                         value = JsonUtil.toJson(value),
                         contextMap = variables,
-                        onlyExpression = true,
+                        dialect = dialect,
                         contextPair = customReplacement,
                         functions = SpecialFunctions.functions,
                         output = SpecialFunctions.output

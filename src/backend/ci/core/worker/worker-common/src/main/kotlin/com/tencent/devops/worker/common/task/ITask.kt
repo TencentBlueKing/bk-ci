@@ -66,7 +66,8 @@ abstract class ITask {
     private lateinit var dialect: IPipelineDialect
 
     companion object {
-        private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9.]*"
+        // 有的插件输出的变量会带taskId,taskId包含-,所以需要保留
+        private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9.-]*"
     }
 
     fun run(
@@ -109,22 +110,20 @@ abstract class ITask {
     protected fun addEnv(env: Map<String, String>) {
         var errReadOnlyFlag = false
         var errLongValueFlag = false
+        val errLongValueVars = mutableSetOf<String>()
         var errChineseVarName = false
+        val errChineseVars = mutableSetOf<String>()
         env.forEach { (key, value) ->
             if (this::constVar.isInitialized && key in constVar) {
                 LoggerService.addErrorLine("Variable $key is read-only and cannot be modified.")
                 errReadOnlyFlag = true
             }
             if (value.length >= PIPELINE_VARIABLES_STRING_LENGTH_MAX) {
-                LoggerService.addErrorLine("Variable $key value exceeds 4000 length limit.")
+                errLongValueVars.add(key)
                 errLongValueFlag = true
             }
             if (!Pattern.matches(ENGLISH_NAME_PATTERN, key)) {
-                LoggerService.addErrorLine(
-                    "Variable $key name is illegal,Variable names can only use letters, " +
-                            "numbers and underscores, " +
-                            "and the first character cannot start with a number"
-                )
+                errChineseVars.add(key)
                 errChineseVarName = true
             }
         }
@@ -138,6 +137,7 @@ abstract class ITask {
         }
         if (this::dialect.isInitialized) {
             if (errLongValueFlag && !dialect.supportLongVarValue()) {
+                LoggerService.addWarnLine("Variable $errLongValueVars value exceeds 4000 length limit.")
                 throw TaskExecuteException(
                     errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
                             "errorCode: ${ErrorCode.USER_INPUT_INVAILD}," +
@@ -147,6 +147,11 @@ abstract class ITask {
                 )
             }
             if (errChineseVarName && !dialect.supportChineseVarName()) {
+                LoggerService.addWarnLine(
+                    "Variable $errChineseVars name is illegal,Variable names can only use letters, " +
+                            "numbers and underscores, " +
+                            "and the first character cannot start with a number"
+                )
                 throw TaskExecuteException(
                     errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
                             "errorCode: ${ErrorCode.USER_INPUT_INVAILD}," +
