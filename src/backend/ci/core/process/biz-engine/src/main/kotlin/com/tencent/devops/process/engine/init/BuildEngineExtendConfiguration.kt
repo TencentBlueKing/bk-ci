@@ -121,13 +121,6 @@ class BuildEngineExtendConfiguration {
     }
 
     @Bean
-    fun pipelineBuildCommitFinishFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_COMMIT_FINISH_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
     fun subPipelineBuildStatusQueue(): Queue {
         return Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_SUBPIPEINE)
     }
