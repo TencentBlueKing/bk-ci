@@ -243,7 +243,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                 return@elements
             }
             val webHookParams = WebhookElementParamsRegistrar.getService(element)
-                .getWebhookElementParams(element, variables) ?: return@elements
+                .getWebhookElementParams(element, PipelineVarUtil.fillVariableMap(variables)) ?: return@elements
             val repositoryConfig = webHookParams.repositoryConfig
             if (repositoryConfig.getRepositoryId().isBlank()) {
                 logger.info("repositoryHashId is blank for code trigger pipeline $pipelineId ")
@@ -419,7 +419,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         taskIds.forEach { taskId ->
             val triggerElement = triggerElementMap[taskId] ?: return@forEach
             val webHookParams = WebhookElementParamsRegistrar.getService(triggerElement)
-                .getWebhookElementParams(triggerElement, variables) ?: return@forEach
+                .getWebhookElementParams(triggerElement, PipelineVarUtil.fillVariableMap(variables)) ?: return@forEach
             val repositoryConfig = webHookParams.repositoryConfig
             if (repositoryConfig.repositoryHashId.isNullOrBlank() && repositoryConfig.repositoryName.isNullOrBlank()) {
                 logger.info("repositoryHashId is blank for code trigger pipeline $pipelineId ")
