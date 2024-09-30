@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
@@ -101,6 +102,15 @@ interface UserWorkspaceResource {
         pageSize: Int?,
         search: WorkspaceSearch
     ): Result<Page<Workspace>>
+
+    @Operation(summary = "获取用户公共云桌面环境")
+    @GET
+    @Path("/envs")
+    fun getEnvs4PublicWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<EnvWithNodeCount>>
 
     @Operation(summary = "删除工作空间")
     @DELETE
@@ -290,7 +300,10 @@ interface UserWorkspaceResource {
         userId: String,
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String?,
+        @Parameter(description = "环境id", required = true)
+        @QueryParam("envHashId")
+        envHashId: String?
     ): Result<WorkspaceStartCloudDetail?>
 
     @Operation(summary = "校验云桌面设备管控")

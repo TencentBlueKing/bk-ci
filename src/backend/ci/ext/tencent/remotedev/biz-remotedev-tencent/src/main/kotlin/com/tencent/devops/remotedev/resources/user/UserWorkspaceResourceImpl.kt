@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
@@ -139,6 +140,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.getWorkspaceList(userId, page, pageSize, updatedSearch))
     }
 
+    override fun getEnvs4PublicWorkspace(userId: String): Result<List<EnvWithNodeCount>> {
+        return Result(workspaceService.getUserEnv4Use(userId))
+    }
+
     @AuditEntry(actionId = ActionId.CGS_VIEW)
     override fun getWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceDetail?> {
         return Result(workspaceService.getWorkspaceDetail(userId, workspaceName))
@@ -217,8 +222,12 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = ActionId.CGS_VIEW)
-    override fun startCloudWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceStartCloudDetail?> {
-        return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName))
+    override fun startCloudWorkspaceDetail(
+        userId: String,
+        workspaceName: String?,
+        envHashId: String?
+    ): Result<WorkspaceStartCloudDetail?> {
+        return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName, envHashId))
     }
 
     override fun projectAccessDevicePermissions(

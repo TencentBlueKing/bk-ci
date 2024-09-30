@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -44,10 +45,16 @@ import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.api.devx.ServiceDEVXResource
+import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
+import com.tencent.devops.remotedev.common.exception.ErrorCode.NOT_FIND_NODE_FOR_ENV_ID
+import com.tencent.devops.remotedev.common.exception.ErrorCode.NOT_FIND_USER_ENV_FOR_ENV_ID
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
@@ -607,9 +614,9 @@ class WorkspaceService @Autowired constructor(
         val data = result.map { res ->
             val name = res.workspaceName
 
-            val owner = when (res.ownerType) {
-                WorkspaceOwnerType.PROJECT -> owners[res.workspaceName]
-                WorkspaceOwnerType.PERSONAL -> res.createUserId
+            val owner = when {
+                res.ownerType.projectUse() -> owners[res.workspaceName]
+                else -> res.createUserId
             }
             val depInfo = if (!owner.isNullOrBlank() && (hasDepartmentsInfo == true)) {
                 // 判断是不是太湖用户
@@ -706,7 +713,7 @@ class WorkspaceService @Autowired constructor(
             search = workspaceSearch
         )
 
-        val sharedWorkspace = result.filter { it.ownerType == WorkspaceOwnerType.PROJECT }.ifEmpty { null }?.let {
+        val sharedWorkspace = result.filter { it.ownerType.projectUse() }.ifEmpty { null }?.let {
             workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, it.map { i -> i.workspaceName }.toSet())
         }?.groupBy { it.workspaceName } ?: emptyMap()
         val taiUsers = sharedWorkspace.values.flatMap {
@@ -918,6 +925,7 @@ class WorkspaceService @Autowired constructor(
             workspaceId = workspace.workspaceId,
             workspaceName = workspaceName,
             displayName = workspace.displayName,
+            projectId = workspace.projectId,
             status = workspace.status,
             lastUpdateTime = workspace.updateTime.timestamp(),
             chargeableTime = 0,
@@ -931,7 +939,7 @@ class WorkspaceService @Autowired constructor(
             machineType = workspaceConf?.size,
             region = zone,
             owner = sharedList.filter { it.type == WorkspaceShared.AssignType.OWNER }.map { it.sharedUser }.toSet(),
-            sharedUsers = sharedList.filter { it.type != WorkspaceShared.AssignType.OWNER }.map { it.sharedUser }
+            sharedUsers = sharedList.filter { it.type == WorkspaceShared.AssignType.VIEWER }.map { it.sharedUser }
                 .toSet(),
             creator = workspace.createUserId,
             createTime = workspace.createTime.timestamp(),
@@ -939,6 +947,114 @@ class WorkspaceService @Autowired constructor(
             remark = workspace.remark,
             currentLoginUser = currentLoginUser
         )
+    }
+
+    fun startCloudWorkspaceDetail(userId: String, workspaceName: String?, envId: String?): WorkspaceStartCloudDetail {
+        if (workspaceName != null) {
+            val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                    params = arrayOf(workspaceName)
+                )
+            if (!workspace.status.checkRunning()) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
+                    params = arrayOf(workspaceName)
+                )
+            }
+            return startCloudWorkspaceDetail(userId, workspace)
+        }
+        if (envId != null) {
+            val userEnvs = getUserEnv4Use(userId)
+            val find = userEnvs.find { it.envHashId == envId } ?: run {
+                logger.warn("not find user env for $envId")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                    params = arrayOf(I18nUtil.getCodeLanMessage(NOT_FIND_USER_ENV_FOR_ENV_ID, params = arrayOf(envId)))
+                )
+            }
+
+            val nodeIds = find.nodeHashIds?.map { HashUtil.decodeIdToLong(it) }?.toSet() ?: run {
+                logger.warn("env for $envId has empty public node")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                    params = arrayOf(I18nUtil.getCodeLanMessage(NOT_FIND_NODE_FOR_ENV_ID))
+                )
+            }
+
+            val public = workspaceWindowsDao.batchFetchWorkspaceWindowsInfoWithNodeIds(dslContext, nodeIds)
+            val loginUserMap = startWorkspaceService.loginUsers(public.map { it.hostIp ?: "" }.toSet())
+            val oneReady = public.find { loginUserMap[it.hostIp].isNullOrEmpty() } ?: run {
+                logger.warn("there are no idle public cloud desktops|$envId|$loginUserMap")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                    params = arrayOf(I18nUtil.getCodeLanMessage(NOT_FIND_NODE_FOR_ENV_ID))
+                )
+            }
+            val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(
+                dslContext = dslContext, workspaceName = oneReady.workspaceName
+            ) ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(oneReady.workspaceName)
+            )
+            if (!workspace.status.checkRunning()) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
+                    params = arrayOf(oneReady.workspaceName)
+                )
+            }
+            /*注册检查*/
+            workspaceSharedDao.fetchWorkspaceSharedInfo(
+                dslContext = dslContext,
+                workspaceName = workspace.workspaceName,
+                sharedUsers = listOf(userId)
+            ).firstOrNull()?.resourceId ?: run {
+                logger.info("start register collaborator user to workspace|$userId|${oneReady.workspaceName}")
+                workspaceCommon.shareWorkspace(
+                    workspaceName = workspace.workspaceName,
+                    projectId = workspace.projectId,
+                    operator = workspace.createUserId,
+                    assigns = listOf(
+                        ProjectWorkspaceAssign(
+                            userId = userId, type = WorkspaceShared.AssignType.COLLABORATOR, expiration = null
+                        )
+                    ),
+                    mountType = workspace.workspaceMountType,
+                    ownerType = workspace.ownerType,
+                    notify = false
+                )
+            }
+            return startCloudWorkspaceDetail(userId, workspace)
+        }
+        throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.DENIAL_OF_SERVICE.errorCode
+        )
+    }
+
+    fun getUserEnv4Use(userId: String): List<EnvWithNodeCount> {
+        /*
+        * 现有：user   ->      project     ->      env
+        * 无法直接做到: user    ->    env
+        * 暂时采用project缓存缓解
+        * */
+        val all = workspaceDao.fetchAllProject4Public(dslContext)
+        val userAll = kotlin.runCatching {
+            client.get(ServiceTxProjectResource::class).list(userId, null).data
+        }.onFailure {
+            logger.error("error in ServiceTxProjectResource::list|$userId", it)
+        }.getOrNull()?.map { it.englishName }?.toSet() ?: kotlin.run {
+            logger.error("fail to get user projects|$userId")
+            return emptyList()
+        }
+        val userHas = all.intersect(userAll)
+        return kotlin.runCatching {
+            client.get(ServiceDEVXResource::class).getUserDEVXEnv(userId, userHas).data
+        }.onFailure {
+            logger.error("error in ServiceDEVXResource::getUserDEVXEnv|$userId|$userHas", it)
+        }.getOrNull() ?: kotlin.run {
+            logger.error("fail to get user env|$userId|$userHas")
+            emptyList()
+        }
     }
 
     @ActionAuditRecord(
@@ -950,38 +1066,31 @@ class WorkspaceService @Autowired constructor(
         ),
         content = ActionAuditContent.CGS_VIEW_CONTENT
     )
-    fun startCloudWorkspaceDetail(userId: String, workspaceName: String): WorkspaceStartCloudDetail {
-        logger.info("$userId get startCloud workspace from workspaceName $workspaceName")
-        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(workspaceName)
-            )
+    private fun startCloudWorkspaceDetail(
+        userId: String,
+        workspace: WorkspaceRecordWithWindows
+    ): WorkspaceStartCloudDetail {
+        logger.info("$userId get startCloud workspace from workspaceName ${workspace.workspaceName}")
+
         // 审计
         ActionAuditContext.current()
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
-        permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
+        permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
         ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
-        if (!workspace.status.checkRunning()) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
-                params = arrayOf(workspaceName)
-            )
-        }
         val resourceId = if (userId != workspace.createUserId) {
             workspaceSharedDao.fetchWorkspaceSharedInfo(
                 dslContext = dslContext,
-                workspaceName = workspaceName,
+                workspaceName = workspace.workspaceName,
                 sharedUsers = listOf(userId)
             ).firstOrNull()?.resourceId
         } else {
-            workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.resourceId
+            workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspace.workspaceName)?.resourceId
         }
-        val owner = if (workspace.ownerType == WorkspaceOwnerType.PROJECT) {
+        val owner = if (workspace.ownerType.projectUse()) {
             workspaceSharedDao.fetchWorkspaceSharedInfo(
                 dslContext = dslContext,
-                workspaceName = workspaceName,
+                workspaceName = workspace.workspaceName,
                 assignType = WorkspaceShared.AssignType.OWNER
             ).firstOrNull()?.sharedUser
         } else {
@@ -1093,6 +1202,19 @@ class WorkspaceService @Autowired constructor(
             return true
         }
         return false
+    }
+
+    fun changeWorkspaceOwnerType(
+        workspaceName: String,
+        old: WorkspaceOwnerType,
+        new: WorkspaceOwnerType
+    ) {
+        workspaceDao.updateWorkspaceOwnerType(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            old = old,
+            new = new
+        )
     }
 
     fun projectAccessDevicePermissions(

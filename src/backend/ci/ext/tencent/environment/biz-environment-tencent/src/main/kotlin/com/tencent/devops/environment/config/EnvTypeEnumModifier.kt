@@ -25,33 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.environment.config
 
-enum class WorkspaceSystemType {
-    LINUX,
-    WINDOWS_GPU;
+import com.tencent.devops.common.api.enums.EnumModifier
+import com.tencent.devops.common.api.util.EnumUtil
+import com.tencent.devops.environment.pojo.enums.EnvType
+import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.enums.TXEnvType
+import com.tencent.devops.environment.pojo.enums.TXNodeType
 
-    fun checkWindows() = this == WINDOWS_GPU
+class EnvTypeEnumModifier : EnumModifier {
 
-    fun needSafeInitialization() = this == WINDOWS_GPU
-
-    fun afterCreateStatus(ownerType: WorkspaceOwnerType) = when {
-        this == LINUX -> WorkspaceStatus.RUNNING
-        this == WINDOWS_GPU && ownerType.personalUse() -> WorkspaceStatus.PREPARING
-        this == WINDOWS_GPU && ownerType.projectUse() -> WorkspaceStatus.DELIVERING
-        else -> WorkspaceStatus.RUNNING
-    }
-
-    fun afterCreateNeedWs(ownerType: WorkspaceOwnerType) = when {
-        this == LINUX -> true
-        this == WINDOWS_GPU && ownerType.personalUse() -> false
-        this == WINDOWS_GPU && ownerType.projectUse() -> true
-        else -> true
-    }
-
-    companion object {
-        fun parse(value: String): WorkspaceSystemType {
-            return values().find { it.name == value } ?: WINDOWS_GPU
-        }
+    override fun modified() {
+        EnumUtil.addEnum(
+            enumType = EnvType::class.java,
+            enumName = TXEnvType.DEVX.name,
+            additionalValues = arrayOf()
+        )
+        EnumUtil.addEnum(
+            enumType = NodeType::class.java,
+            enumName = TXNodeType.DEVX.name,
+            additionalValues = arrayOf(TXNodeType.DEVX.typeName)
+        )
     }
 }

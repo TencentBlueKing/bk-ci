@@ -25,7 +25,6 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
@@ -81,15 +80,15 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         logger.info("op assignWorkspace|$userId|$data")
         // 分配之前先同步下最新的数据
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
-        when (data.type) {
-            WorkspaceOwnerType.PROJECT -> assignProjectWorkspace(
+        when {
+            data.type.projectUse() -> assignProjectWorkspace(
                 data = data,
                 userId = userId,
                 cgsData = cgsData,
                 zoneType = zoneType
             )
 
-            WorkspaceOwnerType.PERSONAL -> assignPersonalWorkspace(data = data, cgsData = cgsData)
+            else -> assignPersonalWorkspace(data = data, cgsData = cgsData)
         }
 
         // 启动流水线完成剩下的分配工作

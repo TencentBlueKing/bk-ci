@@ -24,6 +24,15 @@ class WorkspaceWindowsDao {
         }
     }
 
+    fun batchFetchWorkspaceWindowsInfoWithNodeIds(
+        dslContext: DSLContext,
+        nodeIds: Set<Long>
+    ): Result<TWorkspaceWindowsRecord> {
+        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
+            return dslContext.selectFrom(this).where(NODE_ID.`in`(nodeIds)).fetch()
+        }
+    }
+
     fun fetchAnyWorkspaceWindowsInfo(
         dslContext: DSLContext,
         workspaceName: String
@@ -59,6 +68,18 @@ class WorkspaceWindowsDao {
             return dslContext.update(this)
                 .set(CUR_LAUNCH_ID, launchId)
                 .set(REGION_ID, regionId)
+                .where(WORKSPACE_NAME.equal(workspaceName)).execute()
+        }
+    }
+
+    fun updateNodeId(
+        dslContext: DSLContext,
+        nodeId: Long?,
+        workspaceName: String
+    ): Int {
+        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
+            return dslContext.update(this)
+                .set(NODE_ID, nodeId)
                 .where(WORKSPACE_NAME.equal(workspaceName)).execute()
         }
     }
@@ -106,7 +127,7 @@ class WorkspaceWindowsDao {
                         .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.like("%.$ip"))
                         .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                         .and(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
-                        .and(TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
+                        .and(TWorkspace.T_WORKSPACE.OWNER_TYPE.`in`(WorkspaceOwnerType.projectNames()))
                         .skipCheck()
                 )
         )

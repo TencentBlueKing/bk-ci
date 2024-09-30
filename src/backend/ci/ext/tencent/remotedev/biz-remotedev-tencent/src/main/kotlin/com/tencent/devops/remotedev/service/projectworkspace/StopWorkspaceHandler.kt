@@ -171,7 +171,7 @@ class StopWorkspaceHandler @Autowired constructor(
                 action = WorkspaceAction.STOPPING,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START,
-                ownerType = WorkspaceOwnerType.PROJECT,
+                ownerType = workspace.ownerType,
                 projectId = workspace.projectId
             )
 

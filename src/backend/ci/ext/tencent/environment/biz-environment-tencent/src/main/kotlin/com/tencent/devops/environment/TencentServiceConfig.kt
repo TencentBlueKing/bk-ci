@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.environment.config.EnvTypeEnumModifier
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
@@ -42,6 +43,7 @@ import com.tencent.devops.environment.permission.impl.EnvironmentPermissionServi
 import com.tencent.devops.environment.service.TencentAgentUrlServiceImpl
 import com.tencent.devops.environment.service.TencentGITCIAgentUrlServiceImpl
 import com.tencent.devops.environment.service.prometheus.AgentStatusUpdateThreadMetrics
+import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
@@ -50,6 +52,15 @@ import org.springframework.context.annotation.Primary
 
 @Configuration
 class TencentServiceConfig {
+
+
+    /**
+     * 动态扩展NotifyType中的配置项
+     */
+    @PostConstruct
+    fun envTypeChange() {
+        EnvTypeEnumModifier().modified()
+    }
 
     /**
      *  下载链接服务

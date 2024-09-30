@@ -131,4 +131,28 @@ interface OpWorkspaceResource {
         @QueryParam("uid")
         uid: String
     ): Result<Boolean>
+
+    @Operation(summary = "手动通过已有workspace注册环境管理节点")
+    @POST
+    @Path("/devx_env_node_init")
+    fun devxEnvNodeInit(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "workspaceName", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "取消公共云桌面节点，将其转换为团队云桌面")
+    @POST
+    @Path("/devx_env_node_del")
+    fun devxEnvNodeDel(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "workspaceName", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }
