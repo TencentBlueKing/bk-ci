@@ -121,6 +121,14 @@ class AuthResourceGroupConfigDao {
         if (authAuthResourceGroupConfigs.isEmpty()) {
             return
         }
-        dslContext.batchUpdate(authAuthResourceGroupConfigs).execute()
+        with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
+            authAuthResourceGroupConfigs.forEach {
+                dslContext.update(this)
+                    .set(GROUP_NAME, it.groupName)
+                    .set(DESCRIPTION, it.description)
+                    .where(ID.eq(it.id))
+                    .execute()
+            }
+        }
     }
 }

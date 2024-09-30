@@ -128,7 +128,7 @@ class ApigwAuthProjectResourceV4Impl @Autowired constructor(
         projectId: String,
         resourceType: String,
         groupCode: BkAuthGroup
-    ): Result<Boolean> {
+    ): Result<Int> {
         logger.info(
             "OPENAPI_AUTH_PROJECT_RESOURCE_V4 createGroupByGroupCode " +
                 " |$appCode|$userId|$projectId|$resourceType|$groupCode"

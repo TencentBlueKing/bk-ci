@@ -428,12 +428,15 @@ class RbacPermissionApplyService @Autowired constructor(
             AuthResourceType.PIPELINE_DEFAULT.value -> {
                 String.format(pipelineDetailRedirectUri, projectCode, resourceCode)
             }
+
             AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> {
                 String.format(environmentDetailRedirectUri, projectCode, resourceCode)
             }
+
             AuthResourceType.CODECC_TASK.value -> {
                 String.format(codeccTaskDetailRedirectUri, projectCode, resourceCode)
             }
+
             else -> null
         }
     }
