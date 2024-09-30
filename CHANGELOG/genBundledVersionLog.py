@@ -70,7 +70,7 @@ def process(data, path):
 
 
 def search_tree(data, path):
-    dir_names = os.listdir(path)[::-1][:3]
+    dir_names = sorted(os.listdir(path), reverse=True)[:3]
     for name in dir_names:
         whole_path = os.path.join(path, name)
         if os.path.isdir(whole_path):
