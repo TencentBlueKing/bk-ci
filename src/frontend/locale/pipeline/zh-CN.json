@@ -184,13 +184,16 @@
     "waitApproval": "待审批，处理人：{0}",
     "opinionRequired": "驳回时，审核意见必填",
     "userInputTips": "请输入一个或多个审核人，支持输入变量",
+    "userGroupInputTips": "请输入一个或多个用户组，支持输入变量",
     "reviewRequire": "审核名称和审核人必填",
     "addFlow": "添加审批步骤",
     "approveBy": "由 {0} 审批：",
     "editVariable": "变更参数：",
     "approveOpinion": "审批意见：",
     "approveTime": "审批时间：",
-    "approver": "处理人："
+    "approver": "处理人：",
+    "reviewer": "审核人",
+    "groups": "用户组"
   },
   "execDetail": {
     "log": "日志",

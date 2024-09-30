@@ -184,13 +184,16 @@
     "waitApproval": "Waiting for previous approval. Approver: {0}",
     "opinionRequired": "When reject is selected, approval opinion is required",
     "userInputTips": "Please enter approvers. Pipeline variable is supported.",
+    "userGroupInputTips": "Please enter user group. Pipeline variable is supported.",
     "reviewRequire": "Name of approval flow and approvers are required",
     "addFlow": "Create approval step",
     "approveBy": "Approved by {0}: ",
     "editVariable": "Edit variable: ",
     "approveOpinion": "Approval Opinion: ",
     "approveTime": "Approval Time: ",
-    "approver": "Approver: "
+    "approver": "Approver: ",
+    "reviewer": "Reviewer",
+    "groups": "User Group"
   },
   "execDetail": {
     "log": "Log",
