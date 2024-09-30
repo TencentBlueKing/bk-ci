@@ -38,6 +38,7 @@ interface IPreStage
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
  */
 data class PreStage(
+    val id: String? = null,
     var enable: Boolean? = null,
     val name: String?,
     val label: Any? = null,

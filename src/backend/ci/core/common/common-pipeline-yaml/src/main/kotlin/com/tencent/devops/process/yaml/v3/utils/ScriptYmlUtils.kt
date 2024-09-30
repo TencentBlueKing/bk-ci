@@ -525,6 +525,7 @@ object ScriptYmlUtils {
         preStageList.forEach {
             stageList.add(
                 Stage(
+                    id = it.id,
                     enable = it.enable,
                     name = it.name,
                     label = formatStageLabel(it.label),
@@ -551,7 +552,8 @@ object ScriptYmlUtils {
                     flows = preCheck.reviews.flows?.map {
                         Flow(
                             name = it.name,
-                            reviewers = anyToListString(it.reviewers)
+                            reviewers = anyToListString(it.reviewers),
+                            groups = anyToListString(it.groups)
                         )
                     },
                     variables = preCheck.reviews.variables,
