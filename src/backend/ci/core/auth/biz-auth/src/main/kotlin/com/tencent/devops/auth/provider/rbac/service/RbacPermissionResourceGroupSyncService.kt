@@ -80,7 +80,6 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         private val syncExecutorService = Executors.newFixedThreadPool(5)
         private val syncProjectsExecutorService = Executors.newFixedThreadPool(10)
         private val syncResourceMemberExecutorService = Executors.newFixedThreadPool(50)
-        private const val MAX_NUMBER_OF_CHECKS = 14 * 24 * 12  /* 5分钟一次，检查两个星期内的单据*/
     }
 
     override fun syncByCondition(projectConditionDTO: ProjectConditionDTO) {
@@ -176,21 +175,18 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             val limit = 100
             var offset = 0
             val startEpoch = System.currentTimeMillis()
-            val finalRecordIdsOfTimeOut = mutableListOf<Long>()
             val finalRecordsOfPending = mutableListOf<TAuthResourceGroupApplyRecord>()
             val finalRecordsOfSuccess = mutableListOf<TAuthResourceGroupApplyRecord>()
             do {
                 logger.info("sync members of apply | start")
+                // 获取14天内未审批单据
                 val records = authResourceGroupApplyDao.list(
                     dslContext = dslContext,
+                    day = 14,
                     limit = limit,
                     offset = offset
                 )
-                // 检查14天内的申请的单据
-                val recordIdsOfTimeOut = records.filter { it.numberOfChecks >= MAX_NUMBER_OF_CHECKS }.map { it.id }
-                val (recordsOfSuccess, recordsOfPending) = records.filterNot {
-                    recordIdsOfTimeOut.contains(it.id)
-                }.partition {
+                val (recordsOfSuccess, recordsOfPending) = records.partition {
                     try {
                         val isMemberJoinedToGroup = iamV2ManagerService.verifyGroupValidMember(
                             it.memberId,
@@ -202,18 +198,10 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                         false
                     }
                 }
-                finalRecordIdsOfTimeOut.addAll(recordIdsOfTimeOut)
                 finalRecordsOfPending.addAll(recordsOfPending)
                 finalRecordsOfSuccess.addAll(recordsOfSuccess)
                 offset += limit
             } while (records.size == limit)
-            if (finalRecordIdsOfTimeOut.isNotEmpty()) {
-                authResourceGroupApplyDao.batchUpdate(
-                    dslContext = dslContext,
-                    ids = finalRecordIdsOfTimeOut,
-                    applyToGroupStatus = ApplyToGroupStatus.TIME_OUT
-                )
-            }
             if (finalRecordsOfPending.isNotEmpty()) {
                 authResourceGroupApplyDao.batchUpdate(
                     dslContext = dslContext,
