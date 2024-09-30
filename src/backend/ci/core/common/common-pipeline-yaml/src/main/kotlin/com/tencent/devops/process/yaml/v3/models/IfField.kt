@@ -25,37 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.models.stage
+package com.tencent.devops.process.yaml.v3.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.v3.models.job.Job
-import com.tencent.devops.process.yaml.v3.check.StageCheck
-import com.tencent.devops.process.yaml.v3.models.IfField
-import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci)异常
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class Stage(
-    var enable: Boolean? = null,
-    val name: String?,
-    val label: List<String> = emptyList(),
-    @get:Schema(title = "if")
-    @JsonProperty("if")
-    val ifField: IfField? = null,
-    @get:Schema(title = "fast-kill")
-    @JsonProperty("fast-kill")
-    val fastKill: Boolean? = false,
-    val jobs: List<Job>,
-    @get:Schema(title = "if-modify")
-    @JsonProperty("if-modify")
-    val ifModify: List<String>? = null,
-    @get:Schema(title = "check-in")
-    @JsonProperty("check-in")
-    val checkIn: StageCheck?,
-    @get:Schema(title = "check-out")
-    @JsonProperty("check-out")
-    val checkOut: StageCheck?
-)
+data class IfField(
+    val mode: Mode? = null,
+    val params: Map<String, String>? = null,
+    val expression: String? = null
+) {
+    enum class Mode {
+        RUN_WHEN_ALL_PARAMS_MATCH,
+        NOT_RUN_WHEN_ALL_PARAMS_MATCH;
+
+        companion object {
+            fun parse(value: String): Mode? {
+                return Mode.values().find { it.name == value }
+            }
+        }
+    }
+}

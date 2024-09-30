@@ -67,8 +67,6 @@ data class MarketBuildLessAtomElement(
         return PreStep(
             name = name,
             id = stepId,
-            // 插件上的
-            ifFiled = TransferUtil.parseStepIfFiled(this),
             uses = "${getAtomCode()}@$version",
             with = TransferUtil.simplifyParams(defaultValue, input).ifEmpty { null }
         )
