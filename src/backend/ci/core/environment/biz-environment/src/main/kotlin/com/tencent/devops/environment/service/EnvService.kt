@@ -705,7 +705,8 @@ class EnvService @Autowired constructor(
                 bakOperator = it.bakOperator,
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                envEnableNode = nodeIdMaps[it.nodeId] ?: true
+                envEnableNode = nodeIdMaps[it.nodeId] ?: true,
+                size = it.size
             )
         }
         val count = nodeDao.countByNodeIdList(dslContext, projectId, nodeIdMaps.keys).toLong()
