@@ -92,6 +92,12 @@ class VariableTransfer {
                     type = VariablePropType.GIT_REF.value,
                     repoHashId = it.repoHashId
                 )
+                it.type == BuildFormPropertyType.REPO_REF -> {
+                    VariableProps(
+                        type = VariablePropType.REPO_REF.value,
+                        repoHashId = it.repoHashId
+                    )
+                }
 
                 it.type == BuildFormPropertyType.MULTIPLE -> VariableProps(
                     type = VariablePropType.CHECKBOX.value,

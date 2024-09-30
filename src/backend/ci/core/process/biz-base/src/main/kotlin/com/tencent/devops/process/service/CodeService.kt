@@ -42,6 +42,7 @@ import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceSvnResource
 import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.scm.pojo.enums.SvnFileType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -59,9 +60,8 @@ class CodeService @Autowired constructor(
     private val scmProxyService: ScmProxyService,
     private val client: Client
 ) {
-    fun getSvnDirectories(projectId: String, repoHashId: String?, relativePath: String?): List<String> {
-        val repositoryConfig = getRepositoryConfig(repoHashId, null)
-
+    fun getSvnDirectories(projectId: String, repositoryConfig: RepositoryConfig, relativePath: String?): List<String> {
+        val repoHashId = repositoryConfig.getRepositoryId()
         val repository = (client.get(ServiceRepositoryResource::class).get(
             projectId = projectId,
             repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
@@ -70,13 +70,13 @@ class CodeService @Autowired constructor(
             ?: throw NotFoundException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = GIT_NOT_FOUND,
-                    params = arrayOf("$repoHashId")
+                    params = arrayOf(repoHashId)
                 )
             )) as? CodeSvnRepository
             ?: throw IllegalArgumentException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = NOT_SVN_CODE_BASE,
-                    params = arrayOf("$repoHashId")
+                    params = arrayOf(repoHashId)
                 )
             )
 
@@ -119,8 +119,12 @@ class CodeService @Autowired constructor(
         }
     }
 
-    fun getGitRefs(projectId: String, repoHashId: String?, search: String? = null): List<String> {
+    fun getSvnDirectories(projectId: String, repoHashId: String?, relativePath: String?): List<String> {
         val repositoryConfig = getRepositoryConfig(repoHashId, null)
+        return getSvnDirectories(projectId, repositoryConfig, relativePath)
+    }
+
+    fun getGitRefs(projectId: String, repositoryConfig: RepositoryConfig, search: String? = null): List<String> {
         val result = mutableListOf<String>()
         val branches = scmProxyService.listBranches(projectId, repositoryConfig, search).data ?: listOf()
         val tags = scmProxyService.listTags(projectId, repositoryConfig, search).data ?: listOf()
@@ -128,6 +132,11 @@ class CodeService @Autowired constructor(
         result.addAll(branches)
         result.addAll(tags)
         return result
+    }
+
+    fun getGitRefs(projectId: String, repoHashId: String?, search: String? = null): List<String> {
+        val repositoryConfig = getRepositoryConfig(repoHashId, null)
+        return getGitRefs(projectId, repositoryConfig, search)
     }
 
     fun listRepository(projectId: String, scmType: ScmType): List<RepositoryInfoWithPermission> {
@@ -140,6 +149,57 @@ class CodeService @Autowired constructor(
         } catch (t: Throwable) {
             logger.warn("[$projectId|$scmType] Fail to get the repository", t)
             throw t
+        }
+    }
+
+    fun listRepository(projectId: String, repositoryTypes: String?): List<RepositoryInfo> {
+        try {
+            val result = client.get(ServiceRepositoryResource::class).listByProject(
+                projectId,
+                repositoryTypes = repositoryTypes,
+                page = 1,
+                pageSize = 100
+            )
+            if (result.isNotOk() || result.data == null) {
+                logger.warn("[$projectId|$repositoryTypes] Fail to get the repository with message $result")
+            }
+            return result.data!!
+        } catch (t: Throwable) {
+            logger.warn("[$projectId|$repositoryTypes] Fail to get the repository", t)
+            throw t
+        }
+    }
+
+    fun getRepoRefs(projectId: String, repositoryConfig: RepositoryConfig): List<String> {
+        val repository = client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+            repositoryType = repositoryConfig.repositoryType
+        ).data ?: throw NotFoundException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = GIT_NOT_FOUND,
+                params = arrayOf(repositoryConfig.getRepositoryId())
+            )
+        )
+        return when (repository.getScmType()) {
+            ScmType.CODE_SVN -> {
+                getSvnDirectories(
+                    projectId = projectId,
+                    repositoryConfig = repositoryConfig,
+                    relativePath = null
+                )
+            }
+
+            ScmType.CODE_GIT, ScmType.CODE_TGIT, ScmType.CODE_GITLAB, ScmType.GITHUB -> {
+                getGitRefs(
+                    projectId = projectId,
+                    repositoryConfig = repositoryConfig
+                )
+            }
+
+            else -> {
+                emptyList()
+            }
         }
     }
 
@@ -232,7 +292,7 @@ class CodeService @Autowired constructor(
         )
     }
 
-    private fun getRepositoryConfig(repoHashId: String?, repoName: String?): RepositoryConfig {
+    fun getRepositoryConfig(repoHashId: String?, repoName: String?): RepositoryConfig {
         if (!repoHashId.isNullOrBlank()) {
             return RepositoryConfig(repoHashId, null, RepositoryType.ID)
         }

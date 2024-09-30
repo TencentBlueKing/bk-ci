@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
@@ -86,6 +87,8 @@ class ParamFacadeService @Autowired constructor(
                 filterParams.add(addArtifactoryProperties(userId, projectId, it))
             } else if (it.type == BuildFormPropertyType.SUB_PIPELINE) {
                 filterParams.add(addSubPipelineProperties(userId, projectId, pipelineId, it))
+            } else if (it.type == BuildFormPropertyType.REPO_REF) {
+                filterParams.add(addRepoRefs(projectId, it, userId))
             } else {
                 filterParams.add(it)
             }
@@ -114,6 +117,8 @@ class ParamFacadeService @Autowired constructor(
                 addArtifactoryProperties(userId, projectId, property)
             } else if (property.type == BuildFormPropertyType.SUB_PIPELINE) {
                 addSubPipelineProperties(userId, projectId, pipelineId, property)
+            } else if (property.type == BuildFormPropertyType.REPO_REF) {
+                addRepoRefs(projectId, property, userId, search)
             } else {
                 property
             }
@@ -135,7 +140,10 @@ class ParamFacadeService @Autowired constructor(
         val options = refs.map {
             BuildFormValue(it, it)
         }
-        val searchUrl = "/process/api/user/buildParam/$projectId/${formProperty.repoHashId}/gitRefs?search={words}"
+        val searchUrl = getGitBranchSearchUrl(
+            projectId = projectId,
+            repoHashId = formProperty.repoHashId ?: ""
+        )
         val replaceKey = "{words}"
         return copyFormProperty(
             property = formProperty,
@@ -192,7 +200,7 @@ class ParamFacadeService @Autowired constructor(
         val options = if ((!userId.isNullOrBlank())) {
             // 检查代码库的权限， 只返回用户有权限代码库
             val hasPermissionCodelibs =
-                getPermissionCodelibList(userId, projectId, codelibFormProperty.scmType!!, aliasName)
+                getPermissionCodelibList(userId, projectId, codelibFormProperty.scmType!!.name, aliasName)
             logger.info("[$userId|$projectId] Get the permission code lib list ($hasPermissionCodelibs)")
             hasPermissionCodelibs.map { BuildFormValue(it.aliasName, it.aliasName) }
         } else {
@@ -200,9 +208,11 @@ class ParamFacadeService @Autowired constructor(
             val codeAliasName = codeService.listRepository(projectId, codelibFormProperty.scmType!!)
             codeAliasName.map { BuildFormValue(it.aliasName, it.aliasName) }
         }
-        val searchUrl = "/process/api/user/buildParam/repository/$projectId/aliasName?" +
-                "repositoryType=${codelibFormProperty.scmType!!}&permission=${Permission.LIST.name}" +
-                "&aliasName={words}&page=1&pageSize=100"
+        val searchUrl = getCodeLibSearchUrl(
+            projectId = projectId,
+            scmType = codelibFormProperty.scmType!!.name,
+            permission = Permission.LIST
+        )
         val replaceKey = "{words}"
         return copyFormProperty(
             property = codelibFormProperty,
@@ -334,23 +344,24 @@ class ParamFacadeService @Autowired constructor(
             glob = property.glob,
             properties = property.properties,
             searchUrl = searchUrl,
-            replaceKey = replaceKey
+            replaceKey = replaceKey,
+            branch = property.branch
         )
     }
 
     private fun getPermissionCodelibList(
         userId: String,
         projectId: String,
-        scmType: ScmType?,
+        scmType: String?,
         aliasName: String? = null
     ): List<RepositoryInfo> {
-        val watcher = Watcher("getPermissionCodelibList_${userId}_${projectId}_${scmType?.name}")
+        val watcher = Watcher("getPermissionCodelibList_${userId}_${projectId}_$scmType")
         return try {
             client.get(ServiceRepositoryResource::class).hasPermissionList(
                 userId = userId,
                 projectId = projectId,
                 permission = Permission.LIST,
-                repositoryType = scmType?.name,
+                repositoryType = scmType,
                 page = 1,
                 pageSize = 100,
                 aliasName = aliasName
@@ -406,6 +417,96 @@ class ParamFacadeService @Autowired constructor(
             LogUtils.printCostTimeWE(watcher, errorThreshold = 3000)
         }
     }
+
+    private fun addRepoRefs(
+        projectId: String,
+        formProperty: BuildFormProperty,
+        userId: String?,
+        search: String? = null
+    ): BuildFormProperty {
+        val repositoryTypes = listOf(
+            ScmType.CODE_GIT,
+            ScmType.GITHUB,
+            ScmType.CODE_SVN,
+            ScmType.CODE_TGIT,
+            ScmType.CODE_GITLAB
+        ).joinToString(separator = ",") { it.name }
+        val codeLibOptions = if ((!userId.isNullOrBlank())) {
+            // 检查代码库的权限， 只返回用户有权限代码库
+            val codeLibs = getPermissionCodelibList(
+                userId = userId,
+                projectId = projectId,
+                scmType = repositoryTypes,
+                aliasName = search
+            )
+            logger.info("[$userId|$projectId] Get the permission code lib list ($codeLibs)")
+            codeLibs.map { BuildFormValue(it.aliasName, it.aliasName) }
+        } else {
+            // 该接口没有搜索字段
+            val codeAliasName = codeService.listRepository(projectId, repositoryTypes)
+            codeAliasName.map { BuildFormValue(it.aliasName, it.aliasName) }
+        }
+        val codeLibSearchUrl = getCodeLibSearchUrl(
+            projectId = projectId,
+            permission = Permission.LIST,
+            scmType = repositoryTypes
+        )
+        val replaceKey = "{words}"
+        val repoHashIdReplaceKey = "{repoNameWords}"
+        val repositoryConfig = codeService.getRepositoryConfig(
+            repoName = formProperty.defaultValue.toString(),
+            repoHashId = null
+        )
+        val branchOptions = try {
+            codeService.getRepoRefs(
+                projectId = projectId,
+                repositoryConfig = repositoryConfig
+            ).map { BuildFormValue(it, it) }
+        } catch (e: Exception) {
+            logger.warn("projectId:$projectId,repoConfig:$repositoryConfig add repo refs error", e)
+            listOf()
+        }
+        return copyFormProperty(
+            property = formProperty,
+            options = fixDefaultOptions(options = codeLibOptions, defaultValue = formProperty.defaultValue.toString()),
+            searchUrl = codeLibSearchUrl,
+            replaceKey = replaceKey
+        ).copy(
+            branchOptions = branchOptions,
+            branchReplaceKey = replaceKey,
+            branchSearchUrl = getBranchSearchUrl(
+                projectId = projectId,
+                repoHashId = repoHashIdReplaceKey,
+                repositoryType = RepositoryType.NAME
+            ),
+            defaultBranch = formProperty.defaultBranch
+        )
+    }
+
+    private fun getCodeLibSearchUrl(projectId: String, permission: Permission?, scmType: String?): String {
+        val url = StringBuilder("/process/api/user/buildParam/repository/$projectId/aliasName?aliasName={words}&")
+        if (permission != null) {
+            url.append("permission=${permission.name}")
+        }
+        if (scmType != null) {
+            url.append("&repositoryType=$scmType")
+        }
+        return url.toString()
+    }
+
+    private fun getGitBranchSearchUrl(
+        projectId: String,
+        repoHashId: String,
+        repositoryType: RepositoryType = RepositoryType.ID
+    ) = "/process/api/user/buildParam/$projectId/$repoHashId/gitRefs?search={words}&" +
+            "repositoryType=${repositoryType.name}"
+
+    private fun getBranchSearchUrl(
+        projectId: String,
+        repoHashId: String,
+        repositoryType: RepositoryType = RepositoryType.ID
+    ) = "/process/api/user/buildParam/$projectId/repository/refs?search={words}&" +
+            "repositoryType=${repositoryType.name}&repositoryId=$repoHashId"
 
     companion object {
         private val logger = LoggerFactory.getLogger(ParamFacadeService::class.java)
