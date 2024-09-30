@@ -696,6 +696,9 @@
             }
             .card-item {
                 text-align: center;
+                word-wrap: break-word;
+                word-break: break-all;
+                padding: 5px;
                 i {
                     font-size: 12px;
                     font-weight: bold;

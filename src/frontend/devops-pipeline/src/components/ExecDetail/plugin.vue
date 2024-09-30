@@ -43,7 +43,7 @@
                 v-if="currentTab === 'log'"
             />
             <component
-                v-if="currentTab === key"
+                v-show="currentTab === key"
                 :is="value.component"
                 v-bind="value.bindData"
                 v-for="(value, key) in componentList"
@@ -81,6 +81,10 @@
             editingElementPos: {
                 type: Object,
                 required: true
+            },
+            properties: {
+                type: Array,
+                default: () => ['LOG', 'ARTIFACT', 'CONFIG']
             }
         },
         data () {
@@ -179,10 +183,24 @@
                 handler (val) {
                     const tab = val.find(tab => tab.name === this.currentTab)
                     if (!tab.show) {
-                        this.currentTab = 'log'
+                        this.currentTab = val[0].name
                     }
                 },
                 deep: true
+            },
+            properties: {
+                handler (newValue) {
+                    if (newValue.join('') === ['CONFIG', 'LOG', 'ARTIFACT'].join('')) {
+                        this.tabList = [
+                            { name: 'setting', show: true },
+                            { name: 'log', show: true },
+                            { name: 'artifactory', show: false, completeLoading: false },
+                            { name: 'report', show: false, completeLoading: false }
+                        ]
+                        this.currentTab = 'setting'
+                    }
+                },
+                immediate: true
             }
         },
 
