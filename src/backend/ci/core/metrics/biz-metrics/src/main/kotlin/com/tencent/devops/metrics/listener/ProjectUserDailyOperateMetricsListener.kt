@@ -28,7 +28,7 @@
 
 package com.tencent.devops.metrics.listener
 
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
 import com.tencent.devops.metrics.service.ProjectBuildSummaryService
 import org.slf4j.LoggerFactory
@@ -38,7 +38,7 @@ import org.springframework.stereotype.Component
 @Component
 class ProjectUserDailyOperateMetricsListener @Autowired constructor(
     private val projectBuildSummaryService: ProjectBuildSummaryService
-) : Listener<ProjectUserOperateMetricsEvent> {
+) : EventListener<ProjectUserOperateMetricsEvent> {
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectUserDailyOperateMetricsListener::class.java)
     }

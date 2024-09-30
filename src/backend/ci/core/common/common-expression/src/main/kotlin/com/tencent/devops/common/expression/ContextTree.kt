@@ -1,10 +1,5 @@
 package com.tencent.devops.common.expression
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.DictionaryContextDataWithVal
@@ -13,8 +8,6 @@ import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import java.util.LinkedList
 import java.util.Queue
-import java.util.Stack
-import kotlin.jvm.Throws
 
 /**
  * 用来将流水线变量转为树的形式，来对其转换到表达式引擎做兼容处理
@@ -144,22 +137,6 @@ open class ContextTreeNode(
         children.add(child)
     }
 
-    fun depthFirstTraversal(run: (node: ContextTreeNode) -> Unit) {
-        val stack = Stack<ContextTreeNode>()
-        stack.push(this)
-
-        while (!stack.isEmpty()) {
-            val node = stack.pop()
-
-            run(node)
-
-            // 将子节点逆序入栈，保证先访问左边的子节点
-            for (i in node.children.lastIndex downTo 0) {
-                stack.push(node.children[i])
-            }
-        }
-    }
-
     fun breadthFirstTraversal(run: (node: ContextTreeNode) -> Boolean) {
         val queue: Queue<ContextTreeNode> = LinkedList()
         queue.offer(this)
@@ -187,67 +164,5 @@ open class ContextTreeNode(
             dict[child.key] = child.toContext()
         }
         return dict
-    }
-
-    // 校验当前节点的值转换的JSON树是否与子节点结构和值相同
-//    @Throws(ContextJsonFormatException::class)
-//    private fun checkJson() {
-//        val jsonTree = try {
-//            ObjectMapper().readTree(this.value)
-//        } catch (e: Exception) {
-//            throw ContextJsonFormatException("${this.value} to json error ${e.localizedMessage}")
-//        }
-//        // TODO: 是否需要兼容 json 不同类型
-//        jsonTree.equals(ObjectNodeComparator(), this.toJson())
-//    }
-
-    private fun toJson(): JsonNode {
-        val jsonNodeFactory = JsonNodeFactory.instance
-        val rootObj = jacksonObjectMapper().createObjectNode()
-        if (this.children.isEmpty()) {
-            return jsonNodeFactory.textNode(this.value)
-        }
-        this.children.forEach { child ->
-            rootObj.putIfAbsent(child.key, child.toJson())
-        }
-        return rootObj
-    }
-}
-
-// 存在用户的 json 值为 array 但是翻译成了 map，这里我们认为是等价的
-class ObjectNodeComparator : Comparator<JsonNode> {
-    override fun compare(o1: JsonNode?, o2: JsonNode?): Int {
-        if (o1 == null && o2 == null) {
-            return 0
-        }
-        if (o1 == null || o2 == null) {
-            return 1
-        }
-        if (o1 == o2) {
-            return 0
-        }
-        if (o1 is ArrayNode && o2 is ObjectNode) {
-            if (o1.size() != o2.size()) {
-                return 1
-            }
-            o1.forEachIndexed { index, node ->
-                if (o2[index] == null || node != o2[index]) {
-                    return 1
-                }
-            }
-            return 0
-        }
-        if (o1 is ObjectNode && o2 is ArrayNode) {
-            if (o1.size() != o2.size()) {
-                return 1
-            }
-            o2.forEachIndexed { index, node ->
-                if (o1[index] == null || node != o1[index]) {
-                    return 1
-                }
-            }
-            return 0
-        }
-        return 1
     }
 }
