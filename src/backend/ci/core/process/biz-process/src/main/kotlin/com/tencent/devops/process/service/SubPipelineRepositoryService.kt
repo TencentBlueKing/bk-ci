@@ -16,7 +16,6 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
-import com.tencent.devops.process.engine.extend.DefaultModelCheckPlugin
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -33,7 +32,6 @@ class SubPipelineRepositoryService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val pipelineResDao: PipelineResourceDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val defaultModelCheckPlugin: DefaultModelCheckPlugin,
     private val pipelinePermissionService: PipelinePermissionService
 ) {
 

@@ -47,9 +47,6 @@ import java.util.stream.Collectors
 
 @Suppress("NestedBlockDepth", "TooManyFunctions")
 abstract class ITask {
-
-    private val logger = LoggerFactory.getLogger(ITask::class.java)
-
     private val environment = HashMap<String, String>()
 
     private val monitorData = HashMap<String, Any>()

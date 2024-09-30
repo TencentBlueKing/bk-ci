@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -45,6 +46,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_PREPARE_TO_BUILD
@@ -443,6 +445,7 @@ object Runner {
 
         // 填充插件级的ENV参数
         val customEnvStr = buildTask.params?.get(Element::customEnv.name)
+        val dialect = PipelineDialectUtil.getPipelineDialect(jobBuildVariables.variables[PIPELINE_DIALECT])
         if (customEnvStr != null) {
             val customEnv = try {
                 JsonUtil.toOrNull(customEnvStr, object : TypeReference<List<NameAndValue>>() {})
@@ -458,6 +461,7 @@ object Runner {
                     val value = EnvReplacementParser.parse(
                         value = it.value ?: "",
                         contextMap = jobVariables,
+                        dialect = dialect,
                         functions = SpecialFunctions.functions,
                         output = SpecialFunctions.output
                     )
