@@ -47,6 +47,15 @@ BEGIN
         ALTER TABLE `T_NODE`
             ADD INDEX `SERVER_ID` (`SERVER_ID`);
     END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_NODE'
+                        AND COLUMN_NAME = 'SIZE') THEN
+    ALTER TABLE T_NODE
+            ADD COLUMN `SIZE` varchar(32) DEFAULT NULL COMMENT '机型';
+    END IF;
 
     COMMIT;
 END <CI_UBF>

@@ -42,6 +42,7 @@ data class EnvWithNodeCount(
     @get:Schema(title = "源项目", required = false)
     val sharedProjectId: String?,
     @get:Schema(title = "分享人", required = false)
-    val sharedUserId: String?
-
+    val sharedUserId: String?,
+    @get:Schema(title = "节点hash id", required = false)
+    val nodeHashIds: List<String>? = null
 )
