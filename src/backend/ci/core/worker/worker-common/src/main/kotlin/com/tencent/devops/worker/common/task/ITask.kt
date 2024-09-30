@@ -40,7 +40,6 @@ import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.logger.LoggerService
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.regex.Pattern
 import java.util.stream.Collectors
