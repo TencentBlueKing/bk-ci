@@ -27,15 +27,18 @@
 
 package com.tencent.devops.artifactory.util
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
+import java.time.LocalDateTime
 import java.util.regex.Pattern
 
 @Suppress("ALL")
 object DefaultPathUtils {
     private const val DEFAULT_EXTENSION = "temp"
-
+    private val LOG = LoggerFactory.getLogger(this::class.java.name)
     fun isFolder(path: String): Boolean {
         return path.endsWith("/")
     }
@@ -66,6 +69,23 @@ object DefaultPathUtils {
     fun randomFileName(fileExtension: String = DEFAULT_EXTENSION): String {
         val suffix = if (fileExtension.isBlank()) "" else ".$fileExtension"
         return "${UUIDUtil.generate()}$suffix"
+    }
+
+    fun getUploadPathByTime(filePath: String?, fileType: String?, type: String): String {
+        val filePathSb = StringBuilder()
+        val nowTime = DateTimeUtil.toDateTime(LocalDateTime.now(), DateTimeUtil.YYYYMMDD)
+        val baseUrl = "$nowTime/${UUIDUtil.generate()}.$type"
+        val path = if (filePath.isNullOrBlank()) {
+            filePathSb.append("file/")
+            if (fileType == null) {
+                filePathSb.append(baseUrl).toString()
+            } else {
+                filePathSb.append("${fileType.lowercase()}/").append(baseUrl).toString()
+            }
+        } else {
+            filePath
+        }
+        return path
     }
 
     fun resolvePipelineId(path: String): String {
