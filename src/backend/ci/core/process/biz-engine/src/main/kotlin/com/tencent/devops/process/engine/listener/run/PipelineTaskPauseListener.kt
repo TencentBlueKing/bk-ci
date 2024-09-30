@@ -126,11 +126,9 @@ class PipelineTaskPauseListener @Autowired constructor(
             projectId = task.projectId,
             pipelineId = task.pipelineId,
             buildId = task.buildId,
-            stageId = task.stageId,
             containerId = task.containerId,
             executeCount = task.executeCount ?: 1,
-            taskId = task.taskId,
-            element = newElement
+            taskId = task.taskId
         )
         // issues_6210 添加继续操作操作人变量
         buildVariableService.saveVariable(
@@ -179,11 +177,8 @@ class PipelineTaskPauseListener @Autowired constructor(
             projectId = task.projectId,
             pipelineId = task.pipelineId,
             buildId = task.buildId,
-            stageId = task.stageId,
-            containerId = task.containerId,
             taskId = task.taskId,
-            executeCount = task.executeCount ?: 1,
-            cancelUser = userId // fix me: 是否要直接更新取消人，暂时维护原有逻辑
+            executeCount = task.executeCount ?: 1
         )
 
         buildLogPrinter.addYellowLine(

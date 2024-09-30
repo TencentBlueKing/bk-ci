@@ -404,6 +404,7 @@ class PipelineContainerService @Autowired constructor(
                 containPostTaskFlag = container.containPostTaskFlag,
                 agentReuseMutex = agentReuseMutex
             ),
+            containPostTaskFlag = container.containPostTaskFlag,
             matrixGroupFlag = false,
             matrixGroupId = matrixGroupId
         )
@@ -676,6 +677,7 @@ class PipelineContainerService @Autowired constructor(
                             seq = context.containerSeq,
                             status = BuildStatus.QUEUE,
                             controlOption = controlOption,
+                            containPostTaskFlag = container.containPostTaskFlag,
                             matrixGroupFlag = container.matrixGroupFlag,
                             matrixGroupId = null
                         ),
@@ -691,9 +693,9 @@ class PipelineContainerService @Autowired constructor(
                     projectId = context.projectId, pipelineId = context.pipelineId, buildId = context.buildId,
                     resourceVersion = context.resourceVersion, stageId = stage.id!!,
                     containerId = container.containerId!!, containerType = container.getClassType(),
-                    executeCount = context.executeCount, matrixGroupFlag = container.matrixGroupFlag,
-                    matrixGroupId = null, status = BuildStatus.SKIP.name, containerVar = mutableMapOf(),
-                    startTime = null, endTime = null, timestamps = mapOf()
+                    executeCount = context.executeCount, containPostTaskFlag = container.containPostTaskFlag,
+                    matrixGroupFlag = container.matrixGroupFlag, matrixGroupId = null, status = BuildStatus.SKIP.name,
+                    containerVar = mutableMapOf(), startTime = null, endTime = null, timestamps = mapOf()
                 )
             )
         }
