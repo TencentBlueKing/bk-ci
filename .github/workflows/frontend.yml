@@ -47,6 +47,11 @@ jobs:
           export NODE_OPTIONS=--openssl-legacy-provider
           pnpm public
         working-directory: src/frontend
+      - name: generate version log
+        run: |
+          python genBundledVersionLog.py
+          cp bundledVersionLog*.json ../src/frontend/frontend/
+        working-directory: CHANGELOG
       - uses: actions/upload-artifact@v4
         if: ${{ inputs.upload == 'true'  }}
         with:
