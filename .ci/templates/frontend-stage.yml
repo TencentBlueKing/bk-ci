@@ -47,6 +47,10 @@ stages:
                 src/frontend/node_modules
                 src/frontend/*/node_modules
               skipSaveWhenCacheHit: true
+          - name: "generate version log"
+            run: |
+              cd CHANGELOG
+              python genBundledVersionLog.py
           - name: "Bash"
             run: |
               cd src/frontend
@@ -80,9 +84,7 @@ stages:
               cp ./permission/frontend#permission#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no permission module"
               cp ./stream/frontend#stream#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no stream module"
               
-              version_logs_dir=${{ ci.workspace }}/CHANGELOG
-              python $version_logs_dir/genBundledVersionLog.py
-              cp $version_logs_dir/bundledVersionLog*.json ${{ ci.workspace }}/ci/frontend/
+              cp ${{ ci.workspace }}/CHANGELOG/bundledVersionLog*.json ${{ ci.workspace }}/ci/frontend/
 
               cd ${{ ci.workspace }}/scripts/
               cp -rf ci_env_${{ parameters.env }}.properties ci_env.properties
