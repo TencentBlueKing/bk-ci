@@ -79,6 +79,10 @@ stages:
               cp ./manage/frontend#manage#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no manage module"
               cp ./permission/frontend#permission#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no permission module"
               cp ./stream/frontend#stream#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no stream module"
+              
+              version_logs_dir=${{ ci.workspace }}/CHANGELOG
+              python $version_logs_dir/genBundledVersionLog.py
+              cp $version_logs_dir/bundledVersionLog*.json ${{ ci.workspace }}/ci/frontend/
 
               cd ${{ ci.workspace }}/scripts/
               cp -rf ci_env_${{ parameters.env }}.properties ci_env.properties
