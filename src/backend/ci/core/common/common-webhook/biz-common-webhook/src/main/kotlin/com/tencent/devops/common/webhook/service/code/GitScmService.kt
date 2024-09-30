@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
 import com.tencent.devops.repository.api.github.ServiceGithubPRResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
@@ -44,7 +45,9 @@ import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.sdk.github.request.GetCommitRequest
 import com.tencent.devops.repository.sdk.github.request.GetPullRequestRequest
+import com.tencent.devops.repository.sdk.github.response.CommitResponse
 import com.tencent.devops.repository.sdk.github.response.PullRequestResponse
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
@@ -515,5 +518,32 @@ class GitScmService @Autowired constructor(
                 url = url
             )
         ).data
+    }
+
+    /**
+     * 获取github commit 详情
+     */
+    fun getGithubCommitInfo(
+        githubRepoName: String,
+        commitId: String,
+        repo: Repository
+    ): CommitResponse? {
+        return try {
+            val accessToken = client.get(ServiceGithubResource::class).getAccessToken(
+                userId = repo.userName
+            ).data?.accessToken ?: ""
+            val commitInfo = client.get(ServiceGithubCommitsResource::class).getCommit(
+                request = GetCommitRequest(
+                    repoName = githubRepoName,
+                    ref = commitId
+                ),
+                token = accessToken
+            ).data
+            logger.info("get github commit info|repoName[$githubRepoName]|commit[$commitId]|[$commitInfo]")
+            commitInfo
+        } catch (ignored: Exception) {
+            logger.warn("fail to get github commit request", ignored)
+            null
+        }
     }
 }
