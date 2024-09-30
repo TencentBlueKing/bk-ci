@@ -25,24 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.api.pojo
+package com.tencent.devops.process.service.commit.check.listener
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.process.pojo.mq.commit.check.GithubCommitCheckEvent
+import com.tencent.devops.process.service.commit.check.CodeWebhookService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-data class GitCommitCheckInfo(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val repositoryConfig: RepositoryConfig,
-    val commitId: String,
-    val block: Boolean,
-    val triggerType: String = "",
-    val mergeRequestId: Long? = null,
-    val userId: String,
-    val webhookType: String,
-    val webhookEventType: String,
-    val enableCheck: Boolean,
-    val targetBranch: String?,
-    val pipelineName: String = "",
-    val startTaskId: String? = null
-)
+@Component
+class GitHubCommitCheckListener @Autowired constructor(
+    private val codeWebhookService: CodeWebhookService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<GithubCommitCheckEvent>(pipelineEventDispatcher) {
+
+    override fun run(event: GithubCommitCheckEvent) {
+        codeWebhookService.consumeGitHubPrEvent(event)
+    }
+}

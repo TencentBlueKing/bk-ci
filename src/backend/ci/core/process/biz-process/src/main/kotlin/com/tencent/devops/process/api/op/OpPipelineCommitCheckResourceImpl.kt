@@ -25,24 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.api.pojo
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.service.commit.check.CodeWebhookService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-data class GitCommitCheckInfo(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val repositoryConfig: RepositoryConfig,
-    val commitId: String,
-    val block: Boolean,
-    val triggerType: String = "",
-    val mergeRequestId: Long? = null,
-    val userId: String,
-    val webhookType: String,
-    val webhookEventType: String,
-    val enableCheck: Boolean,
-    val targetBranch: String?,
-    val pipelineName: String = "",
-    val startTaskId: String? = null
-)
+@RestResource
+class OpPipelineCommitCheckResourceImpl @Autowired constructor(
+    val codeWebhookService: CodeWebhookService
+) : OpPipelineCommitCheckResource {
+
+    override fun unlock(projectId: String, pipelineId: String, buildId: String): Result<Boolean> {
+        logger.info("start unlock git commit check|$projectId|$pipelineId|$buildId")
+        codeWebhookService.unlock(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            userId = "BK_CI"
+        )
+        return Result(true)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(OpPipelineCommitCheckResourceImpl::class.java)
+    }
+}

@@ -114,6 +114,7 @@ object MQ {
     // 接收上述广播的队列
     const val QUEUE_PIPELINE_BUILD_FINISH_MEASURE = "q.engine.pipeline.build.measure"
     const val QUEUE_PIPELINE_BUILD_FINISH_CODE_WEBHOOK = "q.engine.pipeline.build.code.webhook"
+    const val QUEUE_PIPELINE_BUILD_FINISH_COMMIT_CHECK = "q.engine.pipeline.build.commit.check"
     const val QUEUE_PIPELINE_BUILD_FINISH_ATOM_MARKET = "q.engine.pipeline.build.atom.market"
     const val QUEUE_PIPELINE_BUILD_FINISH_LAMBDA = "q.engine.pipeline.build.lambda"
     const val QUEUE_PIPELINE_BUILD_FINISH_GITCI = "q.engine.pipeline.build.gitci"
@@ -184,12 +185,24 @@ object MQ {
     const val ROUTE_LOG_STATUS_BUILD_EVENT = "r.engine.log.status.build.event"
     const val QUEUE_LOG_STATUS_BUILD_EVENT = "q.engine.log.status.build.event"
 
-    // Git webhook事件回调
+    // Git webhook事件回调(废弃)
+    @Deprecated("commit check相关功能迁移到process服务后, 此常量会失效")
     const val EXCHANGE_GIT_COMMIT_CHECK = "e.engine.git.event"
+    @Deprecated("commit check相关功能迁移到process服务后, 此常量会失效")
     const val ROUTE_GIT_COMMIT_CHECK = "r.engine.git.commit.check"
+    @Deprecated("commit check相关功能迁移到process服务后, 此常量会失效")
     const val QUEUE_GIT_COMMIT_CHECK = "q.engine.git.commit.check"
+    @Deprecated("commit check相关功能迁移到process服务后, 此常量会失效")
     const val ROUTE_GITHUB_PR = "r.engine.github.pr"
+    @Deprecated("commit check相关功能迁移到process服务后, 此常量会失效")
     const val QUEUE_GITHUB_PR = "q.engine.github.pr"
+
+    // Git webhook事件回调
+    const val EXCHANGE_GIT_COMMIT_CHECK_EVENT = "e.engine.git.commit.check.event"
+    const val ROUTE_GIT_COMMIT_CHECK_EVENT = "r.engine.git.commit.check.event"
+    const val QUEUE_GIT_COMMIT_CHECK_EVENT = "q.engine.git.commit.check.event"
+    const val ROUTE_GITHUB_COMMIT_CHECK_EVENT = "r.engine.github.commit.check.event"
+    const val QUEUE_GITHUB_COMMIT_CHECK_EVENT = "q.engine.github.commit.check.event"
 
     // SVN代码仓库webhook请求回调
     const val EXCHANGE_SVN_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.svn.event"

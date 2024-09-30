@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -55,19 +54,17 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.model.plugin.tables.records.TPluginGitCheckRecord
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckInfo
-import com.tencent.devops.plugin.api.pojo.GithubCheckRun
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
-import com.tencent.devops.plugin.api.pojo.PluginGitCheck
 import com.tencent.devops.plugin.dao.PluginGitCheckDao
 import com.tencent.devops.plugin.dao.PluginGithubCheckDao
 import com.tencent.devops.plugin.service.ScmCheckService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_COMPLETED
-import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_ERROR
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_FAILURE
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
@@ -89,82 +86,12 @@ class CodeWebhookService @Autowired constructor(
     private val pluginGithubCheckDao: PluginGithubCheckDao,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val scmCheckService: ScmCheckService,
-    private val gitWebhookUnlockService: GitWebhookUnlockService
+    private val scmCheckService: ScmCheckService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CodeWebhookService::class.java)
         // GIT无目标分支，用于工蜂PUSH事件check回写
         const val GIT_COMMIT_CHECK_NONE_TARGET_BRANCH = "~NONE"
-    }
-
-    fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) {
-        logger.info("Code web hook on start [${event.buildId}]")
-        with(event) {
-            execute(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                userId = userId,
-                triggerType = triggerType
-            ) { info ->
-                with(info) {
-                    val webhookType = CodeType.valueOf(webhookType)
-                    val webhookEventType = CodeEventType.valueOf(webhookEventType)
-                    val repoCondition = webhookType == CodeType.GIT || webhookType == CodeType.TGIT
-                    val eventCondition = webhookEventType == CodeEventType.MERGE_REQUEST || webhookEventType ==
-                        CodeEventType.PUSH
-                    when {
-                        enableCheck && eventCondition && repoCondition -> {
-                            logger.info(
-                                "$buildId|WebHook_ADD_GIT_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]"
-                            )
-                            addGitCommitCheckEvent(
-                                GitCommitCheckEvent(
-                                    source = "codeWebhook_pipeline_build_trigger",
-                                    userId = event.userId,
-                                    projectId = projectId,
-                                    pipelineId = pipelineId,
-                                    buildId = buildId,
-                                    repositoryConfig = repositoryConfig,
-                                    commitId = commitId,
-                                    state = GIT_COMMIT_CHECK_STATE_PENDING,
-                                    block = block,
-                                    targetBranch = if (webhookEventType == CodeEventType.MERGE_REQUEST) {
-                                        targetBranch
-                                    } else {
-                                        GIT_COMMIT_CHECK_NONE_TARGET_BRANCH
-                                    }
-                                )
-                            )
-                        }
-                        webhookEventType == CodeEventType.PULL_REQUEST && webhookType == CodeType.GITHUB -> {
-                            logger.info(
-                                "$buildId|WebHook_ADD_GITHUB_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]"
-                            )
-                            addGithubPrEvent(
-                                GithubPrEvent(
-                                    source = "codeWebhook_pipeline_build_trigger",
-                                    userId = event.userId,
-                                    projectId = projectId,
-                                    pipelineId = pipelineId,
-                                    buildId = buildId,
-                                    repositoryConfig = repositoryConfig,
-                                    commitId = commitId,
-                                    status = GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS,
-                                    startedAt = LocalDateTime.now().timestamp(),
-                                    conclusion = null,
-                                    completedAt = null
-                                )
-                            )
-                        }
-                        else -> {
-                            logger.info("$buildId|code type $webhookType and event type $webhookEventType ignored")
-                        }
-                    }
-                }
-            }
-        }
     }
 
     fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
@@ -285,6 +212,11 @@ class CodeWebhookService @Autowired constructor(
                 logger.warn("Process instance($buildId) is not bs or gongfengscan channel")
                 return
             }
+            // 发布瞬间，重试的构建由process服务处理
+            if (variables[PIPELINE_RETRY_COUNT] != null) {
+                logger.warn("Don't handle retry of build($buildId) tasks")
+                return
+            }
 
             val commitId = variables[PIPELINE_WEBHOOK_REVISION]
             var repositoryId = variables[PIPELINE_WEBHOOK_REPO]
@@ -324,13 +256,31 @@ class CodeWebhookService @Autowired constructor(
                         "commitId($commitId)"
                 )
             }
+            val context = getContext(pipelineName = buildInfo.pipelineName, eventType = webhookEventTypeStr)
+            // 结束状态没有历史信息的话，则在process服务进行commit check回写
+            if (
+                !existCheckRecord(
+                    pipelineId = pipelineId,
+                    commitId = commitId!!,
+                    context = context,
+                    targetBranch = targetBranch,
+                    repositoryConfig = repositoryConfig,
+                    codeType = CodeType.valueOf(webhookTypeStr)
+                )
+            ) {
+                logger.info(
+                    "[plugin] check history data not found|$pipelineId|$commitId|$context|" +
+                            "$repositoryConfig|$webhookTypeStr, skipping."
+                )
+                return
+            }
             action(
                 GitCommitCheckInfo(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
                     repositoryConfig = repositoryConfig,
-                    commitId = commitId!!,
+                    commitId = commitId,
                     block = block,
                     triggerType = triggerType,
                     mergeRequestId = mrId,
@@ -436,56 +386,16 @@ class CodeWebhookService @Autowired constructor(
                         commitId = commitId,
                         context = context,
                         targetBranch = targetBranch
-                    ) ?: pluginGitCheckDao.getOrNull(
-                        dslContext = dslContext,
-                        pipelineId = pipelineId,
-                        repositoryConfig = repositoryConfig,
-                        commitId = commitId,
-                        context = context,
-                        targetBranch = null
+                    ) ?: return
+                    updateCommitCheck(
+                        buildNum = buildNum,
+                        record = record,
+                        event = event,
+                        targetUrl = targetUrl,
+                        pipelineName = pipelineName,
+                        description = description,
+                        channelCode = channelCode
                     )
-                    // 新提交，直接添加commit check
-                    if (record == null) {
-                        scmCheckService.addGitCommitCheck(
-                            event = event,
-                            targetUrl = targetUrl,
-                            context = context,
-                            description = description,
-                            targetBranch = if (targetBranch != null) {
-                                mutableListOf(targetBranch!!)
-                            } else {
-                                null
-                            },
-                            channelCode = channelCode
-                        )
-                        pluginGitCheckDao.create(
-                            dslContext = dslContext,
-                            pluginGitCheck = PluginGitCheck(
-                                pipelineId = pipelineId,
-                                buildNumber = buildNum.toInt(),
-                                repositoryHashId = repositoryConfig.repositoryHashId,
-                                repositoryName = repositoryConfig.repositoryName,
-                                commitId = commitId,
-                                context = context,
-                                targetBranch = targetBranch
-                            )
-                        )
-                    } else {
-                        // 旧数据，更新T_PLUGIN_GIT_CHECK
-                        updateCommitCheck(
-                            buildNum = buildNum,
-                            record = record,
-                            event = event,
-                            targetUrl = targetUrl,
-                            pipelineName = pipelineName,
-                            description = description,
-                            channelCode = channelCode
-                        )
-                    }
-                    // mr锁定并且状态为pending时才需要解锁hook锁
-                    if (block && state == GIT_COMMIT_CHECK_STATE_PENDING) {
-                        gitWebhookUnlockService.addUnlockHookLockEvent(projectId, variables)
-                    }
                     return
                 }
             }
@@ -591,7 +501,8 @@ class CodeWebhookService @Autowired constructor(
             "Code web hook add pr check [projectId=$projectId, pipelineId=$pipelineId, buildId=$buildId, " +
                 "repo=$repositoryConfig, commitId=$commitId, status=$status]"
         )
-
+        // 不存在检查记录直接跳过
+        val record = pluginGithubCheckDao.getOrNull(dslContext, pipelineId, repositoryConfig, commitId) ?: return
         val buildHistoryResult = client.get(ServiceBuildResource::class).getBuildVars(
             userId = userId,
             projectId = projectId,
@@ -619,8 +530,7 @@ class CodeWebhookService @Autowired constructor(
 
         val pipelineName = buildInfo.pipelineName
         val webhookEventType = variables[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]
-        val name = "$pipelineName@$webhookEventType"
-
+        val name = getContext(pipelineName, webhookEventType ?: "")
         val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
         val detailUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
 
@@ -633,83 +543,87 @@ class CodeWebhookService @Autowired constructor(
                     Thread.sleep(100)
                     return@use
                 }
-
-                val record = pluginGithubCheckDao.getOrNull(dslContext, pipelineId, repositoryConfig, commitId)
-                if (record == null) {
-                    val result = scmCheckService.addGithubCheckRuns(
-                        projectId = projectId,
-                        repositoryConfig = repositoryConfig,
-                        name = name,
-                        commitId = commitId,
-                        detailUrl = detailUrl,
-                        externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
-                        status = status,
-                        startedAt = startedAt,
-                        conclusion = conclusion,
-                        completedAt = completedAt,
-                        pipelineId = pipelineId,
-                        buildId = buildId
-                    )
-                    pluginGithubCheckDao.create(
-                        dslContext = dslContext,
-                        checkRun = GithubCheckRun(
-                            pipelineId = pipelineId,
-                            buildNumber = buildNum.toInt(),
+                if (buildNum.toInt() >= record.buildNumber) {
+                    // 如果重试或者reopen，需要将状态重新置为in_progress
+                    val checkRunId = if (conclusion == null) {
+                        val result = scmCheckService.addGithubCheckRuns(
+                            projectId = projectId,
                             repositoryConfig = repositoryConfig,
+                            name = record.checkRunName ?: "$pipelineName #$buildNum",
                             commitId = commitId,
-                            checkRunId = result.id,
-                            checkRunName = name
+                            detailUrl = detailUrl,
+                            externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
+                            status = status,
+                            startedAt = startedAt,
+                            conclusion = conclusion,
+                            completedAt = completedAt,
+                            pipelineId = pipelineId,
+                            buildId = buildId
                         )
-                    )
-                } else {
-                    if (buildNum.toInt() >= record.buildNumber) {
-                        // 如果重试或者reopen，需要将状态重新置为in_progress
-                        val checkRunId = if (conclusion == null) {
-                            val result = scmCheckService.addGithubCheckRuns(
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                buildId = buildId,
-                                repositoryConfig = repositoryConfig,
-                                name = record.checkRunName ?: "$pipelineName #$buildNum",
-                                commitId = commitId,
-                                detailUrl = detailUrl,
-                                externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
-                                status = status,
-                                startedAt = startedAt,
-                                conclusion = conclusion,
-                                completedAt = completedAt
-                            )
-                            result.id
-                        } else {
-                            scmCheckService.updateGithubCheckRuns(
-                                checkRunId = record.checkRunId,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                buildId = buildId,
-                                repositoryConfig = repositoryConfig,
-                                // 兼容历史数据
-                                name = record.checkRunName ?: "$pipelineName #$buildNum",
-                                commitId = commitId,
-                                detailUrl = detailUrl,
-                                externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
-                                status = status,
-                                startedAt = startedAt,
-                                conclusion = conclusion,
-                                completedAt = completedAt,
-                                pipelineName = pipelineName,
-                                channelCode = channelCode
-                            )
-                            record.checkRunId
-                        }
-
-                        pluginGithubCheckDao.update(dslContext, record.id, buildNum.toInt(), checkRunId)
+                        result.id
                     } else {
-                        logger.info("Code web hook check run has bigger build number(${record.buildNumber})")
+                        scmCheckService.updateGithubCheckRuns(
+                            checkRunId = record.checkRunId,
+                            projectId = projectId,
+                            repositoryConfig = repositoryConfig,
+                            // 兼容历史数据
+                            name = record.checkRunName ?: "$pipelineName #$buildNum",
+                            commitId = commitId,
+                            detailUrl = detailUrl,
+                            externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
+                            status = status,
+                            startedAt = startedAt,
+                            conclusion = conclusion,
+                            completedAt = completedAt,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            pipelineName = pipelineName,
+                            channelCode = channelCode
+                        )
+                        record.checkRunId
                     }
-                }
 
+                    pluginGithubCheckDao.update(dslContext, record.id, buildNum.toInt(), checkRunId)
+                } else {
+                    logger.info("Code web hook check run has bigger build number(${record.buildNumber})")
+                }
                 return
             }
         }
+    }
+
+    private fun getContext(pipelineName: String, eventType: String) = "$pipelineName@$eventType"
+
+    private fun existCheckRecord(
+        pipelineId: String,
+        commitId: String,
+        context: String,
+        targetBranch: String?,
+        repositoryConfig: RepositoryConfig,
+        codeType: CodeType
+    ): Boolean {
+        return when (codeType) {
+            CodeType.TGIT, CodeType.GIT -> {
+                pluginGitCheckDao.getOrNull(
+                    dslContext = dslContext,
+                    pipelineId = pipelineId,
+                    commitId = commitId,
+                    context = context,
+                    targetBranch = targetBranch,
+                    repositoryConfig = repositoryConfig
+                )
+            }
+
+            CodeType.GITHUB -> {
+                pluginGithubCheckDao.getOrNull(
+                    dslContext = dslContext,
+                    pipelineId = pipelineId,
+                    commitId = commitId,
+                    repositoryConfig = repositoryConfig
+                )
+            }
+
+            else -> null
+        } != null
     }
 }

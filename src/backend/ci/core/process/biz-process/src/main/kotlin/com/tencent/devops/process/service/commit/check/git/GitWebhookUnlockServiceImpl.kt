@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.service.git
+package com.tencent.devops.process.service.commit.check.git
 
 import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
 import org.springframework.stereotype.Service

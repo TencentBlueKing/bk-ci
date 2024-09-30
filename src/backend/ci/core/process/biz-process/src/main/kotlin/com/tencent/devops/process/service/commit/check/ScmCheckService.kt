@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.service
+package com.tencent.devops.process.service.commit.check
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -37,10 +37,8 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
-import com.tencent.devops.plugin.utils.QualityUtils
+import com.tencent.devops.process.pojo.mq.commit.check.TGitCommitCheckEvent
 import com.tencent.devops.process.utils.Credential
 import com.tencent.devops.process.utils.CredentialUtils
 import com.tencent.devops.repository.api.ServiceGithubResource
@@ -72,16 +70,18 @@ import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
-class ScmCheckService @Autowired constructor(private val client: Client) {
+class ScmCheckService @Autowired constructor(
+    private val client: Client,
+    private val qualityService: QualityService
+) {
     private val logger = LoggerFactory.getLogger(ScmCheckService::class.java)
 
     fun addGitCommitCheck(
-        event: GitCommitCheckEvent,
+        event: TGitCommitCheckEvent,
         targetUrl: String,
         context: String,
         description: String,
-        targetBranch: List<String>? = null,
-        channelCode: ChannelCode
+        targetBranch: List<String>? = null
     ): String {
         with(event) {
             logger.info("Project($$projectId) add git commit($commitId) commit check.")
@@ -126,15 +126,14 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 description = description,
                 block = block,
                 mrRequestId = event.mergeRequestId,
-                reportData = QualityUtils.getQualityGitMrResult(
-                    client = client,
+                reportData = qualityService.getQualityGitMrResult(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
                     startTime = startTime,
                     eventStatus = status,
                     triggerType = triggerType,
-                    channelCode = channelCode
+                    scmType = repo.getScmType()
                 ),
                 targetBranch = targetBranch
             )
@@ -199,8 +198,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         startedAt: LocalDateTime?,
         conclusion: String?,
         completedAt: LocalDateTime?,
-        pipelineName: String,
-        channelCode: ChannelCode
+        pipelineName: String
     ) {
         logger.info("Project($projectId) update github commit($commitId) check runs")
 
@@ -221,19 +219,18 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 summary = "This check concluded as $conclusion.",
                 text = null, // github
                 title = pipelineName,
-                reportData = QualityUtils.getQualityGitMrResult(
-                    client = client,
+                reportData = qualityService.getQualityGitMrResult(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
                     startTime = startedAt?.timestampmilli() ?: 0L,
                     eventStatus = status,
                     triggerType = StartType.WEB_HOOK.name,
-                    channelCode = channelCode
+                    scmType = ScmType.GITHUB
                 )
             )
         )
-
+        logger.info("update github check run|$checkRuns")
         client.get(ServiceGithubResource::class).updateCheckRuns(
             accessToken = accessToken,
             projectName = repo.projectName,
@@ -258,7 +255,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         repositoryConfig: RepositoryConfig,
         variables: Map<String, String>? = null
     ): Repository {
-        val repositoryId = if (variables == null || variables.isEmpty()) {
+        val repositoryId = if (variables.isNullOrEmpty()) {
             repositoryConfig.getURLEncodeRepositoryId()
         } else {
             URLEncoder.encode(EnvUtils.parseEnv(repositoryConfig.getRepositoryId(), variables), "UTF-8")
@@ -360,7 +357,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
 
     private fun getGithubAccessToken(userName: String): String {
         val accessToken = client.get(ServiceGithubResource::class).getAccessToken(userName).data
-            ?: throw NotFoundException("cannot find github oauth accessToekn for user($userName)")
+            ?: throw NotFoundException("cannot find github oauth accessToken for user($userName)")
         return accessToken.accessToken
     }
 }

@@ -25,24 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.api.pojo
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-data class GitCommitCheckInfo(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val repositoryConfig: RepositoryConfig,
-    val commitId: String,
-    val block: Boolean,
-    val triggerType: String = "",
-    val mergeRequestId: Long? = null,
-    val userId: String,
-    val webhookType: String,
-    val webhookEventType: String,
-    val enableCheck: Boolean,
-    val targetBranch: String?,
-    val pipelineName: String = "",
-    val startTaskId: String? = null
-)
+@Tag(name = "OP_PIPELINE_COMMIT_CHECK", description = "OP-流水线-回写检查")
+@Path("/op/pipeline/commit/check")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpPipelineCommitCheckResource {
+
+    @Operation(summary = "解锁")
+    @PUT
+    @Path("unlock")
+    fun unlock(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "项目渠道代码", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "项目路由TAG", required = false)
+        @QueryParam("buildId")
+        buildId: String
+    ): Result<Boolean>
+}
