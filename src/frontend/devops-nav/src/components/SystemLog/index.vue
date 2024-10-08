@@ -23,7 +23,7 @@
                         <div class="title">
                             {{ log.version }}
                             <div
-                            v-if="index === 0"
+                                v-if="index === 0"
                                 class="new-flag"
                             >
                                 {{ $t('currentVersion') }}
