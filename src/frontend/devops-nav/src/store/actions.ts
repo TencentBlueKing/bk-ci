@@ -168,7 +168,7 @@ const actions: ActionTree<RootState, any> = {
     },
 
     fetchVersionsLogList () {
-        return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/versionList`)
+        return Request.get(`${window.location.origin}/bundledVersionLog_en.json`)
     }
 }
 
