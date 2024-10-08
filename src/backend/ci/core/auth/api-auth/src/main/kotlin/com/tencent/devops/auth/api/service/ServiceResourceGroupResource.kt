@@ -49,7 +49,13 @@ interface ServiceResourceGroupResource {
         resourceType: String,
         @Parameter(description = "用户组code,CI管理员为CI_MANAGER", required = true)
         @QueryParam("groupCode")
-        groupCode: BkAuthGroup
+        groupCode: BkAuthGroup,
+        @Parameter(description = "用户组名称", required = true)
+        @QueryParam("groupName")
+        groupName: String?,
+        @Parameter(description = "用户组描述", required = true)
+        @QueryParam("groupDesc")
+        groupDesc: String?
     ): Result<Int>
 
     @POST

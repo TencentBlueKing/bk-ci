@@ -27,12 +27,16 @@ class ServiceResourceGroupResourceImpl constructor(
     override fun createGroupByGroupCode(
         projectCode: String,
         resourceType: String,
-        groupCode: BkAuthGroup
+        groupCode: BkAuthGroup,
+        groupName: String?,
+        groupDesc: String?
     ): Result<Int> {
         return Result(
             permissionResourceGroupService.createProjectGroupByGroupCode(
                 projectId = projectCode,
-                groupCode = groupCode.value
+                groupCode = groupCode.value,
+                groupName = groupName,
+                groupDesc = groupDesc
             )
         )
     }

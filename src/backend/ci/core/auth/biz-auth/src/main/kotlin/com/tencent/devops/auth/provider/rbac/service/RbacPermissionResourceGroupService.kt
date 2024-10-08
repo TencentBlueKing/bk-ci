@@ -467,7 +467,9 @@ class RbacPermissionResourceGroupService @Autowired constructor(
 
     override fun createProjectGroupByGroupCode(
         projectId: String,
-        groupCode: String
+        groupCode: String,
+        groupName: String?,
+        groupDesc: String?
     ): Int {
         val projectInfo = authResourceService.get(
             projectCode = projectId,
@@ -492,20 +494,26 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         if (resourceGroupInfo != null) {
             return resourceGroupInfo.relationId.toInt()
         }
+        val (finalGroupName, finalGroupCode, description) = if (groupName != null) {
+            Triple(groupName, CUSTOM_GROUP_CODE, groupDesc ?: groupName)
+        } else {
+            Triple(groupConfig.groupName, groupConfig.groupCode, groupConfig.description)
+        }
+
         val iamGroupId = createProjectGroupToIam(
             projectCode = projectId,
             projectName = projectInfo.resourceName,
             relationId = projectInfo.relationId.toInt(),
-            groupCode = groupConfig.groupCode,
-            groupName = groupConfig.groupName,
-            description = groupConfig.description
+            groupCode = finalGroupCode,
+            groupName = finalGroupName,
+            description = description
         )
         permissionGroupPoliciesService.grantGroupPermission(
             authorizationScopesStr = groupConfig.authorizationScopes,
             projectCode = projectId,
             projectName = projectInfo.resourceName,
             resourceType = groupConfig.resourceType,
-            groupCode = groupConfig.groupCode,
+            groupCode = finalGroupCode,
             iamResourceCode = projectId,
             resourceName = projectInfo.resourceName,
             iamGroupId = iamGroupId

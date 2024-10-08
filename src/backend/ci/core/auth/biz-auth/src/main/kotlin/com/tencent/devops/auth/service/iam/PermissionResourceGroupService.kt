@@ -91,7 +91,9 @@ interface PermissionResourceGroupService {
 
     fun createProjectGroupByGroupCode(
         projectId: String,
-        groupCode: String
+        groupCode: String,
+        groupName: String? = null,
+        groupDesc: String? = null
     ): Int
 
     fun createCustomGroupAndPermissions(
