@@ -50,7 +50,7 @@ stages:
           - name: "generate version log"
             run: |
               cd CHANGELOG
-              python genBundledVersionLog.py
+              python genBundledVersionLog.py 2
           - name: "Bash"
             run: |
               cd src/frontend
