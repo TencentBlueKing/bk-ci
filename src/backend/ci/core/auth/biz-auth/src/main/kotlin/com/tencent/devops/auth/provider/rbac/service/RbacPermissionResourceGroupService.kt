@@ -484,20 +484,22 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             errorCode = AuthMessageCode.DEFAULT_GROUP_CONFIG_NOT_FOUND,
             defaultMessage = "group($groupCode) config not exist"
         )
+        val (finalGroupName, finalGroupCode, description) = if (groupName != null) {
+            Triple(groupName, CUSTOM_GROUP_CODE, groupDesc ?: groupName)
+        } else {
+            Triple(groupConfig.groupName, groupConfig.groupCode, groupConfig.description)
+        }
+
         val resourceGroupInfo = authResourceGroupDao.get(
             dslContext = dslContext,
             projectCode = projectId,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectId,
-            groupCode = groupConfig.groupCode
+            groupCode = finalGroupCode,
+            groupName = finalGroupName
         )
         if (resourceGroupInfo != null) {
             return resourceGroupInfo.relationId.toInt()
-        }
-        val (finalGroupName, finalGroupCode, description) = if (groupName != null) {
-            Triple(groupName, CUSTOM_GROUP_CODE, groupDesc ?: groupName)
-        } else {
-            Triple(groupConfig.groupName, groupConfig.groupCode, groupConfig.description)
         }
 
         val iamGroupId = createProjectGroupToIam(

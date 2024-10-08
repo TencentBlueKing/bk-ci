@@ -32,7 +32,7 @@ class ServiceResourceGroupResourceImpl constructor(
         groupDesc: String?
     ): Result<Int> {
         return Result(
-            permissionResourceGroupService.createProjectGroupByGroupCode(
+            data = permissionResourceGroupService.createProjectGroupByGroupCode(
                 projectId = projectCode,
                 groupCode = groupCode.value,
                 groupName = groupName,
@@ -46,7 +46,7 @@ class ServiceResourceGroupResourceImpl constructor(
         customGroupCreateReq: CustomGroupCreateReq
     ): Result<Int> {
         return Result(
-            permissionResourceGroupService.createCustomGroupAndPermissions(
+            data = permissionResourceGroupService.createCustomGroupAndPermissions(
                 projectId = projectCode,
                 customGroupCreateReq = customGroupCreateReq
             )
