@@ -108,7 +108,7 @@
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
     import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
-    import { mapGetters } from 'vuex'
+    import { mapGetters, mapActions, mapState } from 'vuex'
 
     export default {
         name: 'bkdevops-base-info-setting-tab',
@@ -127,14 +127,16 @@
         },
         data () {
             return {
-                settings: {},
-                currentPipelineDialect: ''
+                settings: {}
             }
         },
         computed: {
             ...mapGetters({
                 tagGroupList: 'pipelines/getTagGroupList'
             }),
+            ...mapState('pipelines', [
+                'currentPipelineDialect'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -157,12 +159,11 @@
         watch: {
             'pipelineSetting.pipelineAsCodeSettings': {
                 handler (val) {
-                    if (val && !this.currentPipelineDialect) {
-                        const { inheritedDialect, projectDialect, pipelineDialect } = this.pipelineSetting.pipelineAsCodeSettings
-                        this.currentPipelineDialect = inheritedDialect ? projectDialect : pipelineDialect
+                    if (val) {
+                        const { inheritedDialect, pipelineDialect } = this.pipelineSetting.pipelineAsCodeSettings
                         this.settings = {
                             ...this.pipelineSetting.pipelineAsCodeSettings,
-                            pipelineDialect: this.currentPipelineDialect
+                            pipelineDialect: inheritedDialect ? this.currentPipelineDialect : pipelineDialect
                         }
                     }
                 },
@@ -173,6 +174,9 @@
             this.requestGrouptLists()
         },
         methods: {
+            ...mapActions('pipelines', [
+                'getPipelineDialect'
+            ]),
             /** *
              * 获取标签及其分组
              */
@@ -183,6 +187,8 @@
                     })
 
                     this.$store.commit('pipelines/updateGroupLists', res)
+                    // 获取当前项目语法风格
+                    await this.getPipelineDialect(this.projectId)
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
