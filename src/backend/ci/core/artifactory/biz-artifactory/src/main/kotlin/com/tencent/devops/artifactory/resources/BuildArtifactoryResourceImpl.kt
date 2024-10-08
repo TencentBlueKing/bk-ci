@@ -4,14 +4,17 @@ import com.tencent.devops.artifactory.api.builds.BuildArtifactoryResource
 import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.springframework.beans.factory.annotation.Autowired
 
 class BuildArtifactoryResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService,
-    private val client: Client
+    private val client: Client,
+    private val serviceAuthAuthorizationResource: ServiceAuthAuthorizationResource,
 ) : BuildArtifactoryResource {
     override fun acrossProjectCopy(
         projectId: String,
@@ -21,8 +24,17 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         targetProjectId: String,
         targetPath: String
     ): Result<Count> {
-        val userId = client.get(ServicePipelineResource::class)
+        var userId = client.get(ServicePipelineResource::class)
             .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+        // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
+        val pipelineOauthUser = serviceAuthAuthorizationResource.getResourceAuthorization(
+            projectId,
+            AuthResourceType.PIPELINE_DEFAULT.value,
+            pipelineId
+        ).data?.handoverFrom
+        if (!pipelineOauthUser.isNullOrBlank()) {
+            userId = pipelineOauthUser
+        }
         val count = archiveFileService.acrossProjectCopy(
             userId = userId,
             projectId = projectId,
