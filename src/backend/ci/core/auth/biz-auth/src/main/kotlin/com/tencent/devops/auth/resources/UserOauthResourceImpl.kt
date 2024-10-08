@@ -24,7 +24,7 @@ class UserOauthResourceImpl @Autowired constructor(
         )
     }
 
-    override fun relRepo(
+    override fun relSource(
         userId: String,
         projectId: String,
         oauthType: OauthType,
@@ -32,7 +32,7 @@ class UserOauthResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<Page<OauthRelResource>> {
         return Result(
-            userOauthService.relRepo(
+            userOauthService.relSource(
                 userId = userId,
                 projectId = projectId,
                 oauthType = oauthType,

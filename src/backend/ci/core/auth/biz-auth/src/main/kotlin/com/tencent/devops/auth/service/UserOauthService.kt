@@ -30,7 +30,7 @@ class UserOauthService @Autowired constructor(
         return list
     }
 
-    fun relRepo(
+    fun relSource(
         userId: String,
         projectId: String,
         oauthType: OauthType,

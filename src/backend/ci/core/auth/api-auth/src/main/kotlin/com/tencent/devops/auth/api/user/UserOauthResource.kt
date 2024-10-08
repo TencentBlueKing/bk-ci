@@ -67,9 +67,9 @@ interface UserOauthResource {
     ): Result<List<UserOauthInfo>>
 
     @GET
-    @Path("/{projectId}/relRepo")
-    @Operation(summary = "获取用户授权代码库")
-    fun relRepo(
+    @Path("/{projectId}/relSource")
+    @Operation(summary = "获取授权关联的资源列表")
+    fun relSource(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
