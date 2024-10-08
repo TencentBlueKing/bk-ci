@@ -27,12 +27,12 @@
 package com.tencent.devops.openapi.aspect
 
 import com.tencent.devops.common.api.auth.DEVX_HEADER_GW_TOKEN
-import com.tencent.devops.common.api.auth.DEVX_HEADER_NGGW_CLIENT_ADDRESS
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode
+import javax.ws.rs.core.Response
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
@@ -42,7 +42,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import javax.ws.rs.core.Response
 
 @Aspect
 @Component
@@ -70,24 +69,11 @@ class DeskTopApiAspect {
 
         val request = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).request
 
-        val desktopIP: String? = request.getHeader(DEVX_HEADER_NGGW_CLIENT_ADDRESS)
         val devxToken: String? = request.getHeader(DEVX_HEADER_GW_TOKEN)
 
         for (index in parameterValue.indices) {
             val trueVal = parameterValue[index]?.toString()
             when (parameterNames[index]) {
-                "desktopIP" -> {
-                    Preconditions.checkTrue(
-                        condition = trueVal == desktopIP,
-                        exception = CustomException(
-                            Response.Status.BAD_REQUEST,
-                            I18nUtil.getCodeLanMessage(
-                                messageCode = OpenAPIMessageCode.PARAM_VERIFY_FAIL,
-                                params = arrayOf("云桌面IP可能伪造，真正IP：$desktopIP, 参数伪造IP：$trueVal")
-                            )
-                        )
-                    )
-                }
                 "devxGwToken" -> {
                     Preconditions.checkTrue(
                         condition = trueVal == devxToken,
@@ -100,15 +86,12 @@ class DeskTopApiAspect {
                         )
                     )
                 }
+
                 else -> Unit
             }
         }
 
-        logger.debug("DeskTopApiAspect|desktop ip: {}", desktopIP)
-
-        if (desktopIP.isNullOrBlank()) {
-            throw PermissionForbiddenException(message = "无法获取到正确的云桌面IP")
-        } else if (devxToken != devxGwToken) {
+        if (devxToken != devxGwToken) {
             // init 支持配置多个 Token 以便实现替换
             if (devGwTokens == null && devxGwToken.contains(",")) {
                 synchronized(devxGwToken) {
