@@ -5,7 +5,8 @@
         :value="date"
         :disabled="disabled"
         :start-date="start"
-        @change="handleDateChange">
+        @change="handleDateChange"
+    >
     </bk-date-picker>
 </template>
 

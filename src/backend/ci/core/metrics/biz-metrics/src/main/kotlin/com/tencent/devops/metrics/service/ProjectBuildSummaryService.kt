@@ -28,6 +28,7 @@
 
 package com.tencent.devops.metrics.service
 
+import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
 import java.time.LocalDate
@@ -50,6 +51,11 @@ interface ProjectBuildSummaryService {
         userId: String,
         theDate: LocalDate
     )
+
+    /**
+     * 保存用户操作度量数据
+     */
+    fun saveProjectUserOperateMetrics(userOperateCounterData: UserOperateCounterData)
 
     /**
      * 获取项目活跃用户数

@@ -90,6 +90,7 @@ import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
 import com.tencent.devops.experience.dao.GroupDao
 import com.tencent.devops.experience.pojo.Experience
+import com.tencent.devops.experience.pojo.ExperienceClean
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceCreateResp
 import com.tencent.devops.experience.pojo.ExperienceInfoForBuild
@@ -113,17 +114,17 @@ import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import org.apache.commons.lang3.StringUtils
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
 import javax.ws.rs.core.Response
+import org.apache.commons.lang3.StringUtils
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 import kotlin.math.ceil
 
 @Service
@@ -555,7 +556,7 @@ class ExperienceService @Autowired constructor(
                 version = appVersion
             )
         } else { // 内部体验
-            if (isDefendProject(propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE], projectId)) {
+            if (experienceBaseService.isDefendProject(propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE], projectId)) {
                 apkDefend(userId, projectId, artifactoryType, experienceId, experience.path)
                 delayNotify = true
             }
@@ -566,13 +567,6 @@ class ExperienceService @Autowired constructor(
         }
 
         return experienceId
-    }
-
-    private fun isDefendProject(stage: String?, projectId: String): Boolean {
-        if (stage.isNullOrBlank()) {
-            return false
-        }
-        return redisOperation.isMember("apk:defend:${stage.lowercase()}", projectId)
     }
 
     private fun onlinePublicExperience(
@@ -1473,6 +1467,36 @@ class ExperienceService @Autowired constructor(
             redisOperation.sadd(apkDefendersKey, *taskIds.toTypedArray())
             redisOperation.expire(apkDefendersKey, 3700) // 多100秒缓冲
         }
+    }
+
+    fun clean(experienceClean: ExperienceClean): Boolean {
+        val experienceIds = experienceClean.experienceIds
+        if (experienceIds.isNullOrEmpty()) {
+            logger.warn("clean experience id is empty")
+            return false
+        }
+        val experiences = experienceDao.list(dslContext, experienceIds)
+        logger.info("clean experience now... , ids: $experienceIds")
+        threadPool.submit {
+            val now = LocalDateTime.now()
+            for (e in experiences) {
+                kotlin.runCatching {
+                    if (e.endDate.isAfter(now) && e.online) {
+                        logger.warn("Could not delete experience: ${e.id}")
+                        return@runCatching
+                    }
+                    if (experienceDao.delete(dslContext, e.id) <= 0) {
+                        logger.warn("Delete experience: ${e.id} failed")
+                        return@runCatching
+                    }
+                    logger.info("Delete experience now... , id: ${e.id}")
+                    // 清除权限
+                    experiencePermissionService.deleteExperienceResource(e.projectId, e.id)
+                    // TODO 可能还得清理其他
+                }.onFailure { exception -> logger.warn("delete failed , id: ${e.id}", exception) }
+            }
+        }
+        return true
     }
 
     companion object {

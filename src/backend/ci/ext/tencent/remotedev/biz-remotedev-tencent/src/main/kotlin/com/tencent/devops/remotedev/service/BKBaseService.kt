@@ -75,8 +75,6 @@ class BKBaseService @Autowired constructor(
         val url = "${bkConfig.baseUrl}/prod/v3/queryengine/query_sync/"
         val body = BakeBaseQuerySyncReq(
             bkdataDataToken = bkConfig.baseToken,
-            bkAppCode = bkConfig.appCode,
-            bkAppSecret = bkConfig.appSecret,
             sql = sql
         )
         val request = Request.Builder()
@@ -158,7 +156,7 @@ class BKBaseService @Autowired constructor(
     ): Map<String, String> {
         val sql = "SELECT node_id, MAX(dtEventTime) as Maxtime " +
             "FROM 100656_cgs_report_game_all.hdfs " +
-            "WHERE where node_id in (${
+            "WHERE node_id in (${
                 nodeIds.joinToString(separator = "','", prefix = "'", postfix = "'")
             }) " +
             "GROUP BY node_id"
@@ -166,8 +164,6 @@ class BKBaseService @Autowired constructor(
         val url = "${bkConfig.baseUrl}/prod/v3/queryengine/query_sync/"
         val body = BakeBaseQuerySyncReq(
             bkdataDataToken = bkConfig.baseToken,
-            bkAppCode = bkConfig.appCode,
-            bkAppSecret = bkConfig.appSecret,
             sql = sql
         )
         val request = Request.Builder()
@@ -260,10 +256,6 @@ data class BakeBaseQuerySyncReq(
     val bkdataAuthenticationMethod: String = "token",
     @JsonProperty("bkdata_data_token")
     val bkdataDataToken: String,
-    @JsonProperty("bk_app_code")
-    val bkAppCode: String,
-    @JsonProperty("bk_app_secret")
-    val bkAppSecret: String,
     val sql: String,
     @JsonProperty("prefer_storage")
     val preferStorage: String = ""

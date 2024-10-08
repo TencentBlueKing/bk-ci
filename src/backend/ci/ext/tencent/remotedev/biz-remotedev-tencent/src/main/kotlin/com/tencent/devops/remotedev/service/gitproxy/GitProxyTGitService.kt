@@ -409,7 +409,8 @@ class GitProxyTGitService @Autowired constructor(
                         pageSize = pageSize,
                         search = null,
                         minAccessLevel = GitAccessLevelEnum.MASTER,
-                        type = type
+                        type = type,
+                        throwE = false
                     )
 
                     // 过滤项目信息
@@ -1005,13 +1006,27 @@ class GitProxyTGitService @Autowired constructor(
      */
     @Scheduled(cron = "0 50 3 * * ?")
     fun dailyUserAuthDoCheck() {
-        logger.info("dailyUserAuthDoCheck start")
-        // 基本上每个项目下的权限都是这个项目使用的，所以以项目为做检查呢
-        val allProjects = projectTGitLinkDao.fetchAllProject(dslContext)
-        allProjects.forEach { project ->
-            subDailyUserAuthDoCheck(project)
+        val lock = RedisLock(redisOperation, REDIS_DAILY_USER_AUTHDOCHECK, 3600L)
+        try {
+            if (!lock.tryLock()) {
+                logger.info("dailyUserAuthDoCheck, get lock failed, skip")
+                return
+            }
+            logger.info("dailyUserAuthDoCheck start")
+            // 基本上每个项目下的权限都是这个项目使用的，所以以项目为做检查呢
+            val allProjects = projectTGitLinkDao.fetchAllProject(dslContext)
+            allProjects.forEach { project ->
+                subDailyUserAuthDoCheck(project)
+            }
+            logger.info("dailyUserAuthDoCheck end")
+        } catch (e: Throwable) {
+            logger.error("${OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG}|dailyUserAuthDoCheck failed", e)
+        } finally {
+            lock.unlock()
         }
     }
+
+
 
     private fun subDailyUserAuthDoCheck(
         projectId: String
@@ -1102,20 +1117,20 @@ class GitProxyTGitService @Autowired constructor(
         }
     }
 
+    fun checkProjectExist(projectId: String): Boolean {
+        projectTGitLinkDao.fetch(dslContext, projectId, null).ifEmpty { return false }
+        return true
+    }
+
+    fun deleteRepos(projectId: String, tGitIds: Set<Long>): Boolean {
+        projectTGitLinkDao.deleteIds(dslContext, projectId, tGitIds)
+        return true
+    }
+
     private fun String.removeHttpPrefix() = this.removePrefix("https://").removePrefix("http://")
 
     private fun updateTGitLock(tGitId: Long): RedisLock =
         RedisLock(redisOperation, "$REDIS_REMOTEDEV_PROJECT_UPDATE_TGIT_ACL:$tGitId", 90)
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(GitProxyTGitService::class.java)
-
-        // 云桌面公网ip，可能会动态变化所以放redis里
-        private const val REDIS_REMOTEDEV_PUBLIC_IPS = "remotedev:public:ips"
-
-        // 获取工蜂ACL配置的锁，同一时间对同一个项目的配置只能有一个读写
-        private const val REDIS_REMOTEDEV_PROJECT_UPDATE_TGIT_ACL = "remotedev:project:update:tgit:acl"
-    }
 
     /**
      * 把获取 Token 的行为全部封装在这里，非线程安全
@@ -1275,5 +1290,18 @@ class GitProxyTGitService @Autowired constructor(
             }
             return String(DHUtil.decrypt(decoder.decode(cred.v1), decoder.decode(cred.publicKey), pair.privateKey))
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(GitProxyTGitService::class.java)
+
+        // 云桌面公网ip，可能会动态变化所以放redis里
+        private const val REDIS_REMOTEDEV_PUBLIC_IPS = "remotedev:public:ips"
+
+        // 获取工蜂ACL配置的锁，同一时间对同一个项目的配置只能有一个读写
+        private const val REDIS_REMOTEDEV_PROJECT_UPDATE_TGIT_ACL = "remotedev:project:update:tgit:acl"
+
+        // 工蜂巡检定时任务锁
+        private const val REDIS_DAILY_USER_AUTHDOCHECK = "remotedev:tgit:daily:check:lock"
     }
 }

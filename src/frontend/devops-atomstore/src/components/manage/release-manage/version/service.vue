@@ -1,6 +1,7 @@
 <template>
     <section class="show-version g-scroll-table">
-        <bk-button theme="primary"
+        <bk-button
+            theme="primary"
             class="version-button"
             :disabled="disableAddVersion"
             @click="$router.push({
@@ -9,8 +10,11 @@
                     serviceId: versionList[0].serviceId
                 }
             })"
-        > {{ $t('store.新增版本') }} </bk-button>
-        <bk-table :data="versionList"
+        >
+            {{ $t('store.新增版本') }}
+        </bk-button>
+        <bk-table
+            :data="versionList"
             :outer-border="false"
             :header-border="false"
             :header-cell-style="{ background: '#fff' }"
@@ -18,19 +22,43 @@
             @page-change="(page) => $emit('pageChanged', page)"
             @page-limit-change="(currentLimit, prevLimit) => $emit('pageLimitChanged', currentLimit, prevLimit)"
         >
-            <bk-table-column :label="$t('store.版本')" prop="version" :formatter="versionFormatter"></bk-table-column>
-            <bk-table-column :label="$t('store.状态')" prop="serviceStatus" :formatter="statusFormatter"></bk-table-column>
-            <bk-table-column :label="$t('store.创建人')" prop="creator"></bk-table-column>
-            <bk-table-column :label="$t('store.创建时间')" prop="createTime" :formatter="convertTime"></bk-table-column>
-            <bk-table-column :label="$t('store.操作')" width="150" class-name="handler-btn">
+            <bk-table-column
+                :label="$t('store.版本')"
+                prop="version"
+                :formatter="versionFormatter"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('store.状态')"
+                prop="serviceStatus"
+                :formatter="statusFormatter"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('store.创建人')"
+                prop="creator"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('store.创建时间')"
+                prop="createTime"
+                :formatter="convertTime"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('store.操作')"
+                width="150"
+                class-name="handler-btn"
+            >
                 <template slot-scope="props">
                     <section v-show="!index">
-                        <span class="update-btn" @click="showDetail(props.row.serviceId)">{{ $t('store.查看') }}</span>
-                        <span class="update-btn"
+                        <span
+                            class="update-btn"
+                            @click="showDetail(props.row.serviceId)"
+                        >{{ $t('store.查看') }}</span>
+                        <span
+                            class="update-btn"
                             v-if="props.row.serviceStatus === 'INIT'"
                             @click="$router.push({ name: 'editService', params: { serviceId: props.row.serviceId } })"
                         > {{ $t('store.上架') }} </span>
-                        <span class="update-btn"
+                        <span
+                            class="update-btn"
                             v-if="progressStatus.indexOf(props.row.serviceStatus) > -1"
                             @click="$router.push({ name: 'serviceProgress', params: { serviceId: props.row.serviceId } })"
                         > {{ $t('store.进度') }} </span>
@@ -39,13 +67,19 @@
             </bk-table-column>
         </bk-table>
 
-        <bk-sideslider quick-close
+        <bk-sideslider
+            quick-close
             class="offline-atom-slider"
             :is-show.sync="hasShowDetail"
             :title="$t('store.查看详情')"
-            :width="800">
+            :width="800"
+        >
             <template slot="content">
-                <service-detail :detail="detail" v-bkloading="{ isLoading: detailLoading }" class="version-detail">
+                <service-detail
+                    :detail="detail"
+                    v-bkloading="{ isLoading: detailLoading }"
+                    class="version-detail"
+                >
                     <li class="detail-item">
                         <span class="detail-label">{{ $t('store.发布者：') }}：</span>
                         <span>{{ detail.publisher || '--' }}</span>

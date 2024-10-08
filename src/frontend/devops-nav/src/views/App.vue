@@ -1,5 +1,8 @@
 <template>
-    <div class="devops-app" v-bkloading="{ isLoading: moduleLoading }">
+    <div
+        class="devops-app"
+        v-bkloading="{ isLoading: moduleLoading }"
+    >
         <router-view />
         <AnnouncementDialog />
     </div>
@@ -36,11 +39,11 @@
         }
 
         async created () {
+            this.getPlatformPreData()
             const announce = await this.getAnnouncement()
             if (announce && announce.id) {
                 this.setAnnouncement(announce)
             }
-            this.getPlatformPreData()
         }
     }
 </script>

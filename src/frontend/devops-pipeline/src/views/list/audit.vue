@@ -1,5 +1,8 @@
 <template>
-    <div class="p20 pipeline-audit-list" v-bkloading="{ isLoading }">
+    <div
+        class="p20 pipeline-audit-list"
+        v-bkloading="{ isLoading }"
+    >
         <div class="audit-list-header">
             <bk-form form-type="inline">
                 <bk-form-item :label="$t('pipelineId')">
@@ -7,7 +10,8 @@
                         v-model="parameters.resourceId"
                         class="w220"
                         @enter="handlepPaginationChange"
-                        :placeholder="$t('audit.enterPlaceholder')">
+                        :placeholder="$t('audit.enterPlaceholder')"
+                    >
                     </bk-input>
                 </bk-form-item>
                 <bk-form-item :label="$t('pipelineName')">
@@ -15,7 +19,8 @@
                         v-model="parameters.resourceName"
                         class="w220"
                         @enter="handlepPaginationChange"
-                        :placeholder="$t('audit.enterPlaceholder')">
+                        :placeholder="$t('audit.enterPlaceholder')"
+                    >
                     </bk-input>
                 </bk-form-item>
                 <bk-form-item :label="$t('audit.operator')">
@@ -23,7 +28,8 @@
                         v-model="parameters.userId"
                         class="w220"
                         @enter="handlepPaginationChange"
-                        :placeholder="$t('audit.enterPlaceholder')">
+                        :placeholder="$t('audit.enterPlaceholder')"
+                    >
                     </bk-input>
                 </bk-form-item>
                 <bk-form-item :label="$t('audit.operateTime')">
@@ -36,7 +42,8 @@
                         :options="{
                             disabledDate: time => time.getTime() > Date.now()
                         }"
-                        :placeholder="$t('audit.operateTimePlaceholder')">
+                        :placeholder="$t('audit.operateTimePlaceholder')"
+                    >
                     </bk-date-picker>
                 </bk-form-item>
                 <!-- <bk-form-item :label="$t('status')">
@@ -56,17 +63,36 @@
             :data="auditData"
             :pagination="pagination"
             @page-change="current => handlepPaginationChange({ current })"
-            @page-limit-change="limit => handlepPaginationChange({ limit })">
-            <bk-table-column :label="$t('pipelineId')" prop="resourceId"></bk-table-column>
-            <bk-table-column :label="$t('pipelineName')" prop="resourceName"></bk-table-column>
-            <bk-table-column :label="$t('operate')" prop="actionContent"></bk-table-column>
-            <bk-table-column :label="$t('audit.operator')" prop="userId"></bk-table-column>
-            <bk-table-column :label="$t('audit.operateTime')" :prop="'updatedTime'">
+            @page-limit-change="limit => handlepPaginationChange({ limit })"
+        >
+            <bk-table-column
+                :label="$t('pipelineId')"
+                prop="resourceId"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('pipelineName')"
+                prop="resourceName"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('operate')"
+                prop="actionContent"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('audit.operator')"
+                prop="userId"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('audit.operateTime')"
+                :prop="'updatedTime'"
+            >
                 <template slot-scope="props">
                     {{ convertTime(props.row.updatedTime * 1000) }}
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('status')" prop="status"></bk-table-column>
+            <bk-table-column
+                :label="$t('status')"
+                prop="status"
+            ></bk-table-column>
         </bk-table>
     </div>
 </template>

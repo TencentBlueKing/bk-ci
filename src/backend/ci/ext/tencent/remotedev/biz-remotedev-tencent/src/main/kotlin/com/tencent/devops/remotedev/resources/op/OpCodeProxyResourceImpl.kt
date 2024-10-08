@@ -6,6 +6,7 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpCodeProxyResource
 import com.tencent.devops.remotedev.pojo.gitproxy.CallbackLinktgitData
+import com.tencent.devops.remotedev.pojo.gitproxy.DeleteTGitLinkData
 import com.tencent.devops.remotedev.pojo.gitproxy.UpdateTgitAclIpData
 import com.tencent.devops.remotedev.pojo.gitproxy.UpdateTgitAclUserData
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
@@ -47,5 +48,9 @@ class OpCodeProxyResourceImpl @Autowired constructor(
             projectId = data.projectId,
             tgitId = data.tgitId
         )
+    }
+
+    override fun deleteTGitLink(data: DeleteTGitLinkData): Result<Boolean> {
+        return Result(gitProxyTGitService.deleteRepos(data.projectId, data.tGitIds))
     }
 }

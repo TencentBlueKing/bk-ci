@@ -51,7 +51,6 @@ import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
-import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -228,7 +227,7 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.STOPPED
             }
 
-            workspaceInfo.status == EnvStatusEnum.deleted -> {
+            workspaceInfo.status == EnvStatusEnum.deleted || workspaceInfo.status == EnvStatusEnum.readyDelete -> {
                 deleteControl.doDeleteWS(true, userId, workspaceName, workspaceInfo.environmentIP)
                 return WorkspaceStatus.DELETED
             }
@@ -236,6 +235,16 @@ class WorkspaceCommon @Autowired constructor(
             workspaceInfo.status == EnvStatusEnum.restarting -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.RESTARTING)
                 return WorkspaceStatus.RESTARTING
+            }
+
+            workspaceInfo.status == EnvStatusEnum.starting -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.STARTING)
+                return WorkspaceStatus.STARTING
+            }
+
+            workspaceInfo.status == EnvStatusEnum.stopping -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.STOPPING)
+                return WorkspaceStatus.STOPPING
             }
 
             workspaceInfo.status == EnvStatusEnum.rebuilding -> {
@@ -246,6 +255,11 @@ class WorkspaceCommon @Autowired constructor(
             workspaceInfo.status == EnvStatusEnum.upgrading -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.UPGRADING)
                 return WorkspaceStatus.UPGRADING
+            }
+
+            workspaceInfo.status == EnvStatusEnum.copying -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.MAKING_IMAGE)
+                return WorkspaceStatus.MAKING_IMAGE
             }
 
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
@@ -364,13 +378,6 @@ class WorkspaceCommon @Autowired constructor(
             workspaceName = workspaceName
         )
         if (lastHistory?.startTime != null) {
-            workspaceDao.updateWorkspaceUsageTime(
-                workspaceName = workspaceName,
-                usageTime = Duration.between(
-                    lastHistory.startTime, LocalDateTime.now()
-                ).seconds.toInt(),
-                dslContext = transactionContext
-            )
             workspaceHistoryDao.updateWorkspaceHistory(
                 dslContext = transactionContext,
                 id = lastHistory.id,
@@ -412,10 +419,10 @@ class WorkspaceCommon @Autowired constructor(
         return true
     }
 
-    fun syncStartCloudResourceList(): List<EnvironmentResourceData> {
+    fun realtimeStartCloudResourceList(): List<EnvironmentResourceData> {
         return kotlin.runCatching {
             SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
-                .syncStartCloudResourceList().data
+                .realtimeStartCloudResourceList().data
         }.onFailure {
             logger.warn("Error syncing start cloud resource list: ${it.message}")
         }.getOrNull() ?: emptyList()
@@ -443,19 +450,6 @@ class WorkspaceCommon @Autowired constructor(
             dslContext = dslContext,
             cgsId = cgsId
         ) > 0
-    }
-
-    // 获取cgs机型、区域
-    fun getCgsConfig(): CgsResourceConfig {
-        return kotlin.runCatching {
-            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
-                .getCgsConfig().data
-        }.onFailure {
-            logger.warn("Error get cgs config: ${it.message}")
-        }.getOrNull() ?: CgsResourceConfig(
-            zoneList = emptyList(),
-            machineTypeList = emptyList()
-        )
     }
 
     /**
@@ -530,11 +524,11 @@ class WorkspaceCommon @Autowired constructor(
                     workspaceName = workspaceName,
                     cc = mutableSetOf(operator),
                     projectId = projectId,
-                    notifyTemplateCode = WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                     bodyParams = mutableMapOf(
                         "workspaceName" to workspaceName,
                         "cgsId" to cgsId,
+                        "notifyTemplateCode" to WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
                         "userId" to it.userId
                     )
                 )

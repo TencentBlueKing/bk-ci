@@ -41,6 +41,8 @@ class BkConfig {
     val itsmHost: String = ""
     @Value("\${bkitsm.tgitLinkServiceId:#{null}}")
     val tgitLinkServiceId: Int? = null
+    @Value("\${bkitsm.recordViewServiceId:#{null}}")
+    val recordViewServiceId: Int? = null
     @Value("\${bkitsm.dailyCheckServiceId:#{null}}")
     val dailyCheckServiceId: Int? = null
 

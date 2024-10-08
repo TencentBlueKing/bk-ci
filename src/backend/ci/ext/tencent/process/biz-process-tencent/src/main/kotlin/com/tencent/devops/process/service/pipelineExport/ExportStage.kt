@@ -125,7 +125,8 @@ object ExportStage {
                     description = it.desc
                 )
             },
-            description = stage.checkIn?.reviewDesc
+            description = stage.checkIn?.reviewDesc,
+            notifyGroups = stage.checkIn?.notifyGroup
         )
         if (reviews.flows.isNullOrEmpty()) {
             return null

@@ -3,11 +3,13 @@
         <bk-collapse
             v-if="isShowServerFile"
             v-model="activeResult"
-            class="host-detail">
+            class="host-detail"
+        >
             <collapse-item
                 v-if="isShowServerFile"
                 :active="activeResult"
-                name="server">
+                name="server"
+            >
                 <span class="collapse-title">
                     {{ $t('environment.已选择') }}
                     <span class="number strong">{{ serverFileList.length }}</span>
@@ -30,15 +32,22 @@
                         <tbody>
                             <tr
                                 v-for="(row, index) in serverFileList"
-                                :key="index">
+                                :key="index"
+                            >
                                 <td>
                                     <render-file-path :data="row.fileList" />
                                 </td>
                                 <td>
-                                    <render-file-server type="server" :data="row" />
+                                    <render-file-server
+                                        type="server"
+                                        :data="row"
+                                    />
                                 </td>
                                 <td>
-                                    <render-file-server type="agent" :data="row" />
+                                    <render-file-server
+                                        type="agent"
+                                        :data="row"
+                                    />
                                 </td>
                                 <!-- <td>
                                     <server-host-agent

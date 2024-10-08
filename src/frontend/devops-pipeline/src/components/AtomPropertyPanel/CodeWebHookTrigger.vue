@@ -3,7 +3,14 @@
         <template v-for="group in paramsGroupMap">
             <template v-for="(obj, key) in group.props">
                 <template v-if="obj.type === 'group'">
-                    <form-field-group v-if="rely(obj, atomValue)" :name="key" :value="atomValue[key]" :handle-change="handleUpdateAtomInput" :key="key" v-bind="obj">
+                    <form-field-group
+                        v-if="rely(obj, atomValue)"
+                        :name="key"
+                        :value="atomValue[key]"
+                        :handle-change="handleUpdateAtomInput"
+                        :key="key"
+                        v-bind="obj"
+                    >
                         <template v-for="i in obj.children">
                             <form-field
                                 v-if="!isHidden(i, atomValue) && rely(i, atomValue)"
@@ -23,7 +30,8 @@
                                     :value="atomValue[i.key]"
                                     v-bind="i"
                                     :get-atom-key-modal="getAtomKeyModal"
-                                    :placeholder="getPlaceholder(i, atomValue)">
+                                    :placeholder="getPlaceholder(i, atomValue)"
+                                >
                                 </component>
                             </form-field>
                         </template>

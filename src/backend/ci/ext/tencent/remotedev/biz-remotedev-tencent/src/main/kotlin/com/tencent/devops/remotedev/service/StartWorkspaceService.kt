@@ -9,10 +9,9 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.pojo.start.StartMessageDataType
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.startcloud.StartMessageRegisterCondition
 import com.tencent.devops.remotedev.pojo.startcloud.StartMessageRegisterData
 import com.tencent.devops.remotedev.pojo.startcloud.StartMessageRegisterReq
@@ -35,7 +34,6 @@ import org.springframework.stereotype.Service
 class StartWorkspaceService @Autowired constructor(
     private val startCloudClient: StartCloudClient,
     private val dslContext: DSLContext,
-    private val workspaceDao: WorkspaceDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val client: Client,
     val checkTokenService: ClientTokenService
@@ -159,8 +157,8 @@ class StartWorkspaceService @Autowired constructor(
     fun sendMessage(
         operator: String,
         userIdList: Set<String>,
-        dataType: StartMessageDataType,
-        data: String,
+        dataType: RemoteDevNotifyType,
+        messageContent: String,
         messageStartTime: Long,
         messageEndTime: Long
     ) {
@@ -168,7 +166,7 @@ class StartWorkspaceService @Autowired constructor(
         val dataStr = Base64.getEncoder().encodeToString(
             JsonUtil.getObjectMapper(false).writeValueAsBytes(
                 StartMessageRegisterData(
-                    dataType.value, data
+                    dataType.getDesktopType(), messageContent
                 )
             )
         )

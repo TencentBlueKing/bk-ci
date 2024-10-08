@@ -8,6 +8,7 @@ const svgSprite = require('gulp-svg-sprite')
 const inject = require('gulp-inject')
 const rename = require('gulp-rename')
 const hash = require('gulp-hash')
+const { globSync } = require('glob')
 const replace = require('gulp-replace')
 const Ora = require('ora')
 const yargs = require('yargs')
@@ -18,19 +19,24 @@ const argv = yargs.alias({
     env: 'e',
     lsVersion: 'l',
     type: 't',
-    scope: 's'
+    scope: 's',
+    effect: 'effect'
 }).default({
     dist: 'frontend',
     env: 'master',
     lsVersion: 'v2',
-    type: 'tencent'
+    type: 'tencent',
+    effect: true
 }).describe({
     dist: 'build output dist directory',
     env: 'environment [dev, test, master, external]',
     lsVersion: 'localStorage version',
-    type: 'bkdevops version 【ee | tencent】'
+    head: 'head file path',
+    base: 'base file path',
+    effect: 'only buuild effected service'
 }).argv
-const { dist, env, lsVersion, type, scope } = argv
+const { dist, env, lsVersion, scope, head = 'HEAD', base = 'master', effect } = argv
+console.log(env, head, base)
 
 const svgSpriteConfig = {
     mode: {
@@ -40,7 +46,8 @@ const svgSpriteConfig = {
 
 const envPrefix = ['dev', 'test'].indexOf(env) > -1 ? `${env}.` : ''
 const BUNDLE_NAME = 'assets_bundle.json'
-const ASSETS_JSON_URL = `http://${envPrefix}devnet.devops.oa.com/${BUNDLE_NAME}`
+const FINAL_ASSETS_JSON_FILENAME = `${dist}/assetsBundles.js`
+const ASSETS_JSON_URL = `https://${envPrefix}devnet.devops.woa.com/${BUNDLE_NAME}`
 
 async function getAssetsJSON (jsonUrl) {
     try {
@@ -98,8 +105,7 @@ function getScopeStr (scope) {
             default:
                 scopeArray = scope
         }
-        const isMultiple = scopeArray.length > 1
-        return `--scope=devops-${isMultiple ? `{${scopeArray.join(',')}}` : scopeArray.join(',')}`
+        return `-p ${scopeArray.map(item => `devops-${item}`).join(' ')}`
     } catch (e) {
         console.error(e)
         return ''
@@ -117,24 +123,37 @@ task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
 task('build', async () => {
     const assetJson = await getAssetsJSON(ASSETS_JSON_URL)
     fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(assetJson))
-    const scopeStr = getScopeStr(scope)
-    const envConfMap = {
-        dist,
-        version: type,
-        lsVersion
-    }
-    const envQueryStr = Object.keys(envConfMap).reduce((acc, key) => {
-        acc += ` --env ${key}=${envConfMap[key]}`
-        return acc
-    }, '')
-    console.log(envQueryStr)
-    await execAsync(`lerna run public:master ${scopeStr}`)
+    
+    return await execAsync()
 })
 
 task('generate-assets-json', () => {
-    const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(path.join(__dirname, dist, BUNDLE_NAME), 'utf8')}`
-    fs.writeFileSync(`${dist}/assetsBundles.js`, fileContent)
-    return src(`${dist}/assetsBundles.js`).pipe(hash()).pipe(dest(`${dist}/`))
+    const entryDir = path.join(__dirname, dist, "entry's")
+    const assetsBundlesName = path.join(__dirname, dist, BUNDLE_NAME);
+    const prevAssets = JSON.parse(fs.readFileSync(assetsBundlesName, 'utf-8'));
+    // 读取path.join(__dirname, dist, 'entry's', '*.json')所有Json合并成一个
+    const finalAssets = globSync(path.join(entryDir, '*.json')).reduce((acc, file) => {
+        const content = JSON.parse(fs.readFileSync(file, 'utf-8'))
+        acc = {
+            ...acc,
+            ...content
+        }
+        return acc
+    }, prevAssets)
+
+    console.log('final assets json!')
+    console.table(finalAssets)
+    const fileContent = `window.SERVICE_ASSETS = ${JSON.stringify(finalAssets)}`
+    
+    fs.writeFileSync(FINAL_ASSETS_JSON_FILENAME, fileContent)
+    fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(finalAssets))
+    if (fs.existsSync(entryDir)) {
+        fs.rmSync(entryDir, {
+            recursive: true,
+            force: true
+        })
+    }
+    return src(FINAL_ASSETS_JSON_FILENAME).pipe(hash()).pipe(dest(dist))
 })
 
 task('inject-asset', parallel(['console', 'pipeline'].map(prefix => {
@@ -161,20 +180,33 @@ task('inject-asset', parallel(['console', 'pipeline'].map(prefix => {
 }
 )))
 
-async function execAsync (cmd) {
+async function execAsync () {
     const spinner = new Ora('building bk-ci frontend project').start()
+    
     return new Promise((resolve, reject) => {
-        require('child_process').exec(cmd, {
-            maxBuffer: 5000 * 1024,
+        const scopeStr = getScopeStr(scope)
+        const cmd = effect ? 'affected -t public:master' : `run-many -t public:master ${scopeStr}`
+        console.log('gulp cmd: ', cmd, cmd.split(' '))
+        const { spawn } = require('node:child_process')
+        const spawnCmd = spawn('pnpm', [
+            'exec',
+            'nx',
+            '--parallel=16',
+            ...cmd.split(' ')
+        ], {
+            stdio: 'inherit',
             env: {
                 ...process.env,
                 dist,
                 lsVersion
             }
-        }, (err, res) => {
-            if (err) {
-                console.error(err)
-                reject(err)
+        })
+        
+        spawnCmd.on('close', (code) => {
+            console.log(`child process exited with code ${code}`)
+            if (code) {
+                reject(Error('build failed'))
+                spinner.fail('Failed bk-ci frontend project')
                 process.exit(1)
             }
             spinner.succeed('Finished building bk-ci frontend project')

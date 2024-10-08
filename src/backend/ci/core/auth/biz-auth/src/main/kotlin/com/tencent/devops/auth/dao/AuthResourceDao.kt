@@ -406,6 +406,7 @@ class AuthResourceDao {
                 relationId = relationId,
                 createUser = createUser,
                 updateUser = updateUser,
+                iamGradeManagerId = relationId,
                 createTime = createTime,
                 updateTime = updateTime
             )

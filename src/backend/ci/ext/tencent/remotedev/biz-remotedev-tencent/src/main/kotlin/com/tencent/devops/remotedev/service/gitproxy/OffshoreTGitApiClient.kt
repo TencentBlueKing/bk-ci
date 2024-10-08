@@ -33,14 +33,14 @@ import javax.net.ssl.X509TrustManager
 class OffshoreTGitApiClient @Autowired constructor(
     private val tGitConfig: TGitConfig
 ) {
-
     fun getProjectList(
         token: TGitToken,
         page: Int,
         pageSize: Int,
         search: String?,
         minAccessLevel: GitAccessLevelEnum?,
-        type: TGitProjectType
+        type: TGitProjectType,
+        throwE: Boolean
     ): List<TGitProjectInfo> {
         logger.info("get /api/v3/projects|$page|$pageSize|$search|$minAccessLevel|$type")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects".addQuery(
@@ -59,8 +59,12 @@ class OffshoreTGitApiClient @Autowired constructor(
             doRetryHttp(request).use { response ->
                 val data = response.body!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("getProjectList fail|{}|{}", response.code, data)
-                    return emptyList()
+                    if (throwE) {
+                        throw RemoteServiceException(" ${response.code}|$data")
+                    } else {
+                        logger.error("getProjectList fail|{}|{}", response.code, data)
+                        return emptyList()
+                    }
                 }
                 val repoList = JsonParser.parseString(data).asJsonArray
                 if (!repoList.isJsonNull) {
@@ -69,6 +73,9 @@ class OffshoreTGitApiClient @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("getProjectList error", e)
+            if (throwE) {
+                throw e
+            }
         }
         return emptyList()
     }

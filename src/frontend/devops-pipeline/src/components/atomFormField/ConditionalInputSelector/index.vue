@@ -15,7 +15,10 @@
                 :id="item[settingKey]"
                 :name="item[displayKey]"
             >
-                <slot name="option-item" v-bind="item"></slot>
+                <slot
+                    name="option-item"
+                    v-bind="item"
+                ></slot>
             </bk-option>
         </bk-select>
         <component
@@ -25,14 +28,15 @@
             v-validate.initial="Object.assign({}, { required: !!curComponent.required })"
             :handle-change="handleChange"
             :value="element[curComponent.key]"
-            v-bind="curComponent">
-        </component>
+            :disabled="disabled"
+            v-bind="curComponent"
+        />
     </div>
 </template>
 
 <script>
-    import VuexInput from '@/components/atomFormField/VuexInput'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import VuexInput from '@/components/atomFormField/VuexInput'
     import atomFieldMixin from '../atomFieldMixin'
     export default {
         name: 'conditional-input-selector',

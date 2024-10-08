@@ -37,12 +37,14 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.op.OPProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.WindowsGpuResourceDao
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
-import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
+import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
@@ -50,6 +52,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
+import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespDataMachineResource
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.remotedev.utils.CommonUtil
 import org.jooq.DSLContext
@@ -66,11 +69,82 @@ class WindowsResourceConfigService @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val client: Client,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val workspaceWindowsDao: WorkspaceWindowsDao
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
+    private val windowsGpuResourceDao: WindowsGpuResourceDao
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(WindowsResourceConfigService::class.java)
+        private const val SYNC_CHUNKED = 100
+    }
+
+    fun syncStartCloudResourceList() {
+        val data = workspaceCommon.realtimeStartCloudResourceList()
+        if (data.isNotEmpty()) {
+            windowsGpuResourceDao.deleteAllResource(dslContext)
+            data.chunked(SYNC_CHUNKED).forEach { chunk ->
+                windowsGpuResourceDao.createOrUpdateResource(dslContext, chunk)
+                Thread.sleep(50)
+            }
+        }
+        // 同步 gpu空闲资源数据
+        kotlin.runCatching {
+            getAllVmResource()
+        }.onFailure {
+            logger.warn("get all vm resource failed.|${it.message}")
+        }
+    }
+
+    // 获取vm空闲资源，包含Devcloud专区和其他
+    private fun getAllVmResource() {
+        val resList = listOfNotNull(
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getResourceVm(
+                ResourceVmReq(null, null, false)
+            ).data,
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getResourceVm(
+                ResourceVmReq(null, null, true)
+            ).data
+        )
+            .flatten() // 将上述两个list合并成一个
+            .flatMap { resource ->
+                resource.machineResources?.map { mas ->
+                    ResourceVmRespDataMachineResource(
+                        zoneId = resource.zoneId,
+                        machineType = mas.machineType,
+                        cap = mas.cap ?: 0,
+                        used = mas.used ?: 0,
+                        free = mas.free ?: 0
+                    )
+                } ?: emptyList()
+            }
+
+        if (resList.isNotEmpty()) {
+            windowsGpuResourceDao.deleteVmResource(dslContext)
+            windowsGpuResourceDao.insertVmResource(dslContext, resList)
+        }
+    }
+
+    /**
+     * 获取cgs资源池的机型和区域列表
+     */
+    fun getCgsConfig(): CgsResourceConfig {
+        val machineTypeList = mutableListOf<String>()
+        val zoneList = mutableListOf<String>()
+        val cgsConfigList = windowsGpuResourceDao.getCgsConfig(dslContext)
+        cgsConfigList.forEach { cgs ->
+            if (!machineTypeList.contains(cgs.value2())) {
+                machineTypeList.add(cgs.value2())
+            }
+            if (!zoneList.contains(cgs.value1())) {
+                zoneList.add(cgs.value1())
+            }
+        }
+        logger.info("getCgsConfig|machineTypeList|$machineTypeList|zoneList|$zoneList")
+
+        return CgsResourceConfig(
+            zoneList = zoneList,
+            machineTypeList = machineTypeList
+        )
     }
 
     @Suppress("NestedBlockDepth", "ComplexMethod")
@@ -84,7 +158,7 @@ class WindowsResourceConfigService @Autowired constructor(
         val res = mutableMapOf<String, MutableMap<String, Int>>()
         val spec = windowsResourceZoneDao.fetchAllSpec(dslContext).map { it.zoneShortName }
         if (searchCustom != true) {
-            workspaceCommon.syncStartCloudResourceList().forEach {
+            workspaceCommon.realtimeStartCloudResourceList().forEach {
                 if (it.zoneId in spec) return@forEach
                 val key = it.zoneId.replace(Regex("\\d+"), "")
                 val map = res.getOrPut(key) { mutableMapOf() }
@@ -212,7 +286,9 @@ class WindowsResourceConfigService @Autowired constructor(
         return res
     }
 
-    fun getAllZone(): List<WindowsResourceZoneConfig> {
+    fun getAllZone(
+        type: WindowsResourceZoneConfigType = WindowsResourceZoneConfigType.DEFAULT
+    ): List<WindowsResourceZoneConfig> {
         logger.info("get all windows resource zone")
         return windowsResourceZoneDao.fetchAll(dslContext, true)
     }
@@ -255,7 +331,21 @@ class WindowsResourceConfigService @Autowired constructor(
         ).firstOrNull { it.id == windowsZone.id }
     }
 
-    fun getAllSpecZoneShortName() = windowsResourceZoneDao.fetchAllSpec(dslContext).map { it.zoneShortName }
+    fun getAvailableZone(
+        zoneId: String,
+        type: WindowsResourceZoneConfigType
+    ): WindowsResourceZoneConfig? {
+        logger.info("get windows resource config zone type $type")
+        return windowsResourceZoneDao.fetchAll(
+            dslContext = dslContext,
+            withUnavailable = true,
+            type = type
+        ).firstOrNull { it.zoneShortName.startsWith(zoneId) }
+    }
+
+    fun getAllSpecZone() = windowsResourceZoneDao.fetchAllSpec(dslContext)
+
+    fun getAllSpecZoneShortName() = getAllSpecZone().map { it.zoneShortName }
 
     // 新增windows硬件资源配置
     fun addWindowsResource(windowsResourceConfig: WindowsResourceTypeConfig): Boolean {
@@ -522,7 +612,7 @@ class WindowsResourceConfigService @Autowired constructor(
             windowsZone = windowsZone,
             windowsConfig = windowsConfig,
             newNum = newNum,
-            quotaType = QuotaType.parse(ownerType)
+            quotaType = QuotaType.parse(windowsZone.type)
         )
     }
 }

@@ -1,9 +1,15 @@
 <template>
     <ul class="bk-trees-list">
-        <li class="bk-trees-item" :key="index" v-for="(item, index) of list" v-if="item.folder">
-            <div class="bk-tree-title"
+        <li
+            class="bk-trees-item"
+            :key="index"
+            v-for="(item, index) of list"
+            v-if="item.folder"
+        >
+            <div
+                class="bk-tree-title"
                 :class="{ open: item.isOpen, selected: isActive(index) }"
-                :style="{ &quot;padding-left&quot;: 23 * _deepCount + &quot;px&quot; }"
+                :style="{ 'padding-left': 23 * _deepCount + 'px' }"
                 @dblclick.stop="itemDbClickHandler({
                     index,
                     deepCount,
@@ -13,9 +19,17 @@
                     index,
                     deepCount,
                     item
-                })">
-                <i @click.stop="itemDbClickHandler({ index, deepCount, item })" class="devops-icon arrow-icon" :class="item.isOpen ? item.arrowOpenIcon : item.arrowIcon"></i>
-                <i class="devops-icon title-icon" :class="item.isOpen ? item.openIcon : item.icon"></i>
+                })"
+            >
+                <i
+                    @click.stop="itemDbClickHandler({ index, deepCount, item })"
+                    class="devops-icon arrow-icon"
+                    :class="item.isOpen ? item.arrowOpenIcon : item.arrowIcon"
+                ></i>
+                <i
+                    class="devops-icon title-icon"
+                    :class="item.isOpen ? item.openIcon : item.icon"
+                ></i>
                 <span class="title-text pr15">{{ item.name }}</span>
             </div>
             <CollapseTransition>
@@ -25,7 +39,8 @@
                     :list.sync="item.children"
                     :deep-count="_deepCount"
                     :is-root="false"
-                    :road-map="index">
+                    :road-map="index"
+                >
                 </bk-trees>
             </CollapseTransition>
         </li>
@@ -34,7 +49,7 @@
 
 <script>
     import CollapseTransition from '@/utils/collapse-transition.js'
-    import { mapState, mapGetters } from 'vuex'
+    import { mapGetters, mapState } from 'vuex'
     import { bus } from '../../../utils/bus'
     export default {
         name: 'bk-trees',

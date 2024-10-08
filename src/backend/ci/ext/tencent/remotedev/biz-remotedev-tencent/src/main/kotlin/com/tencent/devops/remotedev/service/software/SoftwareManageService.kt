@@ -187,12 +187,12 @@ class SoftwareManageService @Autowired constructor(
                         notifyControl.notify4RemoteDevManager(
                             projectId = projectId,
                             cc = mutableSetOf(workspace.createUserId),
-                            notifyTemplateCode = WINDOWS_GPU_ASSIGN_NOTIFY,
                             notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                             bodyParams = mutableMapOf(
                                 "workspaceName" to workspace.workspaceName,
                                 "cgsId" to (workspace.hostIp ?: workspace.workspaceName),
                                 "projectId" to projectId,
+                                "notifyTemplateCode" to WINDOWS_GPU_ASSIGN_NOTIFY,
                                 "creator" to workspace.createUserId
                             )
                         )

@@ -23,6 +23,7 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import java.time.LocalDateTime
@@ -308,11 +309,13 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun queryWorkspaceImageList(
         appCode: String?,
         apigwType: String?,
-        projectId: String?
+        projectId: String?,
+        imageId: String?
     ): Result<Map<String, Any>> {
         logger.info("queryWorkspaceImageList |$projectId|")
         return client.get(ServiceRemoteDevResource::class).getWorkspaceImageList(
-            projectId = projectId
+            projectId = projectId,
+            imageId = imageId
         )
     }
 
@@ -385,5 +388,41 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun operateCvmCallback(appCode: String?, apigwType: String?, data: OperateCvmData): Result<Boolean> {
         logger.info("operateCvmCallback $data")
         return client.get(ServiceRemoteDevResource::class).opCvm(data)
+    }
+
+    override fun enableWorkspaceRecord(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info("enableWorkspaceRecord |$userId|$projectId|$workspaceName|$enable")
+        return client.get(ServiceRemoteDevResource::class).enableWorkspaceRecord(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            enable = enable
+        )
+    }
+
+    override fun checkWorkspaceEnableAddress(
+        userId: String,
+        appId: Long,
+        ip: String
+    ): Result<CheckWorkspaceRecordData> {
+        logger.info("checkWorkspaceEnableAddress |$userId|$appId|$ip")
+        return client.get(ServiceRemoteDevResource::class).checkWorkspaceEnableAddress(
+            userId = userId,
+            appId = appId,
+            ip = ip
+        )
+    }
+
+    override fun checkUserViewWorkspacePermission(
+        userId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        logger.info("checkUserViewWorkspacePermission |$userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).checkUserViewWorkspacePermission(userId, workspaceName)
     }
 }

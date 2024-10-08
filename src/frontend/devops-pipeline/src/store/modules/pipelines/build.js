@@ -157,7 +157,7 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId, version }) {
+    requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId, isDebug }) {
         const { historyPageStatus: { query, searchKey, page, pageSize } } = state
         const conditions = {
             ...query,
@@ -172,8 +172,9 @@ const actions = {
         dispatch('setHistoryPageStatus', {
             isQuerying: !isEmptyObj(conditions)
         })
-        if (version) {
-            queryMap.append('version', version)
+
+        if (isDebug) {
+            queryMap.append('debug', true)
         }
         queryMap.append('page', page)
         queryMap.append('pageSize', pageSize)

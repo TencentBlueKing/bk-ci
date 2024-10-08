@@ -1,16 +1,34 @@
 <template>
     <div class="code-mode-check bk-form-row bk-form">
-        <div class="bk-form-inline-item" :class="{ 'is-required': required }">
+        <div
+            class="bk-form-inline-item"
+            :class="{ 'is-required': required }"
+        >
             <label class="bk-label">{{ text }}：</label>
             <div class="bk-form-content">
-                <enum-input :list="gitPullModes" :disabled="noPermission" name="type" :handle-change="handleModeChange" :value="gitPullModeType" />
+                <enum-input
+                    :list="gitPullModes"
+                    :disabled="noPermission"
+                    name="type"
+                    :handle-change="handleModeChange"
+                    :value="gitPullModeType"
+                />
             </div>
         </div>
-        <div class="bk-form-inline-item" :class="{ 'is-required': required }">
+        <div
+            class="bk-form-inline-item"
+            :class="{ 'is-required': required }"
+        >
             <template v-if="gitPullModeType">
                 <label class="bk-label">{{ gitPullModeList[gitPullModeType].label }}：</label>
                 <div class="bk-form-content">
-                    <vuex-input :disabled="noPermission" :placeholder="gitPullModeList[gitPullModeType].placeholder" name="value" :handle-change="handleValueChange" :value="gitPullModeVal"></vuex-input>
+                    <vuex-input
+                        :disabled="noPermission"
+                        :placeholder="gitPullModeList[gitPullModeType].placeholder"
+                        name="value"
+                        :handle-change="handleValueChange"
+                        :value="gitPullModeVal"
+                    ></vuex-input>
                 </div>
             </template>
         </div>

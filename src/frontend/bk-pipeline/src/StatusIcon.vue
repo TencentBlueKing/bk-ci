@@ -1,7 +1,12 @@
 <template>
     <span :class="{ 'stage-status': true, [type]: type, [status]: status, 'readonly': !editable || containerDisabled }">
         <transition name="slide-top">
-            <Logo size="14" v-if="isLoading" name="circle-2-1" class="spin-icon" />
+            <Logo
+                size="14"
+                v-if="isLoading"
+                name="circle-2-1"
+                class="spin-icon"
+            />
             <Logo
                 size="14"
                 v-else-if="isHangon"
@@ -10,22 +15,46 @@
             />
         </transition>
         <transition name="slide-top">
-            <Logo size="14" v-if="isWaiting" name="clock" />
+            <Logo
+                size="14"
+                v-if="isWaiting"
+                name="clock"
+            />
         </transition>
         <transition name="slide-down">
-            <Logo size="14" v-if="isCancel" name="exclamation-circle-shape" />
+            <Logo
+                size="14"
+                v-if="isCancel"
+                name="exclamation-circle-shape"
+            />
         </transition>
         <transition name="slide-down">
-            <Logo size="14" v-if="isReviewing" name="exclamation-triangle-shape" />
+            <Logo
+                size="14"
+                v-if="isReviewing"
+                name="exclamation-triangle-shape"
+            />
         </transition>
         <transition name="slide-left">
-            <Logo :size="isHook ? 18 : 14" v-if="isFailed" :name="isHook ? 'build-hooks' : 'close-circle-shape'" />
+            <Logo
+                :size="isHook ? 18 : 14"
+                v-if="isFailed"
+                :name="isHook ? 'build-hooks' : 'close-circle-shape'"
+            />
         </transition>
         <transition name="slide-right">
-            <Logo :size="isHook ? 18 : 14" v-if="isSucceed" :name="isHook ? 'build-hooks' : 'check-circle-shape'"></Logo>
+            <Logo
+                :size="isHook ? 18 : 14"
+                v-if="isSucceed"
+                :name="isHook ? 'build-hooks' : 'check-circle-shape'"
+            ></Logo>
         </transition>
         <transition name="slide-right">
-            <Logo size="16" name="pause" v-if="isPause"></Logo>
+            <Logo
+                size="16"
+                name="pause"
+                v-if="isPause"
+            ></Logo>
         </transition>
         <span v-if="defaultStatus">
             <slot></slot>
