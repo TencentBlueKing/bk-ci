@@ -570,7 +570,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         projectName: String,
         actions: List<String>
     ): String {
-        val resourceType2Actions = actions.groupBy { it.substringAfterLast("_") }
+        val resourceType2Actions = actions.groupBy { it.substringBeforeLast("_") }
         val authorizationScopes = resourceType2Actions.map { (resourceType, actions) ->
             val projectPath = ManagerPath().apply {
                 system = systemId
