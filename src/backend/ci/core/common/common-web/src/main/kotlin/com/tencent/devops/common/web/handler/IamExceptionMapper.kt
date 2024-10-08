@@ -46,12 +46,7 @@ class IamExceptionMapper : ExceptionMapper<IamException> {
     override fun toResponse(exception: IamException): Response {
         logger.warn("Failed with iam request exception", exception)
         val status = Response.Status.BAD_REQUEST
-        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
-            exception.message
-        } else {
-            "Failed with iam request exception"
-        }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result(status = status.statusCode, message = message, data = exception.errorMsg)).build()
+            .entity(Result(status = status.statusCode, message = exception.errorMsg, data = exception.errorMsg)).build()
     }
 }
