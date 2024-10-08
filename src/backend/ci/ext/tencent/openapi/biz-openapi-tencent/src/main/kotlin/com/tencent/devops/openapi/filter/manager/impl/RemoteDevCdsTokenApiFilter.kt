@@ -27,84 +27,88 @@
 package com.tencent.devops.openapi.filter.manager.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.devops.auth.pojo.dto.ClientDetailsDTO
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_STORE_CODE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_AUTHORIZATION
-import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_CLIENT_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_CLIENT_SECRET
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.DEVX_HEADER_CDS_TOKEN
 import com.tencent.devops.common.api.auth.DEVX_HEADER_NGGW_CLIENT_ADDRESS
+import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.openapi.filter.manager.ApiFilterFlowState
 import com.tencent.devops.openapi.filter.manager.ApiFilterManager
 import com.tencent.devops.openapi.filter.manager.FilterContext
-import com.tencent.devops.remotedev.api.service.ServiceSDKResource
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class RemoteDevTokenApiFilter(
+class RemoteDevCdsTokenApiFilter(
     private val client: Client
 ) : ApiFilterManager {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(RemoteDevTokenApiFilter::class.java)
+        private val logger = LoggerFactory.getLogger(RemoteDevCdsTokenApiFilter::class.java)
         private const val CACHE_MAX_SIZE = 10000L
-        private const val CACHE_EXPIRE_MINUTES = 30L
+        private const val CACHE_EXPIRE_MINUTES = 1L
     }
 
-    private val oauthDTOCache = Caffeine.newBuilder()
+    @Value("\${devx.aes.key:}")
+    private val aesKey: String = ""
+
+    @Value("\${devx.aes.iv:}")
+    private val aesIV: String = ""
+
+    private val cdsCache = Caffeine.newBuilder()
         .maximumSize(CACHE_MAX_SIZE)
-        .expireAfterAccess(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
-        .build<String, ClientDetailsDTO?> { key ->
+        .expireAfterWrite(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+        .build<String, List<String> /*项目id、登录人(创建人)、区域id、cdsId*/> { content ->
+            var value = ""
             kotlin.runCatching {
-                val (appId, hostIp) = key.split("@@")
-                client.get(ServiceSDKResource::class).getAppIdOauthClientDetail(
-                    desktopIP = hostIp,
-                    appId = appId
-                ).data
-            }.onFailure { logger.warn("$key getAppIdOauthClientDetail error.", it) }.getOrNull()
+                value = AESUtil.decryptWithIV(aesKey, aesIV, content)
+                return@build value.split("::::")
+            }.onFailure { logger.error("get cdsTokenCheck fail.|$content|$value", it) }.getOrNull() ?: emptyList()
         }
 
     /*返回true时执行check逻辑*/
     override fun canExecute(requestContext: FilterContext): Boolean {
-        return if (!requestContext.requestContext.headers.getFirst(AUTH_HEADER_OAUTH2_AUTHORIZATION).isNullOrBlank() &&
-            !requestContext.requestContext.headers.getFirst(AUTH_HEADER_DEVOPS_STORE_CODE).isNullOrBlank() &&
-            !requestContext.requestContext.headers.getFirst(DEVX_HEADER_NGGW_CLIENT_ADDRESS).isNullOrBlank()
-        ) {
-            requestContext.needCheckPermissions = true
-            true
-        } else {
-            false
-        }
+        return !requestContext.requestContext.headers.getFirst(DEVX_HEADER_CDS_TOKEN).isNullOrBlank()
+//            || !requestContext.requestContext.headers.getFirst(DEVX_HEADER_NGGW_CLIENT_ADDRESS).isNullOrBlank()
     }
 
     override fun verify(requestContext: FilterContext): ApiFilterFlowState {
-        val appId = requestContext.requestContext.headers.getFirst(AUTH_HEADER_DEVOPS_STORE_CODE)
-        val hostIp = requestContext.requestContext.headers.getFirst(DEVX_HEADER_NGGW_CLIENT_ADDRESS)
+        val bkCdsToken = requestContext.requestContext.headers.getFirst(DEVX_HEADER_CDS_TOKEN)
 
-        val key = "$appId@@$hostIp"
-        val cache = oauthDTOCache.get(key)
-        if (cache == null) {
+        if (bkCdsToken.isNullOrBlank()) {
             requestContext.requestContext.abortWith(
-                Response.status(Response.Status.BAD_REQUEST)
-                    .entity("remotedev sdk access openapi failed").build()
+                Response.status(Response.Status.FORBIDDEN)
+                    .entity("Desktop sdk illegal access openapi.").build()
             )
             return ApiFilterFlowState.BREAK
         }
-        requestContext.requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_ID]?.set(0, null)
-        if (requestContext.requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_ID] != null) {
-            requestContext.requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_ID]?.set(0, cache.clientId)
+
+        val cache = cdsCache.get(bkCdsToken)
+        if (cache?.find { it.isNotBlank() } == null) {
+            logger.info("Desktop sdk access openapi with illegal cds token($bkCdsToken).")
+            requestContext.requestContext.abortWith(
+                Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Desktop sdk access openapi with illegal cds token($bkCdsToken).").build()
+            )
+            return ApiFilterFlowState.BREAK
+        }
+        val ip = cache.getOrNull(3)?.substringAfter(".") ?: ""
+        val user = cache.getOrNull(1) ?: ""
+        requestContext.requestContext.headers[DEVX_HEADER_NGGW_CLIENT_ADDRESS]?.set(0, null)
+        if (requestContext.requestContext.headers[DEVX_HEADER_NGGW_CLIENT_ADDRESS] != null) {
+            requestContext.requestContext.headers[DEVX_HEADER_NGGW_CLIENT_ADDRESS]?.set(0, ip)
         } else {
-            requestContext.requestContext.headers.add(AUTH_HEADER_OAUTH2_CLIENT_ID, cache.clientId)
+            requestContext.requestContext.headers.add(DEVX_HEADER_NGGW_CLIENT_ADDRESS, ip)
         }
 
-        requestContext.requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_SECRET]?.set(0, null)
-        if (requestContext.requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_SECRET] != null) {
-            requestContext.requestContext.headers[AUTH_HEADER_OAUTH2_CLIENT_SECRET]?.set(0, cache.clientSecret)
+        requestContext.requestContext.headers[AUTH_HEADER_USER_ID]?.set(0, null)
+        if (requestContext.requestContext.headers[AUTH_HEADER_USER_ID] != null) {
+            requestContext.requestContext.headers[AUTH_HEADER_USER_ID]?.set(0, user)
         } else {
-            requestContext.requestContext.headers.add(AUTH_HEADER_OAUTH2_CLIENT_SECRET, cache.clientSecret)
+            requestContext.requestContext.headers.add(AUTH_HEADER_USER_ID, user)
         }
 
         return ApiFilterFlowState.CONTINUE
