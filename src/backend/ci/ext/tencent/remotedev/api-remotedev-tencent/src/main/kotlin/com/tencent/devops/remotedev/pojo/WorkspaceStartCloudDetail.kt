@@ -46,7 +46,5 @@ data class WorkspaceStartCloudDetail(
     @get:Schema(title = "拥有者")
     val owner: String? = null,
     @get:Schema(title = "resourceId")
-    val resourceId: String? = null,
-    @get:Schema(title = "代表一个人登陆了一个云桌面的token")
-    val bkCdsToken: String? = null
+    val resourceId: String? = null
 )

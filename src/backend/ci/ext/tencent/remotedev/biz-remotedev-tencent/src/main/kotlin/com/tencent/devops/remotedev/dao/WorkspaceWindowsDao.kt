@@ -63,27 +63,6 @@ class WorkspaceWindowsDao {
         }
     }
 
-    fun updateBkCdsToken(
-        dslContext: DSLContext,
-        bkCdsToken: String?,
-        workspaceName: String
-    ): Int {
-        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
-            return dslContext.update(this)
-                .set(BK_CDS_TOKEN, bkCdsToken)
-                .where(WORKSPACE_NAME.equal(workspaceName)).execute()
-        }
-    }
-
-    fun fetchWindowsInfoByBkCdsToken(
-        dslContext: DSLContext,
-        bkCdsToken: String
-    ): TWorkspaceWindowsRecord? {
-        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
-            return dslContext.selectFrom(this).where(BK_CDS_TOKEN.eq(bkCdsToken)).fetchAny()
-        }
-    }
-
     fun countProjectIp(
         dslContext: DSLContext,
         projectId: String,
