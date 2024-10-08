@@ -273,7 +273,6 @@
                 applySettings: [],
                 inheritedDialect: true,
                 pipelineDialect: 'CLASSIC',
-                currentPipelineDialect: '',
                 isLoading: false,
                 newPipelineName: '',
                 searchName: '',
@@ -293,7 +292,8 @@
                 'pipelineTemplateMap'
             ]),
             ...mapState('pipelines', [
-                'isManage'
+                'isManage',
+                'currentPipelineDialect'
             ]),
             pipelineListRoute () {
                 return {
@@ -592,9 +592,8 @@
             async requestPipelineDialect () {
                 try {
                     const projectId = this.$route.params.projectId
-                    const { data } = await this.getPipelineDialect(projectId)
-                    this.currentPipelineDialect = data
-                    this.pipelineDialect = data
+                    await this.getPipelineDialect(projectId)
+                    this.pipelineDialect = this.currentPipelineDialect
                 } catch (err) {
                     console.log(err)
                 }

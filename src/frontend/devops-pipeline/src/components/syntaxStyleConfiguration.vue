@@ -150,4 +150,8 @@
     border-radius: 12px;
     padding: 4px 12px;
 }
+
+.pipelinte-template-type-group {
+    margin-top: 10px;
+}
 </style>
