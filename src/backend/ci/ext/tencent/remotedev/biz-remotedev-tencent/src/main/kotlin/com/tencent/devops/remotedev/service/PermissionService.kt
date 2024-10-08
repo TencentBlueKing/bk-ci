@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
@@ -44,13 +45,17 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.utils.RsaUtil
 import java.net.URLEncoder
+import java.nio.charset.Charset
+import java.security.interfaces.RSAPublicKey
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
@@ -68,6 +73,7 @@ class PermissionService @Autowired constructor(
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val redisCache: RedisCacheService,
     private val whiteListService: WhiteListService,
+    private val bkConfig: BkConfig,
     private val checkTokenService: ClientTokenService
 ) {
     companion object {
@@ -265,15 +271,46 @@ class PermissionService @Autowired constructor(
         return JsonUtil.to(value, object : TypeReference<UserOnePassword>() {})
     }
 
-    fun init1Password(userId: String, workspaceName: String, projectId: String?, expiredInSecond: Long?): String {
+    fun init1Password(
+        userId: String,
+        workspaceName: String,
+        projectId: String?,
+        hostIp: String?,
+        expiredInSecond: Long?
+    ): String {
         val key = initRedisUser(
             UserOnePassword(
-                userId, workspaceName, projectId
+                userId = userId, workspaceName = workspaceName, projectId = projectId, hostIp = hostIp
             ),
-                expiredInSecond
+            expiredInSecond
         )
         logger.info("start init1Password|$userId|$workspaceName|$key")
         return URLEncoder.encode(key, "UTF-8")
+    }
+
+    fun cdsToken(
+        userId: String,
+        workspaceName: String,
+        projectId: String,
+        hostIp: String?
+    ): String {
+        val token = init1Password(
+            userId = userId,
+            workspaceName = workspaceName,
+            projectId = projectId,
+            hostIp = hostIp,
+            expiredInSecond = TimeUnit.DAYS.toSeconds(1)
+        )
+        val resPair = RsaUtil.generateRSAKeyPair()
+        val encrypt = RsaUtil.rsaEncrypt(token, resPair.public as RSAPublicKey)
+        return Base64.getEncoder()
+            .encode(
+                AESUtil.encrypt(
+                    bkConfig.desktopSdkToken,
+                    "$encrypt:${Base64.getEncoder().encodeToString(resPair.private.encoded)}".toByteArray()
+                )
+            )
+            .toString(Charset.defaultCharset())
     }
 
     fun checkUserPermission(userId: String, workspaceName: String): Boolean {

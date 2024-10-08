@@ -96,6 +96,7 @@ import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
+import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
 import com.tencent.devops.remotedev.service.tai.TaiService
@@ -996,7 +997,13 @@ class WorkspaceService @Autowired constructor(
             name = workspace.workspaceName,
             creator = workspace.createUserId,
             owner = owner,
-            resourceId = resourceId
+            resourceId = resourceId,
+            bkCdsToken = permissionService.cdsToken(
+                userId = userId,
+                workspaceName = workspaceName,
+                projectId = workspace.projectId,
+                hostIp = workspace.hostIp
+            )
         )
     }
 

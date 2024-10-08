@@ -4,16 +4,24 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openssl.PEMReader
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
+import java.security.KeyPair
 import java.security.Security
 import java.security.Signature
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.util.Base64
 import javax.crypto.Cipher
+import org.bouncycastle.jce.provider.asymmetric.ec.KeyPairGenerator
 
 object RsaUtil {
     init {
         Security.addProvider(BouncyCastleProvider())
+    }
+
+    fun generateRSAKeyPair(): KeyPair {
+        val keyGen = KeyPairGenerator.getInstance("RSA")
+        keyGen.initialize(2048)
+        return keyGen.genKeyPair()
     }
 
     /**

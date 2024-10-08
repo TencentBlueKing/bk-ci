@@ -44,12 +44,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class RemoteDevTokenApiFilter(
+class RemoteDevOauthTokenApiFilter(
     private val client: Client
 ) : ApiFilterManager {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(RemoteDevTokenApiFilter::class.java)
+        private val logger = LoggerFactory.getLogger(RemoteDevOauthTokenApiFilter::class.java)
         private const val CACHE_MAX_SIZE = 10000L
         private const val CACHE_EXPIRE_MINUTES = 30L
     }

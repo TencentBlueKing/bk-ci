@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.service.ServiceSDKResource
 import com.tencent.devops.remotedev.pojo.DesktopTokenSign
+import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.sdk.SdkReportData
 import com.tencent.devops.remotedev.service.RemotedevSdkService
 import org.slf4j.LoggerFactory
@@ -17,6 +18,10 @@ class ServiceSdkResourceImpl(
 ) : ServiceSDKResource {
     companion object {
         private val logger = LoggerFactory.getLogger(ServiceSdkResourceImpl::class.java)
+    }
+
+    override fun cdsTokenCheck(cdsToken: String): Result<UserOnePassword?> {
+        return Result(remotedevSdkService.cdsTokenCheck(cdsToken))
     }
 
     override fun getToken(desktopIP: String, sign: DesktopTokenSign): Result<String> {

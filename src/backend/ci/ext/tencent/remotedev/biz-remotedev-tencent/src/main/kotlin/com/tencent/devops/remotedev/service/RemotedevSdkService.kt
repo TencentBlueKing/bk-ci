@@ -16,9 +16,14 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.kafka.KafkaClient
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceWindowsRecord
 import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.dao.WorkspaceAppOauth2MaterialsDao
+import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.DesktopTokenSign
+import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.sdk.SdkReportDataType
 import com.tencent.devops.remotedev.utils.RsaUtil
@@ -38,13 +43,16 @@ import org.springframework.stereotype.Service
  */
 @Service
 class RemotedevSdkService @Autowired constructor(
+    private val client: Client,
+    private val redisOperation: RedisOperation,
     private val kafkaClient: KafkaClient,
     private val bkConfig: BkConfig,
     private val workspaceService: WorkspaceService,
     private val permissionService: PermissionService,
+    private val startWorkspaceService: StartWorkspaceService,
     private val workspaceAppOauth2MaterialsDao: WorkspaceAppOauth2MaterialsDao,
     private val dslContext: DefaultDSLContext,
-    private val client: Client
+    private val workspaceWindowsDao: WorkspaceWindowsDao
 ) {
     @Value("\${sdk.kafka.topics.codeccQualityReport:#{null}}")
     val codeccQualityReport: String? = null
@@ -52,16 +60,60 @@ class RemotedevSdkService @Autowired constructor(
     @Value("\${sdk.kafka.topics.codeccCodeMonitor:#{null}}")
     val codeccCodeMonitor: String? = null
 
+    fun cdsTokenCheck(cdsToken: String): UserOnePassword? {
+        val win = workspaceWindowsDao.fetchWindowsInfoByBkCdsToken(
+            dslContext, cdsToken
+        )
+        if (win != null) {
+            return cdsTokenCheck(win)
+        }
+        RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "$LOCK_KEY:$cdsToken",
+            expiredTimeInSeconds = LOCK_EXPIRE_SECONDS
+        ).use {
+            it.lock()
+            val check = workspaceWindowsDao.fetchWindowsInfoByBkCdsToken(
+                dslContext, cdsToken
+            )
+            if (check != null) {
+                return cdsTokenCheck(check)
+            }
+            val tokenInfo = kotlin.runCatching {
+                permissionService.checkAndGetUser1Password(cdsToken)
+            }.getOrNull()
+            if (tokenInfo != null) {
+                workspaceWindowsDao.updateBkCdsToken(dslContext, cdsToken, tokenInfo.workspaceName)
+            }
+            return tokenInfo
+        }
+    }
+
+    private fun cdsTokenCheck(win: TWorkspaceWindowsRecord): UserOnePassword {
+        val ws = lazy {
+            workspaceService.getWorkspaceRecord(win.workspaceName)
+        }
+        return UserOnePassword(
+            userId = startWorkspaceService.loginUsers(setOf(win.hostIp))[win.hostIp]?.firstOrNull()
+                ?: permissionService.getWorkspaceOwner(win.workspaceName).firstOrNull()
+                ?: checkNotNull(ws.value?.createUserId),
+            workspaceName = win.workspaceName,
+            projectId = null,
+            hostIp = win.hostIp
+        )
+    }
+
     fun getAppToken(desktopIP: String, sign: DesktopTokenSign): String {
         val ws = workspaceService.getWorkspaceList4WeSec(
             ip = desktopIP
         ).firstOrNull() ?: throwTokenFail(desktopIP, "unknown ip", "not find $desktopIP")
         check(ws, sign, desktopIP)
         val dToken = permissionService.init1Password(
-            ws.owner ?: throwTokenFail(desktopIP, "unknown owner", "${ws.workspaceName} not has owner"),
-            ws.workspaceName,
-            ws.projectId,
-            600
+            userId = ws.owner ?: throwTokenFail(desktopIP, "unknown owner", "${ws.workspaceName} not has owner"),
+            workspaceName = ws.workspaceName,
+            projectId = ws.projectId,
+            hostIp = ws.innerIp,
+            expiredInSecond = 600
         )
         val rsaPublicKey = kotlin.runCatching { RsaUtil.generatePublicKey(Base64.getDecoder().decode(sign.publicKey)) }
             .onFailure { throwTokenFail(desktopIP, "wrong publicKey", sign.publicKey) }.getOrThrow()
@@ -242,6 +294,8 @@ class RemotedevSdkService @Autowired constructor(
     }
 
     companion object {
+        private const val LOCK_KEY = "bkCdsToken"
+        private const val LOCK_EXPIRE_SECONDS = 10L
         private val logger = LoggerFactory.getLogger(RemotedevSdkService::class.java)
     }
 }

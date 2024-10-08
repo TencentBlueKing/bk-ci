@@ -4,6 +4,7 @@ import com.tencent.devops.auth.pojo.dto.ClientDetailsDTO
 import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.DesktopTokenSign
+import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.sdk.SdkReportData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -21,6 +22,15 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceSDKResource {
+    @Operation(summary = "提供给openapi服务拿取appId对应的oauth原材料")
+    @GET
+    @Path("/cds_token_check")
+    fun cdsTokenCheck(
+        @Parameter(description = "cdsToken", required = false)
+        @QueryParam("cdsToken")
+        cdsToken: String
+    ): Result<UserOnePassword?>
+
     @Operation(summary = "云桌面SDK获取应用token")
     @POST
     @Path("/token")

@@ -118,6 +118,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
                 userId = userId,
                 workspaceName = workspaceName,
                 projectId = null,
+                hostIp = null,
                 expiredInSecond = redisCache.get(RedisKeys.REDIS_1PASSWORD_EXPIRED_SECOND)?.toLongOrNull()
             )
         )
