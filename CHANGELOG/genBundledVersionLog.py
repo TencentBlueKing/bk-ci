@@ -3,6 +3,7 @@ import json
 import os
 import functools
 import re
+import sys
 
 VERSION_LOG_PATH = os.environ.get("VERSION_LOG_PATH", os.getcwd())
 
@@ -24,6 +25,13 @@ resp = {
 }
 DEFAULT_LANGUAGE = "zh_CN"
 
+# 获取版本类型, 0-输出所有版本, 1-输出release版本, 2-输出rc版本
+def getVersionType():
+    versionType = 0
+    if len(sys.argv) > 1:
+        versionType = sys.argv[1]
+    return int(versionType)
+
 def extract_version_and_time(version_title):
     index = version_title.find("(")
     # 版本号上没有时间戳
@@ -42,7 +50,7 @@ def extract_title_and_content(changelog_content):
 
     lines = changelog_content.split('\n')
     for line in lines:
-        line = line.strip()
+        line = line.rstrip()
         if line.startswith('# '):
             if current_heading:
                 version_name, time = extract_version_and_time(current_heading)
@@ -63,8 +71,14 @@ def process(data, path):
         content = f.read()
         f.close()
         sections  = extract_title_and_content(content)
+        versionType = getVersionType()
         for version, time, content in sections:
-            data.append({"version": version, "time": time, "content": content})
+            if versionType == 0:
+                data.append({"version": version, "time": time, "content": content})
+            elif versionType == 1 and "-rc" not in version:
+                data.append({"version": version, "time": time, "content": content})
+            elif versionType == 2 and "-rc" in version:
+                data.append({"version": version, "time": time, "content": content})
     else:
         print("not md file, ignore:", path)
 
@@ -144,6 +158,9 @@ def run():
                 .replace("_", "").replace("-", ""):
             write_one_language_version_log(version_log_data, "bundledVersionLog.json")
 
-
 if __name__ == "__main__":
+    """
+    sys.argv参数说明:
+    sys.argv[1](int): 版本类型,0-输出所有版本, 1-输出release版本, 2-输出rc版本
+    """
     run()
