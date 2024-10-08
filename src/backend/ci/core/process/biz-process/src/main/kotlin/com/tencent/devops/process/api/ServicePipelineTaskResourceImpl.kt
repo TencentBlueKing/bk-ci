@@ -87,14 +87,16 @@ class ServicePipelineTaskResourceImpl @Autowired constructor(
         projectId: String,
         buildId: String,
         taskId: String?,
-        stepId: String?
+        stepId: String?,
+        executeCount: Int?
     ): Result<PipelineBuildTask?> {
         if (taskId != null) {
             return Result(
                 pipelineTaskService.getByTaskId(
                     projectId = projectId,
                     buildId = buildId,
-                    taskId = taskId
+                    taskId = taskId,
+                    executeCount = executeCount
                 )
             )
         }
@@ -105,7 +107,8 @@ class ServicePipelineTaskResourceImpl @Autowired constructor(
                     projectId = projectId,
                     buildId = buildId,
                     taskId = null,
-                    stepId = stepId
+                    stepId = stepId,
+                    executeCount = executeCount
                 )
             )
         }
