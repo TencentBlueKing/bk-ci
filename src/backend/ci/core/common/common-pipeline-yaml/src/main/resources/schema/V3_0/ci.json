@@ -213,7 +213,7 @@
                     "type" : "array",
                     "uniqueItems" : true,
                     "items" : {
-                      "enum" : [ "open", "close", "reopen", "push-update", "merge" ]
+                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
                     },
                     "additionalItems" : false
                   },
@@ -904,7 +904,7 @@
                   "type" : "array",
                   "uniqueItems" : true,
                   "items" : {
-                    "enum" : [ "open", "close", "reopen", "push-update", "merge" ]
+                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
                   },
                   "additionalItems" : false
                 },
