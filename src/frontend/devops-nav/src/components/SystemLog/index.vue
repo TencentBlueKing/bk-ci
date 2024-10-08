@@ -56,7 +56,6 @@
         data () {
             return {
                 isShow: false,
-                isLoading: false,
                 activeIndex: 0,
                 list: []
             }
@@ -89,54 +88,17 @@
         },
         methods: {
             async fetchData () {
-                // this.isLoading = true
-                // const res = await this.$store.dispatch('fetchVersionsLogList', this.projectId)
-                // this.list = res.data || []
-                // // 按发布日期顺序排序
-                // this.list.sort((a, b) => (b.date).split('-').join('') * 1 - a.date.split('-').join('') * 1)
-                // this.latestBcsVerSion = this.list[0]?.version || ''
-                // this.isLoading = false
-                // const curBcsVerSion = localStorage.getItem('bkci_latest_version')
-                // if (curBcsVerSion !== this.latestBcsVerSion && this.list.length) {
-                //     this.$emit('input', true)
-                // }
+                const res = await this.$store.dispatch('fetchVersionsLogList')
+                this.list = res.data || []
+                this.latestBcsVerSion = this.list[0]?.version || ''
+                const curBcsVerSion = localStorage.getItem('bkci_latest_version')
+                if (curBcsVerSion !== this.latestBcsVerSion && this.list.length) {
+                    this.isShow = true
+                }
             },
             handleTabChange (index) {
                 this.activeIndex = index
             }
-            // handleClose () {
-            //     this.$emit('input', false)
-        
-            //     localStorage.setItem('bkci_latest_version', this.latestBcsVerSion)
-            //     const $sourceEle = this.$refs.log.cloneNode(true)
-            //     const {
-            //         top: sourceTop,
-            //         left: sourceLeft,
-            //         width: sourceWidth,
-            //         height: sourceHeight
-            //     } = this.$refs.log.getBoundingClientRect()
-            //     $sourceEle.classList.add('hide')
-            //     const styles = $sourceEle.style
-            //     styles.position = 'fixed'
-            //     styles.top = `${sourceTop}px`
-            //     styles.left = `${sourceLeft}px`
-            //     styles.width = `${sourceWidth}px`
-            //     styles.height = `${sourceHeight}px`
-            //     styles.zIndex = window.__bk_zIndex_manager.nextZIndex()
-            //     document.body.appendChild($sourceEle)
-            //     setTimeout(() => {
-            //         const $targetEle = document.querySelector('#siteHelp')
-            //         const {
-            //             top: targetTop,
-            //             left: targetLeft,
-            //             width: targetWidth,
-            //             height: targetHeight
-            //         } = $targetEle.getBoundingClientRect()
-            //         const translateX = targetLeft + targetWidth / 2 - (sourceLeft + sourceWidth / 2)
-            //         const translateY = -(sourceTop + sourceHeight / 2 - (targetTop + targetHeight / 2))
-            //         styles.transform = `translate(${translateX}px, ${translateY}px) scale(0)`
-            //     })
-            // }
         }
     }
 </script>
