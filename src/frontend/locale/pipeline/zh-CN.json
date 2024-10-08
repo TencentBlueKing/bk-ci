@@ -1604,5 +1604,9 @@
   "variableStandard": "变量 ID 规范",
   "traditionalStandardMode": "未限制",
   "constraintStandardMode": "不支持中文 ID，减少不同构建环境下的兼容问题",
-  "versionNotMatch": "当前版本非最新版本，无法执行"
+  "versionNotMatch": "当前版本非最新版本，无法执行",
+  "deleteDraft": "删除草稿",
+  "sureDeleteDraft": "确认删除该草稿？",
+  "deleteDraftPipeline": "当前流水线尚未发布，删除草稿等同于删除流水线，确认删除吗？",
+  "noDraft": "暂无可删除的草稿"
 }

@@ -123,13 +123,13 @@ data class BuildRecordContainer(
                     timestamps = mapOf()
                 )
             )
-            if (taskBuildRecords == null) return
+            if (taskBuildRecords == null || container.matrixGroupFlag == true) return
             container.elements.forEachIndexed { index, element ->
                 if (buildStatus == BuildStatus.SKIP && !ElementUtils.getTaskAddFlag(
                         element = element,
                         stageEnableFlag = stageEnableFlag,
                         containerEnableFlag = container.containerEnabled(),
-                        originMatrixContainerFlag = container.fetchGroupContainers() != null
+                        originMatrixContainerFlag = container.matrixGroupFlag == true
                     )
                 ) {
                     // 不保存跳过的非post任务记录或非质量红线记录

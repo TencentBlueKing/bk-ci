@@ -1602,5 +1602,9 @@
   "variableStandard": "Variable ID Standard",
   "traditionalStandardMode": "No Restriction",
   "constraintStandardMode": "Chinese IDs Not Supported to Reduce Compatibility Issues in Different Build Environments",
-  "versionNotMatch": "The current version is not the latest version and cannot be executed"
+  "versionNotMatch": "The current version is not the latest version and cannot be executed",
+  "deleteDraft": "Delete Draft",
+  "sureDeleteDraft": "Are you sure you want to delete this draft?",
+  "deleteDraftPipeline": "The current pipeline has not been published yet. Deleting the draft is equivalent to deleting the pipeline. Are you sure you want to proceed?",
+  "noDraft": "No drafts available for deletion"
 }

@@ -24,7 +24,7 @@
                     >
                         <li
                             class="parallel-conf-detail-row"
-                            v-for="item in prarallelSettingRows"
+                            v-for="item in parallelSettingRows"
                             :key="item.key"
                         >
                             <label>
@@ -151,7 +151,7 @@
                     )
                 ]
             },
-            prarallelSettingRows () {
+            parallelSettingRows () {
                 return [
                     {
                         key: 'concurrencyGroup',
