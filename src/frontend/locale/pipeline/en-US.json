@@ -1595,8 +1595,8 @@
     "resetBuildNo": "Reset Build Number",
     "isSureReset": "Are you sure you want to reset the build number?",
     "confirm": "Confirm Reset",
-    "lockBuildNo": "After reset, subsequent builds will be locked to {0}",
-    "nextSuccessBuildNo": "After resetting the build number to the baseline value {0}, the next successful build will start counting from {1}",
-    "nextBuildNo": "After resetting the build number to the baseline value {0}, the next build will start counting from {1}"
+    "CONSISTENT": "After reset, subsequent builds will be locked to {0}",
+    "SUCCESS_BUILD_INCREMENT": "After resetting the build number to the baseline value {0}, the next successful build will start counting from {1}",
+    "EVERY_BUILD_INCREMENT": "After resetting the build number to the baseline value {0}, the next build will start counting from {1}"
   }
 }

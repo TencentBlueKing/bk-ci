@@ -241,15 +241,14 @@
             <div>
                 <p>{{ `${$t('buildNoBaseline.baselineValue')}${buildNo.buildNo}` }}</p>
                 <p class="reset-tips">
-                    <span v-if="buildNo.buildNoType === 'CONSISTENT'">
-                        {{ $t('buildNoBaseline.lockBuildNo', [buildNo.buildNo]) }}
-                    </span>
-                    <span v-else-if="buildNo.buildNoType === 'SUCCESS_BUILD_INCREMENT'">
-                        {{ $t('buildNoBaseline.nextSuccessBuildNo', [buildNo.buildNo, resetBuildNo]) }}
-                    </span>
-                    <span v-else>
-                        {{ $t('buildNoBaseline.nextBuildNo', [buildNo.buildNo, resetBuildNo]) }}
-                    </span>
+                    <i18n
+                        :path="`buildNoBaseline.${buildNo.buildNoType}`"
+                        tag="p"
+                        slot="title"
+                    >
+                        <span>{{ buildNo.buildNo }}</span>
+                        <span v-if="buildNo.buildNoType !== 'CONSISTENT'">{{ resetBuildNo }}</span>
+                    </i18n>
                 </p>
             </div>
             <template slot="footer">
