@@ -168,7 +168,11 @@ const actions: ActionTree<RootState, any> = {
     },
 
     fetchVersionsLogList () {
-        return Request.get(`${window.location.origin}/bundledVersionLog_en.json`)
+        return Request.get(`${window.location.origin}/bundledVersionLog.json?t=${Date.now()}`)
+    },
+
+    fetchVersionsLogListEn () {
+        return Request.get(`${window.location.origin}/bundledVersionLog_en.json?t=${Date.now()}`)
     }
 }
 

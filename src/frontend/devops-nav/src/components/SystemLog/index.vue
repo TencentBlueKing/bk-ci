@@ -1,6 +1,6 @@
 <template>
     <bk-dialog
-        class="system-log-dialog"
+        ext-cls="system-log-dialog"
         v-model="isShow"
         :width="1105"
         :close-icon="true"
@@ -12,7 +12,7 @@
             class="system-log-layout"
         >
             <div class="layout-left">
-                <div class="version-wraper">
+                <div class="version-warpper">
                     <div
                         v-for="(log, index) in list"
                         :key="log.version"
@@ -20,19 +20,21 @@
                         :class="{ active: index === activeIndex }"
                         @click="handleTabChange(index)"
                     >
-                        <div class="title">{{ log.version }}</div>
-                        <div class="date">{{ log.date }}</div>
-                        <div
+                        <div class="title">
+                            {{ log.version }}
+                            <div
                             v-if="index === 0"
-                            class="new-flag"
-                        >
-                            {{ $t('currentVersion') }}
+                                class="new-flag"
+                            >
+                                {{ $t('currentVersion') }}
+                            </div>
                         </div>
+                        <div class="date">{{ log.time }}</div>
                     </div>
                 </div>
             </div>
             <div class="layout-right">
-                <div class="content-wraper">
+                <div class="content-warpper">
                     <div
                         v-html="logContent"
                         class="markdown-container"
@@ -45,6 +47,7 @@
   
 <script>
     import MarkdownIt from 'markdown-it'
+    import createLocale from '../../../../locale'
     export default {
         name: 'VersionLog',
         props: {
@@ -57,7 +60,8 @@
             return {
                 isShow: false,
                 activeIndex: 0,
-                list: []
+                list: [],
+                latestVerSion: ''
             }
         },
         computed: {
@@ -88,11 +92,15 @@
         },
         methods: {
             async fetchData () {
-                const res = await this.$store.dispatch('fetchVersionsLogList')
-                this.list = res.data || []
-                this.latestBcsVerSion = this.list[0]?.version || ''
-                const curBcsVerSion = localStorage.getItem('bkci_latest_version')
-                if (curBcsVerSion !== this.latestBcsVerSion && this.list.length) {
+                const { i18n } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
+                const requestHandler = i18n.locale === 'en-US' ? 'fetchVersionsLogListEn' : 'fetchVersionsLogList'
+                const res = await this.$store.dispatch(requestHandler)
+                this.list = res || []
+
+                this.latestVerSion = (this.list.length && this.list[0].version) || ''
+                const curVerSion = localStorage.getItem('bk_latest_version')
+                if (curVerSion !== this.latestVerSion && this.list.length) {
+                    localStorage.setItem('bk_latest_version', this.latestVerSion)
                     this.isShow = true
                 }
             },
@@ -102,7 +110,7 @@
         }
     }
 </script>
-<style lang='scss' scoped>
+<style lang='scss'>
     .system-log-dialog {
         .bk-dialog-tool,
         .bk-dialog-header {
@@ -124,7 +132,6 @@
             transform-origin: center;
         }
         .layout-left {
-            flex: 0 0 180px;
             position: relative;
             padding: 40px 0;
             background: #fafbfd;
@@ -142,16 +149,15 @@
             flex: 1;
             padding: 45px;
         }
-        .version-wraper {
+        .version-warpper {
             overflow-y: hidden;
             overflow-x: hidden;
             max-height: 520px;
-            width: 180px;
             &:hover {
                 overflow-y: auto;
             }
         }
-        .content-wraper {
+        .content-warpper {
             overflow-y: hidden;
             max-height: 510px;
             &:hover {
@@ -161,7 +167,6 @@
         .log-tab {
             position: relative;
             display: flex;
-            width: 180px;
             height: 54px;
             padding-left: 30px;
             cursor: pointer;
@@ -190,6 +195,7 @@
                 content: '';
             }
             .title {
+                display: flex;
                 font-size: 16px;
                 font-weight: bold;
                 line-height: 22px;
@@ -201,9 +207,6 @@
                 color: #63656e;
             }
             .new-flag {
-                position: absolute;
-                top: 10px;
-                right: 20px;
                 display: flex;
                 width: 58px;
                 height: 20px;
@@ -213,11 +216,15 @@
                 border-radius: 2px;
                 align-items: center;
                 justify-content: center;
+                margin: 0 15px;
             }
         }
         .markdown-container {
             font-size: 14px;
             color: #313238;
+            a {
+                color: #3c96ff;
+            }
             h1,
             h2,
             h3,
@@ -388,12 +395,5 @@
                 content: "";
             }
         }
-    }
-    .version-features {
-        position: absolute;
-        font-size: 12px;
-        left: 50%;
-        transform: translateX(-50%);
-        bottom: 12px;
     }
   </style>
