@@ -373,7 +373,7 @@ class RbacPermissionApplyService @Autowired constructor(
                     throw ErrorCodeException(
                         errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
                         params = arrayOf(
-                            "申请加入用户组失败，该资源的管理员${departedUsers}已离职，请麻烦联系项目管理员或者蓝盾小助手进行交接该用户的权限!"
+                            "该资源的管理员${departedUsers}已离职，请麻烦联系项目管理员或者蓝盾小助手进行交接该用户的权限!"
                         )
                     )
                 }
