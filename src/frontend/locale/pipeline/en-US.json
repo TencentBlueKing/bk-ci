@@ -767,7 +767,7 @@
     "image": "Image",
     "provideInfo": "Provided by {0}, modified {1} on {2}",
     "officialCertification": "Official Certification",
-    "thirdImageHolder": "Please enter the full image path, such as docker.io/bkci/ci",
+    "thirdImageHolder": "Please enter the full image path, such as xxx.xxx.com/your-namespace/your-imagename:1.0",
     "by": "by",
     "devnet": "Devnet VM",
     "onlySupport": "Only supported",
