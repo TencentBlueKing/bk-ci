@@ -333,7 +333,11 @@ class PipelineAtomService @Autowired constructor(
                     val pipelineId = dataArray[6]
                     val pipelineInfoRecord = pagePipelineInfoRecordMap[pipelineId]
                     val secrecyFlag = dataArray[0] == HIDDEN_SYMBOL
-                    dataArray[2] = if (secrecyFlag) HIDDEN_SYMBOL else pipelineInfoRecord!!.lastModifyUser
+                    // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
+                    dataArray[2] = if (secrecyFlag) HIDDEN_SYMBOL else pipelineRepositoryService.getPipelineOauthUser(
+                        pipelineInfoRecord!!.projectId,
+                        pipelineId!!
+                    ) ?: pipelineInfoRecord!!.lastModifyUser
                     dataArray[3] = DateTimeUtil.toDateTime(pipelineInfoRecord!!.updateTime)
                 }
                 // 查询流水线汇总信息
@@ -346,7 +350,11 @@ class PipelineAtomService @Autowired constructor(
                     val pipelineId = dataArray[6]
                     val pipelineSummaryRecord = pagePipelineSummaryRecordMap[pipelineId]
                     val secrecyFlag = dataArray[0] == HIDDEN_SYMBOL
-                    dataArray[4] = if (secrecyFlag) HIDDEN_SYMBOL else pipelineSummaryRecord!!.latestStartUser
+                    // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
+                    dataArray[4] = if (secrecyFlag) HIDDEN_SYMBOL else pipelineRepositoryService.getPipelineOauthUser(
+                        pipelineSummaryRecord!!.projectId,
+                        pipelineId!!
+                    ) ?: pipelineSummaryRecord!!.latestStartUser
                     dataArray[5] = DateTimeUtil.toDateTime(pipelineSummaryRecord!!.latestStartTime)
                     dataArray[6] = null
                 }
