@@ -1,4 +1,4 @@
-package com.tencent.devops.gpt.service.model
+package com.tencent.devops.gpt.service.hunyuan
 
 import com.tencent.devops.gpt.service.config.HunYuanConfig
 import dev.ai4j.openai4j.OpenAiClient
@@ -134,7 +134,7 @@ class HunYuanChatModel(
         }
 
         val request = requestBuilder.build()
-        val modelListenerRequest = ChatHelper.createModelListenerRequest(request, messages, toolSpecifications)
+        val modelListenerRequest = HunYuanChatHelper.createModelListenerRequest(request, messages, toolSpecifications)
         val attributes: Map<Any, Any> = ConcurrentHashMap()
         val requestContext = ChatModelRequestContext(modelListenerRequest, attributes)
         listeners.forEach(Consumer { listener: ChatModelListener ->
@@ -157,7 +157,7 @@ class HunYuanChatModel(
                     (chatCompletionResponse.choices()[0] as ChatCompletionChoice).finishReason()
                 )
             )
-            val modelListenerResponse = ChatHelper.createModelListenerResponse(
+            val modelListenerResponse = HunYuanChatHelper.createModelListenerResponse(
                 chatCompletionResponse.id(),
                 chatCompletionResponse.model(),
                 response

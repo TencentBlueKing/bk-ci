@@ -25,12 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gpt.service
+package com.tencent.devops.gpt.service.hunyuan
 
+import com.tencent.devops.gpt.service.LLMModelService
 import com.tencent.devops.gpt.service.config.GptGatewayCondition
 import com.tencent.devops.gpt.service.config.HunYuanConfig
-import com.tencent.devops.gpt.service.model.HunYuanChatModel
-import com.tencent.devops.gpt.service.model.HunYuanStreamingChatModel
 import com.tencent.devops.gpt.service.processor.ScriptErrorAnalysisProcessor
 import dev.langchain4j.service.AiServices
 import java.util.concurrent.CountDownLatch
@@ -42,12 +41,16 @@ import org.springframework.stereotype.Service
 
 @Service
 @Conditional(GptGatewayCondition::class)
-class LLMHunYuanService @Autowired constructor(private val config: HunYuanConfig) {
+class LLMHunYuanServiceImpl @Autowired constructor(private val config: HunYuanConfig) : LLMModelService {
     companion object {
-        private val logger = LoggerFactory.getLogger(LLMHunYuanService::class.java)
+        private val logger = LoggerFactory.getLogger(LLMHunYuanServiceImpl::class.java)
     }
 
-    fun scriptErrorAnalysisChat(script: List<String>, errorLog: List<String>, output: ScriptErrorAnalysisProcessor) {
+    override fun scriptErrorAnalysisChat(
+        script: List<String>,
+        errorLog: List<String>,
+        output: ScriptErrorAnalysisProcessor
+    ) {
         output.init()
         val streamingModel = HunYuanStreamingChatModel(config)
         val model = HunYuanChatModel(config)

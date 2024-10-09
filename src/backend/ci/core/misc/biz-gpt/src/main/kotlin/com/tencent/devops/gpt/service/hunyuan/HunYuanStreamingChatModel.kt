@@ -1,4 +1,4 @@
-package com.tencent.devops.gpt.service.model
+package com.tencent.devops.gpt.service.hunyuan
 
 import com.tencent.devops.gpt.service.config.HunYuanConfig
 import dev.ai4j.openai4j.OpenAiClient
@@ -141,7 +141,7 @@ class HunYuanStreamingChatModel(
         }
 
         val request = requestBuilder.build()
-        val modelListenerRequest = ChatHelper.createModelListenerRequest(request, messages, toolSpecifications)
+        val modelListenerRequest = HunYuanChatHelper.createModelListenerRequest(request, messages, toolSpecifications)
         val attributes: Map<Any, Any> = ConcurrentHashMap()
         val requestContext = ChatModelRequestContext(modelListenerRequest, attributes)
         listeners.forEach(Consumer { listener: ChatModelListener ->
@@ -167,7 +167,7 @@ class HunYuanStreamingChatModel(
         }.onComplete {
             val response = this.createResponse(responseBuilder, toolThatMustBeExecuted)
             val modelListenerResponse =
-                ChatHelper.createModelListenerResponse(responseId.get(), responseModel.get(), response)
+                HunYuanChatHelper.createModelListenerResponse(responseId.get(), responseModel.get(), response)
             val responseContext = ChatModelResponseContext(modelListenerResponse, modelListenerRequest, attributes)
             listeners.forEach(Consumer { listener: ChatModelListener ->
                 try {
@@ -180,7 +180,7 @@ class HunYuanStreamingChatModel(
         }.onError { error: Throwable ->
             val response = this.createResponse(responseBuilder, toolThatMustBeExecuted)
             val modelListenerPartialResponse =
-                ChatHelper.createModelListenerResponse(responseId.get(), responseModel.get(), response)
+                HunYuanChatHelper.createModelListenerResponse(responseId.get(), responseModel.get(), response)
             val errorContext =
                 ChatModelErrorContext(error, modelListenerRequest, modelListenerPartialResponse, attributes)
             listeners.forEach(Consumer { listener: ChatModelListener ->
