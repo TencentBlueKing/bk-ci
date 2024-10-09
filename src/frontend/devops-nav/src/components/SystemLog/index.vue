@@ -1,11 +1,12 @@
 <template>
     <bk-dialog
         ext-cls="system-log-dialog"
-        v-model="isShow"
+        :value="showSystemLog"
         :width="1105"
         :close-icon="true"
         :show-footer="false"
         :esc-close="true"
+        @value-change="(value) => toggleShowLog(value)"
     >
         <div
             ref="log"
@@ -47,18 +48,19 @@
   
 <script>
     import MarkdownIt from 'markdown-it'
-    import createLocale from '../../../../locale'
     export default {
         name: 'VersionLog',
         props: {
-            value: {
+            showSystemLog: {
                 type: Boolean,
                 default: false
+            },
+            toggleShowLog: {
+                type: Function
             }
         },
         data () {
             return {
-                isShow: false,
                 activeIndex: 0,
                 list: [],
                 latestVerSion: ''
@@ -92,8 +94,7 @@
         },
         methods: {
             async fetchData () {
-                const { i18n } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
-                const requestHandler = i18n.locale === 'en-US' ? 'fetchVersionsLogListEn' : 'fetchVersionsLogList'
+                const requestHandler = this.$i18n.locale === 'en-US' ? 'fetchVersionsLogListEn' : 'fetchVersionsLogList'
                 const res = await this.$store.dispatch(requestHandler)
                 this.list = res || []
 
@@ -101,7 +102,7 @@
                 const curVerSion = localStorage.getItem('bk_latest_version')
                 if (curVerSion !== this.latestVerSion && this.list.length) {
                     localStorage.setItem('bk_latest_version', this.latestVerSion)
-                    this.isShow = true
+                    this.toggleShowLog(true)
                 }
             },
             handleTabChange (index) {

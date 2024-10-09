@@ -174,7 +174,7 @@
                     </li>
                     <li
                         class="bkci-dropdown-item"
-                        @click.stop="showVersionLog"
+                        @click.stop="toggleShowVersionLog(true)"
                     >
                         {{ $t('releaseNotes') }}
                     </li>
@@ -203,7 +203,10 @@
             :title="projectDialogTitle"
         />
         <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
-        <system-log ref="systemLogDialog"></system-log>
+        <system-log
+            :show-system-log="showSystemLog"
+            :toggleShowLog="toggleShowVersionLog"
+        />
     </div>
 </template>
 
@@ -454,8 +457,8 @@
             this.togglePopupShow(false)
         }
 
-        showVersionLog () {
-            this.$refs.systemLogDialog.isShow = true
+        toggleShowVersionLog (value: boolean) {
+            this.showSystemLog = value
         }
     }
 </script>
