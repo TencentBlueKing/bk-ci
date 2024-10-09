@@ -16,7 +16,7 @@
 - Pipeline as code
   - [New] feat: Draft version UI display [link](http://github.com/TencentBlueKing/bk-ci/issues/9861)
   - [New] Pipeline version management mechanism [link](http://github.com/TencentBlueKing/bk-ci/issues/8161)
-  - [New] [PAC] feat: Code bases with PAC mode enabled support automatic synchronization of code base YAML changes to Blue Shield [link](http://github.com/TencentBlueKing/bk-ci/issues/8130)
+  - [New] [PAC] feat: Code bases with PAC mode enabled support automatic synchronization of code base YAML changes to Devops [link](http://github.com/TencentBlueKing/bk-ci/issues/8130)
   - [New] pac ui editing pipeline [link](http://github.com/TencentBlueKing/bk-ci/issues/8125)
   - [New] Optimization of the issue that the output variables are not obtained in the variable panel of the pipeline created in Code mode [link](http://github.com/TencentBlueKing/bk-ci/issues/10755)
   - [New] Support debugging pipeline when creating/editing pipeline [link](http://github.com/TencentBlueKing/bk-ci/issues/8164)
@@ -30,7 +30,7 @@
   - [New] [PAC] feat: Custom build number format supports Code definition [link](http://github.com/TencentBlueKing/bk-ci/issues/10210)
   - [New] Edit variable interactive optimization [link](http://github.com/TencentBlueKing/bk-ci/issues/9652)
   - [New] The pipeline build details page supports one-click expansion/collapse of jobs [link](http://github.com/TencentBlueKing/bk-ci/issues/9775)
-  - [New] Support Blue Shield new expression running conditions [link](http://github.com/TencentBlueKing/bk-ci/issues/10467)
+  - [New] Support Devops new expression running conditions [link](http://github.com/TencentBlueKing/bk-ci/issues/10467)
   - [New] Release pipeline page, add instructions for PAC mode [link](http://github.com/TencentBlueKing/bk-ci/issues/10482)
   - [New] [PAC] Impact of code conversion on API users [link](http://github.com/TencentBlueKing/bk-ci/issues/9813)
   - [New] Debug record prompts and entry optimization [link](http://github.com/TencentBlueKing/bk-ci/issues/10720)
@@ -54,7 +54,7 @@
 - [New] Pipeline renaming optimization [link](http://github.com/TencentBlueKing/bk-ci/issues/10399)
 - [New] Added fallback logic to the path matching rules triggered by SVN events [ link ](http://github.com/TencentBlueKing/bk-ci/issues/10510)
 - [New] Added "Execution time" field to the pipeline execution history list [link](http://github.com/TencentBlueKing/bk-ci/issues/10251)
-- [New] [Blue Shield-Product-Reviewed] Pipeline supports displaying running progress [link](http://github.com/TencentBlueKing/bk-ci/issues/7932)
+- [New] [Devops-Product-Reviewed] Pipeline supports displaying running progress [link](http://github.com/TencentBlueKing/bk-ci/issues/7932)
 - [New] Build history list supports displaying build information fields [link](http://github.com/TencentBlueKing/bk-ci/issues/10724)
 - [New] Pipeline supports exporting POJO attributes in order [link](http://github.com/TencentBlueKing/bk-ci/issues/10728)
 - [New] Optimize the variables of pipeline "file" type [link](http://github.com/TencentBlueKing/bk-ci/issues/10400)
@@ -78,7 +78,7 @@
 - [New] When associating with the WorkerBee code base, support enabling Pipeline as Code mode [ link ](http://github.com/TencentBlueKing/bk-ci/issues/8115)
 - [New] Code base optimization phase 1 function points [link](http://github.com/TencentBlueKing/bk-ci/issues/9347)
 - [New] github pr check output quality red line report [link](http://github.com/TencentBlueKing/bk-ci/issues/10607)
-- [New] [openapi] Link the code base to Blue Shield's API to support enabling PAC [link](http://github.com/TencentBlueKing/bk-ci/issues/10770)
+- [New] [openapi] Link the code base to Devops's API to support enabling PAC [link](http://github.com/TencentBlueKing/bk-ci/issues/10770)
 - [New] PAC mode enabled code base, supports disabling PAC [link](http://github.com/TencentBlueKing/bk-ci/issues/9993)
 - [New] Optimize the display of code base trigger event results [link](http://github.com/TencentBlueKing/bk-ci/issues/10307)
 - [New] github check run should support pipelines for GONGFENGSCAN channel [link](http://github.com/TencentBlueKing/bk-ci/issues/10704)
@@ -100,9 +100,9 @@
 - [New] Added project-level event callback [link](http://github.com/TencentBlueKing/bk-ci/issues/10146)
 ##### Store
 - [New] Support plugin developers to set the default timeout and default failure strategy [link](http://github.com/TencentBlueKing/bk-ci/issues/10019)
-- [New] Added interface for modifying R&D store component initialization project [ link ](http://github.com/TencentBlueKing/bk-ci/issues/10126)
+- [New] Added interface for modifying store component initialization project [ link ](http://github.com/TencentBlueKing/bk-ci/issues/10126)
 - [New] Retry when the plugin fails to upload a file [link](http://github.com/TencentBlueKing/bk-ci/issues/10214)
-- [New] R&D Store - Workbench - Container Image, the status icon is misplaced when verification fails [link](http://github.com/TencentBlueKing/bk-ci/issues/10696)
+- [New] Store - Workbench - Container Image, the status icon is misplaced when verification fails [link](http://github.com/TencentBlueKing/bk-ci/issues/10696)
 - [New] Fixed the issue that the associated debug project information was not deleted when updating the component associated initialization project information [link](http://github.com/TencentBlueKing/bk-ci/issues/10621)
 - [New] Integrate micro-extension resource scheduling capabilities [link](http://github.com/TencentBlueKing/bk-ci/issues/10122)
 ##### Log Service
@@ -134,7 +134,7 @@
 - [New] bk-apigw interface authentication method adjustment [link](http://github.com/TencentBlueKing/bk-ci/issues/10802)
 - [New] Fix swagger package scanning method [link](http://github.com/TencentBlueKing/bk-ci/issues/10806)
 - [New] Global configuration title/footer/logo/favicon/product name [link](http://github.com/TencentBlueKing/bk-ci/issues/10678)
-- [New] Blue Shield Gateway trusts the cors-header of the secure domain name [link](http://github.com/TencentBlueKing/bk-ci/issues/10767)
+- [New] Devops Gateway trusts the cors-header of the secure domain name [link](http://github.com/TencentBlueKing/bk-ci/issues/10767)
 - [New] Fix iam initialization script [link](http://github.com/TencentBlueKing/bk-ci/issues/10658)
 - [New] Add text when openapi access is not authorized [link](http://github.com/TencentBlueKing/bk-ci/issues/10638)
 - [New] Interaction optimization when dependent services are not deployed [link](http://github.com/TencentBlueKing/bk-ci/issues/10612)
@@ -156,10 +156,10 @@
 - [Optimization] er: Optimization of some code of environment management 2 [link](http://github.com/TencentBlueKing/bk-ci/issues/10263)
 ##### Store
 - [Optimization] Support Java plugin target reference variables to set the jar package execution path [link](http://github.com/TencentBlueKing/bk-ci/issues/10643)
-- [Optimization] Optimization of permission verification of sensitive interfaces in R&D store [link](http://github.com/TencentBlueKing/bk-ci/issues/10418)
-- [Optimization] The R&D store plug-in supports specifying running parameters through the execution.target field in task.json [link](http://github.com/TencentBlueKing/bk-ci/issues/10072)
-- [Optimization] R&D store universal interface encapsulation [link](http://github.com/TencentBlueKing/bk-ci/issues/10123)
-- [Optimization] R&D store logo upload does not support svg images yet to prevent xss attacks [link](http://github.com/TencentBlueKing/bk-ci/issues/10374)
+- [Optimization] Optimization of permission verification of sensitive interfaces in store [link](http://github.com/TencentBlueKing/bk-ci/issues/10418)
+- [Optimization] The store plug-in supports specifying running parameters through the execution.target field in task.json [link](http://github.com/TencentBlueKing/bk-ci/issues/10072)
+- [Optimization] store universal interface encapsulation [link](http://github.com/TencentBlueKing/bk-ci/issues/10123)
+- [Optimization] store logo upload does not support svg images yet to prevent xss attacks [link](http://github.com/TencentBlueKing/bk-ci/issues/10374)
 ##### Agent
 - [Fix] Occasional 142 issues when starting the build process in windwos [link](http://github.com/TencentBlueKing/bk-ci/issues/10179)
 ##### other
@@ -204,11 +204,11 @@
 - [Fix] Serialization comparison issue of the maximum authorized scope of the project [link](http://github.com/TencentBlueKing/bk-ci/issues/10649)
 - [Fix] Disabled projects should not count the number of users [link](http://github.com/TencentBlueKing/bk-ci/issues/10634)
 - [Fix] Fixed the incorrect grayscale label setting on the CodeCC platform [link](http://github.com/TencentBlueKing/bk-ci/issues/10434)
-##### R&D Store
-- [Fix] The first version of the R&D store app is under testing. The query interface cannot query the app version under testing by instance ID [link](http://github.com/TencentBlueKing/bk-ci/issues/10691)
+##### Store
+- [Fix] The first version of the store app is under testing. The query interface cannot query the app version under testing by instance ID [link](http://github.com/TencentBlueKing/bk-ci/issues/10691)
 - [Fix] Lower the priority configuration of SampleFirstStoreHostDecorateImpl [link](http://github.com/TencentBlueKing/bk-ci/issues/10401)
 - [Fix] [Community] Listing failure & white screen issue on pipeline execution page [v2.1.0+] [Link](http://github.com/TencentBlueKing/bk-ci/issues/10357)
-- [Fix] Adjustment of international configuration of R&D store general interface [link](http://github.com/TencentBlueKing/bk-ci/issues/10640)
+- [Fix] Adjustment of international configuration of store general interface [link](http://github.com/TencentBlueKing/bk-ci/issues/10640)
 - [Fix] The open source version of the plugin upgrade did not refresh the LATEST_TEST_FLAG flag status [link](http://github.com/TencentBlueKing/bk-ci/issues/10701)
 ##### Scheduling
 - [Fix] Issue with executing matrix job with audit plugin in builder without compilation environment [link](http://github.com/TencentBlueKing/bk-ci/issues/10599)
@@ -231,7 +231,7 @@
 - Pipeline as code
 - [New] feat: Draft version UI display [link](http://github.com/TencentBlueKing/bk-ci/issues/9861)
 - [New] Pipeline version management mechanism [link](http://github.com/TencentBlueKing/bk-ci/issues/8161)
-- [New] [PAC] feat: Code bases with PAC mode enabled support automatic synchronization of code base YAML changes to Blue Shield [link](http://github.com/TencentBlueKing/bk-ci/issues/8130)
+- [New] [PAC] feat: Code bases with PAC mode enabled support automatic synchronization of code base YAML changes to Devops [link](http://github.com/TencentBlueKing/bk-ci/issues/8130)
 - [New] pac ui editing pipeline [link](http://github.com/TencentBlueKing/bk-ci/issues/8125)
 - [New] Optimization of the issue that the output variables are not obtained in the variable panel of the pipeline created in Code mode [link](http://github.com/TencentBlueKing/bk-ci/issues/10755)
 - [New] Support debugging pipeline when creating/editing pipeline [link](http://github.com/TencentBlueKing/bk-ci/issues/8164)
@@ -245,7 +245,7 @@
 - [New] [PAC] feat: Custom build number format supports Code definition [link](http://github.com/TencentBlueKing/bk-ci/issues/10210)
 - [New] Edit variable interactive optimization [link](http://github.com/TencentBlueKing/bk-ci/issues/9652)
 - [New] The pipeline build details page supports one-click expansion/collapse of jobs [link](http://github.com/TencentBlueKing/bk-ci/issues/9775)
-- [New] Support Blue Shield new expression running conditions [link](http://github.com/TencentBlueKing/bk-ci/issues/10467)
+- [New] Support Devops new expression running conditions [link](http://github.com/TencentBlueKing/bk-ci/issues/10467)
 - [New] Release pipeline page, add instructions for PAC mode [link](http://github.com/TencentBlueKing/bk-ci/issues/10482)
 - [New] [PAC] Impact of code conversion on API users [link](http://github.com/TencentBlueKing/bk-ci/issues/9813)
 - [New] Debug record prompts and entry optimization [link](http://github.com/TencentBlueKing/bk-ci/issues/10720)
@@ -269,7 +269,7 @@
 - [New] Pipeline renaming optimization [link](http://github.com/TencentBlueKing/bk-ci/issues/10399)
 - [New] Added fallback logic to the path matching rules triggered by SVN events [link](http://github.com/TencentBlueKing/bk-ci/issues/10510)
 - [New] Added "Execution time" field to the pipeline execution history list [link](http://github.com/TencentBlueKing/bk-ci/issues/10251)
-- [New] [Blue Shield-Product-Reviewed] Pipeline supports displaying running progress [link](http://github.com/TencentBlueKing/bk-ci/issues/7932)
+- [New] [Devops-Product-Reviewed] Pipeline supports displaying running progress [link](http://github.com/TencentBlueKing/bk-ci/issues/7932)
 - [New] Build history list supports displaying build information fields [link](http://github.com/TencentBlueKing/bk-ci/issues/10724)
 - [New] Pipeline supports exporting POJO attributes in order [link](http://github.com/TencentBlueKing/bk-ci/issues/10728)
 - [New] Optimize the variables of pipeline "file" type [link](http://github.com/TencentBlueKing/bk-ci/issues/10400)
@@ -293,7 +293,7 @@
 - [New] When associating with the WorkerBee code base, support enabling Pipeline as Code mode [link](http://github.com/TencentBlueKing/bk-ci/issues/8115)
 - [New] Code base optimization phase 1 function points [link](http://github.com/TencentBlueKing/bk-ci/issues/9347)
 - [New] github pr check output quality red line report [link](http://github.com/TencentBlueKing/bk-ci/issues/10607)
-- [New] [openapi] Link the code base to Blue Shield's API to support enabling PAC [link](http://github.com/TencentBlueKing/bk-ci/issues/10770)
+- [New] [openapi] Link the code base to Devops's API to support enabling PAC [link](http://github.com/TencentBlueKing/bk-ci/issues/10770)
 - [New] PAC mode enabled code base, supports disabling PAC [link](http://github.com/TencentBlueKing/bk-ci/issues/9993)
 - [New] Optimize the display of code base trigger event results [link](http://github.com/TencentBlueKing/bk-ci/issues/10307)
 - [New] github check run should support pipelines for GONGFENGSCAN channel [link](http://github.com/TencentBlueKing/bk-ci/issues/10704)
@@ -313,11 +313,11 @@
 ##### project management
 - [New] Optimization of the problem that the name of the operational product is not displayed on the project view page [link](http://github.com/TencentBlueKing/bk-ci/issues/10668)
 - [New] Added project-level event callback [link](http://github.com/TencentBlueKing/bk-ci/issues/10146)
-##### R&D Store
+##### Store
 - [New] Support plugin developers to set the default timeout and default failure strategy [link](http://github.com/TencentBlueKing/bk-ci/issues/10019)
-- [New] Added interface for modifying R&D store component initialization project [link](http://github.com/TencentBlueKing/bk-ci/issues/10126)
+- [New] Added interface for modifying store component initialization project [link](http://github.com/TencentBlueKing/bk-ci/issues/10126)
 - [New] Retry when the plugin fails to upload a file [link](http://github.com/TencentBlueKing/bk-ci/issues/10214)
-- [New] R&D Store - Workbench - Container Image, the status icon is misplaced when verification fails [link](http://github.com/TencentBlueKing/bk-ci/issues/10696)
+- [New] Store - Workbench - Container Image, the status icon is misplaced when verification fails [link](http://github.com/TencentBlueKing/bk-ci/issues/10696)
 - [New] Fixed the issue that the associated debug project information was not deleted when updating the component associated initialization project information [link](http://github.com/TencentBlueKing/bk-ci/issues/10621)
 - [New] Integrate micro-extension resource scheduling capabilities [link](http://github.com/TencentBlueKing/bk-ci/issues/10122)
 ##### Log Service
@@ -349,7 +349,7 @@
 - [New] bk-apigw interface authentication method adjustment [link](http://github.com/TencentBlueKing/bk-ci/issues/10802)
 - [New] Fix swagger package scanning method [link](http://github.com/TencentBlueKing/bk-ci/issues/10806)
 - [New] Global configuration title/footer/logo/favicon/product name [link](http://github.com/TencentBlueKing/bk-ci/issues/10678)
-- [New] Blue Shield Gateway trusts the cors-header of the secure domain name [ link ](http://github.com/TencentBlueKing/bk-ci/issues/10767)
+- [New] Devops Gateway trusts the cors-header of the secure domain name [ link ](http://github.com/TencentBlueKing/bk-ci/issues/10767)
 - [New] Fix iam initialization script [link](http://github.com/TencentBlueKing/bk-ci/issues/10658)
 - [New] Add text when openapi access is not authorized [link](http://github.com/TencentBlueKing/bk-ci/issues/10638)
 - [New] Interaction optimization when dependent services are not deployed [link](http://github.com/TencentBlueKing/bk-ci/issues/10612)
@@ -369,12 +369,12 @@
 - [Optimization] Add some error codes to environment management [link](http://github.com/TencentBlueKing/bk-ci/issues/10788)
 - [Optimization] Optimization of some environment management codes [link](http://github.com/TencentBlueKing/bk-ci/issues/10641)
 - [Optimization] er: Optimization of some code of environment management 2 [link](http://github.com/TencentBlueKing/bk-ci/issues/10263)
-##### R&D Store
+##### Store
 - [Optimization] Support Java plugin target reference variables to set the jar package execution path [link](http://github.com/TencentBlueKing/bk-ci/issues/10643)
-- [Optimization] Optimization of permission verification of sensitive interfaces in R&D store [link](http://github.com/TencentBlueKing/bk-ci/issues/10418)
-- [Optimization] The R&D store plug-in supports specifying running parameters through the execution.target field in task.json [link](http://github.com/TencentBlueKing/bk-ci/issues/10072)
-- [Optimization] R&D store universal interface encapsulation [link](http://github.com/TencentBlueKing/bk-ci/issues/10123)
-- [Optimization] R&D store logo upload does not support svg images yet to prevent xss attacks [link](http://github.com/TencentBlueKing/bk-ci/issues/10374)
+- [Optimization] Optimization of permission verification of sensitive interfaces in store [link](http://github.com/TencentBlueKing/bk-ci/issues/10418)
+- [Optimization] The store plug-in supports specifying running parameters through the execution.target field in task.json [link](http://github.com/TencentBlueKing/bk-ci/issues/10072)
+- [Optimization] store universal interface encapsulation [link](http://github.com/TencentBlueKing/bk-ci/issues/10123)
+- [Optimization] store logo upload does not support svg images yet to prevent xss attacks [link](http://github.com/TencentBlueKing/bk-ci/issues/10374)
 ##### Agent
 - [Fix] Occasional 142 issues when starting the build process in windwos [link](http://github.com/TencentBlueKing/bk-ci/issues/10179)
 ##### other
@@ -419,11 +419,11 @@
 - [Fix] Serialization comparison issue of the maximum authorized scope of the project [link](http://github.com/TencentBlueKing/bk-ci/issues/10649)
 - [Fix] Disabled projects should not count the number of users [link](http://github.com/TencentBlueKing/bk-ci/issues/10634)
 - [Fix] Fixed the incorrect grayscale label setting on the CodeCC platform [link](http://github.com/TencentBlueKing/bk-ci/issues/10434)
-##### R&D Store
-- [Fix] The first version of the R&D store app is under testing, and the query interface cannot query the app version under testing by instance ID [link](http://github.com/TencentBlueKing/bk-ci/issues/10691)
+##### Store
+- [Fix] The first version of the store app is under testing, and the query interface cannot query the app version under testing by instance ID [link](http://github.com/TencentBlueKing/bk-ci/issues/10691)
 - [Fix] Lower the priority configuration of SampleFirstStoreHostDecorateImpl [link](http://github.com/TencentBlueKing/bk-ci/issues/10401)
 - [Fix] [Community] Listing failure & white screen issue on pipeline execution page [v2.1.0+] [Link](http://github.com/TencentBlueKing/bk-ci/issues/10357)
-- [Fix] Adjustment of international configuration of R&D store general interface [link](http://github.com/TencentBlueKing/bk- ci/issues/10640)
+- [Fix] Adjustment of international configuration of store general interface [link](http://github.com/TencentBlueKing/bk-ci/issues/10640)
 - [Fix] The open source version of the plugin upgrade did not refresh the LATEST_TEST_FLAG flag status [link](http://github.com/TencentBlueKing/bk-ci/issues/10701)
 ##### Scheduling
 - [Fix] Issue with executing matrix job with audit plugin in builder without compilation environment [link](http://github.com/TencentBlueKing/bk-ci/issues/10599)
