@@ -70,7 +70,7 @@ def process(data, path):
         f = codecs.open(path, "r", encoding="UTF-8")
         content = f.read()
         f.close()
-        sections  = extract_title_and_content(content)
+        sections = extract_title_and_content(content)
         versionType = getVersionType()
         for version, time, content in sections:
             if versionType == 0:
