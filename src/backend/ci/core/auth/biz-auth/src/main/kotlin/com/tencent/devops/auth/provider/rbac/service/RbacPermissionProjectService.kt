@@ -149,6 +149,15 @@ class RbacPermissionProjectService(
         }
     }
 
+    override fun checkUserInProjectLevelGroup(userId: String, projectCode: String): Boolean {
+        return resourceGroupMemberService.getResourceGroupMembers(
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            group = null
+        ).contains(userId)
+    }
+
     override fun checkProjectManager(userId: String, projectCode: String): Boolean {
         return rbacCacheService.checkProjectManager(userId, projectCode)
     }
@@ -172,7 +181,6 @@ class RbacPermissionProjectService(
         logger.info("batch add project user:$userId|$projectCode|$roleCode|$members")
         val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
         resourceMemberService.batchAddResourceGroupMembers(
-            userId = userId,
             projectCode = projectCode,
             iamGroupId = iamGroupId,
             expiredTime = expiredTime,
@@ -203,7 +211,7 @@ class RbacPermissionProjectService(
             groupCode = BkAuthGroup.MANAGER.value
         )!!.relationId.toInt()
 
-        val remotedevManager = projectInfo.properties?.remotedevManager?.split(",")
+        val remotedevManager = projectInfo.properties?.remotedevManager?.split(";")
         val members = projectGroupAndUserList.flatMap { it.userIdList }.distinct()
 
         val owners = projectGroupAndUserList

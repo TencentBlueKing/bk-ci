@@ -1,14 +1,74 @@
 <template>
-    <accordion show-checkbox show-content key="otherChoice">
-        <header class="var-header" slot="header">
+    <accordion
+        show-checkbox
+        show-content
+        key="otherChoice"
+    >
+        <header
+            class="var-header"
+            slot="header"
+        >
             <span>{{ $t('editPage.jobOption') }}</span>
-            <i class="devops-icon icon-angle-down" style="display:block"></i>
+            <i
+                class="devops-icon icon-angle-down"
+                style="display:block"
+            ></i>
         </header>
-        <div slot="content" class="bk-form bk-form-vertical">
+        <div
+            slot="content"
+            class="bk-form bk-form-vertical"
+        >
             <template v-for="(obj, key) in optionModel">
-                <form-field :key="key" v-if="!isHidden(obj, container)" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                    <component :is="obj.component" :set-parent-validate="setKeyValueValidate" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateJobOption" :value="jobOption[key]" :disabled="disabled" v-bind="obj"></component>
-                </form-field>
+                <template v-if="obj.type === 'group'">
+                    <form-field-group
+                        v-if="!isHidden(obj, container)"
+                        :key="key"
+                        v-bind="obj"
+                    >
+                        <template v-for="i in obj.children">
+                            <form-field
+                                :key="i.key"
+                                v-if="!isHidden(i, container)"
+                                v-bind="i"
+                                :is-error="errors.has(i.key)"
+                                :error-msg="errors.first(i.key)"
+                            >
+                                <component
+                                    :is="i.component"
+                                    :set-parent-validate="setKeyValueValidate"
+                                    :name="i.key"
+                                    v-validate.initial="Object.assign({}, i.rule, { required: !!i.required })"
+                                    :handle-change="handleUpdateJobOption"
+                                    :value="jobOption[i.key]"
+                                    :disabled="disabled"
+                                    v-bind="i"
+                                ></component>
+                            </form-field>
+                        </template>
+                    </form-field-group>
+                </template>
+                <template v-else>
+                    <form-field
+                        :key="key"
+                        v-if="!isHidden(obj, container)"
+                        :desc="obj.desc"
+                        :required="obj.required"
+                        :label="obj.label"
+                        :is-error="errors.has(key)"
+                        :error-msg="errors.first(key)"
+                    >
+                        <component
+                            :is="obj.component"
+                            :set-parent-validate="setKeyValueValidate"
+                            :name="key"
+                            v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                            :handle-change="handleUpdateJobOption"
+                            :value="jobOption[key]"
+                            :disabled="disabled"
+                            v-bind="obj"
+                        ></component>
+                    </form-field>
+                </template>
             </template>
         </div>
     </accordion>

@@ -1,92 +1,134 @@
 <template>
-  <article class="group-aside" v-bkloading="{ isLoading: !groupList.length }">
-    <span class="group-title">{{ $t('权限角色') }}</span>
-    <scroll-load-list
-      class="group-list"
-      ref="loadList"
-      :list="groupList"
-      :has-load-end="hasLoadEnd"
-      :page="page"
-      :get-data-method="handleGetData"
-    >
-      <template v-slot:default="{ data: group, index }">
-        <bk-input
-          ref="renameInput"
-          v-show="group.groupId === renameGroupId && isRename"
-          v-model="displayGroupName"
-          class="rename-input"
-          @enter="handleRename"
-          @blur="handleRename"
+  <article class="group-aside">
+    <template v-if="showSelectProject">
+      <div class="select-project">
+        <p class="title">{{ t('选择项目') }}</p>
+        <bk-select
+          v-model="curProjectCode"
+          filterable
+          :clearable="false"
+          :input-search="false"
+          :scroll-loading="scrollLoading"
+          :remote-method="handleSearchProject"
+          @change="handleSelectProject"
+          :popoverOptions="popoverOptions"
         >
-        </bk-input>
-        <div
-          :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
-          @click="handleChooseGroup(group)"
-          v-show="group.groupId !== renameGroupId"
-        >
-          <span class="group-name" :title="group.name">{{ group.name }}</span>
-          <span class="user-num">
-            <img src="../../../svg/user.svg?inline" class="group-icon">
-            {{ group.userCount }}
-          </span>
-          <span class="group-num">
-            <img src="../../../svg/organization.svg?inline" class="group-icon">
-            {{ group.departmentCount }}
-          </span>
-          <bk-popover
-            v-if="resourceType === 'project'"
-            class="group-more-option"
-            placement="bottom"
-            theme="light dot-menu"
-            :popoverDelay="[100, 0]"
-            :arrow="false"
-            offset="15"
-            :distance="0">
-            <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
-            <template #content>
-              <div class="menu-content">
-                <bk-button
-                  v-if="!group.defaultGroup"
-                  class="btn"
-                  text
-                  @click="handleShowRename(group)"
-                >
-                  {{ $t('重命名') }}
-                </bk-button>
-                <bk-button
-                  class="btn"
-                  :disabled="group.defaultGroup"
-                  text
-                  @click="handleShowDeleteGroup(group)">
-                  {{ $t('删除') }}
-                </bk-button>
+          <div
+            v-for="project in filterProjectList"
+            :key="project.projectCode"
+          >
+            <bk-option
+              :value="project.englishName"
+              :disabled="!project.managePermission"
+              :label="project.projectName"
+            >
+              <div
+                v-bk-tooltips="{
+                  disabled: project.managePermission,
+                  content: t('非项目管理员，无操作权限'),
+                }"
+                class="option-item"
+              >
+                {{ project.projectName }}
               </div>
-            </template>
-          </bk-popover>
-        </div>
-      </template>
-    </scroll-load-list>
-    <div class="line-split" />
-    <div
-      v-if="showCreateGroup"
-      :class="{ 'group-item': true, 'group-active': activeTab === '' }"
-      @click="handleCreateGroup">
-      <span class="add-group-btn">
-        <i class="manage-icon manage-icon-add-fill add-icon"></i>
-        {{ $t('新建用户组') }}
-      </span>
-    </div>
-    <div
-      v-if="resourceType !== 'project'"
-      class="close-btn"
-    >
-      <bk-button @click="handleCloseManage" :loading="isClosing">{{ $t('关闭权限管理') }}</bk-button>
-    </div>
+            </bk-option>
+          </div>
+        </bk-select>
+      </div>
+      <div class="line-split" v-if="!isNotProject" />
+    </template>
+    <bk-loading v-if="dataLoaded" :loading="fetchGroupLoading">
+      <scroll-load-list
+        class="group-list"
+        ref="loadList"
+        :list="groupList"
+        :has-load-end="hasLoadEnd"
+        :project-Code="curProjectCode"
+        :page="page"
+        :get-data-method="handleGetData"
+        :is-not-project="isNotProject"
+      >
+        <template v-slot:default="{ data: group, index }">
+          <bk-input
+            ref="renameInput"
+            v-show="group.groupId === renameGroupId && isRename"
+            v-model="displayGroupName"
+            class="rename-input"
+            @enter="handleRename"
+            @blur="handleRename"
+          >
+          </bk-input>
+          <div
+            :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
+            @click="handleChooseGroup(group)"
+          >
+            <span class="group-name" :title="group.name">{{ group.name }}</span>
+            <div class="num-box" v-for="item in groupCountField" :key="item">
+              <i
+                :class="['group-icon', 'manage-icon', {
+                  'manage-icon-user-shape': item === 'userCount',
+                  'manage-icon-user-template': item === 'templateCount',
+                  'manage-icon-organization': item === 'departmentCount',
+                  'active': activeTab === group.groupId
+                }]"
+              />
+              <div class="group-num">{{ group[item] }}</div>
+            </div>
+            <bk-popover
+              v-if="resourceType === 'project' && !group.defaultGroup"
+              class="group-more-option"
+              placement="bottom"
+              theme="light dot-menu"
+              :arrow="false"
+              trigger="click"
+              :offset="15"
+              :distance="0">
+              <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
+              <template #content>
+                <div class="menu-content">
+                  <bk-button
+                    v-if="!group.defaultGroup"
+                    class="btn"
+                    text
+                    @click="handleShowRename(group)"
+                  >
+                    {{ t('重命名') }}
+                  </bk-button>
+                  <bk-button
+                    class="btn"
+                    :disabled="group.defaultGroup"
+                    text
+                    @click="handleShowDeleteGroup(group)">
+                    {{ t('删除') }}
+                  </bk-button>
+                </div>
+              </template>
+            </bk-popover>
+          </div>
+        </template>
+      </scroll-load-list>
+      <div class="line-split" />
+      <div
+        v-if="showCreateGroup && projectCode"
+        :class="{ 'group-item': true, 'group-active': activeTab === '' }"
+        @click="handleCreateGroup">
+        <span class="add-group-btn">
+          <i class="manage-icon manage-icon-add-fill add-icon"></i>
+          {{ t('新建用户组') }}
+        </span>
+      </div>
+      <div
+        v-if="resourceType !== 'project'"
+        class="close-btn"
+      >
+        <bk-button @click="handleCloseManage" :loading="isClosing">{{ t('关闭权限管理') }}</bk-button>
+      </div>
+    </bk-loading>
     <bk-dialog
       dialogType="show"
       header-align="center"
       theme="danger"
-      extCls="delete-group-dialog"
+      class="delete-group-dialog"
       :quick-close="false"
       :is-show="deleteObj.isShow"
       :is-loading="deleteObj.isLoading"
@@ -94,30 +136,30 @@
     >
       <template #header>
         <div class="manage-icon manage-icon-warning-circle-fill title-icon"></div>
-        <p class="delete-title">{{ $t('确认删除【】用户组？', [deleteObj.group.name]) }}</p>
+        <p class="delete-title">{{ t('确认删除【】用户组？', [deleteObj.group.name]) }}</p>
       </template>
       <div class="delete-tips">
-        <p>{{ $t('删除用户组【】将执行如下操作：', [deleteObj.group.name]) }}</p>
+        <p>{{ t('删除用户组【】将执行如下操作：', [deleteObj.group.name]) }}</p>
         <p>
           <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
-          {{ $t('将用户和组织从组中移除') }}
+          {{ t('将用户和组织从组中移除') }}
         </p>
         <p>
           <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
-          {{ $t('删除组内用户继承该组的权限') }}
+          {{ t('删除组内用户继承该组的权限') }}
         </p>
         <p>
           <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
-          {{ $t('删除组信息和组权限') }}
+          {{ t('删除组信息和组权限') }}
         </p>
       </div>
       <div class="confirm-delete">
         <i18n-t keypath="此操作提交后将不能恢复，为避免误删除，请再次确认你的操作：" style="color: #737987;font-size: 14px;" tag="div">
-          <span style="color: red;">{{$t('不能恢复')}}</span>
+          <span style="color: red;">{{t('不能恢复')}}</span>
         </i18n-t>
         <bk-input
           v-model="keyWords"
-          :placeholder="$t('请输入待删除的用户组名')"
+          :placeholder="t('请输入待删除的用户组名')"
           class="confirm-input"
         ></bk-input>
       </div>
@@ -128,13 +170,13 @@
           :disabled="disableDeleteBtn"
           @click="handleDeleteGroup"
         >
-          {{ $t('删除') }}
+          {{ t('删除') }}
         </bk-button>
         <bk-button
           class="btn"
           @click="handleHiddenDeleteGroup"
         >
-          {{ $t('取消') }}
+          {{ t('取消') }}
         </bk-button>
       </div>
     </bk-dialog>
@@ -145,6 +187,8 @@
 import ScrollLoadList from '../../widget-components/scroll-load-list';
 import ajax from '../../../ajax/index';
 import { Message } from 'bkui-vue';
+import http from '@/http/api';
+import { useI18n } from 'vue-i18n';
 export default {
   components: {
     ScrollLoadList,
@@ -177,6 +221,7 @@ export default {
   },
   emits: ['choose-group', 'create-group', 'close-manage'],
   data() {
+    const { t } = useI18n();
     return {
       page: 1,
       activeTab: '',
@@ -193,12 +238,36 @@ export default {
       renameGroupId: 0,
       curGroupIndex: -1,
       keyWords: '',
+      t,
+      projectList: [],
+      searchProjectKey: '',
+      curProjectCode: this.projectCode,
+      fetchGroupLoading: false,
+      popoverOptions: {
+        zIndex: 2000
+      },
+      dataLoaded: false
     };
   },
   computed: {
     disableDeleteBtn() {
       return !(this.keyWords === this.deleteObj.group.name);
     },
+    groupCountField () {
+      if (this.resourceType === 'pipeline') {
+        return ['userCount', 'templateCount', 'departmentCount']
+      }
+      return ['userCount', 'departmentCount']
+    },
+    showSelectProject () {
+      return location.search.includes('showSelectProject=true')
+    },
+    filterProjectList () {
+      return this.projectList.filter(i => i.projectName.includes(this.searchProjectKey));
+    },
+    isNotProject () {
+      return this.curProjectCode === 'my-project' || !this.curProjectCode
+    }
   },
   watch: {
     activeIndex(newVal) {
@@ -207,6 +276,11 @@ export default {
   },
   async created() {
     window.addEventListener('message', this.handleMessage);
+    if (this.showSelectProject) {
+      await this.getProjectList()
+    } else {
+      this.dataLoaded = true
+    }
   },
 
   beforeUnmount() {
@@ -214,17 +288,39 @@ export default {
   },
   methods: {
     handleGetData(pageSize) {
+      this.fetchGroupLoading = true
       return ajax
-        .get(`${this.ajaxPrefix}/auth/api/user/auth/resource/${this.projectCode}/${this.resourceType}/${this.resourceCode}/listGroup?page=${this.page}&pageSize=${pageSize}`)
+        .get(`${this.ajaxPrefix}/auth/api/user/auth/resource/${this.curProjectCode}/${this.resourceType}/${this.curProjectCode}/listGroup?page=${this.page}&pageSize=${pageSize}`)
         .then(({ data }) => {
           this.hasLoadEnd = !data.hasNext;
-          this.groupList.push(...data.records);
+          this.groupList = [...this.groupList, ...data.records];
           // 首页需要加载
           if (this.page === 1) {
             const chooseGroup = this.groupList.find(group => +group.groupId === +this.$route.query?.groupId) || this.groupList[0];
             this.handleChooseGroup(chooseGroup);
           }
           this.page += 1
+        })
+        .finally(() => {
+          this.fetchGroupLoading = false
+        })
+    },
+    getProjectList() {
+      return ajax
+        .get(`${this.ajaxPrefix}/project/api/user/projects/?enabled=true`)
+        .then((res) => {
+          this.projectList = res.data;
+          const project = this.projectList.find(i => i.projectCode === this.projectCode);
+          if (project?.managePermission === false || !/rbac/.test(project?.routerTag)) {
+            this.curProjectCode = '';
+          };
+          this.dataLoaded = true
+          this.$router.push({
+            query: {
+              ...this.$route.query,
+              projectCode: this.curProjectCode
+            }
+          })
         });
     },
     refreshList() {
@@ -244,13 +340,14 @@ export default {
     handleDeleteGroup() {
       this.deleteObj.isLoading = true;
       return ajax
-        .delete(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/${this.projectCode}/${this.resourceType}/${this.deleteObj.group.groupId}`)
+        .delete(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/${this.curProjectCode}/${this.resourceType}/${this.deleteObj.group.groupId}`)
         .then(() => {
           this.handleHiddenDeleteGroup();
           this.refreshList();
+          this.syncGroupAndMemberIAM();
           Message({
             theme: 'success',
-            message: this.$t('删除成功')
+            message: this.t('删除成功')
           });
         })
         .finally(() => {
@@ -268,14 +365,30 @@ export default {
       this.curGroupIndex = this.groupList.findIndex(item => item.groupId === group.groupId);
       this.$emit('choose-group', group);
     },
-    handleCreateGroup() {
+    async handleCreateGroup() {
+      if (this.isNotProject) return
       this.activeTab = '';
-      this.$emit('create-group');
+      try {
+        const res = await http.getResource({
+          projectCode: this.curProjectCode,
+          resourceType: this.resourceType,
+          resourceCode: this.curProjectCode});
+          if(res) {
+            const role_id = res.iamGradeManagerId;
+            this.$emit('create-group', role_id);
+          }
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
+      }
+      
     },
     handleCloseManage() {
       this.isClosing = true;
       return ajax
-        .put(`${this.ajaxPrefix}/auth/api/user/auth/resource/${this.projectCode}/${this.resourceType}/${this.resourceCode}/disable`)
+        .put(`${this.ajaxPrefix}/auth/api/user/auth/resource/${this.curProjectCode}/${this.resourceType}/${this.curProjectCode}/disable`)
         .then(() => {
           this.$emit('close-manage');
         })
@@ -285,7 +398,7 @@ export default {
     },
     handleMessage(event) {
       const { data } = event;
-      if (data.type === 'IAM') {
+      if (data?.type === 'IAM') {
         switch (data.code) {
           case 'create_user_group_submit':
             this
@@ -294,6 +407,7 @@ export default {
                 const group = this.groupList.find(group => group.groupId === data?.data?.id) || this.groupList[0];
                 this.handleChooseGroup(group);
               })
+              this.syncGroupAndMemberIAM();
             break;
           case 'create_user_group_cancel':
             this.handleChooseGroup(this.groupList[0]);
@@ -301,16 +415,39 @@ export default {
           case 'add_user_confirm':
             this.groupList[this.curGroupIndex].departmentCount += data.data.departments.length
             this.groupList[this.curGroupIndex].userCount += data.data.users.length
+            this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
-          case 'remove_user_confirm':
+          case 'remove_user_confirm': {
             const departments = data.data.members.filter(i => i.type === 'department')
             const users = data.data.members.filter(i => i.type === 'user')
             this.groupList[this.curGroupIndex].departmentCount -= departments.length
             this.groupList[this.curGroupIndex].userCount -= users.length
+            this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
+          }
           case 'change_group_detail_tab':
             this.$emit('change-group-detail-tab', data.data.tab)
         }
+      }
+    },
+    async syncGroupIAM(groupId){
+      try {
+        await http.syncGroupMember(this.curProjectCode, groupId);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
+      }
+    },
+    async syncGroupAndMemberIAM(){
+      try {
+        await http.syncGroupAndMember(this.curProjectCode);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
       }
     },
     handleShowRename (group) {
@@ -331,14 +468,15 @@ export default {
         return
       }
       return ajax
-        .put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/${this.projectCode}/${this.resourceType}/${this.renameGroupId}/rename`, {
+        .put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/${this.curProjectCode}/${this.resourceType}/${this.renameGroupId}/rename`, {
           groupName: this.displayGroupName,
         })
         .then(() => {
           group.name = this.displayGroupName;
+          this.syncGroupAndMemberIAM();
           Message({
             theme: 'success',
-            message: this.$t('修改成功')
+            message: this.t('修改成功')
           });
         })
         .catch((err) => {
@@ -353,6 +491,20 @@ export default {
           this.displayGroupName = '';
         })
     },
+    handleSearchProject (val) {
+      this.searchProjectKey = val
+    },
+    handleSelectProject (val) {
+      this.page = 1
+      this.groupList = []
+      this.curProjectCode = val
+      this.$router.push({
+        query: {
+          ...this.$route.query,
+          projectCode: this.curProjectCode
+        }
+      })
+    }
   },
 };
 </script>
@@ -364,9 +516,19 @@ export default {
   height: 100%;
   background-color: #fff;
   border-right: 1px solid #dde0e6;
+  padding-top: 10px;
+}
+.select-project {
+  padding: 10px 24px 0;
+  .title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
 }
 .group-list {
-  max-height: calc(100% - 130px);
+  max-height: calc(100% - 70px);
+  min-height: 80px;
   height: auto;
   overflow-y: auto;
   &::-webkit-scrollbar-thumb {
@@ -414,8 +576,15 @@ export default {
     color: #fff;
   }
   .group-icon {
-    filter: invert(100%) sepia(0%) saturate(1%) hue-rotate(151deg) brightness(104%) contrast(101%);
+    color: #A3C5FD;
   }
+}
+.num-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-right: 10px;
 }
 .user-num,
 .group-num {
@@ -428,19 +597,19 @@ export default {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  margin-right: 20px;
 }
 .user-num,
 .group-num {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
-  width: 40px;
-  height: 16px;
+  width: 24px;
+  height: 12px;
   background: #F0F1F5;
   border-radius: 2px;
   font-size: 12px;
   line-height: 16px;
-  margin-right: 3px;
   text-align: center;
   color: #C4C6CC;
 }
@@ -454,9 +623,9 @@ export default {
   color: #3A84FF !important;
 }
 .group-icon {
-  height: 12px;
-  width: 12px;
-  filter: invert(89%) sepia(8%) saturate(136%) hue-rotate(187deg) brightness(91%) contrast(86%);
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: #C4C6CC;
 }
 .line-split {
   width: 80%;
@@ -474,9 +643,6 @@ export default {
 .close-btn {
   margin-bottom: 20px;
   text-align: center;
-}
-.small-size {
-  scale: 0.9;
 }
 .rename-input {
   position: relative;
@@ -523,9 +689,6 @@ export default {
   .delete-tips {
     background-color: #f5f6fa;
     padding: 20px;
-  }
-  .bk-dialog-header {
-    padding: 15px 0;
   }
   .bk-dialog-title {
     height: 26px !important;

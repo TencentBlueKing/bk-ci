@@ -2,6 +2,7 @@ package com.tencent.devops.openapi.resources.apigw.v4
 
 import com.tencent.devops.auth.api.oauth2.Oauth2ServiceEndpointResource
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
+import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
@@ -22,7 +23,7 @@ class ApigwOauth2EndpointResourceV4Impl @Autowired constructor(
         clientId: String,
         clientSecret: String,
         accessTokenRequest: Oauth2AccessTokenRequest
-    ): Result<Any?> {
+    ): Result<Oauth2AccessTokenVo> {
         logger.info("OPENAPI_OAUTH2_ACCESS_TOKEN_V4|$appCode|$clientId")
         return try {
             client.get(Oauth2ServiceEndpointResource::class).getAccessToken(

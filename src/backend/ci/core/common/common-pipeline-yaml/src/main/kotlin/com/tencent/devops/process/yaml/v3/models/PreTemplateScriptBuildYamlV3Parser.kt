@@ -32,15 +32,18 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.pojo.YamlVersion
+import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.Stage
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
+import org.slf4j.LoggerFactory
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -67,6 +70,9 @@ data class PreTemplateScriptBuildYamlV3Parser(
     @JsonProperty("custom-build-num")
     override var customBuildNum: String? = null
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
+    companion object {
+        private val logger = LoggerFactory.getLogger(PreTemplateScriptBuildYamlV3Parser::class.java)
+    }
 
     init {
         version = YamlVersion.V3_0.tag
@@ -90,11 +96,22 @@ data class PreTemplateScriptBuildYamlV3Parser(
     @JsonIgnore
     lateinit var preYaml: PreScriptBuildYamlV3Parser
 
+    private val formatStages = lazy { ScriptYmlUtils.formatStage(preYaml, transferData) }
+    private val formatFinallyStage = lazy { ScriptYmlUtils.preJobs2Jobs(preYaml.finally, transferData) }
+
     @JsonIgnore
     val transferData: YamlTransferData = YamlTransferData()
 
     override fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlIParser) {
-        preYaml = f(this) as PreScriptBuildYamlV3Parser
+        kotlin.runCatching {
+            preYaml = f(this) as PreScriptBuildYamlV3Parser
+        }.onFailure { error ->
+            logger.warn("replaceTemplate error", error)
+            throw PipelineTransferException(
+                YAML_NOT_VALID,
+                arrayOf(error.message ?: "unknown error")
+            )
+        }
     }
 
     override fun formatVariables(): Map<String, Variable> {
@@ -123,12 +140,12 @@ data class PreTemplateScriptBuildYamlV3Parser(
 
     override fun formatStages(): List<Stage> {
         checkInitialized()
-        return ScriptYmlUtils.formatStage(preYaml, transferData)
+        return formatStages.value
     }
 
     override fun formatFinallyStage(): List<Job> {
         checkInitialized()
-        return ScriptYmlUtils.preJobs2Jobs(preYaml.finally, transferData)
+        return formatFinallyStage.value
     }
 
     override fun formatResources(): Resources? {

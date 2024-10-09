@@ -77,9 +77,11 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_MONITOR = "q.engine.pipeline.listener.monitor"
     const val ROUTE_PIPELINE_BUILD_HEART_BEAT = "r.engine.pipeline.build.hb"
     const val QUEUE_PIPELINE_BUILD_HEART_BEAT = "q.engine.pipeline.build.hb"
+
     // 构建产生的审核通知类队列
     const val ROUTE_PIPELINE_BUILD_NOTIFY = "r.engine.pipeline.build.notify"
     const val QUEUE_PIPELINE_BUILD_NOTIFY = "q.engine.pipeline.build.notify"
+
     // 构建状态Websocket推送解耦
     const val ROUTE_PIPELINE_BUILD_WEBSOCKET = "r.engine.pipeline.build.websocket"
     const val QUEUE_PIPELINE_BUILD_WEBSOCKET = "q.engine.pipeline.build.websocket"
@@ -117,6 +119,7 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_FINISH_GITCI = "q.engine.pipeline.build.gitci"
     const val QUEUE_PIPELINE_BUILD_FINISH_LOG = "q.engine.pipeline.build.log"
     const val QUEUE_PIPELINE_BUILD_FINISH_SUBPIPEINE = "q.engine.pipeline.build.subpipeline"
+    const val QUEUE_PIPELINE_BUILD_QUEUE_SUBPIPEINE = "q.engine.pipeline.build.queue.subpipeline"
     const val QUEUE_PIPELINE_BUILD_FINISH_WEBHOOK_QUEUE = "q.engine.pipeline.build.finish.webhook.queue"
     const val QUEUE_PIPELINE_BUILD_FINISH_NOTIFY_QUEUE = "q.engine.pipeline.build.finish.notify.queue"
 
@@ -145,6 +148,11 @@ object MQ {
     const val QUEUE_AGENT_STARTUP = "q.engine.pipeline.agent.startup"
     const val ROUTE_AGENT_SHUTDOWN = "r.engine.pipeline.agent.shutdown"
     const val QUEUE_AGENT_SHUTDOWN = "q.engine.pipeline.agent.shutdown"
+
+    // 第三方 AGENT 排队消息队列 ====================================
+    const val EXCHANGE_THIRD_PARTY_AGENT_QUEUE = "e.dispatch.tp.agent.queue"
+    const val ROUTE_THIRD_PARTY_AGENT_QUEUE = "r.dispatch.tp.agent.queue"
+    const val QUEUE_THIRD_PARTY_AGENT_QUEUE = "q.dispatch.tp.agent.queue"
 
     // 无构建环境的Docker构建机启停消息队列 ====================================
     const val EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT = "e.engine.pipeline.bl.agent"
@@ -257,6 +265,7 @@ object MQ {
     // 回调
     const val EXCHANGE_PIPELINE_BUILD_CALL_BACK_FANOUT = "e.engine.pipeline.build.callback.fanout"
     const val QUEUE_PIPELINE_BUILD_STATUS_CHANGE = "e.engine.pipeline.build.callback.change"
+    const val QUEUE_PIPELINE_BUILD_STATUS_METRICS = "q.engine.pipeline.build.callback.metrics"
 
     // 蓝盾项目管理
     const val EXCHANGE_PROJECT_CREATE_FANOUT = "e.project.create.exchange.fanout"
@@ -276,6 +285,7 @@ object MQ {
 
     // 蓝盾构建结束后metrics数据上报事件广播
     const val EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT = "e.engine.build.end.metrics.data.report.fanout"
+
     // 流水线标签变化metrics数据同步广播
     const val EXCHANGE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC_FANOUT =
         "e.pipeline.label.change.metrics.data.sync.fanout"
@@ -319,20 +329,30 @@ object MQ {
     const val ROUTE_AUTH_RESOURCE_GROUP_MODIFY = "r.auth.resource.group.modify"
     const val QUEUE_AUTH_RESOURCE_GROUP_MODIFY = "q.auth.resource.group.modify"
 
-    const val EXCHANGE_PROJECT_USER_DAILY_FANOUT = "e.metrics.project.user.daily.exchange.fanout"
-    const val QUEUE_PROJECT_USER_DAILY_METRICS = "q.metrics.project.user.daily.queue"
+    const val EXCHANGE_PROJECT_USER_DAILY_FANOUT = "e.metrics.project.user.daily.fanout"
+    const val QUEUE_PROJECT_USER_DAILY_METRICS = "q.metrics.project.user.daily.new.queue"
+
+    const val EXCHANGE_PROJECT_USER_DAILY_OPERATE = "e.metrics.project.user.daily.operate.exchange"
+    const val QUEUE_PROJECT_USER_DAILY_OPERATE_METRICS = "q.metrics.project.user.daily.operate.new.queue"
+    const val ROUTE_PROJECT_USER_DAILY_OPERATE_METRICS = "r.metrics.project.user.daily.new.operate"
+
+    // 项目启用同步组和成员事件
+    const val QUEUE_PROJECT_ENABLED_SYNC_GROUP_AND_MEMBER = "q.project.enabled.sync.group.and.member"
 
     // 数据库分片
     const val EXCHANGE_SHARDING_ROUTING_RULE_FANOUT = "e.sharding.routing.rule.exchange.fanout"
 
     // pac每条流水线触发事件
     const val EXCHANGE_PIPELINE_YAML_LISTENER = "e.pipeline.yaml.listener"
+
     // pac开启流水线事件
     const val ROUTE_PIPELINE_YAML_ENABLE_EVENT = "r.pipeline.yaml.enable.event"
     const val QUEUE_PIPELINE_YAML_ENABLE_EVENT = "q.pipeline.yaml.enable.event"
+
     // pac触发事件
     const val ROUTE_PIPELINE_YAML_TRIGGER_EVENT = "r.pipeline.yaml.trigger.event"
     const val QUEUE_PIPELINE_YAML_TRIGGER_EVENT = "q.pipeline.yaml.trigger.event"
+
     // pac关闭流水线事件
     const val ROUTE_PIPELINE_YAML_DISABLE_EVENT = "r.pipeline.yaml.disable.event"
     const val QUEUE_PIPELINE_YAML_DISABLE_EVENT = "q.pipeline.yaml.disable.event"

@@ -51,12 +51,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
 ) : ProjectPermissionService {
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
-        val projectCodes = authProjectApi.getUserProjects(
-            serviceCode = projectAuthServiceCode,
-            userId = userId,
-            supplier = supplierForPermission
-        )
-        return projectCodes.contains(projectCode)
+        return projectDao.countByEnglishName(dslContext, listOf(projectCode)) > 0
     }
 
     private val supplierForPermission = {

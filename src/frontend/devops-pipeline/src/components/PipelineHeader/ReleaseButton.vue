@@ -1,22 +1,30 @@
 <template>
     <div style="height: 100%">
-        <span v-bk-tooltips="disableTooltips" :class="['publish-pipeline-btn', {
-            'publish-diabled': !canRelease
-        }]" @click="showReleaseSlider" v-perm="{
-            hasPermission: canEdit,
-            disablePermissionApi: true,
-            permissionData: {
-                projectId,
-                resourceType: 'pipeline',
-                resourceCode: pipelineId,
-                action: RESOURCE_ACTION.EDIT
-            }
-        }">
+        <span
+            v-bk-tooltips="disableTooltips"
+            :class="['publish-pipeline-btn', {
+                'publish-diabled': !canRelease
+            }]"
+            @click="showReleaseSlider"
+            v-perm="{
+                hasPermission: canEdit,
+                disablePermissionApi: true,
+                permissionData: {
+                    projectId,
+                    resourceType: 'pipeline',
+                    resourceCode: pipelineId,
+                    action: RESOURCE_ACTION.EDIT
+                }
+            }"
+        >
             <i class="devops-icon icon-check-small" />
             {{ $t('release') }}
         </span>
-        <ReleasePipelineSideSlider v-model="isReleaseSliderShow" :version="currentVersion"
-            :draft-base-version-name="draftBaseVersionName" />
+        <ReleasePipelineSideSlider
+            v-model="isReleaseSliderShow"
+            :version="currentVersion"
+            :draft-base-version-name="draftBaseVersionName"
+        />
     </div>
 </template>
 
@@ -101,16 +109,12 @@
 
     &.publish-diabled {
         background: #DCDEE5;
+        color: white !important;
         cursor: not-allowed;
     }
 
     .icon-check-small {
         font-size: 18px;
-    }
-
-    &.disabled {
-        background: #DCDEE5;
-        cursor: not-allowed;
     }
 }
 </style>

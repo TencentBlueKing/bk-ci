@@ -1,5 +1,6 @@
 <template>
     <div class="build-num-switcher">
+        <span>{{ $t(isDebug ? 'draftExecDetail' : 'pipelinesDetail') }}</span>
         <span>#{{ currentBuildNum }}</span>
         <p>
             <i
@@ -20,12 +21,13 @@
     import { mapActions } from 'vuex'
     export default {
         props: {
+            isDebug: Boolean,
             latestBuildNum: {
-                type: Object,
+                type: [String, Number],
                 required: true
             },
             currentBuildNum: {
-                type: Object,
+                type: [String, Number],
                 required: true
             },
             version: {
@@ -90,6 +92,8 @@
   align-items: center;
   grid-auto-flow: column;
   grid-gap: 6px;
+  color: #63656e;
+
   > p {
     display: flex;
     flex-direction: column;

@@ -5,6 +5,7 @@
   "main": "dist/bk-pipeline.min.js",
   "scripts": {
     "public": "webpack  --mode production",
+    "public:master": "webpack --mode production",
     "patch": "npm version patch && npm publish",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -27,11 +28,13 @@
     "@babel/plugin-transform-runtime": "^7.15.8",
     "@babel/preset-env": "^7.15.8",
     "@babel/preset-react": "^7.16.0",
+    "@babel/runtime": "^7.15.8",
     "@vue/babel-preset-jsx": "^1.2.4",
     "babel-helper-vue-jsx-merge-props": "^2.0.3",
     "babel-loader": "^8.2.2",
     "babel-plugin-transform-vue-jsx": "^4.0.1",
     "copy-webpack-plugin": "9.0.1",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.4.0",
     "css-minimizer-webpack-plugin": "^4.2.1",
     "eslint": "^7.3.1",
@@ -46,16 +49,17 @@
     "eslint-plugin-vue": "^6.2.2",
     "html-webpack-plugin": "^5.3.2",
     "immutable": "^5.0.0-beta.4",
+    "json5": "2.2.3",
     "mini-css-extract-plugin": "^2.4.2",
     "sass": "^1.42.1",
     "sass-loader": "^12.1.0",
-    "semver": "6.3.0",
     "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.3.6",
-    "vue-loader": "^15.10.0",
-    "webpack": "^5.58.1"
+    "vue-loader": "~15.10.0",
+    "webpack": "~5.76.1"
   },
   "dependencies": {
+    "uuid": "~8.1.0",
     "vuedraggable": "^2.24.3"
   },
   "repository": {
@@ -63,8 +67,8 @@
     "url": "git+https://github.com/Tencent/bk-ci.git"
   },
   "peerDependencies": {
-    "vue": "~2.7.16",
-    "bk-magic-vue": "2.5.9-beta.9"
+    "bk-magic-vue": "2.5.9-beta.9",
+    "vue": "~2.7.16"
   },
   "keywords": [
     "pipeline",

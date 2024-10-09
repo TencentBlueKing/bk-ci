@@ -170,12 +170,17 @@ class ModelTransfer @Autowired constructor(
         // 添加finally
         val finallyJobs = yamlInput.yaml.formatFinallyStage()
         if (finallyJobs.isNotEmpty()) {
+            yamlInput.aspectWrapper.setYamlStage4Yaml(
+                aspectType = PipelineTransferAspectWrapper.AspectType.BEFORE
+            )
             stageList.add(
                 modelStage.yaml2FinallyStage(
                     stageIndex = stageIndex,
                     finallyJobs = finallyJobs,
                     yamlInput = yamlInput
-                )
+                ).also {
+                    yamlInput.aspectWrapper.setModelStage4Model(it, PipelineTransferAspectWrapper.AspectType.AFTER)
+                }
             )
         }
         checkExtends(yamlInput.yaml.templateFilter().extends, model)
@@ -283,13 +288,13 @@ class ModelTransfer @Autowired constructor(
 
     private fun makeNoticesV3(setting: PipelineSetting): List<PacNotices>? {
         val res = mutableListOf<PacNotices>()
-        setting.successSubscriptionList?.ifEmpty { listOf(setting.successSubscription) }?.forEach {
+        setting.successSubscriptionList?.ifEmpty { setting.successSubscription?.let { listOf(it) } }?.forEach {
             if (it.types.isNotEmpty()) {
                 val notice = PacNotices(it, IfType.SUCCESS.name)
                 res.add(prepareYamlGroups(setting.projectId, notice))
             }
         }
-        setting.failSubscriptionList?.ifEmpty { listOf(setting.failSubscription) }?.forEach {
+        setting.failSubscriptionList?.ifEmpty { setting.failSubscription?.let { listOf(it) } }?.forEach {
             if (it.types.isNotEmpty()) {
                 val notice = PacNotices(it, IfType.FAILURE.name)
                 res.add(prepareYamlGroups(setting.projectId, notice))

@@ -249,7 +249,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         }
         if (sendNotify) {
             executorService.submit<Result<Boolean>> {
-                val bodyParams = mapOf("storeAdmin" to userId, "storeName" to getStoreName(storeCode))
+                val bodyParams = mapOf("storeAdmin" to userId, "storeName" to getStoreName(storeCode, storeType))
                 storeNotifyService.sendNotifyMessage(
                     templateCode = STORE_MEMBER_ADD_NOTIFY_TEMPLATE + "_$storeType",
                     sender = DEVOPS,
@@ -307,7 +307,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             }
             executorService.submit<Result<Boolean>> {
                 val receivers = mutableSetOf(record.username)
-                val bodyParams = mapOf("storeAdmin" to userId, "storeName" to getStoreName(storeCode))
+                val bodyParams = mapOf("storeAdmin" to userId, "storeName" to getStoreName(storeCode, storeType))
                 storeNotifyService.sendNotifyMessage(
                     templateCode = STORE_MEMBER_DELETE_NOTIFY_TEMPLATE + "_$storeType",
                     sender = DEVOPS,
@@ -322,7 +322,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     /**
      * 获取组件名称
      */
-    abstract fun getStoreName(storeCode: String): String
+    abstract fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String
 
     /**
      * 更改store组件成员的调试项目

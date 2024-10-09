@@ -70,9 +70,15 @@ interface SensitiveApiService {
         sensitiveApiApproveReq: SensitiveApiApproveReq
     ): Result<Boolean>
 
+    @Suppress("LongParameterList")
     fun verifyApi(
+        signFileName: String? = null,
+        fileShaContent: String? = null,
+        osName: String? = null,
+        osArch: String? = null,
         storeType: StoreTypeEnum,
         storeCode: String,
-        apiName: String
+        apiName: String,
+        version: String? = null
     ): Result<Boolean>
 }

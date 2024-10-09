@@ -80,7 +80,6 @@ export default (r, initSetLocale = false) => {
     const { messages, localeList } = importAll(r)
     
     const initLocale = getLsLocale()
-    // export localeList
     
     const i18n = new VueI18n({
         locale: initLocale,
@@ -98,6 +97,7 @@ export default (r, initSetLocale = false) => {
 
     function dynamicLoadModule (module, locale = DEFAULT_LOCALE) {
         const localeModuleId = getLocalModuleId(module, locale)
+
         if (loadedModule[localeModuleId]) {
             return Promise.resolve()
         }
@@ -144,7 +144,7 @@ export default (r, initSetLocale = false) => {
             console.log('sync backendLocalEnum', backendLocalEnum[localeLang], localeLang, bkLocalEnum[localeLang])
             await Promise.any([
                 axios.put('/ms/project/api/user/locales/update', {
-                    language: backendLocalEnum[localeLang]
+                    language: backendLocalEnum[localeLang] ?? localeLang
                 }),
                 jsonpLocale(bkLocalEnum[localeLang])
             ])

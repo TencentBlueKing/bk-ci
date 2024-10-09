@@ -158,23 +158,11 @@ class PipelineBuildSummaryDao {
                 dslContext.update(this)
                     .set(numColumn, numColumn + 1)
                     .set(BUILD_NUM_ALIAS, buildNumAlias)
-                    .let {
-                        /* debug 模式构建不需要更新状态 */
-                        if (!debug) {
-                            it.set(LATEST_BUILD_ID, buildId).set(LATEST_STATUS, BuildStatus.QUEUE.ordinal)
-                        } else it
-                    }
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             } else {
                 dslContext.update(this)
                     .set(numColumn, buildNum)
                     .set(BUILD_NUM_ALIAS, buildNumAlias)
-                    .let {
-                        /* debug 模式构建不需要更新状态 */
-                        if (!debug) {
-                            it.set(LATEST_BUILD_ID, buildId).set(LATEST_STATUS, BuildStatus.QUEUE.ordinal)
-                        } else it
-                    }
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             }
             return dslContext.select(numColumn)
@@ -503,31 +491,44 @@ class PipelineBuildSummaryDao {
     fun startLatestRunningBuild(
         dslContext: DSLContext,
         latestRunningBuild: LatestRunningBuild,
-        executeCount: Int
+        executeCount: Int,
+        debug: Boolean
     ): Int {
         return with(latestRunningBuild) {
-            with(T_PIPELINE_BUILD_SUMMARY) {
-                dslContext.update(this)
-                    .let {
-                        if (executeCount == 1) {
-                            // 只有首次才写入LATEST_BUILD_ID
-                            it.set(LATEST_BUILD_ID, buildId).set(LATEST_STATUS, status.ordinal)
-                        } else {
-                            // 重试时只有最新的构建才能刷新LATEST_STATUS
-                            it.set(
-                                LATEST_STATUS,
-                                DSL.`when`(LATEST_BUILD_ID.eq(buildId), status.ordinal).otherwise(LATEST_STATUS)
-                            )
+            if (debug) {
+                /* debug 下只更新计数 */
+                with(T_PIPELINE_BUILD_SUMMARY) {
+                    dslContext.update(this)
+                        .set(QUEUE_COUNT, QUEUE_COUNT - 1)
+                        .set(RUNNING_COUNT, RUNNING_COUNT + 1)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .execute()
+                }
+            } else {
+                with(T_PIPELINE_BUILD_SUMMARY) {
+                    dslContext.update(this)
+                        .let {
+                            if (executeCount == 1) {
+                                // 只有首次才写入LATEST_BUILD_ID
+                                it.set(LATEST_BUILD_ID, buildId).set(LATEST_STATUS, status.ordinal)
+                            } else {
+                                // 重试时只有最新的构建才能刷新LATEST_STATUS
+                                it.set(
+                                    LATEST_STATUS,
+                                    DSL.`when`(LATEST_BUILD_ID.eq(buildId), status.ordinal).otherwise(LATEST_STATUS)
+                                )
+                            }
                         }
-                    }
-                    .set(LATEST_TASK_COUNT, taskCount)
-                    .set(LATEST_START_USER, userId)
-                    .set(QUEUE_COUNT, QUEUE_COUNT - 1)
-                    .set(RUNNING_COUNT, RUNNING_COUNT + 1)
-                    .set(LATEST_START_TIME, LocalDateTime.now())
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId)) // 并发的情况下，不再考虑LATEST_BUILD_ID，没有意义，而且会造成Slow SQL
-                    .execute()
+                        .set(LATEST_TASK_COUNT, taskCount)
+                        .set(LATEST_START_USER, userId)
+                        .set(QUEUE_COUNT, QUEUE_COUNT - 1)
+                        .set(RUNNING_COUNT, RUNNING_COUNT + 1)
+                        .set(LATEST_START_TIME, LocalDateTime.now())
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId)) // 并发的情况下，不再考虑LATEST_BUILD_ID，没有意义，而且会造成Slow SQL
+                        .execute()
+                }
             }
         }
     }
@@ -562,7 +563,8 @@ class PipelineBuildSummaryDao {
     fun finishLatestRunningBuild(
         dslContext: DSLContext,
         latestRunningBuild: LatestRunningBuild,
-        isStageFinish: Boolean
+        isStageFinish: Boolean,
+        debug: Boolean
     ) {
         return with(latestRunningBuild) {
             with(T_PIPELINE_BUILD_SUMMARY) {
@@ -571,12 +573,14 @@ class PipelineBuildSummaryDao {
                         .set(
                             LATEST_STATUS,
                             DSL.`when`(LATEST_BUILD_ID.eq(buildId), status.ordinal).otherwise(LATEST_STATUS)
-                        ) // 不一定是FINISH，也有可能其它失败的status
-                        .set(LATEST_END_TIME, endTime) // 结束时间
+                        )
+                if (!debug) {
+                    // 不一定是FINISH，也有可能其它失败的status
+                    update.set(LATEST_END_TIME, endTime) // 结束时间
                         .set(LATEST_TASK_ID, "") // 结束时清空
                         .set(LATEST_TASK_NAME, "") // 结束时清空
                         .set(FINISH_COUNT, FINISH_COUNT + 1)
-
+                }
                 if (!isStageFinish) update.set(RUNNING_COUNT, RUNNING_COUNT - 1)
                 update.where(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId)) //  并发的情况下，不用考虑是否是当前的LATEST_BUILD_ID，而且会造成Slow SQL
@@ -593,21 +597,24 @@ class PipelineBuildSummaryDao {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        runningIncrement: Int = 1
+        runningIncrement: Int = 1,
+        debug: Boolean
     ) {
         with(T_PIPELINE_BUILD_SUMMARY) {
             val update = dslContext.update(this).set(RUNNING_COUNT, RUNNING_COUNT + runningIncrement)
-
-            if (runningIncrement > 0) {
-                update.set(
-                    LATEST_STATUS,
-                    DSL.`when`(LATEST_BUILD_ID.eq(buildId), BuildStatus.RUNNING.ordinal).otherwise(LATEST_STATUS)
-                )
-            } else {
-                update.set(
-                    LATEST_STATUS,
-                    DSL.`when`(LATEST_BUILD_ID.eq(buildId), BuildStatus.STAGE_SUCCESS.ordinal).otherwise(LATEST_STATUS)
-                ).set(LATEST_END_TIME, LocalDateTime.now())
+            if (!debug) {
+                if (runningIncrement > 0) {
+                    update.set(
+                        LATEST_STATUS,
+                        DSL.`when`(LATEST_BUILD_ID.eq(buildId), BuildStatus.RUNNING.ordinal).otherwise(LATEST_STATUS)
+                    )
+                } else {
+                    update.set(
+                        LATEST_STATUS,
+                        DSL.`when`(LATEST_BUILD_ID.eq(buildId), BuildStatus.STAGE_SUCCESS.ordinal)
+                            .otherwise(LATEST_STATUS)
+                    ).set(LATEST_END_TIME, LocalDateTime.now())
+                }
             }
             update.where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId)) //  并发的情况下，不用考虑是否是当前的LATEST_BUILD_ID，而且会造成Slow SQL

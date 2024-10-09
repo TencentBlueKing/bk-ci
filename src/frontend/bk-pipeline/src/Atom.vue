@@ -1,5 +1,10 @@
 <template>
-    <li :key="atom.id" :class="atomCls" @click.stop="handleAtomClick" :id="atom.id">
+    <li
+        :key="atom.id"
+        :class="atomCls"
+        @click.stop="handleAtomClick"
+        :id="atom.id"
+    >
         <template v-if="isQualityGateAtom">
             <span class="atom-title">
                 <i></i>
@@ -7,7 +12,12 @@
                 <i></i>
             </span>
             <template v-if="isReviewing">
-                <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
+                <Logo
+                    v-if="isBusy"
+                    name="circle-2-1"
+                    size="14"
+                    class="spin-icon"
+                />
                 <span
                     v-else
                     :class="{
@@ -15,10 +25,16 @@
                         'disabled-review': isReviewing && !hasReviewPerm
                     }"
                 >
-                    <span class="revire-btn" @click.stop="qualityApprove('PROCESS')">{{
+                    <span
+                        class="revire-btn"
+                        @click.stop="qualityApprove('PROCESS')"
+                    >{{
                         t("resume")
                     }}</span>
-                    <span class="review-btn" @click.stop="qualityApprove('ABORT')">{{
+                    <span
+                        class="review-btn"
+                        @click.stop="qualityApprove('ABORT')"
+                    >{{
                         t("terminate")
                     }}</span>
                 </span>
@@ -37,6 +53,11 @@
                 v-bind="progressConf"
                 :percent="atom.progressRate"
             />
+            <Logo
+                v-else-if="atom.asyncStatus && atom.asyncStatus !== 'SUCCEED'"
+                class="atom-progress"
+                :name="`sub_pipeline_${atom.asyncStatus.toLowerCase()}`"
+            />
             <status-icon
                 v-else-if="!isSkip && !!atomStatus"
                 type="element"
@@ -44,18 +65,39 @@
                 :is-hook="isHookAtom"
             />
 
-            <img v-else-if="atom.logoUrl" :src="atom.logoUrl" :class="logoCls" />
-            <Logo v-else :class="logoCls" :name="svgAtomIcon" size="18" />
+            <img
+                v-else-if="atom.logoUrl"
+                :src="atom.logoUrl"
+                :class="logoCls"
+            />
+            <Logo
+                v-else
+                :class="logoCls"
+                :name="svgAtomIcon"
+                size="18"
+            />
             <p class="atom-name">
-                <span :title="atom.name" :class="skipSpanCls">
+                <span
+                    :title="atom.name"
+                    :class="skipSpanCls"
+                >
                     {{ atom.atomCode ? atom.name : t("pendingAtom") }}
                 </span>
             </p>
             <template v-if="isExecuting">
                 <span class="atom-execounter">{{ execTime }}</span>
             </template>
-            <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
-            <bk-popover :delay="[300, 0]" v-else-if="isReviewing" placement="top">
+            <Logo
+                v-if="isBusy"
+                name="circle-2-1"
+                size="14"
+                class="spin-icon"
+            />
+            <bk-popover
+                :delay="[300, 0]"
+                v-else-if="isReviewing"
+                placement="top"
+            >
                 <span
                     @click.stop="reviewAtom"
                     class="atom-reviewing-tips atom-operate-area"
@@ -67,30 +109,50 @@
                     <p>{{ t("checkUser") }}{{ reviewUsers.join(";") }}</p>
                 </template>
             </bk-popover>
-            <bk-popover :delay="[300, 0]" v-else-if="isReviewAbort" placement="top">
+            <bk-popover
+                :delay="[300, 0]"
+                v-else-if="isReviewAbort"
+                placement="top"
+            >
                 <span class="atom-review-diasbled-tips">{{ t("aborted") }}</span>
                 <template slot="content">
                     <p>{{ t("abortTips") }}{{ t("checkUser") }}{{ reactiveData.cancelUserId }}</p>
                 </template>
             </bk-popover>
             <template v-else-if="atom.status === 'PAUSE'">
-                <bk-popover :delay="[300, 0]" placement="top" :disabled="!Array.isArray(atom.pauseReviewers)">
-                    <span :class="resumeSpanCls" @click.stop="atomExecute(true)">
+                <bk-popover
+                    :delay="[300, 0]"
+                    placement="top"
+                    :disabled="!Array.isArray(atom.pauseReviewers)"
+                >
+                    <span
+                        :class="resumeSpanCls"
+                        @click.stop="atomExecute(true)"
+                    >
                         {{ t("resume") }}
                     </span>
                     <template slot="content">
                         <p>{{ t("checkUser") }}{{ pauseReviewerStr }}</p>
                     </template>
                 </bk-popover>
-                <span @click.stop="atomExecute(false)" class="pause-button">
+                <span
+                    @click.stop="atomExecute(false)"
+                    class="pause-button"
+                >
                     <span>{{ t("stop") }}</span>
                 </span>
             </template>
             <span class="atom-operate-area">
-                <span v-if="atom.canRetry && !isBusy" @click.stop="skipOrRetry(false)">
+                <span
+                    v-if="atom.canRetry && !isBusy"
+                    @click.stop="skipOrRetry(false)"
+                >
                     {{ t("retry") }}
                 </span>
-                <span v-if="atom.canSkip && !isBusy" @click.stop="skipOrRetry(true)">
+                <span
+                    v-if="atom.canSkip && !isBusy"
+                    @click.stop="skipOrRetry(true)"
+                >
                     {{ t("SKIP") }}
                 </span>
                 <bk-popover
@@ -126,14 +188,20 @@
             />
 
             <template v-if="reactiveData.editable">
-                <i @click.stop="deleteAtom(false)" class="add-plus-icon close" />
+                <i
+                    @click.stop="deleteAtom(false)"
+                    class="add-plus-icon close"
+                />
                 <Logo
                     v-if="atom.isError"
                     class="atom-invalid-icon"
                     name="exclamation-triangle-shape"
                 />
             </template>
-            <span v-if="reactiveData.canSkipElement" @click.stop="">
+            <span
+                v-if="reactiveData.canSkipElement"
+                @click.stop=""
+            >
                 <bk-checkbox
                     class="atom-canskip-checkbox"
                     v-model="atom.canElementSkip"
@@ -245,7 +313,7 @@
                 try {
                     return (
                         this.atom.status === 'SKIP'
-                        || !this.atom.additionalOptions.enable
+                        || this.atom.additionalOptions?.enable === false
                         || this.containerDisabled
                     )
                 } catch (error) {
@@ -285,7 +353,7 @@
             },
             atomStatusCls () {
                 try {
-                    if (this.atom.additionalOptions && this.atom.additionalOptions.enable === false) {
+                    if (this.atom.additionalOptions?.enable === false) {
                         return STATUS_MAP.DISABLED
                     }
                     return this.atomStatus
@@ -309,6 +377,7 @@
                     [this.qualityStatus]: this.isQualityGateAtom && !!this.qualityStatus,
                     [this.atomStatusCls]: !!this.atomStatusCls,
                     'quality-atom': this.isQualityGateAtom,
+                    'is-sub-pipeline-atom': this.atom.atomCode === 'SubPipelineExec',
                     'is-error': this.atom.isError,
                     'is-intercept': this.isQualityCheckAtom,
                     'template-compare-atom': this.atom.templateModify,
@@ -565,6 +634,7 @@
   transition: all 0.4s ease-in-out;
   z-index: 2;
   border: 1px solid $fontLighterColor;
+
   .atom-progress {
     display: inline-flex;
     width: 42px;

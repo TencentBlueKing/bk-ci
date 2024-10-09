@@ -32,7 +32,7 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import org.jboss.logging.Logger
@@ -40,7 +40,7 @@ import org.jooq.DSLContext
 
 class MigratePermissionHandoverService constructor(
     private val v2ManagerService: V2ManagerService,
-    private val groupService: PermissionResourceGroupService,
+    private val permissionResourceMemberService: PermissionResourceMemberService,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceService: AuthResourceService,
     private val dslContext: DSLContext
@@ -59,11 +59,12 @@ class MigratePermissionHandoverService constructor(
                     groupCode = DefaultGroupType.MANAGER.value
                 )
                 handoverToList.forEach { handoverTo ->
-                    groupService.addGroupMember(
-                        userId = handoverTo,
+                    permissionResourceMemberService.addGroupMember(
+                        projectCode = projectCode,
+                        memberId = handoverTo,
                         memberType = USER_TYPE,
                         expiredAt = GROUP_EXPIRED_TIME,
-                        groupId = projectManagerGroupId!!.relationId.toInt()
+                        iamGroupId = projectManagerGroupId!!.relationId.toInt()
                     )
                 }
             }
@@ -90,16 +91,17 @@ class MigratePermissionHandoverService constructor(
                     groupCode = DefaultGroupType.MANAGER.value
                 )
                 try {
-                    groupService.addGroupMember(
-                        userId = handoverTo,
+                    permissionResourceMemberService.addGroupMember(
+                        projectCode = projectCode,
+                        memberId = handoverTo,
                         memberType = USER_TYPE,
                         expiredAt = GROUP_EXPIRED_TIME,
-                        groupId = resourceManagerGroup!!.relationId.toInt()
+                        iamGroupId = resourceManagerGroup!!.relationId.toInt()
                     )
-                    v2ManagerService.deleteRoleGroupMemberV2(
-                        resourceManagerGroup.relationId.toInt(),
-                        USER_TYPE,
-                        handoverFrom
+                    permissionResourceMemberService.batchDeleteResourceGroupMembers(
+                        projectCode = projectCode,
+                        iamGroupId = resourceManagerGroup.relationId.toInt(),
+                        members = listOf(handoverFrom)
                     )
                 } catch (ignore: Exception) {
                     logger.warn(

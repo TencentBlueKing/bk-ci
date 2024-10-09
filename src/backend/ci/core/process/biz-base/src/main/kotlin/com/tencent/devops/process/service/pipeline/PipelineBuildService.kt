@@ -31,10 +31,12 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -54,6 +56,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.util.BuildMsgUtils
+import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
@@ -177,7 +180,7 @@ class PipelineBuildService(
 
             // 如果指定了版本号，则设置指定的版本号
             pipeline.version = signPipelineVersion ?: pipeline.version
-
+            val originModelStr = JsonUtil.toJson(model, formatted = false)
             // 只有新构建才需要填充Post插件与质量红线插件
             if (!pipelineParamMap.containsKey(PIPELINE_RETRY_BUILD_ID)) {
                 pipelineElementService.fillElementWhenNewBuild(
@@ -201,7 +204,15 @@ class PipelineBuildService(
                 pipeline = pipeline,
                 projectVO = projectVO,
                 channelCode = channelCode,
-                isMobile = isMobile
+                isMobile = isMobile,
+                pipelineAuthorizer = if (pipeline.channelCode == ChannelCode.BS) {
+                    pipelineRepositoryService.getPipelineOauthUser(
+                        projectId = pipeline.projectId,
+                        pipelineId = pipeline.pipelineId
+                    )
+                } else {
+                    null
+                }
             )
 
             val context = StartBuildContext.init(
@@ -209,12 +220,14 @@ class PipelineBuildService(
                 pipelineId = pipeline.pipelineId,
                 buildId = buildId,
                 resourceVersion = pipeline.version,
-                model = model,
+                modelStr = originModelStr,
                 pipelineSetting = setting,
                 currentBuildNo = buildNo,
                 triggerReviewers = triggerReviewers,
                 pipelineParamMap = pipelineParamMap,
                 webHookStartParam = webHookStartParam,
+                // 解析出定义的流水线变量
+                realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id },
                 debug = debug ?: false,
                 versionName = versionName,
                 yamlVersion = yamlVersion
@@ -261,7 +274,8 @@ class PipelineBuildService(
         projectVO: ProjectVO?,
         channelCode: ChannelCode,
         isMobile: Boolean,
-        debug: Boolean? = false
+        debug: Boolean? = false,
+        pipelineAuthorizer: String? = null
     ) {
         val userName = when (startType) {
             StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value
@@ -374,6 +388,15 @@ class PipelineBuildService(
                 readOnly = true
             )
         }
+        // 流水线权限代持人
+        pipelineAuthorizer?.let {
+            pipelineParamMap[BK_CI_AUTHORIZER] = BuildParameters(
+                key = BK_CI_AUTHORIZER,
+                value = it,
+                readOnly = true
+            )
+        }
+
         // 链路
         val bizId = MDC.get(TraceTag.BIZID)
         if (!bizId.isNullOrBlank()) { // 保存链路信息

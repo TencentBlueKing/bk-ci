@@ -38,6 +38,8 @@ data class PipelineVersionSimple(
     val creator: String,
     @get:Schema(title = "创建时间戳", required = true)
     val createTime: Long,
+    @get:Schema(title = "更新操作人", required = true)
+    val updater: String?,
     @get:Schema(title = "更新时间戳", required = true)
     val updateTime: Long?,
     @get:Schema(title = "流水线版本号", required = true)
@@ -65,5 +67,9 @@ data class PipelineVersionSimple(
     @get:Schema(title = "调试构建ID", required = false)
     val debugBuildId: String? = null,
     @get:Schema(title = "该版本的来源版本（空时一定为主路径）", required = false)
-    val baseVersion: Int? = null
+    val baseVersion: Int? = null,
+    @get:Schema(title = "基准版本的版本名称")
+    var baseVersionName: String? = null,
+    @get:Schema(title = "当前最新正式版本标识", required = false)
+    var latestReleasedFlag: Boolean? = false
 )

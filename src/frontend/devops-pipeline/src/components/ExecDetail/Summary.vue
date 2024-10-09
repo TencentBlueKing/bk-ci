@@ -1,11 +1,17 @@
 <template>
     <header class="exec-detail-summary">
-        <div v-if="visible" class="exec-detail-summary-info">
+        <div
+            v-if="visible"
+            class="exec-detail-summary-info"
+        >
             <div class="exec-detail-summary-info-material">
                 <span class="exec-detail-summary-info-block-title">
                     {{ $t("details.triggerRepo") }}
                 </span>
-                <div v-if="webhookInfo" class="exec-detail-summary-info-material-list">
+                <div
+                    v-if="webhookInfo"
+                    class="exec-detail-summary-info-material-list"
+                >
                     <material-item
                         class="visible-material-row"
                         :material="webhookInfo"
@@ -14,13 +20,19 @@
                     >
                     </material-item>
                 </div>
-                <span class="no-exec-material" v-else>--</span>
+                <span
+                    class="no-exec-material"
+                    v-else
+                >--</span>
             </div>
             <div class="exec-detail-summary-info-material">
                 <span class="exec-detail-summary-info-block-title">{{
                     $t("details.material")
                 }}</span>
-                <div v-if="visibleMaterial" class="exec-detail-summary-info-material-list">
+                <div
+                    v-if="visibleMaterial"
+                    class="exec-detail-summary-info-material-list"
+                >
                     <material-item
                         class="visible-material-row"
                         :material="visibleMaterial[0]"
@@ -32,31 +44,53 @@
                         class="all-exec-material-list"
                         @mouseleave="hideMoreMaterial"
                     >
-                        <li v-for="(material, index) in visibleMaterial" :key="index">
+                        <li
+                            v-for="(material, index) in visibleMaterial"
+                            :key="index"
+                        >
                             <material-item :material="material" />
                         </li>
                     </ul>
                 </div>
-                <span class="no-exec-material" v-else>--</span>
+                <span
+                    class="no-exec-material"
+                    v-else
+                >--</span>
             </div>
             <div style="overflow: hidden;">
                 <span class="exec-detail-summary-info-block-title">{{ $t("history.tableMap.pipelineVersion") }}</span>
                 <div class="exec-detail-summary-info-block-content">
-                    <bk-popover v-if="isConstraintTemplate"
+                    <bk-popover
+                        v-if="isConstraintTemplate"
                         trigger="click"
                         class="instance-template-info"
                         placement="bottom"
                         width="360"
                         theme="light"
                     >
-                        <logo class="template-info-entry" name="constraint" size="14" />
-                        <div class="pipeline-template-info-popover" slot="content">
+                        <logo
+                            class="template-info-entry"
+                            name="constraint"
+                            size="14"
+                        />
+                        <div
+                            class="pipeline-template-info-popover"
+                            slot="content"
+                        >
                             <header class="template-info-header">{{ $t('newlist.constraintModeDesc') }}</header>
                             <section class="template-info-section">
-                                <p v-for="row in templateRows" :key="row.id">
+                                <p
+                                    v-for="row in templateRows"
+                                    :key="row.id"
+                                >
                                     <label>{{ row.id }}：</label>
                                     <span>{{ row.content }}</span>
-                                    <router-link v-if="row.link" class="template-link-icon" :to="row.link" target="_blank">
+                                    <router-link
+                                        v-if="row.link"
+                                        class="template-link-icon"
+                                        :to="row.link"
+                                        target="_blank"
+                                    >
                                         <logo
                                             name="tiaozhuan"
                                             size="14"
@@ -66,9 +100,24 @@
                             </section>
                         </div>
                     </bk-popover>
-                    <span v-bk-overflow-tips class="pipeline-cur-version-span">
-                        {{execDetail.curVersionName}}
-                    </span>
+                    <bk-popover
+                        placement="top"
+                        max-width="500"
+                    >
+                        <span class="pipeline-cur-version-span">
+                            {{ execDetail.curVersionName }}
+                        </span>
+                        <div slot="content">
+                            <p>
+                                <label>{{ $t('versionNum') }}：</label>
+                                <span>{{ execDetail.curVersionName }}</span>
+                            </p>
+                            <p>
+                                <label>{{ $t('versionDesc') }}：</label>
+                                <span>{{ curVersionDesc || '--' }}</span>
+                            </p>
+                        </div>
+                    </bk-popover>
                 </div>
             </div>
             <div class="exec-remark-block">
@@ -79,11 +128,22 @@
                         @click="showRemarkEdit"
                         class="devops-icon icon-edit exec-remark-edit-icon pointer"
                     />
-                    <span v-else class="pipeline-exec-remark-actions">
-                        <bk-button text theme="primary" @click="handleRemarkChange">{{
+                    <span
+                        v-else
+                        class="pipeline-exec-remark-actions"
+                    >
+                        <bk-button
+                            text
+                            theme="primary"
+                            @click="handleRemarkChange"
+                        >{{
                             $t("save")
                         }}</bk-button>
-                        <bk-button text theme="primary" @click="hideRemarkEdit">{{
+                        <bk-button
+                            text
+                            theme="primary"
+                            @click="hideRemarkEdit"
+                        >{{
                             $t("cancel")
                         }}</bk-button>
                     </span>
@@ -139,7 +199,8 @@
                 tempRemark: this.execDetail.remark,
                 remark: this.execDetail.remark,
                 isChangeRemark: false,
-                isShowMoreMaterial: false
+                isShowMoreMaterial: false,
+                curVersionDesc: ''
             }
         },
         computed: {
@@ -181,15 +242,38 @@
 
         },
         watch: {
-            execDetail: function (val) {
-                if (val.remark !== this.tempRemark) {
-                    this.tempRemark = val.remark
-                    this.remark = val.remark
-                }
+            execDetail: {
+                handler: function (val, oldVal) {
+                    if (val.remark !== this.tempRemark) {
+                        this.tempRemark = val.remark
+                        this.remark = val.remark
+                    }
+                    if (val?.curVersion !== oldVal?.curVersion) {
+                        this.updateCurVersionDesc()
+                    }
+                },
+                immediate: true
             }
         },
         methods: {
-            ...mapActions('pipelines', ['updateBuildRemark']),
+            ...mapActions({
+                fetchVersionDetail: 'atom/getPipelineVersionInfo',
+                updateBuildRemark: 'pipelines/updateBuildRemark'
+            }),
+            async updateCurVersionDesc () {
+                try {
+                    const result = await this.fetchVersionDetail({
+                        version: this.execDetail.curVersion,
+                        ...this.$route.params
+                    })
+                    this.curVersionDesc = result.data.description
+                } catch (error) {
+                    this.$showTips({
+                        message: error.message,
+                        theme: 'error'
+                    })
+                }
+            },
             showRemarkEdit () {
                 this.remarkEditable = true
             },
@@ -267,7 +351,7 @@
     > div {
       display: flex;
       flex-direction: column;
-      
+
       &:first-child {
         margin-left: -16px;
       }
@@ -335,9 +419,10 @@
       align-items: center;
       line-height: 48px;
       .pipeline-cur-version-span {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        @include ellipsis();
+        text-decoration: underline;
+        text-decoration-skip-ink: none;
+        cursor: pointer;
       }
 
       .exec-remark {

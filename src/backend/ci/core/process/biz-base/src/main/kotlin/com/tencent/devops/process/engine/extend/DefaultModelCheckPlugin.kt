@@ -38,9 +38,11 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
@@ -65,6 +67,7 @@ import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.KEY_JOB
 import com.tencent.devops.process.utils.KEY_STAGE
 import com.tencent.devops.process.utils.KEY_TASK
+import com.tencent.devops.process.utils.PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -86,7 +89,8 @@ open class DefaultModelCheckPlugin constructor(
         model: Model,
         projectId: String?,
         userId: String,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        oauthUser: String?
     ): Int {
         var metaSize = 0
         // 检查流水线名称
@@ -150,6 +154,17 @@ open class DefaultModelCheckPlugin constructor(
 
             // #4531 检查stage审核组配置是否符合要求
             stage.checkStageReviewers()
+            val stageControlOption = stage.stageControlOption
+            if (stageControlOption?.runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
+                val length = stageControlOption.customCondition?.length ?: 0
+                if (length > PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX) throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_CONDITION_EXPRESSION_TOO_LONG,
+                    params = arrayOf(
+                        stage.name ?: stage.id.toString(),
+                        PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX.toString()
+                    )
+                )
+            }
 
             val atomVersions = mutableSetOf<StoreVersion>()
             val atomInputParamList = mutableListOf<StoreParam>()
@@ -163,7 +178,8 @@ open class DefaultModelCheckPlugin constructor(
                 contextMap = contextMap,
                 atomInputParamList = atomInputParamList,
                 elementCheckResults = elementCheckResults,
-                isTemplate = isTemplate
+                isTemplate = isTemplate,
+                oauthUser = oauthUser
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
                 AtomUtils.checkModelAtoms(
@@ -240,7 +256,8 @@ open class DefaultModelCheckPlugin constructor(
         contextMap: Map<String, String>,
         atomInputParamList: MutableList<StoreParam>,
         elementCheckResults: MutableList<ElementCheckResult>,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        oauthUser: String?
     ): Int /* MetaSize*/ {
         var metaSize = 0
         containers.forEach { container ->
@@ -289,7 +306,8 @@ open class DefaultModelCheckPlugin constructor(
                     atomInputParamList = atomInputParamList,
                     contextMap = contextMap,
                     elementCheckResults = elementCheckResults,
-                    isTemplate = isTemplate
+                    isTemplate = isTemplate,
+                    oauthUser = oauthUser
                 )
             }
         }
@@ -306,7 +324,8 @@ open class DefaultModelCheckPlugin constructor(
         atomInputParamList: MutableList<StoreParam>,
         contextMap: Map<String, String>,
         elementCheckResults: MutableList<ElementCheckResult>,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        oauthUser: String?
     ) {
         val eCnt = elementCnt.computeIfPresent(element.getAtomCode()) { _, oldValue -> oldValue + 1 }
             ?: elementCnt.computeIfAbsent(element.getAtomCode()) { 1 } // 第一次时出现1次
@@ -318,7 +337,8 @@ open class DefaultModelCheckPlugin constructor(
             element = element,
             contextMap = contextMap,
             appearedCnt = eCnt,
-            isTemplate = isTemplate
+            isTemplate = isTemplate,
+            oauthUser = oauthUser
         )
         if (elementCheckResult?.result == false) {
             elementCheckResults.add(elementCheckResult)
@@ -326,6 +346,15 @@ open class DefaultModelCheckPlugin constructor(
         addAtomInputDataInfo(element, atomVersions, atomInputParamList)
 
         checkElementTimeoutVar(container = this, element = element, contextMap = contextMap)
+
+        val elementControlOption = element.additionalOptions
+        if (elementControlOption?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH) {
+            val length = elementControlOption.customCondition?.length ?: 0
+            if (length > PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX) throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_CONDITION_EXPRESSION_TOO_LONG,
+                params = arrayOf(element.name, PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX.toString())
+            )
+        }
     }
 
     override fun checkElementTimeoutVar(container: Container, element: Element, contextMap: Map<String, String>) {
@@ -554,6 +583,14 @@ open class DefaultModelCheckPlugin constructor(
 
         if (jobControlOption?.runCondition == null) {
             return
+        }
+
+        if (jobControlOption.runCondition == JobRunCondition.CUSTOM_CONDITION_MATCH) {
+            val length = jobControlOption.customCondition?.length ?: 0
+            if (length > PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX) throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_CONDITION_EXPRESSION_TOO_LONG,
+                params = arrayOf(container.name, PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX.toString())
+            )
         }
 
         // 非finallyStage下不允许有finallyStageJobRunConditionSet下的条件

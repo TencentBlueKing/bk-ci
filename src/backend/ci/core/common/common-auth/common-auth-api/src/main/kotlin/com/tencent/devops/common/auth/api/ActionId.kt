@@ -62,6 +62,7 @@ object ActionId {
     const val CGS_DELETE = "cgs_delete"
     const val CGS_SHARE = "cgs_share"
     const val CGS_EDIT = "cgs_edit"
+    const val CGS_TOKEN_GENERATE = "cgs_token_generate"
 
     // 镜像
     const val IMAGE_LIST = "image_list"
@@ -69,9 +70,9 @@ object ActionId {
     const val IMAGE_EDIT = "image_edit"
 
     // 代理仓库
-    const val CODE_PROXY_CREATE = "code_proxy_create"
-    const val CODE_PROXY_LIST = "code_proxy_list"
-    const val CODE_PROXY_DELETE = "code_proxy_delete"
+    const val TGIT_LINK_CREATE = "tgit_link_create"
+    const val TGIT_LINK_LIST = "tgit_link_list"
+    const val TGIT_LINK_DELETE = "tgit_link_delete"
 
     // 环境
     const val ENVIRONMENT_CREATE = "environment_create"

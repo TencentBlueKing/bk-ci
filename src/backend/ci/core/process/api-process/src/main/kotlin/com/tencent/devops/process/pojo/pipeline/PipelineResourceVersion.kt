@@ -27,9 +27,12 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.utils.PipelineVersionUtils
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -48,12 +51,14 @@ data class PipelineResourceVersion(
     var yaml: String?,
     @get:Schema(title = "YAML编排版本", required = false)
     var yamlVersion: String?,
-    @get:Schema(title = "创建者", required = true)
-    val creator: String,
     @get:Schema(title = "版本名称", required = true)
     val versionName: String?,
+    @get:Schema(title = "创建者", required = true)
+    val creator: String,
     @get:Schema(title = "版本创建时间", required = true)
     val createTime: LocalDateTime,
+    @get:Schema(title = "更新操作人", required = true)
+    val updater: String?,
     @get:Schema(title = "版本修改时间", required = true)
     val updateTime: LocalDateTime?,
     @get:Schema(title = "发布版本号", required = false)
@@ -78,4 +83,30 @@ data class PipelineResourceVersion(
     val debugBuildId: String? = null,
     @get:Schema(title = "该版本的来源版本（空时一定为主路径）", required = false)
     val baseVersion: Int? = null
-)
+) {
+    fun toSimple() = PipelineVersionSimple(
+        pipelineId = pipelineId,
+        creator = creator,
+        createTime = createTime.timestampmilli(),
+        updater = updater,
+        updateTime = updateTime?.timestampmilli(),
+        version = version,
+        versionName = versionName ?: PipelineVersionUtils.getVersionName(
+            versionNum = version,
+            pipelineVersion = versionNum ?: version,
+            triggerVersion = 0,
+            settingVersion = 0
+        ) ?: "",
+        referFlag = referFlag,
+        referCount = referCount,
+        versionNum = versionNum,
+        pipelineVersion = pipelineVersion,
+        triggerVersion = triggerVersion,
+        settingVersion = settingVersion,
+        status = status,
+        debugBuildId = debugBuildId,
+        baseVersion = baseVersion,
+        description = description,
+        yamlVersion = yamlVersion
+    )
+}

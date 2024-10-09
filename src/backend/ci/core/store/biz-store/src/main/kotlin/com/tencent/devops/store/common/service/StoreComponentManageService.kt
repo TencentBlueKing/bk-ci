@@ -3,6 +3,7 @@ package com.tencent.devops.store.common.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
+import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -55,5 +56,16 @@ interface StoreComponentManageService {
         version: String,
         projectCode: String,
         userId: String
+    ): Result<Boolean>
+
+    /**
+     * 更新组件已安装包sha1摘要值
+     */
+    fun updateComponentInstalledPkgShaContent(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        installedPkgFileShaContentRequest: InstalledPkgFileShaContentRequest
     ): Result<Boolean>
 }

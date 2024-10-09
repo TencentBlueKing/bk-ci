@@ -1,10 +1,27 @@
 <template>
     <div class="variable-container">
-        <bk-alert v-if="editable" type="info" :title="$t('newui.pipelineParam.useTips')" closable></bk-alert>
+        <bk-alert
+            v-if="editable"
+            type="info"
+            :title="$t('newui.pipelineParam.useTips')"
+            closable
+        ></bk-alert>
         <div class="operate-row">
             <template v-if="editable">
-                <bk-button class="var-btn" v-enStyle="'min-width:100px'" @click="handleAdd">{{$t('newui.pipelineParam.addVar')}}</bk-button>
-                <bk-button class="var-btn" v-enStyle="'min-width:100px'" @click="handleAdd('constant')">{{$t('newui.pipelineParam.addConst')}}</bk-button>
+                <bk-button
+                    class="var-btn"
+                    v-enStyle="'min-width:100px'"
+                    @click="handleAdd"
+                >
+                    {{ $t('newui.pipelineParam.addVar') }}
+                </bk-button>
+                <bk-button
+                    class="var-btn"
+                    v-enStyle="'min-width:100px'"
+                    @click="handleAdd('constant')"
+                >
+                    {{ $t('newui.pipelineParam.addConst') }}
+                </bk-button>
             </template>
             <bk-input
                 v-model="searchStr"
@@ -23,14 +40,23 @@
                 :item-num="group.list.length"
                 :list="group.list"
                 :handle-edit="handleEdit"
-                :handle-delete="handleDelete"
+                :handle-update="handleUpdate"
+                :handle-sort="handleSort"
             />
         </template>
 
-        <div v-else-if="editable" class="current-edit-param-item">
+        <div
+            v-else-if="editable"
+            class="current-edit-param-item"
+        >
             <div class="edit-var-header">
-                <bk-icon style="font-size: 28px;" type="arrows-left" class="back-icon" @click="hideSlider" />
-                {{sliderTitle}}
+                <bk-icon
+                    style="font-size: 28px;"
+                    type="arrows-left"
+                    class="back-icon"
+                    @click="hideSlider"
+                />
+                {{ sliderTitle }}
             </div>
             <div class="edit-var-content">
                 <pipeline-param-form
@@ -40,13 +66,23 @@
                     :edit-index="editIndex"
                     :param-type="paramType"
                     :update-param="updateEditItem"
-                    :reset-edit-item="resetEditItem" />
+                    :reset-edit-item="resetEditItem"
+                />
             </div>
-            <div class="edit-var-footer" slot="footer">
-                <bk-button theme="primary" @click="handleSaveVar">
+            <div
+                class="edit-var-footer"
+                slot="footer"
+            >
+                <bk-button
+                    theme="primary"
+                    @click="handleSaveVar"
+                >
                     {{ editIndex === -1 ? $t('editPage.append') : $t('confirm') }}
                 </bk-button>
-                <bk-button style="margin-left: 8px;" @click="hideSlider">
+                <bk-button
+                    style="margin-left: 8px;"
+                    @click="hideSlider"
+                >
                     {{ $t('cancel') }}
                 </bk-button>
             </div>
@@ -130,10 +166,24 @@
             }
         },
         methods: {
-            handleDelete (paramId) {
+            handleSort (preEleId, newEleId) {
+                // 从原列表找出被拖拽的element
+                const newEle = this.globalParams.find(item => item.id === newEleId)
+                // 从原列表中删除该element
+                const oldIndex = this.globalParams.findIndex(item => item.id === newEleId)
+                this.globalParams.splice(oldIndex, 1)
+                // 把拖拽的element插入到preEleId对应的element后面
+                const preEleIndex = this.globalParams.findIndex(item => item.id === preEleId)
+                this.globalParams.splice(preEleIndex + 1, 0, newEle)
+                this.updateContainerParams('params', [...this.globalParams, ...this.versions])
+            },
+            // toTop为true，表示移到最前, 为false为delete操作
+            handleUpdate (paramId, toTop = false) {
                 if (!this.editable) return
                 const index = this.globalParams.findIndex(item => item.id === paramId)
+                const item = this.globalParams.find(item => item.id === paramId)
                 this.globalParams.splice(index, 1)
+                toTop && this.globalParams.unshift(item)
                 this.updateContainerParams('params', [...this.globalParams, ...this.versions])
             },
             handleAdd (type = 'var') {

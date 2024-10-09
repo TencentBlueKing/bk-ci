@@ -1,8 +1,17 @@
 <template>
     <h3 class="atom-card empty-card">
-        <img class="empty-logo" :src="image" />
-        <p class="empty-prompt">{{emptyData.str}}
-            <router-link class="router-list" :to="{ name: `${emptyData.type}Work` }">{{emptyData.tip}}</router-link>
+        <img
+            class="empty-logo"
+            :src="image"
+        />
+        <p class="empty-prompt">
+            {{ emptyData.str }}
+            <router-link
+                class="router-list"
+                :to="{ name: `${emptyData.type}Work` }"
+            >
+                {{ emptyData.tip }}
+            </router-link>
         </p>
     </h3>
 </template>

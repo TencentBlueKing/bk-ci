@@ -54,7 +54,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
 @Service
-@Suppress("LongParameterList", "ReturnCount")
+@Suppress("LongParameterList", "ReturnCount", "ComplexMethod")
 class PipelineRepositoryVersionService(
     private val dslContext: DSLContext,
     private val pipelineResourceDao: PipelineResourceDao,
@@ -201,6 +201,100 @@ class PipelineRepositoryVersionService(
         versionName: String?,
         creator: String?,
         description: String?
+    ): Pair<Int, MutableList<PipelineVersionSimple>> {
+        if (pipelineInfo == null) {
+            return Pair(0, mutableListOf())
+        }
+        // 计算包括草稿在内的总数
+        var count = pipelineResourceVersionDao.count(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            includeDraft = includeDraft,
+            versionName = versionName,
+            creator = creator,
+            description = description
+        )
+        // 草稿单独提出来放在第一页，其他版本后插入结果
+        val result = mutableListOf<PipelineVersionSimple>()
+        if (includeDraft != false && offset == 0) {
+            pipelineResourceVersionDao.getDraftVersionResource(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.toSimple()?.apply {
+                baseVersionName = baseVersion?.let {
+                    pipelineResourceVersionDao.getPipelineVersionSimple(
+                        dslContext, projectId, pipelineId, it
+                    )?.versionName
+                }
+            }?.let { result.add(it) }
+        }
+        val others = pipelineResourceVersionDao.listPipelineVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineInfo = pipelineInfo,
+            creator = creator,
+            description = description,
+            versionName = versionName,
+            includeDraft = false,
+            excludeVersion = excludeVersion,
+            offset = offset,
+            limit = limit
+        )
+        result.addAll(others)
+
+        // #8161 当过滤草稿时查到空结果是正常的，只在不过滤草稿时兼容老数据的版本表无记录
+        val noSearch = versionName.isNullOrBlank() && creator.isNullOrBlank() && description.isNullOrBlank()
+        if (result.isEmpty() && pipelineInfo.latestVersionStatus?.isNotReleased() != true && noSearch) {
+            pipelineResourceDao.getReleaseVersionResource(
+                dslContext, projectId, pipelineId
+            )?.let { record ->
+                count = 1
+                result.add(
+                    PipelineVersionSimple(
+                        pipelineId = record.pipelineId,
+                        creator = record.creator,
+                        createTime = record.createTime.timestampmilli(),
+                        updater = record.updater,
+                        updateTime = record.updateTime?.timestampmilli(),
+                        version = record.version,
+                        versionName = record.versionName ?: PipelineVersionUtils.getVersionName(
+                            versionNum = record.version,
+                            pipelineVersion = record.versionNum ?: record.version,
+                            triggerVersion = 0,
+                            settingVersion = 0
+                        ) ?: "",
+                        yamlVersion = record.yamlVersion,
+                        referFlag = record.referFlag,
+                        referCount = record.referCount,
+                        versionNum = record.versionNum ?: record.version,
+                        pipelineVersion = record.pipelineVersion,
+                        triggerVersion = record.triggerVersion,
+                        settingVersion = record.settingVersion,
+                        status = record.status,
+                        debugBuildId = record.debugBuildId,
+                        baseVersion = record.baseVersion,
+                        description = record.description
+                    )
+                )
+            }
+        }
+        return count to result
+    }
+
+    fun listPipelineVersionWithInfo(
+        pipelineInfo: PipelineInfo?,
+        projectId: String,
+        pipelineId: String,
+        offset: Int,
+        limit: Int,
+        includeDraft: Boolean?,
+        excludeVersion: Int?,
+        versionName: String?,
+        creator: String?,
+        description: String?
     ): Pair<Int, MutableList<PipelineVersionWithInfo>> {
         if (pipelineInfo == null) {
             return Pair(0, mutableListOf())
@@ -221,6 +315,7 @@ class PipelineRepositoryVersionService(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                pipelineInfo = pipelineInfo,
                 creator = creator,
                 description = description,
                 versionName = versionName,
@@ -240,6 +335,7 @@ class PipelineRepositoryVersionService(
                     PipelineVersionSimple(
                         pipelineId = record.pipelineId,
                         creator = record.creator,
+                        updater = record.updater,
                         createTime = record.createTime.timestampmilli(),
                         updateTime = record.updateTime?.timestampmilli(),
                         version = record.version,
@@ -382,6 +478,9 @@ class PipelineRepositoryVersionService(
     private fun updatePipelineReferFlag(projectId: String, pipelineId: String) {
         var offset = 0
         val limit = PageUtil.DEFAULT_PAGE_SIZE
+        val pipelineInfo = pipelineInfoDao.convert(
+            pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId), null
+        ) ?: return
         val lock = PipelineModelLock(redisOperation, pipelineId)
         try {
             lock.lock()
@@ -391,6 +490,7 @@ class PipelineRepositoryVersionService(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
+                    pipelineInfo = pipelineInfo,
                     queryUnknownRelatedFlag = true,
                     offset = offset,
                     limit = limit

@@ -40,6 +40,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_SHA_CONTENT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
@@ -383,7 +384,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         uploadFileToRepo(destPath, file)
         val shaContent = file.inputStream().use { ShaUtils.sha1InputStream(it) }
         var fileProps: Map<String, String?> = props ?: mapOf()
-        fileProps = fileProps.plus("shaContent" to shaContent)
+        fileProps = fileProps.plus(KEY_SHA_CONTENT to shaContent)
         val path = destPath.substring(getBasePath().length)
         val fileId = UUIDUtil.generate()
         dslContext.transaction { t ->

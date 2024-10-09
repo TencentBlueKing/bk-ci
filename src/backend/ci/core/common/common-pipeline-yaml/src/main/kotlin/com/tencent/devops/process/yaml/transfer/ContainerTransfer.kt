@@ -29,6 +29,8 @@ package com.tencent.devops.process.yaml.transfer
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.TRANSFER_ERROR_CHECK_AGENT_ID_FAILED
+import com.tencent.devops.common.api.constant.CommonMessageCode.TRANSFER_ERROR_CHECK_ENV_ID_FAILED
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
@@ -48,6 +50,7 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.utils.TransferUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_JOB_MAX_QUEUE_MINUTES
@@ -174,6 +177,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
         steps: List<PreStep>?
     ): PreJob {
         return PreJob(
+            enable = job.containerEnabled().nullIfDefault(true),
             name = job.name,
             runsOn = RunsOn(
                 selfHosted = null,
@@ -217,6 +221,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
         steps: List<PreStep>?
     ): PreJob {
         return PreJob(
+            enable = job.containerEnabled().nullIfDefault(true),
             name = job.name,
             runsOn = dispatchTransfer.makeRunsOn(job)?.fix(
                 jobId = job.jobId.toString(),
@@ -267,7 +272,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
                     value = nodeName
                 ) ?: throw PipelineTransferException(
                     CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
-                    arrayOf("agentId: $nodeName")
+                    arrayOf(I18nUtil.getCodeLanMessage(TRANSFER_ERROR_CHECK_AGENT_ID_FAILED) + ": $nodeName")
                 )
             }
 
@@ -275,12 +280,17 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 poolName = transferCache.getThirdPartyAgent(
                     poolType = JobRunsOnPoolType.ENV_ID,
                     userId = userId,
-                    projectId = envProjectId ?: projectId,
+                    projectId = envProjectId?.ifBlank { null } ?: projectId,
                     value = poolName
                 ) ?: throw PipelineTransferException(
                     CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
-                    arrayOf("envId: $poolName")
+                    arrayOf(I18nUtil.getCodeLanMessage(TRANSFER_ERROR_CHECK_ENV_ID_FAILED) + ": $poolName")
                 )
+            }
+
+            JobRunsOnPoolType.AGENT_REUSE_JOB.name -> {
+                nodeName = null
+                poolName = null
             }
         }
 
@@ -288,8 +298,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
         if (hwSpec != null && buildType != null) {
             kotlin.run {
                 val res = transferCache.getDockerResource(userId, projectId, buildType)
-                // hwSpec为0时为特殊值，表示默认配置
-                if (res?.default == hwSpec || hwSpec == "0") {
+                // hwSpec为0和1时为特殊值，表示默认配置Basic
+                if (res?.default == hwSpec || hwSpec == "0" || hwSpec == "1") {
                     hwSpec = null
                     return@run
                 }
@@ -309,9 +319,9 @@ class ContainerTransfer @Autowired(required = false) constructor(
     }
 
     private fun makeJobTimeout(controlOption: JobControlOption?): String? {
-        return controlOption?.timeoutVar.nullIfDefault(
+        return (controlOption?.timeoutVar ?: controlOption?.timeout?.toString()).nullIfDefault(
             VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES.toString()
-        ) ?: controlOption?.timeout.nullIfDefault(VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES)?.toString()
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -365,6 +375,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
 
         return if (finalStage) {
             JobControlOption(
+                enable = jobEnable,
                 timeout = timeout,
                 timeoutVar = timeoutVar,
                 runCondition = when (job.ifField) {
@@ -376,7 +387,9 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 dependOnType = DependOnType.NAME,
                 dependOnName = dependOnName,
                 prepareTimeout = job.runsOn.queueTimeoutMinutes ?: VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT,
-                continueWhenFailed = job.continueOnError ?: DEFAULT_CONTINUE_WHEN_FAILED
+                continueWhenFailed = job.continueOnError ?: DEFAULT_CONTINUE_WHEN_FAILED,
+                singleNodeConcurrency = job.runsOn.singleNodeConcurrency,
+                allNodeConcurrency = job.runsOn.allNodeConcurrency
             )
         } else {
             val runCondition = kotlin.run {
@@ -395,7 +408,9 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 dependOnType = DependOnType.NAME,
                 dependOnName = dependOnName,
                 prepareTimeout = job.runsOn.queueTimeoutMinutes ?: VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT,
-                continueWhenFailed = job.continueOnError ?: DEFAULT_CONTINUE_WHEN_FAILED
+                continueWhenFailed = job.continueOnError ?: DEFAULT_CONTINUE_WHEN_FAILED,
+                singleNodeConcurrency = job.runsOn.singleNodeConcurrency,
+                allNodeConcurrency = job.runsOn.allNodeConcurrency
             )
         }
     }
@@ -415,19 +430,19 @@ class ContainerTransfer @Autowired(required = false) constructor(
     }
 
     private fun getMutexYaml(resource: MutexGroup?): Mutex? {
-        if (resource?.mutexGroupName.isNullOrBlank()) {
+        if (resource?.mutexGroupName.isNullOrBlank() || resource?.enable != true) {
             return null
         }
         return Mutex(
-            label = resource?.mutexGroupName!!,
+            label = resource.mutexGroupName!!,
             queueLength = if (resource.queueEnable) {
                 resource.queue
             } else {
                 null
             },
             timeoutMinutes = if (resource.queueEnable) {
-                resource.timeoutVar.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES.toString())
-                    ?: resource.timeout.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES)?.toString()
+                (resource.timeoutVar ?: resource.timeout.toString())
+                    .nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES.toString())
             } else {
                 null
             }

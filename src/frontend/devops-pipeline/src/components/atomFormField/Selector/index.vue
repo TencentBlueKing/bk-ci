@@ -1,5 +1,9 @@
 <template>
-    <bk-select @toggle="toggleVisible" @change="onChange" v-bind="selectProps">
+    <bk-select
+        @toggle="toggleVisible"
+        @change="onChange"
+        v-bind="selectProps"
+    >
         <bk-option
             v-for="(item, index) in listData"
             :key="index"
@@ -7,7 +11,10 @@
             :name="item[displayKey]"
             :disabled="item.disabled"
         >
-            <slot name="option-item" v-bind="item"></slot>
+            <slot
+                name="option-item"
+                v-bind="item"
+            ></slot>
         </bk-option>
         <div slot="extension">
             <slot></slot>
@@ -93,7 +100,7 @@
                 const props = {
                     value: this.value,
                     loading: this.isLoading,
-                    disabled: this.disabled,
+                    disabled: this.disabled || this.readOnly,
                     searchable: this.searchable,
                     multiple: this.multiSelect,
                     clearable: this.clearable,

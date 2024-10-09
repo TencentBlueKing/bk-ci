@@ -28,7 +28,7 @@ function isSkip (status) {
 
 export default {
     isCurPipelineLocked: state => {
-        return state.pipelineInfo?.runLockType === 'LOCK'
+        return state.pipelineInfo?.locked ?? false
     },
     hasDraftPipeline: state => {
         return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVersion
@@ -50,6 +50,9 @@ export default {
     },
     onlyBranchPipeline: state => {
         return state.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH
+    },
+    isCommittingPipeline: state => {
+        return state.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING
     },
     isReleaseVersion: state => {
         return state.activePipelineVersion?.version === state.pipelineInfo?.releaseVersion && state.activePipelineVersion?.status === VERSION_STATUS_ENUM.RELEASED
@@ -370,8 +373,9 @@ export default {
         const isPublicDevCloud = getters.isPublicDevCloudContainer(container)
         const isBcsContainer = getters.isBcsContainer(container)
         const isThirdDocker = getters.isThirdDockerContainer(container)
-        const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum && execDetail.curVersion === execDetail.latestVersion
-        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer || isThirdDocker) && (routeName === 'pipelinesEdit' || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
+        const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum
+
+        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer || isThirdDocker) && (['pipelinesEdit', 'pipelinesHistory'].includes(routeName) || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
     },
     getElements: state => container => {
         return container && Array.isArray(container.elements)

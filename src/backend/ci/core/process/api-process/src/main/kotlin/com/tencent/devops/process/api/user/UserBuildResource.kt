@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
@@ -400,13 +401,13 @@ interface UserBuildResource {
         @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "代码库别名", required = false)
+        @Parameter(description = "源材料代码库别名", required = false)
         @QueryParam("materialAlias")
         materialAlias: List<String>?,
         @Parameter(description = "代码库URL", required = false)
         @QueryParam("materialUrl")
         materialUrl: String?,
-        @Parameter(description = "分支", required = false)
+        @Parameter(description = "源材料分支", required = false)
         @QueryParam("materialBranch")
         materialBranch: List<String>?,
         @Parameter(description = "commitId", required = false)
@@ -460,9 +461,18 @@ interface UserBuildResource {
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false,
-        @Parameter(description = "查看指定版本调试数据", required = false, example = "false")
-        @QueryParam("version")
-        debugVersion: Int? = null
+        @Parameter(description = "指定调试数据", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = null,
+        @Parameter(description = "触发代码库", required = false)
+        @QueryParam("triggerAlias")
+        triggerAlias: List<String>?,
+        @Parameter(description = "触发分支", required = false)
+        @QueryParam("triggerBranch")
+        triggerBranch: List<String>?,
+        @Parameter(description = "触发方式", required = false)
+        @QueryParam("triggerUser")
+        triggerUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "修改流水线备注")
@@ -534,7 +544,13 @@ interface UserBuildResource {
         pipelineId: String,
         @Parameter(description = "查看指定版本调试数据", required = false, example = "false")
         @QueryParam("version")
-        debugVersion: Int? = null
+        debugVersion: Int? = null,
+        @Parameter(description = "搜索分支关键字", required = false)
+        @QueryParam("search")
+        search: String?,
+        @Parameter(description = "搜索类型, 触发/源材料", required = false)
+        @QueryParam("type")
+        type: HistorySearchType?
     ): Result<List<String>>
 
     @Operation(summary = "获取流水线构建中的查询条件-分支")
@@ -556,7 +572,13 @@ interface UserBuildResource {
         alias: List<String>?,
         @Parameter(description = "查看指定版本调试数据", required = false, example = "false")
         @QueryParam("debugVersion")
-        debugVersion: Int? = null
+        debugVersion: Int? = null,
+        @Parameter(description = "搜索分支关键字", required = false)
+        @QueryParam("search")
+        search: String?,
+        @Parameter(description = "搜索类型,触发/源材料", required = false)
+        @QueryParam("type")
+        type: HistorySearchType?
     ): Result<List<String>>
 
     @Operation(summary = "触发审核")

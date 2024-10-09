@@ -1,16 +1,36 @@
 <template>
-    <section class="bk-form pipeline-setting base" v-if="!isLoading">
+    <section
+        class="bk-form pipeline-setting base"
+        v-if="!isLoading"
+    >
         <div class="setting-container">
-            <form-field :required="true" :label="$t('name')" :is-error="errors.has('name')" :error-msg="errors.first('name')">
-                <input class="bk-form-input" :placeholder="$t('settings.namePlaceholder')" v-model="templateSetting.pipelineName" name="name" v-validate.initial="'required|max:40'" />
+            <form-field
+                :required="true"
+                :label="$t('name')"
+                :is-error="errors.has('name')"
+                :error-msg="errors.first('name')"
+            >
+                <bk-input
+                    :placeholder="$t('settings.namePlaceholder')"
+                    v-model.trim="templateSetting.pipelineName"
+                    name="name"
+                    @change="setIsEditing"
+                    v-validate="'required|max:40'"
+                />
             </form-field>
 
-            <form-field :required="false" :label="$t('settings.label')" v-if="tagGroupList.length">
+            <form-field
+                :required="false"
+                :label="$t('settings.label')"
+                v-if="tagGroupList.length"
+            >
                 <div class="form-group form-group-inline">
-                    <div :class="grouInlineCol"
+                    <div
+                        :class="grouInlineCol"
                         v-for="(filter, index) in tagGroupList"
-                        :key="index">
-                        <label class="group-title">{{filter.name}}</label>
+                        :key="index"
+                    >
+                        <label class="group-title">{{ filter.name }}</label>
                         <bk-select
                             ext-cls="setting-select"
                             :value="labelValues[index]"
@@ -18,34 +38,59 @@
                             @clear="handleLabelSelect(index, [[]])"
                             multiple
                         >
-                            <bk-option v-for="(option, oindex) in filter.labels" :key="oindex" :id="option.id" :name="option.name">
+                            <bk-option
+                                v-for="(option, oindex) in filter.labels"
+                                :key="oindex"
+                                :id="option.id"
+                                :name="option.name"
+                            >
                             </bk-option>
                         </bk-select>
                     </div>
                 </div>
             </form-field>
 
-            <form-field :label="$t('desc')" :is-error="errors.has('desc')" :error-msg="errors.first('desc')">
-                <textarea name="desc" v-model="templateSetting.desc" :placeholder="$t('settings.descPlaceholder')" class="bk-form-textarea" v-validate.initial="'max:100'"></textarea>
+            <form-field
+                :label="$t('desc')"
+                :is-error="errors.has('desc')"
+                :error-msg="errors.first('desc')"
+            >
+                <textarea
+                    name="desc"
+                    v-model.trim="templateSetting.desc"
+                    :placeholder="$t('settings.descPlaceholder')"
+                    class="bk-form-textarea"
+                    v-validate.initial="'max:100'"
+                    @change="setIsEditing"
+                />
             </form-field>
 
-            <form-field :label="$t('settings.runLock')" class="opera-lock-radio">
+            <form-field
+                :label="$t('settings.runLock')"
+                class="opera-lock-radio"
+            >
                 <running-lock
                     :pipeline-setting="templateSetting"
                     :handle-running-lock-change="handleRunningLockChange"
                 />
             </form-field>
 
-            <form-field :label="$t('settings.notice')" style="margin-bottom: 0px">
+            <form-field
+                :label="$t('settings.notice')"
+                style="margin-bottom: 0px"
+            >
                 <notify-tab
-                    :editable="!isDisabled && !noPermission"
-                    :success-subscription-list="templateSetting.successSubscriptionList"
-                    :fail-subscription-list="templateSetting.failSubscriptionList"
+                    :editable="!isDisabled && hasPermission"
+                    :success-subscription-list="templateSetting?.successSubscriptionList ?? []"
+                    :fail-subscription-list="templateSetting?.failSubscriptionList ?? []"
                     :update-subscription="handleUpdateNotify"
                 />
             </form-field>
 
-            <div class="handle-btn" style="margin-left: 146px;">
+            <div
+                class="handle-btn"
+                style="margin-left: 146px;"
+            >
                 <bk-button
                     v-if="isEnabledPermission"
                     @click="saveTemplateSetting()"
@@ -62,7 +107,14 @@
                 >
                     {{ $t('save') }}
                 </bk-button>
-                <bk-button v-else @click="saveTemplateSetting()" theme="primary" :disabled="isDisabled || noPermission">{{ $t('save') }}</bk-button>
+                <bk-button
+                    v-else
+                    @click="saveTemplateSetting()"
+                    theme="primary"
+                    :disabled="isDisabled || !hasPermission"
+                >
+                    {{ $t('save') }}
+                </bk-button>
                 <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
             </div>
         </div>
@@ -84,6 +136,7 @@
             RunningLock
         },
         props: {
+            isLoading: Boolean,
             isDisabled: {
                 type: Boolean,
                 default: false
@@ -92,10 +145,7 @@
         },
         data () {
             return {
-                noPermission: false,
-                isEditing: false,
-                isLoading: true,
-                resetFlag: false
+                isEditing: false
             }
         },
         computed: {
@@ -105,6 +155,9 @@
             ...mapGetters({
                 tagGroupList: 'pipelines/getTagGroupList'
             }),
+            hasPermission () {
+                return this.templateSetting?.hasPermission !== false
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -180,22 +233,8 @@
             }
         },
         watch: {
-            templateSetting: {
-                deep: true,
-                handler: function (newVal, oldVal) {
-                    // 无权限灰掉保存按钮
-                    if (this.templateSetting.hasPermission !== undefined && this.templateSetting.hasPermission === false) {
-                        this.noPermission = true
-                    } else {
-                        this.noPermission = false
-                    }
-                    this.isLoading = false
-                    if (!this.isEditing && JSON.stringify(oldVal) !== '{}' && newVal !== null && !this.resetFlag) {
-                        this.isEditing = true
-                    }
-                    this.resetFlag = false
-                    this.isStateChange()
-                }
+            isEditing () {
+                this.isStateChange()
             }
         },
         created () {
@@ -217,15 +256,17 @@
                     else labels = labels.concat(value)
                 })
                 this.templateSetting.labels = labels
+                this.setIsEditing()
             },
             isStateChange () {
-                this.$emit('setState', {
-                    isLoading: this.isLoading,
-                    isEditing: this.isEditing
-                })
+                this.$emit('setState', this.isEditing)
+            },
+            setIsEditing () {
+                this.isEditing = true
             },
             handleChangeRunType (name, value) {
                 Object.assign(this.templateSetting, { [name]: value })
+                this.setIsEditing()
             },
             exit () {
                 this.$emit('cancel')
@@ -256,7 +297,7 @@
                 let resData
                 try {
                     const { templateSetting } = this
-                    Object.assign(templateSetting, { projectId: this.projectId })
+                    Object.assign(templateSetting, { projectId: this.projectId, successSubscription: undefined, failSubscription: undefined })
                     resData = await this.$ajax.put(`/process/api/user/templates/projects/${this.projectId}/templates/${this.templateId}/settings`, templateSetting)
 
                     if (resData && resData.data) {
@@ -285,14 +326,11 @@
             },
             handleRunningLockChange (param) {
                 Object.assign(this.templateSetting, param)
-                // console.log(param, 5522)
-                // this.updatePipelineSetting({
-                //     container: this.templateSetting,
-                //     param
-                // })
+                this.setIsEditing()
             },
             handleUpdateNotify (name, value) {
                 Object.assign(this.templateSetting, { [name]: value })
+                this.setIsEditing()
             }
         }
     }

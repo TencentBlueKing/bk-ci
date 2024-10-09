@@ -37,6 +37,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_JOB_QUEUE_TIMEOUT
@@ -45,6 +46,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_B
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_RUNNING
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
@@ -61,11 +63,11 @@ import com.tencent.devops.process.engine.service.PipelineSettingService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import kotlin.math.min
 
 /**
@@ -83,7 +85,8 @@ class BuildMonitorControl @Autowired constructor(
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
@@ -97,6 +100,15 @@ class BuildMonitorControl @Autowired constructor(
     fun handle(event: PipelineBuildMonitorEvent): Boolean {
 
         val buildId = event.buildId
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            channelCode = null
+        )
+        if (pipelineInfo == null) {
+            LOG.info("ENGINE|$buildId|BUILD_MONITOR|pipeline_deleted_cancel_monitor|ec=${event.executeCount}")
+            return true
+        }
         val buildInfo = pipelineRuntimeService.getBuildInfo(event.projectId, buildId)
         if (buildInfo == null || buildInfo.isFinish()) {
             LOG.info("ENGINE|$buildId|BUILD_MONITOR|status=${buildInfo?.status}|ec=${event.executeCount}")
@@ -121,14 +133,18 @@ class BuildMonitorControl @Autowired constructor(
         val minInterval = min(jobMinInt, stageMinInt)
 
         if (minInterval < min(Timeout.CONTAINER_MAX_MILLS, Timeout.STAGE_MAX_MILLS)) {
-            LOG.info("ENGINE|${event.buildId}|BUILD_MONITOR_CONTINUE|jobMinInt=$jobMinInt|" +
-                "stageMinInt=$stageMinInt|Interval=$minInterval")
+            LOG.info(
+                "ENGINE|${event.buildId}|BUILD_MONITOR_CONTINUE|jobMinInt=$jobMinInt|" +
+                    "stageMinInt=$stageMinInt|Interval=$minInterval"
+            )
             // 每次Check间隔不能大于10分钟，防止长时间延迟消息被大量堆积
             event.delayMills = coerceAtMost10Min(minInterval).toInt()
             pipelineEventDispatcher.dispatch(event)
         } else {
-            LOG.info("ENGINE|${event.buildId}|BUILD_MONITOR_QUIT|jobMinInt=$jobMinInt|" +
-                "stageMinInt=$stageMinInt|Interval=$minInterval")
+            LOG.info(
+                "ENGINE|${event.buildId}|BUILD_MONITOR_QUIT|jobMinInt=$jobMinInt|" +
+                    "stageMinInt=$stageMinInt|Interval=$minInterval"
+            )
         }
         return true
     }
@@ -452,9 +468,19 @@ class BuildMonitorControl @Autowired constructor(
             )
         } else {
             // 判断当前监控的排队构建是否可以尝试启动(仅当前是在队列中排第1位的构建可以)
-            val canStart = pipelineRuntimeExtService.queueCanPend2Start(
-                projectId = event.projectId, pipelineId = event.pipelineId, buildId = buildInfo.buildId
-            )
+            val canStart = if (buildInfo.concurrencyGroup.isNullOrBlank()) { // 旧版串行队列
+                pipelineRuntimeExtService.queueCanPend2Start(
+                    projectId = event.projectId, pipelineId = event.pipelineId, buildId = buildInfo.buildId
+                )
+            } else { // concurrent并发组
+                ConcurrencyGroupLock(redisOperation, buildInfo.projectId, buildInfo.concurrencyGroup!!).use { gLock ->
+                    gLock.lock()
+                    pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(
+                        concurrencyGroup = buildInfo.concurrencyGroup!!,
+                        projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId
+                    ) != null
+                }
+            }
             if (canStart) {
                 val buildId = event.buildId
                 LOG.info("ENGINE|$buildId|BUILD_QUEUE_TRY_START")
@@ -474,6 +500,7 @@ class BuildMonitorControl @Autowired constructor(
                         taskId = buildInfo.firstTaskId,
                         status = BuildStatus.RUNNING,
                         actionType = ActionType.START,
+                        executeCount = buildInfo.executeCount,
                         buildNoType = triggerContainer.buildNo?.buildNoType
                     )
                 )

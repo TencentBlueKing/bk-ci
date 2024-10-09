@@ -22,12 +22,19 @@
                     }"
                 ></span>
                 <aside class="exec-detail-summary-header-title">
-                    <bk-tag class="exec-status-tag" type="stroke" :theme="statusTagTheme">
+                    <bk-tag
+                        class="exec-status-tag"
+                        type="stroke"
+                        :theme="statusTagTheme"
+                    >
                         <span class="exec-status-label">
-                            <i v-if="isRunning" :class="['devops-icon', {
-                                'icon-hourglass': execDetail.status === 'QUEUE',
-                                'icon-circle-2-1 spin-icon': execDetail.status === 'RUNNING'
-                            }]" />
+                            <i
+                                v-if="isRunning"
+                                :class="['devops-icon', {
+                                    'icon-hourglass hourglass-queue': execDetail.status === 'QUEUE',
+                                    'icon-circle-2-1 spin-icon': execDetail.status === 'RUNNING'
+                                }]"
+                            />
                             {{ statusLabel }}
                             <span
                                 v-if="execDetail.status === 'CANCELED'"
@@ -37,13 +44,23 @@
                             </span>
                         </span>
                     </bk-tag>
-                    <span class="exec-detail-summary-header-build-msg">
+                    <span
+                        v-bk-overflow-tips
+                        class="exec-detail-summary-header-build-msg"
+                    >
                         {{ execDetail.buildMsg }}
                     </span>
                 </aside>
                 <aside class="exec-detail-summary-header-trigger">
-                    <img v-if="execDetail.triggerUserProfile" class="exec-trigger-profile" />
-                    <logo class="exec-trigger-profile" name="default-user" size="24" />
+                    <img
+                        v-if="execDetail.triggerUserProfile"
+                        class="exec-trigger-profile"
+                    />
+                    <logo
+                        class="exec-trigger-profile"
+                        name="default-user"
+                        size="24"
+                    />
                     <span v-if="execDetail.triggerUser">
                         {{
                             $t("details.executorInfo", [
@@ -55,7 +72,10 @@
                     </span>
                 </aside>
             </div>
-            <p class="summary-header-shadow" v-show="show"></p>
+            <p
+                class="summary-header-shadow"
+                v-show="show"
+            ></p>
             <Summary
                 ref="detailSummary"
                 :visible="summaryVisible"
@@ -84,9 +104,11 @@
                     {{ panel.label }}
                 </span>
             </header>
-            <div :class="['exec-detail-main', {
-                'is-outputs-panel': curItemTab === 'outputs'
-            }]">
+            <div
+                :class="['exec-detail-main', {
+                    'is-outputs-panel': curItemTab === 'outputs'
+                }]"
+            >
                 <component
                     :is="curPanel.component"
                     v-bind="curPanel.bindData"
@@ -377,7 +399,7 @@
         watch: {
             execDetail (val) {
                 this.isLoading = val === null
-                
+
                 if (val) {
                     this.$updateTabTitle?.(`#${val.buildNum}  ${val.buildMsg} | ${val.pipelineName}`)
                 }
@@ -437,6 +459,7 @@
 
         beforeDestroy () {
             this.setPipelineDetail(null)
+            this.resetAtomModalMap()
             this.isLoading = false
             webSocketMessage.unInstallWsMessage()
         },
@@ -450,7 +473,8 @@
                 'setPipelineDetail',
                 'getInitLog',
                 'getAfterLog',
-                'pausePlugin'
+                'pausePlugin',
+                'resetAtomModalMap'
             ]),
             handlerScroll (e) {
                 this.show = e.target.scrollTop > 88
@@ -567,12 +591,6 @@
         align-items: center;
         grid-auto-flow: column;
         grid-gap: 6px;
-        .devops-icon.icon-hourglass {
-            animation: hourglassSpin;
-            animation-delay: 0.5s, 0.5s;
-            animation-duration: 1s;
-            animation-iteration-count: infinite;
-        }
       }
 
       .exec-detail-summary-header-build-msg {

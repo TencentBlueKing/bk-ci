@@ -299,6 +299,13 @@ class CodeGitlabRepositoryService @Autowired constructor(
         )
     }
 
+    override fun addResourceAuthorization(
+        projectId: String,
+        userId: String,
+        repositoryId: Long,
+        repository: CodeGitlabRepository
+    ) = Unit
+
     companion object {
         private val logger = LoggerFactory.getLogger(CodeGitlabRepositoryService::class.java)
     }

@@ -1,8 +1,14 @@
 <template>
-    <div class="biz-container bkdevops-history-subpage pipeline-subpages" v-bkloading="{ isLoading }">
+    <div
+        class="biz-container bkdevops-history-subpage pipeline-subpages"
+        v-bkloading="{ isLoading }"
+    >
         <template v-if="isInfoReady">
             <div class="pipeline-subpages-header">
-                <router-view name="header" :is-switch-pipeline="isLoading"></router-view>
+                <router-view
+                    name="header"
+                    :is-switch-pipeline="isLoading"
+                ></router-view>
             </div>
             <router-view class="biz-content"></router-view>
         </template>
@@ -54,7 +60,8 @@
                 'setPipelineYaml',
                 'selectPipelineVersion',
                 'setPipelineWithoutTrigger',
-                'requestPipelineSummary'
+                'requestPipelineSummary',
+                'resetAtomModalMap'
             ]),
             async fetchPipelineInfo () {
                 try {
@@ -66,9 +73,11 @@
                         resourceCode: this.$route.params.pipelineId,
                         action: RESOURCE_ACTION.VIEW
                     })
-                    this.$router.replace({
-                        name: 'PipelineManageList'
-                    })
+                    if (error?.code !== 403) {
+                        this.$router.replace({
+                            name: 'PipelineManageList'
+                        })
+                    }
                     return false
                 } finally {
                     this.isLoading = false
