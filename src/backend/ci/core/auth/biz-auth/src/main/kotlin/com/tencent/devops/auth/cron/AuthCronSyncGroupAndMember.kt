@@ -47,7 +47,7 @@ class AuthCronSyncGroupAndMember(
     }
 
     /**
-     * 10秒同步一次用户申请加入组的单据，若2周未审批单据，将不再进行扫描
+     * 10秒同步一次用户申请加入组的单据，若1周未审批单据，将不再进行扫描
      * */
     @Scheduled(initialDelay = 10000, fixedRate = 10000)
     fun syncIamGroupMembersOfApplyRegularly() {

@@ -179,10 +179,10 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             val finalRecordsOfSuccess = mutableListOf<TAuthResourceGroupApplyRecord>()
             do {
                 logger.info("sync members of apply | start")
-                // 获取14天内未审批单据
+                // 获取7天内未审批单据
                 val records = authResourceGroupApplyDao.list(
                     dslContext = dslContext,
-                    day = 14,
+                    day = 7,
                     limit = limit,
                     offset = offset
                 )
