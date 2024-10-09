@@ -64,8 +64,8 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.version.StoreVersion
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.StoreVersion
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -436,7 +436,12 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     }
                 }
                 val flag = queryTestFlag ||
-                        storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
+                        storeProjectRelDao.isTestProjectCode(
+                            dslContext = dslContext,
+                            storeCode = atomCode,
+                            storeType = StoreTypeEnum.ATOM,
+                            projectCode = projectCode
+                        )
                 if (flag) {
                     // 初始化项目或者调试项目有权查处于测试中、审核中的插件
                     this.addAll(
