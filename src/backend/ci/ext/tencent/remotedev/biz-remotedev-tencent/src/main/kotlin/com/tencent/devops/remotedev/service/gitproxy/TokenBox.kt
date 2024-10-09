@@ -17,14 +17,14 @@ import java.util.Base64
 /**
  * 把获取 Token 的行为全部封装在这里，非线程安全。对于client只是引用没有性能损耗，单独类更清晰些
  * @param save 是否缓存 token
- * @param bThrowE 是否抛出异常
- * @param bLogE 是否在异常时打印日志
+ * @param throwE 是否抛出异常
+ * @param logE 是否在异常时打印日志
  */
 class TokenBox(
     private val client: Client,
     private val save: Boolean,
-    private val bThrowE: Boolean? = null,
-    private val bLogE: Boolean? = null
+    private val throwE: Boolean? = null,
+    private val logE: Boolean? = null
 ) {
     private var oauthUserTokens: MutableMap<String, TGitToken>? = null
     private var credIdTokens: MutableMap<String, TGitToken>? = null
@@ -49,16 +49,16 @@ class TokenBox(
                 projectId = projectId,
                 credType = credType,
                 cred = cred,
-                throwE = throwE ?: bThrowE ?: false,
-                log = log ?: bLogE ?: true
+                throwE = throwE ?: this.throwE ?: false,
+                log = log ?: logE ?: true
             )
         }
         return getToken(
             projectId = projectId,
             credType = credType,
             cred = cred,
-            throwE = throwE ?: bThrowE ?: true,
-            log = log ?: bLogE ?: false
+            throwE = throwE ?: this.throwE ?: true,
+            log = log ?: logE ?: false
         )
     }
 

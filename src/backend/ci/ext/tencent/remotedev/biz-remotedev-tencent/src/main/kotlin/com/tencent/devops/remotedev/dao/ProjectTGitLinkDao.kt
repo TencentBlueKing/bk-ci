@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 @Repository
 class ProjectTGitLinkDao {
 
-    // 注：OAUTH_USER 这个字段的改做和操作者一种用来，运来记录当前绑定是谁操作的
+    // 注：OAUTH_USER 这个字段的改做和操作者一种用发，运来记录当前绑定是谁操作的
     fun add(
         dslContext: DSLContext,
         projectId: String,
@@ -49,6 +49,7 @@ class ProjectTGitLinkDao {
             ).onDuplicateKeyUpdate()
                 .set(STATUS, status.name)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .set(OAUTH_USER, oauthUser)
                 .set(CRED, cred)
                 .set(CRED_TYPE, credType.name)
                 .set(URL, url)
@@ -86,6 +87,7 @@ class ProjectTGitLinkDao {
                     ).onDuplicateKeyUpdate()
                         .set(STATUS, it.status.name)
                         .set(UPDATE_TIME, LocalDateTime.now())
+                        .set(OAUTH_USER, it.oauthUser)
                         .set(CRED, it.cred)
                         .set(CRED_TYPE, it.credType.name)
                         .set(URL, it.url)

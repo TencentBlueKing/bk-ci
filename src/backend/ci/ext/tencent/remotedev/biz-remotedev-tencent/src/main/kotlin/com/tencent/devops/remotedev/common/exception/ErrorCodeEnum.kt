@@ -199,6 +199,13 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132048",
         formatErrorMessage = "user {0} no permission to view workspace {1} record"
+    ),
+    REBINDING_SUB_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132049",
+        formatErrorMessage = "Some repo failed! Insufficient permissions or the repository has been deleted. " +
+                "Please make sure the credential owner has administrator permissions: " +
+                "Git requires Master and above, SVN requires root directory approver"
     );
 
     fun getErrorMessage(): String {
