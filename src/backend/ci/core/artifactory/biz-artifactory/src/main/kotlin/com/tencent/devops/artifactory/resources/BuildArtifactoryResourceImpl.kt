@@ -13,8 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 class BuildArtifactoryResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService,
-    private val client: Client,
-    private val serviceAuthAuthorizationResource: ServiceAuthAuthorizationResource,
+    private val client: Client
 ) : BuildArtifactoryResource {
     override fun acrossProjectCopy(
         projectId: String,
@@ -27,10 +26,10 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         var userId = client.get(ServicePipelineResource::class)
             .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
         // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
-        val pipelineOauthUser = serviceAuthAuthorizationResource.getResourceAuthorization(
-            projectId,
-            AuthResourceType.PIPELINE_DEFAULT.value,
-            pipelineId
+        val pipelineOauthUser = client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
+            projectId = projectId,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+            resourceCode = pipelineId
         ).data?.handoverFrom
         if (!pipelineOauthUser.isNullOrBlank()) {
             userId = pipelineOauthUser
