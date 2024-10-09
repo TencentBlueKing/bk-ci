@@ -25,33 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources.service
+package com.tencent.devops.auth.service.lock
 
-import com.tencent.devops.auth.api.service.ServiceDeptResource
-import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
-import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-@RestResource
-class ServiceDeptResourceImpl @Autowired constructor(
-    val deptService: DeptService
-) : ServiceDeptResource {
-    override fun getParentDept(userId: String): Result<Int> {
-        return Result("", deptService.getUserParentDept(userId))
-    }
-
-    override fun getDeptByName(userId: String, deptName: String): Result<DeptInfoVo?> {
-        return Result(deptService.getDeptByName(deptName, userId))
-    }
-
-    override fun getUserInfo(userId: String, name: String): Result<UserAndDeptInfoVo?> {
-        return Result(deptService.getUserInfo(userId, name))
-    }
-
-    override fun checkUserDeparted(name: String): Result<Boolean> {
-        return Result(deptService.isUserDeparted(name))
+class CronSyncGroupPermissionsLock(redisOperation: RedisOperation) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "cron.sync.group.and.member.lock",
+        // 半小时，防止服务重启，锁未释放
+        expiredTimeInSeconds = 1800
+    ) {
+    override fun decorateKey(key: String): String {
+        return key
     }
 }

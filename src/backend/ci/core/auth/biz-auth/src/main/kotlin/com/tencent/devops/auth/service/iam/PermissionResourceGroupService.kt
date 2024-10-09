@@ -31,6 +31,7 @@ package com.tencent.devops.auth.service.iam
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.dto.ListGroupConditionDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
+import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
@@ -90,6 +91,13 @@ interface PermissionResourceGroupService {
 
     fun createProjectGroupByGroupCode(
         projectId: String,
-        groupCode: String
-    ): Boolean
+        groupCode: String,
+        groupName: String? = null,
+        groupDesc: String? = null
+    ): Int
+
+    fun createCustomGroupAndPermissions(
+        projectId: String,
+        customGroupCreateReq: CustomGroupCreateReq
+    ): Int
 }
