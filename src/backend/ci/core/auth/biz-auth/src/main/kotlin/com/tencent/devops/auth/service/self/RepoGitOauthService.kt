@@ -20,7 +20,7 @@ class RepoGitOauthService @Autowired constructor(
     oauthType = OauthType.GIT,
     client = client
 ) {
-    override fun get(userId: String, projectId: String): UserOauthInfo? {
+    override fun get(userId: String, projectId: String?): UserOauthInfo? {
         val gitToken = client.get(ServiceOauthResource::class).gitGet(userId).data ?: return null
         // 授权过期
         var expired = false

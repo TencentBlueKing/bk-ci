@@ -19,7 +19,7 @@ class RepoGithubOauthService @Autowired constructor(
     oauthType = OauthType.GITHUB,
     client = client
 ) {
-    override fun get(userId: String, projectId: String): UserOauthInfo? {
+    override fun get(userId: String, projectId: String?): UserOauthInfo? {
         val gitToken = client.get(ServiceGithubResource::class).getAccessToken(
             userId = userId
         ).data ?: return null
