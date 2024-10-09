@@ -232,7 +232,8 @@
         "set": "Set",
         "remaining": "Remaining",
         "canApplyCount": "Can apply count",
-        "selectNewNode": "Select new Agent"
+        "selectNewNode": "Select new Agent",
+        "dockerMaxConcurrency": "Maximum Docker Build Concurrency"
     },
     "nodeTypeMap": {
         "CC": "CC",
