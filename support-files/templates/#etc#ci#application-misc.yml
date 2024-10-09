@@ -101,3 +101,7 @@ plugin:
     path: __BK_CODECC_DATA_DIR__/tools
     covFile: build_dev.py
     toolFile: build_tool_dev.py
+
+gpt:
+  gateway: __BK_CI_GPT_GATEWAY__
+  headers: __BK_CI_GPT_HEADERS__
