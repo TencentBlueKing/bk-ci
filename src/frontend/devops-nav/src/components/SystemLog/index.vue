@@ -6,7 +6,7 @@
         :close-icon="true"
         :show-footer="false"
         :esc-close="true"
-        @value-change="(value) => toggleShowLog(value)"
+        @value-change="toggleShowLog"
     >
         <div
             ref="log"
