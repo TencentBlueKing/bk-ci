@@ -64,8 +64,8 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.version.StoreVersion
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.StoreVersion
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -272,7 +272,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             version = version,
             normalStatusList = normalStatusList,
             atomCode = atomCode,
-            projectCode = projectCode
+            projectCode = projectCode,
+            queryTestFlag = buildingFlag
         )
         val atomDefaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
         val atomBaseInfoRecord = marketAtomEnvInfoDao.getProjectAtomBaseInfo(
@@ -419,7 +420,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         version: String,
         normalStatusList: List<Byte>,
         atomCode: String,
-        projectCode: String
+        projectCode: String,
+        queryTestFlag: Boolean
     ): List<Byte> {
         return if (atomStatus != null) {
             mutableListOf(atomStatus)
@@ -433,13 +435,13 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                         this.add(AtomStatusEnum.RELEASED.status.toByte())
                     }
                 }
-                val flag =
-                    projectCode == storeInnerPipelineConfig.innerPipelineProject || storeProjectRelDao.isTestProjectCode(
-                        dslContext = dslContext,
-                        storeCode = atomCode,
-                        storeType = StoreTypeEnum.ATOM,
-                        projectCode = projectCode
-                    )
+                val flag = queryTestFlag ||
+                        storeProjectRelDao.isTestProjectCode(
+                            dslContext = dslContext,
+                            storeCode = atomCode,
+                            storeType = StoreTypeEnum.ATOM,
+                            projectCode = projectCode
+                        )
                 if (flag) {
                     // 初始化项目或者调试项目有权查处于测试中、审核中的插件
                     this.addAll(
