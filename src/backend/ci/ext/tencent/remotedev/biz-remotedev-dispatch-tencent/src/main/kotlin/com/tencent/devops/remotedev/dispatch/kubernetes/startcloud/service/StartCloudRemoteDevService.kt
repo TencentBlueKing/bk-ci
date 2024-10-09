@@ -111,7 +111,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                     cgsId = event.devFile.cgsId,
                     projectId = event.projectId,
                     image = event.devFile.imageCosFile,
-                    internal = event.devFile.quotaType?.getInternal() ?: false
+                    internal = event.devFile.quotaType?.getInternal() ?: false,
+                    pvcs = event.devFile.pvcs
                 )
             )
         )
