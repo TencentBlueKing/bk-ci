@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.redis.RedisOperation
@@ -489,7 +488,7 @@ class BuildMonitorControl @Autowired constructor(
                         errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                         params = arrayOf(buildInfo.buildId)
                     )
-                val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+                val triggerContainer = model.getTriggerContainer()
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStartEvent(
                         source = "start_monitor",
