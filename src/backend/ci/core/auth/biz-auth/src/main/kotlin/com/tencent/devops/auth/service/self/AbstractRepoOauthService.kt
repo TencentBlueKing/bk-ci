@@ -18,7 +18,7 @@ abstract class AbstractRepoOauthService(
     open val client: Client,
     open val oauthType: OauthType
 ) : OauthService {
-    override fun relSource(userId: String, projectId: String, page: Int, pageSize: Int): Page<OauthRelResource> {
+    override fun relSource(userId: String, projectId: String?, page: Int, pageSize: Int): Page<OauthRelResource> {
         return client.get(ServiceRepositoryResource::class).listOauthRepo(
             projectId = projectId,
             userId = userId,
@@ -30,7 +30,7 @@ abstract class AbstractRepoOauthService(
                 records = pageInfo.records.map {
                     OauthRelResource(
                         name = it.aliasName,
-                        url = it.url
+                        url = it.detailUrl ?: ""
                     )
                 },
                 count = pageInfo.count,
@@ -40,7 +40,7 @@ abstract class AbstractRepoOauthService(
         } ?: Page(page = page, pageSize = pageSize, records = listOf(), count = 0)
     }
 
-    override fun delete(userId: String, projectId: String) {
+    override fun delete(userId: String, projectId: String?) {
         // 检查是否还有关联代码库
         if (countOauthRepo(projectId = projectId, userId = userId) > 0) {
             throw ErrorCodeException(
@@ -70,7 +70,7 @@ abstract class AbstractRepoOauthService(
         }
     }
 
-    fun countOauthRepo(projectId: String, userId: String): Long {
+    fun countOauthRepo(projectId: String?, userId: String): Long {
         return client.get(ServiceRepositoryResource::class).countOauthRepo(
             projectId = projectId,
             userId = userId,

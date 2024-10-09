@@ -55,27 +55,27 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserOauthResource {
     @GET
-    @Path("/{projectId}/")
+    @Path("/")
     @Operation(summary = "获取用户OAuth授权列表")
     fun list(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID")
-        @PathParam("projectId")
-        projectId: String
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam(value = "projectId")
+        projectId: String?
     ): Result<List<UserOauthInfo>>
 
     @GET
-    @Path("/{projectId}/relSource")
+    @Path("/relSource")
     @Operation(summary = "获取授权关联的资源列表")
     fun relSource(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID")
-        @PathParam("projectId")
-        projectId: String,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
         @Parameter(description = "授权类型", required = true)
         @QueryParam("oauthType")
         oauthType: OauthType,
@@ -88,15 +88,15 @@ interface UserOauthResource {
     ): Result<Page<OauthRelResource>>
 
     @DELETE
-    @Path("/{projectId}/delete")
+    @Path("/delete")
     @Operation(summary = "删除oauth授权")
     fun delete(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID")
-        @PathParam("projectId")
-        projectId: String,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
         @Parameter(description = "授权类型", required = true)
         @QueryParam("oauthType")
         oauthType: OauthType

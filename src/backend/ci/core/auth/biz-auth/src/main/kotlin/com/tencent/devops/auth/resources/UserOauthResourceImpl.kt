@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserOauthResourceImpl @Autowired constructor(
     val userOauthService: UserOauthService
 ) : UserOauthResource {
-    override fun list(userId: String, projectId: String): Result<List<UserOauthInfo>> {
+    override fun list(userId: String, projectId: String?): Result<List<UserOauthInfo>> {
         return Result(
             userOauthService.list(
                 userId = userId,
@@ -26,7 +26,7 @@ class UserOauthResourceImpl @Autowired constructor(
 
     override fun relSource(
         userId: String,
-        projectId: String,
+        projectId: String?,
         oauthType: OauthType,
         page: Int?,
         pageSize: Int?
@@ -44,7 +44,7 @@ class UserOauthResourceImpl @Autowired constructor(
 
     override fun delete(
         userId: String,
-        projectId: String,
+        projectId: String?,
         oauthType: OauthType
     ): Result<Boolean> {
         userOauthService.delete(

@@ -274,14 +274,14 @@ interface ServiceRepositoryResource {
 
     @Operation(summary = "获取指定用户授权的代码库")
     @POST
-    @Path("/{projectId}/listOauthRepo")
+    @Path("/listOauthRepo")
     fun listOauthRepo(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID")
-        @PathParam("projectId")
-        projectId: String,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
         @Parameter(description = "代码库类型")
         @QueryParam("scmType")
         scmType: ScmType,
@@ -295,14 +295,14 @@ interface ServiceRepositoryResource {
 
     @Operation(summary = "获取指定用户授权的代码库")
     @POST
-    @Path("/{projectId}/countOauthRepo")
+    @Path("/countOauthRepo")
     fun countOauthRepo(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID")
-        @PathParam("projectId")
-        projectId: String,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
         @Parameter(description = "代码库类型")
         @QueryParam("scmType")
         scmType: ScmType

@@ -12,17 +12,17 @@ interface OauthService {
     /**
      * 获取授权信息
      */
-    fun get(userId: String, projectId: String): UserOauthInfo?
+    fun get(userId: String, projectId: String?): UserOauthInfo?
 
     /**
      * 授权信息关联的资源列表
      */
-    fun relSource(userId: String, projectId: String, page: Int, pageSize: Int): Page<OauthRelResource>
+    fun relSource(userId: String, projectId: String?, page: Int, pageSize: Int): Page<OauthRelResource>
 
     /**
      * 删除授权
      */
-    fun delete(userId: String, projectId: String)
+    fun delete(userId: String, projectId: String?)
 
     /**
      * 重置授权

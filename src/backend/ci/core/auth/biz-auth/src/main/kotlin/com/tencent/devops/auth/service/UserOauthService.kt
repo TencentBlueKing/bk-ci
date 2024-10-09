@@ -16,7 +16,7 @@ class UserOauthService @Autowired constructor(
     val repoGithubOauthService: RepoGithubOauthService,
     val repoGitOauthService: RepoGitOauthService
 ) {
-    fun list(userId: String, projectId: String): List<UserOauthInfo> {
+    fun list(userId: String, projectId: String?): List<UserOauthInfo> {
         val list = mutableListOf<UserOauthInfo>()
         listOf(
             repoGitOauthService,
@@ -32,7 +32,7 @@ class UserOauthService @Autowired constructor(
 
     fun relSource(
         userId: String,
-        projectId: String,
+        projectId: String?,
         oauthType: OauthType,
         page: Int,
         pageSize: Int
@@ -46,7 +46,7 @@ class UserOauthService @Autowired constructor(
     }
 
     fun delete(
-        projectId: String,
+        projectId: String?,
         userId: String,
         oauthType: OauthType
     ) {

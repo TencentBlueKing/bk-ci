@@ -1563,7 +1563,7 @@ class RepositoryService @Autowired constructor(
 
     fun listOauthRepo(
         userId: String,
-        projectId: String,
+        projectId: String?,
         scmType: ScmType,
         limit: Int,
         offset: Int
@@ -1575,7 +1575,10 @@ class RepositoryService @Autowired constructor(
             scmType = scmType,
             limit = limit,
             offset = offset
-        )
+        ).map {
+            it.detailUrl = "/console/codelib/${it.projectId}/?id=${it.hashId}"
+            it
+        }
         val count = countOauthRepo(
             userId = userId,
             projectId = projectId,
@@ -1586,7 +1589,7 @@ class RepositoryService @Autowired constructor(
 
     fun countOauthRepo(
         userId: String,
-        projectId: String,
+        projectId: String?,
         scmType: ScmType
     ): Long {
         return repositoryDao.countOauthRepo(

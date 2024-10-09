@@ -655,7 +655,7 @@ class RepositoryDao {
 
     fun listOauthRepo(
         dslContext: DSLContext,
-        projectId: String,
+        projectId: String?,
         userId: String,
         limit: Int,
         offset: Int,
@@ -663,7 +663,7 @@ class RepositoryDao {
     ): List<RepoOauthRefVo> {
         val t1 = TRepository.T_REPOSITORY
         val (t2, conditions, joinConditions) = oauthRepoConditions(t1, projectId, userId, scmType) ?: return listOf()
-        return dslContext.select(t1.ALIAS_NAME, t1.URL)
+        return dslContext.select(t1.ALIAS_NAME, t1.URL, t1.PROJECT_ID, t1.REPOSITORY_HASH_ID)
             .from(t1)
             .leftJoin(t2)
             .on(joinConditions)
@@ -673,14 +673,16 @@ class RepositoryDao {
             .map {
                 RepoOauthRefVo(
                     aliasName = it.get(0).toString(),
-                    url = it.get(1).toString()
+                    url = it.get(1).toString(),
+                    projectId = it.get(2).toString(),
+                    hashId = it.get(3).toString()
                 )
             }
     }
 
     fun countOauthRepo(
         dslContext: DSLContext,
-        projectId: String,
+        projectId: String?,
         userId: String,
         scmType: ScmType
     ): Long {
@@ -696,15 +698,17 @@ class RepositoryDao {
 
     fun oauthRepoConditions(
         t1: TRepository,
-        projectId: String,
+        projectId: String?,
         userId: String,
         scmType: ScmType
     ): Triple<TableImpl<*>, List<Condition>, Condition>? {
         val conditions = mutableListOf(
             t1.IS_DELETED.eq(false),
-            t1.PROJECT_ID.eq(projectId),
             t1.TYPE.eq(scmType.name)
         )
+        if (!projectId.isNullOrBlank()){
+            conditions.add(t1.PROJECT_ID.eq(projectId))
+        }
         val joinConditions: Condition
         val t2 = when (scmType) {
             ScmType.CODE_GIT -> {
