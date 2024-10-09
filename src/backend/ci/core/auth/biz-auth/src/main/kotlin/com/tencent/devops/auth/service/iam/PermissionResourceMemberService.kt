@@ -74,13 +74,13 @@ interface PermissionResourceMemberService {
     fun getMemberGroupsDetails(
         projectId: String,
         memberId: String,
-        resourceType: String?,
+        resourceType: String? = null,
         iamGroupIds: List<Int>? = null,
         groupName: String? = null,
         minExpiredAt: Long? = null,
         maxExpiredAt: Long? = null,
-        start: Int?,
-        limit: Int?
+        start: Int? = null,
+        limit: Int? = null
     ): SQLPage<GroupDetailsInfoVo>
 
     fun batchDeleteResourceGroupMembers(
