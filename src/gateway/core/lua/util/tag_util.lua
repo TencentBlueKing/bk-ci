@@ -54,7 +54,7 @@ function _M:get_tag(ns_config)
             local red, err = redisUtil:new()
             if not red then
                 ngx.log(ngx.ERR, "tag failed to new redis ", err)
-                return "kubernetes-" .. tag
+                return "kubernetes-" .. default_tag
             end
             -- 根据project_id路由
             if devops_project_id ~= nil and devops_project_id ~= '' then
