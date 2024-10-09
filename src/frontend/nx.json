@@ -6,7 +6,8 @@
         "^public:master"
       ],
       "outputs": [
-        "{projectRoot}/dist"
+        "{projectRoot}/dist",
+        "{workspaceRoot}/frontend"
       ],
       "cache": true
     },

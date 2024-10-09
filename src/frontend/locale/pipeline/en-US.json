@@ -1598,5 +1598,9 @@
     "CONSISTENT": "After reset, subsequent builds will be locked to {0}",
     "SUCCESS_BUILD_INCREMENT": "After resetting the build number to the baseline value {0}, the next successful build will start counting from {1}",
     "EVERY_BUILD_INCREMENT": "After resetting the build number to the baseline value {0}, the next build will start counting from {1}"
-  }
+  },
+  "deleteDraft": "Delete Draft",
+  "sureDeleteDraft": "Are you sure you want to delete this draft?",
+  "deleteDraftPipeline": "The current pipeline has not been published yet. Deleting the draft is equivalent to deleting the pipeline. Are you sure you want to proceed?",
+  "noDraft": "No drafts available for deletion"
 }

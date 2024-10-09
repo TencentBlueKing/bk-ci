@@ -1600,5 +1600,9 @@
     "CONSISTENT": "重置后，后续构建将锁定为 {0}",
     "SUCCESS_BUILD_INCREMENT": "将构建号重置为基线值 {0} 后，下一次成功构建将从 {1} 开始计数",
     "EVERY_BUILD_INCREMENT": "将构建号重置为基线值 {0} 后，下一次构建将从 {1} 开始计数"
-  }
+  },
+  "deleteDraft": "删除草稿",
+  "sureDeleteDraft": "确认删除该草稿？",
+  "deleteDraftPipeline": "当前流水线尚未发布，删除草稿等同于删除流水线，确认删除吗？",
+  "noDraft": "暂无可删除的草稿"
 }
