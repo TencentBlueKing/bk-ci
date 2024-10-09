@@ -29,8 +29,6 @@ package com.tencent.devops.common.web.handler
 
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.MediaType
