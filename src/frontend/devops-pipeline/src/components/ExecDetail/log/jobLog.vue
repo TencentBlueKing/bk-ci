@@ -24,6 +24,8 @@
             ref="multipleLog"
             class="bk-log"
             :log-list="pluginList"
+            :enable-a-i="enableAI"
+            :ai-tips="aiTips"
             @open-log="openLog"
             @tag-change="tagChange"
             @praise-ai="handlePraiseAi"
@@ -78,8 +80,14 @@
                 logPostData: {},
                 closeIds: [],
                 curExe: this.executeCount,
-                showDebug: false
+                showDebug: false,
+                enableAI: false,
+                aiTips: ''
             }
+        },
+
+        mounted () {
+            this.checkAIStatus()
         },
 
         beforeDestroy () {
@@ -93,8 +101,16 @@
                 'praiseAi',
                 'cancelPraiseAi',
                 'getPraiseAiInfo',
-                'getLogAIMessage'
+                'getLogAIMessage',
+                'getAIStatus'
             ]),
+
+            checkAIStatus () {
+                this.getAIStatus().then(res => {
+                    this.enableAI = res.data
+                    this.aiTips = res.message
+                })
+            },
 
             handlePraiseAi ({ id, item }) {
                 this.praiseAi({

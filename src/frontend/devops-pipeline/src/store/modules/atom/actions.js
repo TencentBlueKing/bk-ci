@@ -839,6 +839,10 @@ export default {
         })
     },
 
+    getAIStatus () {
+        return request.get('/misc/api/user/gpt_config/is_ok')
+    },
+
     getMacSysVersion () {
         return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
     },

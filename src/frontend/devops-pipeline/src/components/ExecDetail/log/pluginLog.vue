@@ -23,6 +23,8 @@
         <bk-log
             class="bk-log"
             ref="scroll"
+            :enable-a-i="enableAI"
+            :ai-tips="aiTips"
             @tag-change="tagChange"
             @praise-ai="handlePraiseAi"
             @down-praise-ai="handleDownPraiseAi"
@@ -85,7 +87,9 @@
                 },
                 timeId: '',
                 clearIds: [],
-                showDebug: false
+                showDebug: false,
+                enableAI: false,
+                aiTips: ''
             }
         },
 
@@ -151,6 +155,7 @@
 
         mounted () {
             this.getLog()
+            this.checkAIStatus()
         },
 
         beforeDestroy () {
@@ -166,8 +171,16 @@
                 'praiseAi',
                 'cancelPraiseAi',
                 'getPraiseAiInfo',
-                'getLogAIMessage'
+                'getLogAIMessage',
+                'getAIStatus'
             ]),
+
+            checkAIStatus () {
+                this.getAIStatus().then(res => {
+                    this.enableAI = res.data
+                    this.aiTips = res.message
+                })
+            },
 
             handlePraiseAi (item) {
                 this.praiseAi({
