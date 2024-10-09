@@ -205,7 +205,7 @@
         <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
         <system-log
             :show-system-log="showSystemLog"
-            :toggleShowLog="toggleShowVersionLog"
+            :toggle-show-log="toggleShowVersionLog"
         />
     </div>
 </template>
