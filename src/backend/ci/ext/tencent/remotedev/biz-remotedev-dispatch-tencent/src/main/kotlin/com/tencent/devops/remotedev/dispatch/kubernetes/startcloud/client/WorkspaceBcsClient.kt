@@ -21,10 +21,12 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsResp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsRespData
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskData
 import com.tencent.devops.remotedev.pojo.image.ListVmImagesResp
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.remotedev.BcsResp
 import com.tencent.devops.remotedev.pojo.remotedev.BcsTaskData
+import com.tencent.devops.remotedev.pojo.remotedev.BcsTaskDataV2
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskData
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
@@ -354,6 +356,19 @@ class WorkspaceBcsClient @Autowired constructor(
             .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
         return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<BcsTaskData>>().data
+    }
+
+    fun createDisk(
+        data: CreateDiskData
+    ): BcsTaskDataV2? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/createdisk"
+        val body = JsonUtil.toJson(data, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<BcsTaskDataV2>>().data
     }
 
     private inline fun <reified T> okhttp3.Response.resolveResponse(): T {

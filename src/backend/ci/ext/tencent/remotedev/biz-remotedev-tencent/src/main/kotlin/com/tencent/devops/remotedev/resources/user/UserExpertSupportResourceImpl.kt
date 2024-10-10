@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserExpertSupportResource
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskTaskDetail
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
@@ -34,6 +35,11 @@ class UserExpertSupportResourceImpl @Autowired constructor(
                 message = data.message
             )
         )
+    }
+
+    @AuditEntry(actionId = TencentActionId.CGS_CREATE_DISK)
+    override fun createDisk(userId: String, workspaceName: String, size: String): Result<CreateDiskResp> {
+        return Result(expertSupportService.createDisk(workspaceName = workspaceName, userId = userId, size = size))
     }
 
     override fun expandDiskDetail(userId: String, workspaceName: String): Result<ExpandDiskTaskDetail?> {

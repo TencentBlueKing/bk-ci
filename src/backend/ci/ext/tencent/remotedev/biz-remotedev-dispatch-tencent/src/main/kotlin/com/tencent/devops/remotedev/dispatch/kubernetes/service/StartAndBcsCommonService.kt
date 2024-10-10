@@ -8,6 +8,9 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentActionSt
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceBcsClient
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.interfaces.ServiceRemoteDevInterface
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskData
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskDataClass
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatusEnum
@@ -47,6 +50,29 @@ class StartAndBcsCommonService @Autowired constructor(
                     )
                 }.onFailure {
                     logger.warn("workspaceTaskCallback|workspaceExpandDiskCallback fail ${it.message}", it)
+                }
+                workspaceOpHisDao.update(
+                    dslContext = dslContext,
+                    uid = task.uid,
+                    status = if (taskStatus.status == TaskStatusEnum.successed) {
+                        EnvironmentActionStatus.SUCCEEDED
+                    } else {
+                        EnvironmentActionStatus.FAILED
+                    },
+                    actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
+                )
+                return true
+            }
+
+            task.action == EnvironmentAction.CREATE_DISK -> {
+                kotlin.runCatching {
+                    SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceCreateDiskCallback(
+                        taskId = taskStatus.uid,
+                        workspaceName = task.workspaceName,
+                        operator = task.operator
+                    )
+                }.onFailure {
+                    logger.warn("workspaceTaskCallback|workspaceCreateDiskCallback fail ${it.message}", it)
                 }
                 workspaceOpHisDao.update(
                     dslContext = dslContext,
@@ -166,6 +192,29 @@ class StartAndBcsCommonService @Autowired constructor(
             uid = taskId
         )
         return validateRes
+    }
+
+    fun createDisk(
+        userId: String,
+        workspaceName: String,
+        size: String
+    ): CreateDiskResp {
+        // TODO: 在创建前应该还有一步检查是否可以创建，等接口
+        val envId = getEnvironmentUid(workspaceName)
+        val data = CreateDiskData(uid = envId, pvcSize = size, pvcClass = CreateDiskDataClass.HDD.data)
+        val taskId = bcsClient.createDisk(data)?.taskUid ?: run {
+            logger.warn("createDisk $workspaceName|$size taskId is null")
+            return CreateDiskResp(false, "taskId is null")
+        }
+        workspaceOpHisDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            environmentUid = envId,
+            operator = userId,
+            action = EnvironmentAction.CREATE_DISK,
+            uid = taskId
+        )
+        return CreateDiskResp(true, null)
     }
 
     companion object {

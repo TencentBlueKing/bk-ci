@@ -13,3 +13,8 @@ data class BcsResp<out T>(
 data class BcsTaskData(
     val taskUid: String
 )
+
+data class BcsTaskDataV2(
+    val taskUid: String,
+    val taskID: String?
+)

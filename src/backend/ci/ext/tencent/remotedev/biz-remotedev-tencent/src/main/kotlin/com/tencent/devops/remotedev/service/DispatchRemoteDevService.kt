@@ -54,4 +54,8 @@ class DispatchRemoteDevService(
             imageId = imageId
         )
     }
+
+    override fun workspaceCreateDiskCallback(taskId: String, workspaceName: String, operator: String) {
+        return expertSupportService.createDiskCallback(taskId, workspaceName, operator)
+    }
 }
