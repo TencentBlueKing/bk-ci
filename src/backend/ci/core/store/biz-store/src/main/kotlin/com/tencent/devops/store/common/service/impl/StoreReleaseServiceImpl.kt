@@ -46,6 +46,7 @@ import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.handler.StoreCreateDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreCreateHandlerChain
 import com.tencent.devops.store.common.handler.StoreCreateParamCheckHandler
+import com.tencent.devops.store.common.handler.StoreCreatePreBusHandler
 import com.tencent.devops.store.common.handler.StoreUpdateDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreUpdateHandlerChain
 import com.tencent.devops.store.common.handler.StoreUpdateParamCheckHandler
@@ -98,6 +99,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
     private val storeNotifyService: StoreNotifyService,
     private val storePipelineService: StorePipelineService,
     private val storeCreateParamCheckHandler: StoreCreateParamCheckHandler,
+    private val storeCreatePreBusHandler: StoreCreatePreBusHandler,
     private val storeCreateDataPersistHandler: StoreCreateDataPersistHandler,
     private val storeUpdateParamI18nConvertHandler: StoreUpdateParamI18nConvertHandler,
     private val storeUpdateParamCheckHandler: StoreUpdateParamCheckHandler,
@@ -115,6 +117,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
         logger.info("createComponent userId:$userId|storeCreateRequest:$storeCreateRequest")
         val handlerList = mutableListOf(
             storeCreateParamCheckHandler, // 参数检查处理
+            storeCreatePreBusHandler, // 前置业务处理
             storeCreateDataPersistHandler // 数据持久化处理
         )
         val bkStoreContext = storeCreateRequest.bkStoreContext
