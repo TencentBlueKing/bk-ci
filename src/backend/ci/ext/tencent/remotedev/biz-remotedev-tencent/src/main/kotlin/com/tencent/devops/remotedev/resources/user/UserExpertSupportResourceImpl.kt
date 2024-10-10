@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.resources.user
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserExpertSupportResource
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
