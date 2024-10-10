@@ -939,7 +939,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         startParams[KEY_CODE_SRC] = atomRecord.codeSrc
         startParams[KEY_REPOSITORY_PATH] = (buildInfo.value2() ?: "")
         startParams[KEY_LANGUAGE] = language
-        startParams[KEY_SCRIPT] = buildInfo.value1()
+        startParams[KEY_SCRIPT] = StringEscapeUtils.escapeJava(buildInfo.value1())
         runtimeVersion?.let { startParams[KEY_RUNTIME_VERSION] = it }
         validOsNameFlag?.let {
             startParams[KEY_VALID_OS_NAME_FLAG] = it.toString()
@@ -949,7 +949,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         val innerPipelineProject = storeInnerPipelineConfig.innerPipelineProject
         val innerPipelineUser = storeInnerPipelineConfig.innerPipelineUser
-        val pipelineName = "ATOM-PIPELINE-BUILD:PUBLIC"
+        val pipelineName = "ATOM_PIPELINE_BUILD:PUBLIC"
         var publicPipelineId = redisOperation.get(pipelineName)
         var pipelineId: String? = null
         if (publicPipelineId.isNullOrBlank()) {
@@ -1347,7 +1347,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     ): String {
         var pipelineId: String?
         val lock = RedisLock(redisOperation, "creatAtomPipeline-$projectCode", 60L)
-        val pipelineName = "ATOM-PIPELINE-BUILD:PUBLIC"
+        val pipelineName = "ATOM_PIPELINE_BUILD:PUBLIC"
         try {
             lock.lock()
             pipelineId = redisOperation.get(pipelineName)
