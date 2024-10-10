@@ -41,5 +41,5 @@
 - [New] Support the authority center RBAC [link](http://github.com/TencentBlueKing/bk-ci/issues/7794)
 - [New] Add project management front-end service [link](http://github.com/TencentBlueKing/bk-ci/issues/7923)
 
-#### optimization
+#### Optimization
 - [Optimization] Optimize rbac permission binary deployment script [link](http://github.com/TencentBlueKing/bk-ci/issues/9769)
