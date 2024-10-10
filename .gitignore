@@ -50,3 +50,5 @@ docker-images/core/ci/*.gz
 #turbo 忽略文件
 src/backend/turbo/**/build/
 src/backend/turbo/release/
+
+CHANGELOG/bundledVersionLog*.json
