@@ -38,30 +38,30 @@
                 <div class="version-con">
                     <div class="version-names">
                         <div
-                            :class="{ 'baseline-build': isBuildNo(param) }"
+                            :class="{ 'baseline-build': param.isBuildNo }"
                             v-bk-tooltips="{
                                 ...baselineTooltipContent,
                                 disabled: param.id !== 'BK_CI_BUILD_NO'
                             }"
                         >
                             <span>{{ param.id }}</span>
-                            <span>({{ isBuildNo(param) ? param.desc : $t(param.desc) }})</span>
+                            <span>({{ param.isBuildNo ? param.desc : $t(param.desc) }})</span>
                         </div>
                         <div
                             id="baseline-tooltip-content"
-                            v-if="isBuildNo(param)"
+                            v-if="param.isBuildNo"
                         >
                             <p
                                 v-for="(tip, index) in buildNoBaselineTips"
                                 :key="index"
                             >
-                                {{ $t(tip) }}
+                                {{ tip }}
                             </p>
                         </div>
                     </div>
                     <div class="value-row">
                         <span class="default-value">
-                            <span v-if="isBuildNo(param)">
+                            <span v-if="param.isBuildNo">
                                 {{ `${$t('buildNoBaseline.baselineValue')}${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` }}
                                 <span
                                     class="dafault-value-current"
@@ -182,7 +182,7 @@
                                 v-for="(tip, index) in buildNoBaselineTips"
                                 :key="index"
                             >
-                                {{ $t(tip) }}
+                                {{ tip }}
                             </p>
                         </div>
                     </bk-form-item>
@@ -347,7 +347,8 @@
                     ...this.versions,
                     {
                         id: 'BK_CI_BUILD_NO',
-                        desc: this.$t('buildNo')
+                        desc: this.$t('buildNo'),
+                        isBuildNo: true
                     }
                 ]
             },
@@ -371,9 +372,6 @@
             },
             resetBuildNo () {
                 return this.buildNo.buildNo + 1
-            },
-            isBuildNo () {
-                return (param) => param.id === 'BK_CI_BUILD_NO'
             }
         },
         watch: {
