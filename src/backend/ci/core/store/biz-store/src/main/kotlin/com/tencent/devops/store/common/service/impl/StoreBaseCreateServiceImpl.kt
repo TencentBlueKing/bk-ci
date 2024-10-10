@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvManageDao
 import com.tencent.devops.store.common.dao.StoreBaseExtManageDao
@@ -43,7 +44,9 @@ import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.common.service.StoreBaseCreateService
+import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.common.utils.StoreReleaseUtils
+import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
@@ -95,6 +98,12 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
                 params = arrayOf(name)
             )
         }
+    }
+
+    override fun doStoreCreatePreBus(storeCreateRequest: StoreCreateRequest) {
+        val storeBaseCreateRequest = storeCreateRequest.baseInfo
+        val storeType = storeBaseCreateRequest.storeType
+        getStoreSpecBusService(storeType).doStoreCreatePreBus(storeCreateRequest)
     }
 
     override fun doStoreCreateDataPersistent(storeCreateRequest: StoreCreateRequest) {
@@ -155,6 +164,13 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
             }
             initStoreData(context, storeCode, storeType, userId, storeCreateRequest)
         }
+    }
+
+    private fun getStoreSpecBusService(storeType: StoreTypeEnum): StoreReleaseSpecBusService {
+        return SpringContextUtil.getBean(
+            StoreReleaseSpecBusService::class.java,
+            StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
+        )
     }
 
     private fun initStoreData(

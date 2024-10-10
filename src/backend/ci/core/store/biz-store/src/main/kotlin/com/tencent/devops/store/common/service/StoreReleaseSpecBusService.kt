@@ -30,11 +30,20 @@ package com.tencent.devops.store.common.service
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 
 interface StoreReleaseSpecBusService {
+
+    /**
+     * 执行新增组件请求前置业务
+     * @param storeCreateRequest 新增组件请求报文
+     */
+    fun doStoreCreatePreBus(
+        storeCreateRequest: StoreCreateRequest
+    )
 
     /**
      * 对更新组件请求参数进行国际化转换个性化逻辑

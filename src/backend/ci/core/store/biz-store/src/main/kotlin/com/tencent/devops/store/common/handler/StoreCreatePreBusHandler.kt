@@ -25,33 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.common.handler
 
+import com.tencent.devops.store.common.service.StoreBaseCreateService
+import com.tencent.devops.store.pojo.common.handler.Handler
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
+import org.springframework.stereotype.Service
 
-interface StoreBaseCreateService {
+@Service
+class StoreCreatePreBusHandler(
+    private val storeBaseCreateService: StoreBaseCreateService
+) : Handler<StoreCreateRequest> {
 
-    /**
-     * 检查新增组件请求参数合法性
-     * @param storeCreateRequest 新增组件请求报文
-     */
-    fun checkStoreCreateParam(
-        storeCreateRequest: StoreCreateRequest
-    )
+    override fun canExecute(handlerRequest: StoreCreateRequest): Boolean {
+        return true
+    }
 
-    /**
-     * 执行新增组件请求前置业务
-     * @param storeCreateRequest 新增组件请求报文
-     */
-    fun doStoreCreatePreBus(
-        storeCreateRequest: StoreCreateRequest
-    )
-
-    /**
-     * 持久化新增组件数据
-     * @param storeCreateRequest 新增组件请求报文
-     */
-    fun doStoreCreateDataPersistent(
-        storeCreateRequest: StoreCreateRequest
-    )
+    override fun execute(handlerRequest: StoreCreateRequest) {
+        // 执行前置业务
+        storeBaseCreateService.doStoreCreatePreBus(handlerRequest)
+    }
 }
