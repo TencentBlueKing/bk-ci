@@ -189,7 +189,7 @@ interface UserRemoteDevResource {
         data: ClientUpgradeData
     ): Result<ClientUpgradeResp>
 
-    @Operation(summary = "客户端获取加载时Tips")
+    @Operation(summary = "点击进入云桌面时客户端获取加载时Tips")
     @GET
     @Path("/client/tips")
     fun clientTips(
