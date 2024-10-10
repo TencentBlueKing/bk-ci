@@ -41,7 +41,7 @@
                             :class="{ 'baseline-build': param.isBuildNo }"
                             v-bk-tooltips="{
                                 ...baselineTooltipContent,
-                                disabled: param.id !== 'BK_CI_BUILD_NO'
+                                disabled: !param.isBuildNo
                             }"
                         >
                             <span>{{ param.id }}</span>
