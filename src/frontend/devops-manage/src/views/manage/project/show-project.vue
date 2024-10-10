@@ -21,6 +21,7 @@ import {
 useRoute,
 useRouter,
 } from 'vue-router';
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -301,6 +302,10 @@ const projectTypeNameMap = {
   4: t('平台产品'),
   5: t('支撑产品'),
 }
+const pipelineDialectMap = {
+  'CLASSIC': t('传统风格'),
+  'CONSTRAINED': t('制约风格'),
+}
 watch(() => projectData.value.approvalStatus, (status) => {
   if (status === 4) fetchDiffProjectData();
 }, {
@@ -410,6 +415,20 @@ onMounted(async () => {
                     >
                       {{ subjectScope.name }}
                     </bk-tag>
+                  </div>
+                </bk-form-item>
+                <bk-form-item property="pipelineDialect">
+                  <template #label>
+                    <dialect-popover-table />
+                  </template>
+                  <div>
+                    <span>{{ pipelineDialectMap[projectData.pipelineDialect] }}</span>
+                    <div class="diff-content" v-if="projectData.afterPipelineDialect">
+                      <p class="update-title">
+                        {{ t('本次更新：') }}
+                      </p>
+                      <span>{{ pipelineDialectMap[projectData.afterPipelineDialect] }}</span>
+                    </div>
                   </div>
                 </bk-form-item>
                 <bk-form-item>

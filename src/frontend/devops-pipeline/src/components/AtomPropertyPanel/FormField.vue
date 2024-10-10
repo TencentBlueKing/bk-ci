@@ -1,7 +1,10 @@
 <script>
-
+    import NamingConventionTip from '@/components/namingConventionTip.vue'
     export default {
         name: 'form-field',
+        components: {
+            NamingConventionTip
+        },
         props: {
             label: {
                 type: String,
@@ -52,6 +55,10 @@
             bottomDivider: {
                 type: Boolean,
                 default: false
+            },
+            customDesc: {
+                type: Boolean,
+                default: false
             }
         },
         computed: {
@@ -63,7 +70,7 @@
             }
         },
         render (h) {
-            const { label, inline, required, $slots, isError, errorMsg, hideColon, desc, docsLink, descLink, descLinkText, type, widthStyle, bottomDivider } = this
+            const { label, inline, required, $slots, isError, errorMsg, hideColon, desc, docsLink, descLink, descLinkText, type, widthStyle, bottomDivider, customDesc } = this
             const descMap = desc.split('\n')
             return (
                 <div class={{
@@ -78,22 +85,27 @@
                         { docsLink
                             && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
                         }
-                        { label.trim() && desc.trim() && <bk-popover placement="top">
-                            <i class={{ 'bk-icon': true, 'icon-info-circle': true }} style={{ 'margin-left': hideColon ? '4px' : '0', color: hideColon ? '#979BA5' : '' }}></i>
-                            <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
-                                <div>
+                        { label.trim() && (desc.trim() || customDesc) && <bk-popover placement="top" theme={customDesc ? 'light' : 'dark'} width={customDesc ? 892 : 'auto'}>
+                                <i class={{ 'bk-icon': true, 'icon-info-circle': true }} style={{ 'margin-left': hideColon ? '4px' : '0', color: hideColon ? '#979BA5' : '' }}></i>
+                                <div slot="content">
                                     {
-                                        descMap.length > 1
-                                        ? descMap.map(item => (
-                                            <div>{item}</div>
-                                        ))
-                                        : desc
+                                        customDesc
+                                        ? <NamingConventionTip/>
+                                        : <div style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
+                                            {
+                                                descMap.length > 1
+                                                ? descMap.map(item => (
+                                                    <div>{item}</div>
+                                                ))
+                                                : desc
+                                            }
+                                            { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>}
+                                        </div>
                                     }
-                                    { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>}
+                                    
                                 </div>
-                            </div>
-                        </bk-popover>
-                    }
+                            </bk-popover>
+                        }
                     </label> }
                     
                     <div class='bk-form-content'>

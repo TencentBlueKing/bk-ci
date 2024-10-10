@@ -52,6 +52,10 @@
                                     --
                                 </template>
                             </template>
+                            <template v-else-if="['namingConvention', 'modificationDetail', 'creatorDetail'].includes(row.key)">
+                                <span>{{ row.value || '--' }}</span>
+                                <span class="base-info-block-row-value-gray">{{ row.grayDesc }}</span>
+                            </template>
                             <template v-else>
                                 {{ row.value || '--' }}
                             </template>
@@ -73,7 +77,11 @@
         },
         data () {
             return {
-                activeName: ['baseInfo', 'executeConfig']
+                activeName: ['baseInfo', 'executeConfig'],
+                namingStyle: {
+                    CLASSIC: this.$t('traditionalStyle'),
+                    CONSTRAINED: this.$t('constraintStyle')
+                }
             }
         },
         computed: {
@@ -88,6 +96,8 @@
             },
             baseInfoRows () {
                 const { basicInfo } = this
+                const { inheritedDialect, projectDialect, pipelineDialect } = basicInfo?.pipelineAsCodeSettings ?? {}
+                const namingConvention = inheritedDialect ? this.namingStyle[projectDialect] : this.namingStyle[pipelineDialect]
                 return [
                     {
                         key: 'pipelineName',
@@ -106,12 +116,19 @@
                         value: basicInfo?.desc ?? '--'
                     },
                     {
-                        key: 'creator',
-                        value: basicInfo?.creator ?? '--'
+                        key: 'namingConvention',
+                        value: namingConvention ?? '--',
+                        grayDesc: inheritedDialect ? ` ( ${this.$t('inheritedProject')} )` : ''
                     },
                     {
-                        key: 'createTime',
-                        value: convertTime(basicInfo?.createTime) ?? '--'
+                        key: 'modificationDetail',
+                        value: basicInfo?.versionUpdater ?? '--',
+                        grayDesc: ` | ${convertTime(basicInfo?.versionUpdateTime)}`
+                    },
+                    {
+                        key: 'creatorDetail',
+                        value: basicInfo?.creator ?? '--',
+                        grayDesc: ` | ${convertTime(basicInfo?.createTime)}`
                     }
                 ]
             },
@@ -225,5 +242,8 @@
         }
     }
 
+}
+.base-info-block-row-value-gray {
+    color: #979BA5;
 }
 </style>
