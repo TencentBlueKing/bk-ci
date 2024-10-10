@@ -1,6 +1,52 @@
 <template>
   <bk-loading class="manage" :loading="isLoading"  :zIndex="100">
     <div class="manage-search">
+      <bk-select
+        class="search-select"
+        v-model="serviceValue"
+        :prefix="t('所属服务')"
+        @change="serviceChange"
+      >
+        <bk-option
+          v-for="(item, index) in serviceList"
+          :id="item.resourceType"
+          :key="index"
+          :name="item.name"
+        />
+      </bk-select>
+
+      <bk-select
+        class="search-select"
+        v-model="resourceValue"
+        :prefix="t('资源')"
+        filterable
+        :input-search="false"
+        :disabled="isAllowSearch"
+        :scroll-loading="resourceScrollLoading"
+        @scroll-end="resourceScrollEnd"
+      >
+        <bk-option
+          v-for="(item, index) in resourceList"
+          :id="item.resourceCode"
+          :key="index"
+          :name="item.resourceName"
+        />
+      </bk-select>
+
+      <bk-select
+        class="search-select"
+        v-model="actionValue"
+        :prefix="t('操作')"
+        :disabled="isAllowSearch"
+      >
+        <bk-option
+          v-for="(item, index) in actionList"
+          :id="item.action"
+          :key="index"
+          :name="item.actionName"
+        />
+      </bk-select>
+
       <div class="search-expired">
         <p class="search-terms">{{ t('过期时间') }}</p>
         <date-picker
@@ -450,7 +496,10 @@ const searchExpiredAt = ref([]);
 const expiredAtList = ref([])
 const searchGroup = computed(() => ({
   searchValue: searchValue.value,
-  expiredAt: expiredAtList.value
+  expiredAt: expiredAtList.value,
+  relatedResourceType: serviceValue.value,
+  relatedResourceCode: resourceValue.value,
+  action: actionValue.value,
 }));
 const commonUseList = ref([
   {
@@ -512,6 +561,16 @@ const unableText = {
   handover: t('无法移交'),
   remove: t('无法移出'),
 }
+const serviceValue = ref('');
+const resourceValue = ref('');
+const actionValue = ref('');
+const serviceList = ref([]);
+const resourceList = ref([]);
+const actionList = ref([]);
+const isAllowSearch = ref(true);
+const resourceScrollLoading = ref(false);
+const resourcePage = ref(1);
+const hasNextPage = ref(false);
 const {
   sourceList,
   isShowRenewal,
@@ -560,6 +619,7 @@ const {
 
 onMounted(() => {
   init(true);
+  getListResourceTypes();
 });
 watch(projectId, () => {
   init(true);
@@ -567,13 +627,21 @@ watch(projectId, () => {
 watch(searchGroup, () => {
   init(undefined, searchGroup.value);
 });
+watch(serviceValue, (newValue) => {
+  if (newValue) {
+    isAllowSearch.value = false;
+    getListResource();
+    getListActions();
+  } else {
+    isAllowSearch.value = true;
+  }
+})
 function handleSearch (value) {
   if(!value.length) return;
   searchValue.value = value;
   init(undefined, searchGroup.value);
 }
 function handleValueChange (value, info) {
-  console.log(value,'/////');
   searchExpiredAt.value = value;
   expiredAtList.value = info;
 }
@@ -847,6 +915,50 @@ function handleClearOverFormName () {
 function closeDeptListPermissionDialog () {
   showDeptListPermissionDialog.value = false
 }
+async function getListResourceTypes () {
+  try {
+    const res = await http.getListResourceTypes();
+    serviceList.value = res;
+  } catch (error) {
+    console.error(error);
+  }
+}
+async function getListResource () {
+  try {
+    resourceScrollLoading.value = true;
+    const query = {
+      page: resourcePage.value,
+      pageSize: 10,
+    };
+    const res = await http.getListResource(projectId.value, serviceValue.value, query);
+    hasNextPage.value = res.hasNext;
+    resourceList.value.push(...res.records);
+    resourceScrollLoading.value = false;
+  } catch (error) {
+    console.error(error);
+  }
+}
+async function resourceScrollEnd () {
+  if (!hasNextPage.value) return;
+  resourcePage.value ++;
+  getListResource();
+}
+async function getListActions () {
+  try {
+    const res = await http.getListActions(serviceValue.value);
+    actionList.value = res;
+  } catch (error) {
+    console.error(error);
+  }
+}
+function serviceChange (value) {
+  serviceValue.value = value;
+  resourcePage.value = 1;
+  resourceValue.value = '';
+  actionValue.value = '';
+  resourceList.value = [];
+  actionList.value = [];
+}
 </script>
 
 <style lang="less" scoped>
@@ -862,12 +974,17 @@ function closeDeptListPermissionDialog () {
     background: #FFFFFF;
     padding: 16px 24px;
     box-shadow: 0 2px 4px 0 #1919290d;
+
+    .search-select {
+      margin-right: 10px;
+    }
     
     .search-expired {
       display: flex;
       align-items: center;
 
       .search-terms {
+        white-space: nowrap;
         color: #63656e;
         line-height: 30px;
         padding: 0 10px;

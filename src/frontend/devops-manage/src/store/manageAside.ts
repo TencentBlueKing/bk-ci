@@ -22,6 +22,9 @@ interface MemberListParamsType {
   groupName?: string,
   minExpiredAt?: number,
   maxExpiredAt?: number,
+  relatedResourceType?: string,
+  relatedResourceCode?: string,
+  action?: string,
 }
 
 export default defineStore('manageAside', () => {
@@ -54,7 +57,7 @@ export default defineStore('manageAside', () => {
     asideItem.value = undefined;
     if (memberPagination.value.current !== current) {
       memberPagination.value.current = current;
-      getProjectMembers(projectId, true);
+      getProjectMembers(projectId, true, seacrhObj.value);
     }
   }
   /**
@@ -95,7 +98,7 @@ export default defineStore('manageAside', () => {
       }
       btnLoading.value = false;
       manageAsideRef.handOverClose();
-      getProjectMembers(projectId, true);
+      getProjectMembers(projectId, true, seacrhObj.value);
     } catch (error) {
       btnLoading.value = false;
     }
@@ -112,6 +115,16 @@ export default defineStore('manageAside', () => {
 
     if (departedFlag) {
       params.departedFlag = departedFlag;
+    }
+
+    if (searchGroup?.relatedResourceType) {
+      params.relatedResourceType = searchGroup.relatedResourceType
+    }
+    if (searchGroup?.relatedResourceCode) {
+      params.relatedResourceCode = searchGroup.relatedResourceCode
+    }
+    if (searchGroup?.action) {
+      params.action = searchGroup.action
     }
 
     if (searchGroup?.expiredAt && Object.keys(searchGroup?.expiredAt).length) {
@@ -143,11 +156,15 @@ export default defineStore('manageAside', () => {
     try {
       isLoading.value = true;
       const params = getParams(projectId, departedFlag, searchGroup);
-      
+
       seacrhObj.value = {
-        ...(params.groupName && {groupName: params.groupName}),
-        ...(params.minExpiredAt && {minExpiredAt: params.minExpiredAt}),
-        ...(params.maxExpiredAt && {maxExpiredAt: params.maxExpiredAt}),
+        ...['groupName', 'minExpiredAt', 'maxExpiredAt', 'relatedResourceType', 'relatedResourceCode', 'action']
+          .reduce((acc, key) => {
+            if (params[key]) {
+              acc[key] = params[key];
+            }
+            return acc;
+          }, {})
       }
 
       const res = await http.getProjectMembersByCondition(projectId, params);
