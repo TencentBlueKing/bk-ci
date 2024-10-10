@@ -45,7 +45,7 @@ class ClientTipsDao {
 
     fun delete(dslContext: DSLContext, ids: Set<Long>) {
         with(TClientTips.T_CLIENT_TIPS) {
-            dslContext.deleteFrom(this).where(ID.`in`(ids)).execute()
+            dslContext.deleteFrom(this).where(ID.`in`(ids)).limit(ids.size).execute()
         }
     }
 
