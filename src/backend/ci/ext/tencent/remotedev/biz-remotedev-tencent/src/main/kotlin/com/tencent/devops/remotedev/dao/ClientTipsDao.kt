@@ -67,7 +67,7 @@ class ClientTipsDao {
                     } else {
                         JSON.json(JsonUtil.toJson(info.effectiveUsers!!, false))
                     }
-                ).where(ID.eq(id)).execute()
+                ).where(ID.eq(id)).limit(1).execute()
         }
     }
 
