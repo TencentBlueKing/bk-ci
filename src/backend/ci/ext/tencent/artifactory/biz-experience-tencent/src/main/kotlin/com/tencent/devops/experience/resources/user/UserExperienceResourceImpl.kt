@@ -77,10 +77,34 @@ class UserExperienceResourceImpl @Autowired constructor(
     override fun list(
         userId: String,
         projectId: String,
-        expired: Boolean?
+        expired: Boolean?,
+        createDateBegin: Long?,
+        createDateEnd: Long?,
+        endDateBegin: Long?,
+        endDateEnd: Long?,
+        name: String?,
+        version: String?,
+        remark: String?,
+        versionTitle: String?,
+        creator: String?
     ): Result<List<ExperienceSummaryWithPermission>> {
         checkParam(userId, projectId)
-        return Result(experienceService.list(userId, projectId, expired))
+        return Result(
+            experienceService.list(
+                userId = userId,
+                projectId = projectId,
+                expired = expired,
+                createDateBegin = createDateBegin,
+                createDateEnd = createDateEnd,
+                endDateBegin = endDateBegin,
+                endDateEnd = endDateEnd,
+                name = name,
+                version = version,
+                remark = remark,
+                versionTitle = versionTitle,
+                creator = creator
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.EXPERIENCE_TASK_VIEW)

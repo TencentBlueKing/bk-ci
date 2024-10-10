@@ -43,6 +43,7 @@ import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
@@ -191,11 +192,48 @@ class ExperienceService @Autowired constructor(
         }
     }
 
-    fun list(userId: String, projectId: String, expired: Boolean?): List<ExperienceSummaryWithPermission> {
-        val expireTime = DateUtil.today()
-        val searchTime = if (expired == null || expired == false) expireTime else null
+    fun list(
+        userId: String,
+        projectId: String,
+        expired: Boolean?,
+        createDateBegin: Long?,
+        createDateEnd: Long?,
+        endDateBegin: Long?,
+        endDateEnd: Long?,
+        name: String?,
+        version: String?,
+        remark: String?,
+        versionTitle: String?,
+        creator: String?
+    ): List<ExperienceSummaryWithPermission> {
+        val today = DateUtil.today()
+        val expiredTime = if (expired == null || expired == false) today else null
+        val finalCreateDateBegin = if (createDateBegin == null) {
+            expiredTime
+        } else {
+            val c = createDateBegin.let { DateTimeUtil.convertTimestampToLocalDateTime(it) }
+            if (expiredTime == null) {
+                c
+            } else {
+                DateTimeUtil.max(c, expiredTime)
+            }
+        }
+
         val online = if (expired == null || expired == false) true else null
-        val experienceRecordList = experienceDao.list(dslContext, projectId, searchTime, online)
+        val experienceRecordList = experienceDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            createDateBegin = finalCreateDateBegin,
+            createDateEnd = createDateEnd?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+            endDateBegin = endDateBegin?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+            endDateEnd = endDateEnd?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+            name = name,
+            version = version,
+            remark = remark,
+            versionTitle = versionTitle,
+            creator = creator,
+            online = online
+        )
         // Rbac得校验体验是否列表权限，有才返回。
         val experienceListResult = experiencePermissionService.filterCanListExperience(
             user = userId,
@@ -210,7 +248,7 @@ class ExperienceService @Autowired constructor(
         )
 
         return experienceListResult.map {
-            val isExpired = DateUtil.isExpired(it.endDate, expireTime)
+            val isExpired = DateUtil.isExpired(it.endDate, today)
             val canExperience = recordIds.contains(it.id) || userId == it.creator
             val canEdit = experiencePermissionListMap[AuthPermission.EDIT]?.contains(it.id) ?: false
             val canDelete = experiencePermissionListMap[AuthPermission.DELETE]?.contains(it.id) ?: false

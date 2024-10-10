@@ -90,9 +90,36 @@ interface UserExperienceResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "", required = false)
+        @Parameter(description = "是否显示已过期体验", required = false)
         @QueryParam("expired")
-        expired: Boolean?
+        expired: Boolean?,
+        @Parameter(description = "体验发起时间--起始时间(秒级)", required = false)
+        @QueryParam("createDateBegin")
+        createDateBegin: Long?,
+        @Parameter(description = "体验发起时间--终止时间(秒级)", required = false)
+        @QueryParam("createDateEnd")
+        createDateEnd: Long?,
+        @Parameter(description = "体验结束时间--起始时间(秒级)", required = false)
+        @QueryParam("endDateBegin")
+        endDateBegin: Long?,
+        @Parameter(description = "体验结束时间--终止时间(秒级)", required = false)
+        @QueryParam("endDateEnd")
+        endDateEnd: Long?,
+        @Parameter(description = "文件名", required = false)
+        @QueryParam("name")
+        name: String?,
+        @Parameter(description = "版本号", required = false)
+        @QueryParam("version")
+        version: String?,
+        @Parameter(description = "版本描述", required = false)
+        @QueryParam("remark")
+        remark: String?,
+        @Parameter(description = "版本标题", required = false)
+        @QueryParam("versionTitle")
+        versionTitle: String?,
+        @Parameter(description = "发起人", required = false)
+        @QueryParam("creator")
+        creator: String?
     ): Result<List<ExperienceSummaryWithPermission>>
 
     @Operation(summary = "获取体验详情")

@@ -78,6 +78,36 @@ class ExperienceDao {
         }
     }
 
+    fun list(
+        dslContext: DSLContext,
+        projectId: String,
+        createDateBegin: LocalDateTime?,
+        createDateEnd: LocalDateTime?,
+        endDateBegin: LocalDateTime?,
+        endDateEnd: LocalDateTime?,
+        name: String?,
+        version: String?,
+        remark: String?,
+        versionTitle: String?,
+        creator: String?,
+        online: Boolean?
+    ): Result<TExperienceRecord> {
+        with(TExperience.T_EXPERIENCE) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+                .let { if (createDateBegin != null) it.and(CREATE_TIME.gt(createDateBegin)) else it }
+                .let { if (createDateEnd != null) it.and(CREATE_TIME.lt(createDateEnd)) else it }
+                .let { if (endDateBegin != null) it.and(END_DATE.gt(endDateBegin)) else it }
+                .let { if (endDateEnd != null) it.and(END_DATE.lt(endDateEnd)) else it }
+                .let { if (name != null) it.and(NAME.like("%$name%")) else it }
+                .let { if (version != null) it.and(VERSION.like("%$version%")) else it }
+                .let { if (remark != null) it.and(REMARK.like("%$remark%")) else it }
+                .let { if (versionTitle != null) it.and(VERSION_TITLE.like("%$versionTitle%")) else it }
+                .let { if (creator != null) it.and(CREATOR.like("%$creator%")) else it }
+                .let { if (online != null) it.and(ONLINE.eq(online)) else it }
+                .orderBy(CREATE_TIME.desc()).fetch()
+        }
+    }
+
     fun listByBundleIdentifier(
         dslContext: DSLContext,
         projectId: String,
