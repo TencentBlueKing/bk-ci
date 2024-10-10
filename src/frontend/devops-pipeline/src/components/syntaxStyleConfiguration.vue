@@ -1,52 +1,18 @@
 <template>
     <div>
         <bk-popover
+            v-if="isShowPopover"
             theme="light"
             :width="892"
             placement="top-start"
         >
             <label class="label">{{ $t('namingConvention') }}</label>
             <div slot="content">
-                <h3>{{ $t('grammaticalDifferences') }}</h3>
-                <bk-table
-                    :data="namingConventionData"
-                    :outer-border="false"
-                    row-auto-height
-                    show-overflow-tooltip
-                >
-                    <bk-table-column
-                        :label="$t('differenceItem')"
-                        prop="difference"
-                        :width="140"
-                    />
-                    <bk-table-column
-                        :label="$t('traditionalStyle')"
-                        prop="classic"
-                        :width="290"
-                    >
-                        <template slot-scope="props">
-                            <div class="label-column">
-                                <p>{{ props.row.classic }}</p>
-                                <p>{{ props.row.classicExample }}</p>
-                            </div>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        :label="$t('constraintStyle')"
-                        prop="constrainedMode"
-                    >
-                        <template slot-scope="props">
-                            <div class="label-column">
-                                <p>{{ props.row.constrainedMode }}</p>
-                                <p>{{ props.row.constrainedExample }}</p>
-                            </div>
-                        </template>
-                    </bk-table-column>
-                </bk-table>
+                <NamingConventionTip />
             </div>
         </bk-popover>
         <bk-checkbox
-            ext-cls="namingConvention-checkbox"
+            :ext-cls="{ 'namingConvention-checkbox': isShowPopover }"
             v-model="inheritedDialect"
             @change="inheritedChange"
         >
@@ -58,28 +24,37 @@
             @change="pipelineDialectChange"
         >
             <bk-radio
+                class="radio-label"
                 :value="'CLASSIC'"
                 :disabled="isDialectDisabled"
             >
-                <span class="radio-label">{{ $t('traditionalStyle') }}</span>
+                <span>{{ $t('traditionalStyle') }}</span>
             </bk-radio>
             <bk-radio
+                class="radio-label"
                 :value="'CONSTRAINED'"
                 :disabled="isDialectDisabled"
             >
-                <span class="radio-label">{{ $t('constraintStyle') }}</span>
+                <span>{{ $t('constraintStyle') }}</span>
             </bk-radio>
         </bk-radio-group>
     </div>
 </template>
 
 <script>
-
+    import NamingConventionTip from '@/components/namingConventionTip.vue'
     export default {
         name: 'base-setting-tab',
+        components: {
+            NamingConventionTip
+        },
         props: {
             inheritedDialect: Boolean,
-            pipelineDialect: String
+            pipelineDialect: String,
+            isShowPopover: {
+                type: Boolean,
+                default: true
+            }
         },
         computed: {
             namingConventionData () {
@@ -153,5 +128,10 @@
 
 .pipelinte-template-type-group {
     margin-top: 10px;
+    display: flex;
+
+    .radio-label {
+        margin-right: 10px;
+    }
 }
 </style>
