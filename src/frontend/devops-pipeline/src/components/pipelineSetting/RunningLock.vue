@@ -265,6 +265,7 @@
                         requiredRule,
                         {
                             validator: (val) => {
+                                if (!val && val !== 0) return true
                                 return /^(?:[1-9]|[1-9][0-9]|1[0-9]{2}|200)$/.test(val)
                             },
                             message: this.$t('settings.maxConRunningQueueSizeTips'),
