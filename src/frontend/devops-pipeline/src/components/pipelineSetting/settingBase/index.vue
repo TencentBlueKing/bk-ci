@@ -66,11 +66,13 @@
             </form-field>
 
             <form-field
-                class="namingConvention"
+                :label="$t('namingConvention')"
+                :custom-desc="true"
             >
                 <syntax-style-configuration
-                    :inherited-dialect="templateSetting.pipelineAsCodeSettings?.inheritedDialect ?? true"
-                    :pipeline-dialect="templateSetting.pipelineAsCodeSettings?.pipelineDialect ?? 'CLASSIC'"
+                    :is-show-popover="false"
+                    :inherited-dialect="templateSetting.pipelineAsCodeSettings?.inheritedDialect"
+                    :pipeline-dialect="templateSetting.pipelineAsCodeSettings?.pipelineDialect ?? currentPipelineDialect"
                     @inherited-change="inheritedChange"
                     @pipeline-dialect-change="pipelineDialectChange"
                 />
@@ -424,9 +426,6 @@
         }
         .form-group-link {
             width: 100%;
-        }
-        .namingConvention {
-            position: relative;
         }
         .opera-lock-radio {
             margin-bottom: 0;

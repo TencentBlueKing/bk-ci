@@ -1594,6 +1594,13 @@
   "constraintFormat": "仅支持双花括号，避免出现 bash 脚本变量在执行前被系统赋值的问题",
   "constraintFormatExample": "如：${{variables.var}}",
 
+  "expressionFunction": "表达式函数",
+  "expressionFunctionTip": "如contains、join、fromJSON等",
+  "traditionalFunctionFormat": "仅在流程控制选项 {0} 设置中可以使用",
+  "customExpressionsSatisfyRun": "自定义表达式满足时运行",
+  "constraintFunctionFormat": "流程控制选项、插件入参、Job设置等流水线配置中均可使用函数",
+  "constraintFunctionFormatExample": "如变量 a 值为 Json 字符串，则 bash 脚本中，可以使用 fromJSON 读取echo “a.node is ${{fromJSON(a).node}}”",
+
   "variableValueTooLong": "变量值超长",
   "traditionalValueTooLongMode": "仅警告未报错",
 

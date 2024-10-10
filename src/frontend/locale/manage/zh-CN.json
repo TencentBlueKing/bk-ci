@@ -277,6 +277,13 @@
     "仅支持双花括号，避免出现 bash 脚本变量在执行前被系统赋值的问题": "仅支持双花括号，避免出现 bash 脚本变量在执行前被系统赋值的问题",
     "如：${{variables.var}}":"如：{'${{variables.var}}'}",
 
+    "表达式函数": "表达式函数",
+    "如contains、join、fromJSON": "如contains、join、fromJSON等",
+    "仅在流程控制选项X设置中可以使用": "仅在流程控制选项 {0} 设置中可以使用",
+    "自定义表达式满足时运行": "自定义表达式满足时运行",
+    "流程控制选项、插件入参、Job设置等流水线配置中均可使用函数": "流程控制选项、插件入参、Job设置等流水线配置中均可使用函数",
+    "如变量a值为Json字符串，则bash脚本中，可以使用fromJSON读取echo “a.node is ${{fromJSON(a).node}}”": "如变量 a 值为 Json 字符串，则 bash 脚本中，可以使用 fromJSON 读取echo “a.node is ${{fromJSON(a).node}}”",
+
     "变量值超长": "变量值超长",
     "仅警告未报错": "仅警告未报错",
 

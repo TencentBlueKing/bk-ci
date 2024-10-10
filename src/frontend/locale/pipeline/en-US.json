@@ -1592,6 +1592,13 @@
   "constraintFormat": "Only Double Curly Braces Supported to Avoid System Assignment Issues in Bash Scripts",
   "constraintFormatExample": "e.g., ${{variables.var}}",
 
+  "expressionFunction": "Expression Functions",
+  "expressionFunctionTip": "e.g., contains, join, fromJSON...",
+  "traditionalFunctionFormat": "Can only be used in the flow control option {0} settings",
+  "customExpressionsSatisfyRun": "custom expressions satisfy run",
+  "constraintFunctionFormat": "Functions can be used in pipeline configurations such as flow control options, plugin parameters, and Job settings",
+  "constraintFunctionFormatExample": "If the value of variable 'a' is a JSON string, you can use fromJSON in a bash script to read it, e.g., echo “a.node is ${{fromJSON(a).node}}”",
+
   "variableValueTooLong": "Variable Value Too Long",
   "traditionalValueTooLongMode": "Only Warning without Error",
 
