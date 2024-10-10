@@ -100,7 +100,7 @@ class PipelineSettingVersionDao {
                     JsonUtil.toJson(self, false)
                 },
                 version,
-                setting.maxConRunningQueueSize
+                setting.maxConRunningQueueSize ?: -1
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
