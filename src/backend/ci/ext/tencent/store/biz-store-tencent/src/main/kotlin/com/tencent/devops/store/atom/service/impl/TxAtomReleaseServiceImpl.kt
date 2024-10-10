@@ -75,10 +75,12 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineReq
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.utils.KEY_PIPELINE_NAME
 import com.tencent.devops.quality.api.v2.ServiceQualityControlPointMarketResource
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorMarketResource
@@ -643,7 +645,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     }
 
     @SuppressWarnings("ComplexMethod", "LongMethod")
-    private fun runPipeline(
+    private fun runPipeline2(
         context: DSLContext,
         atomId: String,
         userId: String,
