@@ -231,7 +231,7 @@
 - [New] Adjustment of pipeline output sorting [link](http://github.com/TencentBlueKing/bk-ci/issues/9259)
 - [New] Optimize RBAC permissions [link](http://github.com/TencentBlueKing/bk-ci/issues/9149)
 
-#### optimization
+#### Optimization
 - [Optimization] store universal interface encapsulation [link](http://github.com/TencentBlueKing/bk-ci/issues/10123)
 - [Optimization] Optimization of some environment management codes [link](http://github.com/TencentBlueKing/bk-ci/issues/10157)
 - [Optimization] Optimization of store plugin UI grouping logic [link](http://github.com/TencentBlueKing/bk-ci/issues/10086)
@@ -337,7 +337,7 @@
 - [New] Added paging parameters to the worker bee svn webhook query interface [link](http://github.com/TencentBlueKing/bk-ci/issues/10189)
 - [New] Support plugin developers to set the default timeout and default failure strategy [link](http://github.com/TencentBlueKing/bk-ci/issues/10019)
 
-#### optimization
+#### Optimization
 - [Optimization] store universal interface encapsulation [link](http://github.com/TencentBlueKing/bk-ci/issues/10123)
 
 #### Fixes
@@ -364,7 +364,7 @@
 - [New] Containerized no-compilation build environment transformation [link](http://github.com/TencentBlueKing/bk-ci/issues/8534)
 - [New] The Devops callback sequence may be inconsistent with the time buildNo sequence. It is hoped that the callback message can return the buildNo [link](http://github.com/TencentBlueKing/bk-ci/issues/10017)
 
-#### optimization
+#### Optimization
 - [Optimization] Optimization of some environment management codes [link](http://github.com/TencentBlueKing/bk-ci/issues/10157)
 - [Optimization] Optimization of store plugin UI grouping logic [link](http://github.com/TencentBlueKing/bk-ci/issues/10086)
 
@@ -396,7 +396,7 @@
 - [New] When the plugin code base automatically opens stream ci, the project ownership information is optimized [link](http://github.com/TencentBlueKing/bk-ci/issues/9996)
 - [New] Access to the Audit Center (Phase II) [Link](http://github.com/TencentBlueKing/bk-ci/issues/9732)
 
-#### optimization
+#### Optimization
 - [Optimization] The plugin migration tool blocks permission verification when migrating plugins in templates [link](http://github.com/TencentBlueKing/bk-ci/issues/10093)
 - [Optimization] Redis storage db sharding rule optimization TencentBlueKing [link](http://github.com/TencentBlueKing/bk-ci/issues/10081)
 
@@ -425,7 +425,7 @@
 - [New] Reduce the number of submodules of metrics microservice [link](http://github.com/TencentBlueKing/bk-ci/issues/9229)
 - [New] Merge edge microservices into misc services [link](http://github.com/TencentBlueKing/bk-ci/issues/9770)
 
-#### optimization
+#### Optimization
 - [Optimization] The task data skipped in the current build is not saved to the database TencentBlueKing [link](http://github.com/TencentBlueKing/bk-ci/issues/9951)
 
 #### Fixes
@@ -457,7 +457,7 @@
 - [New] [bugfix] Stream cross-library trigger commit check probability loss [link](http://github.com/TencentBlueKing/bk-ci/issues/9941)
 - [New] Verify user permissions based on moa tickets and return security information [link](http://github.com/TencentBlueKing/bk-ci/issues/9795)
 
-#### optimization
+#### Optimization
 - [Optimization] Add a gradle plugin to verify the partition table structure [link](http://github.com/TencentBlueKing/bk-ci/issues/9931)
 
 #### Fixes
@@ -596,7 +596,7 @@
 - [New] Adjustment of pipeline output sorting [link](http://github.com/TencentBlueKing/bk-ci/issues/9259)
 - [New] Optimize RBAC permissions [link](http://github.com/TencentBlueKing/bk-ci/issues/9149)
 
-#### optimization
+#### Optimization
 - [Optimization] Added a retry mechanism for creating file disk cache objects [link](http://github.com/TencentBlueKing/bk-ci/issues/9892)
 - [Optimization] The store component built-in packaging pipeline abandons the dockerhost builder solution [link](http://github.com/TencentBlueKing/bk-ci/issues/9689)
 - [Optimization] The domain name in the static file URL supports replacement based on the Referer header of the http request [link](http://github.com/TencentBlueKing/bk-ci/issues/9803)

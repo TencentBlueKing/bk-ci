@@ -127,7 +127,7 @@
 ##### Gateway
 - [New] The gateway can handle 302 abnormal jumps during auth_request [link](http://github.com/TencentBlueKing/bk-ci/issues/10295)
 - [New] Gateway default tag is not hard-coded [link](http://github.com/TencentBlueKing/bk-ci/issues/10334)
-##### other
+##### Other
 - [New] Compress http return json string [link](http://github.com/TencentBlueKing/bk-ci/issues/10323)
 - [New] Changes in Blue Whale 7.2 version [link](http://github.com/TencentBlueKing/bk-ci/issues/10558)
 - [New] SQL doc document update [link](http://github.com/TencentBlueKing/bk-ci/issues/9974)
@@ -142,7 +142,7 @@
 - [New] Optimize audit related logic [link](http://github.com/TencentBlueKing/bk-ci/issues/10671)
 - [New] Optimize open interface section verification [link](http://github.com/TencentBlueKing/bk-ci/issues/10426)
 
-#### optimization
+#### Optimization
 ##### Pipeline
 - [Optimization] Optimize the pipeline execution history table [link](http://github.com/TencentBlueKing/bk-ci/issues/10769)
 - [Optimization] The pipeline instance copy function does not copy the parameter values of the corresponding instance [link](http://github.com/TencentBlueKing/bk-ci/issues/10580)
@@ -162,7 +162,7 @@
 - [Optimization] store logo upload does not support svg images yet to prevent xss attacks [link](http://github.com/TencentBlueKing/bk-ci/issues/10374)
 ##### Agent
 - [Fix] Occasional 142 issues when starting the build process in windwos [link](http://github.com/TencentBlueKing/bk-ci/issues/10179)
-##### other
+##### Other
 - [Optimization] The method for getting the db cluster name supports configurable db cluster list [link](http://github.com/TencentBlueKing/bk-ci/issues/10372)
 
 #### Fixes
@@ -198,7 +198,7 @@
 - [Fix] Variable read-only causes inability to rewrite [link](http://github.com/TencentBlueKing/bk-ci/issues/10245)
 ##### Code Repository
 - [Fix] The project name of the associated code library that has been associated with the pac is not cleared after closing the pop-up window [link](http://github.com/TencentBlueKing/bk-ci/issues/8146)
-##### project management
+##### Project management
 - [Fix] Open source community, the open source version of the project management interface needs to be authorized [link](http://github.com/TencentBlueKing/bk-ci/issues/10382)
 - [Fix] The front end of the community version of the simple permission center should hide the maximum authorization scope [ link ](http://github.com/TencentBlueKing/bk-ci/issues/10040)
 - [Fix] Serialization comparison issue of the maximum authorized scope of the project [link](http://github.com/TencentBlueKing/bk-ci/issues/10649)
@@ -210,7 +210,7 @@
 - [Fix] [Community] Listing failure & white screen issue on pipeline execution page [v2.1.0+] [Link](http://github.com/TencentBlueKing/bk-ci/issues/10357)
 - [Fix] Adjustment of international configuration of store general interface [link](http://github.com/TencentBlueKing/bk-ci/issues/10640)
 - [Fix] The open source version of the plugin upgrade did not refresh the LATEST_TEST_FLAG flag status [link](http://github.com/TencentBlueKing/bk-ci/issues/10701)
-##### Scheduling
+##### Dispatch
 - [Fix] Issue with executing matrix job with audit plugin in builder without compilation environment [link](http://github.com/TencentBlueKing/bk-ci/issues/10599)
 - [Fix] Retrying rescheduling causes reuse to fail to unlock [link](http://github.com/TencentBlueKing/bk-ci/issues/10675)
 ##### Agent
@@ -219,7 +219,7 @@
 - [Fix] When the agent has no region information, there is no bkrepo gateway by default [link](http://github.com/TencentBlueKing/bk-ci/issues/10778)
 - [Fix] Agent skips reuse lock when reusing peer nodes [link](http://github.com/TencentBlueKing/bk-ci/issues/10795)
 - [Fix] Agent cannot exit the queue after cancellation during reuse [link](http://github.com/TencentBlueKing/bk-ci/issues/10589)
-##### other
+##### Other
 - [Fix] Failed to start the process service in version 2.1 [link](http://github.com/TencentBlueKing/bk-ci/issues/10271)
 - [Fix] Synchronize difference code [link](http://github.com/TencentBlueKing/bk-ci/issues/10319)
 - [Fix] Fix npm dependency vulnerability [link](http://github.com/TencentBlueKing/bk-ci/issues/10604)
@@ -310,7 +310,7 @@
 - [New] User group related interface optimization [link](http://github.com/TencentBlueKing/bk-ci/issues/10463)
 - [New] Pull user list based on organization ID [link](http://github.com/TencentBlueKing/bk-ci/issues/10513)
 - [New] Optimize the permission application page [link](http://github.com/TencentBlueKing/bk-ci/issues/10145)
-##### project management
+##### Project management
 - [New] Optimization of the problem that the name of the operational product is not displayed on the project view page [link](http://github.com/TencentBlueKing/bk-ci/issues/10668)
 - [New] Added project-level event callback [link](http://github.com/TencentBlueKing/bk-ci/issues/10146)
 ##### Store
@@ -322,7 +322,7 @@
 - [New] Integrate micro-extension resource scheduling capabilities [link](http://github.com/TencentBlueKing/bk-ci/issues/10122)
 ##### Log Service
 - [New] Add subtag query conditions to the Log Service interface [link](http://github.com/TencentBlueKing/bk-ci/issues/10536)
-##### Scheduling
+##### Dispatch
 - [New] Optimize the dockerhost dockerRun container log acquisition interface [link](http://github.com/TencentBlueKing/bk-ci/issues/10811)
 - [New] kubernetes-manager supports docker inspect image [link](http://github.com/TencentBlueKing/bk-ci/issues/8862)
 - [New] The build environment Agent concurrency limit is 0 and does not take effect [link](http://github.com/TencentBlueKing/bk-ci/issues/10740)
@@ -342,7 +342,7 @@
 ##### Gateway
 - [New] The gateway can handle 302 abnormal jumps during auth_request [link](http://github.com/TencentBlueKing/bk-ci/issues/10295)
 - [New] Gateway default tag is not hard-coded [link](http://github.com/TencentBlueKing/bk-ci/issues/10334)
-##### other
+##### Other
 - [New] Compress http return json string [link](http://github.com/TencentBlueKing/bk-ci/issues/10323)
 - [New] Changes in Blue Whale 7.2 version [link](http://github.com/TencentBlueKing/bk-ci/issues/10558)
 - [New] SQL doc document update [link](http://github.com/TencentBlueKing/bk-ci/issues/9974)
@@ -357,7 +357,7 @@
 - [New] Optimize audit related logic [link](http://github.com/TencentBlueKing/bk-ci/issues/10671)
 - [New] Optimize open interface section verification [link](http://github.com/TencentBlueKing/bk-ci/issues/10426)
 
-#### optimization
+#### Optimization
 ##### Pipeline
 - [Optimization] Optimize the pipeline execution history table [link](http://github.com/TencentBlueKing/bk-ci/issues/10769)
 - [Optimization] The pipeline instance copy function does not copy the parameter values of the corresponding instance [link](http://github.com/TencentBlueKing/bk-ci/issues/10580)
@@ -377,7 +377,7 @@
 - [Optimization] store logo upload does not support svg images yet to prevent xss attacks [link](http://github.com/TencentBlueKing/bk-ci/issues/10374)
 ##### Agent
 - [Fix] Occasional 142 issues when starting the build process in windwos [link](http://github.com/TencentBlueKing/bk-ci/issues/10179)
-##### other
+##### Other
 - [Optimization] The method for obtaining the db cluster name supports configurable db cluster list [link](http://github.com/TencentBlueKing/bk-ci/issues/10372)
 
 #### Fixes
@@ -413,7 +413,7 @@
 - [Fix] Variable read-only causes inability to rewrite [link](http://github.com/TencentBlueKing/bk-ci/issues/10245)
 ##### Code Repository
 - [Fix] The project name of the associated code library that has been associated with PAC is not cleared after closing the pop-up window [link](http://github.com/TencentBlueKing/bk-ci/issues/8146)
-##### project management
+##### Project management
 - [Fix] Open source community, the permissions of the open source version of the project management interface need to be released [link](http://github.com/TencentBlueKing/bk-ci/issues/10382)
 - [Fix] The front end of the community version of the simple permission center should hide the maximum authorization scope [link](http://github.com/TencentBlueKing/bk-ci/issues/10040)
 - [Fix] Serialization comparison issue of the maximum authorized scope of the project [link](http://github.com/TencentBlueKing/bk-ci/issues/10649)
@@ -425,7 +425,7 @@
 - [Fix] [Community] Listing failure & white screen issue on pipeline execution page [v2.1.0+] [Link](http://github.com/TencentBlueKing/bk-ci/issues/10357)
 - [Fix] Adjustment of international configuration of store general interface [link](http://github.com/TencentBlueKing/bk-ci/issues/10640)
 - [Fix] The open source version of the plugin upgrade did not refresh the LATEST_TEST_FLAG flag status [link](http://github.com/TencentBlueKing/bk-ci/issues/10701)
-##### Scheduling
+##### Dispatch
 - [Fix] Issue with executing matrix job with audit plugin in builder without compilation environment [link](http://github.com/TencentBlueKing/bk-ci/issues/10599)
 - [Fix] Retrying rescheduling causes reuse to fail to unlock [link](http://github.com/TencentBlueKing/bk-ci/issues/10675)
 ##### Agent
@@ -434,7 +434,7 @@
 - [Fix] When the agent has no region information, there is no bkrepo gateway by default [link](http://github.com/TencentBlueKing/bk-ci/issues/10778)
 - [Fix] Agent skips reuse lock when reusing peer nodes [link](http://github.com/TencentBlueKing/bk-ci/issues/10795)
 - [Fix] Agent cannot exit the queue after cancellation during reuse [link](http://github.com/TencentBlueKing/bk-ci/issues/10589)
-##### other
+##### Other
 - [Fix] Failed to start the process service in version 2.1 [link](http://github.com/TencentBlueKing/bk-ci/issues/10271)
 - [Fix] Synchronize difference code [link](http://github.com/TencentBlueKing/bk-ci/issues/10319)
 - [Fix] Fix npm dependency vulnerability [link](http://github.com/TencentBlueKing/bk-ci/issues/10604)
