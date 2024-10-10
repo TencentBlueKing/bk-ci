@@ -35,13 +35,16 @@ import com.tencent.devops.common.api.constant.KEY_SCRIPT
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineReq
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -49,6 +52,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
@@ -79,12 +83,12 @@ import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.UpdateStoreBaseDataPO
+import java.util.concurrent.Executors
 import org.apache.commons.lang3.StringEscapeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 @Suppress("ALL")
 @Service
@@ -118,13 +122,11 @@ class StorePipelineServiceImpl @Autowired constructor(
         userId: String,
         updateStorePipelineModelRequest: UpdateStorePipelineModelRequest
     ): Result<Boolean> {
-        val taskId = UUIDUtil.generate()
         val scopeType = updateStorePipelineModelRequest.scopeType
         val storeType = updateStorePipelineModelRequest.storeType
         val storeCodeList = updateStorePipelineModelRequest.storeCodeList
         val updatePipelineModel = updateStorePipelineModelRequest.pipelineModel
         val pipelineModel: String
-        val grayPipelineModel: String
         if (updatePipelineModel.isNullOrBlank()) {
             val pipelineModelConfig =
                 businessConfigDao.get(dslContext, storeType, featureName, "PIPELINE_MODEL")
@@ -132,51 +134,17 @@ class StorePipelineServiceImpl @Autowired constructor(
                         messageCode = CommonMessageCode.SYSTEM_ERROR,
                         language = I18nUtil.getLanguage(userId)
                     )
-            val grayPipelineModelConfig =
-                businessConfigDao.get(dslContext, storeType, featureName, "GRAY_PIPELINE_MODEL")
-                    ?: return I18nUtil.generateResponseDataObject(
-                        messageCode = CommonMessageCode.SYSTEM_ERROR,
-                        language = I18nUtil.getLanguage(userId)
-                    )
             pipelineModel = pipelineModelConfig.configValue
-            grayPipelineModel = grayPipelineModelConfig.configValue
         } else {
             pipelineModel = updatePipelineModel
-            grayPipelineModel = updatePipelineModel
         }
         when (scopeType) {
             ScopeTypeEnum.ALL.name -> {
-                handleStorePipelineModel(
+                handleStorePublicPipelineModel(
                     storeType = storeType,
-                    taskId = taskId,
-                    userId = userId,
-                    pipelineModel = grayPipelineModel,
-                    grayFlag = true
-                )
-                handleStorePipelineModel(
-                    storeType = storeType,
-                    taskId = taskId,
-                    userId = userId,
-                    pipelineModel = pipelineModel,
-                    grayFlag = false
-                )
-            }
-            ScopeTypeEnum.GRAY.name -> {
-                handleStorePipelineModel(
-                    storeType = storeType,
-                    taskId = taskId,
-                    userId = userId,
-                    pipelineModel = grayPipelineModel,
-                    grayFlag = true
-                )
-            }
-            ScopeTypeEnum.NO_GRAY.name -> {
-                handleStorePipelineModel(
-                    storeType = storeType,
-                    taskId = taskId,
-                    userId = userId,
-                    pipelineModel = pipelineModel,
-                    grayFlag = false
+                    storeCode = null,
+                    userId = storeInnerPipelineConfig.innerPipelineUser,
+                    pipelineModel = pipelineModel
                 )
             }
             ScopeTypeEnum.SPEC.name -> {
@@ -187,15 +155,14 @@ class StorePipelineServiceImpl @Autowired constructor(
                         language = I18nUtil.getLanguage(userId)
                     )
                 }
-                updatePipelineModel(
-                    storeType = storeType,
-                    storeCodeList = storeCodeList,
-                    userId = userId,
-                    taskId = taskId,
-                    defaultPipelineModel = pipelineModel,
-                    checkGrayFlag = true,
-                    grayPipelineModel = grayPipelineModel
-                )
+                storeCodeList.forEach {
+                    handleStorePublicPipelineModel(
+                        storeType = storeType,
+                        storeCode = it,
+                        userId = storeInnerPipelineConfig.innerPipelineUser,
+                        pipelineModel = pipelineModel
+                    )
+                }
             }
         }
         return Result(true)
@@ -328,6 +295,58 @@ class StorePipelineServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun deleteStoreInnerPipeline(
+        userId: String,
+        storeType: StoreTypeEnum?,
+        storeCode: String?,
+        excludeProjectCode: String?
+    ): Boolean {
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin deleteStoreInnerPipeline!!")
+            var offset = 0
+            do {
+                // 查询组件内置流水线信息记录
+                val storePipelineRelRecords = storePipelineRelDao.getStorePipelineRelRecords(
+                    dslContext = dslContext,
+                    offset = offset,
+                    limit = pageSize,
+                    storeType = storeType,
+                    storeCode = storeCode
+                )
+                storePipelineRelRecords?.forEach { storePipelineRelRecord ->
+                    var initProjectCode = storePipelineRelRecord.projectCode
+                    if (excludeProjectCode == initProjectCode) {
+                        // 如果内置流水线的项目属于要排除的项目，则不删除该内置流水线
+                        return@forEach
+                    }
+                    storePipelineBuildRelDao.deleteStorePipelineBuildRelByPipelineId(
+                        dslContext,
+                        storePipelineRelRecord.pipelineId
+                    )
+                    storePipelineRelDao.deleteStorePipelineRelById(dslContext, storePipelineRelRecord.id)
+                    if (initProjectCode.isNullOrBlank()) {
+                        initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+                            dslContext = dslContext,
+                            storeCode = storePipelineRelRecord.storeCode,
+                            storeType = storePipelineRelRecord.storeType
+                        )
+                    }
+                    // 调接口删除内置流水线
+                    client.get(ServicePipelineResource::class).delete(
+                        userId = userId,
+                        pipelineId = storePipelineRelRecord.pipelineId,
+                        channelCode = ChannelCode.AM,
+                        projectId = initProjectCode,
+                        checkFlag = false
+                    )
+                }
+                offset += pageSize
+            } while (storePipelineRelRecords?.size == pageSize)
+            logger.info("end deleteStoreInnerPipeline!!")
+        }
+        return true
+    }
+
     private fun handleStorePipelineModel(
         storeType: String,
         taskId: String,
@@ -378,6 +397,110 @@ class StorePipelineServiceImpl @Autowired constructor(
                     break@loop
                 }
             }
+        }
+    }
+
+    private fun handleStorePublicPipelineModel(
+        storeType: String,
+        userId: String,
+        pipelineModel: String,
+        storeCode: String? = null
+    ) {
+        val projectCode = storeInnerPipelineConfig.innerPipelineProject
+        val pipelineId = if (storeCode != null) {
+            storePipelineRelDao.getStorePipelineRelByStoreCode(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = StoreTypeEnum.valueOf(storeType)
+            )?.pipelineId
+        } else {
+            redisOperation.get("$storeType-PIPELINE-BUILD:PUBLIC")
+        }
+        pipelineId ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+            params = arrayOf(storeCode ?: "$storeType-PIPELINE-BUILD:PUBLIC")
+        )
+        val flag = client.get(ServicePipelineSettingResource::class).getPipelineSetting(
+            projectId = projectCode,
+            pipelineId = pipelineId,
+            channelCode = ChannelCode.AM
+        ).data != null
+        if (flag) {
+            client.get(ServicePipelineSettingResource::class)
+                .updatePipelineModel(
+                    userId = userId,
+                    updatePipelineModelRequest = UpdatePipelineModelRequest(
+                        pipelineModelVersionList = listOf(
+                            PipelineModelVersion(
+                                projectId = projectCode,
+                                pipelineId = pipelineId,
+                                creator = storeInnerPipelineConfig.innerPipelineUser,
+                                model = pipelineModel
+                            )
+                        )
+                    )
+                )
+        } else {
+            if (storeCode != null) {
+                val newPipelineId = creatAtomPipelineByStoreCode(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = storeType
+                )
+                val pipelineRelRecord = storePipelineRelDao.getStorePipelineRel(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = StoreTypeEnum.valueOf(storeType)
+                )
+                if (pipelineRelRecord == null) {
+                    storePipelineRelDao.add(
+                        dslContext = dslContext,
+                        storeCode = storeCode,
+                        storeType = StoreTypeEnum.valueOf(storeType),
+                        pipelineId = newPipelineId,
+                        projectCode = storeInnerPipelineConfig.innerPipelineProject
+                    )
+                } else {
+                    storePipelineRelDao.updateStorePipelineProject(
+                        dslContext = dslContext,
+                        storeCode = storeCode,
+                        storeType = StoreTypeEnum.valueOf(storeType),
+                        projectCode = storeInnerPipelineConfig.innerPipelineProject,
+                        pipelineId = newPipelineId
+                    )
+                }
+            }
+        }
+    }
+
+    fun creatAtomPipelineByStoreCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: String
+    ): String {
+        val lock = RedisLock(redisOperation, "creatAtomPipeline-$storeType-$storeCode", 60L)
+        try {
+            lock.lock()
+            val pipelineModelConfig = businessConfigDao.get(
+                dslContext = dslContext,
+                business = StoreTypeEnum.ATOM.name,
+                feature = "initBuildPipeline",
+                businessValue = "PIPELINE_MODEL"
+            )
+            val pipelineModel = pipelineModelConfig!!.configValue.replace(
+                "#{$KEY_PIPELINE_NAME}",
+                "$storeType-PIPELINE-BUILD:$storeCode"
+            )
+            val model = JsonUtil.to(pipelineModel, Model::class.java)
+            val pipelineId = client.get(ServicePipelineResource::class).create(
+                userId = storeInnerPipelineConfig.innerPipelineUser,
+                projectId = storeInnerPipelineConfig.innerPipelineProject,
+                pipeline = model,
+                channelCode = ChannelCode.AM
+            ).data!!.id
+            return pipelineId
+        } finally {
+            lock.unlock()
         }
     }
 

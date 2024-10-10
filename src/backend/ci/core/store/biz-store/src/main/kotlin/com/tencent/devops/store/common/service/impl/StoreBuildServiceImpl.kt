@@ -34,10 +34,10 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
 import com.tencent.devops.store.common.dao.StorePipelineRelDao
-import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.AbstractStoreHandleBuildResultService
 import com.tencent.devops.store.common.service.StoreBuildService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -60,13 +60,22 @@ class StoreBuildServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("handleStoreBuildResult params:[$pipelineId|$buildId|$storeBuildResultRequest]")
         // 查看该次构建流水线属于研发商店哪个组件类型
-        val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(dslContext, pipelineId)
-            ?: return I18nUtil.generateResponseDataObject(
+        val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRelByBuildId(dslContext, buildId)
+        logger.info("handleStoreBuildResult pipelineId:${storeBuildInfoRecord?.pipelineId}")
+        val storeType = storeBuildInfoRecord?.pipelineId?.let {
+            storePipelineRelDao.getStoreTypeByLatestPipelineId(
+                dslContext = dslContext,
+                pipelineId = it
+            )
+        }
+        logger.info("handleStoreBuildResult pipelineId:${storeBuildInfoRecord?.pipelineId},storeType:$storeType")
+        if (storeType == null) {
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(pipelineId),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
-        val storeType = storePipelineRelRecord.storeType
+        }
         val storeHandleBuildResultService =
             getStoreHandleBuildResultService(StoreTypeEnum.getStoreType(storeType.toInt()))
         val result = storeHandleBuildResultService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest)
