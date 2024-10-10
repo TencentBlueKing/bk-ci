@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.callback.AuthConstants
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectApprovalDao
@@ -61,8 +60,7 @@ class ProjectApprovalService @Autowired constructor(
     private val projectDao: ProjectDao,
     private val projectExtService: ProjectExtService,
     private val projectDispatcher: ProjectDispatcher,
-    private val projectUpdateHistoryDao: ProjectUpdateHistoryDao,
-    private val redisOperation: RedisOperation
+    private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) {
 
     companion object {

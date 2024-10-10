@@ -361,6 +361,24 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         // 设置Job环境变量customEnv到variablesWithType和variables中
         // TODO 此处应收敛到variablesWithType或variables的其中一个
         val customBuildParameters = mutableListOf<BuildParameters>()
+        // 兼容历史数据
+        container.customBuildEnv?.forEach { (k, v) ->
+            val value = EnvReplacementParser.parse(
+                value = v,
+                contextMap = contextMap,
+                onlyExpression = dialect.supportUseExpression(),
+                contextPair = contextPair
+            )
+            contextMap[k] = value
+            customBuildParameters.add(
+                BuildParameters(
+                    key = k,
+                    value = value,
+                    valueType = BuildFormPropertyType.STRING,
+                    readOnly = true
+                )
+            )
+        }
         container.customEnv?.forEach { nameAndValue ->
             val key = nameAndValue.key ?: return@forEach
             val value = EnvReplacementParser.parse(
