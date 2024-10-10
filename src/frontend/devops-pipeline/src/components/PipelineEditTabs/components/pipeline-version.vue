@@ -38,18 +38,18 @@
                 <div class="version-con">
                     <div class="version-names">
                         <div
-                            :class="{ 'baseline-build': param.id === 'BK_CI_BUILD_NO' }"
+                            :class="{ 'baseline-build': isBuildNo(param) }"
                             v-bk-tooltips="{
                                 ...baselineTooltipContent,
                                 disabled: param.id !== 'BK_CI_BUILD_NO'
                             }"
                         >
                             <span>{{ param.id }}</span>
-                            <span>({{ param.id === 'BK_CI_BUILD_NO' ? param.desc : $t(param.desc) }})</span>
+                            <span>({{ isBuildNo(param) ? param.desc : $t(param.desc) }})</span>
                         </div>
                         <div
                             id="baseline-tooltip-content"
-                            v-if="param.id === 'BK_CI_BUILD_NO'"
+                            v-if="isBuildNo(param)"
                         >
                             <p
                                 v-for="(tip, index) in buildNoBaselineTips"
@@ -61,7 +61,7 @@
                     </div>
                     <div class="value-row">
                         <span class="default-value">
-                            <span v-if="param.id === 'BK_CI_BUILD_NO'">
+                            <span v-if="isBuildNo(param)">
                                 {{ `${$t('buildNoBaseline.baselineValue')}${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` }}
                                 <span
                                     class="dafault-value-current"
@@ -367,18 +367,13 @@
                 return this.buildNo && this.buildNo.required ? this.buildNo.required : false
             },
             buildNoBaselineTips () {
-                return [
-                    'buildNoBaseline.tips1',
-                    'buildNoBaseline.tips2',
-                    'buildNoBaseline.tips3',
-                    'buildNoBaseline.tips4',
-                    'buildNoBaseline.tips5',
-                    'buildNoBaseline.tips6',
-                    'buildNoBaseline.tips7'
-                ]
+                return Array(7).fill(0).map((_, i) => this.$t(`buildNoBaseline.tips${i + 1}`))
             },
             resetBuildNo () {
                 return this.buildNo.buildNo + 1
+            },
+            isBuildNo () {
+                return (param) => param.id === 'BK_CI_BUILD_NO'
             }
         },
         watch: {
