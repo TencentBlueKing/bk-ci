@@ -48,9 +48,6 @@ import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
-import java.net.URLDecoder
-import java.time.LocalDateTime
-import java.util.Locale
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -61,6 +58,9 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.lower
 import org.springframework.stereotype.Repository
+import java.net.URLDecoder
+import java.time.LocalDateTime
+import java.util.Locale
 
 @Suppress("ALL")
 @Repository
@@ -406,7 +406,8 @@ class ProjectDao {
                 PROPERTIES,
                 SUBJECT_SCOPES,
                 AUTH_SECRECY,
-                PRODUCT_ID
+                PRODUCT_ID,
+                PIPELINE_DIALECT
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -437,7 +438,8 @@ class ProjectDao {
                 },
                 subjectScopesStr,
                 projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
-                projectCreateInfo.productId
+                projectCreateInfo.productId,
+                projectCreateInfo.pipelineDialect
             ).execute()
         }
     }
@@ -471,6 +473,7 @@ class ProjectDao {
                 .set(SUBJECT_SCOPES, subjectScopesStr)
                 .set(PROJECT_TYPE, projectUpdateInfo.projectType)
                 .set(PRODUCT_ID, projectUpdateInfo.productId)
+                .set(PIPELINE_DIALECT, projectUpdateInfo.pipelineDialect)
             projectUpdateInfo.authSecrecy?.let { update.set(AUTH_SECRECY, it) }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }

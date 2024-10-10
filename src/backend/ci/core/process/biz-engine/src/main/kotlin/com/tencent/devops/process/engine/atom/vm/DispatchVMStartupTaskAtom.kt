@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -65,8 +66,8 @@ import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailServ
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -91,7 +92,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeBuilder: DispatchTypeBuilder,
-    private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineContextService: PipelineContextService,
     private val pipelineTaskService: PipelineTaskService
 ) : IAtomTask<VMBuildContainer> {
@@ -289,14 +289,11 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     ): Boolean {
         param.buildEnv?.let { buildEnv ->
             val asCode by lazy {
-                val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
-                    task.projectId, task.pipelineId, task.buildId, null
-                )
-                val asCodeEnabled = asCodeSettings?.enable == true
-                val contextPair = if (asCodeEnabled) {
+                val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
+                val contextPair = if (dialect.supportUseExpression()) {
                     EnvReplacementParser.getCustomExecutionContextByMap(variables)
                 } else null
-                Pair(asCodeEnabled, contextPair)
+                Pair(dialect, contextPair)
             }
             buildEnv.forEach { env ->
                 if (!env.value.startsWith("$")) {
@@ -305,7 +302,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 val version = EnvReplacementParser.parse(
                     value = env.value,
                     contextMap = variables,
-                    onlyExpression = asCode.first,
+                    onlyExpression = asCode.first.supportUseExpression(),
                     contextPair = asCode.second
                 )
                 val res = client.get(ServiceContainerAppResource::class).getBuildEnv(

@@ -61,6 +61,7 @@ import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.LogUtils
@@ -1597,6 +1598,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         deptId: Long?,
         deptName: String?
     )
+
+    override fun getPipelineDialect(projectId: String): String {
+        return getByEnglishName(englishName = projectId)?.pipelineDialect ?: PipelineDialectType.CLASSIC.name
+    }
 
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64
