@@ -13,12 +13,14 @@ import java.time.LocalDateTime
 class AuthResourceGroupApplyDao {
     fun list(
         dslContext: DSLContext,
+        day: Long,
         limit: Int,
         offset: Int
     ): Result<TAuthResourceGroupApplyRecord> {
         return with(TAuthResourceGroupApply.T_AUTH_RESOURCE_GROUP_APPLY) {
             dslContext.selectFrom(this)
                 .where(STATUS.eq(ApplyToGroupStatus.PENDING.value))
+                .and(CREATE_TIME.ge(LocalDateTime.now().minusDays(day)))
                 .orderBy(CREATE_TIME.asc())
                 .offset(offset)
                 .limit(limit)

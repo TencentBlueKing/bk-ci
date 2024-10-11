@@ -237,6 +237,17 @@ class AuthResourceService @Autowired constructor(
         )
     }
 
+    fun listResourcesCreator(
+        projectCode: String,
+        resourceCodes: List<String>
+    ): List<String> {
+        return authResourceDao.listResourcesCreator(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceCodes = resourceCodes
+        )
+    }
+
     private fun formatTimestamp(timestamp: Long?): LocalDateTime? =
         if (timestamp == null) null
         else LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault())

@@ -179,7 +179,8 @@ class RbacAuthConfiguration {
         dslContext: DSLContext,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
-        resourceGroupSyncService: PermissionResourceGroupSyncService
+        resourceGroupSyncService: PermissionResourceGroupSyncService,
+        objectMapper: ObjectMapper
     ) = RbacPermissionResourceGroupService(
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
@@ -188,7 +189,8 @@ class RbacAuthConfiguration {
         dslContext = dslContext,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
         authResourceGroupMemberDao = authResourceGroupMemberDao,
-        resourceGroupSyncService = resourceGroupSyncService
+        resourceGroupSyncService = resourceGroupSyncService,
+        objectMapper = objectMapper
     )
 
     @Bean
@@ -577,16 +579,16 @@ class RbacAuthConfiguration {
 
     @Bean
     fun migratePermissionHandoverService(
-        v2ManagerService: V2ManagerService,
         permissionResourceMemberService: PermissionResourceMemberService,
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceService: AuthResourceService,
+        authResourceGroupMemberService: PermissionResourceMemberService,
         dslContext: DSLContext
     ) = MigratePermissionHandoverService(
-        v2ManagerService = v2ManagerService,
         permissionResourceMemberService = permissionResourceMemberService,
         authResourceGroupDao = authResourceGroupDao,
         authResourceService = authResourceService,
+        authResourceGroupMemberService = authResourceGroupMemberService,
         dslContext = dslContext
     )
 

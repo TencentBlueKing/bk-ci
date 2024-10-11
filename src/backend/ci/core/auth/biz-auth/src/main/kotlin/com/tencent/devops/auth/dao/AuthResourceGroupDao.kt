@@ -179,13 +179,15 @@ class AuthResourceGroupDao {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        groupCode: String?
+        groupCode: String? = null,
+        groupName: String? = null
     ): TAuthResourceGroupRecord? {
         return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
             dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_CODE.eq(resourceCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .let { if (groupCode == null) it else it.and(GROUP_CODE.eq(groupCode)) }
+                .let { if (groupName == null) it else it.and(GROUP_NAME.eq(groupName)) }
                 .fetchOne()
         }
     }

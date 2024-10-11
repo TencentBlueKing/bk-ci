@@ -31,6 +31,8 @@ package com.tencent.devops.auth.provider.sample.service
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.dto.ListGroupConditionDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
+import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
+import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
@@ -89,6 +91,11 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         resourceType: String,
         resourceCode: String,
         groupCode: String
+    ): Int = 0
+
+    override fun createCustomGroupAndPermissions(
+        projectId: String,
+        customGroupCreateReq: CustomGroupCreateReq
     ): Int = 0
 
     override fun syncManagerGroup(

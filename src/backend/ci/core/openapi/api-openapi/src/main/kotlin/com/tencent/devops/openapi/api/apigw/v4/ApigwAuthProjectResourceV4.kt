@@ -1,6 +1,7 @@
 package com.tencent.devops.openapi.api.apigw.v4
 
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
+import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
@@ -189,7 +190,33 @@ interface ApigwAuthProjectResourceV4 {
         resourceType: String,
         @Parameter(description = "用户组code,CI管理员为CI_MANAGER", required = true)
         @QueryParam("groupCode")
-        groupCode: BkAuthGroup
+        groupCode: BkAuthGroup,
+        @Parameter(description = "用户组名称", required = true)
+        @QueryParam("groupName")
+        groupName: String?,
+        @Parameter(description = "用户组描述", required = true)
+        @QueryParam("groupDesc")
+        groupDesc: String?
+    ): Result<Int>
+
+    @POST
+    @Path("/create_custom_group_and_permissions/")
+    @Operation(summary = "创建自定义用户和权限", tags = ["v4_app_create_custom_group_and_permissions"])
+    fun createCustomGroupAndPermissions(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "userId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String?,
+        @Parameter(description = "项目Id", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "自定义组创建请求体", required = true)
+        customGroupCreateReq: CustomGroupCreateReq
     ): Result<Int>
 
     @POST

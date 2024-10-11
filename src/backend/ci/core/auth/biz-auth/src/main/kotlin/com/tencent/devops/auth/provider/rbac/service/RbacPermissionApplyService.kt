@@ -356,10 +356,35 @@ class RbacPermissionApplyService @Autowired constructor(
                 applyJoinGroupInfo = applyJoinGroupInfo
             )
         } catch (e: Exception) {
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
-                params = arrayOf(e.message ?: "")
-            )
+            when {
+                e.message?.contains("审批人不允许为空") == true -> {
+                    val resourceCodes = authResourceGroupDao.listByRelationId(
+                        dslContext = dslContext,
+                        projectCode = applyJoinGroupInfo.projectCode,
+                        iamGroupIds = applyJoinGroupInfo.groupIds.map { it.toString() }
+                    ).distinctBy { it.resourceCode }.map { it.resourceCode }
+                    val listResourcesCreator = authResourceService.listResourcesCreator(
+                        projectCode = applyJoinGroupInfo.projectCode,
+                        resourceCodes = resourceCodes
+                    )
+                    val departedUsers = listResourcesCreator.filter {
+                        deptService.isUserDeparted(it)
+                    }.joinToString(",")
+                    throw ErrorCodeException(
+                        errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
+                        params = arrayOf(
+                            "该资源的管理员${departedUsers}已离职，请麻烦联系项目管理员或者蓝盾小助手进行交接该用户的权限!"
+                        )
+                    )
+                }
+
+                else -> {
+                    throw ErrorCodeException(
+                        errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
+                        params = arrayOf("${e.message}")
+                    )
+                }
+            }
         }
         return true
     }

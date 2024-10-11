@@ -4,6 +4,7 @@ import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
 import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
+import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.common.api.pojo.Result
@@ -127,16 +128,37 @@ class ApigwAuthProjectResourceV4Impl @Autowired constructor(
         userId: String?,
         projectId: String,
         resourceType: String,
-        groupCode: BkAuthGroup
+        groupCode: BkAuthGroup,
+        groupName: String?,
+        groupDesc: String?
     ): Result<Int> {
         logger.info(
             "OPENAPI_AUTH_PROJECT_RESOURCE_V4 createGroupByGroupCode " +
-                " |$appCode|$userId|$projectId|$resourceType|$groupCode"
+                " |$appCode|$userId|$projectId|$resourceType|$groupCode|$groupName|$groupDesc"
         )
         return client.get(ServiceResourceGroupResource::class).createGroupByGroupCode(
             projectCode = projectId,
             resourceType = resourceType,
-            groupCode = groupCode
+            groupCode = groupCode,
+            groupName = groupName,
+            groupDesc = groupDesc
+        )
+    }
+
+    override fun createCustomGroupAndPermissions(
+        appCode: String?,
+        apigwType: String?,
+        userId: String?,
+        projectId: String,
+        customGroupCreateReq: CustomGroupCreateReq
+    ): Result<Int> {
+        logger.info(
+            "OPENAPI_AUTH_PROJECT_RESOURCE_V4 createCustomGroupAndPermissions " +
+                " |$appCode|$userId|$projectId|$customGroupCreateReq"
+        )
+        return client.get(ServiceResourceGroupResource::class).createCustomGroupAndPermissions(
+            projectCode = projectId,
+            customGroupCreateReq = customGroupCreateReq
         )
     }
 
