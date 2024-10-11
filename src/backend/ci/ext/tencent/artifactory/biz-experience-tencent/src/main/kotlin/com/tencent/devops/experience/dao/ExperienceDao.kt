@@ -43,7 +43,6 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
-
 @Repository
 @SuppressWarnings("LongParameterList", "LongMethod")
 class ExperienceDao {
