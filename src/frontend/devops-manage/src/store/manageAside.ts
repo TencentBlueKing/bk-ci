@@ -41,23 +41,23 @@ export default defineStore('manageAside', () => {
   const btnLoading = ref(false);
   const removeUserDeptListMap = ref({});
   const showDeptListPermissionDialog = ref(false);
-  const seacrhObj = ref<SearchParamsType>({});
+  const searchObj = ref<SearchParamsType>({});
   /**
    * 人员组织侧边栏点击事件
    */
   function handleAsideClick(item: AsideItem) {
     asideItem.value = item;
     activeTab.value = item.id;
-    groupTableStore.fetchUserGroupList(item, seacrhObj.value);
+    groupTableStore.fetchUserGroupList(item, searchObj.value);
   }
   /**
    * 人员组织侧边栏页码切换
    */
-  async function handleAsidePageChange(current: number, projectId: string) {
+  async function handleAsidePageChange(current: number, projectId: string, searchGroup?: any) {
     asideItem.value = undefined;
     if (memberPagination.value.current !== current) {
       memberPagination.value.current = current;
-      getProjectMembers(projectId, true, seacrhObj.value);
+      getProjectMembers(projectId, true, searchGroup);
     }
   }
   /**
@@ -98,7 +98,7 @@ export default defineStore('manageAside', () => {
       }
       btnLoading.value = false;
       manageAsideRef.handOverClose();
-      getProjectMembers(projectId, true, seacrhObj.value);
+      getProjectMembers(projectId, true);
     } catch (error) {
       btnLoading.value = false;
     }
@@ -157,7 +157,7 @@ export default defineStore('manageAside', () => {
       isLoading.value = true;
       const params = getParams(projectId, departedFlag, searchGroup);
 
-      seacrhObj.value = {
+      searchObj.value = {
         ...['groupName', 'minExpiredAt', 'maxExpiredAt', 'relatedResourceType', 'relatedResourceCode', 'action']
           .reduce((acc, key) => {
             if (params[key]) {
