@@ -18,8 +18,7 @@ class ExperienceCleanJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val experienceService: ExperienceService
 ) {
-    //    @Scheduled(cron = "0 10 0 * * ?")
-    @Scheduled(cron = "0 * * * * ?")
+    @Scheduled(cron = "0 10 0 * * ?")
     fun clean() {
         val redisLock = RedisLock(redisOperation, "expJobHot", 60L)
         try {
