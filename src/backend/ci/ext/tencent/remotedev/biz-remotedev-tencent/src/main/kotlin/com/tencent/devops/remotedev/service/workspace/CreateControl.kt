@@ -406,7 +406,8 @@ class CreateControl @Autowired constructor(
                     machineType = windowsConfig.size,
                     cgsId = cgsId,
                     imageCosFile = workspaceCreate.imageCosFile,
-                    quotaType = quotaType
+                    quotaType = quotaType,
+                    pvcs = workspaceCreate.pvcs
                 ),
                 projectId = projectId,
                 mountType = mountType,
