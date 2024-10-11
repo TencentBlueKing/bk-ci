@@ -44,7 +44,7 @@ class MigratePermissionHandoverService(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceService: AuthResourceService,
     private val resourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService,
-    private val dslContext: DSLContext,
+    private val dslContext: DSLContext
 ) {
     fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO) {
         val handoverFrom = permissionHandoverDTO.handoverFrom
