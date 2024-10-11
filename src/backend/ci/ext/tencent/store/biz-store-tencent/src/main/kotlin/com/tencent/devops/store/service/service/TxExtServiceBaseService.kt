@@ -28,22 +28,16 @@
 package com.tencent.devops.store.service.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.KEY_BRANCH
-import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
-import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
-import com.tencent.devops.common.api.constant.KEY_SCRIPT
-import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.MASTER
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServiceExtServiceBuildPipelineInitResource
-import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineReq
+import com.tencent.devops.process.api.service.ServiceExtServiceBuildPipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildPipelineReq
 import com.tencent.devops.process.utils.KEY_PIPELINE_NAME
 import com.tencent.devops.project.api.service.service.ServiceItemResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
@@ -56,19 +50,16 @@ import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
 import com.tencent.devops.store.common.dao.StorePipelineRelDao
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.extservice.constants.KEY_EXT_SERVICE_ITEMS_PREFIX
 import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
 import com.tencent.devops.store.pojo.extservice.dto.ExtServiceImageInfoDTO
 import com.tencent.devops.store.pojo.extservice.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.extservice.enums.ExtServicePackageSourceTypeEnum
-import com.tencent.devops.store.pojo.extservice.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.service.configuration.ExtServiceImageSecretConfig
 import com.tencent.devops.store.service.dao.ExtServiceBuildInfoDao
 import java.util.Base64
 import java.util.concurrent.TimeUnit
-import org.apache.commons.text.StringEscapeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -198,14 +189,9 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             storeCode = serviceCode,
             storeType = StoreTypeEnum.SERVICE
         )
-        // 查找新增微扩展时关联的项目
-        val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-            dslContext = context, storeCode = serviceCode, storeType = StoreTypeEnum.SERVICE.type.toByte()
-        ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
         val buildInfo = extServiceBuildInfoDao.getServiceBuildInfo(context, serviceId)
         logger.info("service[$serviceCode] buildInfo is:$buildInfo")
         val script = buildInfo.value1()
-        val repoAddr = extServiceImageSecretConfig.repoRegistryUrl
         val username = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoUsername.toByteArray())
         val password = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoPassword.toByteArray())
         val extServiceImageInfo = ExtServiceImageInfoDTO(
@@ -223,122 +209,112 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             serviceCode = serviceCode,
             version = version
         )
-        if (null == servicePipelineRelRecord) {
-            // 为用户初始化构建流水线并触发执行
-            val serviceBaseInfo = ExtServiceBaseInfoDTO(
-                serviceId = serviceId,
-                serviceCode = serviceCode,
-                version = serviceRecord.version,
-                extServiceImageInfo = extServiceImageInfo,
-                extServiceDeployInfo = deployApp,
-                branch = MASTER
+        val pipelineName = "EXT_SERVICE_PIPELINE_BUILD_PUBLIC"
+        var publicPipelineId = redisOperation.get(pipelineName)
+        if (publicPipelineId.isNullOrBlank()) {
+            publicPipelineId = creatServicePipeline(
+                context = context,
+                userId = storeInnerPipelineConfig.innerPipelineUser,
+                projectCode = storeInnerPipelineConfig.innerPipelineProject,
+                pipelineName = pipelineName
             )
+        }
+        val extServiceFeature = extFeatureDao.getServiceByCode(context, serviceCode)!!
+        val serviceBaseInfo = ExtServiceBaseInfoDTO(
+            serviceId = serviceId,
+            serviceCode = serviceCode,
+            version = serviceRecord.version,
+            extServiceImageInfo = extServiceImageInfo,
+            extServiceDeployInfo = deployApp,
+            branch = MASTER,
+            repositoryHashId = extServiceFeature.repositoryHashId,
+            repositoryPath = (buildInfo.value2() ?: "")
+        )
+        val extServiceBuildPipelineReq = ExtServiceBuildPipelineReq(
+            script = script,
+            extServiceBaseInfo = serviceBaseInfo
+        )
+        val pipelineId: String = if (null == servicePipelineRelRecord) {
+            publicPipelineId
+        } else {
+            // 如果插件关联的流水线是在公共项目下但不是公共流水线，那就属于是组件定制化流水线
+            if (servicePipelineRelRecord.pipelineId != publicPipelineId
+                && servicePipelineRelRecord.projectCode == storeInnerPipelineConfig.innerPipelineProject) {
+                servicePipelineRelRecord.pipelineId
+            } else {
+                publicPipelineId
+            }
+        }
+        val serviceMarketPipelineResp =
+            client.get(ServiceExtServiceBuildPipelineResource::class).extServiceBuildPipeline(
+                userId = storeInnerPipelineConfig.innerPipelineUser,
+                projectCode = storeInnerPipelineConfig.innerPipelineProject,
+                pipelineId = pipelineId,
+                extServiceBuildPipelineReq = extServiceBuildPipelineReq
+            ).data
+        logger.info("the serviceMarketPipelineResp is:$serviceMarketPipelineResp")
+        if (null != serviceMarketPipelineResp) {
+            if (null == servicePipelineRelRecord) {
+                storePipelineRelDao.add(
+                    dslContext = context,
+                    storeCode = serviceCode,
+                    storeType = StoreTypeEnum.SERVICE,
+                    pipelineId = serviceMarketPipelineResp.pipelineId,
+                    projectCode = storeInnerPipelineConfig.innerPipelineProject
+                )
+            }
+            extServiceDao.setServiceStatusById(
+                dslContext = context,
+                serviceId = serviceId,
+                serviceStatus = serviceMarketPipelineResp.extServiceStatus.status.toByte(),
+                userId = userId,
+                msg = null
+            )
+            val buildId = serviceMarketPipelineResp.buildId
+            if (null != buildId) {
+                storePipelineBuildRelDao.add(context, serviceId, serviceMarketPipelineResp.pipelineId, buildId)
+            }
+        }
+        return true
+    }
+
+    fun creatServicePipeline(
+        context: DSLContext,
+        userId: String,
+        projectCode: String,
+        pipelineName: String
+    ): String {
+        var pipelineId: String?
+        val lock = RedisLock(redisOperation, "creat-service-pipeline-$projectCode", 60L)
+        try {
+            lock.lock()
+            pipelineId = redisOperation.get(pipelineName)
+            if (!pipelineId.isNullOrBlank()) {
+                return pipelineId
+            }
             val pipelineModelConfig = businessConfigDao.get(
                 dslContext = context,
                 business = StoreTypeEnum.SERVICE.name,
                 feature = "initBuildPipeline",
                 businessValue = "PIPELINE_MODEL"
             )
-            val extServiceFeature = extFeatureDao.getServiceByCode(context, serviceCode)!!
-            var pipelineModel = pipelineModelConfig!!.configValue
-            val pipelineName = "am-$serviceCode-${UUIDUtil.generate()}"
-            val paramMap = mapOf(
-                KEY_PIPELINE_NAME to pipelineName,
-                KEY_STORE_CODE to serviceCode,
-                KEY_VERSION to version,
-                KEY_SCRIPT to StringEscapeUtils.escapeJava(script),
-                KEY_REPOSITORY_HASH_ID to extServiceFeature.repositoryHashId,
-                KEY_REPOSITORY_PATH to (buildInfo.value2() ?: ""),
-                KEY_BRANCH to MASTER
-            )
-            // 将流水线模型中的变量替换成具体的值
-            paramMap.forEach { (key, value) ->
-                pipelineModel = pipelineModel.replace("#{$key}", value)
-            }
-            val extServiceBuildInitPipelineReq = ExtServiceBuildInitPipelineReq(
-                pipelineModel = pipelineModel,
-                script = script,
-                extServiceBaseInfo = serviceBaseInfo
-            )
-            val serviceMarketInitPipelineResp =
-                client.get(ServiceExtServiceBuildPipelineInitResource::class).initExtServiceBuildPipeline(
-                    userId = storeInnerPipelineConfig.innerPipelineUser,
-                    projectCode = storeInnerPipelineConfig.innerPipelineProject,
-                    extServiceBuildInitPipelineReq = extServiceBuildInitPipelineReq
-                ).data
-            logger.info("the serviceMarketInitPipelineResp is:$serviceMarketInitPipelineResp")
-            if (null != serviceMarketInitPipelineResp) {
-                storePipelineRelDao.add(
-                    dslContext = context,
-                    storeCode = serviceCode,
-                    storeType = StoreTypeEnum.SERVICE,
-                    pipelineId = serviceMarketInitPipelineResp.pipelineId,
-                    projectCode = storeInnerPipelineConfig.innerPipelineProject
-                )
-                extServiceDao.setServiceStatusById(
-                    dslContext = context,
-                    serviceId = serviceId,
-                    serviceStatus = serviceMarketInitPipelineResp.extServiceStatus.status.toByte(),
-                    userId = userId,
-                    msg = null
-                )
-                val buildId = serviceMarketInitPipelineResp.buildId
-                if (null != buildId) {
-                    storePipelineBuildRelDao.add(context, serviceId, serviceMarketInitPipelineResp.pipelineId, buildId)
-                }
-            }
-        } else {
-            // 触发执行流水线
-            val startParams = mutableMapOf<String, String>() // 启动参数
-            startParams["serviceCode"] = serviceCode
-            startParams["version"] = serviceRecord.version
-            startParams["serviceName"] = serviceCode
-            startParams["imageTag"] = version
-            startParams["extServiceDeployInfo"] = JsonUtil.toJson(deployApp)
-            startParams["script"] = script
-            startParams["branch"] = MASTER
-            startParams["repoAddr"] = repoAddr
-            startParams["username"] = username
-            startParams["password"] = password
-            extServiceImageInfo.repoName?.let {
-                startParams["repoName"] = it
-            }
-            extServiceImageInfo.repoProjectCode?.let {
-                startParams["repoProjectCode"] = it
-            }
-            val startProjectCode = if (servicePipelineRelRecord.projectCode.isNullOrBlank()) {
-                projectCode
-            } else {
-                servicePipelineRelRecord.projectCode
-            }
-            val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
+            val pipelineModel =
+                pipelineModelConfig!!.configValue.replace("#{$KEY_PIPELINE_NAME}", pipelineName)
+            val model = JsonUtil.to(pipelineModel, Model::class.java)
+            pipelineId = client.get(ServicePipelineResource::class).create(
                 userId = userId,
-                projectId = startProjectCode,
-                pipelineId = servicePipelineRelRecord.pipelineId,
-                values = startParams,
-                channelCode = ChannelCode.AM,
-                startType = StartType.SERVICE
-            ).data
-            logger.info("the buildIdObj is:$buildIdObj")
-            if (null != buildIdObj) {
-                storePipelineBuildRelDao.add(context, serviceId, servicePipelineRelRecord.pipelineId, buildIdObj.id)
-                extServiceDao.setServiceStatusById(
-                    dslContext = context,
-                    serviceId = serviceId,
-                    serviceStatus = ExtServiceStatusEnum.BUILDING.status.toByte(),
-                    userId = userId,
-                    msg = null
-                ) // 构建中
-            } else {
-                extServiceDao.setServiceStatusById(
-                    dslContext = context,
-                    serviceId = serviceId,
-                    serviceStatus = ExtServiceStatusEnum.BUILD_FAIL.status.toByte(),
-                    userId = userId,
-                    msg = null
-                ) // 构建失败
-            }
+                projectId = projectCode,
+                pipeline = model,
+                channelCode = ChannelCode.AM
+            ).data!!.id
+            redisOperation.set(
+                key = pipelineName,
+                value = pipelineId,
+                expired = false
+            )
+            return pipelineId
+        } finally {
+            lock.unlock()
         }
-        return true
     }
 }

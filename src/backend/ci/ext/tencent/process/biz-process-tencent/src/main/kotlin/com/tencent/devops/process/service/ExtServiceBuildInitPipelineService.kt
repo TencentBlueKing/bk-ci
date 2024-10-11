@@ -31,11 +31,10 @@ import com.tencent.devops.common.api.constant.KEY_BRANCH
 import com.tencent.devops.common.api.constant.KEY_SCRIPT
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineReq
-import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineResp
+import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildPipelineReq
+import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildPipelineResp
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
 import com.tencent.devops.store.pojo.extservice.dto.ExtServiceImageInfoDTO
@@ -61,28 +60,25 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
     fun initPipeline(
         userId: String,
         projectCode: String,
-        extServiceBuildInitPipelineReq: ExtServiceBuildInitPipelineReq
-    ): Result<ExtServiceBuildInitPipelineResp> {
-        val model = JsonUtil.to(extServiceBuildInitPipelineReq.pipelineModel, Model::class.java)
-        // 保存流水线信息
-        val pipelineId = pipelineInfoFacadeService.createPipeline(
-            userId = userId,
-            projectId = projectCode,
-            model = model,
-            channelCode = ChannelCode.AM
-        ).pipelineId
-        logger.info("createPipeline result is:$pipelineId")
+        pipelineId: String,
+        extServiceBuildPipelineReq: ExtServiceBuildPipelineReq
+    ): Result<ExtServiceBuildPipelineResp> {
         // 异步启动流水线
         val startParams = mutableMapOf<String, String>() // 启动参数
-        val extServiceBaseInfo = extServiceBuildInitPipelineReq.extServiceBaseInfo
+        val extServiceBaseInfo = extServiceBuildPipelineReq.extServiceBaseInfo
         startParams[ExtServiceBaseInfoDTO::serviceCode.name] = extServiceBaseInfo.serviceCode
         startParams[ExtServiceBaseInfoDTO::version.name] = extServiceBaseInfo.version
+        startParams[ExtServiceBaseInfoDTO::repositoryHashId.name] = extServiceBaseInfo.repositoryHashId
         startParams[ExtServiceBaseInfoDTO::extServiceDeployInfo.name] =
             JsonUtil.toJson(extServiceBaseInfo.extServiceDeployInfo)
-        startParams[KEY_SCRIPT] = extServiceBuildInitPipelineReq.script
+        startParams[KEY_SCRIPT] = extServiceBuildPipelineReq.script
         val branch = extServiceBaseInfo.branch
         if (!branch.isNullOrBlank()) {
             startParams[KEY_BRANCH] = branch
+        }
+        val repositoryPath = extServiceBaseInfo.repositoryPath
+        if (!repositoryPath.isNullOrBlank()) {
+            startParams[ExtServiceBaseInfoDTO::repositoryPath.name] = repositoryPath
         }
         startParams[ExtServiceImageInfoDTO::serviceName.name] = extServiceBaseInfo.extServiceImageInfo.serviceName
         startParams[ExtServiceImageInfoDTO::imageTag.name] = extServiceBaseInfo.extServiceImageInfo.imageTag
@@ -113,6 +109,6 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
             logger.error("$pipelineId buildManualStartup error:", ignored)
             serviceBuildStatus = ExtServiceStatusEnum.BUILD_FAIL
         }
-        return Result(ExtServiceBuildInitPipelineResp(pipelineId, buildId, serviceBuildStatus))
+        return Result(ExtServiceBuildPipelineResp(pipelineId, buildId, serviceBuildStatus))
     }
 }

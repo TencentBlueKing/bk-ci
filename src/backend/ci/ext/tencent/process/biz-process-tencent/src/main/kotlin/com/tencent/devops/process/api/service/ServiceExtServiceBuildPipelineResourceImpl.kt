@@ -29,25 +29,27 @@ package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineReq
-import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineResp
+import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildPipelineReq
+import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildPipelineResp
 import com.tencent.devops.process.service.ExtServiceBuildInitPipelineService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceExtServiceBuildPipelineInitResourceImpl @Autowired constructor(
+class ServiceExtServiceBuildPipelineResourceImpl @Autowired constructor(
     private val extServiceBuildInitPipelineService: ExtServiceBuildInitPipelineService
-) : ServiceExtServiceBuildPipelineInitResource {
+) : ServiceExtServiceBuildPipelineResource {
 
-    override fun initExtServiceBuildPipeline(
+    override fun extServiceBuildPipeline(
         userId: String,
         projectCode: String,
-        extServiceBuildInitPipelineReq: ExtServiceBuildInitPipelineReq
-    ): Result<ExtServiceBuildInitPipelineResp> {
+        pipelineId: String,
+        extServiceBuildPipelineReq: ExtServiceBuildPipelineReq
+    ): Result<ExtServiceBuildPipelineResp> {
         return extServiceBuildInitPipelineService.initPipeline(
             userId = userId,
             projectCode = projectCode,
-            extServiceBuildInitPipelineReq = extServiceBuildInitPipelineReq
+            pipelineId = pipelineId,
+            extServiceBuildPipelineReq = extServiceBuildPipelineReq
         )
     }
 }

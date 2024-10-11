@@ -949,7 +949,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         val innerPipelineProject = storeInnerPipelineConfig.innerPipelineProject
         val innerPipelineUser = storeInnerPipelineConfig.innerPipelineUser
-        val pipelineName = "ATOM_PIPELINE_BUILD:PUBLIC"
+        val pipelineName = "ATOM_PIPELINE_BUILD_PUBLIC"
         var publicPipelineId = redisOperation.get(pipelineName)
         var pipelineId: String? = null
         if (publicPipelineId.isNullOrBlank()) {
@@ -960,6 +960,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             )
         }
         if (null != atomPipelineRelRecord) {
+            // 如果插件关联的流水线是在公共项目下但不是公共流水线，那就属于是组件定制化流水线
             pipelineId = if (atomPipelineRelRecord.pipelineId != publicPipelineId
                 && atomPipelineRelRecord.projectCode == innerPipelineProject) {
                 atomPipelineRelRecord.pipelineId
@@ -968,6 +969,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             }
             val projectCode: String
             val userName: String
+            // 兼容历史打包流水线
             if (atomPipelineRelRecord.projectCode == innerPipelineProject) {
                 projectCode = innerPipelineProject
                 userName = innerPipelineUser
@@ -1346,8 +1348,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         projectCode: String
     ): String {
         var pipelineId: String?
-        val lock = RedisLock(redisOperation, "creatAtomPipeline-$projectCode", 60L)
-        val pipelineName = "ATOM_PIPELINE_BUILD:PUBLIC"
+        val lock = RedisLock(redisOperation, "creat-atom-pipeline-$projectCode", 60L)
+        val pipelineName = "ATOM_PIPELINE_BUILD_PUBLIC"
         try {
             lock.lock()
             pipelineId = redisOperation.get(pipelineName)
