@@ -79,6 +79,7 @@ class ExperienceDao {
         }
     }
 
+    @SuppressWarnings("ComplexMethod")
     fun list(
         dslContext: DSLContext,
         projectId: String,

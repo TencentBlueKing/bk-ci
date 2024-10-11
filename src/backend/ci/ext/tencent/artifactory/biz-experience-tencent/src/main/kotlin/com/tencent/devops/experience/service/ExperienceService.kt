@@ -192,6 +192,7 @@ class ExperienceService @Autowired constructor(
         }
     }
 
+    @SuppressWarnings("ComplexMethod")
     fun list(
         userId: String,
         projectId: String,
