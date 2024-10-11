@@ -529,6 +529,7 @@ class GitScmService @Autowired constructor(
         repo: Repository
     ): CommitResponse? {
         return try {
+            logger.info("get github commit info|repoName[$githubRepoName]|commit[$commitId]")
             val accessToken = client.get(ServiceGithubResource::class).getAccessToken(
                 userId = repo.userName
             ).data?.accessToken ?: ""
@@ -539,7 +540,6 @@ class GitScmService @Autowired constructor(
                 ),
                 token = accessToken
             ).data
-            logger.info("get github commit info|repoName[$githubRepoName]|commit[$commitId]|[$commitInfo]")
             commitInfo
         } catch (ignored: Exception) {
             logger.warn("fail to get github commit request", ignored)
