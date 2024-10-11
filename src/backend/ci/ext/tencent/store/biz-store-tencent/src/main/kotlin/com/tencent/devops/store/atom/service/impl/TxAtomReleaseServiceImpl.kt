@@ -1027,7 +1027,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                     pipelineId = pipelineId,
                     projectCode = storeInnerPipelineConfig.innerPipelineProject
                 )
-            } else {
+            } else if (atomPipelineRelRecord.pipelineId != pipelineId) {
                 storePipelineRelDao.updateStorePipelineProject(
                     dslContext = context,
                     storeCode = atomCode,

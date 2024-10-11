@@ -234,17 +234,14 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             script = script,
             extServiceBaseInfo = serviceBaseInfo
         )
-        val pipelineId: String = if (null == servicePipelineRelRecord) {
-            publicPipelineId
-        } else {
-            // 如果插件关联的流水线是在公共项目下但不是公共流水线，那就属于是组件定制化流水线
-            if (servicePipelineRelRecord.pipelineId != publicPipelineId
-                && servicePipelineRelRecord.projectCode == storeInnerPipelineConfig.innerPipelineProject) {
+        val pipelineId = when {
+            servicePipelineRelRecord == null -> publicPipelineId
+            servicePipelineRelRecord.pipelineId != publicPipelineId &&
+                    servicePipelineRelRecord.projectCode == storeInnerPipelineConfig.innerPipelineProject ->
                 servicePipelineRelRecord.pipelineId
-            } else {
-                publicPipelineId
-            }
+            else -> publicPipelineId
         }
+
         val serviceMarketPipelineResp =
             client.get(ServiceExtServiceBuildPipelineResource::class).extServiceBuildPipeline(
                 userId = storeInnerPipelineConfig.innerPipelineUser,
@@ -254,13 +251,21 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             ).data
         logger.info("the serviceMarketPipelineResp is:$serviceMarketPipelineResp")
         if (null != serviceMarketPipelineResp) {
-            if (null == servicePipelineRelRecord) {
+            if (servicePipelineRelRecord == null) {
                 storePipelineRelDao.add(
                     dslContext = context,
                     storeCode = serviceCode,
-                    storeType = StoreTypeEnum.SERVICE,
-                    pipelineId = serviceMarketPipelineResp.pipelineId,
+                    storeType = StoreTypeEnum.ATOM,
+                    pipelineId = pipelineId,
                     projectCode = storeInnerPipelineConfig.innerPipelineProject
+                )
+            } else if (servicePipelineRelRecord.pipelineId != pipelineId) {
+                storePipelineRelDao.updateStorePipelineProject(
+                    dslContext = context,
+                    storeCode = serviceCode,
+                    storeType = StoreTypeEnum.ATOM,
+                    projectCode = storeInnerPipelineConfig.innerPipelineProject,
+                    pipelineId = pipelineId
                 )
             }
             extServiceDao.setServiceStatusById(
