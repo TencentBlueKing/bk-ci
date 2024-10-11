@@ -95,7 +95,7 @@
             <bk-form-item ext-cls="namingConvention">
                 <syntax-style-configuration
                     :inherited-dialect="settings.inheritedDialect"
-                    :pipeline-dialect="settings.pipelineDialect"
+                    :pipeline-dialect="settings.pipelineDialect ?? currentPipelineDialect"
                     @inherited-change="inheritedChange"
                     @pipeline-dialect-change="pipelineDialectChange"
                 />
