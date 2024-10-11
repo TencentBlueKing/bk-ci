@@ -1060,8 +1060,10 @@ class PipelineRepositoryService constructor(
                             ) throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_VERSION_IS_NOT_UPDATED
                             )
-                            releaseResource.model.getTriggerContainer().buildNo?.let {
-                                if (draftVersion.model.getTriggerContainer().buildNo?.buildNo != it.buildNo) {
+                            draftVersion.model.getTriggerContainer().buildNo?.let {
+                                val releaseBuildNo = releaseResource.model.getTriggerContainer().buildNo
+                                // [关闭变为开启]或[修改buildNo数值]，都属于更新行为，需要提示更新
+                                if (releaseBuildNo == null || releaseBuildNo.buildNo != it.buildNo) {
                                     updateBuildNo = true
                                 }
                             }
