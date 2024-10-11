@@ -29,6 +29,7 @@ package com.tencent.devops.experience.dao
 
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.model.experience.tables.TExperience
+import com.tencent.devops.model.experience.tables.TExperienceDownloadDetail
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import java.time.Instant
 import java.time.LocalDateTime
@@ -41,6 +42,7 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+
 
 @Repository
 @SuppressWarnings("LongParameterList", "LongMethod")
@@ -566,5 +568,34 @@ class ExperienceDao {
                 .and(ID.eq(experienceId))
                 .execute()
         }
+    }
+
+    /**
+     * 列出需要清理的体验ID
+     */
+    fun listCleanIds(dslContext: DSLContext): List<Long> {
+        val e = TExperience.T_EXPERIENCE
+        val d = TExperienceDownloadDetail.T_EXPERIENCE_DOWNLOAD_DETAIL
+        val sixMonthAgo = LocalDateTime.now().minusMonths(6)
+        val fieldName = "lastDownloadTime"
+
+        // 构建子查询
+        val subQuery = dslContext.select(e.ID, DSL.max(d.CREATE_TIME).`as`(fieldName))
+            .from(e)
+            .leftJoin(d)
+            .on(e.ID.eq(d.RECORD_ID))
+            .where(e.END_DATE.lt(sixMonthAgo))
+            .groupBy(e.ID)
+
+        // 从子查询结果中选择 ID 字段
+        val result = dslContext.select(subQuery.field(e.ID))
+            .from(subQuery)
+            .where(
+                subQuery.field(fieldName)!!.isNull()
+                    .or(subQuery.field(fieldName, LocalDateTime::class.java)!!.lt(sixMonthAgo))
+            )
+            .fetch(0, Long::class.java)
+
+        return result
     }
 }
