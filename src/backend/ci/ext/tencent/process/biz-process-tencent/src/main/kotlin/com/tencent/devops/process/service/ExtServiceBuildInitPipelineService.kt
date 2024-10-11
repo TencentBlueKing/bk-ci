@@ -63,6 +63,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         pipelineId: String,
         extServiceBuildPipelineReq: ExtServiceBuildPipelineReq
     ): Result<ExtServiceBuildPipelineResp> {
+        logger.info("initPipeline pipelineId:$pipelineId")
         // 异步启动流水线
         val startParams = mutableMapOf<String, String>() // 启动参数
         val extServiceBaseInfo = extServiceBuildPipelineReq.extServiceBaseInfo
