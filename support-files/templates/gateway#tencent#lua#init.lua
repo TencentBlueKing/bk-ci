@@ -106,6 +106,7 @@ config = {
             url = "__BK_CI_KUBERNETES_API_URL__",
             token = "__BK_CI_KUBERNETES_API_TOKEN__"
         },
+        special_domain = {},
         recovery = {
             switchAll = false,
             domain = "__BK_CI_K8S_DOMAIN__"

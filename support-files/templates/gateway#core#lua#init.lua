@@ -95,6 +95,7 @@ config = {
             url = "https://127.0.0.1/api/v1/nodes",
             token = ""
         },
+        special_domain = {},
         recovery = {
             switchAll = false,
             domain = "k8s.demo.com"
