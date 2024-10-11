@@ -34,12 +34,12 @@ class RemotedevBkRepoClient @Autowired constructor(
     fun repoStreamCreate(
         region: BkRepoRegion,
         projectId: String,
-        workspaceName: String,
+        repoName: String,
         userId: String
     ): String? {
         val config = bkRepoConfig.getRegionConfig(region)
         val request = Request.Builder()
-            .url("${config.url}/media/api/user/stream/create/$projectId/$workspaceName?display=false")
+            .url("${config.url}/media/api/user/stream/create/$projectId/$repoName?display=false")
             .headers(getCommonHeaders(region, userId).toHeaders())
             .post(
                 objectMapper.writeValueAsString(JsonUtil.toJson(mapOf<String, String>()))

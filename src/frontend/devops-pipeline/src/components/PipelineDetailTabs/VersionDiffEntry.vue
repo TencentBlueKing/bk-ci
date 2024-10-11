@@ -1,9 +1,11 @@
 <template>
-    <span>
+    <span class="version-diff-entry-wrapper">
         <bk-button
             :text="text"
             :outline="outline"
             :theme="theme"
+            :disabled="disabled"
+            :size="size"
             @click="initDiff"
         >
             <slot>
@@ -23,7 +25,10 @@
                 class="diff-version-dialog-content"
                 v-bkloading="{ isLoading: isLoadYaml, color: '#1d1d1d' }"
             >
-                <header class="diff-version-header">
+                <header
+                    class="diff-version-header"
+                    v-if="showButton"
+                >
                     <VersionSelector
                         ext-cls="dark-theme-select-trigger"
                         ext-popover-cls="dark-theme-select-menu"
@@ -82,6 +87,10 @@
                 type: String,
                 default: 'primary'
             },
+            size: {
+                type: String,
+                default: 'normal'
+            },
             version: {
                 type: Number,
                 required: true
@@ -93,6 +102,14 @@
             canSwitchVersion: {
                 type: Boolean,
                 default: true
+            },
+            showButton: {
+                type: Boolean,
+                default: true
+            },
+            disabled: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -167,6 +184,11 @@
 
 <style lang="scss">
     @import "@/scss/select-dark-theme.scss";
+    .version-diff-entry-wrapper {
+        .bk-button-text.bk-button-small {
+            padding: 0;
+        }
+    }
     .diff-version-dialog.bk-dialog-wrapper {
         transition: none;
         .bk-dialog {

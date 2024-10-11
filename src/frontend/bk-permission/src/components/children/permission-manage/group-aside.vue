@@ -191,7 +191,6 @@ export default {
       hasLoadEnd: false,
       isClosing: false,
       curGroupIndex: -1,
-      groupCountField: ['userCount', 'departmentCount'],
     };
   },
   computed: {

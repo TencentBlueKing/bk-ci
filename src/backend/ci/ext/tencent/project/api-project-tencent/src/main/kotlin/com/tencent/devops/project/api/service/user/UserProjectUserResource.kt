@@ -47,7 +47,7 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_PROJECT_USER", description = "项目列表用户接口")
-@Path("/user/users")
+@Path("/{apiType:user|desktop}/users")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserProjectUserResource {
