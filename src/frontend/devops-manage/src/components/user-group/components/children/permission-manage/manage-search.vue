@@ -22,6 +22,7 @@
       :disabled="isAllowSearch"
       :scroll-loading="resourceScrollLoading"
       @scroll-end="resourceScrollEnd"
+      @clear="handleClearResource('resource')"
     >
       <bk-option
         v-for="(item, index) in resourceList"
@@ -36,6 +37,7 @@
       v-model="actionValue"
       :prefix="t('操作')"
       :disabled="isAllowSearch"
+      @clear="handleClearResource('action')"
     >
       <bk-option
         v-for="(item, index) in actionList"
@@ -164,6 +166,9 @@ const searchGroup = computed(() => ({
 const emit = defineEmits(['searchInit']);
 
 watch(searchGroup, () => {
+  if(!resourceValue.value && !actionValue.value) {
+    return
+  }
   emit('searchInit', undefined, searchGroup.value)
 });
 watch(serviceValue, (newValue) => {
@@ -172,6 +177,7 @@ watch(serviceValue, (newValue) => {
     getListResource();
     getListActions();
   } else {
+    emit('searchInit', undefined, searchGroup.value);
     isAllowSearch.value = true;
   }
 })
@@ -181,6 +187,16 @@ onMounted(()=>{
 defineExpose({
   clearSearch,
 });
+function handleClearResource (flag) {
+  if(flag === 'resource') {
+    resourceValue.value = '';
+  } else if(flag === 'action') {
+    actionValue.value = '';
+  }
+  if(!resourceValue.value && !actionValue.value) {
+    emit('searchInit', undefined);
+  }
+}
 function clearSearch () {
   searchValue.value = [];
   searchExpiredAt.value = [];
