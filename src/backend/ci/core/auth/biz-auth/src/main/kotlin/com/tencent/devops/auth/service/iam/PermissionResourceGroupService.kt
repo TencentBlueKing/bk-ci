@@ -85,7 +85,9 @@ interface PermissionResourceGroupService {
         projectId: String,
         resourceType: String = AuthResourceType.PROJECT.value,
         resourceCode: String,
-        groupCode: String
+        groupCode: String,
+        groupName: String? = null,
+        groupDesc: String? = null
     ): Int
 
     fun syncManagerGroup(
@@ -108,10 +110,8 @@ interface PermissionResourceGroupService {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String,
-        groupName: String? = null,
-        groupDesc: String? = null
-    ): Int
+        resourceName: String
+    ): Boolean
 
     fun createCustomGroupAndPermissions(
         projectId: String,

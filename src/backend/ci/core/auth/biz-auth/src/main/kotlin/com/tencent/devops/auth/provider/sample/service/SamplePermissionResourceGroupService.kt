@@ -90,7 +90,9 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         projectId: String,
         resourceType: String,
         resourceCode: String,
-        groupCode: String
+        groupCode: String,
+        groupName: String?,
+        groupDesc: String?
     ): Int = 0
 
     override fun createCustomGroupAndPermissions(

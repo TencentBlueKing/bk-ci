@@ -179,8 +179,7 @@ class RbacAuthConfiguration {
         dslContext: DSLContext,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
-        resourceGroupSyncService: PermissionResourceGroupSyncService,
-        objectMapper: ObjectMapper
+        resourceGroupSyncService: PermissionResourceGroupSyncService
     ) = RbacPermissionResourceGroupService(
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
@@ -189,8 +188,7 @@ class RbacAuthConfiguration {
         dslContext = dslContext,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
         authResourceGroupMemberDao = authResourceGroupMemberDao,
-        resourceGroupSyncService = resourceGroupSyncService,
-        objectMapper = objectMapper
+        resourceGroupSyncService = resourceGroupSyncService
     )
 
     @Bean
@@ -229,7 +227,8 @@ class RbacAuthConfiguration {
         iamV2ManagerService: V2ManagerService,
         authAuthorizationScopesService: AuthAuthorizationScopesService,
         authActionDao: AuthActionDao,
-        authResourceGroupConfigDao: AuthResourceGroupConfigDao
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+        objectMapper: ObjectMapper
     ) = RbacPermissionResourceGroupPermissionService(
         v2ManagerService = v2ManagerService,
         rbacCacheService = rbacCacheService,
@@ -242,7 +241,8 @@ class RbacAuthConfiguration {
         iamV2ManagerService = iamV2ManagerService,
         authAuthorizationScopesService = authAuthorizationScopesService,
         authActionDao = authActionDao,
-        authResourceGroupConfigDao = authResourceGroupConfigDao
+        authResourceGroupConfigDao = authResourceGroupConfigDao,
+        objectMapper = objectMapper
     )
 
     @Bean

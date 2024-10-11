@@ -29,7 +29,12 @@
 package com.tencent.devops.auth.provider.rbac.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.dto.InstancesDTO
+import com.tencent.bk.sdk.iam.dto.manager.Action
+import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
+import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
+import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
@@ -76,7 +81,8 @@ class RbacPermissionResourceGroupPermissionService(
     private val iamV2ManagerService: V2ManagerService,
     private val authAuthorizationScopesService: AuthAuthorizationScopesService,
     private val authActionDao: AuthActionDao,
-    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
+    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+    private val objectMapper: ObjectMapper
 ) : PermissionResourceGroupPermissionService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -127,6 +133,34 @@ class RbacPermissionResourceGroupPermissionService(
         }
         syncGroupPermissions(projectCode, iamGroupId)
         return true
+    }
+
+    override fun buildProjectPermissions(
+        projectCode: String,
+        projectName: String,
+        actions: List<String>
+    ): String {
+        val resourceType2Actions = actions.groupBy { it.substringBeforeLast("_") }
+        val authorizationScopes = resourceType2Actions.map { (resourceType, actions) ->
+            val projectPath = ManagerPath().apply {
+                system = systemId
+                id = projectCode
+                name = projectName
+                type = AuthResourceType.PROJECT.value
+            }
+            val resources = ManagerResources.builder()
+                .system(systemId)
+                .type(resourceType)
+                .paths(listOf(listOf(projectPath)))
+                .build()
+            val iamActions = actions.map { Action(it) }
+            AuthorizationScopes().also {
+                it.resources = listOf(resources)
+                it.actions = iamActions
+                it.system = systemId
+            }
+        }
+        return objectMapper.writeValueAsString(authorizationScopes)
     }
 
     override fun getGroupPolices(

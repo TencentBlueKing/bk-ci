@@ -45,6 +45,12 @@ interface PermissionResourceGroupPermissionService {
         registerMonitorPermission: Boolean = true
     ): Boolean
 
+    fun buildProjectPermissions(
+        projectCode: String,
+        projectName: String,
+        actions: List<String>
+    ): String
+
     fun getGroupPolices(
         userId: String,
         projectCode: String,
