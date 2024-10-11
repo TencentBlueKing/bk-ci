@@ -14,6 +14,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.windows.WindowsPoolListFetchData
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
@@ -159,14 +160,14 @@ class OpRemoteDevResourceImpl @Autowired constructor(
             val res = workspaceDao.limitFetchWorkspace(dslContext = dslContext, sqlLimit)
             if (res.isEmpty()) return Result(true)
             res.forEach {
-                if (it.ip.isNullOrBlank()) {
+                if (it.ip.isNullOrBlank() && it.workspaceMountType == WorkspaceMountType.START.name) {
                     workspaceDao.updateWorkspaceIp(
                         dslContext = dslContext,
                         workspaceName = it.name,
                         hostName = it.hostName,
                         ip = it.hostName.substringAfter(".")
                     )
-                    Thread.sleep(30)
+                    Thread.sleep(10)
                 }
             }
             page += 1
