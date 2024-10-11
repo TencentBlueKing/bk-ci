@@ -94,9 +94,6 @@
                     id: mode,
                     cls: this.pipelineMode === mode ? 'is-selected' : ''
                 }))
-            },
-            canSwitch () {
-                return !(!this.readOnly && this.isEditing)
             }
         },
 
@@ -205,7 +202,7 @@
                     }
                     this.isSwitching = false
                 }
-                if (!this.draft && this.isEditing) {
+                if (!this.draft && this.isEditing && !this.readOnly) {
                     this.leaveConfirmVisisble = true
                     this.newMode = mode
                     return
