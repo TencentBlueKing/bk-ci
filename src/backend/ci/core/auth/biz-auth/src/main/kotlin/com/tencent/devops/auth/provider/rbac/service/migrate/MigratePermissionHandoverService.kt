@@ -32,6 +32,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.auth.pojo.enum.JoinedType
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -42,7 +43,7 @@ class MigratePermissionHandoverService(
     private val permissionResourceMemberService: PermissionResourceMemberService,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceService: AuthResourceService,
-    private val authResourceGroupMemberService: PermissionResourceMemberService,
+    private val resourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService,
     private val dslContext: DSLContext,
 ) {
     fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO) {
@@ -113,7 +114,7 @@ class MigratePermissionHandoverService(
                 )
             }
             // 交接用户组权限
-            val userJoinedGroups = authResourceGroupMemberService.getMemberGroupsDetails(
+            val userJoinedGroups = resourceGroupAndMemberFacadeService.getMemberGroupsDetails(
                 projectId = projectCode,
                 memberId = handoverFrom
             ).records.filter { it.joinedType == JoinedType.DIRECT }.map { it.groupId }

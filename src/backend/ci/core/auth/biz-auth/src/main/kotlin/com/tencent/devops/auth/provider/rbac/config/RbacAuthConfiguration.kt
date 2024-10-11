@@ -92,6 +92,7 @@ import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -583,13 +584,14 @@ class RbacAuthConfiguration {
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceService: AuthResourceService,
         authResourceGroupMemberService: PermissionResourceMemberService,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        resourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService
     ) = MigratePermissionHandoverService(
         permissionResourceMemberService = permissionResourceMemberService,
         authResourceGroupDao = authResourceGroupDao,
         authResourceService = authResourceService,
-        authResourceGroupMemberService = authResourceGroupMemberService,
-        dslContext = dslContext
+        dslContext = dslContext,
+        resourceGroupAndMemberFacadeService = resourceGroupAndMemberFacadeService
     )
 
     @Bean
