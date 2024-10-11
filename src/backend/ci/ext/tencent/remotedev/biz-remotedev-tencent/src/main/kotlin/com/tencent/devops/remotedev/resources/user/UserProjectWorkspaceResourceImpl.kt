@@ -44,6 +44,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.windows.TimeScope
 import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeResp
@@ -51,6 +52,7 @@ import com.tencent.devops.remotedev.service.BKBaseService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
@@ -82,12 +84,12 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val startWorkspaceService: StartWorkspaceService,
     private val bkBaseService: BKBaseService,
     private val xlsxExportService: WorkspaceXlsxExportService,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val workspaceRecordService: WorkspaceRecordService
 ) : UserProjectWorkspaceResource {
     @AuditEntry(actionId = ActionId.CGS_CREATE)
     override fun createWorkspace(
         userId: String,
-        bkTicket: String,
         projectId: String,
         workspace: WindowsWorkspaceCreate
     ): Result<Boolean> {
@@ -254,5 +256,36 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         upgradeWorkspaceHandler.upgradeWorkspace(userId, projectId, workspaceName, upgradeReq)
         return Result(true)
+    }
+
+    override fun applyViewRecord(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        permissionService.checkUserProjectManager(userId, projectId)
+        workspaceRecordService.approvalRecordView(projectId = projectId, user = userId, workspaceName = workspaceName)
+        return Result(true)
+    }
+
+    override fun getViewRecordMetadata(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<WorkspaceRecordMetadata>> {
+        permissionService.checkUserProjectManager(userId, projectId)
+        if (!workspaceRecordService.checkWorkspaceUserApproval(workspaceName, userId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_RECORD_VIEW_NO_PERMISSION_ERROR.errorCode,
+                params = arrayOf(userId, workspaceName)
+            )
+        }
+        return Result(
+            workspaceRecordService.getWorkspaceRecordMetadata(
+                projectId = projectId,
+                userId = userId,
+                workspaceName = workspaceName,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 }

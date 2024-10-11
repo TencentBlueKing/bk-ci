@@ -9,7 +9,7 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 
 @Service
-class Oauth2RefreshTokenService constructor(
+class Oauth2RefreshTokenService(
     private val authOauth2RefreshTokenDao: AuthOauth2RefreshTokenDao,
     private val dslContext: DSLContext
 ) {

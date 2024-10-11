@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
     `ZONE_ID` varchar(32) default '' null comment '地域id',
     `CUR_LAUNCH_ID` int(11) NULL COMMENT '根据项目区分的计费id',
     `REGION_ID` int(11) NULL COMMENT '云区域ID',
+    `ENABLE_RECORD_USER` varchar(1024) NULL COMMENT '开启云桌面录屏的人，有值等同于开启云桌面',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`WORKSPACE_NAME`),
     KEY `ipKey`(`HOST_IP`),
@@ -582,7 +583,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_ID_LINK`(
     `GIT_TYPE` varchar(16) NOT NULL COMMENT 'GIT仓库类型SVN或者GIT',
     `URL` varchar(255) NULL COMMENT '工蜂url地址',
     `CREATE_TIME` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
-    `UPDATE_TIME` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间'
+    `UPDATE_TIME` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
 	PRIMARY KEY (`PROJECT_ID`, `TGIT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -671,8 +672,7 @@ CREATE TABLE `T_WORKSPACE_NOTIFY_HISTORY`
     `BODY_PARAMS`   text        NOT NULL COMMENT '描述内容',
     `CREATED_TIME` timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     KEY `uni_1` (`BIZ_ID`)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4 COMMENT ='云桌面消息通知历史'
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='云桌面消息通知历史';
 
 -- ----------------------------
 -- Table structure for T_DISPATCH_WORKSPACE_OP_HIS
@@ -693,5 +693,35 @@ CREATE TABLE IF NOT EXISTS T_DISPATCH_WORKSPACE_OP_HIS
     KEY `uni_2` (`UID`),
     KEY `uni_3` (`STATUS`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='KUBERNETES构建集群工作空间操作记录表';
+create table IF NOT EXISTS T_WORKSPACE_APP_OAUTH2_MATERIALS
+(
+    APP_ID     varchar(64)  not null comment '云桌面研发商店应用唯一ID',
+    WORKSPACE_NAME varchar(128) not null comment '工作空间唯一ID',
+    CLIENT_ID               varchar(32)                           not null comment '客户端标识',
+    CLIENT_SECRET           varchar(64)                           not null comment '客户端秘钥',
+    constraint ukey
+        unique (APP_ID, WORKSPACE_NAME)
+)
+    comment '云研发应用oauth原材料';
+
+CREATE TABLE IF NOT EXISTS `T_WORKSPACE_RECORD_USER_APPROVAL` (
+	`WORKSPACE_NAME` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '工作空间名称',
+	`USER` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '申请的用户',
+	`PROJECT_ID` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '项目ID',
+	`CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+	`UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间', 
+    PRIMARY KEY (`WORKSPACE_NAME`,`USER`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户申请查看工作空间录屏记录';
+
+
+CREATE TABLE  IF NOT EXISTS `T_CLIENT_TIPS` (
+	`ID` bigint(11) auto_increment NOT NULL COMMENT '自增ID',
+	`TITLE` varchar(1024) NOT NULL COMMENT '标题',
+	`CONTENT` text NOT NULL COMMENT '内容',
+	`WEIGHT` int NOT NULL COMMENT '权重',
+	`EFFECTIVE_USERS` json NULL COMMENT '生效人员',
+	`EFFECTIVE_PROJECTS` json NULL COMMENT '生效项目',
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端加载时的提示配置表';
 
 SET FOREIGN_KEY_CHECKS = 1;
