@@ -48,7 +48,6 @@ import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
@@ -577,42 +576,5 @@ class WindowsResourceConfigService @Autowired constructor(
                 )
             }
         }
-    }
-
-    fun createCheckWhenWinNotAlready(
-        zoneId: String,
-        winConfigId: Int,
-        newNum: Int,
-        ownerType: WorkspaceOwnerType
-    ) {
-        val windowsConfig = getTypeConfig(winConfigId)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(winConfigId.toString())
-            )
-
-        if (windowsConfig.available == false) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(windowsConfig.size)
-            )
-        }
-        val windowsZone = getZoneConfig(zoneId.replace(Regex("\\d+"), ""))
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(zoneId)
-            )
-        if (windowsZone.available == false) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(zoneId)
-            )
-        }
-        createCheckWhenWinNotAlready(
-            windowsZone = windowsZone,
-            windowsConfig = windowsConfig,
-            newNum = newNum,
-            quotaType = QuotaType.parse(windowsZone.type)
-        )
     }
 }
