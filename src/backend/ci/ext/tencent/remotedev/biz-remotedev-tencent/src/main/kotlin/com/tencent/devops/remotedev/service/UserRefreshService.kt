@@ -6,7 +6,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.dao.WorkspaceDao
-import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -22,6 +21,7 @@ class UserRefreshService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
     }
+
     private val executorService = Executors.newSingleThreadExecutor()
 
     fun refreshAllUser(): Boolean {
@@ -69,7 +69,8 @@ class UserRefreshService @Autowired constructor(
                         userInfo.bgName != it.creatorBgName ||
                         userInfo.deptName != it.creatorDeptName ||
                         userInfo.centerName != it.creatorCenterName ||
-                        userInfo.groupName != it.creatorGroupName) {
+                        userInfo.groupName != it.creatorGroupName
+                    ) {
                         logger.info(
                             "${it.creator} cent id is diff, " +
                                 "tof ${userInfo.bgName} ${userInfo.deptName} " +

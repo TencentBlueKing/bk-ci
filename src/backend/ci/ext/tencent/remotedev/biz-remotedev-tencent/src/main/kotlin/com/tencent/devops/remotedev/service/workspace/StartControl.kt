@@ -48,9 +48,7 @@ import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
