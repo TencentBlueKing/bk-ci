@@ -478,11 +478,16 @@ class CreateControl @Autowired constructor(
             }.getOrElse { emptyArray() }
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                workspaceDao.updateWorkspaceIp(
+                    dslContext = transactionContext,
+                    workspaceName = event.workspaceName,
+                    hostName = event.environmentHost,
+                    ip = event.environmentIp
+                )
                 workspaceDao.updateWorkspaceStatus(
                     dslContext = transactionContext,
                     workspaceName = event.workspaceName,
-                    status = ws.workspaceSystemType.afterCreateStatus(ws.ownerType),
-                    hostName = event.environmentHost
+                    status = ws.workspaceSystemType.afterCreateStatus(ws.ownerType)
                 )
                 workspaceHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
@@ -511,7 +516,7 @@ class CreateControl @Autowired constructor(
                     dslContext,
                     event.workspaceName,
                     event.resourceId,
-                    event.environmentIp,
+                    event.environmentHost,
                     event.macAddress
                 )
             }
@@ -521,7 +526,7 @@ class CreateControl @Autowired constructor(
             }
 
             // 创建成功时给 cmdb 添加字段方便监控检索
-            val ip = event.environmentIp?.substringAfter(".")
+            val ip = event.environmentIp
             if (!ip.isNullOrBlank() && ws.workspaceSystemType.checkWindows()) {
                 workspaceCommon.updateHostMonitor(
                     workspaceName = ws.workspaceName,

@@ -1,7 +1,6 @@
 package com.tencent.devops.remotedev.resources.op
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -15,7 +14,6 @@ import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
-import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.windows.WindowsPoolListFetchData
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
@@ -154,16 +152,22 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun detailDaoTransferToWindowsDao(userId: String): Result<Boolean> {
+    override fun initWorkspaceIp(userId: String): Result<Boolean> {
         var page = 1
         while (true) {
             val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, 100)
-            val res = workspaceDao.limitFetchWorkspaceDetail(dslContext = dslContext, sqlLimit)
+            val res = workspaceDao.limitFetchWorkspace(dslContext = dslContext, sqlLimit)
             if (res.isEmpty()) return Result(true)
             res.forEach {
-                val detail = objectMapper.readValue<WorkSpaceCacheInfo>(it.detail)
-                workspaceWindowsDao.updateDetailInfo(dslContext, detail.curLaunchId, detail.regionId, it.workspaceName)
-                Thread.sleep(30)
+                if (it.ip.isNullOrBlank()) {
+                    workspaceDao.updateWorkspaceIp(
+                        dslContext = dslContext,
+                        workspaceName = it.name,
+                        hostName = it.hostName,
+                        ip = it.hostName.substringAfter(".")
+                    )
+                    Thread.sleep(30)
+                }
             }
             page += 1
         }

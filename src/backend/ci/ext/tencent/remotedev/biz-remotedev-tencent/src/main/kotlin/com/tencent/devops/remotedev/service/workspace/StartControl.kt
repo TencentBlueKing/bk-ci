@@ -236,22 +236,6 @@ class StartControl @Autowired constructor(
         )
     }
 
-    fun afterStartWorkspace(event: RemoteDevUpdateEvent) {
-        if (!event.status) {
-            // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
-            val workspaceInfo = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
-                .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
-            when {
-                workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> event.status = true
-                else -> logger.warn(
-                    "start workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
-                )
-            }
-        }
-        doStartWS(event.status, event.userId, event.workspaceName, event.environmentHost, event.errorMsg)
-    }
-
     fun doStartWS(
         status: Boolean,
         operator: String,
