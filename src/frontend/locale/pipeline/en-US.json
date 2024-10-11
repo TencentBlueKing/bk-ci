@@ -653,6 +653,7 @@
     "checkDescInfo": "The review function will end on {0}, and overdue will be automatically identified as Stage success status",
     "abort": "Cancel (immediately mark Stage success status)",
     "agree": "Continue execution",
+    "aiAnalysis": "AI service is not yet deployed, if you need to use it, please contact the administrator to deploy it.<a href=\"{0}\" target=\"_blank\" style=\"color:#3a84ff\">Learn more</a>",
     "statusMap": {
       "PAUSE": "Pause",
       "RUNNING": "Running",

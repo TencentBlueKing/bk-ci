@@ -1288,8 +1288,8 @@ importers:
   devops-pipeline:
     dependencies:
       '@blueking/log':
-        specifier: 2.2.0-beta.29
-        version: 2.2.0-beta.29(vue@2.7.16)
+        specifier: 2.2.0-beta.30
+        version: 2.2.0-beta.30(vue@2.7.16)
       '@blueking/search-select':
         specifier: 0.0.1-beta.2
         version: 0.0.1-beta.2
@@ -2943,8 +2943,8 @@ packages:
     peerDependencies:
       vue: ^2.5.22
 
-  '@blueking/log@2.2.0-beta.29':
-    resolution: {integrity: sha512-nM48vYrx0M6JZNigHlp4xwMiFsbgfbllG0IZ3osEyl/CkyQATnFhTAzkwhkSG5e1h9/Mcjv06S53Klz5ga5v3Q==}
+  '@blueking/log@2.2.0-beta.30':
+    resolution: {integrity: sha512-5yic07LbrJ2yNAki9RVYQs5LDMo5dJr+547rMIdYMxPt4TAWuhVNbfyVTFngoxZjW+nolAzpcjtuI+cDt46KEQ==}
     peerDependencies:
       vue: ^2.5.22
 
@@ -16851,7 +16851,7 @@ snapshots:
       - supports-color
       - webpack-command
 
-  '@blueking/log@2.2.0-beta.29(vue@2.7.16)':
+  '@blueking/log@2.2.0-beta.30(vue@2.7.16)':
     dependencies:
       core-js: 3.26.0
       vue: 2.7.16

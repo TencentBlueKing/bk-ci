@@ -653,6 +653,7 @@
     "checkDescInfo": "请在 {0} 前完成审核操作，逾期将自动标记流水线为Stage成功状态",
     "abort": "取消执行，立即标记为Stage成功状态",
     "agree": "继续执行",
+    "aiAnalysis": "AI 服务暂未部署完成，如需使用，请联系管理员部署。<a href=\"{0}\" target=\"_blank\" style=\"color:#3a84ff\">了解更多</a>",
     "statusMap": {
       "PAUSE": "暂停",
       "RUNNING": "执行中",

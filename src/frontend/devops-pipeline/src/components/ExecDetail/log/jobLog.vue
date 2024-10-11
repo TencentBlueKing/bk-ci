@@ -108,7 +108,7 @@
             checkAIStatus () {
                 this.getAIStatus().then(res => {
                     this.enableAI = res.data
-                    this.aiTips = res.message
+                    this.aiTips = this.$t('aiAnalysis', [this.$pipelineDocs.AIAnalysis])
                 })
             },
 
