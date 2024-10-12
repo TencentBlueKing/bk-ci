@@ -21,7 +21,7 @@
             </div>
           </template>
         </bk-table-column>
-        <bk-table-column :label="t('传统风格')" prop="classic" :width="290">
+        <bk-table-column :label="t('CLASSIC')" prop="classic" :width="290">
           <template #default="{ row }">
             <div
               class="label-column"
@@ -41,7 +41,7 @@
             </div>
           </template>
         </bk-table-column>
-        <bk-table-column :label="t('制约风格')" prop="constrainedMode">
+        <bk-table-column :label="t('CONSTRAINED')" prop="constrainedMode">
           <template #default="{ row }">
             <div
               class="label-column"

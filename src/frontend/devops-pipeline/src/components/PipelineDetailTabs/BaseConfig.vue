@@ -79,8 +79,8 @@
             return {
                 activeName: ['baseInfo', 'executeConfig'],
                 namingStyle: {
-                    CLASSIC: this.$t('traditionalStyle'),
-                    CONSTRAINED: this.$t('constraintStyle')
+                    CLASSIC: this.$t('CLASSIC'),
+                    CONSTRAINED: this.$t('CONSTRAINED')
                 }
             }
         },

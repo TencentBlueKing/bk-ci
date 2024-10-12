@@ -20,7 +20,7 @@
                 </template>
             </bk-table-column>
             <bk-table-column
-                :label="$t('traditionalStyle')"
+                :label="$t('CLASSIC')"
                 prop="classic"
                 :width="290"
             >
@@ -42,7 +42,7 @@
                 </template>
             </bk-table-column>
             <bk-table-column
-                :label="$t('constraintStyle')"
+                :label="$t('CONSTRAINED')"
                 prop="constrainedMode"
             >
                 <template slot-scope="props">
