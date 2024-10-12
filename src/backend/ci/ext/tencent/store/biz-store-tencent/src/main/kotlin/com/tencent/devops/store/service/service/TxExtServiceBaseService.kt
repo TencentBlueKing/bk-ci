@@ -227,7 +227,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             extServiceImageInfo = extServiceImageInfo,
             extServiceDeployInfo = deployApp,
             branch = MASTER,
-            repositoryHashId = extServiceFeature.repositoryHashId,
+            codeSrc = extServiceFeature.codeSrc,
             repositoryPath = (buildInfo.value2() ?: "")
         )
         val extServiceBuildPipelineReq = ExtServiceBuildPipelineReq(

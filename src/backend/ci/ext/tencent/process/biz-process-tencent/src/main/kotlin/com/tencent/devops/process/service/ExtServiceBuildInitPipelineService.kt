@@ -69,7 +69,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         val extServiceBaseInfo = extServiceBuildPipelineReq.extServiceBaseInfo
         startParams[ExtServiceBaseInfoDTO::serviceCode.name] = extServiceBaseInfo.serviceCode
         startParams[ExtServiceBaseInfoDTO::version.name] = extServiceBaseInfo.version
-        startParams[ExtServiceBaseInfoDTO::repositoryHashId.name] = extServiceBaseInfo.repositoryHashId
+        startParams[ExtServiceBaseInfoDTO::codeSrc.name] = extServiceBaseInfo.codeSrc
         startParams[ExtServiceBaseInfoDTO::extServiceDeployInfo.name] =
             JsonUtil.toJson(extServiceBaseInfo.extServiceDeployInfo)
         startParams[KEY_SCRIPT] = extServiceBuildPipelineReq.script
