@@ -22,6 +22,7 @@
       :disabled="isAllowSearch"
       :scroll-loading="resourceScrollLoading"
       @scroll-end="resourceScrollEnd"
+      :remote-method="getSearchResource"
       >
       <bk-option
         v-for="(item, index) in resourceList"
@@ -90,6 +91,7 @@ const hasNextPage = ref(false);
 const searchExpiredAt = ref([]);
 const expiredAtList = ref([])
 const searchValue = ref([]);
+const searchResourceName=ref();
 const filterTips = computed(() => {
   return searchData.value.map(item => item.name).join(' / ');
 });
@@ -206,12 +208,18 @@ async function getListResourceTypes () {
     console.error(error);
   }
 }
+function getSearchResource (val) {
+  searchResourceName.value = val;
+  resourceList.value =[]
+  getListResource();
+}
 async function getListResource () {
   try {
     resourceScrollLoading.value = true;
     const query = {
       page: resourcePage.value,
       pageSize: 10,
+      ...(searchResourceName.value && {resourceName: searchResourceName.value}),
     };
     const res = await http.getListResource(projectId.value, serviceValue.value, query);
     hasNextPage.value = res.hasNext;
