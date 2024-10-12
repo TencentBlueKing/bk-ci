@@ -25,10 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.devx.constants
+package com.tencent.devops.scm.services
 
-const val KEY_NET_POLICY_INFO = "netPolicyInfo"
-const val KEY_MAX_PEAK_BAND_WIDTH = "maxPeakBandwidth"
-const val KEY_MIN_PEAK_BAND_WIDTH = "minPeakBandwidth"
-const val KEY_NEED_VISITED_SITE_INFOS = "needVisitedSiteInfos"
-const val KEY_FRAMEWORK_CODE = "frameworkCode"
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
+import org.springframework.stereotype.Service
+import java.io.File
+import java.nio.charset.Charset
+
+@Service("DEFAULT_FILE_HANDLE")
+class DefaultFileHandleService : AbstractFileHandleService {
+
+    /**
+     * 处理bk-config.yml文件
+     */
+    override fun handleFile(
+        repositoryName: String,
+        fileName: String,
+        workspace: File?
+    ): Result<Boolean> {
+        // 把配置文件中的storeCode修改成用户对应的
+        val bkConfigFile = File(workspace, fileName)
+        if (bkConfigFile.exists()) {
+            val fileContent = bkConfigFile.readText(Charset.forName(Charsets.UTF_8.name()))
+            val dataMap = YamlUtil.to(fileContent, object : TypeReference<MutableMap<String, Any>>() {})
+            dataMap[KEY_STORE_CODE] = repositoryName
+            val deleteFlag = bkConfigFile.delete()
+            if (deleteFlag) {
+                bkConfigFile.createNewFile()
+                bkConfigFile.writeText(YamlUtil.toYaml(dataMap), Charset.forName(Charsets.UTF_8.name()))
+            }
+        }
+        return Result(true)
+    }
+}

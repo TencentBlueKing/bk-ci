@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.devx.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
 import com.tencent.devops.common.api.constant.APPROVE
 import com.tencent.devops.common.api.constant.BEGIN
@@ -51,29 +52,38 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
+import com.tencent.devops.repository.api.ServiceGitRepositoryResource
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
+import com.tencent.devops.store.common.dao.StoreBuildInfoDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.CONFIG_JSON_NAME
+import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import com.tencent.devops.store.pojo.devx.BkConfigInfo
 import com.tencent.devops.store.pojo.devx.OsConfigInfo
 import com.tencent.devops.store.pojo.devx.SignatureConfigInfo
+import com.tencent.devops.store.pojo.devx.constants.KEY_FRAMEWORK_CODE
 import com.tencent.devops.store.pojo.devx.constants.KEY_MAX_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_MIN_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_NEED_VISITED_SITE_INFOS
@@ -93,6 +103,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
     private val storeBaseQueryDao: StoreBaseQueryDao,
     private val storeBaseEnvQueryDao: StoreBaseEnvQueryDao,
     private val storeBaseEnvExtQueryDao: StoreBaseEnvExtQueryDao,
+    private val storeBuildInfoDao: StoreBuildInfoDao,
     private val storeCommonService: StoreCommonService,
     private val storeInnerPipelineConfig: StoreInnerPipelineConfig,
     private val client: Client
@@ -103,7 +114,44 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
     }
 
     @Value("\${store.devx.sign.windows.supportFileTypes:exe}")
-    val windowsSupportFileTypes: String = "exe"
+    private val windowsSupportFileTypes: String = "exe"
+
+    @Value("\${git.devx.nameSpaceId:}")
+    private val devxNameSpaceId: String = ""
+
+    override fun doStoreCreatePreBus(storeCreateRequest: StoreCreateRequest) {
+        val storeBaseCreateRequest = storeCreateRequest.baseInfo
+        val storeCode = storeBaseCreateRequest.storeCode
+        val baseFeatureInfo = storeBaseCreateRequest.baseFeatureInfo
+        val extBaseFeatureInfo = baseFeatureInfo?.extBaseFeatureInfo
+        val frameworkCode = extBaseFeatureInfo?.get(KEY_FRAMEWORK_CODE)?.toString()
+        if (!frameworkCode.isNullOrBlank() && frameworkCode != "CUSTOM_FRAMEWORK") {
+            // 如果用户选择的开发模板不是自定义开发框架则平台自动给应用创建带脚手架的代码库
+            val createGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).createGitCodeRepository(
+                userId = storeInnerPipelineConfig.innerPipelineUser,
+                projectCode = storeInnerPipelineConfig.innerPipelineProject,
+                repositoryName = storeCode,
+                sampleProjectPath = storeBuildInfoDao.getStoreBuildInfoByLanguage(
+                    dslContext,
+                    frameworkCode,
+                    StoreTypeEnum.DEVX
+                )?.sampleProjectPath,
+                namespaceId = devxNameSpaceId.toInt(),
+                visibilityLevel = VisibilityLevelEnum.LOGIN_PUBLIC,
+                tokenType = TokenTypeEnum.PRIVATE_KEY
+            )
+            if (createGitRepositoryResult.isNotOk()) {
+                throw ErrorCodeException(
+                    errorCode = createGitRepositoryResult.status.toString(),
+                    defaultMessage = createGitRepositoryResult.message
+                )
+            }
+            val repositoryInfo = createGitRepositoryResult.data
+            repositoryInfo?.let {
+                extBaseFeatureInfo["repositoryNameWithNamespace"] = repositoryInfo.aliasName
+            }
+        }
+    }
 
     override fun doStoreI18nConversionSpecBus(storeUpdateRequest: StoreUpdateRequest) {
         // 云开发暂无需做国际化转换
@@ -244,14 +292,14 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
     ): List<StorePkgEnvInfo> {
         val storePkgEnvInfos = mutableListOf<StorePkgEnvInfo>()
         if (queryConfigFileFlag == true) {
-            val filePath = URLEncoder.encode("$storeCode/$version/$CONFIG_JSON_NAME", Charsets.UTF_8.name())
-            val configJsonStr =
+            val filePath = URLEncoder.encode("$storeCode/$version/$CONFIG_YML_NAME", Charsets.UTF_8.name())
+            val configFileContent =
                 client.get(ServiceArchiveComponentPkgResource::class).getFileContent(StoreTypeEnum.DEVX, filePath).data
-            if (configJsonStr.isNullOrBlank()) {
+            if (configFileContent.isNullOrBlank()) {
                 storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
                 return storePkgEnvInfos
             }
-            val bkConfigInfo = JsonUtil.to(configJsonStr, BkConfigInfo::class.java)
+            val bkConfigInfo = YamlUtil.to(configFileContent, object : TypeReference<BkConfigInfo>() {})
             val osDefaultEnvNumMap = mutableMapOf<String, Int>()
             bkConfigInfo.os.forEach { osConfigInfo ->
                 storePkgEnvInfos.add(createStorePkgEnvInfoFromConfig(osConfigInfo))
@@ -270,7 +318,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 if (defaultEnvNum != 1) {
                     throw ErrorCodeException(
                         errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID,
-                        params = arrayOf(CONFIG_JSON_NAME, osName, defaultEnvNum.toString())
+                        params = arrayOf(CONFIG_YML_NAME, osName, defaultEnvNum.toString())
                     )
                 }
             }
