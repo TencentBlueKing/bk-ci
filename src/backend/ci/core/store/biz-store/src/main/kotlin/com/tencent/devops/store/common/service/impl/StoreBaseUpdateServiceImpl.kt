@@ -183,22 +183,18 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
             val context = DSL.using(t)
             storeBaseManageDao.saveStoreBaseData(context, storeBaseDataPO)
             if (!storeBaseExtDataPOs.isNullOrEmpty()) {
-                storeBaseExtManageDao.deleteStoreBaseExtInfo(context, storeId)
                 storeBaseExtManageDao.batchSave(context, storeBaseExtDataPOs)
             }
             storeBaseFeatureDataPO?.let {
                 storeBaseFeatureManageDao.saveStoreBaseFeatureData(context, it)
             }
             if (!storeBaseFeatureExtDataPOs.isNullOrEmpty()) {
-                storeBaseFeatureExtManageDao.deleteStoreBaseFeatureExtInfo(context, storeCode, storeType.type.toByte())
                 storeBaseFeatureExtManageDao.batchSave(context, storeBaseFeatureExtDataPOs)
             }
             if (!storeBaseEnvDataPOs.isNullOrEmpty()) {
-                storeBaseEnvManageDao.deleteStoreEnvInfo(context, storeId)
                 storeBaseEnvManageDao.batchSave(context, storeBaseEnvDataPOs)
             }
             if (!storeBaseEnvExtDataPOs.isNullOrEmpty()) {
-                storeBaseEnvExtManageDao.deleteStoreEnvExtInfo(context, storeId)
                 storeBaseEnvExtManageDao.batchSave(context, storeBaseEnvExtDataPOs)
             }
             storeLabelRelDao.deleteByStoreId(context, storeId)
