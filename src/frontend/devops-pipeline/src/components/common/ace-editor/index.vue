@@ -92,7 +92,7 @@
         },
         async mounted () {
             this.isLoading = true
-            const [monaco, { GongfengMonacoEditor, ReleaseChannel }] = await Promise.all([
+            const [monaco, { GongfengMonacoEditor, ReleaseChannel, AuthenticatedSession }] = await Promise.all([
                 import(
                     /* webpackMode: "lazy" */
                     /* webpackPrefetch: true */
@@ -116,7 +116,13 @@
                     // 接入方版本号
                     version: '1.0.0'
                 },
-                env: ReleaseChannel.INSIDER
+                env: ReleaseChannel.INSIDER,
+                forceAuthentication: false
+                // forceAuthentication: false,
+                // authenticatedSession: {
+                //     accessToken: '',
+                //     user: ''
+                // }
             })
 
             this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
