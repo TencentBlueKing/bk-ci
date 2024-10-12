@@ -961,8 +961,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         if (null != atomPipelineRelRecord) {
             // 如果插件关联的流水线是在公共项目下但不是公共流水线，那就属于是组件定制化流水线
-            pipelineId = if (atomPipelineRelRecord.pipelineId != publicPipelineId
-                && atomPipelineRelRecord.projectCode == innerPipelineProject) {
+            pipelineId = if (atomPipelineRelRecord.pipelineId != publicPipelineId &&
+                atomPipelineRelRecord.projectCode == innerPipelineProject) {
                 atomPipelineRelRecord.pipelineId
             } else {
                 publicPipelineId
