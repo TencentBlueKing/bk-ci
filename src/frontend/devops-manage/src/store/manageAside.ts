@@ -74,7 +74,6 @@ export default defineStore('manageAside', () => {
    */
   async function handleAsideRemoveConfirm(removeUser: AsideItem, handOverMember: AsideItem, projectId: string, manageAsideRef: any) {
     showDeptListPermissionDialog.value = false
-    console.log(handOverMember, 'handOverMember')
     const params = {
       targetMember: removeUser,
       ...(Object.keys(handOverMember).length && {handoverTo: handOverMember})
