@@ -1579,5 +1579,9 @@
   },
   "debugHint": "调试和执行不共享构建号，但共享并发控制。调试记录仅在草稿版本调试期间有效，版本发布后将自动清理。",
   "templateRollbackBackTips": "当前流水线为约束模式（模板实例），需要跳转到模板进行版本回滚。",
-  "versionNotMatch": "当前版本非最新版本，无法执行"
+  "versionNotMatch": "当前版本非最新版本，无法执行",
+  "deleteDraft": "删除草稿",
+  "sureDeleteDraft": "确认删除该草稿？",
+  "deleteDraftPipeline": "当前流水线尚未发布，删除草稿等同于删除流水线，确认删除吗？",
+  "noDraft": "暂无可删除的草稿"
 }
