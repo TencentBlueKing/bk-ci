@@ -18,7 +18,7 @@ data class IamGroupIdsQueryConditionDTO(
     val action: String? = null
 ) {
     fun isQueryByGroupPermissions(): Boolean {
-        return relatedResourceType != null && (relatedResourceCode != null || action != null)
+        return relatedResourceType != null
     }
 
     fun isQueryByGroupName(): Boolean {
