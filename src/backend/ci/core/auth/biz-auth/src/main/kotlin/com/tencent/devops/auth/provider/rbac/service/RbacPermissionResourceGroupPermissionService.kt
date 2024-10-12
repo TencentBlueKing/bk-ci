@@ -356,6 +356,22 @@ class RbacPermissionResourceGroupPermissionService(
         }.sortedBy { it.actionId }
     }
 
+    private fun buildRelatedResourceTypesName(iamSystemId: String, instancesDTO: InstancesDTO) {
+        instancesDTO.let {
+            val resourceTypeName = if (iamSystemId == systemId) {
+                rbacCacheService.getResourceTypeInfo(it.type).name
+            } else {
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_MONITOR_SPACE)
+            }
+            it.name = resourceTypeName
+            it.path.forEach { element1 ->
+                element1.forEach { element2 ->
+                    element2.typeName = resourceTypeName
+                }
+            }
+        }
+    }
+
     override fun syncGroupPermissions(projectCode: String, iamGroupId: Int): Boolean {
         return try {
             val resourceGroupInfo = authResourceGroupDao.get(
@@ -417,7 +433,7 @@ class RbacPermissionResourceGroupPermissionService(
                         ids = toDeleteRecords.map { it.id!! })
                 }
                 resourceGroupPermissionDao.batchCreate(
-                    dslContext = dslContext,
+                    dslContext = transactionContext,
                     records = toAddRecords
                 )
             }
@@ -485,34 +501,22 @@ class RbacPermissionResourceGroupPermissionService(
         resourceType: String,
         resourceCode: String
     ): Boolean {
-        resourceGroupPermissionDao.deleteByResourceCode(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            resourceType = resourceType,
-            resourceCode = resourceCode
-        )
-        resourceGroupPermissionDao.deleteByRelatedResourceCode(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            relatedResourceType = resourceType,
-            relatedResourceCode = resourceCode
-        )
-        return true
-    }
-
-    private fun buildRelatedResourceTypesName(iamSystemId: String, instancesDTO: InstancesDTO) {
-        instancesDTO.let {
-            val resourceTypeName = if (iamSystemId == systemId) {
-                rbacCacheService.getResourceTypeInfo(it.type).name
-            } else {
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_MONITOR_SPACE)
-            }
-            it.name = resourceTypeName
-            it.path.forEach { element1 ->
-                element1.forEach { element2 ->
-                    element2.typeName = resourceTypeName
-                }
-            }
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            resourceGroupPermissionDao.deleteByResourceCode(
+                dslContext = transactionContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+            resourceGroupPermissionDao.deleteByRelatedResourceCode(
+                dslContext = transactionContext,
+                projectCode = projectCode,
+                relatedResourceType = resourceType,
+                relatedResourceCode = resourceCode
+            )
         }
+
+        return true
     }
 }

@@ -482,8 +482,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         val iamGroupId = createGroupToIam(
             resourceType = resourceType,
             managerId = resourceInfo.relationId.toInt(),
-            groupName = groupConfig.groupName,
-            description = groupConfig.description
+            groupName = finalGroupName,
+            description = description
         )
         authResourceGroupDao.create(
             dslContext = dslContext,
@@ -492,8 +492,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceCode = resourceCode,
             resourceName = resourceInfo.resourceName,
             iamResourceCode = resourceInfo.iamResourceCode,
-            groupCode = groupCode,
-            groupName = groupConfig.groupName,
+            groupCode = finalGroupCode,
+            groupName = finalGroupName,
             defaultGroup = false,
             relationId = iamGroupId.toString()
         )
@@ -538,6 +538,18 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             managerId = projectInfo.relationId.toInt(),
             groupName = customGroupCreateReq.groupName,
             description = customGroupCreateReq.groupDesc
+        )
+        authResourceGroupDao.create(
+            dslContext = dslContext,
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId,
+            resourceName = projectInfo.resourceName,
+            iamResourceCode = projectId,
+            groupCode = CUSTOM_GROUP_CODE,
+            groupName = customGroupCreateReq.groupName,
+            defaultGroup = false,
+            relationId = iamGroupId.toString()
         )
         permissionResourceGroupPermissionService.grantGroupPermission(
             authorizationScopesStr = authorizationScopes,
