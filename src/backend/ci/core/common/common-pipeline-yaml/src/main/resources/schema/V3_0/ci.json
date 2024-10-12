@@ -213,7 +213,7 @@
                     "type" : "array",
                     "uniqueItems" : true,
                     "items" : {
-                      "enum" : [ "open", "close", "reopen", "push-update", "merge" ]
+                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
                     },
                     "additionalItems" : false
                   },
@@ -904,7 +904,7 @@
                   "type" : "array",
                   "uniqueItems" : true,
                   "items" : {
-                    "enum" : [ "open", "close", "reopen", "push-update", "merge" ]
+                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
                   },
                   "additionalItems" : false
                 },
@@ -1759,7 +1759,20 @@
               } ]
             },
             "if" : {
-              "type" : "string"
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "mode" : {
+                    "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                  },
+                  "params" : {
+                    "type" : "object"
+                  }
+                }
+              } ]
             },
             "check-in" : {
               "$ref" : "#/definitions/check-in"
@@ -2163,6 +2176,9 @@
     },
     "custom-build-num" : {
       "type" : "string"
+    },
+    "syntax-dialect" : {
+      "enum" : [ "INHERIT", "CLASSIC", "CONSTRAINT" ]
     }
   },
   "definitions" : {
@@ -2181,7 +2197,7 @@
               "items" : {
                 "type" : "object",
                 "additionalProperties" : false,
-                "required" : [ "name", "reviewers" ],
+                "required" : [ "name" ],
                 "properties" : {
                   "name" : {
                     "type" : "string"
@@ -2206,7 +2222,30 @@
                       }
                     } ]
                   }
-                }
+                },
+                "allOf" : [ {
+                  "if" : {
+                    "required" : [ "reviewers" ]
+                  },
+                  "then" : {
+                    "allOf" : [ {
+                      "not" : {
+                        "required" : [ "groups" ]
+                      }
+                    } ]
+                  }
+                }, {
+                  "if" : {
+                    "required" : [ "groups" ]
+                  },
+                  "then" : {
+                    "allOf" : [ {
+                      "not" : {
+                        "required" : [ "reviewers" ]
+                      }
+                    } ]
+                  }
+                } ]
               }
             },
             "variables" : {
@@ -2478,7 +2517,20 @@
               }
             },
             "if" : {
-              "type" : "string"
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "mode" : {
+                    "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                  },
+                  "params" : {
+                    "type" : "object"
+                  }
+                }
+              } ]
             },
             "steps" : {
               "$ref" : "#/definitions/steps"
@@ -2598,7 +2650,20 @@
               "maxLength" : 64
             },
             "if" : {
-              "type" : "string"
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "mode" : {
+                    "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                  },
+                  "params" : {
+                    "type" : "object"
+                  }
+                }
+              } ]
             },
             "with" : {
               "type" : "object"
