@@ -59,5 +59,12 @@
     "共N个监控平台空间": "{0} spaces total",
     "项目尚未升级到新版权限系统，点击前往旧版权限中心申请": "The project has not been upgraded to the new permission system. Go to the old permission center to apply.",
     "项目级用户组": "Project User Group",
-    "资源级用户组": "Resource User Group"
+    "资源级用户组": "Resource User Group",
+    "xx创建于N年前": "{0} created {1} years ago",
+    "xx创建于N天前": "{0} created {1} days ago",
+    "xx创建于N小时前": "{0} created {1} hours ago",
+    "xx创建于N分钟前": "{0} created {1} minutes ago",
+    "授权代码库": "Authorized Repository",
+    "授权账号": "Authorized Account",
+    "我的授权": "My Authorizations"
 }
