@@ -483,7 +483,7 @@
                     this.resetLoading = true
 
                     const { pipelineId, projectId, version } = this.$route.params
-                    const { data } = await this.updateBuildNo({ projectId, pipelineId, currentBuildNo: this.resetBuildNo })
+                    const { data } = await this.updateBuildNo({ projectId, pipelineId, currentBuildNo: this.buildNo.buildNo })
 
                     if (data) {
                         const pipelineRes = await this.fetchPipelineByVersion({ projectId, pipelineId, version })
