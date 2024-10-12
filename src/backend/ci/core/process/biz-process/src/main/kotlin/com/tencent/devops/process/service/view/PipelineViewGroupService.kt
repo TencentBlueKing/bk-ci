@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -58,6 +59,7 @@ import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlViewDao
 import com.tencent.devops.process.enums.OperationLogType
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
@@ -95,7 +97,8 @@ class PipelineViewGroupService @Autowired constructor(
     private val client: Client,
     private val clientTokenService: ClientTokenService,
     private val operationLogService: PipelineOperationLogService,
-    private val pipelineYamlViewDao: PipelineYamlViewDao
+    private val pipelineYamlViewDao: PipelineYamlViewDao,
+    private val pipelinePermissionService: PipelinePermissionService
 ) {
     private val allPipelineInfoCache = Caffeine.newBuilder()
         .maximumSize(10)
@@ -837,7 +840,15 @@ class PipelineViewGroupService @Autowired constructor(
 
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
-        val countByViewId = pipelineViewGroupDao.countByViewId(dslContext, projectId, views.map { it.id })
+        val authPipelines = pipelinePermissionService.getResourceByPermission(
+            userId = userId, projectId = projectId, permission = AuthPermission.LIST
+        )
+        val countByViewId = pipelineViewGroupDao.countByViewId(
+            dslContext = dslContext,
+            projectId = projectId,
+            viewIds = views.map { it.id },
+            filterPipelineIds = authPipelines
+        )
         val yamlViews = pipelineYamlViewDao.listViewIds(dslContext, projectId)
         // 确保数据都初始化一下
         views.filter { it.viewType == PipelineViewType.DYNAMIC }
@@ -846,20 +857,26 @@ class PipelineViewGroupService @Autowired constructor(
         if (projected != false) {
             val classifiedPipelineIds = getClassifiedPipelineIds(projectId)
             val unclassifiedCount =
-                pipelineInfoDao.countExcludePipelineIds(dslContext, projectId, classifiedPipelineIds, ChannelCode.BS)
+                pipelineInfoDao.countExcludePipelineIds(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    excludePipelineIds = classifiedPipelineIds,
+                    channelCode = ChannelCode.BS,
+                    filterPipelineIds = authPipelines
+                )
             summaries.add(
                 0, PipelineNewViewSummary(
-                    id = PIPELINE_VIEW_UNCLASSIFIED,
-                    projectId = projectId,
-                    name = I18nUtil.getCodeLanMessage(PIPELINE_VIEW_UNCLASSIFIED),
-                    projected = true,
-                    createTime = LocalDateTime.now().timestamp(),
-                    updateTime = LocalDateTime.now().timestamp(),
-                    creator = "admin",
-                    top = false,
-                    viewType = PipelineViewType.UNCLASSIFIED,
-                    pipelineCount = unclassifiedCount
-                )
+                id = PIPELINE_VIEW_UNCLASSIFIED,
+                projectId = projectId,
+                name = I18nUtil.getCodeLanMessage(PIPELINE_VIEW_UNCLASSIFIED),
+                projected = true,
+                createTime = LocalDateTime.now().timestamp(),
+                updateTime = LocalDateTime.now().timestamp(),
+                creator = "admin",
+                top = false,
+                viewType = PipelineViewType.UNCLASSIFIED,
+                pipelineCount = unclassifiedCount
+            )
             )
         }
         return summaries

@@ -33,12 +33,12 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.MockPipelinePermissionService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.RbacPipelinePermissionService
 import com.tencent.devops.process.permission.StreamPipelinePermissionServiceImpl
-import com.tencent.devops.process.service.view.PipelineViewGroupService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -107,7 +107,7 @@ class PipelinePermConfiguration {
         pipelineAuthServiceCode: PipelineAuthServiceCode,
         dslContext: DSLContext,
         pipelineInfoDao: PipelineInfoDao,
-        pipelineViewGroupService: PipelineViewGroupService,
+        pipelineViewGroupDao: PipelineViewGroupDao,
         authResourceApi: AuthResourceApi
     ): PipelinePermissionService = RbacPipelinePermissionService(
         authPermissionApi = authPermissionApi,
@@ -115,7 +115,7 @@ class PipelinePermConfiguration {
         pipelineAuthServiceCode = pipelineAuthServiceCode,
         dslContext = dslContext,
         pipelineInfoDao = pipelineInfoDao,
-        pipelineViewGroupService = pipelineViewGroupService,
+        pipelineViewGroupDao = pipelineViewGroupDao,
         authResourceApi = authResourceApi
     )
 }
