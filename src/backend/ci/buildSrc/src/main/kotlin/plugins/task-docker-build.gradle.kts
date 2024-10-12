@@ -1,5 +1,3 @@
-import gradle.kotlin.dsl.accessors._65b623254b230e20bedeab439d343b4d.jib
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
