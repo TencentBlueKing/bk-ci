@@ -77,3 +77,21 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .permission-icon-warning-circle-fill:before {
 	content: "\e112";
 }
+.permission-icon-down-shape:before {
+	content: "\e113";
+}
+.permission-icon-yonghuzu:before {
+	content: "\e114";
+}
+.permission-icon-yonghu-2:before {
+	content: "\e115";
+}
+.permission-icon-oauth:before {
+	content: "\e116";
+}
+.permission-icon-codelib:before {
+	content: "\e117";
+}
+.permission-icon-user:before {
+	content: "\e118";
+}

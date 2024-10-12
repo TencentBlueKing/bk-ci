@@ -91,6 +91,10 @@
                         label: this.$t('accessCenter')
                     },
                     {
+                        to: 'console/permission/auth/oauth',
+                        label: this.$t('oauthManage')
+                    },
+                    {
                         cb: this.logout,
                         label: this.$t('logout')
                     }

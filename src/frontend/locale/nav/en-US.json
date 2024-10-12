@@ -217,5 +217,6 @@
     "undeployTitle": "The {0} service has not been deployed yet",
     "turboServiceDesc": "Turbo compilation acceleration service is based on distributed compilation, caching, and container technologies. It aims to provide efficient, stable, and convenient acceleration services for businesses, thereby improving development efficiency. To use this feature, the acceleration service needs to be deployed.",
     "bkci": "BK-CI",
-    "tencentBlueKing": "Tencent BlueKing"
+    "tencentBlueKing": "Tencent BlueKing",
+    "oauthManage": "Oauth Manage"
 }

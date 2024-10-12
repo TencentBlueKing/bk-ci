@@ -1,8 +1,6 @@
 import fetch from './fetch';
 
-const apiPerfix = '/api';
-const applyFix = 'ms/auth/api/user/auth/apply';
-const IAM_PERFIX = '/ms/auth/api/user/auth/resource';
+const apiPerfix = '/ms/auth/api/user';
 const projectPerfix = 'ms/project/api/user'
 export default {
   getUser() {
@@ -13,16 +11,16 @@ export default {
   },
   // 获取资源类型列表
   getResourceTypesList() {
-    return fetch.get(`${applyFix}/listResourceTypes`);
+    return fetch.get(`${apiPerfix}/auth/apply/listResourceTypes`);
   },
   // 获取动作列表
   getActionsList(resourceType: any) {
-    return fetch.get(`${applyFix}/listActions?resourceType=${resourceType}`);
+    return fetch.get(`${apiPerfix}/auth/apply/listActions?resourceType=${resourceType}`);
   },
   // 获取资源列表
   getResourceList(params: any, pageInfo: any) {
     const { projectId, resourceType, resourceName } = params;
-    return fetch.get(`${IAM_PERFIX}/${projectId}/${resourceType}/listResources`, {
+    return fetch.get(`${apiPerfix}/auth/resource/${projectId}/${resourceType}/listResources`, {
       ...pageInfo,
       resourceName
     })
@@ -31,14 +29,18 @@ export default {
   getUserGroupList(params: any) {
     const { projectId } = params;
     delete params.projectId;
-    return fetch.post(`${applyFix}/${projectId}/listGroups`, params);
+    return fetch.post(`${apiPerfix}/auth/apply/${projectId}/listGroups`, params);
   },
   // 申请加入用户组实体
   applyToJoinGroup(params: any) {
-    return fetch.post(`${applyFix}/applyToJoinGroup`, params);
+    return fetch.post(`${apiPerfix}/auth/apply/applyToJoinGroup`, params);
   },
   // 查询用户组权限详情
   getGroupPermissionDetail(groupId: any) {
-    return fetch.get(`${applyFix}/${groupId}/getGroupPermissionDetail`)
+    return fetch.get(`${apiPerfix}/auth/apply/${groupId}/getGroupPermissionDetail`)
+  },
+
+  getOauthResource() {
+    return fetch.get(`${apiPerfix}/oauth/resource`)
   }
 }
