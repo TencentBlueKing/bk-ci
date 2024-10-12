@@ -330,7 +330,12 @@ class StageTransfer @Autowired(required = false) constructor(
 
     private fun getCheckInForStage(stage: Stage): PreStageCheck? {
         val reviews = PreStageReviews(
-            flows = stage.checkIn?.reviewGroups?.map { PreFlow(it.name, it.reviewers, it.groups) },
+            flows = stage.checkIn?.reviewGroups?.map {
+                PreFlow(
+                    it.name,
+                    it.reviewers.ifEmpty { null },
+                    it.groups.ifEmpty { null })
+            },
             variables = stage.checkIn?.reviewParams?.associate {
                 it.key to ReviewVariable(
                     label = it.chineseName ?: it.key,

@@ -46,6 +46,6 @@ data class PreStageReviews(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PreFlow(
     val name: String,
-    val reviewers: Any,
-    val groups: Any
+    val reviewers: Any?,
+    val groups: Any?
 )
