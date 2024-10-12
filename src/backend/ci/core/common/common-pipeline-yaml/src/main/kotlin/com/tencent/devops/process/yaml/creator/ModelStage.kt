@@ -215,6 +215,7 @@ class ModelStage @Autowired(required = false) constructor(
                     reviewers = ModelCommon.parseReceivers(it.reviewers).toList()
                 )
             }.toMutableList()
+            check.notifyGroup = stageCheck.reviews.notifyGroups?.toMutableList()
         }
         if (stageCheck.gates?.isNotEmpty() == true) {
             check.ruleIds = createRules(

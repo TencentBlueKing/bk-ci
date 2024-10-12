@@ -1,20 +1,53 @@
 <template>
     <section v-bkloading="{ isLoading }">
-        <bk-form :label-width="100" :model="formData" class="manage-detail-edit" ref="atomEdit" v-if="!isLoading">
-            <bk-form-item :label="$t('store.名称')" :rules="[requireRule($t('store.名称')), nameRule, numMax(40)]" :required="true" property="name" error-display-type="normal">
-                <bk-input v-model="formData.name" :placeholder="$t('store.请输入中英文名称，不超过40个字符')"></bk-input>
+        <bk-form
+            :label-width="100"
+            :model="formData"
+            class="manage-detail-edit"
+            ref="atomEdit"
+            v-if="!isLoading"
+        >
+            <bk-form-item
+                :label="$t('store.名称')"
+                :rules="[requireRule($t('store.名称')), nameRule, numMax(40)]"
+                :required="true"
+                property="name"
+                error-display-type="normal"
+            >
+                <bk-input
+                    v-model="formData.name"
+                    :placeholder="$t('store.请输入中英文名称，不超过40个字符')"
+                ></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('store.分类')" :rules="[requireRule($t('store.分类'))]" :required="true" property="classifyCode" error-display-type="normal">
-                <bk-select v-model="formData.classifyCode" searchable :clearable="false" @toggle="requestAtomClassify" :loading="isLoadingClassify">
-                    <bk-option v-for="(option, index) in sortList"
+            <bk-form-item
+                :label="$t('store.分类')"
+                :rules="[requireRule($t('store.分类'))]"
+                :required="true"
+                property="classifyCode"
+                error-display-type="normal"
+            >
+                <bk-select
+                    v-model="formData.classifyCode"
+                    searchable
+                    :clearable="false"
+                    @toggle="requestAtomClassify"
+                    :loading="isLoadingClassify"
+                >
+                    <bk-option
+                        v-for="(option, index) in sortList"
                         :key="index"
                         :id="option.classifyCode"
-                        :name="option.classifyName">
+                        :name="option.classifyName"
+                    >
                     </bk-option>
                 </bk-select>
             </bk-form-item>
-            <bk-form-item :label="$t('store.功能标签')" property="labelIdList">
-                <bk-select :placeholder="$t('store.请选择功能标签')"
+            <bk-form-item
+                :label="$t('store.功能标签')"
+                property="labelIdList"
+            >
+                <bk-select
+                    :placeholder="$t('store.请选择功能标签')"
                     v-model="formData.labelIdList"
                     show-select-all
                     searchable
@@ -22,30 +55,70 @@
                     @toggle="requestAtomlabels"
                     :loading="isLoadingLabel"
                 >
-                    <bk-option v-for="(option, index) in labelList"
+                    <bk-option
+                        v-for="(option, index) in labelList"
                         :key="index"
                         :id="option.id"
-                        :name="option.labelName">
+                        :name="option.labelName"
+                    >
                     </bk-option>
                 </bk-select>
             </bk-form-item>
             <template v-if="userInfo.isProjectAdmin && VERSION_TYPE !== 'ee'">
-                <bk-form-item :label="$t('store.是否开源')" property="visibilityLevel">
-                    <bk-radio-group v-model="formData.visibilityLevel" class="radio-group">
-                        <bk-radio :disabled="entry.disable" :title="entry.title" :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="formData.privateReason = ''">{{entry.label}}</bk-radio>
+                <bk-form-item
+                    :label="$t('store.是否开源')"
+                    property="visibilityLevel"
+                >
+                    <bk-radio-group
+                        v-model="formData.visibilityLevel"
+                        class="radio-group"
+                    >
+                        <bk-radio
+                            :disabled="entry.disable"
+                            :title="entry.title"
+                            :value="entry.value"
+                            v-for="(entry, key) in isOpenSource"
+                            :key="key"
+                            @click.native="formData.privateReason = ''"
+                        >
+                            {{ entry.label }}
+                        </bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
-                <bk-form-item v-if="formData.visibilityLevel === 'PRIVATE'" :label="$t('store.不开源原因')" :rules="[requireRule($t('store.不开源原因'))]" :required="true" property="privateReason" error-display-type="normal">
-                    <bk-input type="textarea" v-model="formData.privateReason"></bk-input>
+                <bk-form-item
+                    v-if="formData.visibilityLevel === 'PRIVATE'"
+                    :label="$t('store.不开源原因')"
+                    :rules="[requireRule($t('store.不开源原因'))]"
+                    :required="true"
+                    property="privateReason"
+                    error-display-type="normal"
+                >
+                    <bk-input
+                        type="textarea"
+                        v-model="formData.privateReason"
+                    ></bk-input>
                 </bk-form-item>
             </template>
-            <bk-form-item :label="$t('store.简介')" :rules="[requireRule($t('store.简介')), numMax(256)]" :required="true" property="summary" :desc="$t('store.展示在插件市场以及流水线选择插件页面。')" error-display-type="normal">
-                <bk-input v-model="formData.summary" :placeholder="$t('store.插件一句话简介，不超过256个字符')"></bk-input>
+            <bk-form-item
+                :label="$t('store.简介')"
+                :rules="[requireRule($t('store.简介')), numMax(256)]"
+                :required="true"
+                property="summary"
+                :desc="$t('store.展示在插件市场以及流水线选择插件页面。')"
+                error-display-type="normal"
+            >
+                <bk-input
+                    v-model="formData.summary"
+                    :placeholder="$t('store.插件一句话简介，不超过256个字符')"
+                ></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('store.详细描述')"
+            <bk-form-item
+                :label="$t('store.详细描述')"
                 property="description"
-                :desc="`${$t('store.atomRemark')}<br>${$t('store.展示在插件市场查看插件详情界面，帮助用户快速了解插件和解决遇到的问题。')}`">
-                <mavon-editor class="remark-input"
+                :desc="`${$t('store.atomRemark')}<br>${$t('store.展示在插件市场查看插件详情界面，帮助用户快速了解插件和解决遇到的问题。')}`"
+            >
+                <mavon-editor
+                    class="remark-input"
                     ref="mdHook"
                     v-model="formData.description"
                     :toolbars="toolbars"
@@ -56,26 +129,58 @@
                     @imgAdd="addImage"
                 />
             </bk-form-item>
-            <bk-form-item :label="$t('store.发布者')" :rules="[requireRule($t('store.发布者'))]" :required="true" property="publisher" error-display-type="normal">
+            <bk-form-item
+                :label="$t('store.发布者')"
+                :rules="[requireRule($t('store.发布者'))]"
+                :required="true"
+                property="publisher"
+                error-display-type="normal"
+            >
                 <bk-select v-model="formData.publisher">
-                    <bk-option v-for="publisher in publishersList" :key="publisher.id" :id="publisher.publisherCode" :name="publisher.publisherName"></bk-option>
+                    <bk-option
+                        v-for="publisher in publishersList"
+                        :key="publisher.id"
+                        :id="publisher.publisherCode"
+                        :name="publisher.publisherName"
+                    ></bk-option>
                 </bk-select>
             </bk-form-item>
-            <bk-form-item :required="true" property="logoUrl" error-display-type="normal" class="edit-logo">
-                <select-logo :form="formData" type="ATOM" :is-err="false" ref="logoUrlError"></select-logo>
+            <bk-form-item
+                :required="true"
+                property="logoUrl"
+                error-display-type="normal"
+                class="edit-logo"
+            >
+                <select-logo
+                    :form="formData"
+                    type="ATOM"
+                    :is-err="false"
+                    ref="logoUrlError"
+                ></select-logo>
             </bk-form-item>
             <bk-form-item>
-                <bk-button theme="primary" @click="save" :loading="isSaving">{{ $t('store.保存') }}</bk-button>
-                <bk-button :disabled="isSaving" @click="$router.back()">{{ $t('store.取消') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    @click="save"
+                    :loading="isSaving"
+                >
+                    {{ $t('store.保存') }}
+                </bk-button>
+                <bk-button
+                    :disabled="isSaving"
+                    @click="$router.back()"
+                >
+                    {{ $t('store.取消') }}
+                </bk-button>
             </bk-form-item>
         </bk-form>
     </section>
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {

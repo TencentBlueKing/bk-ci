@@ -172,6 +172,20 @@ class PermissionService @Autowired constructor(
         }
     }
 
+    fun checkUserProjectManager(userId: String, projectId: String) {
+        val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
+            token = checkTokenService.getSystemToken(),
+            userId = userId,
+            projectCode = projectId
+        ).data ?: false
+        if (!checkProjectManager) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
+            )
+        }
+    }
+
     fun checkUserManager(userId: String, projectId: String) {
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)

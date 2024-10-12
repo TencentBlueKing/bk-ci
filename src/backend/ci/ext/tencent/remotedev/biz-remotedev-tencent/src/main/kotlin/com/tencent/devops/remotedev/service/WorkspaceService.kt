@@ -530,7 +530,8 @@ class WorkspaceService @Autowired constructor(
                     remark = it.remark,
                     labels = it.labels,
                     createTime = it.createTime.timestamp(),
-                    imageId = detail?.imageId ?: ""
+                    imageId = detail?.imageId ?: "",
+                    recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank()
                 )
             )
         }
@@ -597,6 +598,12 @@ class WorkspaceService @Autowired constructor(
             null
         }
 
+        val loginUserMap = if (hasCurrentUser == true) {
+            startWorkspaceService.loginUsers(result.map { it.hostIp ?: "" }.toSet())
+        } else {
+            null
+        }
+
         val data = result.map { res ->
             val name = res.workspaceName
 
@@ -625,11 +632,6 @@ class WorkspaceService @Autowired constructor(
             } else {
                 null
             }
-            val currUser = if (hasCurrentUser == true && ip != null) {
-                startWorkspaceService.loginUsers(setOf(res.hostIp ?: "")).values.flatten().toSet()
-            } else {
-                null
-            }
             WeSecProjectWorkspace(
                 workspaceName = name,
                 projectId = res.projectId,
@@ -642,7 +644,7 @@ class WorkspaceService @Autowired constructor(
                 status = res.status,
                 displayName = res.displayName,
                 ownerDepartments = depInfo,
-                currentLoginUsers = currUser,
+                currentLoginUsers = res.hostIp?.let { ip -> loginUserMap?.get(ip) }?.toSet() ?: emptySet(),
                 machineType = workspaceWindows[name]?.let { win -> allConfig[win.winConfigId.toString()]?.size },
                 macAddress = workspaceWindows[name]?.macAddress,
                 viewers = viewers[name]
@@ -906,6 +908,12 @@ class WorkspaceService @Autowired constructor(
 
         val sharedList = workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
 
+        val currentLoginUser = if (winInfo != null) {
+            startWorkspaceService.loginUsers(setOf(winInfo.hostIp)).values.flatten().toSet()
+        } else {
+            null
+        }
+
         return WorkspaceDetail(
             workspaceId = workspace.workspaceId,
             workspaceName = workspaceName,
@@ -928,7 +936,8 @@ class WorkspaceService @Autowired constructor(
             creator = workspace.createUserId,
             createTime = workspace.createTime.timestamp(),
             imageId = winInfo?.imageId,
-            remark = workspace.remark
+            remark = workspace.remark,
+            currentLoginUser = currentLoginUser
         )
     }
 
@@ -987,7 +996,8 @@ class WorkspaceService @Autowired constructor(
             name = workspace.workspaceName,
             creator = workspace.createUserId,
             owner = owner,
-            resourceId = resourceId
+            resourceId = resourceId,
+            displayName = workspace.displayName
         )
     }
 

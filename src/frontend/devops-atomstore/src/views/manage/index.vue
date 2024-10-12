@@ -1,14 +1,25 @@
 <template>
     <article class="g-store-main">
-        <bread-crumbs :bread-crumbs="navList" :type="type"></bread-crumbs>
+        <bread-crumbs
+            :bread-crumbs="navList"
+            :type="type"
+        ></bread-crumbs>
 
-        <transition-tab :panels="panels"
+        <transition-tab
+            :panels="panels"
             @tab-change="tabChange"
             @child-tab-change="childTabChange"
         ></transition-tab>
 
-        <main v-bkloading="{ isLoading }" class="g-store-body">
-            <router-view v-if="Object.keys(detail).length > 0 && !isLoading" class="g-store-route" v-bind="routekey"></router-view>
+        <main
+            v-bkloading="{ isLoading }"
+            class="g-store-body"
+        >
+            <router-view
+                v-if="Object.keys(detail).length > 0 && !isLoading"
+                class="g-store-route"
+                v-bind="routekey"
+            ></router-view>
         </main>
     </article>
 </template>

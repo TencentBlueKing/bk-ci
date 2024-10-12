@@ -1,8 +1,14 @@
 <template>
     <article>
         <section class="show-detail">
-            <img :src="detail.logoUrl || defaultPic" class="detail-img">
-            <ul class="detail-items" ref="detail">
+            <img
+                :src="detail.logoUrl || defaultPic"
+                class="detail-img"
+            >
+            <ul
+                class="detail-items"
+                ref="detail"
+            >
                 <li class="detail-item">
                     <span class="item-name">{{ detail.name }}</span>
                 </li>
@@ -19,20 +25,36 @@
                     <span>{{ detail.classifyName || '--' }}</span>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.适用Job类型：') }}</span>
-                    <div v-if="detail.os">{{ jobTypeMap[detail.jobType] }}
+                    <span class="detail-label">{{ $t('store.适用机器类型：') }}</span>
+                    <div v-if="detail.os">
+                        {{ jobTypeMap[detail.jobType] }}
                         <span v-if="detail.jobType === 'AGENT'">（
-                            <i class="devops-icon icon-linux-view" v-if="detail.os.indexOf('LINUX') !== -1"></i>
-                            <i class="devops-icon icon-windows" v-if="detail.os.indexOf('WINDOWS') !== -1"></i>
-                            <i class="devops-icon icon-macos" v-if="detail.os.indexOf('MACOS') !== -1"></i>）
+                            <i
+                                class="devops-icon icon-linux-view"
+                                v-if="detail.os.indexOf('LINUX') !== -1"
+                            ></i>
+                            <i
+                                class="devops-icon icon-windows"
+                                v-if="detail.os.indexOf('WINDOWS') !== -1"
+                            ></i>
+                            <i
+                                class="devops-icon icon-macos"
+                                v-if="detail.os.indexOf('MACOS') !== -1"
+                            ></i>）
                         </span>
                     </div>
                 </li>
-                <li class="detail-item" v-if="!isEnterprise">
+                <li
+                    class="detail-item"
+                    v-if="!isEnterprise"
+                >
                     <span class="detail-label">{{ $t('store.是否开源：') }}</span>
                     <span>{{ detail.visibilityLevel | levelFilter }}</span>
                 </li>
-                <li class="detail-item" v-if="isEnterprise">
+                <li
+                    class="detail-item"
+                    v-if="isEnterprise"
+                >
                     <span class="detail-label">{{ $t('store.发布包：') }}</span>
                     <span>{{ detail.pkgName || '--' }}</span>
                 </li>

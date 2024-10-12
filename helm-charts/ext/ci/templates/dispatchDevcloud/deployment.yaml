@@ -119,7 +119,7 @@ spec:
                   command:
                   - /bin/bash
                   - -c
-                  - sleep 10
+                  - sleep 20
       volumes:
       - hostPath:
           path: /data

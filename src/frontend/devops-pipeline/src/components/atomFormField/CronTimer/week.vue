@@ -3,20 +3,37 @@
         <div class="cron-build-week">
             <span>每周</span>
             <ul>
-                <li v-for="(week, index) of weeks"
+                <li
+                    v-for="(week, index) of weeks"
                     :key="index"
                     class="week-item"
                     :class="{ 'cur-item': isSelectedWeek(index + 1) }"
-                    @click="toggleWeek(index + 1)">
+                    @click="toggleWeek(index + 1)"
+                >
                     <label>{{ week }}</label>
                 </li>
             </ul>
         </div>
-        <p v-if="isEmtpyVal" class="bk-form-help is-danger">{{$t('editPage.cronWeekHint')}}</p>
+        <p
+            v-if="isEmtpyVal"
+            class="bk-form-help is-danger"
+        >
+            {{ $t('editPage.cronWeekHint') }}
+        </p>
         <div class="cron-build-time">
             <span>触发于</span>
-            <bk-input :disabled="disabled" :value="normalTime" @input="changeTimes" placeholder="多个触发时间可以用英文逗号分隔，比如09:00,15:30，为空的时候默认为00:00" />
-            <div class="bk-form-help is-danger" v-if="error">触发时间格式有误，请用英文逗号分隔，如09:00,15:30</div>
+            <bk-input
+                :disabled="disabled"
+                :value="normalTime"
+                @input="changeTimes"
+                placeholder="多个触发时间可以用英文逗号分隔，比如09:00,15:30，为空的时候默认为00:00"
+            />
+            <div
+                class="bk-form-help is-danger"
+                v-if="error"
+            >
+                触发时间格式有误，请用英文逗号分隔，如09:00,15:30
+            </div>
         </div>
     </div>
 </template>

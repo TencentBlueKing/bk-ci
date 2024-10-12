@@ -1,33 +1,51 @@
 <template>
-    <bk-popover theme="light" trigger="click" :disabled="!info" :max-width="360">
+    <bk-popover
+        theme="light"
+        trigger="click"
+        :disabled="!info"
+        :max-width="360"
+    >
         <span class="pac-tag">
             <i class="devops-icon icon-code" />
             PAC
         </span>
-        <section v-if="info" slot="content">
+        <section
+            v-if="info"
+            slot="content"
+        >
             <h6 class="pac-enable-tip">{{ $t('pacEnableTips') }}</h6>
             <div class="pac-info">
                 <p class="pac-info-row">
-                    <logo size="16" name="CODE_GIT" />
+                    <logo
+                        size="16"
+                        name="CODE_GIT"
+                    />
                     <bk-link
                         class="pac-info-row-link"
                         target="_blank"
                         :href="info.webUrl"
                     >
-                        {{info.pathWithNamespace}}
+                        {{ info.pathWithNamespace }}
                     </bk-link>
                 </p>
                 <p class="pac-info-row">
-                    <logo size="16" name="file" />
+                    <logo
+                        size="16"
+                        name="file"
+                    />
                     <bk-link
                         class="pac-info-row-link"
                         target="_blank"
                         :href="info.fileUrl"
                     >
                         <span class="pac-info-row-link-text-span">
-                            {{info.filePath}}
+                            {{ info.filePath }}
                         </span>
-                        <logo class="pac-info-row-link-text-icon" size="16" name="tiaozhuan" />
+                        <logo
+                            class="pac-info-row-link-text-icon"
+                            size="16"
+                            name="tiaozhuan"
+                        />
                     </bk-link>
                 </p>
             </div>

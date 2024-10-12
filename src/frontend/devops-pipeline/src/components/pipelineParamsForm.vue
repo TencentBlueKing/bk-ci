@@ -1,8 +1,12 @@
 <template>
-    <bk-form form-type="vertical" class="pipeline-execute-params-form">
+    <bk-form
+        form-type="vertical"
+        class="pipeline-execute-params-form"
+    >
         <form-field
             v-for="param in paramList"
-            :key="param.id" :required="param.required"
+            :key="param.id"
+            :required="param.required"
             :is-error="errors.has('devops' + param.name)"
             :error-msg="errors.first('devops' + param.name)"
             :label="param.label || param.id"
@@ -23,9 +27,15 @@
                     :placeholder="param.placeholder"
                     :is-diff-param="highlightChangedParam && param.isChanged"
                 />
-                <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('metaData') }}
+                <span
+                    class="meta-data"
+                    v-show="showMetadata(param.type, param.value)"
+                >{{ $t('metaData') }}
                     <aside class="metadata-box">
-                        <metadata-list :is-left-render="(index % 2) === 1" :path="isArtifactoryParam(param.type) ? param.value : ''"></metadata-list>
+                        <metadata-list
+                            :is-left-render="(index % 2) === 1"
+                            :path="isArtifactoryParam(param.type) ? param.value : ''"
+                        ></metadata-list>
                     </aside>
                 </span>
             </section>
@@ -114,7 +124,7 @@
                                 ...restParam,
                                 ...param.payload,
                                 multiSelect: param.type === 'MULTIPLE',
-                                value: param.type === 'MULTIPLE' ? param.value.split(',') : param.value
+                                value: param.type === 'MULTIPLE' ? this.paramValues?.[param.id]?.split(',') : this.paramValues[param.id]
                             }
                         } else {
                             restParam = {

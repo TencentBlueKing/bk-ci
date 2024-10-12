@@ -36,6 +36,7 @@ import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -55,6 +56,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val desktopWorkspaceService: DesktopWorkspaceService,
     private val xlsxExportService: WorkspaceXlsxExportService,
+    private val workspaceRecordService: WorkspaceRecordService,
     private val client: Client,
     private val notifyControl: NotifyControl,
     private val redisOperation: RedisOperation,
@@ -78,7 +80,6 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("op assignWorkspace|$userId|$data")
         // 分配之前先同步下最新的数据
-        workspaceCommon.syncStartCloudResourceList()
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
         when (data.type) {
             WorkspaceOwnerType.PROJECT -> assignProjectWorkspace(
@@ -312,6 +313,14 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
 
     override fun fetchNotifyList(userId: String, page: Int, pageSize: Int): Result<List<WorkspaceNotifyListData>> {
         return Result(notifyControl.fetchNotifyList(page, pageSize))
+    }
+
+    override fun applyViewRecordCallback(userId: String, projectId: String, workspaceName: String) {
+        workspaceRecordService.approvalRecordViewCallback(
+            projectId = projectId,
+            userId = userId,
+            workspaceName = workspaceName
+        )
     }
 
     companion object {

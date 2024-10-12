@@ -160,7 +160,7 @@ spec:
                   command:
                   - /bin/bash
                   - -c
-                  - sleep 10 && ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
+                  - sleep 20 && ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
       volumes:
         - name: storage
           {{- if and .Values.persistence.enabled (eq .Values.config.bkCiArtifactoryRealm "local") }}

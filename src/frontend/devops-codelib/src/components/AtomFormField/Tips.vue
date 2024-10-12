@@ -3,7 +3,10 @@
         <span class="tip-icon">
             <i class="devops-icon icon-info-circle-shape"></i>
         </span>
-        <span class="tip-message" v-html="tip"></span>
+        <span
+            class="tip-message"
+            v-html="tip"
+        ></span>
     </h3>
 </template>
 

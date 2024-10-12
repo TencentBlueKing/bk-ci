@@ -46,5 +46,7 @@ data class WorkspaceStartCloudDetail(
     @get:Schema(title = "拥有者")
     val owner: String? = null,
     @get:Schema(title = "resourceId")
-    val resourceId: String? = null
+    val resourceId: String? = null,
+    @get:Schema(title = "实例别名")
+    val displayName: String? = null
 )

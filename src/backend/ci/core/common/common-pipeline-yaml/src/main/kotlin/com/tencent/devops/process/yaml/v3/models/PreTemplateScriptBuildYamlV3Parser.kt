@@ -96,6 +96,9 @@ data class PreTemplateScriptBuildYamlV3Parser(
     @JsonIgnore
     lateinit var preYaml: PreScriptBuildYamlV3Parser
 
+    private val formatStages = lazy { ScriptYmlUtils.formatStage(preYaml, transferData) }
+    private val formatFinallyStage = lazy { ScriptYmlUtils.preJobs2Jobs(preYaml.finally, transferData) }
+
     @JsonIgnore
     val transferData: YamlTransferData = YamlTransferData()
 
@@ -137,12 +140,12 @@ data class PreTemplateScriptBuildYamlV3Parser(
 
     override fun formatStages(): List<Stage> {
         checkInitialized()
-        return ScriptYmlUtils.formatStage(preYaml, transferData)
+        return formatStages.value
     }
 
     override fun formatFinallyStage(): List<Job> {
         checkInitialized()
-        return ScriptYmlUtils.preJobs2Jobs(preYaml.finally, transferData)
+        return formatFinallyStage.value
     }
 
     override fun formatResources(): Resources? {

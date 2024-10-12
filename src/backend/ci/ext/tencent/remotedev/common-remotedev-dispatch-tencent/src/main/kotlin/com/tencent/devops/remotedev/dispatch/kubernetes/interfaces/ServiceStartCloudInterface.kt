@@ -28,9 +28,7 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.interfaces
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
-import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
@@ -44,18 +42,11 @@ interface ServiceStartCloudInterface {
         gameId: String?
     ): Result<Boolean>
 
-    fun syncStartCloudResourceList(): Result<List<EnvironmentResourceData>>
+    fun realtimeStartCloudResourceList(): Result<List<EnvironmentResourceData>>
 
     fun getCgsData(
         data: FetchWinPoolData
     ): Result<List<EnvironmentResourceData>>
-
-    fun checkCgsRunning(
-        cgsId: String,
-        status: EnvStatusEnum? = EnvStatusEnum.running
-    ): Result<Boolean>
-
-    fun getCgsConfig(): Result<CgsResourceConfig>
 
     fun shareWorkspace(
         operator: String,

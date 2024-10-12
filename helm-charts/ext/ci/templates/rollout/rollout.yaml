@@ -1,0 +1,21 @@
+{{- if .Values.rollout.enabled }}
+apiVersion: tkex.tencent.com/v1alpha1
+kind: Rollout
+metadata:
+  name: "{{ .Values.rollout.service }}-rollout"
+spec:
+  type: BlueGreen
+  failurePolicy: Backward
+  objectRef:
+    workloadRef:
+      apiVersion: apps/v1
+      kind: {{ .Values.rollout.kind }}
+      name: "{{ .Values.rollout.service }}-bk-ci-{{ .Values.rollout.service }}"
+  steps:
+  - pause: {}
+    replicas: 1
+  {{- if .Values.rollout.mirror }}
+  - pause: {}
+    replicas: 100%
+  {{- end }}
+{{- end }}

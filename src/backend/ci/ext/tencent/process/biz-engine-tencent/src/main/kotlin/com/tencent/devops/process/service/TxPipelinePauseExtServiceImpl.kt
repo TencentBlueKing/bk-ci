@@ -29,13 +29,13 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelinePauseExtService
-import com.tencent.devops.process.util.ServiceHomeUrlUtils
 import com.tencent.devops.store.pojo.common.PIPELINE_TASK_PAUSE_NOTIFY
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -56,8 +56,8 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
             // 发送消息给相关关注人
             val sendUser = buildTask.additionalOptions!!.subscriptionPauseUser
             val subscriptionPauseUser = mutableSetOf<String>()
-            if (!sendUser.isNullOrEmpty()) {
-                val sendUsers = sendUser!!.split(",").toSet()
+            if (!sendUser.isNullOrBlank()) {
+                val sendUsers = sendUser.split(",").toSet()
                 subscriptionPauseUser.addAll(sendUsers)
             }
             sendPauseNotify(
@@ -90,7 +90,7 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
         val pipelineName = (pipelineRecord.pipelineName ?: "")
         val buildNum = buildRecord?.buildNum.toString()
         val projectName = projectNameService.getProjectName(pipelineRecord.projectId) ?: ""
-        val host = ServiceHomeUrlUtils.server()
+        val host = HomeHostUtil.innerServerHost()
         val url = host + buildNotifyUrl(pipelineRecord.projectId, pipelineId, buildId)
 
         // 指定通过rtx发送
@@ -99,7 +99,7 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
 
         // 若没有配置订阅人，则将暂停消息发送给发起人
         val receiver = mutableSetOf<String>()
-        if (receivers == null || receivers.isEmpty()) {
+        if (receivers.isNullOrEmpty()) {
             receiver.add(buildRecord!!.startUser)
             receiver.add(pipelineRecord.lastModifyUser)
         } else {

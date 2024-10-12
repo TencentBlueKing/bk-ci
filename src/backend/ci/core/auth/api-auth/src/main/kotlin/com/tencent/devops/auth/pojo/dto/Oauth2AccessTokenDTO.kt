@@ -12,6 +12,8 @@ data class Oauth2AccessTokenDTO(
     val expiredTime: Long? = null,
     @get:Schema(title = "accessToken绑定的用户名称", required = true)
     val userName: String? = null,
+    @get:Schema(title = "accessToken绑定的密码", required = true)
+    val passWord: String? = null,
     @get:Schema(title = "授权范围Id", required = true)
     val scopeId: Int
 )

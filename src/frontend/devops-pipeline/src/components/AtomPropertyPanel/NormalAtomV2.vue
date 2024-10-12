@@ -1,5 +1,8 @@
 <template>
-    <section class="bk-form bk-form-vertical" v-if="showFormUI">
+    <section
+        class="bk-form bk-form-vertical"
+        v-if="showFormUI"
+    >
         <template v-if="!paramsGroupSort.length">
             <template v-for="(group, groupKey) in paramsGroupMap">
                 <template v-if="groupKey === 'rootProps'">
@@ -33,10 +36,21 @@
                         </form-field>
                     </template>
                 </template>
-                <accordion v-else show-checkbox :show-content="group.isExpanded" :key="groupKey">
-                    <header class="var-header" slot="header">
+                <accordion
+                    v-else
+                    show-checkbox
+                    :show-content="group.isExpanded"
+                    :key="groupKey"
+                >
+                    <header
+                        class="var-header"
+                        slot="header"
+                    >
                         <span>{{ group.label }}</span>
-                        <i class="devops-icon icon-angle-down" style="display: block"></i>
+                        <i
+                            class="devops-icon icon-angle-down"
+                            style="display: block"
+                        ></i>
                     </header>
                     <div slot="content">
                         <template v-for="(obj, key) in group.props">
@@ -78,9 +92,15 @@
                     :show-content="group.isExpanded"
                     :key="groupKey"
                 >
-                    <header class="var-header" slot="header">
+                    <header
+                        class="var-header"
+                        slot="header"
+                    >
                         <span>{{ group.label }}</span>
-                        <i class="devops-icon icon-angle-down" style="display: block"></i>
+                        <i
+                            class="devops-icon icon-angle-down"
+                            style="display: block"
+                        ></i>
                     </header>
                     <div slot="content">
                         <template v-for="(obj, key) in group.props">
@@ -143,7 +163,10 @@
                 </template>
             </template>
         </template>
-        <atom-output :element="element" :atom-props-model="atomPropsModel" />
+        <atom-output
+            :element="element"
+            :atom-props-model="atomPropsModel"
+        />
     </section>
     <section v-else>
         <div class="empty-tips">{{ $t('editPage.noAppIdTips') }}</div>

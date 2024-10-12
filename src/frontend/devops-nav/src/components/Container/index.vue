@@ -1,5 +1,8 @@
 <template>
-    <div ref="container" class="devops-container">
+    <div
+        ref="container"
+        class="devops-container"
+    >
         <router-view></router-view>
     </div>
 </template>

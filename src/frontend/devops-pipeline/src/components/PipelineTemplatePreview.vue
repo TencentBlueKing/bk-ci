@@ -23,7 +23,11 @@
             read-only
             :highlight-ranges="highlightMarkList"
         />
-        <bk-tab v-else :active.sync="activePanel" type="unborder-card">
+        <bk-tab
+            v-else
+            :active.sync="activePanel"
+            type="unborder-card"
+        >
             <bk-tab-panel
                 v-for="panel in panels"
                 :key="panel.name"

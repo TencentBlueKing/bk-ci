@@ -1,7 +1,8 @@
 
 <template>
     <div class="bk-tag-selector">
-        <input type="text"
+        <input
+            type="text"
             class="bk-form-input"
             autocomplete="off"
             :name="name"
@@ -9,16 +10,21 @@
             :placeholder="placeholder || defaultPlaceHolder"
             @input="input"
             @mousedown="focus"
-            @blur="hideAll" />
+            @blur="hideAll"
+        />
 
-        <div class="bk-selector-list" v-show="(showList || openList) && localList.length">
+        <div
+            class="bk-selector-list"
+            v-show="(showList || openList) && localList.length"
+        >
             <ul class="ul-container">
                 <li
                     v-for="(data, index) in list"
                     class="bk-selector-list-item"
                     :class="activeClass(index)"
                     :key="index"
-                    @click.stop="selectList(data)">
+                    @click.stop="selectList(data)"
+                >
                     <div class="bk-selector-node">
                         <div class="text">{{ data[displayKey] }}</div>
                     </div>

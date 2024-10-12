@@ -44,8 +44,6 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         } + "bkci-" + service + ":" + toImageTag
     }
 
-    val configNamespace = System.getProperty("config.namespace")
-
     val jvmFlagList = System.getProperty("jvmFlags.file")?.let { File(it).readLines() } ?: emptyList()
 
     val watchAllNamespace = System.getProperty("watch.all.namespace", "true")
@@ -79,7 +77,6 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         "-Dspring.main.allow-circular-references=true",
         "-Dspring.cloud.kubernetes.config.sources[0].name=config-bk-ci-common",
         "-Dspring.cloud.kubernetes.config.sources[1].name=config-bk-ci-$service",
-        "-Dspring.cloud.kubernetes.config.namespace=$configNamespace",
         "-Dspring.cloud.kubernetes.discovery.all-namespaces=$watchAllNamespace",
         "-Dspring.cloud.kubernetes.config.includeProfileSpecificSources=false",
         "-Dio.undertow.legacy.cookie.ALLOW_HTTP_SEPARATORS_IN_V0=true",
