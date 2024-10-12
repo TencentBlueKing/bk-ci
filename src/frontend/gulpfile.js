@@ -48,12 +48,18 @@ const envPrefix = ['dev', 'test'].indexOf(env) > -1 ? `${env}.` : ''
 const BUNDLE_NAME = 'assets_bundle.json'
 const FINAL_ASSETS_JSON_FILENAME = `${dist}/assetsBundles.js`
 const ASSETS_JSON_URL = `https://${envPrefix}devnet.devops.woa.com/${BUNDLE_NAME}`
+const gateWayTagMap = {
+    'dev': 'dev-rbac',
+    'test': 'test-rbac',
+    'stream': '',
+    'stream-gray': ''
+}
 
 async function getAssetsJSON (jsonUrl) {
     try {
         const res = await fetch(jsonUrl, {
             headers: {
-                'X-GATEWAY-TAG': ['dev', 'test', 'stream', 'stream-gray'].includes(env) ? null : env
+                'X-GATEWAY-TAG': gateWayTagMap[env] ?? env
             }
         })
         const assets = await res.json()
