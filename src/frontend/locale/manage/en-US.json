@@ -265,8 +265,8 @@
     "过去 X 天": "Last {0} Days",
     "变量语法风格": "Naming Convention",
     "继承项目设置": "Inherited Project Settings",
-    "传统风格": "Traditional Style",
-    "制约风格": "Constraint Style",
+    "CLASSIC": "Traditional Style",
+    "CONSTRAINED": "Constraint Style",
     "语法差异": "Grammatical Differences",
     "差异项": "Difference Item",
 

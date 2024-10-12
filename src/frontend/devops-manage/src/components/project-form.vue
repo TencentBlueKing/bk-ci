@@ -480,10 +480,10 @@ onBeforeUnmount(() => {
         @change="handleChangeForm"
       >
         <bk-radio label="CLASSIC">
-          <span>{{ t('传统风格') }}</span>
+          <span>{{ t('CLASSIC') }}</span>
         </bk-radio>
         <bk-radio label="CONSTRAINED">
-          <span>{{ t('制约风格') }}</span>
+          <span>{{ t('CONSTRAINED') }}</span>
         </bk-radio>
       </bk-radio-group>
     </bk-form-item>

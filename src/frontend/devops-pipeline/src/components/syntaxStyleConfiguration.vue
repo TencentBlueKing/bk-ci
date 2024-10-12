@@ -28,14 +28,14 @@
                 :value="'CLASSIC'"
                 :disabled="isDialectDisabled"
             >
-                <span>{{ $t('traditionalStyle') }}</span>
+                <span>{{ $t('CLASSIC') }}</span>
             </bk-radio>
             <bk-radio
                 class="radio-label"
                 :value="'CONSTRAINED'"
                 :disabled="isDialectDisabled"
             >
-                <span>{{ $t('constraintStyle') }}</span>
+                <span>{{ $t('CONSTRAINED') }}</span>
             </bk-radio>
         </bk-radio-group>
     </div>

@@ -1583,8 +1583,8 @@
   "templateRollbackBackTips": "当前流水线为约束模式（模板实例），需要跳转到模板进行版本回滚。",
   "namingConvention": "变量语法风格",
   "inheritedProject": "继承项目设置",
-  "traditionalStyle": "传统风格",
-  "constraintStyle": "制约风格",
+  "CLASSIC": "传统风格",
+  "CONSTRAINED": "制约风格",
   "grammaticalDifferences": "语法差异",
   "differenceItem": "差异项",
 

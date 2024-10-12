@@ -302,10 +302,6 @@ const projectTypeNameMap = {
   4: t('平台产品'),
   5: t('支撑产品'),
 }
-const pipelineDialectMap = {
-  'CLASSIC': t('传统风格'),
-  'CONSTRAINED': t('制约风格'),
-}
 watch(() => projectData.value.approvalStatus, (status) => {
   if (status === 4) fetchDiffProjectData();
 }, {
@@ -422,12 +418,12 @@ onMounted(async () => {
                     <dialect-popover-table />
                   </template>
                   <div>
-                    <span>{{ pipelineDialectMap[projectData.pipelineDialect] }}</span>
+                    <span>{{ t(projectData.pipelineDialect) }}</span>
                     <div class="diff-content" v-if="projectData.afterPipelineDialect">
                       <p class="update-title">
                         {{ t('本次更新：') }}
                       </p>
-                      <span>{{ pipelineDialectMap[projectData.afterPipelineDialect] }}</span>
+                      <span>{{ t(projectData.afterPipelineDialect) }}</span>
                     </div>
                   </div>
                 </bk-form-item>

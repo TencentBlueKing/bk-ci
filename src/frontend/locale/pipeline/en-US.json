@@ -1581,8 +1581,8 @@
   "templateRollbackBackTips": "The current pipeline is in constraint mode (template instance). You need to jump to the template to roll back the version.",
   "namingConvention": "Naming Convention",
   "inheritedProject": "Inherited Project Settings",
-  "traditionalStyle": "Traditional Style",
-  "constraintStyle": "Constraint Style",
+  "CLASSIC": "Traditional Style",
+  "CONSTRAINED": "Constraint Style",
   "grammaticalDifferences": "Grammatical Differences",
   "differenceItem": "Difference Item",
 
