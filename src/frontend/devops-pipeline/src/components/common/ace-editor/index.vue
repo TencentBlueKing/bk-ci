@@ -92,7 +92,7 @@
         },
         async mounted () {
             this.isLoading = true
-            const [monaco, { GongfengMonacoEditor, ReleaseChannel, AuthenticatedSession }] = await Promise.all([
+            const [monaco, { GongfengMonacoEditor, ReleaseChannel }] = await Promise.all([
                 import(
                     /* webpackMode: "lazy" */
                     /* webpackPrefetch: true */
