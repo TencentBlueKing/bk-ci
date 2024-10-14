@@ -115,6 +115,12 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         getStoreSpecBusService(storeType).doCheckStoreUpdateParamSpecBus(storeUpdateRequest)
     }
 
+    override fun doStoreUpdatePreBus(storeUpdateRequest: StoreUpdateRequest) {
+        val storeBaseUpdateRequest = storeUpdateRequest.baseInfo
+        val storeType = storeBaseUpdateRequest.storeType
+        getStoreSpecBusService(storeType).doStoreUpdatePreBus(storeUpdateRequest)
+    }
+
     override fun doStoreUpdateDataPersistent(storeUpdateRequest: StoreUpdateRequest) {
         val storeBaseUpdateRequest = storeUpdateRequest.baseInfo
         val storeType = storeBaseUpdateRequest.storeType

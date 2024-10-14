@@ -25,41 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.common.handler
 
+import com.tencent.devops.store.common.service.StoreBaseUpdateService
+import com.tencent.devops.store.pojo.common.handler.Handler
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
+import org.springframework.stereotype.Service
 
-interface StoreBaseUpdateService {
+@Service
+class StoreUpdatePreBusHandler(
+    private val storeBaseUpdateService: StoreBaseUpdateService
+) : Handler<StoreUpdateRequest> {
 
-    /**
-     * 对更新组件请求参数进行国际化转换
-     * @param storeUpdateRequest 更新组件请求报文
-     */
-    fun doStoreI18nConversion(
-        storeUpdateRequest: StoreUpdateRequest
-    )
+    override fun canExecute(handlerRequest: StoreUpdateRequest): Boolean {
+        return true
+    }
 
-    /**
-     * 检查更新组件请求参数合法性
-     * @param storeUpdateRequest 更新组件请求报文
-     */
-    fun checkStoreUpdateParam(
-        storeUpdateRequest: StoreUpdateRequest
-    )
-
-    /**
-     * 执行更新组件请求前置业务
-     * @param storeUpdateRequest 更新组件请求报文
-     */
-    fun doStoreUpdatePreBus(
-        storeUpdateRequest: StoreUpdateRequest
-    )
-
-    /**
-     * 持久化更新组件数据
-     * @param storeUpdateRequest 更新组件请求报文
-     */
-    fun doStoreUpdateDataPersistent(
-        storeUpdateRequest: StoreUpdateRequest
-    )
+    override fun execute(handlerRequest: StoreUpdateRequest) {
+        // 执行前置业务
+        storeBaseUpdateService.doStoreUpdatePreBus(handlerRequest)
+    }
 }
