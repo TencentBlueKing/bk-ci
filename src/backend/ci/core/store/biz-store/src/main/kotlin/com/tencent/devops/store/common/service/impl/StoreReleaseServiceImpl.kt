@@ -51,6 +51,7 @@ import com.tencent.devops.store.common.handler.StoreUpdateDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreUpdateHandlerChain
 import com.tencent.devops.store.common.handler.StoreUpdateParamCheckHandler
 import com.tencent.devops.store.common.handler.StoreUpdateParamI18nConvertHandler
+import com.tencent.devops.store.common.handler.StoreUpdatePreBusHandler
 import com.tencent.devops.store.common.handler.StoreUpdateRunPipelineHandler
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreNotifyService
@@ -103,6 +104,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
     private val storeCreateDataPersistHandler: StoreCreateDataPersistHandler,
     private val storeUpdateParamI18nConvertHandler: StoreUpdateParamI18nConvertHandler,
     private val storeUpdateParamCheckHandler: StoreUpdateParamCheckHandler,
+    private val storeUpdatePreBusHandler: StoreUpdatePreBusHandler,
     private val storeUpdateDataPersistHandler: StoreUpdateDataPersistHandler,
     private val storeUpdateRunPipelineHandler: StoreUpdateRunPipelineHandler,
     private val storeInnerPipelineConfig: StoreInnerPipelineConfig
@@ -136,6 +138,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
         val handlerList = mutableListOf(
             storeUpdateParamI18nConvertHandler, // 参数国际化处理
             storeUpdateParamCheckHandler, // 参数检查处理
+            storeUpdatePreBusHandler, // 前置业务处理
             storeUpdateDataPersistHandler, // 数据持久化处理
             storeUpdateRunPipelineHandler // 运行内置流水线
         )
