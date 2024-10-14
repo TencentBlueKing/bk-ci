@@ -13,6 +13,11 @@ import com.tencent.devops.remotedev.dao.WorkspaceRecordUserApprovalDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.service.client.NodeSearchBody
+import com.tencent.devops.remotedev.service.client.NodeSearchPage
+import com.tencent.devops.remotedev.service.client.NodeSearchRule
+import com.tencent.devops.remotedev.service.client.NodeSearchRulesItem
+import com.tencent.devops.remotedev.service.client.NodeSearchSort
 import com.tencent.devops.remotedev.service.client.RemotedevBkRepoClient
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -155,7 +160,9 @@ class WorkspaceRecordService @Autowired constructor(
         userId: String,
         workspaceName: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        startTime: Long,
+        stopTime: Long
     ): Page<WorkspaceRecordMetadata> {
         val record = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(
             dslContext = dslContext,
@@ -166,13 +173,55 @@ class WorkspaceRecordService @Autowired constructor(
         )
         val region = genRegion(record.hostIp)
 
-        val resp = remotedevBkRepoClient.pageNodeList(
+        val searchBody = NodeSearchBody(
+            select = listOf("name", "fullPath", "metadata"),
+            page = NodeSearchPage(
+                pageNumber = page ?: 1,
+                pageSize = pageSize ?: 20
+            ),
+            sort = NodeSearchSort(
+                properties = listOf("metadata.media.startTime"),
+                direction = "DESC"
+            ),
+            rule = NodeSearchRule(
+                rules = listOf(
+                    NodeSearchRulesItem(
+                        field = "projectId",
+                        value = projectId,
+                        operation = "EQ"
+                    ),
+                    NodeSearchRulesItem(
+                        field = "repoName",
+                        value = workspaceName,
+                        operation = "EQ"
+                    ),
+                    NodeSearchRulesItem(
+                        field = "path",
+                        value = "/streams/",
+                        operation = "EQ"
+                    ),
+                    NodeSearchRulesItem(
+                        field = "folder",
+                        value = false,
+                        operation = "EQ"
+                    ),
+                    NodeSearchRulesItem(
+                        field = "metadata.media.startTime",
+                        value = startTime,
+                        operation = "GTE"
+                    ),
+                    NodeSearchRulesItem(
+                        field = "metadata.media.startTime",
+                        value = stopTime,
+                        operation = "LTE"
+                    )
+                )
+            )
+        )
+        val resp = remotedevBkRepoClient.nodeSearch(
             region = region,
-            projectId = projectId,
             userId = userId,
-            workspaceName = workspaceName,
-            page = page ?: 1,
-            pageSize = pageSize ?: 20
+            body = searchBody
         ) ?: return Page(0, 0, 0, emptyList())
 
         val data = resp.records.map {
