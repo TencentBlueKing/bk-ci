@@ -17,7 +17,7 @@ class OpPermissionFacadeResourceImpl(
         customGroupCreateReq: CustomGroupCreateReq
     ): Result<Int> {
         return Result(
-            resourceGroupService.createCustomGroupAndPermissions(
+            data = resourceGroupService.createCustomGroupAndPermissions(
                 projectId = projectId,
                 customGroupCreateReq = customGroupCreateReq
             )
