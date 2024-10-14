@@ -25,44 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.atom.plugin
+package com.tencent.devops.common.pipeline.pojo.element.atom
 
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.process.plugin.ElementBizPlugin
-import com.tencent.devops.process.plugin.annotation.ElementBiz
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.pojo.element.Element
 
-@ElementBiz
-class SubPipelineCallElementBizPlugin @Autowired constructor(
-    private val elementBizPluginServices: List<IElementBizPluginService>
-) : ElementBizPlugin<SubPipelineCallElement> {
-
-    override fun elementClass(): Class<SubPipelineCallElement> {
-        return SubPipelineCallElement::class.java
-    }
-
-    override fun check(element: SubPipelineCallElement, appearedCnt: Int) = Unit
-
-    override fun beforeDelete(element: SubPipelineCallElement, param: BeforeDeleteParam) {
-        elementBizPluginServices.find { it.supportElement(element) }?.beforeDelete(
-            element = element,
-            param = param
-        )
-    }
-
-    override fun afterCreate(
-        element: SubPipelineCallElement,
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
-        userId: String,
-        channelCode: ChannelCode,
-        create: Boolean,
-        container: Container,
-        yamlInfo: PipelineYamlVo?
-    ) = Unit
-}
+/**
+ * 插件引用信息
+ */
+data class ElementHolder(
+    val element: Element,
+    val stage: Stage,
+    val container: Container
+)

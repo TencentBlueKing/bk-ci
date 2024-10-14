@@ -44,17 +44,16 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
-import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
+import com.tencent.devops.common.pipeline.pojo.element.atom.ElementBatchCheckParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ElementHolder
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT
 import com.tencent.devops.process.engine.atom.AtomUtils
+import com.tencent.devops.process.engine.atom.plugin.IElementBizPluginService
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
@@ -82,7 +81,8 @@ open class DefaultModelCheckPlugin constructor(
     open val pipelineCommonSettingConfig: PipelineCommonSettingConfig,
     open val stageCommonSettingConfig: StageCommonSettingConfig,
     open val jobCommonSettingConfig: JobCommonSettingConfig,
-    open val taskCommonSettingConfig: TaskCommonSettingConfig
+    open val taskCommonSettingConfig: TaskCommonSettingConfig,
+    open val elementBizPluginService: List<IElementBizPluginService>
 ) : ModelCheckPlugin {
 
     override fun checkModelIntegrity(
@@ -128,7 +128,7 @@ open class DefaultModelCheckPlugin constructor(
         val elementCnt = mutableMapOf<String, Int>()
         val containerCnt = mutableMapOf<String, Int>()
         val lastPosition = model.stages.size - 1
-        val elementCheckResults = mutableListOf<ElementCheckResult>()
+        val elementHolders = mutableMapOf<String, MutableList<ElementHolder>>()
 
         model.stages.forEachIndexed { nowPosition, stage ->
             val containers = stage.containers
@@ -171,17 +171,12 @@ open class DefaultModelCheckPlugin constructor(
             val atomInputParamList = mutableListOf<StoreParam>()
 
             metaSize += stage.checkJob(
-                projectId = projectId,
-                userId = userId,
                 containerCnt = containerCnt,
                 elementCnt = elementCnt,
                 atomVersions = atomVersions,
                 contextMap = contextMap,
                 atomInputParamList = atomInputParamList,
-                elementCheckResults = elementCheckResults,
-                isTemplate = isTemplate,
-                oauthUser = oauthUser,
-                pipelineId = pipelineId
+                elementHolders = elementHolders
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
                 AtomUtils.checkModelAtoms(
@@ -195,8 +190,15 @@ open class DefaultModelCheckPlugin constructor(
             DependOnUtils.checkRepeatedJobId(stage)
         }
 
-        // 批量校验插件参数有效性
-        checkElementInput(elementCheckResults)
+        val param = ElementBatchCheckParam(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            contextMap = contextMap,
+            isTemplate = isTemplate,
+            oauthUser = oauthUser
+        )
+        batchCheckElement(param = param, elementHolders = elementHolders)
 
         return metaSize
     }
@@ -250,17 +252,12 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     private fun Stage.checkJob(
-        projectId: String?,
-        userId: String,
         containerCnt: MutableMap<String, Int>,
         elementCnt: MutableMap<String, Int>,
         atomVersions: MutableSet<StoreVersion>,
         contextMap: Map<String, String>,
         atomInputParamList: MutableList<StoreParam>,
-        elementCheckResults: MutableList<ElementCheckResult>,
-        isTemplate: Boolean,
-        oauthUser: String?,
-        pipelineId: String
+        elementHolders: MutableMap<String, MutableList<ElementHolder>>
     ): Int /* MetaSize*/ {
         var metaSize = 0
         containers.forEach { container ->
@@ -300,18 +297,13 @@ open class DefaultModelCheckPlugin constructor(
 
             container.elements.forEach { e ->
                 container.checkElement(
-                    projectId = projectId,
-                    userId = userId,
                     stage = this,
                     element = e,
                     elementCnt = elementCnt,
                     atomVersions = atomVersions,
                     atomInputParamList = atomInputParamList,
                     contextMap = contextMap,
-                    elementCheckResults = elementCheckResults,
-                    isTemplate = isTemplate,
-                    oauthUser = oauthUser,
-                    pipelineId = pipelineId
+                    elementHolders = elementHolders
                 )
             }
         }
@@ -319,36 +311,20 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     private fun Container.checkElement(
-        projectId: String?,
-        userId: String,
         stage: Stage,
         element: Element,
         elementCnt: MutableMap<String, Int>,
         atomVersions: MutableSet<StoreVersion>,
         atomInputParamList: MutableList<StoreParam>,
         contextMap: Map<String, String>,
-        elementCheckResults: MutableList<ElementCheckResult>,
-        isTemplate: Boolean,
-        oauthUser: String?,
-        pipelineId: String
+        elementHolders: MutableMap<String, MutableList<ElementHolder>>
     ) {
         val eCnt = elementCnt.computeIfPresent(element.getAtomCode()) { _, oldValue -> oldValue + 1 }
             ?: elementCnt.computeIfAbsent(element.getAtomCode()) { 1 } // 第一次时出现1次
-        val elementCheckResult = ElementBizRegistrar.getPlugin(element)?.check(
-            projectId = projectId,
-            userId = userId,
-            stage = stage,
-            container = this,
-            element = element,
-            contextMap = contextMap,
-            appearedCnt = eCnt,
-            isTemplate = isTemplate,
-            oauthUser = oauthUser,
-            pipelineId = pipelineId
+        elementHolders.getOrPut(element.getAtomCode()) { mutableListOf() }.add(
+            ElementHolder(stage = stage, container = this, element = element)
         )
-        if (elementCheckResult?.result == false) {
-            elementCheckResults.add(elementCheckResult)
-        }
+        ElementBizRegistrar.getPlugin(element)?.check(element = element, appearedCnt = eCnt)
         addAtomInputDataInfo(element, atomVersions, atomInputParamList)
 
         checkElementTimeoutVar(container = this, element = element, contextMap = contextMap)
@@ -360,6 +336,22 @@ open class DefaultModelCheckPlugin constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_CONDITION_EXPRESSION_TOO_LONG,
                 params = arrayOf(element.name, PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX.toString())
             )
+        }
+    }
+
+    /**
+     * 批量校验插件合法性
+     *
+     * 当需要把同一类插件的合法性校验结果都抛出，如校验是否有子流水线的执行权限时
+     */
+    private fun batchCheckElement(
+        param: ElementBatchCheckParam,
+        elementHolders: MutableMap<String, MutableList<ElementHolder>>
+    ) {
+        elementHolders.forEach { (atomCode, elements) ->
+            elementBizPluginService.filter { it.supportAtomCode(atomCode) }.forEach {
+                it.batchCheck(elements = elements, param = param)
+            }
         }
     }
 
@@ -397,27 +389,6 @@ open class DefaultModelCheckPlugin constructor(
                 logger.info(
                     "BKSystemMonitor|[${contextMap[PROJECT_NAME]}]|[${contextMap[PIPELINE_ID]}]" +
                             "|bad timeout: ${obj.beforeChangeStr}"
-                )
-            }
-        }
-    }
-
-    private fun checkElementInput(elementCheckResults: MutableList<ElementCheckResult>) {
-        if (elementCheckResults.isNotEmpty()) {
-            val pipelineCheckErrors = elementCheckResults.filterNot {
-                it.errorTitle.isNullOrBlank() || it.errorMessage.isNullOrBlank()
-            }.groupBy({ it.errorTitle!! }, { it.errorMessage!! })
-                .map { PipelineCheckFailedErrors.ErrorInfo(it.key, it.value.toSet()) }
-            if (pipelineCheckErrors.isNotEmpty()) {
-                val failedReason = PipelineCheckFailedErrors(
-                    message = I18nUtil.getCodeLanMessage(
-                        messageCode = BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE
-                    ),
-                    errors = pipelineCheckErrors
-                )
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED,
-                    params = arrayOf(JsonUtil.toJson(failedReason))
                 )
             }
         }
