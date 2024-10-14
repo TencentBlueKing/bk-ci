@@ -149,7 +149,7 @@
             },
 
             addReviewItem () {
-                const newItem = { name: '', reviewers: [], groups: [] }
+                const newItem = { name: '', reviewers: [], groups: [], reviewType: 'user' }
                 this.copyReviewGroups.push(newItem)
                 this.triggleChange()
             },
