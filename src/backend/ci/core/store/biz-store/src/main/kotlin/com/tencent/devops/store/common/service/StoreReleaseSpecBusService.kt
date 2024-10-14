@@ -46,6 +46,14 @@ interface StoreReleaseSpecBusService {
     )
 
     /**
+     * 执行更新组件请求前置业务
+     * @param storeUpdateRequest 更新组件请求报文
+     */
+    fun doStoreUpdatePreBus(
+        storeUpdateRequest: StoreUpdateRequest
+    )
+
+    /**
      * 对更新组件请求参数进行国际化转换个性化逻辑
      * @param storeUpdateRequest 更新组件请求报文
      */
