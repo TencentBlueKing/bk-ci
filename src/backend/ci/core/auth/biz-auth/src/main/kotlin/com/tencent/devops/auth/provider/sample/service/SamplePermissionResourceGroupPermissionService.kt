@@ -46,6 +46,12 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         registerMonitorPermission: Boolean
     ): Boolean = true
 
+    override fun grantAllProjectGroupsPermission(
+        projectCode: String,
+        projectName: String,
+        actions: List<String>
+    ) = true
+
     override fun buildProjectPermissions(
         projectCode: String,
         projectName: String,
