@@ -3,6 +3,7 @@
       class="search-select"
       v-model="serviceValue"
       :prefix="t('所属服务')"
+      :disabled="!projectId"
       @change="serviceChange"
     >
       <bk-option
