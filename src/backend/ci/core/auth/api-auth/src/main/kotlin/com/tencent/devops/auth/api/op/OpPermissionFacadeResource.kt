@@ -10,6 +10,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "OP_AUTH_FACADE", description = "op操作门面类")
@@ -29,14 +30,14 @@ interface OpPermissionFacadeResource {
     ): Result<Int>
 
     @POST
-    @Path("/{projectId}/{projectName}/grantAllProjectGroupsPermission/")
+    @Path("/{projectId}/grantAllProjectGroupsPermission/")
     @Operation(summary = "授予项目级用户组权限，例子：给项目级用户组都添加上流水线列表权限。")
     fun grantAllProjectGroupsPermission(
         @Parameter(description = "项目Id", required = true)
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "项目名称", required = true)
-        @PathParam("projectName")
+        @QueryParam("projectName")
         projectName: String,
         @Parameter(description = "操作列表", required = true)
         actions: List<String>
