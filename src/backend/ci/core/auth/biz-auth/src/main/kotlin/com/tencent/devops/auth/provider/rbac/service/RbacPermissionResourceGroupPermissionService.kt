@@ -135,6 +135,37 @@ class RbacPermissionResourceGroupPermissionService(
         return true
     }
 
+    override fun grantAllProjectGroupsPermission(
+        projectCode: String,
+        projectName: String,
+        actions: List<String>
+    ): Boolean {
+        authResourceGroupDao.getByResourceCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        ).forEach {
+            val authorizationScopes = buildProjectPermissions(
+                projectCode = projectCode,
+                projectName = projectName,
+                actions = actions
+            )
+            grantGroupPermission(
+                authorizationScopesStr = authorizationScopes,
+                projectCode = projectCode,
+                projectName = projectName,
+                resourceType = AuthResourceType.PROJECT.value,
+                groupCode = it.groupCode,
+                iamResourceCode = projectCode,
+                resourceName = projectName,
+                iamGroupId = it.relationId,
+                registerMonitorPermission = false
+            )
+        }
+        return true
+    }
+
     override fun buildProjectPermissions(
         projectCode: String,
         projectName: String,

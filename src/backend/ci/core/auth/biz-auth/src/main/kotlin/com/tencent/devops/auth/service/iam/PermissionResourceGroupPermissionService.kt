@@ -45,6 +45,18 @@ interface PermissionResourceGroupPermissionService {
         registerMonitorPermission: Boolean = true
     ): Boolean
 
+    /**
+     *  授予项目级用户组权限，例子：给项目级用户组都添加上流水线列表权限。
+     * */
+    fun grantAllProjectGroupsPermission(
+        projectCode: String,
+        projectName: String,
+        actions: List<String>
+    ): Boolean
+
+    /**
+     *  构建项目级权限，如传递actions为pipeline_view，将获得整个项目下流水线的查询权限。
+     * */
     fun buildProjectPermissions(
         projectCode: String,
         projectName: String,
