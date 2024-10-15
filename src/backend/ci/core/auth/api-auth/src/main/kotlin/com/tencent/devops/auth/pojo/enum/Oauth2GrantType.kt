@@ -35,6 +35,9 @@ enum class Oauth2GrantType(val grantType: String) {
     // 客户端模式
     CLIENT_CREDENTIALS("client_credentials"),
 
+    // 密码模式
+    PASS_WORD("pass_word"),
+
     // 刷新token模式
     REFRESH_TOKEN("refresh_token");
 }
