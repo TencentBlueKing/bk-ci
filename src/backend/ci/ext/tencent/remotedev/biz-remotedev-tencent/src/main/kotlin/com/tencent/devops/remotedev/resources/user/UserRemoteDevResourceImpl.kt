@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.resources.user
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
+import com.tencent.devops.remotedev.pojo.ClientTips
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeData
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeResp
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
@@ -37,6 +38,7 @@ import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.service.ClientTipsService
 import com.tencent.devops.remotedev.service.clientupgrade.ClientUpgradeService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
@@ -59,7 +61,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val expertSupportService: ExpertSupportService,
     private val txcService: TxcService,
     private val redisCache: RedisCacheService,
-    private val clientUpgradeService: ClientUpgradeService
+    private val clientUpgradeService: ClientUpgradeService,
+    private val clientTipsService: ClientTipsService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -141,6 +144,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
 
     override fun clientUpgrade(userId: String, data: ClientUpgradeData): Result<ClientUpgradeResp> {
         return Result(clientUpgradeService.checkUpgrade(userId, data))
+    }
+
+    override fun clientTips(userId: String, projectId: String?): Result<List<ClientTips>> {
+        return Result(clientTipsService.fetchTips(projectId = projectId, userId = userId))
     }
 
     override fun getTxcToken(userId: String, openId: String, nickName: String, avatar: String): Result<String> {

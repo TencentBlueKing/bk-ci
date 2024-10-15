@@ -1237,8 +1237,8 @@ importers:
         specifier: ^1.2.4
         version: 1.4.0(@babel/core@7.24.6)(vue@2.7.16)
       add-asset-html-webpack-plugin:
-        specifier: ^5.0.2
-        version: 5.0.2(html-webpack-plugin@5.6.0(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1))))(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1)))
+        specifier: ^6.0.0
+        version: 6.0.0(html-webpack-plugin@5.6.0(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1))))(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1)))
       babel-helper-vue-jsx-merge-props:
         specifier: ^2.0.3
         version: 2.0.3
@@ -1423,6 +1423,9 @@ importers:
       '@tencent/bk-magic-vue':
         specifier: 2.5.9-beta.6
         version: 2.5.9-beta.6(vue@2.7.16)
+      '@tencent/gongfeng-copilot-monaco':
+        specifier: ^2.0.8
+        version: 2.0.8
       axios:
         specifier: 0.28.0
         version: 0.28.0
@@ -1565,9 +1568,6 @@ importers:
       '@webpack-cli/serve':
         specifier: ^1.7.0
         version: 1.7.0(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@4.10.0)(webpack@5.76.1))(webpack@5.76.1))(webpack-dev-server@4.15.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@4.10.0)(webpack@5.76.1))
-      add-asset-html-webpack-plugin:
-        specifier: ^5.0.2
-        version: 5.0.2(html-webpack-plugin@5.6.0(webpack@5.76.1(webpack-cli@4.10.0)))(webpack@5.76.1(webpack-cli@4.10.0))
       babel-helper-vue-jsx-merge-props:
         specifier: ^2.0.3
         version: 2.0.3
@@ -4732,6 +4732,9 @@ packages:
     peerDependencies:
       vue: ^2.6.0
 
+  '@tencent/gongfeng-copilot-monaco@2.0.8':
+    resolution: {integrity: sha512-zWE+1XRUkcaurOB2EA+gbR9kFKJre2KIPjT7T5Fw9+DFMU/GzbaO3W7TEojDNsennDBWKEg2hPaT/Imib8KIvw==, tarball: https://mirrors.tencent.com/npm/@tencent/gongfeng-copilot-monaco/-/@tencent/gongfeng-copilot-monaco-2.0.8.tgz}
+
   '@tootallnate/once@1.1.2':
     resolution: {integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==}
     engines: {node: '>= 6'}
@@ -5648,12 +5651,12 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  add-asset-html-webpack-plugin@5.0.2:
-    resolution: {integrity: sha512-tvizXk9TU8+0BMpygyLl3/ELnCkMfEFxBvrU1bbtgJMs+ZOZdXpAgM6zRljxtV6UsPIOVhcIUmZG9GYeaGiEJQ==}
-    engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
+  add-asset-html-webpack-plugin@6.0.0:
+    resolution: {integrity: sha512-W5uv10hFCsYFwG6EM2pbV/RqLZT04jiUbR9uAaPSc2LC8XiGkEOfDtBagKzNxEKudK7i3EKWwPaFr8talsEb7g==}
+    engines: {node: ^16.13.0 || ^18.12.0 || >=20.0.0}
     peerDependencies:
-      html-webpack-plugin: ^3.0.4 || ^4.0.0-0 || ^5.0.0
-      webpack: ^4.0.0 || ^5.0.0
+      html-webpack-plugin: ^4.0.0 || ^5.0.0
+      webpack: ^5.0.0
 
   address@1.2.2:
     resolution: {integrity: sha512-4B/qKCfeE/ODUaAUpSwfzazo5x29WD4r3vXiWsB7I2mSDAihwEqKO+g8GELZUQSSAo5e1XTYh3ZVfLyxBc12nA==}
@@ -10002,7 +10005,7 @@ packages:
     resolution: {integrity: sha512-x7+VxdxOdlV3CYpjvRLBv5Lo9OJerlYanjwFrPR9fuGPjCiNiCzFgAWpiLAohSbsnH4ZAys3SBh+hq5rJosxUQ==}
 
   is-stream@1.1.0:
-    resolution: {integrity: sha1-EtSj3U5o4Lec6428hBc66A2RykQ=}
+    resolution: {integrity: sha512-uQPm8kcs47jx38atAcWTVxyltQYoPT68y9aWYdV6yWXSyW8mzSat0TL6CiWdZeCdF3KrAvpVtnHbTv4RN+rqdQ==}
     engines: {node: '>=0.10.0'}
 
   is-stream@2.0.1:
@@ -11230,6 +11233,9 @@ packages:
   monaco-editor@0.40.0:
     resolution: {integrity: sha512-1wymccLEuFSMBvCk/jT1YDW/GuxMLYwnFwF9CDyYCxoTw2Pt379J3FUhwy9c43j51JdcxVPjwk0jm0EVDsBS2g==}
 
+  monaco-editor@0.51.0:
+    resolution: {integrity: sha512-xaGwVV1fq343cM7aOYB6lVE4Ugf0UyimdD/x5PWcWBMKENwectaEu77FAN7c5sFiyumqeJdX1RPTh1ocioyDjw==}
+
   monaco-languageserver-types@0.3.3:
     resolution: {integrity: sha512-4uJ6XaVwVamOQ1SXfBGusAqL4fTn7ZJzaybEinr2U5ZX7AKSjsbXWlu0X3Ah+hyefn+85+Ca7GZwbI87g55C8Q==}
 
@@ -11862,7 +11868,7 @@ packages:
     engines: {node: '>=0.10.0'}
 
   path-key@2.0.1:
-    resolution: {integrity: sha1-QRyttXTFoUDTpLGRDUDYDMn0C0A=}
+    resolution: {integrity: sha512-fEHGKCSmUSDPv4uoj8AlD+joPlq3peND+HRYyxFz4KPw4z926S/b8rIuFs2FYJg3BwsxJf6A9/3eIdLaYC+9Dw==}
     engines: {node: '>=4'}
 
   path-key@3.1.1:
@@ -19428,6 +19434,10 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 3.4.31(typescript@3.4.5)
 
+  '@tencent/gongfeng-copilot-monaco@2.0.8':
+    optionalDependencies:
+      monaco-editor: 0.51.0
+
   '@tootallnate/once@1.1.2':
     optional: true
 
@@ -21408,19 +21418,12 @@ snapshots:
 
   acorn@8.11.3: {}
 
-  add-asset-html-webpack-plugin@5.0.2(html-webpack-plugin@5.6.0(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1))))(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1))):
+  add-asset-html-webpack-plugin@6.0.0(html-webpack-plugin@5.6.0(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1))))(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1))):
     dependencies:
       globby: 11.1.0
       html-webpack-plugin: 5.6.0(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1)))
       micromatch: 4.0.7
       webpack: 5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1))
-
-  add-asset-html-webpack-plugin@5.0.2(html-webpack-plugin@5.6.0(webpack@5.76.1(webpack-cli@4.10.0)))(webpack@5.76.1(webpack-cli@4.10.0)):
-    dependencies:
-      globby: 11.1.0
-      html-webpack-plugin: 5.6.0(webpack@5.76.1(webpack-cli@4.10.0))
-      micromatch: 4.0.7
-      webpack: 5.76.1(webpack-cli@4.10.0)
 
   address@1.2.2: {}
 
@@ -28451,6 +28454,9 @@ snapshots:
       webpack: 5.76.1(webpack-cli@4.10.0)
 
   monaco-editor@0.40.0: {}
+
+  monaco-editor@0.51.0:
+    optional: true
 
   monaco-languageserver-types@0.3.3:
     dependencies:
