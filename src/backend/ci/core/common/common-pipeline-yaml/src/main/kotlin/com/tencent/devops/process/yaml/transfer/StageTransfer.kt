@@ -30,6 +30,7 @@ package com.tencent.devops.process.yaml.transfer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -44,7 +45,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
-import com.tencent.devops.common.pipeline.utils.TransferUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.utils.FIXVERSION
@@ -64,6 +64,8 @@ import com.tencent.devops.process.yaml.v3.check.ReviewVariable
 import com.tencent.devops.process.yaml.v3.check.StageCheck
 import com.tencent.devops.process.yaml.v3.enums.ContentFormat
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
+import com.tencent.devops.process.yaml.v3.models.IfField
+import com.tencent.devops.process.yaml.v3.models.IfField.Mode
 import com.tencent.devops.process.yaml.v3.models.RecommendedVersion
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.VariablePropType
@@ -232,14 +234,27 @@ class StageTransfer @Autowired(required = false) constructor(
 
         // 根据if设置stageController
         val stageControlOption = if (!finalStage) {
-            val runCondition = kotlin.run {
-                if (!stage.ifField.isNullOrBlank()) StageRunCondition.CUSTOM_CONDITION_MATCH else null
-            } ?: StageRunCondition.AFTER_LAST_FINISHED
+            val runCondition = when {
+                stage.ifField == null -> StageRunCondition.AFTER_LAST_FINISHED
+                !stage.ifField.expression.isNullOrBlank() -> StageRunCondition.CUSTOM_CONDITION_MATCH
+                stage.ifField.mode == Mode.RUN_WHEN_ALL_PARAMS_MATCH -> StageRunCondition.CUSTOM_VARIABLE_MATCH
+                stage.ifField.mode == Mode.NOT_RUN_WHEN_ALL_PARAMS_MATCH ->
+                    StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+
+                else -> StageRunCondition.AFTER_LAST_FINISHED
+            }
             StageControlOption(
                 enable = stageEnable,
                 runCondition = runCondition,
                 customCondition = if (runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
-                    stage.ifField
+                    stage.ifField?.expression
+                } else {
+                    null
+                },
+                customVariables = if (runCondition == StageRunCondition.CUSTOM_VARIABLE_MATCH ||
+                    runCondition == StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+                ) {
+                    stage.ifField?.params?.map { NameAndValue(it.key, it.value) }
                 } else {
                     null
                 }
@@ -305,12 +320,18 @@ class StageTransfer @Autowired(required = false) constructor(
             label = maskYamlStageLabel(stage.tag).ifEmpty { null },
             ifField = when (stage.stageControlOption?.runCondition) {
                 StageRunCondition.CUSTOM_CONDITION_MATCH -> stage.stageControlOption?.customCondition
-                StageRunCondition.CUSTOM_VARIABLE_MATCH -> TransferUtil.customVariableMatch(
-                    stage.stageControlOption?.customVariables
+                StageRunCondition.CUSTOM_VARIABLE_MATCH -> IfField(
+                    mode = IfField.Mode.RUN_WHEN_ALL_PARAMS_MATCH,
+                    params = stage.stageControlOption?.customVariables?.associateBy(
+                        { it.key ?: "" },
+                        { it.value ?: "" })
                 )
 
-                StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> TransferUtil.customVariableMatchNotRun(
-                    stage.stageControlOption?.customVariables
+                StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> IfField(
+                    mode = IfField.Mode.NOT_RUN_WHEN_ALL_PARAMS_MATCH,
+                    params = stage.stageControlOption?.customVariables?.associateBy(
+                        { it.key ?: "" },
+                        { it.value ?: "" })
                 )
 
                 else -> null

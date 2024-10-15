@@ -44,7 +44,7 @@ data class PreStage(
     val label: Any? = null,
     @get:Schema(title = "if")
     @JsonProperty("if")
-    val ifField: String? = null,
+    val ifField: Any? = null,
     @get:Schema(title = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
