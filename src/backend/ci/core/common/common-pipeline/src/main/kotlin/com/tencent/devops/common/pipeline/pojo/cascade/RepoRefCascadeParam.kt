@@ -40,7 +40,7 @@ class RepoRefCascadeParam : CascadeParam(
     }
 
     companion object {
-        const val SELECTOR_KEY_REPO_NAME = "repo.name"
+        const val SELECTOR_KEY_REPO_NAME = "repo-name"
         const val SELECTOR_KEY_BRANCH = "branch"
         private val SUPPORT_REPO_TYPE = listOf(
             ScmType.CODE_GIT,
