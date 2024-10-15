@@ -25,5 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
+package com.tencent.devops.common.event.util
+
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+
+class IPUtilsTest {
+
+    @Test
+    fun getInnerIP() {
+        val innerIP = IPUtils.getInnerIP()
+        println(innerIP)
+        assertNotNull(innerIP)
+    }
+
+    @Test
+    fun getNtNameAndIP() {
+        val map = IPUtils.getNtNameAndIP()
+        println(map)
+        assertTrue(map.isNotEmpty())
+    }
 }
