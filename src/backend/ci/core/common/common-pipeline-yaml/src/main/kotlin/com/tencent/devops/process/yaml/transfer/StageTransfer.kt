@@ -251,6 +251,7 @@ class StageTransfer @Autowired(required = false) constructor(
         val stageId = VMUtils.genStageId(stageIndex)
         return Stage(
             id = stageId,
+            stageIdForUser = stage.id,
             name = stage.name ?: if (finalStage) {
                 "Final"
             } else {
@@ -298,6 +299,7 @@ class StageTransfer @Autowired(required = false) constructor(
             }
         }
         return PreStage(
+            id = stage.stageIdForUser,
             enable = stage.stageEnabled().nullIfDefault(true),
             name = stage.name,
             label = maskYamlStageLabel(stage.tag).ifEmpty { null },
@@ -328,7 +330,12 @@ class StageTransfer @Autowired(required = false) constructor(
 
     private fun getCheckInForStage(stage: Stage): PreStageCheck? {
         val reviews = PreStageReviews(
-            flows = stage.checkIn?.reviewGroups?.map { PreFlow(it.name, it.reviewers) },
+            flows = stage.checkIn?.reviewGroups?.map {
+                PreFlow(
+                    it.name,
+                    it.reviewers.ifEmpty { null },
+                    it.groups.ifEmpty { null })
+            },
             variables = stage.checkIn?.reviewParams?.associate {
                 it.key to ReviewVariable(
                     label = it.chineseName ?: it.key,
@@ -337,11 +344,13 @@ class StageTransfer @Autowired(required = false) constructor(
                         ManualReviewParamType.ENUM -> "SELECTOR"
                         ManualReviewParamType.MULTIPLE -> "SELECTOR-MULTIPLE"
                         ManualReviewParamType.BOOLEAN -> "BOOL"
+                        ManualReviewParamType.CHECKBOX -> "CHECKBOX"
                         else -> "INPUT"
                     },
                     default = it.value,
                     values = it.options?.map { mit -> mit.key },
-                    description = it.desc
+                    description = it.desc,
+                    required = it.required
                 )
             },
             description = stage.checkIn?.reviewDesc,
@@ -372,7 +381,8 @@ class StageTransfer @Autowired(required = false) constructor(
             check.reviewGroups = stageCheck.reviews.flows.map {
                 StageReviewGroup(
                     name = it.name,
-                    reviewers = ModelCommon.parseReceivers(it.reviewers).toList()
+                    reviewers = ModelCommon.parseReceivers(it.reviewers).toList(),
+                    groups = ModelCommon.parseReceivers(it.groups).toList()
                 )
             }.toMutableList()
             check.markdownContent = stageCheck.reviews.contentFormat == ContentFormat.MARKDOWN
@@ -389,13 +399,18 @@ class StageTransfer @Autowired(required = false) constructor(
             params.add(
                 ManualReviewParam(
                     key = key,
-                    value = variable.default,
-                    required = true,
+                    value = when (variable.type) {
+                        /* CHECKBOX 只能false，不允许修改 */
+                        "CHECKBOX" -> false
+                        else -> variable.default
+                    },
+                    required = variable.required ?: false,
                     valueType = when (variable.type) {
                         "TEXTAREA" -> ManualReviewParamType.TEXTAREA
                         "SELECTOR" -> ManualReviewParamType.ENUM
                         "SELECTOR-MULTIPLE" -> ManualReviewParamType.MULTIPLE
                         "BOOL" -> ManualReviewParamType.BOOLEAN
+                        "CHECKBOX" -> ManualReviewParamType.CHECKBOX
                         else -> ManualReviewParamType.STRING
                     },
                     chineseName = variable.label,

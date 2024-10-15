@@ -79,6 +79,15 @@ BEGIN
     END IF;
 	
 	IF NOT EXISTS(SELECT 1
+	                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_STAGE'
+                        AND COLUMN_NAME = 'STAGE_ID_FOR_USER') THEN
+    ALTER TABLE `T_PIPELINE_BUILD_STAGE` 
+			ADD COLUMN `STAGE_ID_FOR_USER` varchar(64) DEFAULT NULL COMMENT '当前stageId 阶段ID (用户可编辑)';
+    END IF;
+
+	IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'

@@ -413,7 +413,8 @@ class BuildMonitorControl @Autowired constructor(
                         suggest = "TIMEOUT"
                     ),
                     timeout = true,
-                    debug = buildInfo.debug
+                    debug = buildInfo.debug,
+                    system = true
                 )
             }
         }
