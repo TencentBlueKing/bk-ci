@@ -96,6 +96,9 @@
                             if (valueType === 'MULTIPLE' && (!value || value.length <= 0)) {
                                 errorKeys.push(key)
                             }
+                            if (valueType === 'CHECKBOX' && !value) {
+                                errorKeys.push(key)
+                            }
                         }
                     })
                     if (errorKeys.length) this.errMessage = this.$t('stageReview.requireRule', [errorKeys.join(',')])
