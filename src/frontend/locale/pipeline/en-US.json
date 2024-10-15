@@ -149,6 +149,10 @@
   "downloadLog": "Download Log",
   "hideDebugLog": "Hide Debug Log",
   "showDebugLog": "Show Debug Log",
+  "successPraise": "Like Success",
+  "successDownPraise": "Down Like Success",
+  "successCancelPraise": "Cancel Like",
+  "successCancelDownPraise": "Cancel Down Like",
   "stageReview": {
     "stageInConditions": "Stage-In conditions",
     "approvalFlow": "Approval flow",
@@ -608,7 +612,7 @@
     "downloading": "Downloading ",
     "copySuc": " Copy {0} to custom artifactory successfully",
     "buildMsg": "Build Message"
-},
+  },
   "preview": {
     "build": "Build",
     "introVersion": "Recommended Version",
@@ -656,6 +660,7 @@
     "checkDescInfo": "The review function will end on {0}, and overdue will be automatically identified as Stage success status",
     "abort": "Cancel (immediately mark Stage success status)",
     "agree": "Continue execution",
+    "aiAnalysis": "AI service is not yet deployed, if you need to use it, please contact the administrator to deploy it.<a href=\"{0}\" target=\"_blank\" style=\"color:#3a84ff\">Learn more</a>",
     "statusMap": {
       "PAUSE": "Pause",
       "RUNNING": "Running",
