@@ -101,9 +101,10 @@ class RepoFileService @Autowired constructor(
         reversion: String?,
         branch: String?,
         subModule: String? = null,
-        svnFullPath: Boolean = false
+        svnFullPath: Boolean = false,
+        projectId: String = ""
     ): String {
-        val repo = repositoryService.serviceGet("", repositoryConfig)
+        val repo = repositoryService.serviceGet(projectId, repositoryConfig)
         return getFileContent(
             repo = repo,
             filePath = filePath,

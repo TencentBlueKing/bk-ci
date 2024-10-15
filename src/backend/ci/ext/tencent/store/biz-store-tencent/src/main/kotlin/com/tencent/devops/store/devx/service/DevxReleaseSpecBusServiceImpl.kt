@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
+import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.NUM_FIVE
@@ -63,6 +64,8 @@ import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreBuildInfoDao
 import com.tencent.devops.store.common.service.StoreCommonService
@@ -72,6 +75,7 @@ import com.tencent.devops.store.pojo.common.CONFIG_JSON_NAME
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
+import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -88,6 +92,7 @@ import com.tencent.devops.store.pojo.devx.constants.KEY_MAX_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_MIN_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_NEED_VISITED_SITE_INFOS
 import com.tencent.devops.store.pojo.devx.constants.KEY_NET_POLICY_INFO
+import com.tencent.devops.store.pojo.devx.enums.FrameworkCodeEnum
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -101,8 +106,10 @@ import java.net.URLEncoder
 class DevxReleaseSpecBusServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeBaseQueryDao: StoreBaseQueryDao,
+    private val storeBaseFeatureQueryDao: StoreBaseFeatureQueryDao,
     private val storeBaseEnvQueryDao: StoreBaseEnvQueryDao,
     private val storeBaseEnvExtQueryDao: StoreBaseEnvExtQueryDao,
+    private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
     private val storeBuildInfoDao: StoreBuildInfoDao,
     private val storeCommonService: StoreCommonService,
     private val storeInnerPipelineConfig: StoreInnerPipelineConfig,
@@ -125,7 +132,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         val baseFeatureInfo = storeBaseCreateRequest.baseFeatureInfo
         val extBaseFeatureInfo = baseFeatureInfo?.extBaseFeatureInfo
         val frameworkCode = extBaseFeatureInfo?.get(KEY_FRAMEWORK_CODE)?.toString()
-        if (!frameworkCode.isNullOrBlank() && frameworkCode != "CUSTOM_FRAMEWORK") {
+        if (!frameworkCode.isNullOrBlank() && frameworkCode != FrameworkCodeEnum.CUSTOM_FRAMEWORK.name) {
             // 如果用户选择的开发模板不是自定义开发框架则平台自动给应用创建带脚手架的代码库
             val createGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).createGitCodeRepository(
                 userId = storeInnerPipelineConfig.innerPipelineUser,
@@ -149,6 +156,25 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             val repositoryInfo = createGitRepositoryResult.data
             repositoryInfo?.let {
                 extBaseFeatureInfo["repositoryNameWithNamespace"] = repositoryInfo.aliasName
+            }
+        }
+    }
+
+    override fun doStoreUpdatePreBus(storeUpdateRequest: StoreUpdateRequest) {
+        val storeBaseCreateRequest = storeUpdateRequest.baseInfo
+        val storeCode = storeBaseCreateRequest.storeCode
+        val storeType = storeBaseCreateRequest.storeType
+        val rdType = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.rdType
+        if (rdType == RdTypeEnum.SELF_DEVELOPED.name) {
+            val frameworkCode = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType,
+                fieldName = KEY_FRAMEWORK_CODE
+            )?.fieldValue
+            if (frameworkCode != FrameworkCodeEnum.CUSTOM_FRAMEWORK.name) {
+                // 获取组件配置文件
+
             }
         }
     }
