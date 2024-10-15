@@ -87,7 +87,6 @@
                 return new Promise((resolve, reject) => {
                     // 校验必填
                     const errorKeys = []
-                    console.log(this.params, '?????????')
                     this.params.forEach(({ required, valueType, value, key, chineseName }) => {
                         if (required) {
                             key = chineseName || (key || '').replace(/^variables\./, '')
