@@ -1,6 +1,5 @@
 package com.tencent.devops.remotedev.resources.op
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -10,7 +9,6 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.dao.WorkspaceDao
-import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
@@ -20,7 +18,6 @@ import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
-import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -29,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpRemoteDevResourceImpl @Autowired constructor(
-    private val workspaceService: WorkspaceService,
     private val workspaceCommon: WorkspaceCommon,
     private val userRefreshService: UserRefreshService,
     private val remoteDevSettingService: RemoteDevSettingService,
@@ -38,8 +34,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val deleteControl: DeleteControl,
     private val workspaceDao: WorkspaceDao,
     private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper,
-    private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val windowsResourceConfigService: WindowsResourceConfigService
 ) : OpRemoteDevResource {
     override fun updateUserSetting(userId: String, data: List<OPUserSetting>): Result<Boolean> {
