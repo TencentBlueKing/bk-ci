@@ -80,6 +80,7 @@ interface UserExperienceResource {
         artifactoryType: ArtifactoryType
     ): Result<Boolean>
 
+    @SuppressWarnings("LongParameterList")
     @Operation(summary = "获取体验列表")
     @Path("/{projectId}/list")
     @GET
