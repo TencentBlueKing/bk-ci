@@ -27,7 +27,9 @@
 
 package com.tencent.devops.artifactory.service
 
+
 import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
@@ -141,7 +143,6 @@ abstract class PipelineService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PipelineService::class.java)
     }
 
-
     fun getPipelineOauthUser(projectId: String, pipelineId: String): String? {
         return try {
             client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
@@ -150,9 +151,10 @@ abstract class PipelineService @Autowired constructor(
                 resourceCode = pipelineId
             ).data
         } catch (ignored: Exception) {
-            logger.info("get pipeline oauth user fail", ignored)
-            null
+            throw CustomException(
+                javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE,
+                "get pipeline oauth user failed:${ignored.message}"
+            )
         }?.handoverFrom
-
     }
 }
