@@ -25,26 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.common.pipeline.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "配置流水线结果")
-data class DeployPipelineResult(
-    @get:Schema(title = "流水线ID", required = true)
-    val pipelineId: String,
-    @get:Schema(title = "流水线名称", required = true)
-    val pipelineName: String,
-    @get:Schema(title = "流水线版本号", required = true)
-    val version: Int,
-    @get:Schema(title = "发布版本号", required = false)
-    val versionNum: Int?,
-    @get:Schema(title = "生成版本名称", required = false)
-    val versionName: String?,
-    @get:Schema(title = "目标链接", required = false)
-    val targetUrl: String? = null,
-    @get:Schema(title = "yaml信息", required = false)
-    val yamlInfo: PipelineYamlVo? = null,
-    @get:Schema(title = "是否更新了推荐版本号", required = false)
-    val updateBuildNo: Boolean? = null
+@Schema(title = "流水线构建推荐版本号更新")
+data class BuildNoUpdateReq(
+    @get:Schema(title = "推荐版本号buildNo当前值", required = true)
+    val currentBuildNo: Int
 )

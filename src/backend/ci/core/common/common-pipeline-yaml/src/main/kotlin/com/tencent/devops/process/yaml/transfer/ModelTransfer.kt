@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
@@ -341,7 +340,7 @@ class ModelTransfer @Autowired constructor(
             modelInput.model.stages[0].containers[0],
             PipelineTransferAspectWrapper.AspectType.BEFORE
         )
-        val triggers = (modelInput.model.stages[0].containers[0] as TriggerContainer).elements
+        val triggers = (modelInput.model.getTriggerContainer()).elements
         val baseTrigger = elementTransfer.baseTriggers2yaml(triggers, modelInput.aspectWrapper)
             ?.toPre(modelInput.version)
         val scmTrigger = elementTransfer.scmTriggers2Yaml(

@@ -34,7 +34,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -231,13 +230,13 @@ class PipelineBuildRecordService @Autowired constructor(
             }
         }
         watcher.start("fixModel")
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        triggerContainer.buildNo?.let {
-            it.buildNo = if (buildInfo.debug) {
+        val triggerContainer = model.getTriggerContainer()
+        triggerContainer.buildNo?.apply {
+            currentBuildNo = if (buildInfo.debug) {
                 buildSummaryRecord?.debugBuildNo
             } else {
                 buildSummaryRecord?.buildNo
-            } ?: it.buildNo
+            } ?: buildNo
         }
         val params = triggerContainer.params
         val newParams = ArrayList<BuildFormProperty>(params.size)

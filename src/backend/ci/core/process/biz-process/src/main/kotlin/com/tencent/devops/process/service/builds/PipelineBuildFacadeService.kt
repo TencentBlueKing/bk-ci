@@ -45,7 +45,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -137,6 +136,7 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
+import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
@@ -230,7 +230,7 @@ class PipelineBuildFacadeService(
             )
         val (resource, debug) = getModelAndBuildLevel(projectId, pipelineId, version)
         val model = resource.model
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
 
         var canManualStartup = false
         var canElementSkip = false
@@ -253,12 +253,12 @@ class PipelineBuildFacadeService(
             val latestParamsMap = lastTimeInfo.buildParameters!!.associate { it.key to it.value }
             triggerContainer.params.forEach { param ->
                 val realValue = latestParamsMap[param.id]
-                // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
+                // 入参、推荐版本号参数有上一次的构建参数的时候才设置成默认值，否者依然使用默认值
                 // 当值是boolean类型的时候，需要转为boolean类型
                 param.value = if (param.constant == true) {
                     param.readOnly = true
                     param.defaultValue
-                } else if (!param.required) {
+                } else if (!param.required && !recommendVersionKey(param.id)) {
                     param.defaultValue
                 } else if (param.defaultValue is Boolean) {
                     realValue?.toString()?.toBoolean()
@@ -309,12 +309,11 @@ class PipelineBuildFacadeService(
 
         BuildPropertyCompatibilityTools.fix(params)
 
-        val currentBuildNo = triggerContainer.buildNo
-        if (currentBuildNo != null) {
-            currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(
+        val currentBuildNo = triggerContainer.buildNo?.apply {
+            currentBuildNo = pipelineRepositoryService.getBuildNo(
                 projectId = projectId,
                 pipelineId = pipelineId
-            ) ?: currentBuildNo.buildNo
+            ) ?: buildNo
         }
 
         return BuildManualStartupInfo(
@@ -637,7 +636,7 @@ class PipelineBuildFacadeService(
             /**
              * 验证流水线参数构建启动参数
              */
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+            val triggerContainer = model.getTriggerContainer()
 
             if (startType == StartType.MANUAL && !debug) {
                 if (!readyToBuildPipelineInfo.canManualStartup) {
@@ -665,7 +664,7 @@ class PipelineBuildFacadeService(
 
             if (buildNo != null) {
                 pipelineRuntimeService.updateBuildNo(
-                    projectId, pipelineId, buildNo, version != null
+                    projectId, pipelineId, buildNo, debug
                 )
                 logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }
@@ -795,7 +794,7 @@ class PipelineBuildFacadeService(
             /**
              * 验证流水线参数构建启动参数
              */
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+            val triggerContainer = model.getTriggerContainer()
 
             val paramPamp = buildParamCompatibilityTransformer.parseTriggerParam(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,
@@ -868,7 +867,7 @@ class PipelineBuildFacadeService(
             /**
              * 验证流水线参数构建启动参数
              */
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+            val triggerContainer = model.getTriggerContainer()
 
             val pipelineParamMap = mutableMapOf<String, BuildParameters>()
             parameters.forEach { (key, value) ->
