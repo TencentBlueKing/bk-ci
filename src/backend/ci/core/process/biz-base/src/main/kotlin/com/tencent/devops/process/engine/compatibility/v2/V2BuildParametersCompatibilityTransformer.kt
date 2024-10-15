@@ -81,8 +81,8 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                         return@forEach
                     }
                     val variableInfo = BuildFormPropertyUtils.getCascadeVariable(key, param.type)
-                    variableInfo.map { (subKey, paramKey) ->
-                        BuildParameters(
+                    variableInfo.forEach { (subKey, paramKey) ->
+                        paramsMap[paramKey] = BuildParameters(
                             key = paramKey,
                             value = value[subKey] ?: "",
                             valueType = param.type,
@@ -92,6 +92,7 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                             relKey = key
                         )
                     }
+                    return@forEach
                 }
 
                 else -> {
