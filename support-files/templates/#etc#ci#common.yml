@@ -15,7 +15,15 @@ spring:
     stream:
       binders:
         rabbit:
-          type: rabbit
+          type: core-rabbit
+          environment:
+            spring:
+              rabbitmq:
+                virtual-host: __BK_CI_RABBITMQ_VHOST__
+                username: __BK_CI_RABBITMQ_USER__
+                password: __BK_CI_RABBITMQ_PASSWORD__
+                addresses: __BK_CI_RABBITMQ_ADDR__
+          type: extend-rabbit
           environment:
             spring:
               rabbitmq:

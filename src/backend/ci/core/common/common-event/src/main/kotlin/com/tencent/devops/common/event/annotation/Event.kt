@@ -33,13 +33,11 @@ import java.lang.annotation.Inherited
 /**
  * Stream事件注解
  * @param destination 发送目标绑定，用于指定RabbitMQ的Exchange，Kafka和Pulsar的Topic
- * @param delayMills 延迟时间，如果为延迟事件则必填
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @Inherited
 annotation class Event(
     val destination: String,
-    val delayMills: Int = 0,
     val binder: String = StreamBinder.CORE_RABBIT
 )

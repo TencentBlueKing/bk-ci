@@ -42,7 +42,6 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class DispatchBeanConfiguration {
 
-    // TODO #7443 增加ext实例配置
     @Bean
     @ConditionalOnMissingBean(JobQuotaInterface::class)
     fun jobQuotaInterface() = JobQuotaInterfaceImpl()

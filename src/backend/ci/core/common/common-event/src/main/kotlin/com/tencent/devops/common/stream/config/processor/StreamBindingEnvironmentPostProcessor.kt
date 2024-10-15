@@ -86,7 +86,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 val bindingName = DefaultBindingUtils.getOutBindingName(clazz)
                 logger.info(
                     "Found StreamEvent class: ${clazz.name}, bindingName[$bindingName], " +
-                            "with destination[${event.destination}, delayMills[${event.delayMills}]"
+                            "with destination[${event.destination}"
                 )
                 val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName"
                 setProperty("$rabbitPropPrefix.producer.delayedExchange", "true")
