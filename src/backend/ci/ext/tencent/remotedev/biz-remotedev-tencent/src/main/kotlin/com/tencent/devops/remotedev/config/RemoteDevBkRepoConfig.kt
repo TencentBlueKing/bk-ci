@@ -30,7 +30,7 @@ class RemoteDevBkRepoConfig {
 
 enum class BkRepoRegion {
     DEVX,
-    CSIG;
+    CSIG
 }
 
 data class BkRepoRegionConfig(
