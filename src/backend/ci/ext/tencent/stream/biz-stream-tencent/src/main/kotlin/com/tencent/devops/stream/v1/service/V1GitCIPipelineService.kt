@@ -84,7 +84,11 @@ class V1GitCIPipelineService @Autowired constructor(
             totalPages = 0,
             records = emptyList()
         )
-        val count = pipelineResourceDao.getPipelineCount(dslContext, gitProjectId)
+        val count = pipelineResourceDao.getPipelineCount(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            keyword = keyword
+        )
         val latestBuilds = gitCIDetailService.batchGetBuildHistory(
             userId = userId,
             gitProjectId = gitProjectId,
