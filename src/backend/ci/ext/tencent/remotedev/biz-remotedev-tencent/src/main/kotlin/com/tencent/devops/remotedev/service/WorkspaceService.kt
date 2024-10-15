@@ -996,7 +996,8 @@ class WorkspaceService @Autowired constructor(
             name = workspace.workspaceName,
             creator = workspace.createUserId,
             owner = owner,
-            resourceId = resourceId
+            resourceId = resourceId,
+            displayName = workspace.displayName
         )
     }
 
