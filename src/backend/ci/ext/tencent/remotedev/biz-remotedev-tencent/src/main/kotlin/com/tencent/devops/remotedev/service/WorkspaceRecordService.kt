@@ -192,7 +192,7 @@ class WorkspaceRecordService @Autowired constructor(
                     ),
                     NodeSearchRulesItem(
                         field = "repoName",
-                        value = workspaceName,
+                        value = genRepoName(workspaceName),
                         operation = "EQ"
                     ),
                     NodeSearchRulesItem(
