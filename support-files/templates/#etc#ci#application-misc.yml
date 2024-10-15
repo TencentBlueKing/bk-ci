@@ -34,7 +34,7 @@ spring:
          username: __BK_CI_MYSQL_USER__
          password: __BK_CI_MYSQL_PASSWORD__
       misc:
-         pkgRegex: "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment|image)"
+         pkgRegex: "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment|image|gpt)"
       # 数据源配置（勿随便变更配置项的顺序）
       dataSourceConfigs:
          - index: 0
