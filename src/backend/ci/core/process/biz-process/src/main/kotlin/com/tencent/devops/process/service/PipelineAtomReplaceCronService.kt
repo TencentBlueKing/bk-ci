@@ -407,6 +407,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                     userId = userId,
                     templateType = TemplateType.CUSTOMIZE,
                     storeFlag = null,
+                    orderBy = null,
+                    sort = null,
                     page = templatePage,
                     pageSize = DEFAULT_PAGE_SIZE
                 )

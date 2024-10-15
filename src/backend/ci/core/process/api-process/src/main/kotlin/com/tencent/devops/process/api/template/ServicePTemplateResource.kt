@@ -35,6 +35,8 @@ import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.process.pojo.PTemplateOrderByType
+import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
@@ -208,6 +210,12 @@ interface ServicePTemplateResource {
         @Parameter(description = "是否已关联到store", required = false)
         @QueryParam("storeFlag")
         storeFlag: Boolean?,
+        @Parameter(description = "模版排序字段", required = false, example = "CREATE_TIME")
+        @QueryParam("orderBy")
+        orderBy: PTemplateOrderByType? = PTemplateOrderByType.CREATE_TIME,
+        @Parameter(description = "orderBy排序顺序", required = false)
+        @QueryParam("sort")
+        sort: PTemplateSortType?,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
