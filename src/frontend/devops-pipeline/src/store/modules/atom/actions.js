@@ -927,6 +927,9 @@ export default {
     },
     setAtomEditing ({ commit }, isEditing) {
         return commit(SET_ATOM_EDITING, isEditing)
+    },
+    updateBuildNo ({ commit }, { projectId, pipelineId, currentBuildNo }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/updateBuildNo`, { currentBuildNo })
     }
 
 }
