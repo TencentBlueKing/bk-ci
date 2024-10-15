@@ -1009,7 +1009,9 @@ class TemplateFacadeService @Autowired constructor(
                         hasPermission = hasManagerPermission,
                         canView = templateWithPermission.templatesWithViewPermIds?.contains(templateId),
                         canDelete = templateWithPermission.templatesWithDeletePermIds?.contains(templateId),
-                        canEdit = templateWithPermission.templatesWithEditPermIds?.contains(templateId)
+                        canEdit = templateWithPermission.templatesWithEditPermIds?.contains(templateId),
+                        creator = record[tTemplate.CREATOR],
+                        updateTime = record[tTemplate.UPDATE_TIME].timestampmilli()
                     )
                 )
             }
