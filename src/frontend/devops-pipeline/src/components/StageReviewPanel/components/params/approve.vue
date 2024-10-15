@@ -87,9 +87,10 @@
                 return new Promise((resolve, reject) => {
                     // 校验必填
                     const errorKeys = []
-                    this.params.forEach(({ required, valueType, value, key }) => {
+                    console.log(this.params, '?????????')
+                    this.params.forEach(({ required, valueType, value, key, chineseName }) => {
                         if (required) {
-                            key = (key || '').replace(/^variables\./, '')
+                            key = chineseName || (key || '').replace(/^variables\./, '')
                             if (typeof value === 'undefined' || value === '') {
                                 errorKeys.push(key)
                             }
@@ -130,6 +131,7 @@
         .review-param-gap {
             display: inline-block;
             min-width: 28px;
+            height: 18px;
             &.param-require:after {
                 height: 8px;
                 line-height: 1;
