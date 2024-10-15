@@ -37,7 +37,7 @@ import com.tencent.devops.common.event.enums.ActionType
  *
  * @version 1.0
  */
-@Event(StreamBinding.PIPELINE_BUILD_HEART_BEAT, 120000)
+@Event(destination = StreamBinding.PIPELINE_BUILD_HEART_BEAT)
 data class PipelineContainerAgentHeartBeatEvent(
     override val source: String,
     override val projectId: String,
