@@ -61,7 +61,8 @@ class PipelineSettingService @Autowired constructor(
                     TimeUnit.HOURS.toMillis(1)
                 }
                 setting.runLockType == PipelineRunLockType.SINGLE ||
-                    setting.runLockType == PipelineRunLockType.GROUP_LOCK -> {
+                    setting.runLockType == PipelineRunLockType.GROUP_LOCK ||
+                    setting.runLockType == PipelineRunLockType.MULTIPLE -> {
                     TimeUnit.MINUTES.toMillis(setting.waitQueueTimeMinute.toLong())
                 }
                 else -> {

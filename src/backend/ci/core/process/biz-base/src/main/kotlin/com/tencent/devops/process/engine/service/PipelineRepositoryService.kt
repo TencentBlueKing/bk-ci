@@ -181,7 +181,9 @@ class PipelineRepositoryService constructor(
                 )
             }
             if (runLockType == PipelineRunLockType.SINGLE ||
-                runLockType == PipelineRunLockType.SINGLE_LOCK || runLockType == PipelineRunLockType.GROUP_LOCK
+                runLockType == PipelineRunLockType.SINGLE_LOCK ||
+                runLockType == PipelineRunLockType.GROUP_LOCK ||
+                runLockType == PipelineRunLockType.MULTIPLE
             ) {
                 if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
                     waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX

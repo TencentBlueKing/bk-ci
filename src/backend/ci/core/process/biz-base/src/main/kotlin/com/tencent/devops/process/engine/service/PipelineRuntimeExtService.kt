@@ -127,18 +127,12 @@ class PipelineRuntimeExtService @Autowired constructor(
     }
 
     fun existQueue(projectId: String, pipelineId: String, buildId: String, buildStatus: BuildStatus): Boolean {
-        val redisLock = PipelineNextQueueLock(redisOperation, pipelineId, buildId)
-        try {
-            redisLock.lock()
-            return pipelineBuildDao.updateStatus(
-                dslContext = dslContext,
-                projectId = projectId,
-                buildId = buildId,
-                oldBuildStatus = buildStatus,
-                newBuildStatus = BuildStatus.UNEXEC
-            )
-        } finally {
-            redisLock.unlock()
-        }
+        return pipelineBuildDao.updateStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            oldBuildStatus = buildStatus,
+            newBuildStatus = BuildStatus.UNEXEC
+        )
     }
 }
