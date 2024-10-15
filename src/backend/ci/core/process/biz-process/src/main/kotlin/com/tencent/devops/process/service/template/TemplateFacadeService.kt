@@ -691,8 +691,8 @@ class TemplateFacadeService @Autowired constructor(
         userId: String,
         templateType: TemplateType?,
         storeFlag: Boolean?,
-        orderBy: PTemplateOrderByType?,
-        sort: PTemplateSortType?,
+        orderBy: PTemplateOrderByType? = null,
+        sort: PTemplateSortType? = null,
         page: Int? = null,
         pageSize: Int? = null,
         keywords: String? = null
