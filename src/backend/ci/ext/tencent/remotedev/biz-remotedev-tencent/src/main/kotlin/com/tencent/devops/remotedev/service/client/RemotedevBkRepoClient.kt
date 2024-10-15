@@ -188,7 +188,8 @@ data class NodeSearchSort(
 )
 
 data class NodeSearchRule(
-    val rules: List<NodeSearchRulesItem>
+    val rules: List<NodeSearchRulesItem>,
+    val relation: String
 )
 
 data class NodeSearchRulesItem(

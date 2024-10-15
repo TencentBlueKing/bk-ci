@@ -215,7 +215,8 @@ class WorkspaceRecordService @Autowired constructor(
                         value = stopTime,
                         operation = "LTE"
                     )
-                )
+                ),
+                relation = "AND"
             )
         )
         val resp = remotedevBkRepoClient.nodeSearch(
