@@ -233,7 +233,8 @@ class PipelineBuildTaskDao {
         projectId: String,
         buildId: String,
         taskId: String?,
-        stepId: String?
+        stepId: String?,
+        executeCount: Int?
     ): PipelineBuildTask? {
         return with(T_PIPELINE_BUILD_TASK) {
 
@@ -243,6 +244,9 @@ class PipelineBuildTaskDao {
             }
             if (stepId != null) {
                 where.and(STEP_ID.eq(stepId))
+            }
+            if (executeCount != null) {
+                where.and(EXECUTE_COUNT.eq(executeCount))
             }
             where.fetchAny(mapper)
         }
