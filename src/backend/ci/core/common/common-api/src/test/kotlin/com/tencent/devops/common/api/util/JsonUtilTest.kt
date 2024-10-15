@@ -30,11 +30,11 @@ package com.tencent.devops.common.api.util
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.annotation.SkipLogField
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 /**
  * @version 1.0
@@ -120,9 +120,10 @@ class JsonUtilTest {
 
         val mutableMap = JsonUtil.toMutableMap(mt)
         Assertions.assertNotNull(mutableMap)
-        Assertions.assertNull(mutableMap["emptyKey"])
-        Assertions.assertNull(mutableMap["str_array"])
+        Assertions.assertNotNull(mutableMap["emptyKey"])
+        Assertions.assertNotNull(mutableMap["str_array"])
         Assertions.assertEquals(mutableMap["a"], "1")
+        Assertions.assertEquals(mutableMap["emptyKey"], "")
         mutableMap["a"] = "2"
         Assertions.assertEquals(mutableMap["a"], "2")
         println(mutableMap)
