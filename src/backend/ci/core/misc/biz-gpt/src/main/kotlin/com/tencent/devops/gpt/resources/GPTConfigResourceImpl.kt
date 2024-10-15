@@ -25,16 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.check
+package com.tencent.devops.gpt.resources
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.gpt.api.GPTConfigResource
+import com.tencent.devops.gpt.constant.GptMessageCode.GPT_DISABLE
+import com.tencent.devops.gpt.service.LLMService
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ReviewVariable(
-    val label: String?,
-    val type: String,
-    val default: Any?,
-    val values: Any?,
-    val required: Boolean?,
-    val description: String?
-)
+@RestResource
+class GPTConfigResourceImpl : GPTConfigResource {
+
+    var check: Boolean? = null
+
+    override fun gptCheck(userId: String): Result<Boolean> {
+        if (check == null) {
+            kotlin.runCatching {
+                SpringContextUtil.getBean(LLMService::class.java)
+            }.onFailure {
+                check = false
+            }.onSuccess {
+                check = true
+            }
+        }
+        return if (check == false) Result(I18nUtil.getCodeLanMessage(GPT_DISABLE), false) else Result(true)
+    }
+}

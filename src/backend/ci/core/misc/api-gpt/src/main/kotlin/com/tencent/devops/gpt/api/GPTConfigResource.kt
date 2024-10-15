@@ -25,16 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.check
+package com.tencent.devops.gpt.api
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ReviewVariable(
-    val label: String?,
-    val type: String,
-    val default: Any?,
-    val values: Any?,
-    val required: Boolean?,
-    val description: String?
-)
+@Tag(name = "USER_GPT", description = "ai服务-配置")
+@Path("/user/gpt_config")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface GPTConfigResource {
+
+    @Operation(summary = "是否已实装大模型")
+    @GET
+    @Path("/is_ok")
+    fun gptCheck(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
+}

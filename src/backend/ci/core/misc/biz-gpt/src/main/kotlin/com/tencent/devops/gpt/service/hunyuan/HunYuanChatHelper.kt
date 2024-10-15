@@ -1,4 +1,4 @@
-package com.tencent.devops.gpt.service.model
+package com.tencent.devops.gpt.service.hunyuan
 
 import dev.ai4j.openai4j.chat.ChatCompletionRequest
 import dev.langchain4j.agent.tool.ToolSpecification
@@ -8,7 +8,7 @@ import dev.langchain4j.model.chat.listener.ChatModelRequest
 import dev.langchain4j.model.chat.listener.ChatModelResponse
 import dev.langchain4j.model.output.Response
 
-object ChatHelper {
+object HunYuanChatHelper {
     fun createModelListenerRequest(
         request: ChatCompletionRequest,
         messages: List<ChatMessage>,

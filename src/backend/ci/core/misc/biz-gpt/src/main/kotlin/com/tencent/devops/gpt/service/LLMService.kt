@@ -59,7 +59,7 @@ import org.springframework.stereotype.Service
 class LLMService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val llmHunYuanService: LLMHunYuanService,
+    private val llmModelService: LLMModelService,
     private val redisOperation: RedisOperation,
     private val aIScoreDao: AIScoreDao
 ) {
@@ -126,7 +126,7 @@ class LLMService @Autowired constructor(
 
         // 第一阶段：通过脚本插件落库的错误信息（提取自错误流，有长度限制）
         if (!task.errorMsg.isNullOrBlank()) {
-            llmHunYuanService.scriptErrorAnalysisChat(script, task.errorMsg!!.lines(), processor)
+            llmModelService.scriptErrorAnalysisChat(script, task.errorMsg!!.lines(), processor)
         }
         if (cacheInSucceed(label, processor)) return
         // 第二阶段：通过拿error log日志
@@ -193,7 +193,7 @@ class LLMService @Autowired constructor(
             output.write(I18nUtil.getCodeLanMessage(SCRIPT_ERROR_ANALYSIS_CHAT_TASK_LOGS_EMPTY))
             return
         }
-        llmHunYuanService.scriptErrorAnalysisChat(
+        llmModelService.scriptErrorAnalysisChat(
             script,
             logsData.logs.takeLast(CHUNK).reversed().map { it.message }.dropLast(1),
             processor

@@ -25,16 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.check
+package com.tencent.devops.gpt.service
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.gpt.service.processor.ScriptErrorAnalysisProcessor
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ReviewVariable(
-    val label: String?,
-    val type: String,
-    val default: Any?,
-    val values: Any?,
-    val required: Boolean?,
-    val description: String?
-)
+interface LLMModelService {
+
+    fun scriptErrorAnalysisChat(script: List<String>, errorLog: List<String>, output: ScriptErrorAnalysisProcessor)
+}

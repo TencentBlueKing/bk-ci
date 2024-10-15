@@ -25,16 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.check
+package com.tencent.devops.common.pipeline.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import io.swagger.v3.oas.annotations.media.Schema
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ReviewVariable(
-    val label: String?,
-    val type: String,
-    val default: Any?,
-    val values: Any?,
-    val required: Boolean?,
-    val description: String?
+@Schema(title = "流水线构建推荐版本号更新")
+data class BuildNoUpdateReq(
+    @get:Schema(title = "推荐版本号buildNo当前值", required = true)
+    val currentBuildNo: Int
 )

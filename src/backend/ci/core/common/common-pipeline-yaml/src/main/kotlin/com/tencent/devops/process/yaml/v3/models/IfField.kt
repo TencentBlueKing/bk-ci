@@ -25,16 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.check
+package com.tencent.devops.process.yaml.v3.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
+/**
+ * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci)异常
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class ReviewVariable(
-    val label: String?,
-    val type: String,
-    val default: Any?,
-    val values: Any?,
-    val required: Boolean?,
-    val description: String?
-)
+data class IfField(
+    val mode: Mode? = null,
+    val params: Map<String, String>? = null,
+    val expression: String? = null
+) {
+    enum class Mode {
+        RUN_WHEN_ALL_PARAMS_MATCH,
+        NOT_RUN_WHEN_ALL_PARAMS_MATCH;
+
+        companion object {
+            fun parse(value: String): Mode? {
+                return Mode.values().find { it.name == value }
+            }
+        }
+    }
+}

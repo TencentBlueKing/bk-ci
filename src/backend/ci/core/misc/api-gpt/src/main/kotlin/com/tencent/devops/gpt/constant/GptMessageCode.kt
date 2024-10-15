@@ -62,5 +62,8 @@ object GptMessageCode {
     const val SCRIPT_ERROR_ANALYSIS_CHAT_TASK_LOGS_EMPTY = "scriptErrorAnalysisChatTaskLogsEmpty"
 
     // 当前模型忙，请稍后重试
-    const val GPT_BUSY = "gpt_busy"
+    const val GPT_BUSY = "gptBusy"
+
+    // 未开启GPT服务
+    const val GPT_DISABLE = "gptDisable"
 }

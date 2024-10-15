@@ -972,7 +972,8 @@ class PipelineRuntimeService @Autowired constructor(
                         startTime = stageStartTime,
                         controlOption = stageOption,
                         checkIn = stage.checkIn,
-                        checkOut = stage.checkOut
+                        checkOut = stage.checkOut,
+                        stageIdForUser = stage.stageIdForUser
                     )
                 )
             }
