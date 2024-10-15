@@ -5,29 +5,65 @@
     >
         <content-header>
             <div slot="left">{{ $route.meta.title }}</div>
-            <div
-                slot="right"
-                v-if="showContent"
-            >
-                <bk-checkbox
-                    :checked="getIsShowExpired"
-                    @change="toggleExpired"
-                >
-                    显示已过期体验
-                </bk-checkbox>
-                <!-- <label class="bk-form-checkbox" style="margin-right: 0;">
-                    <input type="checkbox"  @click="toggleExpired">
-                </label> -->
-            </div>
         </content-header>
-        <section class="sub-view-port">
-            <div v-if="showContent && releaseList.length">
+        <keep-alive>
+            <section class="sub-view-port">
+                <div class="filter-warpper">
+                    <bk-checkbox
+                        class="mr15"
+                        :checked="getIsShowExpired"
+                        @change="toggleExpired"
+                    >
+                        显示已过期体验
+                    </bk-checkbox>
+                    <div class="date-prepend">
+                        体验发起时间
+                    </div>
+                    <bk-date-picker
+                        class="date-picker mr15"
+                        :value="createDaterange"
+                        type="datetimerange"
+                        placeholder="选择日期范围"
+                        :options="{
+                            disabledDate: time => time.getTime() > Date.now()
+                        }"
+                        @clear="handleClearCreateDate"
+                        @change="handleChangeCreateDate"
+                        @pick-success="handlePickSuccessCreateDate"
+                    ></bk-date-picker>
+    
+                    <div class="date-prepend">
+                        体验结束时间
+                    </div>
+                    <bk-date-picker
+                        class="date-picker mr15"
+                        :value="endDaterange"
+                        type="datetimerange"
+                        placeholder="选择日期范围"
+                        :options="{
+                            disabledDate: time => time.getTime() > Date.now()
+                        }"
+                        @clear="handleClearEndDate"
+                        @change="handleChangeEndDate"
+                        @pick-success="handlePickSuccessEndDate"
+                    ></bk-date-picker>
+                    <bk-search-select
+                        v-model="searchValue"
+                        clearable
+                        filter
+                        class="search-input"
+                        :data="searchList"
+                        :show-condition="false"
+                        placeholder="文件名 / 版本号 / 版本标题 / 版本描述 / 分组标识 / 应用名称 / 平台 / 发布人"
+                    ></bk-search-select>
+                </div>
                 <bk-table
                     :data="releaseList"
                     @row-click="toRowDetail"
                     :pagination="pagination"
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageLimitChange"
+                    v-bkloading="{ isLoading: isTableLoading }"
                 >
                     <bk-table-column
                         label="文件名（版本号）"
@@ -149,15 +185,16 @@
                             </div>
                         </template>
                     </bk-table-column>
+                    <template #empty>
+                        <empty-data
+                            :empty-info="emptyInfo"
+                            :to-create-fn="toCreateFn"
+                        >
+                        </empty-data>
+                    </template>
                 </bk-table>
-            </div>
-            <empty-data
-                v-if="showContent && !releaseList.length"
-                :empty-info="emptyInfo"
-                :to-create-fn="toCreateFn"
-            >
-            </empty-data>
-        </section>
+            </section>
+        </keep-alive>
     </div>
 </template>
 
@@ -201,7 +238,26 @@
                     current: 1,
                     limit: 20,
                     count: 0
-                }
+                },
+                modelValue: ['now-2d/d', 'now'],
+                timezone: 'Asia/Shanghai',
+                filterParams: {
+                    createDateBegin: '',
+                    createDateEnd: '',
+                    endDateBegin: '',
+                    endDateEnd: '',
+                    name: '',
+                    version: '',
+                    remark: '',
+                    versionTitle: '',
+                    creator: ''
+                },
+                searchValue: [],
+                createDaterange: ['', ''],
+                createDaterangeCache: ['', ''],
+                endDaterange: ['', ''],
+                endDaterangeCache: ['', ''],
+                isTableLoading: false
             }
         },
         computed: {
@@ -210,13 +266,65 @@
             },
             ...mapGetters('experience', [
                 'getIsShowExpired'
-            ])
+            ]),
+            searchList () {
+                const list = [
+                    {
+                        name: '文件名',
+                        id: 'name'
+                    },
+                    {
+                        name: '版本号',
+                        id: 'version'
+                    },
+                    {
+                        name: '版本标题',
+                        id: 'versionTitle'
+                    },
+                    {
+                        name: '版本描述',
+                        id: 'remark'
+                    },
+                    {
+                        name: '分组标识',
+                        id: 'classify'
+                    },
+                    {
+                        name: '应用名称',
+                        id: 'experienceName'
+                    },
+                    {
+                        name: '平台',
+                        id: 'platform',
+                        children: [
+                            {
+                                name: 'Android',
+                                id: 'ANDROID'
+                            },
+                            {
+                                name: 'IOS',
+                                id: 'IOS'
+                            }
+                        ]
+                    },
+                    {
+                        name: '发布人',
+                        id: 'creator'
+                    }
+                ]
+                return list.filter((data) => {
+                    return !this.searchValue.find(val => val.id === data.id)
+                })
+            }
         },
         watch: {
             projectId () {
                 this.init()
             },
             getIsShowExpired () {
+                this.requestList()
+            },
+            searchValue (val) {
                 this.requestList()
             }
         },
@@ -252,12 +360,25 @@
              */
             async requestList (reset = true) {
                 try {
+                    this.isTableLoading = true
+                    const filterParams = {}
+                    this.searchValue.forEach(item => {
+                        const id = item.id
+                        const value = item.values[0].id
+                        filterParams[id] = value
+                    })
                     const res = await this.$store.dispatch('experience/requestExpList', {
                         projectId: this.projectId,
                         params: {
-                            expired: this.getIsShowExpired
+                            expired: this.getIsShowExpired,
+                            createDateBegin: String(this.createDaterange[0])?.slice(0, 10) ?? '',
+                            createDateEnd: String(this.createDaterange[1])?.slice(0, 10) ?? '',
+                            endDateBegin: String(this.endDaterange[0])?.slice(0, 10) ?? '',
+                            endDateEnd: String(this.endDaterange[1])?.slice(0, 10) ?? '',
+                            ...filterParams
                         }
                     })
+                    this.isTableLoading = false
                     
                     const platformLabelMap = {
                         ANDROID: 'Android',
@@ -397,6 +518,39 @@
                         projectId: this.projectId
                     }
                 })
+            },
+            // 体验发起时间
+            handleClearCreateDate () {
+                this.createDaterange = ['', '']
+                this.requestList()
+            },
+            
+            handleChangeCreateDate (date, type) {
+                const startTime = new Date(date[0]).getTime() || ''
+                const endTime = new Date(date[1]).getTime() || ''
+                this.createDaterangeCache = [startTime, endTime]
+            },
+            
+            handlePickSuccessCreateDate () {
+                this.createDaterange = this.createDaterangeCache
+                this.requestList()
+            },
+
+            // 体验结束时间
+            handleClearEndDate () {
+                this.endDaterange = ['', '']
+                this.requestList()
+            },
+            
+            handleChangeEndDate (date, type) {
+                const startTime = new Date(date[0]).getTime() || ''
+                const endTime = new Date(date[1]).getTime() || ''
+                this.endDaterangeCache = [startTime, endTime]
+            },
+            
+            handlePickSuccessEndDate () {
+                this.endDaterange = this.endDaterangeCache
+                this.requestList()
             }
         }
     }
@@ -435,6 +589,28 @@
                 cursor: default;
                 color: $fontLighterColor;
             }
+        }
+    }
+    .filter-warpper {
+        display: flex;
+        align-items: center;
+        float: right;
+        height: 32px;
+        margin-bottom: 20px;
+        .date-prepend {
+            height: 32px;
+            line-height: 32px;
+            border: 1px solid #c4c6cc;
+            font-size: 12px;
+            color: #63656e;
+            padding: 0 5px;
+            border-right: none;
+        }
+        .date-picker {
+            width: 300px;
+        }
+        .search-input {
+            width: 420px;
         }
     }
 </style>
