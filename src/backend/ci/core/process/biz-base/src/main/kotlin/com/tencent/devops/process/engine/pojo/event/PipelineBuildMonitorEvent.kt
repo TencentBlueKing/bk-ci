@@ -38,7 +38,7 @@ import com.tencent.devops.common.event.enums.ActionType
  * @version 1.0
  */
 @Suppress("MagicNumber")
-@Event(StreamBinding.PIPELINE_BUILD_MONITOR, 20000)
+@Event(StreamBinding.PIPELINE_BUILD_MONITOR)
 data class PipelineBuildMonitorEvent(
     override val source: String,
     override val projectId: String,
@@ -47,5 +47,5 @@ data class PipelineBuildMonitorEvent(
     val buildId: String,
     val executeCount: Int = 0, // 0 为了兼容旧的事件没有该字段，默认为0
     override var actionType: ActionType = ActionType.START,
-    override var delayMills: Int = 0
+    override var delayMills: Int = 20000
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

@@ -49,7 +49,6 @@ open class IEvent(
      */
     fun sendTo(bridge: StreamBridge, destination: String? = null) {
         try {
-            val eventType = this::class.java.annotations.find { s -> s is Event } as Event
             bridge.send(
                 destination ?: DefaultBindingUtils.getOutBindingName(this::class.java),
                 buildMessage(if (delayMills > 0) delayMills else 0)

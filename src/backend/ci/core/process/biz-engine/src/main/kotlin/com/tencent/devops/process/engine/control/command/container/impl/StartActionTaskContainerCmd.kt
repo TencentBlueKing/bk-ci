@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.expression.ExpressionParseException
@@ -39,7 +40,6 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_CONDITION_INVALID
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_UNEXECUTE_POSTACTION_TASK
@@ -82,8 +82,8 @@ class StartActionTaskContainerCmd(
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            !commandContext.buildStatus.isFinish() &&
-            commandContext.container.matrixGroupFlag != true
+                !commandContext.buildStatus.isFinish() &&
+                commandContext.container.matrixGroupFlag != true
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -265,8 +265,8 @@ class StartActionTaskContainerCmd(
 
         LOG.info(
             "ENGINE|${containerContext.event.buildId}|${containerContext.event.source}|CONTAINER_FIND_TASK|" +
-                "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
-                "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate"
+                    "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
+                    "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate"
         )
 
         if (!needTerminate && breakFlag) {
@@ -279,7 +279,7 @@ class StartActionTaskContainerCmd(
 
     private fun isTerminate(containerContext: ContainerContext): Boolean {
         return containerContext.event.actionType.isTerminate() ||
-            FastKillUtils.isTerminateCode(containerContext.event.errorCode)
+                FastKillUtils.isTerminateCode(containerContext.event.errorCode)
     }
 
     private fun findRunningTask(
@@ -355,14 +355,14 @@ class StartActionTaskContainerCmd(
         } catch (ignore: Throwable) {
             buildLogPrinter.addErrorLine(
                 message = "[EXPRESSION_ERROR] failed to parse condition(${additionalOptions?.customCondition}) " +
-                    "with error: ${ignore.message}",
+                        "with error: ${ignore.message}",
                 buildId = buildId, containerHashId = containerHashId, tag = taskId, executeCount = executeCount ?: 1,
                 jobId = null, stepId = stepId
             )
             LOG.error(
                 "BKSystemErrorMonitor|findNeedToRunTask|$buildId|$source|" +
-                    "EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|" +
-                    "customCondition=${additionalOptions?.customCondition}",
+                        "EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|" +
+                        "customCondition=${additionalOptions?.customCondition}",
                 ignore
             )
             Pair(false, ignore)
@@ -491,17 +491,13 @@ class StartActionTaskContainerCmd(
     ): Boolean {
 
         if (this.taskId != VMUtils.genStartVMTaskId(this.containerId)) { // 非开机插件,检查条件
-
             return ControlUtils.checkTaskSkip(
-                projectId = projectId,
-                pipelineId = pipelineId,
                 buildId = buildId,
                 additionalOptions = additionalOptions,
                 containerFinalStatus = containerContext.buildStatus,
                 variables = contextMap,
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                message = message,
-                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+                message = message
             )
         }
 
@@ -511,15 +507,12 @@ class StartActionTaskContainerCmd(
             val it = containerContext.containerTasks[idx]
             if (!VMUtils.isVMTask(it.taskId)) {
                 skip = ControlUtils.checkTaskSkip(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
                     buildId = buildId,
                     additionalOptions = it.additionalOptions,
                     containerFinalStatus = containerContext.buildStatus,
                     variables = contextMap,
                     hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                    message = message,
-                    asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+                    message = message
                 )
                 if (LOG.isDebugEnabled) {
                     LOG.debug("ENGINE|$buildId|CHECK_QUICK_SKIP|$stageId|j($containerId)|${it.taskName}|$skip")
@@ -573,7 +566,7 @@ class StartActionTaskContainerCmd(
             toDoTask = pipelineBuildTask
             LOG.info(
                 "ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
-                    "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}"
+                        "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}"
             )
             val endTask = containerContext.containerTasks
                 .filter { it.taskId.startsWith(VMUtils.getEndLabel()) } // 获取end插件

@@ -61,7 +61,7 @@ class CheckConditionalSkipContainerCmd constructor(
     override fun canExecute(commandContext: ContainerContext): Boolean {
         // 仅在初次进入Container
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            commandContext.container.status.isReadyToRun()
+                commandContext.container.status.isReadyToRun()
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -128,13 +128,10 @@ class CheckConditionalSkipContainerCmd constructor(
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
                 variables = containerContext.variables.plus(contextMap),
-                projectId = container.projectId,
-                pipelineId = container.pipelineId,
                 buildId = container.buildId,
                 runCondition = jobControlOption.runCondition,
                 customCondition = jobControlOption.customCondition,
-                message = message,
-                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+                message = message
             )
         }
 
@@ -154,7 +151,7 @@ class CheckConditionalSkipContainerCmd constructor(
         if (needSkip) {
             LOG.info(
                 "ENGINE|${container.buildId}|${containerContext.event.source}|CONTAINER_SKIP" +
-                    "|${container.stageId}|j(${container.containerId})|conditions=$jobControlOption"
+                        "|${container.stageId}|j(${container.containerId})|conditions=$jobControlOption"
             )
         }
         return needSkip

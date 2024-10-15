@@ -53,8 +53,8 @@ class CheckConditionalSkipStageCmd constructor(
     override fun canExecute(commandContext: StageContext): Boolean {
         // 仅在初次进入Stage
         return commandContext.stage.controlOption?.finally != true &&
-            commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            commandContext.buildStatus.isReadyToRun()
+                commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+                commandContext.buildStatus.isReadyToRun()
     }
 
     override fun execute(commandContext: StageContext) {
@@ -115,12 +115,9 @@ class CheckConditionalSkipStageCmd constructor(
             skip = ControlUtils.checkStageSkipCondition(
                 conditions = conditions,
                 variables = variables.plus(contextMap),
-                projectId = stage.projectId,
-                pipelineId = stage.pipelineId,
                 buildId = stage.buildId,
                 runCondition = controlOption.runCondition,
-                customCondition = controlOption.customCondition,
-                asCodeEnabled = commandContext.pipelineAsCodeEnabled == true
+                customCondition = controlOption.customCondition
             ) // #6366 增加日志明确展示跳过的原因  stage 没有相关可展示的地方，暂时不加
             if (message.isNotBlank()) {
                 // #6366 增加日志明确展示跳过的原因
