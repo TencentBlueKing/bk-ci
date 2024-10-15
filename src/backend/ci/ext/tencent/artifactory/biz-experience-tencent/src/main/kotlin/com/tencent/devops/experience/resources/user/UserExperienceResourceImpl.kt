@@ -28,6 +28,7 @@
 package com.tencent.devops.experience.resources.user
 
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
@@ -86,7 +87,10 @@ class UserExperienceResourceImpl @Autowired constructor(
         version: String?,
         remark: String?,
         versionTitle: String?,
-        creator: String?
+        creator: String?,
+        classify: String?,
+        experienceName: String?,
+        platform: PlatformEnum?
     ): Result<List<ExperienceSummaryWithPermission>> {
         checkParam(userId, projectId)
         return Result(
@@ -102,7 +106,10 @@ class UserExperienceResourceImpl @Autowired constructor(
                 version = version,
                 remark = remark,
                 versionTitle = versionTitle,
-                creator = creator
+                creator = creator,
+                classify = classify,
+                experienceName = experienceName,
+                platform = platform?.name
             )
         )
     }

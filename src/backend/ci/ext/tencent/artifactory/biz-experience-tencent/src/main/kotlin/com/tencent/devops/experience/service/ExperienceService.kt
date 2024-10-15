@@ -205,7 +205,10 @@ class ExperienceService @Autowired constructor(
         version: String?,
         remark: String?,
         versionTitle: String?,
-        creator: String?
+        creator: String?,
+        classify: String?,
+        experienceName: String?,
+        platform: String?
     ): List<ExperienceSummaryWithPermission> {
         val today = DateUtil.today()
         val expiredTime = if (expired == null || expired == false) today else null
@@ -233,7 +236,10 @@ class ExperienceService @Autowired constructor(
             remark = remark,
             versionTitle = versionTitle,
             creator = creator,
-            online = online
+            online = online,
+            classify = classify,
+            experienceName = experienceName,
+            platform = platform
         )
         // Rbac得校验体验是否列表权限，有才返回。
         val experienceListResult = experiencePermissionService.filterCanListExperience(

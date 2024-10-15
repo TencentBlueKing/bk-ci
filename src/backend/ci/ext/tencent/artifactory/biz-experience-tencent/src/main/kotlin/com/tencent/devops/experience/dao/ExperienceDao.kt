@@ -92,7 +92,10 @@ class ExperienceDao {
         remark: String?,
         versionTitle: String?,
         creator: String?,
-        online: Boolean?
+        online: Boolean?,
+        classify: String?,
+        experienceName: String?,
+        platform: String?
     ): Result<TExperienceRecord> {
         with(TExperience.T_EXPERIENCE) {
             return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
@@ -106,6 +109,9 @@ class ExperienceDao {
                 .let { if (versionTitle != null) it.and(VERSION_TITLE.like("%$versionTitle%")) else it }
                 .let { if (creator != null) it.and(CREATOR.like("%$creator%")) else it }
                 .let { if (online != null) it.and(ONLINE.eq(online)) else it }
+                .let { if (classify != null) it.and(CLASSIFY.like("%$classify%")) else it }
+                .let { if (experienceName != null) it.and(EXPERIENCE_NAME.like("%$experienceName%")) else it }
+                .let { if (platform != null) it.and(PLATFORM.eq(platform)) else it }
                 .orderBy(CREATE_TIME.desc()).fetch()
         }
     }
