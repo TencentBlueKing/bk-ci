@@ -30,7 +30,6 @@ package com.tencent.devops.process.service
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
 import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -40,6 +39,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.common.pipeline.pojo.cascade.RepoRefCascadeParam
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED
@@ -88,7 +88,7 @@ class ParamFacadeService @Autowired constructor(
             } else if (it.type == BuildFormPropertyType.SUB_PIPELINE) {
                 filterParams.add(addSubPipelineProperties(userId, projectId, pipelineId, it))
             } else if (it.type == BuildFormPropertyType.REPO_REF) {
-                filterParams.add(addRepoRefs(projectId, it, userId))
+                filterParams.add(addRepoRefs(projectId, it))
             } else {
                 filterParams.add(it)
             }
@@ -118,7 +118,7 @@ class ParamFacadeService @Autowired constructor(
             } else if (property.type == BuildFormPropertyType.SUB_PIPELINE) {
                 addSubPipelineProperties(userId, projectId, pipelineId, property)
             } else if (property.type == BuildFormPropertyType.REPO_REF) {
-                addRepoRefs(projectId, property, userId, search)
+                addRepoRefs(projectId, property)
             } else {
                 property
             }
@@ -344,8 +344,7 @@ class ParamFacadeService @Autowired constructor(
             glob = property.glob,
             properties = property.properties,
             searchUrl = searchUrl,
-            replaceKey = replaceKey,
-            branch = property.branch
+            replaceKey = replaceKey
         )
     }
 
@@ -421,66 +420,17 @@ class ParamFacadeService @Autowired constructor(
     private fun addRepoRefs(
         projectId: String,
         formProperty: BuildFormProperty,
-        userId: String?,
-        search: String? = null
     ): BuildFormProperty {
-        val repositoryTypes = listOf(
-            ScmType.CODE_GIT,
-            ScmType.GITHUB,
-            ScmType.CODE_SVN,
-            ScmType.CODE_TGIT,
-            ScmType.CODE_GITLAB
-        ).joinToString(separator = ",") { it.name }
-        val codeLibOptions = if ((!userId.isNullOrBlank())) {
-            // 检查代码库的权限， 只返回用户有权限代码库
-            val codeLibs = getPermissionCodelibList(
-                userId = userId,
-                projectId = projectId,
-                scmType = repositoryTypes,
-                aliasName = search
-            )
-            logger.info("[$userId|$projectId] Get the permission code lib list ($codeLibs)")
-            codeLibs.map { BuildFormValue(it.aliasName, it.aliasName) }
-        } else {
-            // 该接口没有搜索字段
-            val codeAliasName = codeService.listRepository(projectId, repositoryTypes)
-            codeAliasName.map { BuildFormValue(it.aliasName, it.aliasName) }
-        }
-        val codeLibSearchUrl = getCodeLibSearchUrl(
-            projectId = projectId,
-            permission = Permission.LIST,
-            scmType = repositoryTypes
-        )
-        val replaceKey = "{words}"
-        val repoHashIdReplaceKey = "{repoNameWords}"
-        val repositoryConfig = codeService.getRepositoryConfig(
-            repoName = formProperty.defaultValue.toString(),
-            repoHashId = null
-        )
-        val branchOptions = try {
-            codeService.getRepoRefs(
-                projectId = projectId,
-                repositoryConfig = repositoryConfig
-            ).map { BuildFormValue(it, it) }
-        } catch (e: Exception) {
-            logger.warn("projectId:$projectId,repoConfig:$repositoryConfig add repo refs error", e)
-            listOf()
-        }
         return copyFormProperty(
             property = formProperty,
-            options = fixDefaultOptions(options = codeLibOptions, defaultValue = formProperty.defaultValue.toString()),
-            searchUrl = codeLibSearchUrl,
-            replaceKey = replaceKey
-        ).copy(
-            branchOptions = branchOptions,
-            branchReplaceKey = replaceKey,
-            branchSearchUrl = getBranchSearchUrl(
+            options = listOf()
+        ).let {
+            it.cascadeProps = RepoRefCascadeParam().getProps(
                 projectId = projectId,
-                repoHashId = repoHashIdReplaceKey,
-                repositoryType = RepositoryType.NAME
-            ),
-            defaultBranch = formProperty.defaultBranch
-        )
+                prop = formProperty
+            )
+            it
+        }
     }
 
     private fun getCodeLibSearchUrl(projectId: String, permission: Permission?, scmType: String?): String {
@@ -500,13 +450,6 @@ class ParamFacadeService @Autowired constructor(
         repositoryType: RepositoryType = RepositoryType.ID
     ) = "/process/api/user/buildParam/$projectId/$repoHashId/gitRefs?search={words}&" +
             "repositoryType=${repositoryType.name}"
-
-    private fun getBranchSearchUrl(
-        projectId: String,
-        repoHashId: String,
-        repositoryType: RepositoryType = RepositoryType.ID
-    ) = "/process/api/user/buildParam/$projectId/repository/refs?search={words}&" +
-            "repositoryType=${repositoryType.name}&repositoryId=$repoHashId"
 
     companion object {
         private val logger = LoggerFactory.getLogger(ParamFacadeService::class.java)

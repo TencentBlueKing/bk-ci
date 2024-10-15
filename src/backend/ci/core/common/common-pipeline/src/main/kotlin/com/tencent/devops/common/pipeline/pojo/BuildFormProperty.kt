@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.cascade.BuildCascadeProps
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建模型-表单元素属性")
@@ -90,16 +91,6 @@ data class BuildFormProperty(
     val valueNotEmpty: Boolean? = false,
     @get:Schema(title = "页面所需内容，后台仅保存，不做处理", required = false)
     val payload: Any? = null,
-    @get:Schema(title = "上次构建的分支取值", required = false)
-    var branch: String? = null,
-    @get:Schema(title = "默认分支", required = false)
-    var defaultBranch: String? = null,
-    @get:Schema(title = "分支搜索url, 当是下拉框选项时，列表值从url获取不再从option获取", required = false)
-    var branchSearchUrl: String? = null,
-    @get:Schema(title = "替换搜索url中的分支搜素关键字", required = false)
-    val branchReplaceKey: String? = null,
-    @get:Schema(title = "替换搜索url中的代码库HashId搜素关键字", required = false)
-    val repoNameReplaceKey: String? = null,
-    @get:Schema(title = "分支下拉框列表", required = false)
-    var branchOptions: List<BuildFormValue>? = emptyList()
+    @get:Schema(title = "级联选择器属性", required = false)
+    var cascadeProps: BuildCascadeProps? = null
 )

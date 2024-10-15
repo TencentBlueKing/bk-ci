@@ -27,10 +27,14 @@
 
 package com.tencent.devops.process.engine.compatibility.v2
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.cascade.RepoRefCascadeParam
+import com.tencent.devops.common.pipeline.utils.BuildFormPropertyUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -67,26 +71,27 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
 //            }
                 param.type == BuildFormPropertyType.REPO_REF -> {
                     // 新的变量类型，需手动插入值
-                    val (repoNameKey, branchKey) = BuildParameters.getRepoRefVariableName(key)
-                    paramsMap[repoNameKey] = BuildParameters(
-                        key = repoNameKey,
-                        value = paramValues[repoNameKey] ?: param.defaultValue ?: "",
-                        valueType = param.type,
-                        readOnly = param.readOnly,
-                        desc = param.desc,
-                        defaultValue = param.defaultValue,
-                        relKey = key
-                    )
-                    paramsMap[branchKey] = BuildParameters(
-                        key = branchKey,
-                        value = paramValues[branchKey] ?: param.defaultBranch ?: "",
-                        valueType = param.type,
-                        readOnly = param.readOnly,
-                        desc = param.desc,
-                        defaultValue = param.defaultBranch,
-                        relKey = key
-                    )
-                    return@forEach
+                    val value = try {
+                        JsonUtil.to(
+                            json = paramValues[key] ?: paramValues[param.id] ?: "",
+                            typeReference = object : TypeReference<Map<String, String>>() {}
+                        )
+                    } catch (ignored: Exception) {
+                        logger.warn("parse repo ref error, key: $key, value: ${paramValues[key]}")
+                        return@forEach
+                    }
+                    val variableInfo = BuildFormPropertyUtils.getCascadeVariable(key, param.type)
+                    variableInfo.map { (subKey, paramKey) ->
+                        BuildParameters(
+                            key = paramKey,
+                            value = value[subKey] ?: "",
+                            valueType = param.type,
+                            readOnly = param.readOnly,
+                            desc = param.desc,
+                            defaultValue = (param.defaultValue as Map<String, String>)[subKey],
+                            relKey = key
+                        )
+                    }
                 }
 
                 else -> {
