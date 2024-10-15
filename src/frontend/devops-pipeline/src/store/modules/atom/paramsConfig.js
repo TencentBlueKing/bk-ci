@@ -138,23 +138,6 @@ export const DEFAULT_PARAM = {
         required: true,
         readOnly: false
     },
-    [CONTAINER_TYPE]: {
-        id: 'buildResource',
-        name: 'buildResource',
-        defaultValue: '',
-        defalutValueLabel: 'defaultValue',
-        defaultValueLabelTips: 'defaultValueDesc',
-        containerType: {
-            os: 'LINUX',
-            buildType: 'DOCKER'
-        },
-        desc: '',
-        options: [],
-        type: CONTAINER_TYPE,
-        typeDesc: 'buildResource',
-        required: true,
-        readOnly: false
-    },
     [SUB_PIPELINE]: {
         id: 'subPipeline',
         name: 'subPipeline',
