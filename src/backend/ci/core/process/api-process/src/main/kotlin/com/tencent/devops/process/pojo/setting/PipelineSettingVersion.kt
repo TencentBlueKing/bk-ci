@@ -71,7 +71,9 @@ data class PipelineSettingVersion(
     @get:Schema(title = "并发时,设定的group", required = false)
     var concurrencyGroup: String?,
     @get:Schema(title = "并发时,是否相同group取消正在执行的流水线", required = false)
-    var concurrencyCancelInProgress: Boolean?
+    var concurrencyCancelInProgress: Boolean?,
+    @get:Schema(title = "并发构建数量限制", required = false)
+    var maxConRunningQueueSize: Int? = null // MULTIPLE类型时，并发构建数量限制
 ) {
     companion object {
 
@@ -90,7 +92,8 @@ data class PipelineSettingVersion(
             maxQueueSize = setting.maxQueueSize,
             buildNumRule = setting.buildNumRule,
             concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
-            concurrencyGroup = setting.concurrencyGroup
+            concurrencyGroup = setting.concurrencyGroup,
+            maxConRunningQueueSize = setting.maxConRunningQueueSize
         )
     }
 }

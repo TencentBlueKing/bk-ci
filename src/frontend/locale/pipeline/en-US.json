@@ -149,6 +149,10 @@
   "downloadLog": "Download Log",
   "hideDebugLog": "Hide Debug Log",
   "showDebugLog": "Show Debug Log",
+  "successPraise": "Like Success",
+  "successDownPraise": "Down Like Success",
+  "successCancelPraise": "Cancel Like",
+  "successCancelDownPraise": "Cancel Down Like",
   "stageReview": {
     "stageInConditions": "Stage-In conditions",
     "approvalFlow": "Approval flow",
@@ -184,13 +188,16 @@
     "waitApproval": "Waiting for previous approval. Approver: {0}",
     "opinionRequired": "When reject is selected, approval opinion is required",
     "userInputTips": "Please enter approvers. Pipeline variable is supported.",
+    "userGroupInputTips": "Please enter user group. Pipeline variable is supported.",
     "reviewRequire": "Name of approval flow and approvers are required",
     "addFlow": "Create approval step",
     "approveBy": "Approved by {0}: ",
     "editVariable": "Edit variable: ",
     "approveOpinion": "Approval Opinion: ",
     "approveTime": "Approval Time: ",
-    "approver": "Approver: "
+    "approver": "Approver: ",
+    "reviewer": "Reviewer",
+    "groups": "User Group"
   },
   "execDetail": {
     "log": "Log",
@@ -373,7 +380,11 @@
     "mdLink": "Markdown Link",
     "conCopySuc": "Copied Succeed",
     "additionDesc": "Description",
-    "voice": "Voice"
+    "voice": "Voice",
+    "concurrentMaxConcurrency": "Maximum Concurrency",
+    "concurrentTimeout": "Queue Timeout for Exceeding Limit",
+    "maxConRunningQueueSizeTips": "The range of maximum concurrency is between 1 and 200-200之间",
+    "maxConcurrencyPlaceholder": "Default to system settings when not specified"
   },
   "template": {
     "addTemplate": "New Template",
@@ -601,7 +612,7 @@
     "downloading": "Downloading ",
     "copySuc": " Copy {0} to custom artifactory successfully",
     "buildMsg": "Build Message"
-},
+  },
   "preview": {
     "build": "Build",
     "introVersion": "Recommended Version",
@@ -649,6 +660,7 @@
     "checkDescInfo": "The review function will end on {0}, and overdue will be automatically identified as Stage success status",
     "abort": "Cancel (immediately mark Stage success status)",
     "agree": "Continue execution",
+    "aiAnalysis": "AI service is not yet deployed, if you need to use it, please contact the administrator to deploy it.<a href=\"{0}\" target=\"_blank\" style=\"color:#3a84ff\">Learn more</a>",
     "statusMap": {
       "PAUSE": "Pause",
       "RUNNING": "Running",
