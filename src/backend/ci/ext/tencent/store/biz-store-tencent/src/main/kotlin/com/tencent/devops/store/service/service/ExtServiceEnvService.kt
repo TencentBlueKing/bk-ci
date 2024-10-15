@@ -72,23 +72,23 @@ class ExtServiceEnvService @Autowired constructor(
             )
         }
         // 判断用户的项目是否安装了该扩展服务
-        val extServiceFeatureRecord = extServiceFeatureDao.getServiceByCode(dslContext, serviceCode)!!
-        if (!extServiceFeatureRecord.publicFlag) {
-            val flag = storeProjectRelDao.isInstalledByProject(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                storeCode = serviceCode,
-                storeType = StoreTypeEnum.SERVICE.type.toByte()
-            )
-            if (!flag) {
-                return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf("$serviceCode+$version"),
-                    data = false,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                )
-            }
-        }
+//        val extServiceFeatureRecord = extServiceFeatureDao.getServiceByCode(dslContext, serviceCode)!!
+//        if (!extServiceFeatureRecord.publicFlag) {
+//            val flag = storeProjectRelDao.isInstalledByProject(
+//                dslContext = dslContext,
+//                projectCode = projectCode,
+//                storeCode = serviceCode,
+//                storeType = StoreTypeEnum.SERVICE.type.toByte()
+//            )
+//            if (!flag) {
+//                return I18nUtil.generateResponseDataObject(
+//                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+//                    params = arrayOf("$serviceCode+$version"),
+//                    data = false,
+//                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+//                )
+//            }
+//        }
         extServiceEnvDao.updateExtServiceEnvInfo(dslContext, extServiceRecord.id, updateExtServiceEnvInfo)
         return Result(true)
     }
