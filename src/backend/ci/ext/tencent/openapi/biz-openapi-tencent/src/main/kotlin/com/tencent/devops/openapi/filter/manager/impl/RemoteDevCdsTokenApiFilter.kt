@@ -30,15 +30,15 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.DEVX_HEADER_CDS_TOKEN
 import com.tencent.devops.common.api.auth.DEVX_HEADER_NGGW_CLIENT_ADDRESS
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.openapi.filter.manager.ApiFilterFlowState
 import com.tencent.devops.openapi.filter.manager.ApiFilterManager
 import com.tencent.devops.openapi.filter.manager.FilterContext
+import com.tencent.devops.remotedev.api.service.ServiceSDKResource
+import com.tencent.devops.remotedev.pojo.CdsToken
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -52,21 +52,17 @@ class RemoteDevCdsTokenApiFilter(
         private const val CACHE_EXPIRE_MINUTES = 1L
     }
 
-    @Value("\${devx.aes.key:}")
-    private val aesKey: String = ""
-
-    @Value("\${devx.aes.iv:}")
-    private val aesIV: String = ""
-
     private val cdsCache = Caffeine.newBuilder()
         .maximumSize(CACHE_MAX_SIZE)
         .expireAfterWrite(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
-        .build<String, List<String> /*项目id、登录人(创建人)、区域id、cdsId*/> { content ->
-            var value = ""
+        .build<String, CdsToken> { content ->
             kotlin.runCatching {
-                value = AESUtil.decryptWithIV(aesKey, aesIV, content)
-                return@build value.split("::::")
-            }.onFailure { logger.error("get cdsTokenCheck fail.|$content|$value", it) }.getOrNull() ?: emptyList()
+                client.get(ServiceSDKResource::class).checkCdsToken(
+                    cdsToken = content
+                ).data
+            }.onFailure {
+                logger.error("get cdsTokenCheck fail.|$content", it)
+            }.getOrNull() ?: CdsToken(projectId = "", userId = "", regionId = "", hostName = "")
         }
 
     /*返回true时执行check逻辑*/
@@ -87,7 +83,7 @@ class RemoteDevCdsTokenApiFilter(
         }
 
         val cache = cdsCache.get(bkCdsToken)
-        if (cache?.find { it.isNotBlank() } == null) {
+        if (cache?.hostName.isNullOrBlank()) {
             logger.info("Desktop sdk access openapi with illegal cds token($bkCdsToken).")
             requestContext.requestContext.abortWith(
                 Response.status(Response.Status.BAD_REQUEST)
@@ -95,8 +91,8 @@ class RemoteDevCdsTokenApiFilter(
             )
             return ApiFilterFlowState.BREAK
         }
-        val ip = cache.getOrNull(3)?.substringAfter(".") ?: ""
-        val user = cache.getOrNull(1) ?: ""
+        val ip = cache?.hostName?.substringAfter(".") ?: ""
+        val user = cache?.userId ?: ""
         requestContext.requestContext.headers[DEVX_HEADER_NGGW_CLIENT_ADDRESS]?.set(0, null)
         if (requestContext.requestContext.headers[DEVX_HEADER_NGGW_CLIENT_ADDRESS] != null) {
             requestContext.requestContext.headers[DEVX_HEADER_NGGW_CLIENT_ADDRESS]?.set(0, ip)
