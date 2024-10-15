@@ -514,12 +514,7 @@ class PipelineBuildWebhookService @Autowired constructor(
 //            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
 //        )
         val version = webhookCommit.version ?: pipelineInfo.version
-        // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
-        var pipelineOauthUser = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
-        if (pipelineOauthUser.isNullOrBlank()) {
-            pipelineOauthUser = pipelineInfo.lastModifyUser
-        }
-        checkPermission(pipelineOauthUser, projectId = projectId, pipelineId = pipelineId)
+        checkPermission(userId, projectId = projectId, pipelineId = pipelineId)
 
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
