@@ -279,7 +279,9 @@ class PipelineBuildTaskDao {
         projectId: String,
         buildId: String,
         containerId: String?,
-        statusSet: Collection<BuildStatus>?
+        statusSet: Collection<BuildStatus>?,
+        startTaskSeq: Int? = null,
+        endTaskSeq: Int? = null
     ): List<PipelineBuildTask> {
         return with(T_PIPELINE_BUILD_TASK) {
             val where = dslContext.selectFrom(this)
@@ -288,6 +290,8 @@ class PipelineBuildTaskDao {
             if (!statusSet.isNullOrEmpty()) {
                 where.and(STATUS.`in`(statusSet.map { it.ordinal }))
             }
+            startTaskSeq?.let { where.and(TASK_SEQ.ge(startTaskSeq)) }
+            endTaskSeq?.let { where.and(TASK_SEQ.le(endTaskSeq)) }
             where.orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
     }
