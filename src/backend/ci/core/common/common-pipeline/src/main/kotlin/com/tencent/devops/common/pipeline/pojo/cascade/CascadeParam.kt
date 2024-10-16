@@ -34,17 +34,11 @@ abstract class CascadeParam constructor(
     }
 
     private fun getDefaultValue(prop: BuildFormProperty): Map<String, String> {
-        return try {
-            val defaultValue =
-                JsonUtil.to(prop.defaultValue.toString(), object : TypeReference<Map<String, String>>() {})
-            if (!chain.find { !defaultValue.containsKey(it) }.isNullOrBlank()) {
-                mapOf()
-            } else {
-                defaultValue
-            }
-        } catch (e: JsonProcessingException) {
-            logger.warn("parse default value|prop=$prop", e)
+        val defaultValue = prop.defaultValue as Map<String, String>
+        return if (!chain.find { !defaultValue.containsKey(it) }.isNullOrBlank()) {
             mapOf()
+        } else {
+            defaultValue
         }
     }
 
