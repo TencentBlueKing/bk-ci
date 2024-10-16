@@ -26,11 +26,11 @@ abstract class CascadeParam constructor(
                 projectId = projectId
             )
         }
-        // 链式处理
-        for (i in 0 until chain.size - 1) {
-            map[chain[i]]!!.children = map[chain[i + 1]]
+        // 链式关系处理
+        for (i in chain.size - 1 downTo 1) {
+            map[chain[i-1]]?.children = map[chain[i]]
         }
-        return map[chain[0]]!!
+        return map[chain.first()]!!
     }
 
     private fun getDefaultValue(prop: BuildFormProperty): Map<String, String> {
@@ -58,4 +58,3 @@ abstract class CascadeParam constructor(
 interface CascadeParamPropsHandler {
     fun handle(key: String, defaultValue: String, projectId: String): BuildCascadeProps
 }
-

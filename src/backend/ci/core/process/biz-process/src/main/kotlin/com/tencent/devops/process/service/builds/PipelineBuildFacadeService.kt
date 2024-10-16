@@ -270,7 +270,6 @@ class PipelineBuildFacadeService(
                     }
 
                     CascadePropertyUtils.supportCascadeParam(param.type) -> {
-                        // :TODO merge 级联参数
                         CascadePropertyUtils.getLatestCascadeParamsValue(
                             param = latestParamsMap,
                             type = param.type,
