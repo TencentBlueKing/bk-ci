@@ -419,7 +419,7 @@ class ParamFacadeService @Autowired constructor(
 
     private fun addRepoRefs(
         projectId: String,
-        formProperty: BuildFormProperty,
+        formProperty: BuildFormProperty
     ): BuildFormProperty {
         return copyFormProperty(
             property = formProperty,

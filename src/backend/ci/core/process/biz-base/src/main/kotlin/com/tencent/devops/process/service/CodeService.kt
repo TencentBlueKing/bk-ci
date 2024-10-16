@@ -42,7 +42,6 @@ import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceSvnResource
 import com.tencent.devops.repository.pojo.CodeSvnRepository
-import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.scm.pojo.enums.SvnFileType
 import com.tencent.devops.ticket.api.ServiceCredentialResource

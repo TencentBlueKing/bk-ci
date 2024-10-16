@@ -25,7 +25,7 @@ abstract class CascadeParam constructor(
         }
         // 链式关系处理
         for (i in chain.size - 1 downTo 1) {
-            map[chain[i-1]]?.children = map[chain[i]]
+            map[chain[i - 1]]?.children = map[chain[i]]
         }
         return map[chain.first()]!!
     }
