@@ -425,7 +425,8 @@ class StorePipelineServiceImpl @Autowired constructor(
             pipelineId = pipelineId,
             channelCode = ChannelCode.AM
         ).data != null
-        if (flag) {
+        // 公共项目直接更新
+        if (flag && storeCode == null) {
             client.get(ServicePipelineSettingResource::class)
                 .updatePipelineModel(
                     userId = userId,
