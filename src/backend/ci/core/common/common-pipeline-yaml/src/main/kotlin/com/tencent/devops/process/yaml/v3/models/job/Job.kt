@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.process.yaml.v3.models.IfField
 import com.tencent.devops.process.yaml.v3.models.step.Step
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -51,7 +52,7 @@ data class Job(
     val services: List<Service>? = null,
     @get:Schema(title = "if")
     @JsonProperty("if")
-    val ifField: String? = null,
+    val ifField: IfField? = null,
     val steps: List<Step>? = null,
     @get:Schema(title = "if-modify")
     @JsonProperty("if-modify")

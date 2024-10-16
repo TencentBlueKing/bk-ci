@@ -43,7 +43,6 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCas
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
@@ -280,7 +279,7 @@ class BuildEndControl @Autowired constructor(
 
     private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String, debug: Boolean) {
         val model = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
         val buildNoObj = triggerContainer.buildNo ?: return
 
         if (buildNoObj.buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
@@ -425,7 +424,7 @@ class BuildEndControl @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                     params = arrayOf(nextBuild.buildId)
                 )
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+            val triggerContainer = model.getTriggerContainer()
             pipelineEventDispatcher.dispatch(
                 PipelineBuildStartEvent(
                     source = "build_finish_$buildId",

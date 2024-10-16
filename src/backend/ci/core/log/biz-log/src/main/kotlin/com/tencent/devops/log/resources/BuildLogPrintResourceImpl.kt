@@ -226,7 +226,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             containerHashId = jobId,
             executeCount = executeCount,
             jobId = null,
-            stepId = null
+            stepId = null,
+            reverse = false
         )
         recordMultiLogCount(initLogs.data?.logs?.size ?: 0)
         return initLogs

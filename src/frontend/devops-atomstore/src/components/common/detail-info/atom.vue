@@ -52,7 +52,10 @@
                     <span class="ml6">{{ detail.score }}</span>
                 </section>
                 <section class="num-wraper">
-                    <img :src="getHotIcon(detail.hotFlag)" class="hot-icon">
+                    <img
+                        :src="getHotIcon(detail.hotFlag)"
+                        class="hot-icon"
+                    >
                     <span class="ml3">{{ getShowNum(detail.recentExecuteNum) }}</span>
                 </section>
             </h3>

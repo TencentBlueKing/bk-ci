@@ -32,12 +32,13 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.DEVX_HEADER_CDS_TOKEN
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ClientTips
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeData
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeResp
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
-import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeData
-import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeResp
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -201,4 +202,14 @@ interface UserRemoteDevResource {
         @HeaderParam(DEVX_HEADER_CDS_TOKEN)
         cdsToken: String
     ): Result<WeSecProjectWorkspace?>
+
+    @Operation(summary = "点击进入云桌面时客户端获取加载时Tips")
+    @GET
+    @Path("/client/tips")
+    fun clientTips(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId")
+        projectId: String?
+    ): Result<List<ClientTips>>
 }

@@ -48,9 +48,7 @@ import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
@@ -234,22 +232,6 @@ class StartControl @Autowired constructor(
                 WorkspaceStatus.STARTING.name
             )
         )
-    }
-
-    fun afterStartWorkspace(event: RemoteDevUpdateEvent) {
-        if (!event.status) {
-            // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
-            val workspaceInfo = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
-                .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
-            when {
-                workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> event.status = true
-                else -> logger.warn(
-                    "start workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
-                )
-            }
-        }
-        doStartWS(event.status, event.userId, event.workspaceName, event.environmentHost, event.errorMsg)
     }
 
     fun doStartWS(
