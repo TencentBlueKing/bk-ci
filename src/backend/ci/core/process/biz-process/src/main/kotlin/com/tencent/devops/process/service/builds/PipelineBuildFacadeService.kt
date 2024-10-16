@@ -2317,22 +2317,30 @@ class PipelineBuildFacadeService(
         try {
             redisLock.lock()
 
-            val modelDetail = buildDetailService.get(projectId, buildId) ?: return
-            val alreadyCancelUser = modelDetail.cancelUserId
+            val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+            if (buildInfo == null) {
+                logger.warn("The build($buildId) of pipeline($pipelineId) is not exist")
+                throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                    params = arrayOf(buildId)
+                )
+            }
 
-            if (BuildStatus.parse(modelDetail.status).isFinish()) {
+            if (buildInfo.status.isFinish()) {
                 logger.warn("The build $buildId of project $projectId already finished ")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_OPERATE
                 )
             }
 
-            if (modelDetail.pipelineId != pipelineId) {
-                logger.warn("shutdown error: input|$pipelineId| buildId-pipeline| ${modelDetail.pipelineId}| $buildId")
+            if (buildInfo.pipelineId != pipelineId) {
+                logger.warn("shutdown error: input|$pipelineId| buildId-pipeline| ${buildInfo.pipelineId}| $buildId")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
                 )
             }
+
             val finalTerminateFlag = if (terminateFlag == true) {
                 terminateFlag
             } else {
@@ -2341,6 +2349,7 @@ class PipelineBuildFacadeService(
                 val intervalTime = System.currentTimeMillis() - cancelActionTime
                 var flag = false // 是否强制终止
                 if (intervalTime <= cancelIntervalLimitTime * 1000) {
+                    val alreadyCancelUser = buildRecordService.getBuildCancelUser(pipelineId, buildId, buildInfo.executeCount)
                     logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
                     val timeTip = cancelIntervalLimitTime - intervalTime / 1000
                     throw ErrorCodeException(
@@ -2361,16 +2370,6 @@ class PipelineBuildFacadeService(
             }
             if (pipelineInfo.channelCode != channelCode) {
                 return
-            }
-
-            val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
-            if (buildInfo == null) {
-                logger.warn("The build($buildId) of pipeline($pipelineId) is not exist")
-                throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                    params = arrayOf(buildId)
-                )
             }
 
             val tasks = pipelineTaskService.getRunningTask(projectId, buildId)
