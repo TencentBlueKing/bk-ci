@@ -33,10 +33,10 @@
         class="clear"
     >
         <bk-checkbox
-            v-model="form.value"
+            v-model="form.value "
         >
         </bk-checkbox>
-        <span class="clear-name">{{ form.chineseName }}</span>
+        <span class="clear-name">{{ getParamKey(form) }}</span>
     </div>
 
     <bk-radio-group
@@ -84,6 +84,9 @@
 
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
+            },
+            getParamKey (param) {
+                return param.chineseName || (param.key || '').replace(/^variables\./, '')
             }
         }
     }
