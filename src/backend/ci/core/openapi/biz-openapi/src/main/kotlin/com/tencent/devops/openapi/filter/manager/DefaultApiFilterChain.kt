@@ -30,7 +30,7 @@ package com.tencent.devops.openapi.filter.manager
 import com.tencent.devops.openapi.filter.manager.impl.AccessTokenFilter
 import com.tencent.devops.openapi.filter.manager.impl.ApiPathFilter
 import com.tencent.devops.openapi.filter.manager.impl.NoPermissionFilter
-import javax.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.container.ContainerRequestContext
 
 class DefaultApiFilterChain(
     private val managerCache: ApiFilterManagerCache
