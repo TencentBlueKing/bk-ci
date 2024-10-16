@@ -25,12 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.service.git
+package com.tencent.devops.process.service.commit.check.listener
 
-import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.process.pojo.mq.commit.check.TGitCommitCheckEvent
+import com.tencent.devops.process.service.commit.check.CodeWebhookService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-interface GitWebhookUnlockService {
-    fun addUnlockHookLockEvent(projectId: String, variables: Map<String, String>)
+@Component
+class TGitCommitCheckListener @Autowired constructor(
+    private val codeWebhookService: CodeWebhookService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<TGitCommitCheckEvent>(pipelineEventDispatcher) {
 
-    fun consumeUnlockHookLock(event: GitWebhookUnlockEvent)
+    override fun run(event: TGitCommitCheckEvent) {
+        codeWebhookService.consumeGitCommitCheckEvent(event)
+    }
 }

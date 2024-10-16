@@ -28,7 +28,6 @@
 package com.tencent.devops.plugin.listener
 
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.plugin.service.git.CodeWebhookService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -37,11 +36,7 @@ import org.springframework.stereotype.Component
 class CodeWebhookListener @Autowired constructor(
     private val codeWebhookService: CodeWebhookService
 ) {
-
-    fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) {
-        codeWebhookService.onBuildQueue(event = event)
-    }
-
+    // 迁移后，仅处理流水线构建结束的消息，开始构建的消息由process服务进行消费
     fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
         codeWebhookService.onBuildFinished(event = event)
     }

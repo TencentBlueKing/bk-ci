@@ -25,24 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.api.pojo
+package com.tencent.devops.process.service.commit.check.git
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
 
-data class GitCommitCheckInfo(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val repositoryConfig: RepositoryConfig,
-    val commitId: String,
-    val block: Boolean,
-    val triggerType: String = "",
-    val mergeRequestId: Long? = null,
-    val userId: String,
-    val webhookType: String,
-    val webhookEventType: String,
-    val enableCheck: Boolean,
-    val targetBranch: String?,
-    val pipelineName: String = "",
-    val startTaskId: String? = null
-)
+interface GitWebhookUnlockService {
+    fun addUnlockHookLockEvent(projectId: String, variables: Map<String, String>)
+
+    fun consumeUnlockHookLock(event: GitWebhookUnlockEvent)
+}

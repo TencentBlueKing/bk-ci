@@ -25,24 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.api.pojo
+package com.tencent.devops.process.pojo.mq.commit.check
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 
-data class GitCommitCheckInfo(
-    val projectId: String,
-    val pipelineId: String,
+/**
+ * Github PullRequest 检查事件
+ */
+@Event(MQ.EXCHANGE_GIT_COMMIT_CHECK_EVENT, MQ.ROUTE_GITHUB_COMMIT_CHECK_EVENT)
+data class GithubCommitCheckEvent(
+    override val projectId: String,
+    override val pipelineId: String,
     val buildId: String,
     val repositoryConfig: RepositoryConfig,
     val commitId: String,
-    val block: Boolean,
-    val triggerType: String = "",
-    val mergeRequestId: Long? = null,
-    val userId: String,
-    val webhookType: String,
-    val webhookEventType: String,
-    val enableCheck: Boolean,
-    val targetBranch: String?,
-    val pipelineName: String = "",
-    val startTaskId: String? = null
-)
+    val status: String,
+    val startedAt: Long?,
+    val conclusion: String?,
+    val completedAt: Long?,
+    val startTaskId: String? = null,
+    val targetBranch: String? = null,
+    override var actionType: ActionType = ActionType.REFRESH,
+    override val source: String,
+    override val userId: String,
+    override var delayMills: Int = 0
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

@@ -32,6 +32,7 @@ dependencies {
     api(project(":core:common:common-redis"))
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-websocket"))
+    api(project(":core:common:common-codecc"))
     api(project(":core:store:api-store"))
     api(project(":core:dispatch:api-dispatch"))
     api(project(":core:project:api-project"))
