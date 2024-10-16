@@ -49,12 +49,12 @@ class StoreBaseEnvExtQueryDao {
     fun getBaseExtEnvsByEnvId(
         dslContext: DSLContext,
         envId: String,
-        vararg fieldName: String?
+        vararg fieldNames: String?
     ): Result<TStoreBaseEnvExtRecord>? {
         return with(TStoreBaseEnvExt.T_STORE_BASE_ENV_EXT) {
             val conditions = mutableListOf<Condition>()
             conditions.add(ENV_ID.eq(envId))
-            val nonNullFieldNames = fieldName.filterNotNull() // 过滤掉null值
+            val nonNullFieldNames = fieldNames.filterNotNull() // 过滤掉null值
             if (nonNullFieldNames.isNotEmpty()) {
                 conditions.add(FIELD_NAME.`in`(nonNullFieldNames))
             }
