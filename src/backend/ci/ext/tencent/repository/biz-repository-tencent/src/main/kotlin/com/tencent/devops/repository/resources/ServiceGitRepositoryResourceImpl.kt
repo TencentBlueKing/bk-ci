@@ -102,8 +102,23 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
         return repositoryService.moveGitProjectToGroup(userId, groupCode, RepositoryConfigUtils.buildConfig(repoId, null), tokenType)
     }
 
-    override fun getFileContent(repoId: String, filePath: String, reversion: String?, branch: String?, repositoryType: RepositoryType?): Result<String> {
-        return Result(repoFileService.getFileContent(RepositoryConfigUtils.buildConfig(repoId, repositoryType), filePath, reversion, branch))
+    override fun getFileContent(
+        repoId: String,
+        filePath: String,
+        reversion: String?,
+        branch: String?,
+        repositoryType: RepositoryType?,
+        projectId: String?
+    ): Result<String> {
+        return Result(
+            repoFileService.getFileContent(
+                repositoryConfig = RepositoryConfigUtils.buildConfig(repoId, repositoryType),
+                filePath = filePath,
+                reversion = reversion,
+                branch = branch,
+                projectId = projectId ?: ""
+            )
+        )
     }
 
     override fun updateTGitFileContent(

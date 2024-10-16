@@ -214,9 +214,12 @@ interface ServiceGitRepositoryResource {
         @Parameter(description = "分支（git）")
         @QueryParam("branch")
         branch: String?,
-        @Parameter(description = "代码库请求类型", required = true)
+        @Parameter(description = "代码库请求类型", required = false)
         @QueryParam("repositoryType")
-        repositoryType: RepositoryType?
+        repositoryType: RepositoryType?,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String? = null
     ): Result<String>
 
     @Operation(summary = "更新代码仓库单个文件内容")

@@ -29,6 +29,8 @@ package com.tencent.devops.store.devx.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.APPROVE
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.BUILD
@@ -37,9 +39,9 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
-import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
 import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.constant.NUM_FIVE
 import com.tencent.devops.common.api.constant.NUM_FOUR
 import com.tencent.devops.common.api.constant.NUM_ONE
@@ -50,7 +52,10 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.util.JsonSchemaUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.api.util.YamlUtil
@@ -60,7 +65,6 @@ import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
@@ -68,10 +72,10 @@ import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreBuildInfoDao
+import com.tencent.devops.store.common.service.StoreArchiveService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.pojo.common.CONFIG_JSON_NAME
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
@@ -82,16 +86,19 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
+import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import com.tencent.devops.store.pojo.devx.BkConfigInfo
 import com.tencent.devops.store.pojo.devx.OsConfigInfo
 import com.tencent.devops.store.pojo.devx.SignatureConfigInfo
+import com.tencent.devops.store.pojo.devx.constants.KEY_BUILD_DIR
 import com.tencent.devops.store.pojo.devx.constants.KEY_FRAMEWORK_CODE
 import com.tencent.devops.store.pojo.devx.constants.KEY_MAX_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_MIN_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_NEED_VISITED_SITE_INFOS
 import com.tencent.devops.store.pojo.devx.constants.KEY_NET_POLICY_INFO
+import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_NAME_WITH_NAMESPACE
 import com.tencent.devops.store.pojo.devx.enums.FrameworkCodeEnum
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
@@ -99,6 +106,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.io.File
 import java.net.URLEncoder
 
 @Primary
@@ -112,12 +120,18 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
     private val storeBuildInfoDao: StoreBuildInfoDao,
     private val storeCommonService: StoreCommonService,
+    private val storeArchiveService: StoreArchiveService,
     private val storeInnerPipelineConfig: StoreInnerPipelineConfig,
     private val client: Client
 ) : StoreReleaseSpecBusService {
 
     companion object {
-        private const val KEY_OS_RUN_INFO = "osRunInfo"
+        private const val KEY_WINDOWS_RUN_INFO = "windowsRunInfo"
+        private const val KEY_LINUX_RUN_INFO = "linuxRunInfo"
+        private const val KEY_DARWIN_RUN_INFO = "darwinRunInfo"
+        private const val KEY_WINDOWS_DEFAULT_SCRIPT = "windowsDefaultScript"
+        private const val KEY_LINUX_DEFAULT_SCRIPT = "linuxDefaultScript"
+        private const val KEY_DARWIN_DEFAULT_SCRIPT = "darwinDefaultScript"
     }
 
     @Value("\${store.devx.sign.windows.supportFileTypes:exe}")
@@ -155,7 +169,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             }
             val repositoryInfo = createGitRepositoryResult.data
             repositoryInfo?.let {
-                extBaseFeatureInfo["repositoryNameWithNamespace"] = repositoryInfo.aliasName
+                extBaseFeatureInfo[KEY_REPOSITORY_NAME_WITH_NAMESPACE] = repositoryInfo.aliasName
             }
         }
     }
@@ -167,14 +181,43 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         val rdType = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.rdType
         if (rdType == RdTypeEnum.SELF_DEVELOPED.name) {
             val frameworkCode = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
-                dslContext = dslContext,
-                storeCode = storeCode,
-                storeType = storeType,
-                fieldName = KEY_FRAMEWORK_CODE
+                dslContext = dslContext, storeCode = storeCode, storeType = storeType, fieldName = KEY_FRAMEWORK_CODE
             )?.fieldValue
             if (frameworkCode != FrameworkCodeEnum.CUSTOM_FRAMEWORK.name) {
                 // 获取组件配置文件
-
+                val repositoryNameWithNamespace = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    fieldName = KEY_REPOSITORY_NAME_WITH_NAMESPACE
+                )?.fieldValue ?: ""
+                val configFileContent = client.get(ServiceGitRepositoryResource::class).getFileContent(
+                    repoId = repositoryNameWithNamespace,
+                    filePath = CONFIG_YML_NAME,
+                    reversion = null,
+                    branch = MASTER,
+                    repositoryType = RepositoryType.NAME,
+                    projectId = storeUpdateRequest.projectCode
+                ).data
+                if (configFileContent.isNullOrBlank()) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf(CONFIG_YML_NAME)
+                    )
+                }
+                val versionInfo = storeBaseCreateRequest.versionInfo
+                val version = versionInfo.version
+                // 解析配置文件中的环境信息
+                val storePkgEnvInfos = generateStorePkgEnvInfos(storeCode, version, configFileContent)
+                val storePkgInfoUpdateRequest = StorePkgInfoUpdateRequest(
+                    storeType = storeType,
+                    storeCode = storeCode,
+                    version = version,
+                    storePkgEnvInfos = storePkgEnvInfos
+                )
+                val bkStoreContext = storeUpdateRequest.bkStoreContext
+                val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
+                storeArchiveService.updateComponentPkgInfo(userId, storePkgInfoUpdateRequest)
             }
         }
     }
@@ -269,34 +312,98 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             dslContext = dslContext,
             storeId = storeId
         )
-        var osRunInfos: MutableSet<String>? = null
+        var queryDefaultScriptFlag = false
+        var windowsRunInfos: MutableSet<String>? = null
+        var linuxRunInfos: MutableSet<String>? = null
+        var darwinRunInfos: MutableSet<String>? = null
         baseEnvRecords?.forEach { baseEnvRecord ->
             val osName = baseEnvRecord.osName
-            if (osName == OSType.WINDOWS.name.lowercase()) {
-                if (osRunInfos == null) {
-                    osRunInfos = mutableSetOf()
-                }
-                // 暂时只支持windows操作系统的exe软件包签名
-                val osArch = baseEnvRecord.osArch ?: ""
-                val pkgPath = baseEnvRecord.pkgPath
-                val signatureFileKey = getSignatureFileKey()
-                val signFilePaths = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
-                    dslContext = dslContext,
-                    envId = baseEnvRecord.id,
-                    fieldName = signatureFileKey
-                )?.getOrNull(0)?.fieldValue ?: "[]"
-                val fileType = pkgPath.substringAfterLast(".")
+            val osArch = baseEnvRecord.osArch ?: ""
+            val pkgPath = baseEnvRecord.pkgPath
+            val signatureFileKey = getSignatureFileKey()
+            val extEnvs = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
+                dslContext = dslContext,
+                envId = baseEnvRecord.id,
+                fieldNames = arrayOf(
+                    signatureFileKey,
+                    OsConfigInfo::packScriptPath.name,
+                    OsConfigInfo::packagePath.name
+                )
+            )
+            val signFilePaths = extEnvs?.filter { it.fieldName == signatureFileKey }?.getOrNull(0)?.fieldValue ?: "[]"
+            val packScriptPath =
+                extEnvs?.filter { it.fieldName == OsConfigInfo::packScriptPath.name }?.getOrNull(0)?.fieldValue ?: ""
+            if (packScriptPath.isBlank()) {
+                // 用户没有配置脚本，则需查出平台默认的打包脚本
+                queryDefaultScriptFlag = true
+            }
+            val packagePath =
+                extEnvs?.filter { it.fieldName == OsConfigInfo::packagePath.name }?.getOrNull(0)?.fieldValue ?: ""
+            val fileType = pkgPath.substringAfterLast(".")
+            // 暂时只支持windows操作系统的exe软件包签名
+            if (osName.contains("win")) {
                 val signFlag = windowsSupportFileTypes.split(",").contains(fileType)
-                osRunInfos?.add("$osName:$osArch:$pkgPath:$signFilePaths:$signFlag")
+                if (windowsRunInfos == null) {
+                    windowsRunInfos = mutableSetOf()
+                }
+                windowsRunInfos?.add("$osName:$osArch:$pkgPath:$signFilePaths:$signFlag:$packScriptPath:$packagePath")
+            } else if (osName.contains("darwin")) {
+                if (darwinRunInfos == null) {
+                    darwinRunInfos = mutableSetOf()
+                }
+                darwinRunInfos?.add("$osName:$osArch:$pkgPath:$signFilePaths:false:$packScriptPath:$packagePath")
+            } else {
+                if (linuxRunInfos == null) {
+                    linuxRunInfos = mutableSetOf()
+                }
+                linuxRunInfos?.add("$osName:$osArch:$pkgPath:$signFilePaths:false:$packScriptPath:$packagePath")
             }
         }
-        return mutableMapOf(
-            KEY_STORE_CODE to baseRecord.storeCode,
-            KEY_STORE_TYPE to StoreTypeEnum.getStoreType(baseRecord.storeType.toInt()),
+        val storeCode = baseRecord.storeCode
+        val storeType = StoreTypeEnum.getStoreTypeObj(baseRecord.storeType.toInt())
+        val buildDir = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType,
+            fieldName = KEY_BUILD_DIR
+        )?.fieldValue ?: ""
+        val startParamMap = mutableMapOf(
+            KEY_STORE_CODE to storeCode,
+            KEY_STORE_TYPE to storeType.name,
             KEY_VERSION to baseRecord.version,
             KEY_PROJECT_ID to storeInnerPipelineConfig.innerPipelineProject,
-            KEY_OS_RUN_INFO to if (!osRunInfos.isNullOrEmpty()) JsonUtil.toJson(osRunInfos!!) else "[]"
+            KEY_WINDOWS_RUN_INFO to if (!windowsRunInfos.isNullOrEmpty()) JsonUtil.toJson(windowsRunInfos!!) else "[]",
+            KEY_LINUX_RUN_INFO to if (!linuxRunInfos.isNullOrEmpty()) JsonUtil.toJson(linuxRunInfos!!) else "[]",
+            KEY_DARWIN_RUN_INFO to if (!darwinRunInfos.isNullOrEmpty()) JsonUtil.toJson(darwinRunInfos!!) else "[]",
+            KEY_BUILD_DIR to buildDir
         )
+        if (queryDefaultScriptFlag) {
+            val frameworkCode = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
+                dslContext = dslContext, storeCode = storeCode, storeType = storeType, fieldName = KEY_FRAMEWORK_CODE
+            )?.fieldValue ?: ""
+            val buildInfoRecord = storeBuildInfoDao.getStoreBuildInfoByLanguage(dslContext, frameworkCode, storeType)
+            val script = buildInfoRecord?.script
+            if (script.isNullOrBlank()) {
+                return startParamMap
+            }
+            if (JsonSchemaUtil.validateJson(script)) {
+                val scriptMap = JsonUtil.toMap(script)
+                scriptMap[OS.WINDOWS.name.lowercase()]?.let {
+                    startParamMap[KEY_WINDOWS_DEFAULT_SCRIPT] = it.toString()
+                }
+                scriptMap[OS.LINUX.name.lowercase()]?.let {
+                    startParamMap[KEY_LINUX_DEFAULT_SCRIPT] = it.toString()
+                }
+                scriptMap[OS.MACOS.name.lowercase()]?.let {
+                    startParamMap[KEY_DARWIN_DEFAULT_SCRIPT] = it.toString()
+                }
+            } else {
+                startParamMap[KEY_WINDOWS_DEFAULT_SCRIPT] = script
+                startParamMap[KEY_LINUX_DEFAULT_SCRIPT] = script
+                startParamMap[KEY_DARWIN_DEFAULT_SCRIPT] = script
+            }
+        }
+        return startParamMap
     }
 
     override fun getStoreRunPipelineStatus(buildId: String?, startFlag: Boolean): StoreStatusEnum? {
@@ -316,7 +423,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         osArch: String?,
         queryConfigFileFlag: Boolean?
     ): List<StorePkgEnvInfo> {
-        val storePkgEnvInfos = mutableListOf<StorePkgEnvInfo>()
+        var storePkgEnvInfos = mutableListOf<StorePkgEnvInfo>()
         if (queryConfigFileFlag == true) {
             val filePath = URLEncoder.encode("$storeCode/$version/$CONFIG_YML_NAME", Charsets.UTF_8.name())
             val configFileContent =
@@ -325,29 +432,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
                 return storePkgEnvInfos
             }
-            val bkConfigInfo = YamlUtil.to(configFileContent, object : TypeReference<BkConfigInfo>() {})
-            val osDefaultEnvNumMap = mutableMapOf<String, Int>()
-            bkConfigInfo.os.forEach { osConfigInfo ->
-                storePkgEnvInfos.add(createStorePkgEnvInfoFromConfig(osConfigInfo))
-                // 统计每种操作系统默认环境配置数量
-                val defaultFlag = osConfigInfo.defaultFlag
-                val configOsName = osConfigInfo.osName
-                val increaseDefaultEnvNum = if (defaultFlag) 1 else 0
-                if (osDefaultEnvNumMap.containsKey(configOsName)) {
-                    osDefaultEnvNumMap[configOsName] = osDefaultEnvNumMap[configOsName]!! + increaseDefaultEnvNum
-                } else {
-                    osDefaultEnvNumMap[configOsName] = increaseDefaultEnvNum
-                }
-            }
-            osDefaultEnvNumMap.forEach { (osName, defaultEnvNum) ->
-                // 判断每种操作系统默认环境配置是否有且只有1个
-                if (defaultEnvNum != 1) {
-                    throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID,
-                        params = arrayOf(CONFIG_YML_NAME, osName, defaultEnvNum.toString())
-                    )
-                }
-            }
+            storePkgEnvInfos = generateStorePkgEnvInfos(storeCode, version, configFileContent)
         } else {
             val baseRecord = storeBaseQueryDao.getComponent(
                 dslContext = dslContext, storeCode = storeCode, version = version, storeType = storeType
@@ -365,6 +450,38 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 }
             } else {
                 storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
+            }
+        }
+        return storePkgEnvInfos
+    }
+
+    private fun generateStorePkgEnvInfos(
+        storeCode: String,
+        version: String,
+        configFileContent: String
+    ): MutableList<StorePkgEnvInfo> {
+        val bkConfigInfo = YamlUtil.to(configFileContent, object : TypeReference<BkConfigInfo>() {})
+        val storePkgEnvInfos = mutableListOf<StorePkgEnvInfo>()
+        val osDefaultEnvNumMap = mutableMapOf<String, Int>()
+        bkConfigInfo.os.forEach { osConfigInfo ->
+            storePkgEnvInfos.add(createStorePkgEnvInfoFromConfig(storeCode, version, osConfigInfo))
+            // 统计每种操作系统默认环境配置数量
+            val defaultFlag = osConfigInfo.defaultFlag
+            val configOsName = osConfigInfo.osName
+            val increaseDefaultEnvNum = if (defaultFlag) 1 else 0
+            if (osDefaultEnvNumMap.containsKey(configOsName)) {
+                osDefaultEnvNumMap[configOsName] = osDefaultEnvNumMap[configOsName]!! + increaseDefaultEnvNum
+            } else {
+                osDefaultEnvNumMap[configOsName] = increaseDefaultEnvNum
+            }
+        }
+        osDefaultEnvNumMap.forEach { (osName, defaultEnvNum) ->
+            // 判断每种操作系统默认环境配置是否有且只有1个
+            if (defaultEnvNum != 1) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID,
+                    params = arrayOf(CONFIG_YML_NAME, osName, defaultEnvNum.toString())
+                )
             }
         }
         return storePkgEnvInfos
@@ -396,16 +513,31 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         )
     }
 
-    private fun createStorePkgEnvInfoFromConfig(osConfigInfo: OsConfigInfo): StorePkgEnvInfo {
+    private fun createStorePkgEnvInfoFromConfig(
+        storeCode: String,
+        version: String,
+        osConfigInfo: OsConfigInfo
+    ): StorePkgEnvInfo {
         val configOsName = osConfigInfo.osName
         val configOsArch = osConfigInfo.osArch ?: ""
-        var extEnvInfo: Map<String, Any>? = null
+        var extEnvInfo: MutableMap<String, Any>? = null
         osConfigInfo.signature?.originFilePaths?.let {
             val signatureFileKey = getSignatureFileKey()
-            extEnvInfo = mapOf(signatureFileKey to JsonUtil.toJson(it))
+            extEnvInfo = mutableMapOf(signatureFileKey to JsonUtil.toJson(it))
         }
+        osConfigInfo.packScriptPath?.let {
+            if (extEnvInfo != null) {
+                extEnvInfo!![OsConfigInfo::packScriptPath.name] = it
+            } else {
+                extEnvInfo = mutableMapOf(OsConfigInfo::packScriptPath.name to it)
+            }
+        }
+        val pkgLocalPath = osConfigInfo.packagePath
+        val pkgName = File(pkgLocalPath).name
         return StorePkgEnvInfo(
-            pkgLocalPath = osConfigInfo.packagePath,
+            pkgName = pkgName,
+            pkgLocalPath = pkgLocalPath,
+            pkgRepoPath = "$storeCode/$version/$pkgName",
             osName = configOsName,
             osArch = configOsArch,
             defaultFlag = osConfigInfo.defaultFlag,
