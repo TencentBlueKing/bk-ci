@@ -681,7 +681,7 @@
             cursor: not-allowed !important;
         }
         .icon-item {
-            text-align: center;
+            margin-top: 10px;
         }
         .pipeline-icon {
             width: 40px;
