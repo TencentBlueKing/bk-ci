@@ -199,7 +199,7 @@ onMounted(() => {
         @change="handleFormChange"
         @initProjectForm="initProjectForm">
       </project-form>
-      <div class="btn-group">{{ projectData?.approvalStatus }}
+      <div class="btn-group">
         <Popover
           :content="statusDisabledTips[projectData?.approvalStatus]"
           :disabled="![1, 4].includes(projectData?.approvalStatus)"
