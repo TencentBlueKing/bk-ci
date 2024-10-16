@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.yaml.transfer
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildContainerType
@@ -95,8 +97,7 @@ class VariableTransfer {
                 CascadePropertyUtils.supportCascadeParam(it.type) -> {
                     // 级联选择器类型变量
                     VariableProps(
-                        type = VariablePropType.REPO_REF.value,
-                        properties = it.defaultValue as Map<String, String>
+                        type = it.type.name
                     )
                 }
 
@@ -140,7 +141,12 @@ class VariableTransfer {
             }
             val const = it.constant.nullIfDefault(false)
             result[it.id] = Variable(
-                value = it.defaultValue.toString(),
+                value = if (CascadePropertyUtils.supportCascadeParam(it.type)) {
+                    // 级联选择器参数，展示成json格式
+                    JsonUtil.toJson(it.defaultValue, false)
+                } else {
+                    it.defaultValue.toString()
+                },
                 readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
                 const = const,
@@ -220,7 +226,12 @@ class VariableTransfer {
                             variable.value?.toBoolean() ?: false
 
                         CascadePropertyUtils.supportCascadeParam(type) ->
-                            variable.props?.properties ?: mapOf<String, String>()
+                            variable.value?.let {
+                                JsonUtil.to(
+                                    json = it,
+                                    typeReference = object : TypeReference<Map<String, String>>() {}
+                                )
+                            } ?: mapOf<String, String>()
 
                         else -> variable.value ?: ""
                     },
