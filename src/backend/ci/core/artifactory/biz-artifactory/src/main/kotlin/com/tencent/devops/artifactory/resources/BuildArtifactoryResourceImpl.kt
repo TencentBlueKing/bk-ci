@@ -23,17 +23,13 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         targetProjectId: String,
         targetPath: String
     ): Result<Count> {
-        var userId = client.get(ServicePipelineResource::class)
-            .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
         // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
-        val pipelineOauthUser = client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
+        val userId = client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
             projectId = projectId,
             resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
             resourceCode = pipelineId
-        ).data?.handoverFrom
-        if (!pipelineOauthUser.isNullOrBlank()) {
-            userId = pipelineOauthUser
-        }
+        ).data?.handoverFrom ?: client.get(ServicePipelineResource::class)
+            .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
         val count = archiveFileService.acrossProjectCopy(
             userId = userId,
             projectId = projectId,
