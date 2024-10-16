@@ -3,8 +3,8 @@
     theme="light"
     :width="900"
     extCls="dialect-popover"
-    :componentEventDelay="300"
     show-overflow-tooltip
+    :componentEventDelay="300"
     autoPlacement
   >
     <label class="label">{{ t('变量语法风格') }}</label>
