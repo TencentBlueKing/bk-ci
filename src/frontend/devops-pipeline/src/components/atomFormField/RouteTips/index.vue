@@ -1,28 +1,77 @@
 <template>
-    <div v-if="visible" class="route-tips" :style="!pathTips ? 'height:48px' : ''">
+    <div
+        v-if="visible"
+        class="route-tips"
+        :style="!pathTips ? 'height:48px' : ''"
+    >
         <div class="tips-icon">
-            <i class="bk-icon icon-info-circle-shape" :style="!pathTips ? 'margin: 15px 13px;' : ''"></i>
+            <i
+                class="bk-icon icon-info-circle-shape"
+                :style="!pathTips ? 'margin: 15px 13px;' : ''"
+            ></i>
         </div>
         <div class="tips-content">
-            <p v-if="srcTips" class="tips-row" :style="!pathTips ? 'margin-top: 15px' : ''">
+            <p
+                v-if="srcTips"
+                class="tips-row"
+                :style="!pathTips ? 'margin-top: 15px' : ''"
+            >
                 <span class="tips-label">{{ $t('editPage.source') }} ：</span>
-                <span class="tips-route" :title="srcTips">{{ srcTips }}</span>
+                <span
+                    class="tips-route"
+                    :title="srcTips"
+                >{{ srcTips }}</span>
             </p>
-            <p v-if="pathTips" class="tips-row" style="margin-top: 0px">
+            <p
+                v-if="pathTips"
+                class="tips-row"
+                style="margin-top: 0px"
+            >
                 <span class="tips-label">{{ $t('editPage.target') }}  ：</span>
-                <span class="tips-route" :title="pathTips">{{ pathTips }}</span>
+                <span
+                    class="tips-route"
+                    :title="pathTips"
+                >{{ pathTips }}</span>
             </p>
-            <p v-if="keystoreTips" class="tips-row keystore-row" :style="!pathTips ? 'margin-top: 15px' : ''">
-                <span class="tips-label" style="width: 78px">{{ $t('editPage.certFile') }}  ：</span>
-                <span class="tips-route" :title="keystoreTips">{{ keystoreTips }}</span>
+            <p
+                v-if="keystoreTips"
+                class="tips-row keystore-row"
+                :style="!pathTips ? 'margin-top: 15px' : ''"
+            >
+                <span
+                    class="tips-label"
+                    style="width: 78px"
+                >{{ $t('editPage.certFile') }}  ：</span>
+                <span
+                    class="tips-route"
+                    :title="keystoreTips"
+                >{{ keystoreTips }}</span>
             </p>
-            <p v-if="githubAppUrl" class="tips-row" style="margin-top: 10px">
-                <span class="tips-route" style="margin-left: 15px">{{ $t('editPage.githubAppTips') }}
-                    <a class="link" :href="githubAppUrl" target="_blank">GitHub APP</a>（Tencent DevOps）
+            <p
+                v-if="githubAppUrl"
+                class="tips-row"
+                style="margin-top: 10px"
+            >
+                <span
+                    class="tips-route"
+                    style="margin-left: 15px"
+                >{{ $t('editPage.githubAppTips') }}
+                    <a
+                        class="link"
+                        :href="githubAppUrl"
+                        target="_blank"
+                    >GitHub APP</a>（Tencent DevOps）
                 </span>
             </p>
-            <p v-if="tips" class="tips-row">
-                <span class="tips-route" style="margin-left: 15px" :title="tips">{{ tips }}</span>
+            <p
+                v-if="tips"
+                class="tips-row"
+            >
+                <span
+                    class="tips-route"
+                    style="margin-left: 15px"
+                    :title="tips"
+                >{{ tips }}</span>
             </p>
         </div>
     </div>

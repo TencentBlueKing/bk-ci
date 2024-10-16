@@ -36,7 +36,10 @@
                 <i class="add-plus-icon" />
                 <template v-if="atomList.length === 0">
                     <span class="add-atom-label">{{ t("addAtom") }}</span>
-                    <Logo class="atom-invalid-icon" name="exclamation-triangle-shape" />
+                    <Logo
+                        class="atom-invalid-icon"
+                        name="exclamation-triangle-shape"
+                    />
                 </template>
             </span>
             <span
@@ -50,7 +53,11 @@
                 @click.stop="togglePostAction"
                 v-bk-tooltips="hookToggleTips"
             >
-                <logo class="toggle-post-action-icon" size="6" name="angle-down"></logo>
+                <logo
+                    class="toggle-post-action-icon"
+                    size="6"
+                    name="angle-down"
+                ></logo>
             </span>
         </draggable>
     </section>

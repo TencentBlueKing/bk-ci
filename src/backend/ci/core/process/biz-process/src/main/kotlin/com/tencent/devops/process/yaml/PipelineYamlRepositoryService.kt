@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
@@ -703,7 +702,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             logger.info("$pipelineId|$version|model is null")
             return emptyList()
         }
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
         val variables = triggerContainer.params.associate { param ->
             param.id to param.defaultValue.toString()
         }.toMutableMap()

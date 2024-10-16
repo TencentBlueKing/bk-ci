@@ -1,12 +1,11 @@
-import http from './fetch';
 import {
-  API_PERFIX,
-  STORE_PERFIX,
-  PROJECT_PERFIX,
   IAM_PERFIX,
   ITSM_PERFIX,
+  PROJECT_PERFIX,
+  STORE_PERFIX,
   USER_PERFIX,
 } from './constants';
+import http from './fetch';
 export default {
   getUser() {
     return http.get(`${PROJECT_PERFIX}/user/users`);
