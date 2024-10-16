@@ -178,6 +178,48 @@
                 </template>
             </div>
         </bk-table-column>
+        <bk-table-column
+            v-if="allRenderColumnMap.label"
+            :label="$t('label')"
+            :width="tableWidthMap.groupLabel"
+            min-width="200"
+            prop="groupLabel"
+        >
+            <template slot-scope="{ row, $index }">
+                <div :class="['group-label-warpper', `group-label-warpper-${$index}`]">
+                    <span
+                        v-for="(item, index) in row.groupLabel?.slice(0, 2)"
+                        class="group-tag"
+                        :key="index"
+                        v-bk-overflow-tips
+                    >
+                        {{ `${item.groupName}: ${item.labelName.join(',')}` }}
+                    </span>
+                    <bk-popover
+                        placement="top"
+                        theme="light"
+                        ext-cls="group-tag-popover"
+                    >
+                        <span
+                            v-if="row.groupLabel?.length > 2"
+                            class="group-tag"
+                        >
+                            +{{ row.groupLabel?.slice(2, row.groupLabel.length).length }}
+                        </span>
+                        <div slot="content">
+                            <div
+                                v-for="(item, index) in row.groupLabel?.slice(2, row.groupLabel.length)"
+                                class="group-tag"
+                                :key="index"
+                                v-bk-overflow-tips
+                            >
+                                {{ `${item.groupName}: ${item.labelName.join(',')}` }}
+                            </div>
+                        </div>
+                    </bk-popover>
+                </div>
+            </template>
+        </bk-table-column>
         <template v-if="isPatchView">
             <bk-table-column
                 :width="tableWidthMap.latestBuildNum"
@@ -658,6 +700,10 @@
                     label: this.$t('ownGroupName')
                 },
                 {
+                    id: 'label',
+                    label: this.$t('label')
+                },
+                {
                     id: 'latestExec',
                     label: this.$t('latestExec')
                 },
@@ -691,6 +737,7 @@
                 this.selectedTableColumn = [
                     { id: 'pipelineName' },
                     { id: 'ownGroupName' },
+                    { id: 'label' },
                     { id: 'latestExec' },
                     { id: 'lastExecTime' },
                     { id: 'lastModify' },
@@ -714,7 +761,8 @@
                 updateTime: 154,
                 lastModifyUser: '',
                 latestExec: 484,
-                pipelineId: 120
+                pipelineId: 120,
+                groupLabel: 200
             }
             this.requestList()
         },
@@ -1037,6 +1085,50 @@
                     font-size: 18px;
                     padding: 0 6px;
                 }
+            }
+        }
+        .group-label-warpper {
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+        .group-tag {
+            background-color: rgba(151, 155, 165, .1);
+            border-color: rgba(220, 222, 229, .6);
+            color: #63656e;
+            display: inline-block;
+            font-size: 12px;
+            padding: 0 10px;
+            height: 22px;
+            line-height: 22px;
+            margin: 2px 0 2px 6px;
+            cursor: default;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
+        }
+    }
+    .group-tag-popover {
+        .group-tag {
+            background-color: rgba(151, 155, 165, .1);
+            border-color: rgba(220, 222, 229, .6);
+            color: #63656e;
+            font-size: 12px;
+            padding: 0 10px;
+            height: 22px;
+            line-height: 22px;
+            margin-bottom: 5px;
+            max-width: 300px;
+            width: min-content;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            &:last-child {
+                margin-bottom: 0px;
             }
         }
     }
