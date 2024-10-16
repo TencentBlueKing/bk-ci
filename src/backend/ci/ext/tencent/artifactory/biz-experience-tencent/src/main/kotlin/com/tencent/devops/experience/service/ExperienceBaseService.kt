@@ -58,13 +58,13 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import java.time.LocalDateTime
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 // 服务共用部分在这里
 @SuppressWarnings("LongParameterList", "TooManyFunctions", "ComplexCondition")
@@ -511,5 +511,12 @@ class ExperienceBaseService @Autowired constructor(
 
     fun getNewestPublic(projectId: String, bundleIdentifier: String, platform: String): TExperiencePublicRecord? {
         return experiencePublicDao.getNewestRecord(dslContext, projectId, bundleIdentifier, platform)
+    }
+
+    fun isDefendProject(stage: String?, projectId: String): Boolean {
+        if (stage.isNullOrBlank()) {
+            return false
+        }
+        return redisOperation.isMember("apk:defend:${stage.lowercase()}", projectId)
     }
 }

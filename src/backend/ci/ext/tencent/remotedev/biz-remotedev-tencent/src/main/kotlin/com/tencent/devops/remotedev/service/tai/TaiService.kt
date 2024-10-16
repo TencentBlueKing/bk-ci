@@ -98,7 +98,7 @@ class TaiService {
                 )
             }
             val moa2faVerifyRespData: Moa2faVerifyRespData = jacksonObjectMapper().readValue(responseContent)
-            if (moa2faVerifyRespData.ret != 0) {
+            if (moa2faVerifyRespData.ret != 0 && moa2faVerifyRespData.errCode != 40004) {
                 throw RemoteServiceException(
                     errorMessage = "request api[${request.url.toUrl()}] status code[${response.code}]" +
                         " error message[${response.message}]",

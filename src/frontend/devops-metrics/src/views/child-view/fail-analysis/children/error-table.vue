@@ -16,7 +16,7 @@ import {
 import { useI18n } from "vue-i18n";
 
 import useFilter from '@/composables/use-filter';
-import EmptyTableStatus from '@/components/empty-table-status.vue'
+import EmptyTableStatus from '@/components/empty-table-status'
 const emit = defineEmits(['change', 'clear']);
 const { t } = useI18n();
 

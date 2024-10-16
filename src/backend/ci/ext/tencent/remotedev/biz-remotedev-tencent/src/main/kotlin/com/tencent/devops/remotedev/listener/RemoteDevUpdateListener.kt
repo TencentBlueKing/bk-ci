@@ -37,8 +37,6 @@ import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandl
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
-import com.tencent.devops.remotedev.service.workspace.SleepControl
-import com.tencent.devops.remotedev.service.workspace.StartControl
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -47,8 +45,6 @@ import org.springframework.stereotype.Component
 @Component
 class RemoteDevUpdateListener @Autowired constructor(
     private val createControl: CreateControl,
-    private val startControl: StartControl,
-    private val sleepControl: SleepControl,
     private val deleteControl: DeleteControl,
     private val startWorkspaceHandler: StartWorkspaceHandler,
     private val stopWorkspaceHandler: StopWorkspaceHandler,
@@ -71,13 +67,6 @@ class RemoteDevUpdateListener @Autowired constructor(
                     else -> {}
                 }
                 return
-            }
-            when (event.type) {
-                UpdateEventType.CREATE -> createControl.afterCreateWorkspace(event)
-                UpdateEventType.START -> startControl.afterStartWorkspace(event)
-                UpdateEventType.STOP -> sleepControl.afterStopWorkspace(event)
-                UpdateEventType.DELETE -> deleteControl.afterDeleteWorkspace(event)
-                else -> {}
             }
         }.onFailure {
             logger.warn("RemoteDevUpdateEvent call back error", it)

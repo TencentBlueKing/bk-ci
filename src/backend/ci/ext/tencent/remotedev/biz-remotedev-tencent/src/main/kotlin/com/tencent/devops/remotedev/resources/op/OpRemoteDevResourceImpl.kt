@@ -1,7 +1,5 @@
 package com.tencent.devops.remotedev.resources.op
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -11,17 +9,15 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.dao.WorkspaceDao
-import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
-import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.windows.WindowsPoolListFetchData
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
-import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -30,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpRemoteDevResourceImpl @Autowired constructor(
-    private val workspaceService: WorkspaceService,
     private val workspaceCommon: WorkspaceCommon,
     private val userRefreshService: UserRefreshService,
     private val remoteDevSettingService: RemoteDevSettingService,
@@ -39,8 +34,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val deleteControl: DeleteControl,
     private val workspaceDao: WorkspaceDao,
     private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper,
-    private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val windowsResourceConfigService: WindowsResourceConfigService
 ) : OpRemoteDevResource {
     override fun updateUserSetting(userId: String, data: List<OPUserSetting>): Result<Boolean> {
@@ -154,16 +147,22 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun detailDaoTransferToWindowsDao(userId: String): Result<Boolean> {
+    override fun initWorkspaceIp(userId: String): Result<Boolean> {
         var page = 1
         while (true) {
             val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, 100)
-            val res = workspaceDao.limitFetchWorkspaceDetail(dslContext = dslContext, sqlLimit)
+            val res = workspaceDao.limitFetchWorkspace(dslContext = dslContext, sqlLimit)
             if (res.isEmpty()) return Result(true)
             res.forEach {
-                val detail = objectMapper.readValue<WorkSpaceCacheInfo>(it.detail)
-                workspaceWindowsDao.updateDetailInfo(dslContext, detail.curLaunchId, detail.regionId, it.workspaceName)
-                Thread.sleep(30)
+                if (it.ip.isNullOrBlank() && it.workspaceMountType == WorkspaceMountType.START.name) {
+                    workspaceDao.updateWorkspaceIp(
+                        dslContext = dslContext,
+                        workspaceName = it.name,
+                        hostName = it.hostName,
+                        ip = it.hostName.substringAfter(".")
+                    )
+                    Thread.sleep(10)
+                }
             }
             page += 1
         }

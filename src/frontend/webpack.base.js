@@ -49,10 +49,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     use: [{
                         loader: MiniCssExtractPlugin.loader,
                         options: {
-                            publicPath: (resourcePath, context) => {
-                                console.log(resourcePath, 111)
-                                return ''
-                            }
+                            publicPath: (resourcePath, context) => ''
                         }
                     }, 'css-loader']
                 },
@@ -104,7 +101,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             new BundleWebpackPlugin({
                 dist: envDist,
                 isDev,
-                bundleName: 'assets_bundle'
+                entryFolderName: "entry's"
             }),
             new MiniCssExtractPlugin({
                 filename: '[name].[contenthash].css',

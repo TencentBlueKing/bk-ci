@@ -4,7 +4,7 @@
   "description": "",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "nx exec -- vite",
     "public:dev": "cross-env NODE_ENV=master vite build",
     "public:test": "cross-env NODE_ENV=master vite build",
     "public:master": "cross-env NODE_ENV=master vite build",

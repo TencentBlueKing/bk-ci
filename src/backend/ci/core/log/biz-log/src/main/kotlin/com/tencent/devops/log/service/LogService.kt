@@ -54,7 +54,8 @@ interface LogService {
         containerHashId: String?,
         executeCount: Int?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        reverse: Boolean?
     ): QueryLogs
 
     fun queryLogsBetweenLines(

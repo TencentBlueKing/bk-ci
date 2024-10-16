@@ -53,14 +53,8 @@
                 </section>
                 <section class="num-wraper">
                     <img
-                        v-if="detail.hotFlag"
+                        :src="getHotIcon(detail.hotFlag)"
                         class="hot-icon"
-                        src="../../../images/hot-red.png"
-                    >
-                    <img
-                        v-else
-                        class="hot-icon"
-                        src="../../../images/hot.png"
                     >
                     <span class="ml3">{{ getShowNum(detail.recentExecuteNum) }}</span>
                 </section>
@@ -434,6 +428,9 @@
                 } else {
                     return num
                 }
+            },
+            getHotIcon (hotFlag) {
+                return require(`../../../images/hot${hotFlag ? '-red' : ''}.png`)
             }
         }
     }

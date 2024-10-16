@@ -44,7 +44,7 @@ data class PreStep(
     val id: String?,
     @get:Schema(title = "if")
     @JsonProperty("if")
-    val ifFiled: String?,
+    var ifField: Any? = null,
     @get:Schema(title = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,

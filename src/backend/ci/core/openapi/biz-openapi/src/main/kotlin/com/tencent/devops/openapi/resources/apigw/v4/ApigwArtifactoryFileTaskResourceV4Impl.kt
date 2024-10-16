@@ -74,7 +74,7 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V4|$userId|get status|$projectId|$pipelineId|$buildId|$taskId")
         val realTaskId = if (stepId != null) {
             client.get(ServicePipelineTaskResource::class).getTaskBuildDetail(
-                projectId, buildId, taskId, stepId
+                projectId, buildId, taskId, stepId, null
             ).data?.taskId
         } else taskId
         if (realTaskId == null) {
@@ -102,7 +102,7 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V4|$userId|clear file task|$projectId|$pipelineId|$buildId|$taskId")
         val realTaskId = if (stepId != null) {
             client.get(ServicePipelineTaskResource::class).getTaskBuildDetail(
-                projectId, buildId, taskId, stepId
+                projectId, buildId, taskId, stepId, null
             ).data?.taskId
         } else taskId
         if (realTaskId == null) {

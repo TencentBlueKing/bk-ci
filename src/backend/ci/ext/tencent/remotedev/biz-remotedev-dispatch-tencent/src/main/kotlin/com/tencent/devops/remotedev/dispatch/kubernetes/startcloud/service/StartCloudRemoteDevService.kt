@@ -111,7 +111,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                     cgsId = event.devFile.cgsId,
                     projectId = event.projectId,
                     image = event.devFile.imageCosFile,
-                    internal = event.devFile.quotaType?.getInternal() ?: false
+                    internal = event.devFile.quotaType?.getInternal() ?: false,
+                    pvcs = event.devFile.pvcs
                 )
             )
         )
@@ -161,14 +162,20 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
-    override fun rebuildWorkspace(userId: String, workspaceName: String, imageCosFile: String): String {
+    override fun rebuildWorkspace(
+        userId: String,
+        workspaceName: String,
+        imageCosFile: String,
+        formatDataDisk: Boolean?
+    ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.REBUILD,
             workspaceName = workspaceName,
             environmentOperate = EnvironmentOperate(
                 uid = getEnvironmentUid(workspaceName),
-                image = imageCosFile
+                image = imageCosFile,
+                formatDataDisk = formatDataDisk
             )
         )
 
