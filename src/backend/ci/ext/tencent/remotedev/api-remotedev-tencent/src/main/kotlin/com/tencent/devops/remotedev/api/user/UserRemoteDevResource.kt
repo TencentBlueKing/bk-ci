@@ -33,12 +33,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.DEVX_HEADER_CDS_TOKEN
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ClientTips
-import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeData
-import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeResp
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeData
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeResp
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -190,7 +190,6 @@ interface UserRemoteDevResource {
         userId: String,
         data: ClientUpgradeData
     ): Result<ClientUpgradeResp>
-
 
     @Operation(summary = "根据CDS TOKEN获取云桌面信息")
     @GET
