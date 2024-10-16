@@ -1,17 +1,22 @@
 <template>
     <div style="height: 100%">
-        <span v-bk-tooltips="disableTooltips" :class="['publish-pipeline-btn', {
-            'publish-diabled': !canRelease
-        }]" @click="showReleaseSlider" v-perm="{
-            hasPermission: canEdit,
-            disablePermissionApi: true,
-            permissionData: {
-                projectId,
-                resourceType: 'pipeline',
-                resourceCode: pipelineId,
-                action: RESOURCE_ACTION.EDIT
-            }
-        }">
+        <span
+            v-bk-tooltips="disableTooltips"
+            :class="['publish-pipeline-btn', {
+                'publish-diabled': !canRelease
+            }]"
+            @click="showReleaseSlider"
+            v-perm="{
+                hasPermission: canEdit,
+                disablePermissionApi: true,
+                permissionData: {
+                    projectId,
+                    resourceType: 'pipeline',
+                    resourceCode: pipelineId,
+                    action: RESOURCE_ACTION.EDIT
+                }
+            }"
+        >
             <i class="devops-icon icon-check-small" />
             {{ $t('release') }}
         </span>

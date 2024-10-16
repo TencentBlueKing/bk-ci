@@ -28,11 +28,17 @@
             footer-position="center"
             theme="primary"
         >
-            <header class="draft-hint-title" slot="header">
+            <header
+                class="draft-hint-title"
+                slot="header"
+            >
                 <i class="devops-icon icon-exclamation"></i>
                 {{ draftHintTitle }}
             </header>
-            <div v-if="hasDraftPipeline" class="draft-hint-content">
+            <div
+                v-if="hasDraftPipeline"
+                class="draft-hint-content"
+            >
                 {{ $t('dropDraftTips', [versionName]) }}
             </div>
             <footer slot="footer">
@@ -42,7 +48,10 @@
                 >
                     {{ $t('newVersion') }}
                 </bk-button>
-                <bk-button v-if="hasDraftPipeline" @click="goEdit(draftVersion)">
+                <bk-button
+                    v-if="hasDraftPipeline"
+                    @click="goEdit(draftVersion)"
+                >
                     {{ $t('editDraft') }}
                 </bk-button>
                 <bk-button @click="close">

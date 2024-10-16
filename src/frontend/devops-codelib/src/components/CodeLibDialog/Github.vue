@@ -22,7 +22,10 @@
                 </bk-radio>
             </bk-radio-group>
 
-            <div class="codelib-oauth" v-if="!hasPower">
+            <div
+                class="codelib-oauth"
+                v-if="!hasPower"
+            >
                 <bk-button
                     theme="primary"
                     @click="openValidate"

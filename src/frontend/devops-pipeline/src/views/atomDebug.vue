@@ -3,7 +3,11 @@
         <div class="preview-header"><p class="page-title">{{ $t('atomDebug.title') }}</p></div>
         <main class="main-container">
             <div class="init-json">
-                <textarea class="json-input" :placeholder="$t('atomDebug.inputTips')" v-model="initJsonStr"></textarea>
+                <textarea
+                    class="json-input"
+                    :placeholder="$t('atomDebug.inputTips')"
+                    v-model="initJsonStr"
+                ></textarea>
             </div>
             <div class="transform-json">
                 <json-viewer
@@ -16,7 +20,8 @@
                     :atom-value="atomInputValue"
                     :atom-props-model="initJson"
                     :handle-update-preview-input="handleChangePreviewInput"
-                    class="atom-content">
+                    class="atom-content"
+                >
                 </preview-atom>
             </div>
         </main>

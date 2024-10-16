@@ -43,5 +43,6 @@ data class StageReviews(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Flow(
     val name: String,
-    val reviewers: List<String>
+    val reviewers: List<String>?,
+    val groups: List<String>?
 )

@@ -33,9 +33,11 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
+import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -99,6 +101,7 @@ class PipelineBuildWebhookService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
+        private const val WEBHOOK_COMMIT_TRIGGER = "webhook_commit_trigger"
     }
 
     fun dispatchTriggerPipelines(
@@ -218,9 +221,10 @@ class PipelineBuildWebhookService @Autowired constructor(
         // 触发事件保存流水线名称
         builder.pipelineName(pipelineInfo.pipelineName)
         // 获取授权人
-        val userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId) ?: pipelineInfo.lastModifyUser
+        val userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
+            ?: pipelineInfo.lastModifyUser
         val variables = mutableMapOf<String, String>()
-        val container = model.stages[0].containers[0] as TriggerContainer
+        val container = model.getTriggerContainer()
         // 解析变量
         container.params.forEach { param ->
             variables[param.id] = param.defaultValue.toString()
@@ -397,7 +401,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
         val userId = pipelineInfo.lastModifyUser
         val variables = mutableMapOf<String, String>()
-        val container = model.stages[0].containers[0] as TriggerContainer
+        val container = model.getTriggerContainer()
         // 解析变量
         container.params.forEach { param ->
             variables[param.id] = param.defaultValue.toString()
@@ -448,7 +452,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                         .webhookCommitNew(projectId, webhookCommit).data
                     logger.info(
                         "$pipelineId|${buildId?.id}|webhook trigger|(${triggerElement.name}|" +
-                                "repo(${matcher.getRepoName()})"
+                            "repo(${matcher.getRepoName()})"
                     )
                     return WebhookBuildResult(result = true, pipelineInfo = pipelineInfo, buildId = buildId)
                 } catch (ignore: Exception) {
@@ -576,14 +580,13 @@ class PipelineBuildWebhookService @Autowired constructor(
                     buildId = buildId.id,
                     buildParameters = pipelineParamMap.values.toList()
                 )
+
                 // 上报项目用户度量
                 if (startParams[PIPELINE_START_WEBHOOK_USER_ID] != null) {
-                    measureEventDispatcher.dispatch(
-                        ProjectUserDailyEvent(
-                            projectId = projectId,
-                            userId = startParams[PIPELINE_START_WEBHOOK_USER_ID]!!.toString(),
-                            theDate = LocalDate.now()
-                        )
+                    uploadProjectUserMetrics(
+                        userId = startParams[PIPELINE_START_WEBHOOK_USER_ID]!!.toString(),
+                        projectId = projectId,
+                        theDate = LocalDate.now()
                     )
                 }
             }
@@ -598,5 +601,34 @@ class PipelineBuildWebhookService @Autowired constructor(
 
     private fun checkPermission(userId: String, projectId: String, pipelineId: String) {
         pipelineBuildPermissionService.checkPermission(userId = userId, projectId = projectId, pipelineId = pipelineId)
+    }
+
+    private fun uploadProjectUserMetrics(
+        userId: String,
+        projectId: String,
+        theDate: LocalDate
+    ) {
+        try {
+            val projectUserOperateMetricsKey = ProjectUserOperateMetricsData(
+                projectId = projectId,
+                userId = userId,
+                operate = WEBHOOK_COMMIT_TRIGGER,
+                theDate = theDate
+            ).getProjectUserOperateMetricsKey()
+            measureEventDispatcher.dispatch(
+                ProjectUserDailyEvent(
+                    projectId = projectId,
+                    userId = userId,
+                    theDate = theDate
+                ),
+                ProjectUserOperateMetricsEvent(
+                    userOperateCounterData = UserOperateCounterData().apply {
+                        this.increment(projectUserOperateMetricsKey)
+                    }
+                )
+            )
+        } catch (ignored: Exception) {
+            logger.error("save auth user metrics", ignored)
+        }
     }
 }

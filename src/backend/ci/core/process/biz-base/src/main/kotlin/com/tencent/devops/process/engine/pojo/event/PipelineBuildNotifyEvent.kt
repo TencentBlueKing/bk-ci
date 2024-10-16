@@ -52,6 +52,7 @@ data class PipelineBuildNotifyEvent(
     val callbackData: Map<String, String>? = null,
     val notifyCompleteCheck: Boolean = false,
     val markdownContent: Boolean? = false, // 是否以markdown格式发送通知内容，为true时，会指向md格式的模板
+    val mentionReceivers: Boolean? = false,
     val position: String?,
     val stageId: String?,
     override var actionType: ActionType = ActionType.START,

@@ -1,8 +1,14 @@
 <template>
     <article>
         <section class="show-detail">
-            <img :src="detail.logoUrl || defaultPic" class="detail-img">
-            <ul class="detail-items" ref="detail">
+            <img
+                :src="detail.logoUrl || defaultPic"
+                class="detail-img"
+            >
+            <ul
+                class="detail-items"
+                ref="detail"
+            >
                 <li class="detail-item">
                     <span class="item-name">{{ detail.imageName }}</span>
                 </li>
@@ -46,23 +52,23 @@
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.镜像') }}：</span>
-                    <span>{{((detail.imageRepoUrl ? detail.imageRepoUrl + '/' : '') + (detail.imageRepoName ? detail.imageRepoName + ':' : '') + detail.imageTag) || '--'}}</span>
+                    <span>{{ ((detail.imageRepoUrl ? detail.imageRepoUrl + '/' : '') + (detail.imageRepoName ? detail.imageRepoName + ':' : '') + detail.imageTag) || '--' }}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.镜像凭证') }}：</span>
-                    <span>{{detail.ticketId || '--'}}</span>
+                    <span>{{ detail.ticketId || '--' }}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.发布者') }}：</span>
-                    <span>{{detail.publisher || '--'}}</span>
+                    <span>{{ detail.publisher || '--' }}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.发布类型') }}：</span>
-                    <span>{{detail.releaseType|releaseFilter}}</span>
+                    <span>{{ detail.releaseType|releaseFilter }}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.版本') }}：</span>
-                    <span>{{detail.version || '--'}}</span>
+                    <span>{{ detail.version || '--' }}</span>
                 </li>
                 <slot></slot>
                 <li class="detail-item">

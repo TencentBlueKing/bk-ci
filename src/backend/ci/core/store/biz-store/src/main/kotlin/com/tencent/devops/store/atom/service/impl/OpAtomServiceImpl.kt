@@ -394,7 +394,7 @@ class OpAtomServiceImpl @Autowired constructor(
         val taskJsonFile = File("$atomPath$fileSeparator$TASK_JSON_NAME")
         if (!taskJsonFile.exists()) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
+                messageCode = StoreMessageCode.ATOM_PACKAGE_FILE_NOT_FOUND,
                 params = arrayOf(TASK_JSON_NAME),
                 language = I18nUtil.getLanguage(userId)
             )

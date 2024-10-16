@@ -62,11 +62,11 @@ class MQPipelineUpdateListener @Autowired constructor(
     override fun run(event: PipelineUpdateEvent) {
         val watcher = Watcher(id = "${event.traceId}|UpdatePipeline#${event.pipelineId}|${event.userId}")
 
-        if (event.buildNo != null) {
+        event.buildNo?.apply {
             watcher.safeAround("updateBuildNo") {
                 pipelineRuntimeService.updateBuildNo(
                     projectId = event.projectId, pipelineId = event.pipelineId,
-                    buildNo = event.buildNo!!.buildNo, debug = false
+                    buildNo = currentBuildNo ?: buildNo, debug = false
                 )
             }
         }

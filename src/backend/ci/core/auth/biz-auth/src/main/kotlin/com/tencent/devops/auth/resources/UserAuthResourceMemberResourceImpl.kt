@@ -7,21 +7,26 @@ import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
+import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkManagerCheck
+import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.web.RestResource
 
 @RestResource
 class UserAuthResourceMemberResourceImpl(
-    private val permissionResourceMemberService: PermissionResourceMemberService
+    private val permissionResourceMemberService: PermissionResourceMemberService,
+    private val permissionService: PermissionService
 ) : UserAuthResourceMemberResource {
-    @BkManagerCheck
     override fun listProjectMembers(
         userId: String,
         projectId: String,
@@ -32,15 +37,38 @@ class UserAuthResourceMemberResourceImpl(
         page: Int,
         pageSize: Int
     ): Result<SQLPage<ResourceMemberInfo>> {
+        val hasVisitPermission = permissionService.validateUserResourcePermission(
+            userId = userId,
+            resourceType = AuthResourceType.PROJECT.value,
+            action = RbacAuthUtils.buildAction(AuthPermission.VISIT, AuthResourceType.PROJECT),
+            projectCode = projectId
+        )
+        return if (!hasVisitPermission) {
+            Result(SQLPage(0, emptyList()))
+        } else {
+            Result(
+                permissionResourceMemberService.listProjectMembers(
+                    projectCode = projectId,
+                    memberType = memberType,
+                    userName = userName,
+                    deptName = deptName,
+                    departedFlag = departedFlag ?: false,
+                    page = page,
+                    pageSize = pageSize
+                )
+            )
+        }
+    }
+
+    @BkManagerCheck
+    override fun listProjectMembersByCondition(
+        userId: String,
+        projectId: String,
+        projectMembersQueryConditionReq: ProjectMembersQueryConditionReq
+    ): Result<SQLPage<ResourceMemberInfo>> {
         return Result(
-            permissionResourceMemberService.listProjectMembers(
-                projectCode = projectId,
-                memberType = memberType,
-                userName = userName,
-                deptName = deptName,
-                departedFlag = departedFlag ?: false,
-                page = page,
-                pageSize = pageSize
+            permissionResourceMemberService.listProjectMembersByComplexConditions(
+                conditionReq = projectMembersQueryConditionReq
             )
         )
     }
@@ -156,12 +184,18 @@ class UserAuthResourceMemberResourceImpl(
     override fun getMemberGroupCount(
         userId: String,
         projectId: String,
-        memberId: String
+        memberId: String,
+        groupName: String?,
+        minExpiredAt: Long?,
+        maxExpiredAt: Long?
     ): Result<List<MemberGroupCountWithPermissionsVo>> {
         return Result(
             permissionResourceMemberService.getMemberGroupsCount(
                 projectCode = projectId,
-                memberId = memberId
+                memberId = memberId,
+                groupName = groupName,
+                minExpiredAt = minExpiredAt,
+                maxExpiredAt = maxExpiredAt
             )
         )
     }

@@ -14,18 +14,23 @@
         "module": "esnext",
         "moduleResolution": "node",
         "target": "es5",
-        "lib": [ "es2015", "dom", "es2017", "ESNext"],
+        "lib": [
+            "dom",
+            "es2017",
+            "ESNext"
+        ],
         "baseUrl": ".",
+        "types": [
+            "node",
+            "webpack-env"
+        ],
         "paths": {
             "@/*": [
-              "src/*"
+                "src/*"
             ]
         }
     },
     "include": [
         "./src/**/*"
-    ],
-    "exclude": [
-        "node_modules"
     ]
 }
