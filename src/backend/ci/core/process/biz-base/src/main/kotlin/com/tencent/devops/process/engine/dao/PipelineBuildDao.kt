@@ -268,6 +268,29 @@ class PipelineBuildDao {
         } else normal
     }
 
+    fun countAllBuildWithStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        status: Set<BuildStatus>
+    ): Int {
+        val normal = with(T_PIPELINE_BUILD_HISTORY) {
+            val where = dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(STATUS.`in`(status.map { it.ordinal }))
+            where.fetchOne(0, Int::class.java)!!
+        }
+        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            val where = dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(STATUS.`in`(status.map { it.ordinal }))
+            where.fetchOne(0, Int::class.java)!!
+        }
+        return normal + debug
+    }
+
     fun getBuildTasksByConcurrencyGroup(
         dslContext: DSLContext,
         projectId: String,

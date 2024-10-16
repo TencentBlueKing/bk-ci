@@ -194,7 +194,15 @@
                 }
             },
             reviewGroups () {
-                return Array.isArray(this.stageControl?.reviewGroups) ? this.stageControl.reviewGroups : []
+                const reviews = this.stageControl.reviewGroups?.map(i => {
+                    return {
+                        ...i,
+                        reviewType: i?.groups?.length ? 'group' : 'user'
+                    }
+                })
+                return Array.isArray(this.stageControl?.reviewGroups)
+                    ? reviews
+                    : []
             },
             hasTriggerMember () {
                 try {
@@ -238,12 +246,7 @@
             }
         },
         watch: {
-            manualTrigger (val) {
-                if (!val) {
-                    this.stageControl.notifyGroup = []
-                    this.stageControl.notifyType = []
-                    this.stageControl.reviewGroups = []
-                }
+            manualTrigger () {
                 this.handleUpdateStageControl('isReviewError', !this.validateStageControl())
             },
             hasTriggerMember () {
@@ -279,10 +282,20 @@
                 })
             },
             handleUpdateStageControl (name, value) {
+                let curVal = value
+                if (name === 'reviewGroups') {
+                    curVal = value.map(i => {
+                        return {
+                            name: i.name,
+                            reviewers: i.reviewers || [],
+                            groups: i.groups || []
+                        }
+                    })
+                }
                 this.setPipelineEditing(true)
                 this.handleStageChange(this.stageReviewType, {
                     ...(this.stageControl || {}),
-                    [name]: value
+                    [name]: curVal
                 })
             },
 

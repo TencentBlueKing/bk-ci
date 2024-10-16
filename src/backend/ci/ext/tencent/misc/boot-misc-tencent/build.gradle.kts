@@ -33,4 +33,5 @@ dependencies {
     api(project(":ext:tencent:misc:biz-lambda-tencent"))
     api(project(":ext:tencent:misc:biz-support-tencent"))
     api(project(":ext:tencent:misc:biz-prebuild-tencent"))
+    api(project(":core:misc:biz-gpt"))
 }

@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -136,7 +135,7 @@ class PipelineWebhookUpgradeService(
             val (elements, params) = if (model == null) {
                 Pair(emptyList(), emptyMap())
             } else {
-                val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+                val triggerContainer = model.getTriggerContainer()
                 val params = triggerContainer.params.associate { param ->
                     param.id to param.defaultValue.toString()
                 }
@@ -336,7 +335,7 @@ class PipelineWebhookUpgradeService(
             logger.info("$projectId|$pipelineId|model is null")
             return
         }
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
         val params = triggerContainer.params.associate { param ->
             param.id to param.defaultValue.toString()
         }

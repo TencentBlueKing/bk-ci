@@ -127,7 +127,10 @@ interface ServicePipelineTaskResource {
         taskId: String?,
         @Parameter(description = "任务ID", required = false)
         @QueryParam("stepId")
-        stepId: String?
+        stepId: String?,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?
     ): Result<PipelineBuildTask?>
 
     @Operation(summary = "获取流水线指定Job的构建状态")

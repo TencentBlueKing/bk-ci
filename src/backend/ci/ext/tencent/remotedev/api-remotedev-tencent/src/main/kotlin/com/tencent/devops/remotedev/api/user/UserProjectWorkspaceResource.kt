@@ -354,6 +354,12 @@ interface UserProjectWorkspaceResource {
         page: Int?,
         @Parameter(description = "每页数据条数，默认20", required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @Parameter(description = "开始搜索视频时间", required = true)
+        @QueryParam("startTime")
+        startTime: Long,
+        @Parameter(description = "结束搜索视频时间", required = true)
+        @QueryParam("stopTime")
+        stopTime: Long
     ): Result<Page<WorkspaceRecordMetadata>>
 }

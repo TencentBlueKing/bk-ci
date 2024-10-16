@@ -194,7 +194,8 @@ class LogServiceESImpl(
         containerHashId: String?,
         executeCount: Int?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        reverse: Boolean?
     ): QueryLogs {
         return doQueryInitLogs(
             buildId = buildId,
@@ -205,7 +206,8 @@ class LogServiceESImpl(
             containerHashId = containerHashId,
             executeCount = executeCount,
             jobId = jobId,
-            stepId = stepId
+            stepId = stepId,
+            reverse = reverse
         )
     }
 
@@ -751,7 +753,8 @@ class LogServiceESImpl(
         containerHashId: String? = null,
         executeCount: Int?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        reverse: Boolean?
     ): QueryLogs {
         val (queryLogs, index) = getQueryLogs(
             buildId = buildId,
@@ -794,6 +797,7 @@ class LogServiceESImpl(
                 "[$index|$buildId|$tag|$subTag|$containerHashId|$executeCount] " +
                         "doQueryInitLogs get the query builder: $boolQueryBuilder"
             )
+            val sortOrder = if (reverse == true) SortOrder.DESC else SortOrder.ASC
 
             val searchRequest = SearchRequest(index)
                 .source(
@@ -802,8 +806,8 @@ class LogServiceESImpl(
                         .docValueField("lineNo")
                         .docValueField("timestamp")
                         .size(Constants.NORMAL_MAX_LINES)
-                        .sort("timestamp", SortOrder.ASC)
-                        .sort("lineNo", SortOrder.ASC)
+                        .sort("timestamp", sortOrder)
+                        .sort("lineNo", sortOrder)
                         .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
                 )
             queryLogs.logs = searchByClient(buildId, searchRequest)
