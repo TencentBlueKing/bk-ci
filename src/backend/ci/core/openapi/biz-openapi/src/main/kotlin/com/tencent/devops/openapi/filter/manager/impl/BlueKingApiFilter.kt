@@ -15,7 +15,7 @@ import io.jsonwebtoken.Jwts
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 import java.security.Security
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openssl.PEMParser
