@@ -212,10 +212,10 @@ class ExperienceService @Autowired constructor(
     ): List<ExperienceSummaryWithPermission> {
         val today = DateUtil.today()
         val expiredTime = if (expired == null || expired == false) today else null
-        val finalCreateDateBegin = if (createDateBegin == null) {
+        val finalEndDateBegin = if (endDateBegin == null) {
             expiredTime
         } else {
-            val c = createDateBegin.let { DateTimeUtil.convertTimestampToLocalDateTime(it) }
+            val c = endDateBegin.let { DateTimeUtil.convertTimestampToLocalDateTime(it) }
             if (expiredTime == null) {
                 c
             } else {
@@ -227,9 +227,9 @@ class ExperienceService @Autowired constructor(
         val experienceRecordList = experienceDao.list(
             dslContext = dslContext,
             projectId = projectId,
-            createDateBegin = finalCreateDateBegin,
+            createDateBegin = createDateBegin?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
             createDateEnd = createDateEnd?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
-            endDateBegin = endDateBegin?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+            endDateBegin = finalEndDateBegin,
             endDateEnd = endDateEnd?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
             name = name,
             version = version,
