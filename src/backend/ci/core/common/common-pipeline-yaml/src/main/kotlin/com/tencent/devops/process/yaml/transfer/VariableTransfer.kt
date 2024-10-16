@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildContainerType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
@@ -91,10 +92,11 @@ class VariableTransfer {
                     type = VariablePropType.GIT_REF.value,
                     repoHashId = it.repoHashId
                 )
-                it.type == BuildFormPropertyType.REPO_REF -> {
+                CascadePropertyUtils.supportCascadeParam(it.type) -> {
+                    // 级联选择器类型变量
                     VariableProps(
                         type = VariablePropType.REPO_REF.value,
-                        repoHashId = it.repoHashId
+                        properties = it.defaultValue as Map<String, String>
                     )
                 }
 
@@ -213,8 +215,13 @@ class VariableTransfer {
                     required = variable.allowModifyAtStartup ?: true,
                     constant = variable.const ?: false,
                     type = type,
-                    defaultValue = when (type) {
-                        BuildFormPropertyType.BOOLEAN -> variable.value?.toBoolean() ?: false
+                    defaultValue = when {
+                        type == BuildFormPropertyType.BOOLEAN ->
+                            variable.value?.toBoolean() ?: false
+
+                        CascadePropertyUtils.supportCascadeParam(type) ->
+                            variable.props?.properties ?: mapOf<String, String>()
+
                         else -> variable.value ?: ""
                     },
                     options = variable.props?.options?.map {

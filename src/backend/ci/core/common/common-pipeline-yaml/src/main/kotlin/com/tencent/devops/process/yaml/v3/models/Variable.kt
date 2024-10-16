@@ -106,9 +106,6 @@ data class VariableProps(
     @JsonProperty("repo-id")
     @get:Schema(title = "repo-id")
     val repoHashId: String? = null,
-    @JsonProperty("repo-name")
-    @get:Schema(title = "repo-name")
-    val repoName: String? = null,
     @JsonProperty("scm-type")
     @get:Schema(title = "scm-type")
     val scmType: String? = null,

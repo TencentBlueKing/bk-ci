@@ -1,8 +1,5 @@
 package com.tencent.devops.common.pipeline.pojo.cascade
 
-import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import org.slf4j.LoggerFactory
