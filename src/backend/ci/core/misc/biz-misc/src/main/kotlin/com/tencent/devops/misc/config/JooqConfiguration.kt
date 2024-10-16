@@ -59,7 +59,7 @@ import javax.sql.DataSource
 class JooqConfiguration {
 
     @Value("\${spring.datasource.misc.pkgRegex:}")
-    private val pkgRegex = "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)"
+    private val pkgRegex = "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment|gpt)"
 
     companion object {
         private val LOG = LoggerFactory.getLogger(JooqConfiguration::class.java)
@@ -129,6 +129,15 @@ class JooqConfiguration {
 
     @Bean
     fun pluginJooqConfiguration(
+        @Qualifier("pluginDataSource")
+        pluginDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return generateDefaultConfiguration(pluginDataSource, executeListenerProviders)
+    }
+
+    @Bean
+    fun gptJooqConfiguration(
         @Qualifier("pluginDataSource")
         pluginDataSource: DataSource,
         executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
