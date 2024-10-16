@@ -98,7 +98,8 @@ class PipelineViewGroupService @Autowired constructor(
     private val clientTokenService: ClientTokenService,
     private val operationLogService: PipelineOperationLogService,
     private val pipelineYamlViewDao: PipelineYamlViewDao,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineViewGroupCommonService: PipelineViewGroupCommonService
 ) {
     private val allPipelineInfoCache = Caffeine.newBuilder()
         .maximumSize(10)
@@ -329,18 +330,7 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun listPipelineIdsByViewIds(projectId: String, viewIdsEncode: List<String>): List<String> {
-        val viewIds = viewIdsEncode.map { HashUtil.decodeIdToLong(it) }
-        val pipelineIds = mutableListOf<String>()
-        val viewGroups = pipelineViewGroupDao.listByViewIds(dslContext, projectId, viewIds)
-        if (viewGroups.isEmpty()) {
-            pipelineIds.addAll(emptyList())
-        } else {
-            pipelineIds.addAll(viewGroups.map { it.pipelineId }.toList())
-        }
-        if (pipelineIds.isEmpty()) {
-            pipelineIds.add("##NONE##") // 特殊标志,避免有些判空逻辑导致过滤器没有执行
-        }
-        return pipelineIds
+        return pipelineViewGroupCommonService.listPipelineIdsByViewIds(projectId, viewIdsEncode)
     }
 
     fun listPipelineIdsByViewId(projectId: String, viewIdEncode: String): List<String> {
@@ -989,15 +979,7 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun listViewIdsByPipelineId(projectId: String, pipelineId: String): Set<Long> {
-        return pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId).map { it.viewId }.toSet()
-    }
-
-    fun listViewIdsMap(projectId: String, pipelineIds: List<String>): Map<String, List<Long>> {
-        return pipelineViewGroupDao.listByPipelineIds(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineIds = pipelineIds
-        ).groupBy({ it.pipelineId }, { it.viewId })
+        return pipelineViewGroupCommonService.listViewIdsByPipelineId(projectId, pipelineId)
     }
 
     fun listViewIdsByProjectId(projectId: String): Set<Long> {

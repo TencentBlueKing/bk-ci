@@ -521,6 +521,12 @@ class PipelineListFacadeService @Autowired constructor(
 
         watcher.start("s_r_summary")
         try {
+            // 记录用户最近使用过的视图
+            pipelineViewService.addUsingView(
+                userId = userId,
+                projectId = projectId,
+                viewId = viewId
+            )
             val favorPipelines = pipelineGroupService.getFavorPipelines(
                 userId = userId,
                 projectId = projectId
@@ -532,26 +538,20 @@ class PipelineListFacadeService @Autowired constructor(
                 filterByCreator = filterByCreator,
                 filterByLabels = filterByLabels
             )
-
-            val pipelineIds = mutableSetOf<String>()
             // 根据视图类型获取流水线
-            val pipelineIdsByViewId = listPipelineIdsByViewId(
+            val pipelineIdsFilterByView = listPipelineIdsByViewId(
                 userId = userId,
                 projectId = projectId,
                 viewId = viewId,
                 filterByViewIds = filterByViewIds
             )
-            if (pipelineIdsByViewId.isNotEmpty()) {
-                pipelineIds.addAll(pipelineIdsByViewId)
-            }
-
             val includeDelete = showDelete && (PIPELINE_VIEW_RECENT_USE == viewId || !DEFAULT_VIEW_IDS.contains(viewId))
             // 查询有权限查看的流水线总数
             val totalAvailablePipelineSize = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 channelCode = channelCode,
-                pipelineIds = pipelineIds,
+                pipelineIds = pipelineIdsFilterByView,
                 favorPipelines = favorPipelines,
                 authPipelines = authPipelines,
                 viewId = viewId,
@@ -568,7 +568,7 @@ class PipelineListFacadeService @Autowired constructor(
                     projectId = projectId,
                     channelCode = channelCode,
                     sortType = sortType,
-                    pipelineIds = pipelineIds,
+                    pipelineIds = pipelineIdsFilterByView,
                     favorPipelines = favorPipelines,
                     authPipelines = authPipelines,
                     viewId = viewId,
@@ -581,25 +581,6 @@ class PipelineListFacadeService @Autowired constructor(
                     userId = userId,
                     queryByWeb = queryByWeb
                 )
-            } else if ((null != page && null != pageSize) && !(page == 1 && pageSize == -1)) {
-                handlePipelineQueryList(
-                    pipelineList = pipelineList,
-                    projectId = projectId,
-                    channelCode = channelCode,
-                    sortType = sortType,
-                    pipelineIds = pipelineIds,
-                    favorPipelines = favorPipelines,
-                    authPipelines = authPipelines,
-                    viewId = viewId,
-                    pipelineFilterParamList = pipelineFilterParamList,
-                    permissionFlag = true,
-                    page = page,
-                    pageSize = pageSize,
-                    includeDelete = includeDelete,
-                    collation = collation,
-                    userId = userId,
-                    queryByWeb = queryByWeb
-                )
             } else {
                 // 不分页查询
                 handlePipelineQueryList(
@@ -607,7 +588,7 @@ class PipelineListFacadeService @Autowired constructor(
                     projectId = projectId,
                     channelCode = channelCode,
                     sortType = sortType,
-                    pipelineIds = pipelineIds,
+                    pipelineIds = pipelineIdsFilterByView,
                     favorPipelines = favorPipelines,
                     authPipelines = authPipelines,
                     viewId = viewId,
@@ -620,34 +601,7 @@ class PipelineListFacadeService @Autowired constructor(
                     userId = userId,
                     queryByWeb = queryByWeb
                 )
-
-                if (filterInvalid) {
-                    handlePipelineQueryList(
-                        pipelineList = pipelineList,
-                        projectId = projectId,
-                        channelCode = channelCode,
-                        sortType = sortType,
-                        pipelineIds = pipelineIds,
-                        favorPipelines = favorPipelines,
-                        authPipelines = authPipelines,
-                        viewId = viewId,
-                        pipelineFilterParamList = pipelineFilterParamList,
-                        permissionFlag = false,
-                        page = page,
-                        pageSize = pageSize,
-                        includeDelete = includeDelete,
-                        collation = collation,
-                        userId = userId,
-                        queryByWeb = queryByWeb
-                    )
-                }
             }
-            // 记录用户最近使用过的视图
-            pipelineViewService.addUsingView(
-                userId = userId,
-                projectId = projectId,
-                viewId = viewId
-            )
             watcher.stop()
             return PipelineViewPipelinePage(
                 page = page ?: 1,

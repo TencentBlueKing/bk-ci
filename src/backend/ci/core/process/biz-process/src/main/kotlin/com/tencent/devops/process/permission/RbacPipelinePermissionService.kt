@@ -37,8 +37,8 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.service.view.PipelineViewGroupCommonService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
@@ -49,7 +49,7 @@ class RbacPipelinePermissionService(
     val pipelineAuthServiceCode: PipelineAuthServiceCode,
     val dslContext: DSLContext,
     val pipelineInfoDao: PipelineInfoDao,
-    val pipelineViewGroupDao: PipelineViewGroupDao,
+    val pipelineViewGroupCommonService: PipelineViewGroupCommonService,
     val authResourceApi: AuthResourceApi
 ) : PipelinePermissionService {
 
@@ -105,12 +105,7 @@ class RbacPipelinePermissionService(
             resourceCode = projectId
         )
         parents.add(projectInstance)
-        val pipelineIds = pipelineViewGroupDao.listByPipelineId(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        ).map { it.viewId }.toSet()
-        pipelineIds.forEach { viewId ->
+        pipelineViewGroupCommonService.listViewIdsByPipelineId(projectId, pipelineId).forEach { viewId ->
             parents.add(
                 AuthResourceInstance(
                     resourceType = AuthResourceType.PIPELINE_GROUP.value,
@@ -130,11 +125,10 @@ class RbacPipelinePermissionService(
         projectId: String,
         pipelineIds: List<String>
     ): List<AuthResourceInstance> {
-        val listViewIdsMap = pipelineViewGroupDao.listByPipelineIds(
-            dslContext = dslContext,
+        val listViewIdsMap = pipelineViewGroupCommonService.listViewIdsMap(
             projectId = projectId,
             pipelineIds = pipelineIds
-        ).groupBy({ it.pipelineId }, { it.viewId })
+        )
         return pipelineIds.map { pipelineId ->
             val parents = mutableListOf<AuthResourceInstance>()
             val projectInstance = AuthResourceInstance(
@@ -208,18 +202,7 @@ class RbacPipelinePermissionService(
                 else -> {
                     // 获取有权限流水线组下的流水线
                     val authViewPipelineIds = instanceMap[AuthResourceType.PIPELINE_GROUP.value]?.let { authViewIds ->
-                        val viewIds = authViewIds.map { HashUtil.decodeIdToLong(it) }
-                        val pipelineIds = mutableListOf<String>()
-                        val viewGroups = pipelineViewGroupDao.listByViewIds(dslContext, projectId, viewIds)
-                        if (viewGroups.isEmpty()) {
-                            pipelineIds.addAll(emptyList())
-                        } else {
-                            pipelineIds.addAll(viewGroups.map { it.pipelineId }.toList())
-                        }
-                        if (pipelineIds.isEmpty()) {
-                            pipelineIds.add("##NONE##") // 特殊标志,避免有些判空逻辑导致过滤器没有执行
-                        }
-                        pipelineIds
+                        pipelineViewGroupCommonService.listPipelineIdsByViewIds(projectId, authViewIds)
                     } ?: emptyList()
                     // 获取有权限的流水线列表
                     val authPipelineIds = instanceMap[AuthResourceType.PIPELINE_DEFAULT.value] ?: emptyList()
