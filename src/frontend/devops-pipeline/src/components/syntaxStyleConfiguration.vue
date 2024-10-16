@@ -5,6 +5,7 @@
             theme="light"
             :width="892"
             placement="top-start"
+            :tippy-options="{ flip: false, boundary: 'HTMLElement' }"
         >
             <label class="label">{{ $t('namingConvention') }}</label>
             <div slot="content">
@@ -105,7 +106,6 @@
 
 <style lang="scss" scoped>
 .label {
-    font-weight: bold;
     font-size: 12px;
     padding: 4px 0;
     color: #63656E;

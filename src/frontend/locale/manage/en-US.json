@@ -281,7 +281,7 @@
     "仅在流程控制选项X设置中可以使用": "Can only be used in the flow control option {0} settings",
     "自定义表达式满足时运行": "custom expressions satisfy run",
     "流程控制选项、插件入参、Job设置等流水线配置中均可使用函数": "Functions can be used in pipeline configurations such as flow control options, plugin parameters, and Job settings",
-    "如变量a值为Json字符串，则bash脚本中，可以使用fromJSON读取echo “a.node is ${{fromJSON(a).node}}”": "If the value of variable 'a' is a JSON string, you can use fromJSON in a bash script to read it, e.g., echo “a.node is {'${{fromJSON(a).node}}'}”",
+    "如变量a值为Json字符串，则bash脚本中，可以使用fromJSON读取echo “a.node is ${{fromJSON(a).node}}”": "If the value of variable 'a' is a JSON string, you can use fromJSON in a bash script to read it, e.g., echo \"a.node is {'${{fromJSON(a).node}}'}\"",
 
     "变量值超长": "Variable Value Too Long",
     "仅警告未报错": "Only Warning without Error",
@@ -298,5 +298,7 @@
     "升级后，该项目对变量引用方式将有更严格的要求。": "After the upgrade, this project will have stricter requirements for variable referencing.",
     "将报错，运行失败": "It will cause errors and the run will fail",
     "确认离开当前页?": "Are you sure you want to leave this page?",
-    "离开": "Leave"
+    "离开": "Leave",
+    "基础信息": "Basic Information",
+    "高级信息": "Advanced Information"
 }

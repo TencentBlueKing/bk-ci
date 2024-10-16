@@ -199,42 +199,42 @@ onMounted(() => {
         @change="handleFormChange"
         @initProjectForm="initProjectForm"
         @approvedChange="handleApprovedChange">
-        <bk-form-item>
-          <Popover
-            :content="statusDisabledTips[projectData.approvalStatus]"
-            :disabled="![1, 4].includes(projectData.approvalStatus)"
-            v-perm="{
-              disablePermissionApi: [1, 3, 4].includes(projectData.approvalStatus),
-              hasPermission: [1, 3, 4].includes(projectData.approvalStatus),
-              permissionData: {
-                projectId: projectCode,
-                resourceType: RESOURCE_TYPE,
-                resourceCode: projectCode,
-                action: RESOURCE_ACTION.EDIT
-              }
-            }"
-          >
-            <span>
-              <bk-button
-                class="btn mr10"
-                :disabled="[1, 4].includes(projectData.approvalStatus)"
-                theme="primary"
-                :loading="btnLoading"
-                @click="handleUpdate"
-              >
-                {{ t('提交更新') }}
-              </bk-button>
-            </span>
-          </Popover>
-          <bk-button
-            class="btn"
-            :loading="btnLoading"
-            @click="handleCancel"
-          >
-            {{ t('取消') }}
-          </bk-button>
-        </bk-form-item>
       </project-form>
+      <div class="btn-group">
+        <Popover
+          :content="statusDisabledTips[projectData.approvalStatus]"
+          :disabled="![1, 4].includes(projectData.approvalStatus)"
+          v-perm="{
+            disablePermissionApi: [1, 3, 4].includes(projectData.approvalStatus),
+            hasPermission: [1, 3, 4].includes(projectData.approvalStatus),
+            permissionData: {
+              projectId: projectCode,
+              resourceType: RESOURCE_TYPE,
+              resourceCode: projectCode,
+              action: RESOURCE_ACTION.EDIT
+            }
+          }"
+        >
+          <span>
+            <bk-button
+              class="btn mr10"
+              :disabled="[1, 4].includes(projectData.approvalStatus)"
+              theme="primary"
+              :loading="btnLoading"
+              @click="handleUpdate"
+            >
+              {{ t('提交更新') }}
+            </bk-button>
+          </span>
+        </Popover>
+        <bk-button
+          class="btn"
+          :loading="btnLoading"
+          @click="handleCancel"
+        >
+          {{ t('取消') }}
+        </bk-button>
+      </div>
     </section>
     <bk-exception
       v-else
@@ -276,10 +276,9 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     height: 100%;
+    padding: 16px 24px 24px;
     overflow: auto;
-    margin: 16px 24px 24px;
-    background-color: #fff;
-    box-shadow: 0 2px 2px 0 rgb(0 0 0 / 15%);
+   
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
       border-radius: 5px !important;
@@ -295,13 +294,16 @@ onMounted(() => {
       width: 100%;
       flex: 1;
       margin: 0 auto;
-      padding: 32px 48px;
       :deep(.bk-form-label) {
         font-size: 12px;
       }
       :deep(.bk-form-content) {
         max-width: 700px;
       }
+    }
+    .btn-group {
+      display: flex;
+      margin: 24px 0;
     }
     .mr10 {
       margin-right: 10px;
