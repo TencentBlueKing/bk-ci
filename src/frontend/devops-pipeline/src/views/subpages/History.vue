@@ -66,6 +66,7 @@
             v-if="activeChild.showVar && pipeline"
             :editable="false"
             :pipeline="pipeline"
+            :is-direct-show-version="isDirectShowVersion"
         />
     </div>
 </template>
@@ -194,6 +195,9 @@
                         }))
                     }
                 ]
+            },
+            isDirectShowVersion () {
+                return this.$route.params.isDirectShowVersion || false
             }
         },
         beforeDestroy () {

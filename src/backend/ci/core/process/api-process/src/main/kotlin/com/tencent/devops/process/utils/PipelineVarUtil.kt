@@ -534,4 +534,8 @@ object PipelineVarUtil {
 
         return "$majorVersion.$minorVersion.$fixVersion"
     }
+
+    fun recommendVersionKey(key: String): Boolean {
+        return key == MAJORVERSION || key == MINORVERSION || key == FIXVERSION
+    }
 }

@@ -162,7 +162,7 @@ object PipelineUtils {
      * 将流水线常量转换成模板常量
      */
     fun fixedTemplateParam(model: Model): Model {
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
         val params = mutableListOf<BuildFormProperty>()
         val templateParams = mutableListOf<BuildFormProperty>()
         triggerContainer.params.forEach {
@@ -204,7 +204,7 @@ object PipelineUtils {
         labels: List<String>? = null,
         defaultStageTagId: String?
     ): Model {
-        val templateTrigger = templateModel.stages[0].containers[0] as TriggerContainer
+        val templateTrigger = templateModel.getTriggerContainer()
         val instanceParam = if (templateTrigger.templateParams == null) {
             BuildPropertyCompatibilityTools.mergeProperties(templateTrigger.params, param ?: emptyList())
         } else {

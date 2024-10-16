@@ -139,7 +139,8 @@ class LogServiceLuceneImpl constructor(
         containerHashId: String?,
         executeCount: Int?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        reverse: Boolean?
     ): QueryLogs {
         return doQueryInitLogs(
             buildId = buildId,
@@ -150,7 +151,8 @@ class LogServiceLuceneImpl constructor(
             containerHashId = containerHashId,
             executeCount = executeCount,
             jobId = jobId,
-            stepId = stepId
+            stepId = stepId,
+            reverse = reverse
         )
     }
 
@@ -534,7 +536,8 @@ class LogServiceLuceneImpl constructor(
         containerHashId: String? = null,
         executeCount: Int?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        reverse: Boolean?
     ): QueryLogs {
         val startTime = System.currentTimeMillis()
         val (queryLogs, index) = getQueryLogs(
@@ -569,7 +572,8 @@ class LogServiceLuceneImpl constructor(
                 containerHashId = containerHashId,
                 executeCount = executeCount,
                 jobId = jobId,
-                stepId = stepId
+                stepId = stepId,
+                reverse = reverse
             )
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
             queryLogs.logs.addAll(logs)

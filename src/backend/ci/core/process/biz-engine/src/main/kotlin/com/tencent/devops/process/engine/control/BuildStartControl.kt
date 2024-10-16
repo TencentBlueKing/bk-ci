@@ -53,6 +53,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -228,14 +229,24 @@ class BuildStartControl @Autowired constructor(
                 return false
             }
             val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+
+            if (setting?.runLockType == PipelineRunLockType.MULTIPLE) {
+                canStart = checkRunningCountWithLimit(
+                    buildInfo = buildInfo,
+                    setting = setting,
+                    executeCount = executeCount,
+                    limitCount = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                )
+            }
             // #4074 LOCK 不会进入到这里，在启动API已经拦截
             if (setting?.runLockType == PipelineRunLockType.SINGLE ||
                 setting?.runLockType == PipelineRunLockType.SINGLE_LOCK
             ) {
-                canStart = checkSingleType(
+                canStart = checkRunningCountWithLimit(
                     buildInfo = buildInfo,
                     setting = setting,
-                    executeCount = executeCount
+                    executeCount = executeCount,
+                    limitCount = 1
                 )
             }
 
@@ -373,10 +384,11 @@ class BuildStartControl @Autowired constructor(
         return checkStart
     }
 
-    private fun PipelineBuildStartEvent.checkSingleType(
+    private fun PipelineBuildStartEvent.checkRunningCountWithLimit(
         buildInfo: BuildInfo,
         setting: PipelineSetting,
-        executeCount: Int
+        executeCount: Int,
+        limitCount: Int
     ): Boolean {
         // #4074 锁定当前构建是队列中第一个排队待执行的
         var checkStart = true
@@ -384,9 +396,9 @@ class BuildStartControl @Autowired constructor(
             checkStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
         }
         if (checkStart) {
-            val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
+            val runningCount = pipelineRuntimeService.getRunningBuildCount(projectId, pipelineId)
 
-            if (buildSummaryRecord!!.runningCount > 0) {
+            if (runningCount >= limitCount) {
                 // 需要重新入队等待
                 pipelineRuntimeService.updateBuildInfoStatus2Queue(
                     projectId = projectId, buildId = buildId, oldStatus = BuildStatus.QUEUE_CACHE,
@@ -399,7 +411,7 @@ class BuildStartControl @Autowired constructor(
                 buildLogPrinter.addLine(
                     message = I18nUtil.getCodeLanMessage(
                         messageCode = ProcessMessageCode.BK_BUILD_QUEUE_WAIT,
-                        params = arrayOf(setting.runLockType.name, buildSummaryRecord.runningCount.toString())
+                        params = arrayOf(setting.runLockType.name, runningCount.toString())
                     ),
                     buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
                     jobId = null, stepId = TAG
