@@ -62,7 +62,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
-import com.tencent.devops.common.pipeline.utils.BuildFormPropertyUtils
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -269,9 +269,13 @@ class PipelineBuildFacadeService(
                         realValue?.toString()?.toBoolean()
                     }
 
-                    BuildFormPropertyUtils.supportCascadeParam(param.type) -> {
+                    CascadePropertyUtils.supportCascadeParam(param.type) -> {
                         // :TODO merge 级联参数
-                        ""
+                        CascadePropertyUtils.getLatestCascadeParamsValue(
+                            param = latestParamsMap,
+                            type = param.type,
+                            relKey = param.id
+                        )
                     }
 
                     else -> {
@@ -372,7 +376,7 @@ class PipelineBuildFacadeService(
         )
         val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         val parameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, queryDslContext)
-        return mergeCascadeParams(parameters)
+        return CascadePropertyUtils.mergeCascadeParams(parameters)
     }
 
     fun retry(
@@ -2785,37 +2789,5 @@ class PipelineBuildFacadeService(
             }
             checkManualReviewParamOut(item.valueType, item, value)
         }
-    }
-
-    /**
-     * 处理级联选择框参数
-     * 将xxx.repo-name 和 xxx.branch 合并为 xxx=repo-name@branch
-     */
-    private fun mergeCascadeParams(parameters: List<BuildParameters>): List<BuildParameters> {
-        val repoRefParams =
-            parameters.filter { BuildFormPropertyUtils.supportCascadeParam(it.valueType) }
-                .groupBy { it.relKey }
-                .mapValues { (relKey, params) ->
-                    // xxx.repo-name to buildParam
-                    // xxx.branch to buildParam
-                    val associate = params.associateBy { param -> param.key }
-                    // 拼接参数
-                    val value = BuildFormPropertyUtils.getCascadeVariableSubKey(
-                        key = relKey ?: "",
-                        type = BuildFormPropertyType.REPO_REF
-                    ).joinToString(separator = "@") { subKey -> associate[subKey]?.value.toString() ?: "" }
-                    BuildParameters(
-                        key = relKey ?: "",
-                        value = value,
-                        valueType = BuildFormPropertyType.REPO_REF,
-                        desc = params.first().desc,
-                        readOnly = params.first().readOnly,
-                        relKey = relKey
-                    )
-                }.map { it.value }
-        val list = parameters.filter { it.valueType != BuildFormPropertyType.REPO_REF }
-            .toMutableList()
-        list.addAll(repoRefParams)
-        return list
     }
 }

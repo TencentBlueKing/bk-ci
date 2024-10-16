@@ -33,8 +33,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.pojo.cascade.RepoRefCascadeParam
-import com.tencent.devops.common.pipeline.utils.BuildFormPropertyUtils
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -80,7 +79,7 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                         logger.warn("parse repo ref error, key: $key, value: ${paramValues[key]}")
                         return@forEach
                     }
-                    val variableInfo = BuildFormPropertyUtils.getCascadeVariable(key, param.type)
+                    val variableInfo = CascadePropertyUtils.getCascadeVariableKeyMap(key, param.type)
                     variableInfo.forEach { (subKey, paramKey) ->
                         paramsMap[paramKey] = BuildParameters(
                             key = paramKey,
