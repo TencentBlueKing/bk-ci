@@ -34,11 +34,9 @@ import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -64,18 +62,7 @@ class TimerTriggerElementBizPlugin constructor(
         return TimerTriggerElement::class.java
     }
 
-    override fun check(
-        projectId: String?,
-        userId: String,
-        stage: Stage,
-        container: Container,
-        element: TimerTriggerElement,
-        contextMap: Map<String, String>,
-        appearedCnt: Int,
-        isTemplate: Boolean,
-        oauthUser: String?,
-        pipelineId: String
-    ) = ElementCheckResult(true)
+    override fun check(element: TimerTriggerElement, appearedCnt: Int) = Unit
 
     override fun afterCreate(
         element: TimerTriggerElement,

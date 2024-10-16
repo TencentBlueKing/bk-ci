@@ -8,7 +8,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
+import com.tencent.devops.common.pipeline.pojo.element.atom.ElementHolder
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
@@ -18,6 +18,7 @@ import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.extend.DefaultModelCheckPlugin
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.pipeline.SubPipelineIdAndName
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -27,7 +28,7 @@ import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
 @Service
-class SubPipelineRepositoryService @Autowired constructor(
+class SubPipelineCheckService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val pipelineResDao: PipelineResourceDao,
@@ -49,100 +50,150 @@ class SubPipelineRepositoryService @Autowired constructor(
         pipelineId: String,
         userId: String,
         permission: AuthPermission
-    ): List<ElementCheckResult> {
+    ): Set<String> {
         val model = getModel(projectId, pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
-        val checkResults = mutableListOf<ElementCheckResult>()
         val stages = model.stages
         val contextMap = getContextMap(stages)
-        stages.subList(1, stages.size).forEach { stage ->
+        val elements = mutableListOf<ElementHolder>()
+        stages.forEachIndexed { index, stage ->
+            if (index == 0) return@forEachIndexed
             stage.containers.forEach { container ->
-                container.elements.forEach { element ->
-                    if (supportElement(element)) {
-                        checkElementPermission(
-                            projectId = projectId,
-                            stageName = stage.name ?: "",
-                            containerName = container.name,
-                            element = element,
-                            contextMap = contextMap,
-                            userId = userId,
-                            permission = permission
-                        )?.let {
-                            checkResults.add(it)
-                        }
-                    }
+                container.elements.filter { supportElement(it) }.forEach { element ->
+                    val holder = ElementHolder(stage = stage, container = container, element = element)
+                    elements.add(holder)
                 }
             }
         }
-        return checkResults
+        return batchCheckPermission(
+            projectId = projectId,
+            elements = elements,
+            contextMap = contextMap,
+            userId = userId,
+            permission = permission
+        )
     }
 
     /**
-     * 检查用户是否有插件的目标流水线的指定权限
-     * @param userId 目标用户
-     * @param permission 目标权限
+     * 子流水线去重
+     *
+     * 去掉同一条流水线配置多条相同子流水线,减少子流水线重复校验
+     *
+     * @return 返回子流水线与插件的映射
      */
-    @SuppressWarnings("LongParameterList", "LongMethod")
-    fun checkElementPermission(
+    fun distinctSubPipeline(
         projectId: String,
-        stageName: String,
-        containerName: String,
-        element: Element,
+        elements: List<ElementHolder>,
+        contextMap: Map<String, String>
+    ): Map<SubPipelineIdAndName, MutableList<ElementHolder>> {
+        val subPipelineElementMap = mutableMapOf<SubPipelineIdAndName, MutableList<ElementHolder>>()
+        elements.forEach { holder ->
+            // 禁用的插件不校验
+            if (!holder.enableElement()) return@forEach
+            val (subProjectId, subPipelineId, subPipelineName) = getSubPipelineInfo(
+                element = holder.element,
+                projectId = projectId,
+                contextMap = contextMap
+            ) ?: return@forEach
+            val subPipeline = SubPipelineIdAndName(
+                projectId = subProjectId,
+                pipelineId = subPipelineId,
+                pipelineName = subPipelineName
+            )
+            subPipelineElementMap.getOrPut(subPipeline) { mutableListOf() }.add(holder)
+        }
+        return subPipelineElementMap
+    }
+
+    private fun ElementHolder.enableElement() =
+        stage.stageEnabled() && container.containerEnabled() && element.elementEnabled()
+
+    fun batchCheckPermission(
+        projectId: String,
+        elements: List<ElementHolder>,
         contextMap: Map<String, String>,
         userId: String,
         permission: AuthPermission
-    ): ElementCheckResult? {
-        val subPipelineInfo = getSubPipelineInfo(
-            projectId = projectId,
-            element = element,
-            contextMap = contextMap
-        )
-        if (subPipelineInfo == null) {
-            return null
-        }
-        val (subProjectId, subPipelineId, subPipelineName) = subPipelineInfo
-        logger.info(
-            "check the sub-pipeline permissions[${permission.name}]|" +
-                    "project:$projectId|elementId:${element.id}|userId:$userId|" +
-                    "subProjectId:$subProjectId|subPipelineId:$subPipelineId"
-        )
-        // 校验流水线修改人是否有子流水线执行权限
-        val checkPermission = pipelinePermissionService.checkPipelinePermission(
+    ): Set<String> {
+        val subPipelineElementMap = distinctSubPipeline(projectId = projectId, elements = elements, contextMap)
+        return batchCheckPermission(
+            subPipelineElementMap = subPipelineElementMap,
             userId = userId,
-            projectId = subProjectId,
-            pipelineId = subPipelineId,
             permission = permission
         )
-        val pipelinePermissionUrl = "/console/pipeline/$subProjectId/$subPipelineId/history"
-        return if (checkPermission) {
-            null
-        } else {
-            ElementCheckResult(
-                result = false,
-                errorTitle = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE,
-                    params = arrayOf(userId)
-                ),
-                errorMessage = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE,
-                    params = arrayOf(
-                        stageName,
-                        containerName,
-                        element.name,
-                        pipelinePermissionUrl,
-                        subPipelineName
-                    )
-                )
+    }
+
+    /**
+     * 批量校验子流水线权限
+     *
+     * @return 权限检查错误提示
+     */
+    fun batchCheckPermission(
+        userId: String,
+        permission: AuthPermission,
+        subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>
+    ): Set<String> {
+        val errorDetails = mutableSetOf<String>()
+        subPipelineElementMap.forEach { (subPipeline, elements) ->
+            val subProjectId = subPipeline.projectId
+            val subPipelineId = subPipeline.pipelineId
+            val subPipelineName = subPipeline.pipelineName
+            // 校验流水线修改人是否有子流水线执行权限
+            val checkPermission = pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = subPipeline.projectId,
+                pipelineId = subPipeline.pipelineId,
+                permission = permission
             )
+            val pipelinePermissionUrl = "/console/pipeline/$subProjectId/$subPipelineId/history"
+            if (!checkPermission) {
+                elements.forEach { elementHolder ->
+                    errorDetails.add(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE,
+                            params = arrayOf(
+                                elementHolder.stage.name!!,
+                                elementHolder.container.name,
+                                elementHolder.element.name,
+                                pipelinePermissionUrl,
+                                subPipelineName
+                            )
+                        )
+                    )
+                }
+            }
         }
+        return errorDetails
+    }
+
+    /**
+     * 批量校验子流水线是否循环依赖
+     *
+     * @return 循环依赖提示信息
+     */
+    fun batchCheckCycle(
+        projectId: String,
+        pipelineId: String,
+        subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>
+    ): Set<String> {
+        val errorDetails = mutableSetOf<String>()
+        subPipelineElementMap.forEach { (subPipeline, elements) ->
+            val subProjectId = subPipeline.projectId
+            val subPipelineId = subPipeline.pipelineId
+            val subPipelineName = subPipeline.pipelineName
+        }
+        return errorDetails
     }
 
     fun supportElement(element: Element) = element is SubPipelineCallElement ||
             (element is MarketBuildAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE) ||
             (element is MarketBuildLessAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE)
 
+    fun supportAtomCode(atomCode: String) = (atomCode == SUB_PIPELINE_EXEC_ATOM_CODE)
+
+    @Suppress("UNCHECKED_CAST")
     fun getSubPipelineInfo(
         projectId: String,
         element: Element,
@@ -302,7 +353,7 @@ class SubPipelineRepositoryService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(SubPipelineRepositoryService::class.java)
+        private val logger = LoggerFactory.getLogger(SubPipelineCheckService::class.java)
         private val PIPELINE_ID_PATTERN = Pattern.compile("(p-)?[a-f\\d]{32}")
         private const val SUB_PIPELINE_EXEC_ATOM_CODE = "SubPipelineExec"
     }

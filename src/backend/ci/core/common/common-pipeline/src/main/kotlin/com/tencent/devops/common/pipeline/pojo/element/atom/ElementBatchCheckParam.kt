@@ -25,49 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.plugin
-
-import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+package com.tencent.devops.common.pipeline.pojo.element.atom
 
 /**
- * 流水线的Element的编排插件处理器
+ * 插件检查参数
  */
-@Suppress("ALL")
-interface ElementBizPlugin<T : Element> {
-
-    /**
-     * 取当前泛型Element的类
-     */
-    fun elementClass(): Class<T>
-
-    /**
-     * 创建插件[element]后,根据项目ID[projectId]，流水线ID[pipelineId]
-     * 流水线名称[pipelineName],操作人[userId],还有渠道[channelCode]，和是否初次新建[create]标识
-     * 进行创建后的处理
-     */
-    fun afterCreate(
-        element: T,
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
-        userId: String,
-        channelCode: ChannelCode = ChannelCode.BS,
-        create: Boolean,
-        container: Container,
-        yamlInfo: PipelineYamlVo?
-    )
-
-    /**
-     * 在删除[element]插件之前，根据[param]参数调用删除前的预处理
-     */
-    fun beforeDelete(element: T, param: BeforeDeleteParam)
-
-    /**
-     * 检查[element]插件合法性
-     */
-    fun check(element: T, appearedCnt: Int)
-}
+data class ElementBatchCheckParam(
+    val projectId: String?,
+    val pipelineId: String,
+    val userId: String,
+    val contextMap: Map<String, String>,
+    val isTemplate: Boolean,
+    val oauthUser: String?
+)

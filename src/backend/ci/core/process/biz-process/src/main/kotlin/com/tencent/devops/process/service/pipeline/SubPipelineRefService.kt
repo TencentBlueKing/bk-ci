@@ -44,7 +44,7 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
-import com.tencent.devops.process.service.SubPipelineRepositoryService
+import com.tencent.devops.process.service.SubPipelineCheckService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -59,7 +59,7 @@ class SubPipelineRefService @Autowired constructor(
     private val modelTaskDao: PipelineModelTaskDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val subPipelineRefDao: SubPipelineRefDao,
-    private val subPipelineService: SubPipelineRepositoryService
+    private val subPipelineService: SubPipelineCheckService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineRefService::class.java)
