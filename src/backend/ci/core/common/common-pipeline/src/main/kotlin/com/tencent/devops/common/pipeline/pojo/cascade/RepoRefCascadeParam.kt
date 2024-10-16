@@ -49,7 +49,5 @@ class RepoRefCascadeParam : CascadeParam(
             ScmType.CODE_TGIT,
             ScmType.CODE_GITLAB
         )
-
-        fun getVariableName(key: String) = "$key.$SELECTOR_KEY_REPO_NAME" to "$key.$SELECTOR_KEY_BRANCH"
     }
 }
