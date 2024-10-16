@@ -260,6 +260,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                     projectCode = storeInnerPipelineConfig.innerPipelineProject
                 )
             } else if (servicePipelineRelRecord.pipelineId != pipelineId) {
+                logger.info("updateStorePipelineProject:${servicePipelineRelRecord.pipelineId}|$pipelineId")
                 storePipelineRelDao.updateStorePipelineProject(
                     dslContext = context,
                     storeCode = serviceCode,
