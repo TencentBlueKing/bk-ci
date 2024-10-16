@@ -442,7 +442,7 @@ class StorePipelineServiceImpl @Autowired constructor(
                 )
         } else {
             if (storeCode != null) {
-                val newPipelineId = creatAtomPipelineByStoreCode(
+                val newPipelineId = creatStorePipelineByStoreCode(
                     dslContext = dslContext,
                     storeCode = storeCode,
                     storeType = storeType
@@ -473,17 +473,17 @@ class StorePipelineServiceImpl @Autowired constructor(
         }
     }
 
-    fun creatAtomPipelineByStoreCode(
+    fun creatStorePipelineByStoreCode(
         dslContext: DSLContext,
         storeCode: String,
         storeType: String
     ): String {
-        val lock = RedisLock(redisOperation, "creatAtomPipeline-$storeType-$storeCode", 60L)
+        val lock = RedisLock(redisOperation, "creatStorePipeline-$storeType-$storeCode", 60L)
         try {
             lock.lock()
             val pipelineModelConfig = businessConfigDao.get(
                 dslContext = dslContext,
-                business = StoreTypeEnum.ATOM.name,
+                business = StoreTypeEnum.valueOf(storeType).name,
                 feature = "initBuildPipeline",
                 businessValue = "PIPELINE_MODEL"
             )
