@@ -47,7 +47,7 @@
                         @change="handleChangeEndDate"
                         @pick-success="handlePickSuccessEndDate"
                     ></bk-date-picker>
-                    <bk-search-select
+                    <search-select
                         v-model="searchValue"
                         clearable
                         filter
@@ -55,7 +55,7 @@
                         :data="searchList"
                         :show-condition="false"
                         placeholder="文件名 / 版本号 / 版本标题 / 版本描述 / 分组标识 / 应用名称 / 平台 / 发布人"
-                    ></bk-search-select>
+                    ></search-select>
                 </div>
                 <bk-table
                     :data="releaseList"
@@ -204,11 +204,13 @@
     import qrcode from '@/components/devops/qrcode'
     import emptyData from './empty-data'
     import { EXPERIENCE_TASK_RESOURCE_TYPE, EXPERIENCE_TASK_RESOURCE_ACTION } from '@/utils/permission'
+    import '@blueking/search-select/dist/styles/index.css'
 
     export default {
         components: {
             emptyData,
-            qrcode
+            qrcode,
+            SearchSelect: () => import('@blueking/search-select')
         },
         data () {
             const { projectId } = this.$route.params
@@ -271,6 +273,7 @@
                 const list = [
                     {
                         name: '文件名',
+                        default: true,
                         id: 'name'
                     },
                     {
@@ -598,6 +601,7 @@
         height: 32px;
         margin-bottom: 20px;
         .date-prepend {
+            flex-shrink: 0;
             height: 32px;
             line-height: 32px;
             border: 1px solid #c4c6cc;
@@ -607,7 +611,8 @@
             border-right: none;
         }
         .date-picker {
-            width: 300px;
+            flex-shrink: 0;
+            max-width: 290px;
         }
         .search-input {
             width: 420px;
