@@ -255,7 +255,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                 storePipelineRelDao.add(
                     dslContext = context,
                     storeCode = serviceCode,
-                    storeType = StoreTypeEnum.ATOM,
+                    storeType = StoreTypeEnum.SERVICE,
                     pipelineId = pipelineId,
                     projectCode = storeInnerPipelineConfig.innerPipelineProject
                 )
