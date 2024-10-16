@@ -228,16 +228,15 @@ onMounted(async () => {
         :is-change="isChange"
         :data="projectData"
         @change="handleFormChange"
-        @initProjectForm="initProjectForm"
-        @approvedChange="handleApprovedChange">
+        @initProjectForm="initProjectForm">
       </project-form>
-      <div class="btn-group">
+      <div class="btn-group">{{ projectData?.approvalStatus }}
         <Popover
-          :content="statusDisabledTips[projectData.approvalStatus]"
-          :disabled="![1, 4].includes(projectData.approvalStatus)"
+          :content="statusDisabledTips[projectData?.approvalStatus]"
+          :disabled="![1, 4].includes(projectData?.approvalStatus)"
           v-perm="{
-            disablePermissionApi: [1, 3, 4].includes(projectData.approvalStatus),
-            hasPermission: [1, 3, 4].includes(projectData.approvalStatus),
+            disablePermissionApi: [1, 3, 4].includes(projectData?.approvalStatus),
+            hasPermission: [1, 3, 4].includes(projectData?.approvalStatus),
             permissionData: {
               projectId: projectCode,
               resourceType: RESOURCE_TYPE,
@@ -249,7 +248,7 @@ onMounted(async () => {
           <span>
             <bk-button
               class="btn mr10"
-              :disabled="[1, 4].includes(projectData.approvalStatus)"
+              :disabled="[1, 4].includes(projectData?.approvalStatus)"
               theme="primary"
               :loading="btnLoading"
               @click="handleUpdate"
