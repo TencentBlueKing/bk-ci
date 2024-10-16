@@ -114,7 +114,7 @@ class WorkspaceListener @Autowired constructor(
                 UpdateEventType.START -> {
                     val workspaceResponse = remoteDevService.startWorkspace(event)
                     backEvent.status = true
-                    backEvent.environmentHost = workspaceResponse.environmentHost
+                    backEvent.environmentIp = workspaceResponse.environmentIp
                 }
 
                 UpdateEventType.STOP -> {

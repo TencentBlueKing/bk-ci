@@ -18,7 +18,9 @@ data class RemoteDevUpdateEvent(
     var status: Boolean,
     val mountType: WorkspaceMountType,
     var environmentUid: String? = null,
+    /*带区域的ip*/
     var environmentHost: String? = null,
+    /*不带区域的ip*/
     var environmentIp: String? = null,
     var resourceId: String? = null,
     var macAddress: String? = null,
