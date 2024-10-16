@@ -246,20 +246,4 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
     override fun updateStoreRepoProject(userId: String, projectId: String, repositoryId: Long): Result<Boolean> {
         return repositoryService.updateStoreRepoProject(userId, projectId, repositoryId)
     }
-
-    override fun listByProject(
-        projectId: String,
-        repositoryTypes: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<List<RepositoryInfo>> {
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 100
-        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val result = repositoryService.listByProject(projectId, repositoryTypes, limit.offset, limit.limit)
-        return Result(result)
-    }
 }

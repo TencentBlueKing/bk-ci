@@ -1560,32 +1560,6 @@ class RepositoryService @Autowired constructor(
         )
     }
 
-    fun listByProject(
-        projectId: String,
-        scmTypes: String?,
-        limit: Int,
-        offset: Int
-    ): List<RepositoryInfo> {
-        return repositoryDao.listByProject(
-            dslContext = dslContext,
-            projectId = projectId,
-            repositoryTypes = scmTypes?.split(",")?.map { ScmType.valueOf(it) },
-            repositoryIds = null,
-            aliasName = null,
-            limit = limit,
-            offset = offset
-        ).map {
-            RepositoryInfo(
-                repositoryId = it.repositoryId,
-                repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
-                aliasName = it.aliasName,
-                url = it.url,
-                type = ScmType.valueOf(it.type),
-                updatedTime = it.updatedTime.timestamp()
-            )
-        }
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryService::class.java)
         const val MAX_ALIAS_LENGTH = 255

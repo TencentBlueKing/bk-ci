@@ -152,57 +152,6 @@ class CodeService @Autowired constructor(
         }
     }
 
-    fun listRepository(projectId: String, repositoryTypes: String?): List<RepositoryInfo> {
-        try {
-            val result = client.get(ServiceRepositoryResource::class).listByProject(
-                projectId,
-                repositoryTypes = repositoryTypes,
-                page = 1,
-                pageSize = 100
-            )
-            if (result.isNotOk() || result.data == null) {
-                logger.warn("[$projectId|$repositoryTypes] Fail to get the repository with message $result")
-            }
-            return result.data!!
-        } catch (t: Throwable) {
-            logger.warn("[$projectId|$repositoryTypes] Fail to get the repository", t)
-            throw t
-        }
-    }
-
-    fun getRepoRefs(projectId: String, repositoryConfig: RepositoryConfig): List<String> {
-        val repository = client.get(ServiceRepositoryResource::class).get(
-            projectId = projectId,
-            repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
-            repositoryType = repositoryConfig.repositoryType
-        ).data ?: throw NotFoundException(
-            I18nUtil.getCodeLanMessage(
-                messageCode = GIT_NOT_FOUND,
-                params = arrayOf(repositoryConfig.getRepositoryId())
-            )
-        )
-        return when (repository.getScmType()) {
-            ScmType.CODE_SVN -> {
-                getSvnDirectories(
-                    projectId = projectId,
-                    repositoryConfig = repositoryConfig,
-                    relativePath = null
-                )
-            }
-
-            ScmType.CODE_GIT, ScmType.CODE_TGIT, ScmType.CODE_GITLAB, ScmType.GITHUB -> {
-                getGitRefs(
-                    projectId = projectId,
-                    repositoryConfig = repositoryConfig
-                )
-            }
-
-            else -> {
-                emptyList()
-            }
-        }
-    }
-
     private fun getSvnCredential(
         projectId: String,
         repository: CodeSvnRepository

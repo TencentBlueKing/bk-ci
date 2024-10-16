@@ -270,22 +270,4 @@ interface ServiceRepositoryResource {
         @QueryParam("repositoryId")
         repositoryId: Long
     ): Result<Boolean>
-
-    @Operation(summary = "获取项目代码库列表")
-    @GET
-    @Path("/projects/{projectId}/listRepo")
-    fun listByProject(
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "仓库类型", required = false)
-        @QueryParam("repositoryTypes")
-        repositoryTypes: String?,
-        @Parameter(description = "分页", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @Parameter(description = "分页大小", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<List<RepositoryInfo>>
 }
