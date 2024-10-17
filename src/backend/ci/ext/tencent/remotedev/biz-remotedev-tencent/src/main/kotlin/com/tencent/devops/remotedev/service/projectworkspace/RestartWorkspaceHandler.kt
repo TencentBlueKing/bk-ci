@@ -236,7 +236,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                 )
             }
             // 重装成功后做异步设置(L盘挂载)
-            val ip = event.environmentIp?.substringAfter(".")
+            val ip = event.environmentIp
             ip?.let {
                 workspaceCommon.makeDiskMount(it, event.userId)
             }

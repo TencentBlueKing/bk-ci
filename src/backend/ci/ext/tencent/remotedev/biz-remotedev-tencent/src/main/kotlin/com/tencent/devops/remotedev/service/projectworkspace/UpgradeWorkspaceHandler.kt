@@ -21,10 +21,12 @@ import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
@@ -110,23 +112,9 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                     )
                 )
             }
-            if (workspace.ownerType == WorkspaceOwnerType.PROJECT) {
-                val workspaceNames = workspaceDao.fetchUserWorkspaceName(
-                    dslContext = dslContext,
-                    projectId = workspace.projectId,
-                    ownerType = WorkspaceOwnerType.PROJECT
-                )
-                windowsResourceConfigService.createCheckSpecLimit(
-                    windowsType = rebuildReq.machineType,
-                    projectId = workspace.projectId,
-                    workspaceNames = workspaceNames
-                )
-            }
-            windowsResourceConfigService.createCheckWhenWinNotAlready(
-                zoneId = checkNotNull(workspace.zoneId),
-                winConfigId = checkNotNull(workspace.winConfigId),
-                newNum = 1,
-                ownerType = workspace.ownerType
+            createCheckWhenUpgrade(
+                old = workspace,
+                machineType = rebuildReq.machineType
             )
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
@@ -232,6 +220,56 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                 deleteControl.deleteWorkspace4System(ws.createUserId, bakWorkspaceName)
             }
         }
+    }
+
+    private fun createCheckWhenUpgrade(
+        old: WorkspaceRecordWithWindows,
+        machineType: String
+    ) {
+        val zoneId = checkNotNull(old.zoneId)
+        val winConfigId = checkNotNull(old.winConfigId)
+        val windowsConfig = windowsResourceConfigService.getTypeConfig(winConfigId)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(winConfigId.toString())
+            )
+
+        if (windowsConfig.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(windowsConfig.size)
+            )
+        }
+        val windowsZone = windowsResourceConfigService.getZoneConfig(zoneId.replace(Regex("\\d+"), ""))
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(zoneId)
+            )
+        if (windowsZone.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(zoneId)
+            )
+        }
+
+        if (old.ownerType == WorkspaceOwnerType.PROJECT && old.winConfigId != windowsConfig.id?.toInt()) {
+            val workspaceNames = workspaceDao.fetchUserWorkspaceName(
+                dslContext = dslContext,
+                projectId = old.projectId,
+                ownerType = WorkspaceOwnerType.PROJECT
+            )
+            windowsResourceConfigService.createCheckSpecLimit(
+                windowsType = machineType,
+                projectId = old.projectId,
+                workspaceNames = workspaceNames
+            )
+        }
+        windowsResourceConfigService.createCheckWhenWinNotAlready(
+            windowsZone = windowsZone,
+            windowsConfig = windowsConfig,
+            newNum = 1,
+            quotaType = QuotaType.parse(windowsZone.type)
+        )
     }
 
     companion object {
