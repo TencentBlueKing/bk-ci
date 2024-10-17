@@ -55,7 +55,6 @@ class CodeCCDispatchListener @Autowired constructor(
     }
 
     override fun consumerFilter(dispatchType: DispatchType): Boolean {
-        // TODO #7443 codecc是否还需要单独的type
         return dispatchType is CodeCCDispatchType
     }
 
