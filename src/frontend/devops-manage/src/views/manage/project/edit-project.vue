@@ -228,9 +228,10 @@ onMounted(async () => {
         :is-change="isChange"
         :data="projectData"
         @change="handleFormChange"
-        @initProjectForm="initProjectForm">
+        @initProjectForm="initProjectForm"
+        @approvedChange="handleApprovedChange">
       </project-form>
-      <div class="btn-group">{{ projectData?.approvalStatus }}
+      <div class="btn-group">
         <Popover
           :content="statusDisabledTips[projectData?.approvalStatus]"
           :disabled="![1, 4].includes(projectData?.approvalStatus)"
