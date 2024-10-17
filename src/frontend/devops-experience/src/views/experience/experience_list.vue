@@ -40,9 +40,6 @@
                         :value="endDaterange"
                         type="datetimerange"
                         placeholder="选择日期范围"
-                        :options="{
-                            disabledDate: time => time.getTime() > Date.now()
-                        }"
                         @clear="handleClearEndDate"
                         @change="handleChangeEndDate"
                         @pick-success="handlePickSuccessEndDate"
@@ -59,7 +56,6 @@
                 </div>
                 <bk-table
                     :data="releaseList"
-                    @row-click="toRowDetail"
                     :pagination="pagination"
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageLimitChange"
@@ -78,6 +74,7 @@
                             <span
                                 class="link-text"
                                 :title="`${props.row.name}（ ${props.row.version} ）`"
+                                @click="toRowDetail"
                             >{{ props.row.name }}（{{ props.row.version }}）</span>
                         </template>
                     </bk-table-column>
@@ -566,6 +563,7 @@
         height: 100%;
         overflow: hidden;
         .link-text {
+            cursor: pointer;
             color: $primaryColor;
         }
         .devops-icon.icon-expired-experience{
@@ -591,6 +589,9 @@
             .expired-text {
                 cursor: default;
                 color: $fontLighterColor;
+            }
+            .icon-qrcode {
+                margin-right: 10px;
             }
         }
     }
