@@ -52,6 +52,7 @@
                     :disabled="!editable"
                     :container="container"
                     :update-container-params="handleContainerChange"
+                    :is-direct-show-version="isDirectShowVersion"
                 />
             </div>
         </div>
@@ -80,6 +81,10 @@
             editable: {
                 type: Boolean,
                 default: true
+            },
+            isDirectShowVersion: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -116,6 +121,9 @@
         },
         mounted () {
             this.setShowVariable(true)
+            if (this.isDirectShowVersion) {
+                this.active = 'version'
+            }
         },
         beforeDestroy () {
             this.setShowVariable(false)
