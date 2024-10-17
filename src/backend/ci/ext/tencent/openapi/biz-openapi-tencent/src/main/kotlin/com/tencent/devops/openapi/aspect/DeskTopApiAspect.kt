@@ -37,7 +37,6 @@ import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
 import org.aspectj.lang.reflect.MethodSignature
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
@@ -104,9 +103,5 @@ class DeskTopApiAspect {
                 throw PermissionForbiddenException(message = "仅支持云桌面发起的请求")
             }
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(DeskTopApiAspect::class.java)
     }
 }
