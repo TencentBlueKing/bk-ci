@@ -29,7 +29,6 @@ package com.tencent.devops.quality.listener
 
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
@@ -42,17 +41,12 @@ import com.tencent.devops.quality.dao.v2.QualityRuleReviewerDao
 import com.tencent.devops.quality.service.v2.QualityHistoryService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.core.ExchangeTypes
-import org.springframework.amqp.rabbit.annotation.Exchange
-import org.springframework.amqp.rabbit.annotation.Queue
-import org.springframework.amqp.rabbit.annotation.QueueBinding
-import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import com.tencent.devops.quality.constant.MQ as QualityMQ
 
 @Service
-@Suppress("NestedBlockDepth")
+@Suppress("NestedBlockDepth", "ComplexMethod")
 class PipelineBuildQualityListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
@@ -66,17 +60,6 @@ class PipelineBuildQualityListener @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PipelineBuildQualityListener::class.java)
     }
 
-    @RabbitListener(
-        bindings = [(QueueBinding(
-            value = Queue(value = QualityMQ.QUEUE_PIPELINE_BUILD_CANCEL_QUALITY, durable = "true"),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT,
-                durable = "true",
-                delayed = "true",
-                type = ExchangeTypes.FANOUT
-            )
-        ))]
-    )
     fun listenPipelineCancelQualityListener(pipelineCancelEvent: PipelineBuildCancelBroadCastEvent) {
         try {
             logger.info("QUALITY|pipelineCancelListener cancelEvent: ${pipelineCancelEvent.buildId}")
@@ -95,17 +78,6 @@ class PipelineBuildQualityListener @Autowired constructor(
         }
     }
 
-    @RabbitListener(
-        bindings = [(QueueBinding(
-            value = Queue(value = QualityMQ.QUEUE_PIPELINE_BUILD_RETRY_QUALITY, durable = "true"),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT,
-                durable = "true",
-                delayed = "true",
-                type = ExchangeTypes.FANOUT
-            )
-        ))]
-    )
     fun listenPipelineRetryBroadCastEvent(pipelineRetryStartEvent: PipelineBuildQueueBroadCastEvent) {
         try {
             logger.info("QUALITY|pipelineRetryListener retryEvent: ${pipelineRetryStartEvent.buildId}")
@@ -128,17 +100,6 @@ class PipelineBuildQualityListener @Autowired constructor(
         }
     }
 
-    @RabbitListener(
-        bindings = [(QueueBinding(
-            value = Queue(value = QualityMQ.QUEUE_PIPELINE_BUILD_TIMEOUT_QUALITY, durable = "true"),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT,
-                durable = "true",
-                delayed = "true",
-                type = ExchangeTypes.FANOUT
-            )
-        ))]
-    )
     fun listenPipelineTimeoutBroadCastEvent(pipelineTimeoutEvent: PipelineBuildReviewBroadCastEvent) {
         try {
             logger.info("QUALITY|pipelineTimeoutListener timeoutEvent: ${pipelineTimeoutEvent.buildId}")
@@ -176,17 +137,6 @@ class PipelineBuildQualityListener @Autowired constructor(
     /**
      * 蓝盾流水线质量红线人工审核广播事件
      */
-    @RabbitListener(
-        bindings = [(QueueBinding(
-            value = Queue(value = QualityMQ.QUEUE_PIPELINE_BUILD_QUALITY_REVIEW, durable = "true"),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_PIPELINE_BUILD_QUALITY_REVIEW_FANOUT,
-                durable = "true",
-                delayed = "true",
-                type = ExchangeTypes.FANOUT
-            )
-        ))]
-    )
     fun listenPipelineQualityReviewBroadCastEvent(event: PipelineBuildQualityReviewBroadCastEvent) {
         try {
             logger.info("QUALITY|qualityReviewListener reviewEvent: ${event.buildId}")

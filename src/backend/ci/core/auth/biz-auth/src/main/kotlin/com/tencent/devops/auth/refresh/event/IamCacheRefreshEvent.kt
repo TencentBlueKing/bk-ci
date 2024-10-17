@@ -28,9 +28,9 @@
 package com.tencent.devops.auth.refresh.event
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(exchange = MQ.EXCHANGE_AUTH_REFRESH_FANOUT, routeKey = MQ.ROUTE_AUTH_REFRESH_FANOUT)
+@Event(destination = StreamBinding.AUTH_REFRESH_FANOUT)
 data class IamCacheRefreshEvent(
     override val refreshType: String,
     override var retryCount: Int = 0,
