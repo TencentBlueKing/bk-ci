@@ -36,7 +36,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
@@ -89,7 +89,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeBuilder: DispatchTypeBuilder,
     private val pipelineContextService: PipelineContextService,
@@ -356,6 +356,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = false, // #5046 强制终止为失败
+                        dispatchType = dispatchTypeBuilder.getDispatchType(task, param),
                         routeKeySuffix = dispatchTypeBuilder
                             .getDispatchType(task, param)
                             .routeKeySuffix?.routeKeySuffix,

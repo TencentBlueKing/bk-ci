@@ -85,7 +85,8 @@ class UserLogResourceImpl @Autowired constructor(
             executeCount = executeCount,
             jobId = null,
             stepId = null,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            reverse = false
         )
         recordListLogCount(initLogs.data?.logs?.size ?: 0)
         return initLogs

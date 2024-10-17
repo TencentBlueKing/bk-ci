@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.bean.PipelineUrlBean
@@ -152,7 +153,7 @@ class PipelineBuildService(
                 params = arrayOf(projectVO.englishName)
             )
         }
-
+        // 如果调试出现了没有关联setting的老版本，则使用当前的配置
         val setting = if (debug == true) {
             pipelineRepositoryService.getDraftVersionResource(
                 pipeline.projectId, pipeline.pipelineId
@@ -164,7 +165,7 @@ class PipelineBuildService(
                     detailInfo = null,
                     version = it
                 )
-            }
+            } ?: pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
         } else {
             // webhook、重试可以指定流水线版本
             pipelineRepositoryService.getSettingByPipelineVersion(
@@ -245,7 +246,7 @@ class PipelineBuildService(
                 pipelineParamMap = pipelineParamMap,
                 webHookStartParam = webHookStartParam,
                 // 解析出定义的流水线变量
-                realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id },
+                realStartParamKeys = model.getTriggerContainer().params.map { it.id },
                 debug = debug ?: false,
                 versionName = versionName,
                 yamlVersion = yamlVersion
@@ -267,7 +268,7 @@ class PipelineBuildService(
                     maxQueueSize = setting.maxQueueSize,
                     concurrencyGroup = context.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
-                    maxConRunningQueueSize = setting.maxConRunningQueueSize,
+                    maxConRunningQueueSize = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
                     retry = pipelineParamMap[PIPELINE_RETRY_COUNT] != null
                 )
             )
@@ -325,7 +326,7 @@ class PipelineBuildService(
         )
 
         // 解析出定义的流水线变量
-//        val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
+//        val realStartParamKeys = (model.getTriggerContainer()).params.map { it.id }
 //        val originStartParams = ArrayList<BuildParameters>(realStartParamKeys.size + 4)
 
         // 将用户定义的变量增加上下文前缀的版本，与原变量相互独立

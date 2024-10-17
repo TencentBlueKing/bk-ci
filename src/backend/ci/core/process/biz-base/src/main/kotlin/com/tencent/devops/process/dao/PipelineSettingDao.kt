@@ -160,13 +160,10 @@ class PipelineSettingDao {
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
                 .set(VERSION, setting.version)
+                .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
             // pipelineAsCodeSettings 默认传空不更新
             setting.pipelineAsCodeSettings?.let { self ->
                 insert.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
-            }
-            // maxConRunningQueueSize 默认传空不更新
-            if (setting.maxConRunningQueueSize != null) {
-                insert.set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
             }
             return insert.execute()
         }

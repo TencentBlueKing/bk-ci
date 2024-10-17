@@ -57,6 +57,8 @@ import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -1138,18 +1140,35 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         ErrorType.PLUGIN -> "Please contact the plugin developer."
                         ErrorType.SYSTEM -> "Please contact platform."
                     }
-                buildLogPrinter.addRedLine(
-                    buildId = buildId,
-                    message = errMsg,
-                    tag = taskId,
-                    containerHashId = containerHashId,
-                    executeCount = executeCount ?: 1,
-                    jobId = null,
-                    stepId = stepId
-                )
+                if (showAI(task)) {
+                    buildLogPrinter.addAIErrorLine(
+                        buildId = buildId,
+                        message = errMsg,
+                        tag = taskId,
+                        containerHashId = containerHashId,
+                        executeCount = executeCount ?: 1,
+                        jobId = null,
+                        stepId = stepId
+                    )
+                } else {
+                    buildLogPrinter.addRedLine(
+                        buildId = buildId,
+                        message = errMsg,
+                        tag = taskId,
+                        containerHashId = containerHashId,
+                        executeCount = executeCount ?: 1,
+                        jobId = null,
+                        stepId = stepId
+                    )
+                }
             }
         }
     }
+
+    private fun showAI(task: PipelineBuildTask): Boolean =
+        task.atomCode == "run" ||
+            task.atomCode == LinuxScriptElement.classType ||
+            task.atomCode == WindowsScriptElement.classType
 
     /**
      * #5046 提交构建机出错失败信息，并结束构建

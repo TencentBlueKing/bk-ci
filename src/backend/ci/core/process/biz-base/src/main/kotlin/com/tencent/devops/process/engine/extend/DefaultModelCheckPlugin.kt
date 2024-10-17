@@ -238,7 +238,7 @@ open class DefaultModelCheckPlugin constructor(
             )
         }
         checkIn?.reviewGroups?.forEach { group ->
-            if (group.reviewers.isEmpty()) throw ErrorCodeException(
+            if (group.reviewers.isEmpty() && group.groups.isEmpty()) throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_GROUP_NO_USER,
                 params = arrayOf(name!!, group.name)
             )

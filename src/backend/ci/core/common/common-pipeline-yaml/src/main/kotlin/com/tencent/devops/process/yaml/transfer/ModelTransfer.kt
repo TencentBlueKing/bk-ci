@@ -32,13 +32,13 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
@@ -99,6 +99,7 @@ class ModelTransfer @Autowired constructor(
             waitQueueTimeMinute = yaml.concurrency?.queueTimeoutMinutes
                 ?: VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE,
             maxQueueSize = yaml.concurrency?.queueLength ?: VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE,
+            maxConRunningQueueSize = yaml.concurrency?.maxParallel ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
             labels = yaml2Labels(yamlInput),
             pipelineAsCodeSettings = yamlSyntaxDialect2Setting(yaml.syntaxDialect),
             successSubscriptionList = yamlNotice2Setting(
@@ -333,7 +334,18 @@ class ModelTransfer @Autowired constructor(
                 queueLength = setting.maxQueueSize
                     .nullIfDefault(VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE),
                 queueTimeoutMinutes = setting.waitQueueTimeMinute
-                    .nullIfDefault(VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE)
+                    .nullIfDefault(VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE),
+                maxParallel = null
+            )
+        }
+        if (setting.runLockType == PipelineRunLockType.MULTIPLE) {
+            return Concurrency(
+                group = null,
+                cancelInProgress = null,
+                queueLength = null,
+                queueTimeoutMinutes = setting.waitQueueTimeMinute
+                    .nullIfDefault(VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE),
+                maxParallel = setting.maxConRunningQueueSize.nullIfDefault(PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX)
             )
         }
         return null
@@ -348,7 +360,7 @@ class ModelTransfer @Autowired constructor(
             modelInput.model.stages[0].containers[0],
             PipelineTransferAspectWrapper.AspectType.BEFORE
         )
-        val triggers = (modelInput.model.stages[0].containers[0] as TriggerContainer).elements
+        val triggers = (modelInput.model.getTriggerContainer()).elements
         val baseTrigger = elementTransfer.baseTriggers2yaml(triggers, modelInput.aspectWrapper)
             ?.toPre(modelInput.version)
         val scmTrigger = elementTransfer.scmTriggers2Yaml(

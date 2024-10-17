@@ -247,6 +247,7 @@
                 }
             },
             toEdit (event) {
+                if (this.disabled) return
                 this.isEdit = true
                 this.$refs.staffInput.focus()
             },

@@ -1,37 +1,8 @@
 package com.tencent.devops.common.pipeline.utils
 
-import com.tencent.devops.common.pipeline.NameAndValue
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.RunCondition
-import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import org.json.JSONObject
 
 object TransferUtil {
-    fun parseStepIfFiled(
-        step: Element
-    ): String? {
-        return when (step.additionalOptions?.runCondition) {
-            RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
-            RunCondition.CUSTOM_VARIABLE_MATCH -> customVariableMatch(
-                step.additionalOptions?.customVariables
-            )
-
-            RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> customVariableMatchNotRun(
-                step.additionalOptions?.customVariables
-            )
-
-            RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
-                IfType.ALWAYS_UNLESS_CANCELLED.name
-
-            RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
-                IfType.ALWAYS.name
-
-            RunCondition.PRE_TASK_FAILED_ONLY ->
-                IfType.FAILURE.name
-
-            else -> null
-        }
-    }
 
     /*
     * 简化input, 如果是默认值则去掉
@@ -59,21 +30,5 @@ object TransferUtil {
             }
         }
         return out
-    }
-
-    fun customVariableMatchNotRun(input: List<NameAndValue>?): String? {
-        val ifString = input?.joinToString(separator = " || ") {
-            "${it.key} != '${it.value}' "
-        }
-        return if (input?.isEmpty() == true) null
-        else ifString
-    }
-
-    fun customVariableMatch(input: List<NameAndValue>?): String? {
-        val ifString = input?.joinToString(separator = " && ") {
-            "${it.key} == '${it.value}' "
-        }
-        return if (input?.isEmpty() == true) null
-        else ifString
     }
 }

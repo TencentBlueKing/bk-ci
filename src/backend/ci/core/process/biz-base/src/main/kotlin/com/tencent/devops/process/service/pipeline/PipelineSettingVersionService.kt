@@ -130,6 +130,11 @@ class PipelineSettingVersionService @Autowired constructor(
                     ?: settingInfo.concurrencyCancelInProgress
                 settingInfo.waitQueueTimeMinute = ve.waitQueueTimeMinute ?: settingInfo.waitQueueTimeMinute
                 settingInfo.maxQueueSize = ve.maxQueueSize ?: settingInfo.maxQueueSize
+                settingInfo.maxConRunningQueueSize = if (ve.maxConRunningQueueSize != -1) {
+                    ve.maxConRunningQueueSize ?: settingInfo.maxConRunningQueueSize
+                } else {
+                    null
+                }
                 settingInfo.pipelineAsCodeSettings = ve.pipelineAsCodeSettings
             }
             // 来自前端的请求中，版本中的可能还不是正式生效的，如果和正式配置中有差异则重新获取名称
