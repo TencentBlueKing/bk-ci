@@ -64,7 +64,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         subTag: String?,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        reverse: Boolean?
     ): Result<QueryLogs> {
         return buildLogQueryService.getInitLogs(
             userId = userId,
@@ -79,7 +80,8 @@ class ServiceLogResourceImpl @Autowired constructor(
             subTag = subTag,
             jobId = jobId,
             stepId = stepId,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            reverse = reverse ?: false
         )
     }
 

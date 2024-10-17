@@ -82,8 +82,8 @@ class StartActionTaskContainerCmd(
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            !commandContext.buildStatus.isFinish() &&
-            commandContext.container.matrixGroupFlag != true
+                !commandContext.buildStatus.isFinish() &&
+                commandContext.container.matrixGroupFlag != true
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -265,8 +265,8 @@ class StartActionTaskContainerCmd(
 
         LOG.info(
             "ENGINE|${containerContext.event.buildId}|${containerContext.event.source}|CONTAINER_FIND_TASK|" +
-                "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
-                "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate"
+                    "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
+                    "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate"
         )
 
         if (!needTerminate && breakFlag) {
@@ -279,7 +279,7 @@ class StartActionTaskContainerCmd(
 
     private fun isTerminate(containerContext: ContainerContext): Boolean {
         return containerContext.event.actionType.isTerminate() ||
-            FastKillUtils.isTerminateCode(containerContext.event.errorCode)
+                FastKillUtils.isTerminateCode(containerContext.event.errorCode)
     }
 
     private fun findRunningTask(
@@ -355,14 +355,14 @@ class StartActionTaskContainerCmd(
         } catch (ignore: Throwable) {
             buildLogPrinter.addErrorLine(
                 message = "[EXPRESSION_ERROR] failed to parse condition(${additionalOptions?.customCondition}) " +
-                    "with error: ${ignore.message}",
+                        "with error: ${ignore.message}",
                 buildId = buildId, containerHashId = containerHashId, tag = taskId, executeCount = executeCount ?: 1,
                 jobId = null, stepId = stepId
             )
             LOG.error(
                 "BKSystemErrorMonitor|findNeedToRunTask|$buildId|$source|" +
-                    "EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|" +
-                    "customCondition=${additionalOptions?.customCondition}",
+                        "EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|" +
+                        "customCondition=${additionalOptions?.customCondition}",
                 ignore
             )
             Pair(false, ignore)
@@ -566,7 +566,7 @@ class StartActionTaskContainerCmd(
             toDoTask = pipelineBuildTask
             LOG.info(
                 "ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
-                    "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}"
+                        "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}"
             )
             val endTask = containerContext.containerTasks
                 .filter { it.taskId.startsWith(VMUtils.getEndLabel()) } // 获取end插件
