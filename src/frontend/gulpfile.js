@@ -121,9 +121,6 @@ task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline'), gener
 task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
 
 task('build', async () => {
-    const assetJson = await getAssetsJSON(ASSETS_JSON_URL)
-    fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(assetJson))
-    
     return await execAsync()
 })
 
@@ -202,7 +199,7 @@ async function execAsync () {
             }
         })
         
-        spawnCmd.on('close', (code) => {
+        spawnCmd.on('close', async (code) => {
             console.log(`child process exited with code ${code}`)
             if (code) {
                 reject(Error('build failed'))
@@ -210,6 +207,8 @@ async function execAsync () {
                 process.exit(1)
             }
             spinner.succeed('Finished building bk-ci frontend project')
+            const assetJson = await getAssetsJSON(ASSETS_JSON_URL)
+            fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(assetJson))
             resolve()
         })
     })
