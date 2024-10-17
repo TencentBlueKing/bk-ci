@@ -1565,7 +1565,7 @@ class PipelineBuildFacadeService(
         if (projectId != buildInfo.projectId || pipelineId != buildInfo.pipelineId) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 params = arrayOf(buildId)
             )
         }
