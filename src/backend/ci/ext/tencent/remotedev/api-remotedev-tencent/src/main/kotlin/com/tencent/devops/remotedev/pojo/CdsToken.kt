@@ -29,9 +29,9 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "用户1password模型")
+@Schema(title = "CdsToken")
 data class CdsToken(
-    @get:Schema(title = "用户名")
+    @get:Schema(title = "项目ID")
     val projectId: String,
     @get:Schema(title = "用户名")
     val userId: String,
