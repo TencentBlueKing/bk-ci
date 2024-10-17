@@ -51,6 +51,9 @@ export default {
     onlyBranchPipeline: state => {
         return state.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH
     },
+    isCommittingPipeline: state => {
+        return state.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING
+    },
     isReleaseVersion: state => {
         return state.activePipelineVersion?.version === state.pipelineInfo?.releaseVersion && state.activePipelineVersion?.status === VERSION_STATUS_ENUM.RELEASED
     },

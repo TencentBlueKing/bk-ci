@@ -30,6 +30,7 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-event"))
     api(project(":core:common:common-db-sharding"))
+    api(project(":core:common:common-dispatch-sdk"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-auth:common-auth-provider"))
     api(project(":core:auth:api-auth"))

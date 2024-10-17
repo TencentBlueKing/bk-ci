@@ -27,7 +27,7 @@
 
 package com.tencent.devops.metrics.listener
 
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.metrics.service.builds.MetricsUserService
 import org.slf4j.LoggerFactory
@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component
 @ConditionalOnProperty(name = ["metrics.user.enable"], havingValue = "true", matchIfMissing = false)
 class BuildMetricsUserListener @Autowired constructor(
     private val metricsUserService: MetricsUserService
-) : Listener<PipelineBuildStatusBroadCastEvent> {
+) : EventListener<PipelineBuildStatusBroadCastEvent> {
 
     companion object {
         val logger = LoggerFactory.getLogger(BuildMetricsUserListener::class.java)

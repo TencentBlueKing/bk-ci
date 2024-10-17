@@ -8,7 +8,6 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
-import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -16,26 +15,26 @@ import com.tencent.devops.dispatch.dao.TPAQueueDao
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentQueueSqlData
 import com.tencent.devops.dispatch.exception.DispatchRetryMQException
 import com.tencent.devops.dispatch.pojo.QueueDataContext
-import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.TPAQueueEvent
 import com.tencent.devops.dispatch.pojo.TPAQueueEventContext
+import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentSqlQueueType
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.TPACommonUtil.Companion.tagError
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentQueueEnvLock
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.UUID
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
+import org.springframework.stereotype.Service
 
 @Service
 class TPAQueueService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val commonUtil: TPACommonUtil,
     private val tpaQueueDao: TPAQueueDao,
     private val tpaEnvQueueService: TPAEnvQueueService,
@@ -107,27 +106,11 @@ class TPAQueueService @Autowired constructor(
                 event.sendData = null
             }
             logger.info("queue_dispatch|${event.toLog()}")
-            send(event)
+            event.sendTo(streamBridge)
         } catch (e: Throwable) {
             // 只可能是发送消息错误或者抓到的异常处理逻辑错误，但是为了防止没解锁
             logger.tagError("dispatch|send|${event.toLog()}|error", e)
             lock.unlock()
-        }
-    }
-
-    private fun send(event: TPAQueueEvent) {
-        val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-        rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
-            // 事件中的变量指定
-            when {
-                event.delayMills > 0 -> message.messageProperties.setHeader("x-delay", event.delayMills)
-                eventType.delayMills > 0 -> // 事件类型固化默认值
-                    message.messageProperties.setHeader("x-delay", eventType.delayMills)
-
-                else -> // 非延时消息的则8小时后过期，防止意外发送的消息无消费端ACK处理从而堆积过多消息导致MQ故障
-                    message.messageProperties.expiration = "28800000"
-            }
-            message
         }
     }
 

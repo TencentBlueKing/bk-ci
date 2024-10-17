@@ -100,7 +100,7 @@ object CommandLineUtils {
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
-                errorMsg = "Script command execution failed because of ${t.message}"
+                errorMsg = "Script command execution failed because of ${t.message},command: $command"
             )
         }
         return result.toString()

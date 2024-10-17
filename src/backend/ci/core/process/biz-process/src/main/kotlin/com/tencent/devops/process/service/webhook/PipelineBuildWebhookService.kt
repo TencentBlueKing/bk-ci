@@ -31,14 +31,13 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
 import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -96,7 +95,7 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelineBuildCommitService: PipelineBuildCommitService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val measureEventDispatcher: MeasureEventDispatcher,
+    private val measureEventDispatcher: SampleEventDispatcher,
     private val pipelineBuildPermissionService: PipelineBuildPermissionService,
     private val pipelineYamlService: PipelineYamlService
 ) {
@@ -225,7 +224,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         val userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
             ?: pipelineInfo.lastModifyUser
         val variables = mutableMapOf<String, String>()
-        val container = model.stages[0].containers[0] as TriggerContainer
+        val container = model.getTriggerContainer()
         // 解析变量
         container.params.forEach { param ->
             variables[param.id] = param.defaultValue.toString()
@@ -402,7 +401,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
         val userId = pipelineInfo.lastModifyUser
         val variables = mutableMapOf<String, String>()
-        val container = model.stages[0].containers[0] as TriggerContainer
+        val container = model.getTriggerContainer()
         // 解析变量
         container.params.forEach { param ->
             variables[param.id] = param.defaultValue.toString()
