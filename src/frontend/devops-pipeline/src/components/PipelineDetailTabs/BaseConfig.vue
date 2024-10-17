@@ -36,7 +36,21 @@
                         </li>
                     </ul>
                     <template v-else>
-                        <label class="base-info-block-row-label">{{ $t(row.key) }}</label>
+                        <label
+                            v-if="row.key !== 'namingConvention'"
+                            class="base-info-block-row-label"
+                        >{{ $t(row.key) }}</label>
+                        <bk-popover
+                            v-else
+                            theme="light"
+                            :width="892"
+                            placement="top-start"
+                        >
+                            <label class="base-info-block-row-label dotted">{{ $t(row.key) }}</label>
+                            <div slot="content">
+                                <NamingConventionTip />
+                            </div>
+                        </bk-popover>
                         <span class="base-info-block-row-value">
                             <template v-if="['label', 'pipelineGroup'].includes(row.key)">
                                 <template v-if="row.value.length > 0">
@@ -68,7 +82,11 @@
 </template>
 <script>
     import { convertTime } from '@/utils/util'
+    import NamingConventionTip from '@/components/namingConventionTip.vue'
     export default {
+        components: {
+            NamingConventionTip
+        },
         props: {
             basicInfo: {
                 type: Object,
@@ -240,6 +258,15 @@
         .bk-tag {
             margin-top: 0;
         }
+    }
+
+    .dotted {
+        line-height: 18px;
+        color: #979BA5;
+        border-bottom: 1px dashed #979BA5;
+    }
+    .bk-tooltip {
+        text-align: right !important;
     }
 
 }
