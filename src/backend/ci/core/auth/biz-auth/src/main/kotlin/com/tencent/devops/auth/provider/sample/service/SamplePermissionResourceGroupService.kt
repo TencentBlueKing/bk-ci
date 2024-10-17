@@ -108,6 +108,7 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
     ): Boolean = true
 
     override fun deleteManagerDefaultGroup(
+        userId: String,
         managerId: Int,
         projectCode: String,
         resourceType: String,

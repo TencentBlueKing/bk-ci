@@ -45,6 +45,7 @@ import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
 import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
+import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupApplyDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
@@ -180,6 +181,7 @@ class RbacAuthConfiguration {
         dslContext: DSLContext,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+        authResourceDao: AuthResourceDao,
         resourceGroupSyncService: PermissionResourceGroupSyncService
     ) = RbacPermissionResourceGroupService(
         iamV2ManagerService = iamV2ManagerService,
@@ -189,6 +191,7 @@ class RbacAuthConfiguration {
         dslContext = dslContext,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
         authResourceGroupMemberDao = authResourceGroupMemberDao,
+        authResourceDao = authResourceDao,
         resourceGroupSyncService = resourceGroupSyncService
     )
 

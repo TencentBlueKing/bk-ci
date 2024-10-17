@@ -230,7 +230,8 @@ class AuthResourceGroupPermissionDao {
                         .let {
                             if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value && pipelineGroupIds.isNotEmpty()) {
                                 it.or(
-                                    RELATED_RESOURCE_TYPE.eq(AuthResourceType.PIPELINE_GROUP.value).and(RELATED_RESOURCE_CODE.`in`(pipelineGroupIds))
+                                    RELATED_RESOURCE_TYPE.eq(AuthResourceType.PIPELINE_GROUP.value)
+                                        .and(RELATED_RESOURCE_CODE.`in`(pipelineGroupIds))
                                 )
                             } else {
                                 it

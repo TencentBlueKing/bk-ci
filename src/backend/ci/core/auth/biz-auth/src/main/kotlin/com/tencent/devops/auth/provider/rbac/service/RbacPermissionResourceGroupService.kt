@@ -42,6 +42,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_DEFAULT_GROUP_RENA
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_GROUP_NAME_TO_LONG
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_GROUP_NAME_TO_SHORT
 import com.tencent.devops.auth.constant.AuthMessageCode.GROUP_EXIST
+import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
@@ -78,6 +79,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+    private val authResourceDao: AuthResourceDao,
     private val resourceGroupSyncService: PermissionResourceGroupSyncService
 ) : PermissionResourceGroupService {
     companion object {
@@ -626,6 +628,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     }
 
     override fun deleteManagerDefaultGroup(
+        userId: String,
         managerId: Int,
         projectCode: String,
         resourceType: String,
@@ -645,6 +648,13 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
+            authResourceDao.disable(
+                dslContext = transactionContext,
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
             authResourceGroupDao.deleteByIds(
                 dslContext = transactionContext,
                 ids = records.map { it.id!! }

@@ -100,6 +100,7 @@ interface PermissionResourceGroupService {
     ): Boolean
 
     fun deleteManagerDefaultGroup(
+        userId: String,
         managerId: Int,
         projectCode: String,
         resourceType: String,

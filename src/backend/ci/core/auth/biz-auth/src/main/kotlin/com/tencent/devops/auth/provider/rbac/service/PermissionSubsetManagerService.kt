@@ -238,12 +238,14 @@ class PermissionSubsetManagerService @Autowired constructor(
     }
 
     fun deleteSubsetManagerDefaultGroup(
+        userId: String,
         subsetManagerId: Int,
         projectCode: String,
         resourceType: String,
         resourceCode: String
     ) {
         permissionResourceGroupService.deleteManagerDefaultGroup(
+            userId = userId,
             managerId = subsetManagerId,
             projectCode = projectCode,
             resourceType = resourceType,
