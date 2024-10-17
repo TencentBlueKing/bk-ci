@@ -36,7 +36,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.engine.service.AgentPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.RepoPipelineRefService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -48,7 +47,6 @@ import org.springframework.stereotype.Component
  */
 @Component
 class MQPipelineUpdateListener @Autowired constructor(
-    private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineAtomStatisticsService: PipelineAtomStatisticsService,
     private val callBackControl: CallBackControl,
     private val agentPipelineRefService: AgentPipelineRefService,
@@ -59,15 +57,6 @@ class MQPipelineUpdateListener @Autowired constructor(
 
     override fun run(event: PipelineUpdateEvent) {
         val watcher = Watcher(id = "${event.traceId}|UpdatePipeline#${event.pipelineId}|${event.userId}")
-
-        event.buildNo?.apply {
-            watcher.safeAround("updateBuildNo") {
-                pipelineRuntimeService.updateBuildNo(
-                    projectId = event.projectId, pipelineId = event.pipelineId,
-                    buildNo = currentBuildNo ?: buildNo, debug = false
-                )
-            }
-        }
 
         watcher.safeAround("callback") {
             callBackControl.pipelineUpdateEvent(projectId = event.projectId, pipelineId = event.pipelineId)

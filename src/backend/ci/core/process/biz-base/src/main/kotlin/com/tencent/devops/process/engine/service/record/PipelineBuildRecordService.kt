@@ -653,6 +653,19 @@ class PipelineBuildRecordService @Autowired constructor(
         )
     }
 
+    fun getBuildCancelUser(
+        projectId: String,
+        buildId: String,
+        executeCount: Int
+    ): String? {
+        return recordModelDao.getBuildCancelUser(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            executeCount = executeCount
+        )
+    }
+
     fun updateModelRecord(
         projectId: String,
         pipelineId: String,
