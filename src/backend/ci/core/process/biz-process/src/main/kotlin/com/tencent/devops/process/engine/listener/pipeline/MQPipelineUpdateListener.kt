@@ -28,9 +28,9 @@
 package com.tencent.devops.process.engine.listener.pipeline
 
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.engine.service.AgentPipelineRefService
@@ -55,16 +55,16 @@ class MQPipelineUpdateListener @Autowired constructor(
     private val pipelineWebhookService: PipelineWebhookService,
     private val repoPipelineRefService: RepoPipelineRefService,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineUpdateEvent) {
         val watcher = Watcher(id = "${event.traceId}|UpdatePipeline#${event.pipelineId}|${event.userId}")
 
-        if (event.buildNo != null) {
+        event.buildNo?.apply {
             watcher.safeAround("updateBuildNo") {
                 pipelineRuntimeService.updateBuildNo(
                     projectId = event.projectId, pipelineId = event.pipelineId,
-                    buildNo = event.buildNo!!.buildNo, debug = false
+                    buildNo = currentBuildNo ?: buildNo, debug = false
                 )
             }
         }

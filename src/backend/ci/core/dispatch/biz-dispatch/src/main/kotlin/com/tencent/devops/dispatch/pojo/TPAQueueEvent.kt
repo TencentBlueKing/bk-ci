@@ -2,11 +2,12 @@ package com.tencent.devops.dispatch.pojo
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinding.DISPATCH_AGENT_QUEUE
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import java.time.LocalDateTime
 
-@Event(MQ.EXCHANGE_THIRD_PARTY_AGENT_QUEUE, MQ.ROUTE_THIRD_PARTY_AGENT_QUEUE)
+@Event(DISPATCH_AGENT_QUEUE)
 data class TPAQueueEvent(
     val projectId: String,
     val pipelineId: String,
@@ -15,10 +16,10 @@ data class TPAQueueEvent(
     // 发送这个事件的消息，只在第一次发送消息时携带，重放后置空，方便做一些日志输出或者记录
     var sendData: ThirdPartyAgentDispatchData?,
     // 消息队列延迟消息时间
-    val delayMills: Int,
+    override var delayMills: Int,
     // 拿到的锁的值，为了保证生产和消费始终只有一个消息，所以需要在生产和消费端共用一把锁
     val lockValue: String
-) {
+) : IEvent() {
     fun toLog() = "${this.projectId}|${this.pipelineId}|${this.data}|${this.dataType}"
 }
 

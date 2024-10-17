@@ -34,7 +34,7 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.utils.DispatchDockerRedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -73,7 +73,7 @@ class BuildLessEndPrepareHandler @Autowired constructor(
 
     private fun finishBuild(
         success: Boolean,
-        event: PipelineBuildLessShutdownDispatchEvent,
+        event: PipelineBuildLessShutdownEvent,
         record: TDispatchPipelineDockerBuildRecord
     ) {
         logger.info("${record.buildId}|${record.vmSeqId} Finish the docker buildless with result($success)")

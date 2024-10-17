@@ -28,16 +28,16 @@
 package com.tencent.devops.process.engine.pojo.event
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.event.enums.ActionType
 
 /**
  * 构建任务状态推送,供Pipeline Websocket业务逻辑处理后再转发
  *
  * @version 1.0
  */
-@Event(MQ.EXCHANGE_PIPELINE_MONITOR_DIRECT, MQ.ROUTE_PIPELINE_BUILD_WEBSOCKET)
+@Event(StreamBinding.PIPELINE_BUILD_WEBSOCKET)
 data class PipelineBuildWebSocketPushEvent(
     override val source: String,
     override val projectId: String,
