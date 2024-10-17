@@ -118,8 +118,7 @@
                 },
                 env: ReleaseChannel.INSIDER,
                 // env: ReleaseChannel.PRODUCTION,
-                forceAuthentication: false,
-                showBrandBanner: false
+                forceAuthentication: false
                 // forceAuthentication: false,
                 // authenticatedSession: {
                 //     accessToken: '',
