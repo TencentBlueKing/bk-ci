@@ -87,7 +87,7 @@
                                 content: $t('noDraft'),
                                 disabled: item.showTooltips
                             }"
-                            v-perm="item.vPerm"
+                            v-perm="item.vPerm ? item.vPerm : {}"
                         >
                             <template v-if="item.label">
                                 {{ item.label }}
