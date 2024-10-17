@@ -17,7 +17,7 @@
                         显示已过期体验
                     </bk-checkbox>
                     <div class="date-prepend">
-                        体验发起时间
+                        发起时间
                     </div>
                     <bk-date-picker
                         class="date-picker mr15"
@@ -33,7 +33,7 @@
                     ></bk-date-picker>
     
                     <div class="date-prepend">
-                        体验结束时间
+                        结束时间
                     </div>
                     <bk-date-picker
                         class="date-picker mr15"
@@ -616,6 +616,10 @@
         }
         .search-input {
             width: 420px;
+            background-color: #fff;
+            ::placeholder {
+                color: #c4c6cc;
+            }
         }
     }
 </style>
