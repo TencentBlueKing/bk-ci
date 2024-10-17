@@ -1,15 +1,14 @@
 package com.tencent.devops.remotedev.pojo.event
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.remotedev.MQ.EXCHANGE_WORKSPACE_UPDATE_FROM_K8S
-import com.tencent.devops.common.remotedev.MQ.ROUTE_WORKSPACE_UPDATE_FROM_K8S
+import com.tencent.devops.common.remotedev.RemoteDevMQ.WORKSPACE_UPDATE_FROM_K8S
 import com.tencent.devops.common.remotedev.WorkspaceEvent
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.image.WorkspaceImageInfo
 import org.slf4j.MDC
 
-@Event(EXCHANGE_WORKSPACE_UPDATE_FROM_K8S, ROUTE_WORKSPACE_UPDATE_FROM_K8S)
+@Event(WORKSPACE_UPDATE_FROM_K8S)
 data class RemoteDevUpdateEvent(
     override val userId: String,
     override val traceId: String = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz(),

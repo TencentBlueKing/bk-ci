@@ -25,34 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.remotedev
+package com.tencent.devops.experience.config
 
-import com.tencent.devops.common.event.annotation.Event
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.experience.pojo.AppNotifyMessageWithOperation
+import com.tencent.devops.experience.service.ExperienceNotifyService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Configuration
 
-@Component
-class RemoteDevDispatcher constructor(
-    private val rabbitTemplate: RabbitTemplate
-) {
-    fun dispatch(event: WorkspaceEvent) {
-        try {
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
-                when {
-                    event.delayMills > 0 -> message.messageProperties.setHeader("x-delay", event.delayMills)
-                    eventType.delayMills > 0 -> // 事件类型固化默认值
-                        message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                    else -> // 非延时消息的则8小时后过期，防止意外发送的消息无消费端ACK处理从而堆积过多消息导致MQ故障
-                        message.messageProperties.expiration = "28800000"
-                }
-                message
-            }
-        } catch (e: Throwable) {
-            logger.error("BKSystemErrorMonitor|RemoteDevDispatcher|error:", e)
-        }
+@Configuration
+class ExperienceMQConfiguration {
+    @EventConsumer
+    fun pushNotifyConsumer(
+        @Autowired experienceNotifyService: ExperienceNotifyService
+    ) = ScsConsumerBuilder.build<AppNotifyMessageWithOperation> {
+        experienceNotifyService.onReceiveAppNotifyMessage(it)
     }
-
-    private val logger = LoggerFactory.getLogger(RemoteDevDispatcher::class.java)
 }

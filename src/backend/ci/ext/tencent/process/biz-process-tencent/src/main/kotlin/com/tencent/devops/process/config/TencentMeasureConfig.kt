@@ -27,73 +27,41 @@
 
 package com.tencent.devops.process.config
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.measure.MeasureServiceImpl
 import com.tencent.devops.process.listener.MeasurePipelineBuildFinishListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Suppress("ALL")
 @Configuration
 class TencentMeasureConfig {
+    @Value("\${build.atomMonitorData.report.switch:false}")
+    private val atomMonitorSwitch: String = "false"
 
-    @Value("\${queueConcurrency.measure:3}")
-    private val measureConcurrency: Int? = null
+    @Value("\${build.atomMonitorData.report.maxMonitorDataSize:1677216}")
+    private val maxMonitorDataSize: String = "1677216"
+
+    @Bean
+    fun measureService() = MeasureServiceImpl()
+
+    @Bean
+    fun measurePipelineBuildFinishListener(
+        @Autowired pipelineRuntimeService: PipelineRuntimeService
+    ) = MeasurePipelineBuildFinishListener(
+        pipelineRuntimeService = pipelineRuntimeService
+    )
 
     /**
      * 构建结束广播交换机
      */
-    @Bean
-    @ConditionalOnMissingBean(name = ["pipelineBuildFanoutExchange"])
-    fun pipelineBuildFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    /**
-     * 构建结束度量上报队列--- 并发小
-     */
-    @Bean
-    fun pipelineBuildMeasureQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_MEASURE)
-
-    @Bean
-    fun pipelineBuildMeasureQueueBind(
-        @Autowired pipelineBuildMeasureQueue: Queue,
-        @Autowired pipelineBuildFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildMeasureQueue).to(pipelineBuildFanoutExchange)
-    }
-
-    @Bean
-    fun pipelineBuildMeasureListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildMeasureQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: MeasurePipelineBuildFinishListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildMeasureQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = listener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 120000,
-            consecutiveActiveTrigger = 10,
-            concurrency = measureConcurrency!!,
-            maxConcurrency = 15
-        )
-    }
+    @EventConsumer
+    fun pipelineBuildMeasureConsumer(
+        @Autowired listener: MeasurePipelineBuildFinishListener
+    ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> { listener.execute(it) }
 }

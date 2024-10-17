@@ -8,6 +8,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.pcg.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
@@ -112,6 +114,10 @@ class PCGBuildListener @Autowired constructor(
 
     override fun onStartupDemote(dispatchMessage: DispatchMessage) {
         onStartup(dispatchMessage)
+    }
+
+    override fun consumerFilter(dispatchType: DispatchType): Boolean {
+        return dispatchType is PCGDispatchType
     }
 
     private fun startPCGAgent(
