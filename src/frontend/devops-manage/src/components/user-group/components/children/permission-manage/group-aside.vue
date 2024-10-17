@@ -1,5 +1,5 @@
 <template>
-  <article :class="{'group-aside': true , 'group-aside-height': showSelectProject}">
+  <article :class="['group-aside', {'group-aside-height': showSelectProject}]">
     <template v-if="showSelectProject">
       <div class="select-project">
         <p class="title">{{ t('选择项目') }}</p>
