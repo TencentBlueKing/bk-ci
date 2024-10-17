@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v2.1.4](#v214)
+   - [Changelog since v2.1.3](#changelog-since-v213)
+
 - [v2.1.3](#v213)
    - [Changelog since v2.1.2](#changelog-since-v212)
 
@@ -34,6 +37,10 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v2.1.4
+## Changelog since v2.1.3
+#### 修复
+- [修复] 归档报告插件创建token没有实现 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10693)
 # v2.1.3
 ## Changelog since v2.1.2
 #### 新增
