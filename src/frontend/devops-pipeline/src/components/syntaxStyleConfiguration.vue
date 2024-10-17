@@ -5,7 +5,6 @@
             theme="light"
             :width="892"
             placement="top-start"
-            :tippy-options="{ flip: false, boundary: 'HTMLElement' }"
         >
             <label class="label">{{ $t('namingConvention') }}</label>
             <div slot="content">
