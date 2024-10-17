@@ -40,8 +40,8 @@ import com.tencent.devops.remotedev.service.PermissionService
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import org.jooq.DSLContext
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
 
 @Suppress("ALL")
@@ -56,7 +56,7 @@ class RemoteDevJobService @Autowired constructor(
     private val remoteDevActionService: RemoteDevJobActionService,
     private val workspaceDao: WorkspaceDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val permissionService: PermissionService
 ) {
     fun getMachineTypes(projectId: String): Set<String> {
@@ -296,7 +296,7 @@ class RemoteDevJobService @Autowired constructor(
     fun pipelineJobEnd(
         id: Long
     ) {
-        AsyncExecute.dispatch(rabbitTemplate, AsyncJobEndEvent(id))
+        AsyncExecute.dispatch(streamBridge, AsyncJobEndEvent(id))
     }
 
     fun doPipelineJobEnd(

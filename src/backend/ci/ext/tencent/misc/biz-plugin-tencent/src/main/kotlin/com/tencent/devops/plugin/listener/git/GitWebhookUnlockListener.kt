@@ -27,7 +27,7 @@
 
 package com.tencent.devops.plugin.listener.git
 
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
 import com.tencent.devops.plugin.service.git.GitWebhookUnlockService
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component
 @Component
 class GitWebhookUnlockListener @Autowired constructor(
     private val gitWebhookUnlockService: GitWebhookUnlockService
-) : Listener<GitWebhookUnlockEvent> {
+) : EventListener<GitWebhookUnlockEvent> {
 
     override fun execute(event: GitWebhookUnlockEvent) {
         gitWebhookUnlockService.consumeUnlockHookLock(event = event)

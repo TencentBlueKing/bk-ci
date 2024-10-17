@@ -28,11 +28,11 @@
 package com.tencent.devops.process.engine.pojo.event
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.event.enums.ActionType
 
-@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_PAUSE_TASK_EXECUTE)
+@Event(StreamBinding.PIPELINE_PAUSE_TASK_EXECUTE)
 data class PipelineTaskPauseEvent(
     override var actionType: ActionType,
     override val source: String,

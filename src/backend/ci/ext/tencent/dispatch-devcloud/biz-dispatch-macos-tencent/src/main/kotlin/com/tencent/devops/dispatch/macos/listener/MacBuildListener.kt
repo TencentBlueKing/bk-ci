@@ -10,6 +10,8 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -59,6 +61,10 @@ class MacBuildListener @Autowired constructor(
         return JobQuotaVmType.MACOS_DEVCLOUD
     }
 
+    override fun consumerFilter(dispatchType: DispatchType): Boolean {
+        return dispatchType is MacOSDispatchType
+    }
+
     override fun onStartup(dispatchMessage: DispatchMessage) {
         try {
             MacOSThreadPoolUtils.instance.getThreadPool(ThreadPoolName.STARTUP).execute {
@@ -89,6 +95,10 @@ class MacBuildListener @Autowired constructor(
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
+        if (event.dispatchType !is MacOSDispatchType) {
+            return
+        }
+
         logger.info("MacOS shutdown with event($event)")
         // 如果是某个job关闭，则锁到job，如果是整条流水线shutdown，则锁到buildid级别
         val lockKey =

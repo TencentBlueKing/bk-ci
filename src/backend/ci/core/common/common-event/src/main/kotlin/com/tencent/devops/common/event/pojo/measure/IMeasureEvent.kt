@@ -27,8 +27,10 @@
 
 package com.tencent.devops.common.event.pojo.measure
 
+import com.tencent.devops.common.event.pojo.IEvent
+
 open class IMeasureEvent(
     open val projectId: String,
     open val pipelineId: String,
     open val buildId: String
-)
+) : IEvent()

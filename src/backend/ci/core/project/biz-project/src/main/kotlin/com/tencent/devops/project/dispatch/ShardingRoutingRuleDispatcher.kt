@@ -29,17 +29,16 @@ package com.tencent.devops.project.dispatch
 
 import com.rabbitmq.client.ChannelContinuationTimeoutException
 import com.rabbitmq.client.impl.AMQImpl
-import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import com.tencent.devops.common.event.pojo.sharding.ShardingRoutingRuleBroadCastEvent
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Component
 
 @Component
 class ShardingRoutingRuleDispatcher @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) : EventDispatcher<ShardingRoutingRuleBroadCastEvent> {
 
     companion object {
@@ -65,13 +64,6 @@ class ShardingRoutingRuleDispatcher @Autowired constructor(
     }
 
     private fun send(event: ShardingRoutingRuleBroadCastEvent) {
-        val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-        val routeKey = eventType.routeKey
-        rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
-            if (eventType.delayMills > 0) { // 事件类型固化默认值
-                message.messageProperties.setHeader("x-delay", eventType.delayMills)
-            }
-            message
-        }
+        event.sendTo(streamBridge)
     }
 }

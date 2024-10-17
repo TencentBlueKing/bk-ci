@@ -27,11 +27,14 @@
 
 package com.tencent.devops.experience.pojo
 
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.experience.constant.ExperienceConstant.EXPERIENCE_PUSH
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "蓝盾APP消息类型")
-
-open class AppNotifyMessage {
+@Event(EXPERIENCE_PUSH)
+open class AppNotifyMessage : IEvent() {
 
     @get:Schema(title = "消息id")
     var messageId: Long = 0
