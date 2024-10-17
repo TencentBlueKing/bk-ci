@@ -19,6 +19,7 @@ class AuthResourceGroupPermissionDao {
             records.forEach {
                 dslContext.insertInto(
                     this,
+                    ID,
                     PROJECT_CODE,
                     RESOURCE_TYPE,
                     RESOURCE_CODE,
@@ -31,6 +32,7 @@ class AuthResourceGroupPermissionDao {
                     RELATED_RESOURCE_CODE,
                     RELATED_IAM_RESOURCE_CODE
                 ).values(
+                    it.id,
                     it.projectCode,
                     it.resourceType,
                     it.resourceCode,
