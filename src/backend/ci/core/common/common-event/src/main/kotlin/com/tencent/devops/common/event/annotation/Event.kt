@@ -27,10 +27,17 @@
 
 package com.tencent.devops.common.event.annotation
 
+import com.tencent.devops.common.stream.constants.StreamBinder
+import java.lang.annotation.Inherited
+
 /**
- * 事件注解
- * @version 1.0
+ * Stream事件注解
+ * @param destination 发送目标绑定，用于指定RabbitMQ的Exchange，Kafka和Pulsar的Topic
  */
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FILE)
+@Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Event(val exchange: String, val routeKey: String = "", val delayMills: Int = 0)
+@Inherited
+annotation class Event(
+    val destination: String,
+    val binder: String = StreamBinder.CORE_RABBIT
+)

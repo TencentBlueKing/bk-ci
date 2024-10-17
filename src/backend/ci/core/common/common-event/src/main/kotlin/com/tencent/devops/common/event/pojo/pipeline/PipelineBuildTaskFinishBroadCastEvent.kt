@@ -28,13 +28,13 @@
 package com.tencent.devops.common.event.pojo.pipeline
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.stream.constants.StreamBinding
 
 /**
  * 构建结束的广播事件，用于通知等
  */
-@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT)
+@Event(destination = StreamBinding.PIPELINE_BUILD_TASK_FINISH_FANOUT)
 data class PipelineBuildTaskFinishBroadCastEvent(
     override val source: String,
     override val projectId: String,
