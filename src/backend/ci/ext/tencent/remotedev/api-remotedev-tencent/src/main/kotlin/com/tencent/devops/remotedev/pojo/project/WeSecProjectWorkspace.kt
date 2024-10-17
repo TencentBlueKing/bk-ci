@@ -72,7 +72,7 @@ data class WeSecProjectWorkspace(
     @get:Schema(title = "mac地址")
     val macAddress: String? = null,
     @JsonProperty("zone_type")
-    @get:Schema(title = "mac地址")
+    @get:Schema(title = "专区类型")
     val zoneType: WindowsResourceZoneConfigType? = null,
     @get:Schema(title = "共享人")
     val viewers: List<String>? = emptyList()
