@@ -117,7 +117,9 @@
                     version: '1.0.0'
                 },
                 env: ReleaseChannel.INSIDER,
-                forceAuthentication: false
+                // env: ReleaseChannel.PRODUCTION,
+                forceAuthentication: false,
+                showBrandBanner: false
                 // forceAuthentication: false,
                 // authenticatedSession: {
                 //     accessToken: '',

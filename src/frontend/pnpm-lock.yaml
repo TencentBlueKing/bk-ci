@@ -1424,8 +1424,8 @@ importers:
         specifier: 2.5.9-beta.6
         version: 2.5.9-beta.6(vue@2.7.16)
       '@tencent/gongfeng-copilot-monaco':
-        specifier: ^2.0.8
-        version: 2.0.8
+        specifier: ^2.1.0
+        version: 2.1.0
       axios:
         specifier: 0.28.0
         version: 0.28.0
@@ -4732,8 +4732,8 @@ packages:
     peerDependencies:
       vue: ^2.6.0
 
-  '@tencent/gongfeng-copilot-monaco@2.0.8':
-    resolution: {integrity: sha512-zWE+1XRUkcaurOB2EA+gbR9kFKJre2KIPjT7T5Fw9+DFMU/GzbaO3W7TEojDNsennDBWKEg2hPaT/Imib8KIvw==, tarball: https://mirrors.tencent.com/npm/@tencent/gongfeng-copilot-monaco/-/@tencent/gongfeng-copilot-monaco-2.0.8.tgz}
+  '@tencent/gongfeng-copilot-monaco@2.1.0':
+    resolution: {integrity: sha512-BKj29k3NR2bIAETxtdkfAE8VRTJqzyAa0kObaAEMgPZHOGL/skbTXMCBWv4oEIK1C7av+QTcAabmWA8JqWsSFQ==, tarball: https://mirrors.tencent.com/npm/@tencent/gongfeng-copilot-monaco/-/@tencent/gongfeng-copilot-monaco-2.1.0.tgz}
 
   '@tootallnate/once@1.1.2':
     resolution: {integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==}
@@ -19434,7 +19434,7 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 3.4.31(typescript@3.4.5)
 
-  '@tencent/gongfeng-copilot-monaco@2.0.8':
+  '@tencent/gongfeng-copilot-monaco@2.1.0':
     optionalDependencies:
       monaco-editor: 0.51.0
 
