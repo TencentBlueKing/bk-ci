@@ -114,18 +114,6 @@ class SubPipelineElementBizPluginService @Autowired constructor(
         }
     }
 
-    fun SubPipelineRef.check(
-        list: List<(SubPipelineRef) -> ElementCheckResult>
-    ): ElementCheckResult {
-        list.forEach {
-            val invoke = it.invoke(this)
-            if (!invoke.result) {
-                return invoke
-            }
-        }
-        return ElementCheckResult(true)
-    }
-
     fun checkPermission(
         param: ElementBatchCheckParam,
         subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>,
@@ -170,21 +158,6 @@ class SubPipelineElementBizPluginService @Autowired constructor(
                 )
                 errors.add(errorInfo)
             }
-        }
-    }
-
-    fun checkCircularDependency(subPipelineRef: SubPipelineRef): ElementCheckResult {
-        with(subPipelineRef) {
-            if (!elementEnable) return ElementCheckResult(true)
-            val startTime = System.currentTimeMillis()
-            val rootPipelineKey = "${projectId}_$pipelineId"
-            val checkResult = subPipelineRefService.checkCircularDependency(
-                subPipelineRef = this,
-                rootPipelineKey = rootPipelineKey,
-                existsPipeline = HashMap(mapOf(rootPipelineKey to this))
-            )
-            logger.info("finish check circular dependency|${System.currentTimeMillis() - startTime} ms")
-            return checkResult
         }
     }
 }

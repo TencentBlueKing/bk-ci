@@ -157,7 +157,7 @@ class SubPipelineRefService @Autowired constructor(
                 ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB)
             val contextMap = getContextMap(triggerStage)
             if (stageSize > 1) {
-                model.stages.subList(1, stageSize).forEach { stage ->
+                model.stages.subList(1, stageSize).forEachIndexed { stageIndex, stage ->
                     analysisSubPipelineRefAndSave(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -165,7 +165,8 @@ class SubPipelineRefService @Autowired constructor(
                         stage = stage,
                         pipelineName = pipelineName,
                         subPipelineRefList = subPipelineRefList,
-                        contextMap = contextMap
+                        contextMap = contextMap,
+                        stageIndex = stageIndex + 1
                     )
                 }
             }
@@ -201,18 +202,19 @@ class SubPipelineRefService @Autowired constructor(
         channel: String,
         pipelineName: String,
         subPipelineRefList: MutableList<SubPipelineRef>,
-        contextMap: Map<String, String>
+        contextMap: Map<String, String>,
+        stageIndex: Int
     ) {
         if (!stage.stageEnabled()) {
             return
         }
-        stage.containers.forEach c@{ container ->
+        stage.containers.forEachIndexed c@{ jobIndex, container ->
             if (container is TriggerContainer || !container.containerEnabled()) {
                 return@c
             }
-            container.elements.forEach { element ->
+            container.elements.forEachIndexed{ taskIndex, element ->
                 if (element.elementEnabled()) {
-                    subPipelineService.getSubPipelineInfo(
+                    subPipelineService.getSubPipelineParam(
                         element = element,
                         projectId = projectId,
                         contextMap = contextMap
@@ -225,10 +227,15 @@ class SubPipelineRefService @Autowired constructor(
                                 element = element,
                                 stageName = stage.name ?: "",
                                 containerName = container.name,
-                                subProjectId = it.first,
-                                subPipelineId = it.second,
+                                subProjectId = it.projectId,
+                                subPipelineId = it.pipelineId,
                                 channel = channel,
-                                subPipelineName = it.third
+                                subPipelineName = it.pipelineName,
+                                containerSeq = "${stageIndex + 1}_${jobIndex + 1}_${taskIndex + 1}",
+                                taskProjectId = it.taskProjectId,
+                                taskPipelineId = it.taskPipelineId,
+                                taskPipelineType = it.taskPipelineType,
+                                taskPipelineName = it.taskPipelineName
                             )
                         )
                     }
@@ -258,7 +265,7 @@ class SubPipelineRefService @Autowired constructor(
                         val editUrl = getPipelineEditUrl(projectId, pipelineId)
                         BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to arrayOf(
                             editUrl,
-                            subPipelineRef.pipelineName
+                            "${subPipelineRef.pipelineName} [$containerSeq]"
                         )
                     }
                     // [其他流水线_1] -> [其他流水线_2]
@@ -268,18 +275,15 @@ class SubPipelineRefService @Autowired constructor(
                         val editUrl = getPipelineEditUrl(projectId, pipelineId)
                         BK_OTHER_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to arrayOf(
                             editUrl,
-                            subPipelineRef.pipelineName,
+                            "${subPipelineRef.pipelineName} [${subPipelineRef.containerSeq}]",
                             editUrlBase,
-                            parentPipelineRef.pipelineName.ifBlank { subPipelineRef.subPipelineName }
+                            parentPipelineRef.pipelineName.ifBlank { subPipelineRef.pipelineName }
                         )
                     }
                 }
 
                 return ElementCheckResult(
                     result = false,
-                    errorTitle = I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_TITLE
-                    ),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = msgCode,
                         params = params

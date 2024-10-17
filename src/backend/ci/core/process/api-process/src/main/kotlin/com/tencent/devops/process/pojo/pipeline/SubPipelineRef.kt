@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "子流水线依赖信息")
@@ -62,7 +63,17 @@ data class SubPipelineRef(
     @get:Schema(title = "父流水线授权用户", required = true)
     val oauthUser: String? = null,
     @get:Schema(title = "上下文参数", required = false)
-    val contextMap: Map<String, String> = emptyMap()
+    val contextMap: Map<String, String> = emptyMap(),
+    @get:Schema(title = "插件序号", required = false)
+    val containerSeq: String = "",
+    @get:Schema(title = "插件参数[projectId]", required = false)
+    val taskProjectId: String = "",
+    @get:Schema(title = "插件参数[type]", required = false)
+    val taskPipelineType: SubPipelineType = SubPipelineType.ID,
+    @get:Schema(title = "插件参数[pipelineId]", required = false)
+    val taskPipelineId: String? = "",
+    @get:Schema(title = "插件参数[pipelineName]", required = false)
+    val taskPipelineName: String? = ""
 ) {
     constructor(projectId: String, pipelineId: String, subPipelineId: String, subProjectId: String) : this(
         pipelineId = pipelineId,

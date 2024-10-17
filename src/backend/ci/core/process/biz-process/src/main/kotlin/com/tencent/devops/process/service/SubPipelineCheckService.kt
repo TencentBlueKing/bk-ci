@@ -19,11 +19,15 @@ import com.tencent.devops.process.engine.extend.DefaultModelCheckPlugin
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineIdAndName
+import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
+import com.tencent.devops.process.pojo.pipeline.SubPipelineTaskParam
+import com.tencent.devops.process.service.pipeline.SubPipelineRefService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.HashMap
 import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
@@ -34,7 +38,8 @@ class SubPipelineCheckService @Autowired constructor(
     private val pipelineResDao: PipelineResourceDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val defaultModelCheckPlugin: DefaultModelCheckPlugin,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val subPipelineRefService: SubPipelineRefService
 ) {
 
     /**
@@ -92,15 +97,15 @@ class SubPipelineCheckService @Autowired constructor(
         elements.forEach { holder ->
             // 禁用的插件不校验
             if (!holder.enableElement()) return@forEach
-            val (subProjectId, subPipelineId, subPipelineName) = getSubPipelineInfo(
+            val subPipelineTaskParam = getSubPipelineParam(
                 element = holder.element,
                 projectId = projectId,
                 contextMap = contextMap
             ) ?: return@forEach
             val subPipeline = SubPipelineIdAndName(
-                projectId = subProjectId,
-                pipelineId = subPipelineId,
-                pipelineName = subPipelineName
+                projectId = subPipelineTaskParam.projectId,
+                pipelineId = subPipelineTaskParam.pipelineId,
+                pipelineName = subPipelineTaskParam.pipelineName
             )
             subPipelineElementMap.getOrPut(subPipeline) { mutableListOf() }.add(holder)
         }
@@ -179,10 +184,24 @@ class SubPipelineCheckService @Autowired constructor(
         subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>
     ): Set<String> {
         val errorDetails = mutableSetOf<String>()
+        val rootPipelineKey = "${projectId}_$pipelineId"
         subPipelineElementMap.forEach { (subPipeline, elements) ->
             val subProjectId = subPipeline.projectId
             val subPipelineId = subPipeline.pipelineId
-            val subPipelineName = subPipeline.pipelineName
+            val subPipelineRef = SubPipelineRef(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                subPipelineId = subPipelineId,
+                subProjectId = subProjectId
+            )
+            val checkResult = subPipelineRefService.checkCircularDependency(
+                subPipelineRef = subPipelineRef,
+                rootPipelineKey = rootPipelineKey,
+                existsPipeline = HashMap(mapOf(rootPipelineKey to subPipelineRef))
+            )
+            if (!checkResult.result) {
+                errorDetails.add(checkResult.errorMessage ?: "")
+            }
         }
         return errorDetails
     }
@@ -194,7 +213,7 @@ class SubPipelineCheckService @Autowired constructor(
     fun supportAtomCode(atomCode: String) = (atomCode == SUB_PIPELINE_EXEC_ATOM_CODE)
 
     @Suppress("UNCHECKED_CAST")
-    fun getSubPipelineInfo(
+    fun getSubPipelineParam(
         projectId: String,
         element: Element,
         contextMap: Map<String, String>
@@ -230,17 +249,26 @@ class SubPipelineCheckService @Autowired constructor(
         projectId: String,
         element: SubPipelineCallElement,
         contextMap: Map<String, String>
-    ): Triple<String, String, String>? {
+    ): SubPipelineTaskParam? {
         val subPipelineType = element.subPipelineType ?: SubPipelineType.ID
         val subPipelineId = element.subPipelineId
         val subPipelineName = element.subPipelineName
-        return getSubPipelineInfo(
+        val (finalProjectId, finalPipelineId, finalPipeName) = getSubPipelineParam(
             projectId = projectId,
             subProjectId = projectId,
             subPipelineType = subPipelineType,
             subPipelineId = subPipelineId,
             subPipelineName = subPipelineName,
             contextMap = contextMap
+        ) ?: return null
+        return SubPipelineTaskParam(
+            taskProjectId = projectId,
+            taskPipelineType = subPipelineType,
+            taskPipelineId = subPipelineId,
+            taskPipelineName = subPipelineName,
+            projectId = finalProjectId,
+            pipelineId = finalPipelineId,
+            pipelineName = finalPipeName
         )
     }
 
@@ -248,7 +276,7 @@ class SubPipelineCheckService @Autowired constructor(
         projectId: String,
         inputMap: Map<String, Any>,
         contextMap: Map<String, String>
-    ): Triple<String, String, String>? {
+    ): SubPipelineTaskParam? {
         val subProjectId = inputMap.getOrDefault("projectId", projectId).toString()
         val subPipelineTypeStr = inputMap.getOrDefault("subPipelineType", "ID")
         val subPipelineName = inputMap["subPipelineName"]?.toString()
@@ -258,18 +286,27 @@ class SubPipelineCheckService @Autowired constructor(
             "NAME" -> SubPipelineType.NAME
             else -> return null
         }
-        return getSubPipelineInfo(
+        val (finalProjectId, finalPipelineId, finalPipeName) = getSubPipelineParam(
             projectId = projectId,
             subProjectId = subProjectId,
             subPipelineType = subPipelineType,
             subPipelineId = subPipelineId,
             subPipelineName = subPipelineName,
             contextMap = contextMap
+        ) ?: return null
+        return SubPipelineTaskParam(
+            taskProjectId = subProjectId,
+            taskPipelineType = subPipelineType,
+            taskPipelineId = subPipelineId,
+            taskPipelineName = subPipelineName,
+            projectId = finalProjectId,
+            pipelineId = finalPipelineId,
+            pipelineName = finalPipeName
         )
     }
 
     @SuppressWarnings("LongParameterList")
-    private fun getSubPipelineInfo(
+    private fun getSubPipelineParam(
         projectId: String,
         subProjectId: String,
         subPipelineType: SubPipelineType,
