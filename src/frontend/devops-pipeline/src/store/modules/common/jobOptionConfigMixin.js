@@ -52,7 +52,7 @@ const jobOptionConfigMixin = {
                     }
                 },
                 queue: {
-                    rule: { numeric: true, max_value: 10, min_value: 1 },
+                    rule: { numeric: true, max_value: 50, min_value: 1 },
                     component: 'vuex-input',
                     label: this.$t('storeMap.queueLabel'),
                     placeholder: this.$t('storeMap.queuePlaceholder'),
