@@ -31,11 +31,11 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.extservice.dto.UpdateExtServiceEnvInfoDTO
 import com.tencent.devops.store.service.dao.ExtServiceDao
 import com.tencent.devops.store.service.dao.ExtServiceEnvDao
 import com.tencent.devops.store.service.dao.ExtServiceFeatureDao
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.extservice.dto.UpdateExtServiceEnvInfoDTO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -72,23 +72,23 @@ class ExtServiceEnvService @Autowired constructor(
             )
         }
         // 判断用户的项目是否安装了该扩展服务
-//        val extServiceFeatureRecord = extServiceFeatureDao.getServiceByCode(dslContext, serviceCode)!!
-//        if (!extServiceFeatureRecord.publicFlag) {
-//            val flag = storeProjectRelDao.isInstalledByProject(
-//                dslContext = dslContext,
-//                projectCode = projectCode,
-//                storeCode = serviceCode,
-//                storeType = StoreTypeEnum.SERVICE.type.toByte()
-//            )
-//            if (!flag) {
-//                return I18nUtil.generateResponseDataObject(
-//                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-//                    params = arrayOf("$serviceCode+$version"),
-//                    data = false,
-//                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-//                )
-//            }
-//        }
+        val extServiceFeatureRecord = extServiceFeatureDao.getServiceByCode(dslContext, serviceCode)!!
+        if (!extServiceFeatureRecord.publicFlag) {
+            val flag = storeProjectRelDao.isInstalledByUser(
+                dslContext = dslContext,
+                userId = updateExtServiceEnvInfo.userId,
+                storeCode = serviceCode,
+                storeType = StoreTypeEnum.SERVICE.type.toByte()
+            )
+            if (!flag) {
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf("$serviceCode+$version"),
+                    data = false,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
+            }
+        }
         extServiceEnvDao.updateExtServiceEnvInfo(dslContext, extServiceRecord.id, updateExtServiceEnvInfo)
         return Result(true)
     }
