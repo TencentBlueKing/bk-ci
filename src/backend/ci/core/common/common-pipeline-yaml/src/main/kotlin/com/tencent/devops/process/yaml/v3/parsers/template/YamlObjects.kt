@@ -70,10 +70,8 @@ object YamlObjects {
     }
 
     fun getVariable(fromPath: TemplatePath, key: String, variable: Map<String, Any>): Variable {
-        val props = if (variable["props"] == null) {
-            null
-        } else {
-            getVarProps(fromPath, variable["props"]!!)
+        val props = variable["props"]?.let {
+            getVarProps(fromPath, it)
         }
         val type = props?.type
         val va = Variable(

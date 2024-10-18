@@ -142,8 +142,7 @@ class VariableTransfer {
             val const = it.constant.nullIfDefault(false)
             result[it.id] = Variable(
                 value = if (CascadePropertyUtils.supportCascadeParam(it.type)) {
-                    // 级联选择器参数，展示成json格式
-                    JsonUtil.toJson(it.defaultValue, false)
+                    it.defaultValue as Map<String, String>
                 } else {
                     it.defaultValue.toString()
                 },
