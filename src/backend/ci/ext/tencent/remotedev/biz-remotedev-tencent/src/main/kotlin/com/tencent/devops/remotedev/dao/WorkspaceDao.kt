@@ -32,11 +32,9 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TWorkspace
-import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
 import com.tencent.devops.model.remotedev.tables.TWorkspaceLabels
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceDetailRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
@@ -133,12 +131,13 @@ class WorkspaceDao {
         }
     }
 
+    @Deprecated("仅op使用，业务逻辑避免使用")
     fun limitFetchWorkspace(
         dslContext: DSLContext,
         limit: SQLLimit,
         userId: String? = null,
         workspaceName: String? = null
-    ): List<WorkspaceRecord>? {
+    ): List<TWorkspaceRecord> {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(userId, workspaceName)
             val query = dslContext.selectFrom(this)
@@ -148,7 +147,7 @@ class WorkspaceDao {
             }
             return query.orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
-                .fetch(workspaceMapper)
+                .fetch()
         }
     }
 
@@ -426,28 +425,31 @@ class WorkspaceDao {
     fun updateWorkspaceStatus(
         dslContext: DSLContext,
         workspaceName: String,
-        status: WorkspaceStatus,
-        hostName: String? = ""
+        status: WorkspaceStatus
     ) {
         with(TWorkspace.T_WORKSPACE) {
-            if (hostName.isNullOrBlank()) {
-                dslContext.update(this)
-                    .set(STATUS, status.ordinal)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
-                    .where(NAME.eq(workspaceName))
-                    .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-                    .execute()
-            } else {
-                dslContext.update(this)
-                    .set(STATUS, status.ordinal)
-                    .set(HOST_NAME, hostName)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
-                    .where(NAME.eq(workspaceName))
-                    .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-                    .execute()
-            }
+            dslContext.update(this)
+                .set(STATUS, status.ordinal)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
+                .where(NAME.eq(workspaceName))
+                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .execute()
+        }
+    }
+
+    fun updateWorkspaceIp(
+        dslContext: DSLContext,
+        workspaceName: String,
+        hostName: String?,
+        ip: String?
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(HOST_NAME, hostName)
+                .set(IP, ip)
+                .where(NAME.eq(workspaceName))
+                .execute()
         }
     }
 
@@ -511,7 +513,9 @@ class WorkspaceDao {
                         with(TWorkspace.T_WORKSPACE) {
                             transactionContext.update(this)
                                 .set(UPDATE_TIME, LocalDateTime.now())
-                                .set(LABELS, workspaceProperty.labels.let { self -> JsonUtil.toJson(self!!, false) })
+                                .set(
+                                    LABELS,
+                                    workspaceProperty.labels.let { self -> JsonUtil.toJson(self!!, false) })
                                 .where(NAME.eq(workspaceName))
                                 .execute()
                         }
@@ -565,20 +569,6 @@ class WorkspaceDao {
                 .where(NAME.eq(workspaceName))
                 .limit(1)
                 .execute()
-        }
-    }
-
-    @Deprecated("后期删除此方法")
-    fun limitFetchWorkspaceDetail(
-        dslContext: DSLContext,
-        limit: SQLLimit
-    ): List<TWorkspaceDetailRecord> {
-        return with(TWorkspaceDetail.T_WORKSPACE_DETAIL) {
-            dslContext.selectFrom(this)
-                .orderBy(ID.desc())
-                .limit(limit.offset, limit.limit)
-                .skipCheck()
-                .fetch()
         }
     }
 

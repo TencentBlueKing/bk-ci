@@ -31,13 +31,12 @@ import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ENV_NOT_YET_SUPPORTED
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
@@ -66,7 +65,6 @@ import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailServ
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
@@ -81,7 +79,7 @@ import java.util.concurrent.TimeUnit
  *
  * @version 1.0
  */
-@Suppress("UNUSED", "LongParameterList")
+@Suppress("LongParameterList", "LongMethod", "MagicNumber")
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class DispatchVMStartupTaskAtom @Autowired constructor(
@@ -90,8 +88,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val buildVariableService: BuildVariableService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeBuilder: DispatchTypeBuilder,
     private val pipelineAsCodeService: PipelineAsCodeService,
@@ -337,14 +334,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         return true
     }
 
-    private fun getBuildZone(container: Container): Zone? {
-        return when {
-            container !is VMBuildContainer -> null
-            container.enableExternal == true -> Zone.EXTERNAL
-            else -> null
-        }
-    }
-
     override fun tryFinish(
         task: PipelineBuildTask,
         param: VMBuildContainer,
@@ -370,6 +359,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = false, // #5046 强制终止为失败
+                        dispatchType = dispatchTypeBuilder.getDispatchType(task, param),
                         routeKeySuffix = dispatchTypeBuilder
                             .getDispatchType(task, param)
                             .routeKeySuffix?.routeKeySuffix,
@@ -401,9 +391,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         ignoreEnvAgentIds = retryThirdAgentEnv.split(",").filter { it.isNotBlank() }.toSet()
                     )
                 }
-                // 发送后就将参数置空防止下次重复发送事件
 
-                thirdPartyAgentMonitorPrint(task)
+                try {
+                    thirdPartyAgentMonitorPrint(task)
+                } catch (ignore: Exception) {
+                    // 忽略掉因调用打印接口出错而导致调度失败的问题
+                }
             }
 
             AtomResponse(

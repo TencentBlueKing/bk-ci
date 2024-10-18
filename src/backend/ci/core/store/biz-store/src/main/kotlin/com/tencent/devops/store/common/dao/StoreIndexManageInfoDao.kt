@@ -178,38 +178,40 @@ class StoreIndexManageInfoDao {
 
     fun batchCreateStoreIndexResult(dslContext: DSLContext, tStoreIndexResultRecords: List<TStoreIndexResultRecord>) {
         with(TStoreIndexResult.T_STORE_INDEX_RESULT) {
-            dslContext.batch(tStoreIndexResultRecords.map {
-                dslContext.insertInto(
-                    this,
-                    ID,
-                    STORE_CODE,
-                    STORE_TYPE,
-                    INDEX_ID,
-                    INDEX_CODE,
-                    ICON_TIPS,
-                    LEVEL_ID,
-                    CREATOR,
-                    MODIFIER,
-                    UPDATE_TIME,
-                    CREATE_TIME
-                ).values(
-                    it.id,
-                    it.storeCode,
-                    it.storeType,
-                    it.indexId,
-                    it.indexCode,
-                    it.iconTips,
-                    it.levelId,
-                    it.creator,
-                    it.modifier,
-                    it.updateTime,
-                    it.createTime
-                ).onDuplicateKeyUpdate()
-                    .set(ICON_TIPS, it.iconTips)
-                    .set(LEVEL_ID, it.levelId)
-                    .set(MODIFIER, it.modifier)
-                    .set(UPDATE_TIME, it.updateTime)
-            }).execute()
+            dslContext.batch(
+                tStoreIndexResultRecords.map {
+                    dslContext.insertInto(
+                        this,
+                        ID,
+                        STORE_CODE,
+                        STORE_TYPE,
+                        INDEX_ID,
+                        INDEX_CODE,
+                        ICON_TIPS,
+                        LEVEL_ID,
+                        CREATOR,
+                        MODIFIER,
+                        UPDATE_TIME,
+                        CREATE_TIME
+                    ).values(
+                        it.id,
+                        it.storeCode,
+                        it.storeType,
+                        it.indexId,
+                        it.indexCode,
+                        it.iconTips,
+                        it.levelId,
+                        it.creator,
+                        it.modifier,
+                        it.updateTime,
+                        it.createTime
+                    ).onDuplicateKeyUpdate()
+                        .set(ICON_TIPS, it.iconTips)
+                        .set(LEVEL_ID, it.levelId)
+                        .set(MODIFIER, it.modifier)
+                        .set(UPDATE_TIME, it.updateTime)
+                }
+            ).execute()
         }
     }
 
@@ -246,8 +248,10 @@ class StoreIndexManageInfoDao {
             ).from(this)
                 .leftJoin(tStoreIndexBaseInfo)
                 .on(INDEX_ID.eq(tStoreIndexBaseInfo.ID))
-                .join(tStoreIndexLevelInfo).on(INDEX_ID.eq(tStoreIndexLevelInfo.INDEX_ID)
-                    .and(LEVEL_ID.eq(tStoreIndexLevelInfo.ID)))
+                .join(tStoreIndexLevelInfo).on(
+                    INDEX_ID.eq(tStoreIndexLevelInfo.INDEX_ID)
+                        .and(LEVEL_ID.eq(tStoreIndexLevelInfo.ID))
+                )
                 .where(STORE_CODE.`in`(storeCodes).and(STORE_TYPE.eq(storeType.type.toByte())))
                 .orderBy(tStoreIndexBaseInfo.WEIGHT.desc())
                 .fetch()
@@ -307,39 +311,43 @@ class StoreIndexManageInfoDao {
         tStoreIndexElementDetailRecords: List<TStoreIndexElementDetailRecord>
     ) {
         with(TStoreIndexElementDetail.T_STORE_INDEX_ELEMENT_DETAIL) {
-            dslContext.batch(tStoreIndexElementDetailRecords.map {
-                dslContext.insertInto(
-                    this,
-                    ID,
-                    STORE_CODE,
-                    STORE_TYPE,
-                    INDEX_ID,
-                    INDEX_CODE,
-                    ELEMENT_NAME,
-                    ELEMENT_VALUE,
-                    REMARK,
-                    CREATOR,
-                    MODIFIER,
-                    UPDATE_TIME,
-                    CREATE_TIME
-                ).values(
-                    it.id,
-                    it.storeCode,
-                    it.storeType,
-                    it.indexId,
-                    it.indexCode,
-                    it.elementName,
-                    it.elementValue,
-                    it.remark,
-                    it.creator,
-                    it.modifier,
-                    it.updateTime,
-                    it.createTime
-                ).onDuplicateKeyUpdate()
-                    .set(ELEMENT_VALUE, it.elementValue)
-                    .set(REMARK, it.remark)
-                    .set(UPDATE_TIME, it.updateTime)
-            }).execute()
+            dslContext.batch(
+                tStoreIndexElementDetailRecords.map {
+                    dslContext.insertInto(
+                        this,
+                        ID,
+                        STORE_CODE,
+                        STORE_TYPE,
+                        INDEX_ID,
+                        INDEX_CODE,
+                        ELEMENT_CODE,
+                        ELEMENT_NAME,
+                        ELEMENT_VALUE,
+                        REMARK,
+                        CREATOR,
+                        MODIFIER,
+                        UPDATE_TIME,
+                        CREATE_TIME
+                    ).values(
+                        it.id,
+                        it.storeCode,
+                        it.storeType,
+                        it.indexId,
+                        it.indexCode,
+                        it.elementCode,
+                        it.elementName,
+                        it.elementValue,
+                        it.remark,
+                        it.creator,
+                        it.modifier,
+                        it.updateTime,
+                        it.createTime
+                    ).onDuplicateKeyUpdate()
+                        .set(ELEMENT_VALUE, it.elementValue)
+                        .set(REMARK, it.remark)
+                        .set(UPDATE_TIME, it.updateTime)
+                }
+            ).execute()
         }
     }
 

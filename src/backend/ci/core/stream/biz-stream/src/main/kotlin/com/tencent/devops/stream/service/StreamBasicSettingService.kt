@@ -38,7 +38,6 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.StreamNoEnableException
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
@@ -213,21 +212,6 @@ class StreamBasicSettingService @Autowired constructor(
         val gitRepoConf = streamBasicSettingDao.getSetting(dslContext, setting.gitProjectId)
         if (gitRepoConf?.projectCode == null) {
 
-            // 根据url截取group + project的完整路径名称
-            var gitProjectName = GitUtils.getDomainAndRepoName(setting.gitHttpUrl).second
-
-            // 可能存在group多层嵌套的情况:a/b/c/d/e/xx.git，超过t_project表的设置长度64，默认只保存后64位的长度
-            if (gitProjectName.length > StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
-                gitProjectName = gitProjectName.substring(
-                    gitProjectName.length -
-                        StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH,
-                    gitProjectName.length
-                )
-            }
-
-            // 增加判断可能存在stream 侧项目名称删除后，新建同名项目，这时候开启CI就会出现插入project表同名冲突失败的情况,
-            checkSameGitProjectName(userId, gitProjectName)
-
             val projectCode = GitCommonUtils.getCiProjectId(
                 setting.gitProjectId,
                 streamGitConfig.getScmType()
@@ -235,7 +219,7 @@ class StreamBasicSettingService @Autowired constructor(
             val projectResult = client.get(ServiceProjectResource::class).createExtSystem(
                 userId = userId,
                 projectInfo = ProjectCreateInfo(
-                    projectName = gitProjectName ?: projectCode,
+                    projectName = projectCode,
                     englishName = projectCode,
                     projectType = ProjectTypeEnum.SUPPORT_PRODUCT.index,
                     description = "git ci project for git projectId: ${setting.gitProjectId}",

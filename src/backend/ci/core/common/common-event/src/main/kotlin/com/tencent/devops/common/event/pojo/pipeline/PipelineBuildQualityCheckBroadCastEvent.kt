@@ -28,15 +28,15 @@
 package com.tencent.devops.common.event.pojo.pipeline
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.stream.constants.StreamBinding
 
 /**
  * 构建产生红线检查的广播事件，用于通知等
  * @author royalhuang
  * @version 1.0
  */
-@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT)
+@Event(destination = StreamBinding.PIPELINE_BUILD_QUALITY_CHECK_FANOUT)
 data class PipelineBuildQualityCheckBroadCastEvent(
     override val source: String,
     override val projectId: String,

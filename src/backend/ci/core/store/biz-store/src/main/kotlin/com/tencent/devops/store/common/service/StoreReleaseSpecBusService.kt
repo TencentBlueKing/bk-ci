@@ -81,6 +81,7 @@ interface StoreReleaseSpecBusService {
      * @param version 组件版本
      * @param osName 操作系统名称
      * @param osArch 操作系统架构
+     * @param queryConfigFileFlag 是否从配置文件获取环境信息标识
      * @return 包环境信息列表
      */
     @Suppress("LongParameterList")
@@ -90,7 +91,8 @@ interface StoreReleaseSpecBusService {
         storeCode: String,
         version: String,
         osName: String? = null,
-        osArch: String? = null
+        osArch: String? = null,
+        queryConfigFileFlag: Boolean? = false
     ): List<StorePkgEnvInfo>
 
     /**

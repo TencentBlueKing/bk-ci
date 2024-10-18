@@ -40,11 +40,14 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_STAGE_REVIEW_EMPTY_REVIEWER
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -263,17 +266,28 @@ class PipelineStageService @Autowired constructor(
         debug: Boolean
     ): Boolean {
         with(buildStage) {
-            val success = checkIn?.reviewGroup(
+            val startGroup = checkIn?.reviewGroup(
                 userId = userId, groupId = reviewRequest?.id,
                 action = ManualReviewAction.PROCESS, params = reviewRequest?.reviewParams,
                 suggest = reviewRequest?.suggest
             )
-            if (success != true) return false
+            if (startGroup == null) return false
             stageBuildRecordService.stageReview(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount,
                 controlOption = controlOption!!,
                 checkIn = checkIn, checkOut = checkOut
+            )
+            val index = checkIn?.reviewGroups?.indexOf(startGroup)
+            val stageIdForUser = stageIdForUser ?: VMUtils.genStageIdForUser(seq)
+            buildVariableService.batchUpdateVariable(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                variables = mapOf(
+                    "stages.$stageIdForUser.check-in.flow.$index.operator" to userId,
+                    "stages.$stageIdForUser.check-in.flow.$index.result" to (reviewRequest?.suggest ?: "")
+                )
             )
             JooqUtils.retryWhenDeadLock {
                 // #4531 stage先保持暂停，如果没有其他需要审核的审核组则可以启动stage，否则直接返回
@@ -291,7 +305,8 @@ class PipelineStageService @Autowired constructor(
                     triggerUserId = variables[PIPELINE_START_USER_NAME] ?: userId,
                     stage = buildStage,
                     pipelineName = variables[PIPELINE_NAME] ?: pipelineId,
-                    buildNum = variables[PIPELINE_BUILD_NUM] ?: "1"
+                    buildNum = variables[PIPELINE_BUILD_NUM] ?: "1",
+                    debug = debug
                 )
             } else {
                 val allStageStatus = stageBuildRecordService.stageManualStart(
@@ -382,7 +397,8 @@ class PipelineStageService @Autowired constructor(
                         suggest = "CANCEL"
                     ),
                     timeout = timeout,
-                    debug = buildInfo.debug
+                    debug = buildInfo.debug,
+                    system = timeout
                 )
             }
         }
@@ -396,11 +412,12 @@ class PipelineStageService @Autowired constructor(
         buildStage: PipelineBuildStage,
         reviewRequest: StageReviewRequest?,
         timeout: Boolean? = false,
-        debug: Boolean
+        debug: Boolean,
+        system: Boolean? = false
     ): Boolean {
         with(buildStage) {
             checkIn?.reviewGroup(
-                userId = if (timeout == true) "SYSTEM" else userId,
+                userId = if (system == true) "SYSTEM" else userId,
                 groupId = reviewRequest?.id,
                 action = ManualReviewAction.ABORT,
                 suggest = if (timeout == true) "TIMEOUT" else reviewRequest?.suggest
@@ -580,11 +597,32 @@ class PipelineStageService @Autowired constructor(
         triggerUserId: String,
         stage: PipelineBuildStage,
         pipelineName: String,
-        buildNum: String
+        buildNum: String,
+        debug: Boolean
     ) {
         val checkIn = stage.checkIn ?: return
         val group = stage.checkIn?.groupToReview() ?: return
-
+        if (group.reviewers.find { it.isNotBlank() } == null) {
+            /*如果审核人为空，则取消构建*/
+            cancelStage(
+                userId = userId,
+                triggerUserId = triggerUserId,
+                pipelineName = pipelineName,
+                buildNum = buildNum.toIntOrNull() ?: 1,
+                buildStage = stage,
+                reviewRequest = StageReviewRequest(
+                    reviewParams = listOf(),
+                    id = group.id,
+                    suggest = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_STAGE_REVIEW_EMPTY_REVIEWER,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                ),
+                debug = debug,
+                system = true
+            )
+            return
+        }
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "s(${stage.stageId}) waiting for REVIEW",
@@ -617,7 +655,8 @@ class PipelineStageService @Autowired constructor(
                 position = ControlPointPosition.BEFORE_POSITION,
                 stageId = stage.stageId,
                 notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType),
-                markdownContent = checkIn.markdownContent
+                markdownContent = checkIn.markdownContent,
+                mentionReceivers = true
             )
         )
         // #7971 无指定通知类型时、或者触发人是审核人时，不去通知触发人。

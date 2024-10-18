@@ -40,7 +40,7 @@ data class WorkspaceSearch(
     @get:Schema(title = "工作空间状态")
     val status: List<WorkspaceStatus>? = null,
     @get:Schema(title = "工作空间状态 not")
-    val notStatus: List<WorkspaceStatus>? = null,
+    var notStatus: List<WorkspaceStatus>? = null,
     @get:Schema(title = "区域简称，SZ,NJ")
     var zoneShortName: List<String>? = null,
     @get:Schema(title = "资源类型：M，L，XL，S")

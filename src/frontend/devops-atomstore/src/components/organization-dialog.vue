@@ -1,5 +1,6 @@
 <template>
-    <bk-dialog class="organization-dialog"
+    <bk-dialog
+        class="organization-dialog"
         v-model="showDialog"
         :width="width"
         :padding="0"
@@ -15,26 +16,45 @@
                 <div class="organization-card organization-tree">
                     <div class="info-header"> {{ $t('store.全部组织架构') }} </div>
                     <div class="tree-content">
-                        <bk-big-tree show-checkbox
+                        <bk-big-tree
+                            show-checkbox
                             expand-on-click
                             ref="organizationTree"
                             :data="treeList"
                             :check-strictly="false"
                             :lazy-method="loadNodes"
-                            @check-change="handleChange">
+                            @check-change="handleChange"
+                        >
                         </bk-big-tree>
                     </div>
                 </div>
                 <div class="organization-card organization-selected">
                     <div class="info-header"> {{ $t('store.已选组织架构') }} </div>
                     <div class="selected-content">
-                        <div class="selected-item" v-for="(row, index) in selectedList" :key="index">{{ row.displayName }}</div>
+                        <div
+                            class="selected-item"
+                            v-for="(row, index) in selectedList"
+                            :key="index"
+                        >
+                            {{ row.displayName }}
+                        </div>
                     </div>
                 </div>
             </div>
             <section class="handle-footer">
-                <bk-button theme="primary" @click="toConfirmLogo" :loading="isLoading">{{ $t('store.保存') }}</bk-button>
-                <bk-button @click="$emit('cancelHandle')" :disabled="isLoading">{{ $t('store.取消') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    @click="toConfirmLogo"
+                    :loading="isLoading"
+                >
+                    {{ $t('store.保存') }}
+                </bk-button>
+                <bk-button
+                    @click="$emit('cancelHandle')"
+                    :disabled="isLoading"
+                >
+                    {{ $t('store.取消') }}
+                </bk-button>
             </section>
         </main>
     </bk-dialog>

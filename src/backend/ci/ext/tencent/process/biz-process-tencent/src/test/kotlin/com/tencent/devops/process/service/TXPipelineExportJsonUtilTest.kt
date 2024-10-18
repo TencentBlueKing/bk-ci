@@ -16,15 +16,16 @@ import org.springframework.core.io.ClassPathResource
 class TXPipelineExportJsonUtilTest {
 
     @Test
-        /*比较内容是否一致*/
+            /*比较内容是否一致*/
     fun similarTest() {
         val baseModel = getStrFromResource("modelExportJsonUtil.json")
         ElementSubTypeRegisterLoader.registerElement(null)
         DispatchSubTypeRegisterLoader.registerType()
         DispatchSubInfoRegisterLoader.registerInfo()
         val load = JsonUtil.to(baseModel, PipelineModelAndSetting::class.java)
-        val out = JsonUtil.toSortJson(load)
-        Assertions.assertTrue(JSONObject(baseModel).similar(JSONObject(out)))
+        val out = JsonUtil.toJson(load)
+        val sOut = JsonUtil.toSortJson(load)
+        Assertions.assertTrue(JSONObject(sOut).similar(JSONObject(out)))
     }
 
     private fun getStrFromResource(testYaml: String): String {

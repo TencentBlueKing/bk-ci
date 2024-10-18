@@ -20,16 +20,24 @@
                     <br />
                 </p>
                 <p>{{ entry.label }}</p>
-                <div class="dot" v-if="entry.showReminderDot"></div>
+                <div
+                    class="dot"
+                    v-if="entry.showReminderDot"
+                ></div>
             </a>
         </div>
-        <div :class="{
-                 'fixation-wrap': true,
-                 'fixation-wrap-active': showTabAssistant
-             }"
+        <div
+            :class="{
+                'fixation-wrap': true,
+                'fixation-wrap-active': showTabAssistant
+            }"
             v-bk-clickoutside="handleHideTabAssistant"
         >
-            <iframe class="help-center-iframe" src="https://yst.woa.com/chat/chatComp?web_key=1712831968_6109_v_minghteng" frameborder="0"></iframe>
+            <iframe
+                class="help-center-iframe"
+                src="https://yst.woa.com/chat/chatComp?web_key=1712831968_6109_v_minghteng"
+                frameborder="0"
+            ></iframe>
         </div>
     </div>
 </template>

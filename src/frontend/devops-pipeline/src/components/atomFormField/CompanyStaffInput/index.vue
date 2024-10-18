@@ -1,5 +1,7 @@
 <template>
-    <custom-selector name="value" type="text"
+    <custom-selector
+        name="value"
+        type="text"
         :value="curInsertVal"
         :disabled="disabled"
         :placeholder="placeholder"

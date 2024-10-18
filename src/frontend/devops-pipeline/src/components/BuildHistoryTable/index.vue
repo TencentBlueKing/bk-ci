@@ -816,7 +816,7 @@
                 'resetHistoryFilterCondition'
             ]),
             updateTableHeight () {
-                this.tableHeight = this.$refs.tableBox.offsetHeight
+                this.tableHeight = this.$refs.tableBox?.offsetHeight
             },
             handleColumnChange (columns) {
                 this.tableColumnKeys = columns
@@ -841,7 +841,7 @@
                     const res = await this.requestPipelinesHistory({
                         projectId,
                         pipelineId,
-                        ...(this.isDebug ? { version } : {})
+                        isDebug: this.isDebug
                     })
                     this.setHistoryPageStatus({
                         count: res.count
@@ -1418,7 +1418,7 @@
 }
 .build-artifact-list-ul {
     border-top: 1px solid #EAEBF0;
-    max-height: 100vh / 3;
+    max-height: calc(100vh / 3);
     overflow: auto;
     > li {
         height: 38px;

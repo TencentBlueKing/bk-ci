@@ -1,18 +1,32 @@
 <template>
-    <article class="service-manage-home" v-bkloading="{ isLoading }">
+    <article
+        class="service-manage-home"
+        v-bkloading="{ isLoading }"
+    >
         <nav class="service-nav">
             <span>{{ $t('store.微扩展管理') }}</span>
-            <bk-button @click="goToStore" theme="primary">{{ $t('store.添加微扩展服务') }}</bk-button>
+            <bk-button
+                @click="goToStore"
+                theme="primary"
+            >
+                {{ $t('store.添加微扩展服务') }}
+            </bk-button>
         </nav>
         <header class="service-filter">
-            <bk-button ext-cls="filter-button"
+            <bk-button
+                ext-cls="filter-button"
                 :disabled="filterList.length <= 0"
                 @click="filterList = []"
-            >{{ $t('store.全部微扩展') }}（{{installList.length}}）
+            >
+                {{ $t('store.全部微扩展') }}（{{ installList.length }}）
             </bk-button>
             <bk-checkbox-group v-model="filterList">
                 <ul class="fliter-list">
-                    <li v-for="(group, index) in serviceGroup" :key="index" class="filter-item">
+                    <li
+                        v-for="(group, index) in serviceGroup"
+                        :key="index"
+                        class="filter-item"
+                    >
                         <template v-if="group.childItem.length">
                             <logo
                                 class="service-logo"
@@ -20,7 +34,13 @@
                                 size="18"
                             />
                             <section class="filter-select">
-                                <bk-checkbox :value="service.id" v-for="service in group.childItem" :key="service.id">{{service.name}}</bk-checkbox>
+                                <bk-checkbox
+                                    :value="service.id"
+                                    v-for="service in group.childItem"
+                                    :key="service.id"
+                                >
+                                    {{ service.name }}
+                                </bk-checkbox>
                             </section>
                         </template>
                     </li>
@@ -28,24 +48,53 @@
             </bk-checkbox-group>
         </header>
         <main class="service-table">
-            <bk-table :empty-text="$t('store.暂时没有微扩展')"
+            <bk-table
+                :empty-text="$t('store.暂时没有微扩展')"
                 :outer-border="false"
                 :header-border="false"
                 :header-cell-style="{ background: '#fff' }"
                 :data="filterInstallList"
                 :show-overflow-tooltip="true"
             >
-                <bk-table-column :label="$t('store.微扩展名称')" prop="serviceName"></bk-table-column>
-                <bk-table-column :label="$t('store.发布者')" prop="publisher"></bk-table-column>
-                <bk-table-column :label="$t('store.版本')" prop="version"></bk-table-column>
-                <bk-table-column :label="$t('store.状态')" prop="serviceStatus" :formatter="statusFormatter"></bk-table-column>
-                <bk-table-column :label="$t('store.操作人')" prop="creator"></bk-table-column>
-                <bk-table-column :label="$t('store.操作时间')" prop="publishTime" width="180" :formatter="timeFormatter"></bk-table-column>
-                <bk-table-column :label="$t('store.操作')" width="150">
+                <bk-table-column
+                    :label="$t('store.微扩展名称')"
+                    prop="serviceName"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.发布者')"
+                    prop="publisher"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.版本')"
+                    prop="version"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.状态')"
+                    prop="serviceStatus"
+                    :formatter="statusFormatter"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.操作人')"
+                    prop="creator"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.操作时间')"
+                    prop="publishTime"
+                    width="180"
+                    :formatter="timeFormatter"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.操作')"
+                    width="150"
+                >
                     <template slot-scope="props">
                         <span v-bk-tooltips="{ content: $t('store.微扩展初始化项目，不能卸载'), disabled: props.row.isUninstall }">
-                            <bk-button text @click="uninstall(props.row)" :disabled="!props.row.isUninstall">
-                                {{$t('store.卸载')}}
+                            <bk-button
+                                text
+                                @click="uninstall(props.row)"
+                                :disabled="!props.row.isUninstall"
+                            >
+                                {{ $t('store.卸载') }}
                             </bk-button>
                         </span>
                     </template>

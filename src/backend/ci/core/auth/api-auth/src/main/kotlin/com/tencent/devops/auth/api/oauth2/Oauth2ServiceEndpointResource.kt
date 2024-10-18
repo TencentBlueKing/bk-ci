@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.api.oauth2
 
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
+import com.tencent.devops.auth.pojo.dto.ClientDetailsDTO
 import com.tencent.devops.auth.pojo.dto.Oauth2AuthorizationCodeDTO
 import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.auth.pojo.vo.Oauth2AuthorizationInfoVo
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -70,9 +72,9 @@ interface Oauth2ServiceEndpointResource {
         clientSecret: String,
         @Parameter(description = "oauth2获取token请求报文体", required = true)
         accessTokenRequest: Oauth2AccessTokenRequest
-    ): Result<Oauth2AccessTokenVo?>
+    ): Result<Oauth2AccessTokenVo>
 
-    @POST
+    @GET
     @Path("/verifyAccessToken")
     @Operation(summary = "校验accessToken")
     fun verifyAccessToken(
@@ -86,4 +88,21 @@ interface Oauth2ServiceEndpointResource {
         @Parameter(description = "access token", required = true)
         accessToken: String
     ): Result<String>
+
+    @POST
+    @Path("/createClientDetails")
+    @Operation(summary = "新增Oauth2客户端信息")
+    fun createClientDetails(
+        @Parameter(description = "Oauth2客户端请求实体", required = true)
+        clientDetailsDTO: ClientDetailsDTO
+    ): Result<Boolean>
+
+    @DELETE
+    @Path("/deleteClientDetails")
+    @Operation(summary = "删除Oauth2客户端信息")
+    fun deleteClientDetails(
+        @Parameter(description = "客户端ID", required = true)
+        @QueryParam("clientId")
+        clientId: String
+    ): Result<Boolean>
 }

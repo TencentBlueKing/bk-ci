@@ -1,6 +1,5 @@
 <template>
     <div class="pipeline-history-header">
-
         <pipeline-bread-crumb :is-loading="isSwitchPipeline || switchingVersion">
             <bk-popover :delay="[666, 0]">
                 <VersionSelector
@@ -35,7 +34,10 @@
             />
         </pipeline-bread-crumb>
 
-        <aside v-show="!(isSwitchPipeline || switchingVersion)" class="pipeline-history-right-aside">
+        <aside
+            v-show="!(isSwitchPipeline || switchingVersion)"
+            class="pipeline-history-right-aside"
+        >
             <VersionDiffEntry
                 v-if="!isTemplatePipeline && !isReleaseVersion"
                 :text="false"

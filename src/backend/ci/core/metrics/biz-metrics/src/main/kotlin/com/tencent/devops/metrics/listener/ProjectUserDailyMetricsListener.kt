@@ -28,7 +28,7 @@
 
 package com.tencent.devops.metrics.listener
 
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import com.tencent.devops.metrics.service.ProjectBuildSummaryService
 import org.slf4j.LoggerFactory
@@ -38,7 +38,7 @@ import org.springframework.stereotype.Component
 @Component
 class ProjectUserDailyMetricsListener @Autowired constructor(
     private val projectBuildSummaryService: ProjectBuildSummaryService
-) : Listener<ProjectUserDailyEvent> {
+) : EventListener<ProjectUserDailyEvent> {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectUserDailyMetricsListener::class.java)
@@ -47,6 +47,9 @@ class ProjectUserDailyMetricsListener @Autowired constructor(
     override fun execute(event: ProjectUserDailyEvent) {
         try {
             with(event) {
+                if (logger.isDebugEnabled) {
+                    logger.debug("consumer project user daily metrics event|$event")
+                }
                 projectBuildSummaryService.saveProjectUser(
                     projectId = projectId,
                     userId = userId,

@@ -72,5 +72,7 @@ data class WorkspaceDetail(
     @get:Schema(title = "镜像ID")
     val imageId: String?,
     @get:Schema(title = "工作空间备注")
-    val remark: String?
+    val remark: String?,
+    @get:Schema(title = "当前登录人")
+    val currentLoginUser: Set<String>?
 )

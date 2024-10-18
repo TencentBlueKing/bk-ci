@@ -137,15 +137,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -225,6 +225,13 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun getBuildInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo? {
         return pipelineBuildDao.getBuildInfo(dslContext, projectId, pipelineId, buildId)
+    }
+
+    fun getRunningBuildCount(
+        projectId: String,
+        pipelineId: String
+    ): Int {
+        return pipelineBuildDao.countAllBuildWithStatus(dslContext, projectId, pipelineId, setOf(BuildStatus.RUNNING))
     }
 
     /** 根据状态信息获取并发组构建列表
@@ -372,7 +379,7 @@ class PipelineRuntimeService @Autowired constructor(
         startUser: List<String>?,
         updateTimeDesc: Boolean? = null,
         queryDslContext: DSLContext? = null,
-        debugVersion: Int?,
+        debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
         triggerUser: List<String>?
@@ -408,7 +415,7 @@ class PipelineRuntimeService @Autowired constructor(
             buildMsg = buildMsg,
             startUser = startUser,
             updateTimeDesc = updateTimeDesc,
-            debugVersion = debugVersion,
+            debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
             triggerUser = triggerUser
@@ -535,6 +542,7 @@ class PipelineRuntimeService @Autowired constructor(
                 }
                 result.distinct()
             }
+
             else -> emptyList()
         }
         return if (search.isNullOrBlank()) {
@@ -964,7 +972,8 @@ class PipelineRuntimeService @Autowired constructor(
                         startTime = stageStartTime,
                         controlOption = stageOption,
                         checkIn = stage.checkIn,
-                        checkOut = stage.checkOut
+                        checkOut = stage.checkOut,
+                        stageIdForUser = stage.stageIdForUser
                     )
                 )
             }
@@ -1885,7 +1894,7 @@ class PipelineRuntimeService @Autowired constructor(
         buildMsg: String? = null,
         startUser: List<String>? = null,
         queryDslContext: DSLContext? = null,
-        debugVersion: Int? = null,
+        debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
         triggerUser: List<String>?
@@ -1914,7 +1923,7 @@ class PipelineRuntimeService @Autowired constructor(
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
             startUser = startUser,
-            debugVersion = debugVersion,
+            debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
             triggerUser = triggerUser

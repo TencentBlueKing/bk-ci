@@ -1,12 +1,21 @@
 <template>
-    <bk-exception :type="type" scene="part">
+    <bk-exception
+        :type="type"
+        scene="part"
+    >
         <div style="font-size: 14px;">{{ typeMap[type] }}</div>
         <template v-if="type === 'search-empty'">
             <i18n
                 tag="div"
                 path="environment.可以尝试 调整关键词 或 清空筛选条件"
-                class="empty-tips">
-                <bk-button text @click="handleClear">{{$t('environment.清空筛选条件')}}</bk-button>
+                class="empty-tips"
+            >
+                <bk-button
+                    text
+                    @click="handleClear"
+                >
+                    {{ $t('environment.清空筛选条件') }}
+                </bk-button>
             </i18n>
         </template>
     </bk-exception>

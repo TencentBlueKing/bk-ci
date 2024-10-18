@@ -38,7 +38,6 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -95,7 +94,7 @@ class PipelineWebhookService @Autowired constructor(
             logger.info("$pipelineId|$version|model is null")
             return
         }
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
         val variables = triggerContainer.params.associate { param ->
             param.id to param.defaultValue.toString()
         }.toMutableMap()

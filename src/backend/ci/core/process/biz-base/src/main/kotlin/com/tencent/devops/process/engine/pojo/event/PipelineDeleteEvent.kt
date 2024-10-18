@@ -28,16 +28,16 @@
 package com.tencent.devops.process.engine.pojo.event
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.event.enums.ActionType
 
 /**
  * 删除流水线事件
  *
  * @version 1.0
  */
-@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_DELETE)
+@Event(StreamBinding.PIPELINE_DELETE)
 data class PipelineDeleteEvent(
     override val source: String,
     override val projectId: String,

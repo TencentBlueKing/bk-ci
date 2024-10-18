@@ -1,9 +1,18 @@
 <template>
     <section class="main-body">
-        <log :logs="logs" v-bkloading="{ isLoading: isLogLoading }"></log>
+        <log
+            :logs="logs"
+            v-bkloading="{ isLoading: isLogLoading }"
+        ></log>
 
         <footer class="main-footer">
-            <bk-button :disabled="currentStep.status !== 'fail'" :loading="isLoading" @click="reDeploy"> {{ $t('store.重新部署') }} </bk-button>
+            <bk-button
+                :disabled="currentStep.status !== 'fail'"
+                :loading="isLoading"
+                @click="reDeploy"
+            >
+                {{ $t('store.重新部署') }}
+            </bk-button>
         </footer>
     </section>
 </template>

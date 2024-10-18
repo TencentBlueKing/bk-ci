@@ -25,13 +25,15 @@
             v-model="isShowDetail"
             class="execute-history-step-view-server-detail-dialog"
             :ok-text="$t('environment.关闭')"
-            :width="1020">
+            :width="1020"
+        >
             <template #header>
                 <div class="title">
                     <span>{{ $t('environment.服务器文件-服务器列表') }}</span>
                     <i
                         class="dialog-close-btn bk-icon icon-close"
-                        @click="handlerClose" />
+                        @click="handlerClose"
+                    />
                 </div>
             </template>
             <div class="content-wraper">
@@ -41,20 +43,38 @@
                     :header-border="false"
                     :max-height="500"
                 >
-                    <bk-table-column :label="$t('environment.主机ID')" prop="bkHostId"></bk-table-column>
-                    <bk-table-column label="Agent ID" prop="bkAgentId"></bk-table-column>
-                    <bk-table-column label="IPv4" prop="ip">
+                    <bk-table-column
+                        :label="$t('environment.主机ID')"
+                        prop="bkHostId"
+                    ></bk-table-column>
+                    <bk-table-column
+                        label="Agent ID"
+                        prop="bkAgentId"
+                    ></bk-table-column>
+                    <bk-table-column
+                        label="IPv4"
+                        prop="ip"
+                    >
                         <template slot-scope="{ row }">
                             {{ row.ip || '--' }}
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="IPv6" prop="ipv6">
+                    <bk-table-column
+                        label="IPv6"
+                        prop="ipv6"
+                    >
                         <template slot-scope="{ row }">
                             {{ row.ipv6 || '--' }}
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('environment.管控区域')" prop="bkCloudName"></bk-table-column>
-                    <bk-table-column :label="$t('environment.Agent 状态')" prop="alive">
+                    <bk-table-column
+                        :label="$t('environment.管控区域')"
+                        prop="bkCloudName"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('environment.Agent 状态')"
+                        prop="alive"
+                    >
                         <template slot-scope="{ row }">
                             <StatusIcon :status="row.alive ? 'success' : 'error'" />
                             {{ row.alive ? $t('environment.正常') : $t('environment.异常') }}

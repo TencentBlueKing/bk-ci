@@ -1,20 +1,71 @@
 <template>
     <section class="param-edit-home">
-        <bk-button text title="primary" @click="toggleShowParamForm()" :disabled="disabled" class="params-opt">
+        <bk-button
+            text
+            title="primary"
+            @click="toggleShowParamForm()"
+            :disabled="disabled"
+            class="params-opt"
+        >
             <i class="bk-icon icon-plus-circle"></i>{{ $t('stageReview.createVariables') }}
         </bk-button>
 
         <bk-table :data="copyReviewParams">
-            <bk-table-column :label="$t('stageReview.variableName')" prop="key" show-overflow-tooltip></bk-table-column>
-            <bk-table-column :label="$t('stageReview.alias')" prop="chineseName" show-overflow-tooltip></bk-table-column>
-            <bk-table-column :label="$t('stageReview.type')" prop="valueType" :formatter="typeFormatter"></bk-table-column>
-            <bk-table-column :label="$t('stageReview.defaultValue')" prop="value" show-overflow-tooltip :formatter="valFormatter"></bk-table-column>
-            <bk-table-column :label="$t('stageReview.required')" prop="required" :formatter="requireFormatter"></bk-table-column>
-            <bk-table-column :label="$t('stageReview.options')" prop="options" show-overflow-tooltip :formatter="jsonFormatter"></bk-table-column>
-            <bk-table-column :label="$t('stageReview.operation')" width="120">
+            <bk-table-column
+                :label="$t('stageReview.variableName')"
+                prop="key"
+                show-overflow-tooltip
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('stageReview.alias')"
+                prop="chineseName"
+                show-overflow-tooltip
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('stageReview.type')"
+                prop="valueType"
+                :formatter="typeFormatter"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('stageReview.defaultValue')"
+                prop="value"
+                show-overflow-tooltip
+                :formatter="valFormatter"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('stageReview.required')"
+                prop="required"
+                :formatter="requireFormatter"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('stageReview.options')"
+                prop="options"
+                show-overflow-tooltip
+                :formatter="jsonFormatter"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('stageReview.operation')"
+                width="120"
+            >
                 <template slot-scope="props">
-                    <bk-button class="mr10" theme="primary" text @click="toggleShowParamForm(props.row, props.$index)" :disabled="disabled">{{ $t('edit') }}</bk-button>
-                    <bk-button class="mr10" theme="primary" text @click="removeParam(props.$index)" :disabled="disabled">{{ $t('delete') }}</bk-button>
+                    <bk-button
+                        class="mr10"
+                        theme="primary"
+                        text
+                        @click="toggleShowParamForm(props.row, props.$index)"
+                        :disabled="disabled"
+                    >
+                        {{ $t('edit') }}
+                    </bk-button>
+                    <bk-button
+                        class="mr10"
+                        theme="primary"
+                        text
+                        @click="removeParam(props.$index)"
+                        :disabled="disabled"
+                    >
+                        {{ $t('delete') }}
+                    </bk-button>
                 </template>
             </bk-table-column>
         </bk-table>

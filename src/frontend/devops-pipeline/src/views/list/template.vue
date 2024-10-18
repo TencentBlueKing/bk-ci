@@ -1,5 +1,8 @@
 <template>
-    <div class="pipeline-template-list" v-bkloading="{ isLoading }">
+    <div
+        class="pipeline-template-list"
+        v-bkloading="{ isLoading }"
+    >
         <div class="template-list-content">
             <div class="view-table-wrapper">
                 <template v-if="isEnabledPermission">
@@ -50,7 +53,8 @@
                     @getApiData="getTempFromSelf"
                 >
                 </template-table>
-                <empty-tips v-if="showSelfEmpty"
+                <empty-tips
+                    v-if="showSelfEmpty"
                     :title="$t('template.noTemplate')"
                     :desc="emptyTipsConfig.desc"
                     :btn-disabled="emptyTipsConfig.btnDisabled"
@@ -70,10 +74,17 @@
             :title="$t('template.addTemplate')"
             :cancel-text="$t('cancel')"
             width="480"
-            @confirm="createTemplate">
+            @confirm="createTemplate"
+        >
             <div>
-                <form-field :required="false" :label="$t('template.name')" :is-error="errors.has(&quot;templateName&quot;)" :error-msg="errors.first(&quot;templateName&quot;)">
-                    <input class="bk-form-input"
+                <form-field
+                    :required="false"
+                    :label="$t('template.name')"
+                    :is-error="errors.has('templateName')"
+                    :error-msg="errors.first('templateName')"
+                >
+                    <input
+                        class="bk-form-input"
                         maxlength="30"
                         :placeholder="$t('template.nameInputTips')"
                         v-focus="isFocus()"
@@ -89,13 +100,13 @@
 </template>
 
 <script>
-    import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import templateTable from '@/components/template/templateTable'
 
     import {
-        TEMPLATE_RESOURCE_ACTION,
-        PROJECT_RESOURCE_ACTION
+        PROJECT_RESOURCE_ACTION,
+        TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
 
     export default {

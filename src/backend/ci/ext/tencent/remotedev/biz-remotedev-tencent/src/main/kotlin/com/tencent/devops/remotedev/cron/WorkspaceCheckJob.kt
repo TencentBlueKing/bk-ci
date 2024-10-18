@@ -5,11 +5,11 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -18,7 +18,8 @@ class WorkspaceCheckJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceService: WorkspaceService,
     private val bkTag: BkTag,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val windowsResourceConfigService: WindowsResourceConfigService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceCheckJob::class.java)
@@ -28,9 +29,6 @@ class WorkspaceCheckJob @Autowired constructor(
         private const val syncJobLockKey = "remotedev_cron_sync_start_resource_job"
         private const val backupCgsDataLockKey = "remotedev_cron_backup_csg_data_job"
     }
-
-    @Value("\${remoteDev.autoDeletePipeline:}")
-    val autoDeletePipeline = ""
 
     /**
      * 每5min检测一次 30min内没有心跳上报的工作空间，主动stop
@@ -70,7 +68,7 @@ class WorkspaceCheckJob @Autowired constructor(
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 logger.info("sync START resource list get lock.")
-                workspaceCommon.syncStartCloudResourceList()
+                windowsResourceConfigService.syncStartCloudResourceList()
             }
         } catch (e: Throwable) {
             logger.error("sync START resource list failed", e)
@@ -96,13 +94,5 @@ class WorkspaceCheckJob @Autowired constructor(
         } catch (e: Throwable) {
             logger.error("sync START resource list failed", e)
         }
-    }
-
-    /**
-     * 每 10 分钟检测一次过期的工作空间分享
-     */
-    @Scheduled(cron = "0 */10 * ? * *")
-    fun checkAndUnshared() {
-        workspaceService.checkAndUnshared()
     }
 }
