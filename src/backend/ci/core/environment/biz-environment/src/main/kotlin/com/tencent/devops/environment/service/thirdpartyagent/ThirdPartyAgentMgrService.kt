@@ -1080,10 +1080,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             agentVersion = startInfo.version,
             masterVersion = startInfo.masterVersion
         )
-        if (!startInfo.masterVersion.isNullOrBlank() && agentRecord.masterVersion != startInfo.masterVersion) {
-            // 同时更新T_NODE表中 构建机的agent版本字段
-            nodeDao.updateDevopsAgentVersionByNodeId(dslContext, agentRecord.nodeId, startInfo.masterVersion!!)
-        }
         if (updateCount != 1) {
             logger.warn("Fail to update the agent info($updateCount)")
         }
@@ -1108,6 +1104,17 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     webSocketDispatcher.dispatch(
                         websocketService.buildDetailMessage(projectId, "")
                     )
+                } else {
+                    // 在IP没变的情况下版本可能变化，这里单独更新下版本
+                    if (!startInfo.masterVersion.isNullOrBlank() &&
+                        agentRecord.masterVersion != startInfo.masterVersion
+                    ) {
+                        nodeDao.updateDevopsAgentVersionByNodeId(
+                            dslContext = dslContext,
+                            nodeId = agentRecord.nodeId,
+                            agentVersion = startInfo.masterVersion!!
+                        )
+                    }
                 }
             }
         }

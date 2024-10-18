@@ -117,7 +117,9 @@ class AgentUpgradeJob @Autowired constructor(
         ).toMutableSet()
 
         // 对于优先升级的项目的 agent 也一并计入并且放到前面
-        val upgrades = projectScope.fetchInPriorityUpgradeProject()
+        val upgrades = mutableSetOf<String>()
+        upgrades.addAll(projectScope.fetchInPriorityUpgradeProject(AgentUpgradeType.GO_AGENT))
+        upgrades.addAll(projectScope.fetchInPriorityUpgradeProject(AgentUpgradeType.WORKER))
         if (upgrades.isNotEmpty()) {
             val upImportOKAgents = thirdPartyAgentDao.listByStatusAndProject(
                 dslContext = dslContext,
@@ -131,7 +133,7 @@ class AgentUpgradeJob @Autowired constructor(
         val needUpgradeAgents = importOKAgents.filter {
             // #5806 #5045 解决worker过老，或者异常，导致拿不到版本号，而无法自愈或升级的问题
             // it.version.isNullOrBlank() || it.masterVersion.isNullOrBlank() -> false
-            if (checkProjectRouter(it.projectId) && checkProjectUpgrade(it.projectId)) {
+            if (checkProjectRouter(it.projectId)) {
                 checkCanUpgrade(
                     goAgentCurrentVersion = currentMasterVersion,
                     workCurrentVersion = currentVersion,
@@ -161,6 +163,10 @@ class AgentUpgradeJob @Autowired constructor(
         record: TEnvironmentThirdpartyAgentRecord
     ): Boolean {
         AgentUpgradeType.values().forEach { type ->
+            // 校验这个项目下的这个类型是否可以升级
+            if (!checkProjectUpgrade(record.projectId, type)) {
+                return@forEach
+            }
             val res = when (type) {
                 AgentUpgradeType.GO_AGENT -> {
                     goAgentCurrentVersion.trim() != record.masterVersion.trim()
@@ -203,16 +209,15 @@ class AgentUpgradeJob @Autowired constructor(
     }
 
     /**
-     * 校验这个agent所属的项目是否可以进行升级或者其他属性
+     * 校验这个agent所属的项目是否可以进行升级或者其他属性，只支持worker和agent设置，除worker外的类型都和agent设置走
      * @return true 可以升级 false 不能进行升级
      */
-    private fun checkProjectUpgrade(projectId: String): Boolean {
+    private fun checkProjectUpgrade(projectId: String, type: AgentUpgradeType): Boolean {
         // 校验不升级项目，这些项目不参与Agent升级
-        if (projectScope.checkDenyUpgradeProject(projectId)) {
+        if (projectScope.checkDenyUpgradeProject(projectId, type)) {
             return false
         }
-
         // 校验是否在优先升级的项目列表中，如果不在里面并且优先升级项目的列表为空也允许Agent升级。
-        return projectScope.checkInPriorityUpgradeProjectOrEmpty(projectId)
+        return projectScope.checkInPriorityUpgradeProjectOrEmpty(projectId, type)
     }
 }

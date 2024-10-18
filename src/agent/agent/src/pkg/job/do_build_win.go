@@ -56,6 +56,8 @@ func doBuild(
 	goEnv map[string]string,
 	runUser string,
 ) error {
+	// windows特有环境变量
+	goEnv["DEVOPS_AGENT_WIN_SERVICE"] = config.GAgentEnv.WinTask
 	var err error
 	var exitGroup process.ProcessExitGroup
 	enableExitGroup := config.FetchEnvAndCheck(constant.DevopsAgentEnableExitGroup, "true")

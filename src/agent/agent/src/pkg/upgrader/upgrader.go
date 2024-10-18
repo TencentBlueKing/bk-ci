@@ -58,6 +58,7 @@ func DoUpgradeAgent() error {
 	logs.Info("start upgrade agent")
 	config.Init(false)
 	if err := third_components.Init(); err != nil {
+		logs.WithError(err).Error("init third_components error")
 		systemutil.ExitProcess(1)
 	}
 

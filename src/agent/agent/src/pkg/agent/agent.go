@@ -50,6 +50,7 @@ import (
 func Run(isDebug bool) {
 	config.Init(isDebug)
 	if err := third_components.Init(); err != nil {
+		logs.WithError(err).Error("init third_components error")
 		systemutil.ExitProcess(1)
 	}
 
