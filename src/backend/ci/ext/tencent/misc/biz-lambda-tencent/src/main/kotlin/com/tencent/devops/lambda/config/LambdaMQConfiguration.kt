@@ -27,7 +27,6 @@
 package com.tencent.devops.lambda.config
 
 import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
@@ -66,9 +65,4 @@ class LambdaMQConfiguration {
     fun pipelineModelAnalysisConsumer(
         @Autowired lambdaPipelineModelService: LambdaPipelineModelService
     ) = ScsConsumerBuilder.build<PipelineModelAnalysisEvent> { lambdaPipelineModelService.onModelExchange(it) }
-
-    @EventConsumer
-    fun pipelineBuildCommitsFinishConsumer(
-        @Autowired lambdaDataService: LambdaDataService
-    ) = ScsConsumerBuilder.build<PipelineBuildCommitFinishEvent> { lambdaDataService.onBuildCommitFinish(it) }
 }
