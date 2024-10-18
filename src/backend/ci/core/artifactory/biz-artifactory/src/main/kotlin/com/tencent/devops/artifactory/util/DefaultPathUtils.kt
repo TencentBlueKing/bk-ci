@@ -29,7 +29,6 @@ package com.tencent.devops.artifactory.util
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
 import java.time.LocalDateTime
