@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
@@ -226,4 +227,6 @@ data class Model(
         }
         return pipelineCallBack
     }
+
+    fun getTriggerContainer() = stages[0].containers[0] as TriggerContainer
 }
