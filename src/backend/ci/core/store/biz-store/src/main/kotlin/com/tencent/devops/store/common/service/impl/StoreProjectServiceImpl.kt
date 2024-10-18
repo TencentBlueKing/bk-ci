@@ -38,7 +38,6 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
@@ -395,22 +394,6 @@ class StoreProjectServiceImpl @Autowired constructor(
                 projectCode = storeProjectInfo.projectId,
                 type = StoreProjectTypeEnum.TEST.type.toByte()
             )
-            val storePipelineRel = storePipelineRelDao.getStorePipelineRel(
-                dslContext = context,
-                storeCode = storeProjectInfo.storeCode,
-                storeType = storeProjectInfo.storeType
-            )
-            storePipelineRel?.let {
-                storePipelineRelDao.deleteStorePipelineRelById(context, storePipelineRel.id)
-                storePipelineBuildRelDao.deleteStorePipelineBuildRelByPipelineId(context, storePipelineRel.pipelineId)
-                client.get(ServicePipelineResource::class).delete(
-                    userId = userId,
-                    pipelineId = it.pipelineId,
-                    channelCode = ChannelCode.AM,
-                    projectId = initProjectInfo.projectCode,
-                    checkFlag = false
-                )
-            }
             val storeRepoHashId =
                 storeCommonService.getStoreRepoHashIdByCode(storeProjectInfo.storeCode, storeProjectInfo.storeType)
             storeRepoHashId?.let {
