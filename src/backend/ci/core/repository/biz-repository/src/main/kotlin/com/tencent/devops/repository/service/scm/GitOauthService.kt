@@ -295,4 +295,15 @@ class GitOauthService @Autowired constructor(
     override fun deleteToken(userId: String): Int {
         return gitTokenDao.deleteToken(dslContext, userId)
     }
+
+    override fun getOauthUrl(userId: String, redirectUrl: String): String {
+        return getAuthUrl(
+            mapOf(
+                "userId" to userId,
+                "redirectUrlType" to RedirectUrlTypeEnum.SPEC.type,
+                "redirectUrl" to redirectUrl,
+                "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}"
+            )
+        )
+    }
 }

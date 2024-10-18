@@ -574,7 +574,7 @@ class PipelineRuntimeService @Autowired constructor(
                 status = status.name,
                 stageStatus = stageStatus,
                 currentTimestamp = currentTimestamp,
-                material = material?.sortedBy { it.aliasName },
+                material = material,
                 queueTime = queueTime,
                 artifactList = artifactList,
                 remark = remark,

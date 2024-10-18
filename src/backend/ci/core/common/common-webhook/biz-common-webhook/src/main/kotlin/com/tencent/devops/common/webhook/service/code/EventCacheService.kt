@@ -6,6 +6,7 @@ import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.sdk.github.response.CommitResponse
 import com.tencent.devops.repository.sdk.github.response.PullRequestResponse
 import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
@@ -232,6 +233,24 @@ class EventCacheService @Autowired constructor(
                 logger.info("fail to get webhook commit list | err is $ignored")
                 emptyList()
             }
+        }
+    }
+
+    fun getGithubCommitInfo(
+        githubRepoName: String,
+        commitId: String,
+        repo: Repository,
+        projectId: String
+    ): CommitResponse? {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        return eventCache?.githubCommitInfo ?: run {
+            val githubCommitInfo = gitScmService.getGithubCommitInfo(
+                githubRepoName = githubRepoName,
+                commitId = commitId,
+                repo = repo
+            )
+            eventCache?.githubCommitInfo = githubCommitInfo
+            githubCommitInfo
         }
     }
 
