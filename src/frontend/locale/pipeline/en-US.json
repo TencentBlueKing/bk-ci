@@ -779,7 +779,7 @@
     "image": "Image",
     "provideInfo": "Provided by {0}, modified {1} on {2}",
     "officialCertification": "Official Certification",
-    "thirdImageHolder": "Please enter the full image path, such as docker.io/bkci/ci",
+    "thirdImageHolder": "Please enter the full image path, such as xxx.xxx.com/your-namespace/your-imagename:1.0",
     "by": "by",
     "devnet": "Devnet VM",
     "onlySupport": "Only supported",
@@ -1038,7 +1038,13 @@
     "timerTriggerCodelibTips": "- Git repository: Branch is optional, defaults to the default branch when not specified.\n-SVN repository: Branch is mandatory, must be a first-level subdirectory under the repository root path.",
     "timerTriggerBranchTips": "If multiple branches have changes, each branch will trigger once when conditions are met.",
     "filePathTips": "Please enter directory, e.g., /a",
-    "fileNameTips": "File name, leave blank to auto-detect"
+    "fileNameTips": "File name, leave blank to auto-detect",
+    "enableDocker": "Enable Docker for Running Build Tasks",
+    "imagePullPolicy": "Image Pull Policy",
+    "alwaysPull": "Always pull on each run",
+    "ifNotPresent": "Pull only if not present locally",
+    "enableDockerTips": "When using this feature, please ensure that the build machine has Docker installed, and that the user running the third-party build agent has the necessary permissions to operate Docker.",
+    "enabledPrivileged": "Enable Privileged Mode"
   },
   "storeMap": {
     "textarea": "Textarea",
