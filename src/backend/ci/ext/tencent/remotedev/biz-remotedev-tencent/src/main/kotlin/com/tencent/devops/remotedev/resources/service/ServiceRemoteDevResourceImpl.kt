@@ -663,7 +663,12 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun expandDisk(userId: String, workspaceName: String, size: String): Result<ExpandDiskValidateResp?> {
-        val data = expertSupportService.expandDisk(workspaceName, userId, size) ?: return Result(null)
+        val data = expertSupportService.expandDisk(
+            workspaceName = workspaceName,
+            userId = userId,
+            size = size
+        ) ?: return Result(null)
+
         return Result(
             ExpandDiskValidateResp(
                 valid = data.valid,
