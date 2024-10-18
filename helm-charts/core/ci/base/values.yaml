@@ -111,7 +111,7 @@ multiCluster:
 # 内部数据源配置
 mysql:
   image: 
-    tag: 5.7.26
+    tag: 8.0.37-debian-12-r2
   enabled: true
   auth:
     # 修改此选项必须删除mysql的pvc , 否则会创建mysql失败
@@ -174,15 +174,15 @@ elasticsearch:
 rabbitmq:
   enabled: true
   image: 
-    registry: docker.io/bkci
-    repository: rabbitmq-with-delay
-    tag: 0.0.1
+    repository: bitnami/rabbitmq
+    tag: 3.10.8-debian-11-r4
   persistence:
     size: 10Gi
   auth:
     username: admin
     password: blueking
     erlangCookie: blueking # 修改此选项必须删除rabbitmq的pvc , 否则会创建rabbitmq失败
+  communityPlugins: "https://bkopen-1252002024.file.myqcloud.com/ce7/files/rabbitmq_delayed_message_exchange-3.8.17.8f537ac.ez"
   extraPlugins: "rabbitmq_delayed_message_exchange"
   extraConfiguration: |-
     # ipv6 , 需要开启这些选项
@@ -293,7 +293,7 @@ kubernetes-manager:
     enabled: true
     nameOverride: kubernetes-manager-mysql
     image:
-      tag: 5.7.26
+      tag: 8.0.37-debian-12-r2
     auth:
       # 修改此选项必须删除mysql的pvc , 否则会创建mysql失败
       rootPassword: blueking
