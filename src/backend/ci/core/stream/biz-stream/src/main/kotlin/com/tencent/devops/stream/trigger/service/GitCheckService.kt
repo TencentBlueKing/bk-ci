@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -53,7 +53,7 @@ import org.springframework.stereotype.Service
 class GitCheckService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val streamEventDispatcher: MQEventDispatcher
+    private val streamEventDispatcher: SampleEventDispatcher
 ) {
 
     companion object {

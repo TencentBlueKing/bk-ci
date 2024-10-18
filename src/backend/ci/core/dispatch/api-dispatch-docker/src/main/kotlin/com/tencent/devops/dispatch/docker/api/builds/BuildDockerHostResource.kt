@@ -48,6 +48,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
 interface BuildDockerHostResource {
+
     @GET
     @Path("/resource-config/pipelines/{pipelineId}/vmSeqs/{vmSeqId}")
     @Operation(summary = "获取蓝盾项目的docker性能配置")

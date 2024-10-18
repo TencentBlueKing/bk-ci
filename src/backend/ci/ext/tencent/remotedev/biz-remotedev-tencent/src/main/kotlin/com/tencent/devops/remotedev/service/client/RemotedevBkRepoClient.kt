@@ -34,12 +34,12 @@ class RemotedevBkRepoClient @Autowired constructor(
     fun repoStreamCreate(
         region: BkRepoRegion,
         projectId: String,
-        workspaceName: String,
+        repoName: String,
         userId: String
     ): String? {
         val config = bkRepoConfig.getRegionConfig(region)
         val request = Request.Builder()
-            .url("${config.url}/media/api/user/stream/create/$projectId/$workspaceName?display=false")
+            .url("${config.url}/media/api/user/stream/create/$projectId/$repoName?display=false")
             .headers(getCommonHeaders(region, userId).toHeaders())
             .post(
                 objectMapper.writeValueAsString(JsonUtil.toJson(mapOf<String, String>()))
@@ -91,6 +91,21 @@ class RemotedevBkRepoClient @Autowired constructor(
             .url(url)
             .headers(getCommonHeaders(region, userId).toHeaders())
             .get()
+            .build()
+        return doRequest(request).resolveResponse<Response<Page<BkRepoNodeDetail>>>()!!.data
+    }
+
+    fun nodeSearch(
+        region: BkRepoRegion,
+        userId: String,
+        body: NodeSearchBody
+    ): Page<BkRepoNodeDetail>? {
+        val config = bkRepoConfig.getRegionConfig(region)
+        val url = "${config.url}/repository/api/node/search"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(region, userId).toHeaders())
+            .post(objectMapper.writeValueAsString(body).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         return doRequest(request).resolveResponse<Response<Page<BkRepoNodeDetail>>>()!!.data
     }
@@ -152,4 +167,33 @@ data class BkRepoNodeDetailMetadata(
     val mediaStartTime: Long?,
     @JsonProperty("media.stopTime")
     val mediaStopTime: Long?
+)
+
+// 需要参考bkrepo的节点自定义搜索文档，太复杂这里写不下
+data class NodeSearchBody(
+    val select: List<String>,
+    val page: NodeSearchPage,
+    val sort: NodeSearchSort,
+    val rule: NodeSearchRule
+)
+
+data class NodeSearchPage(
+    val pageNumber: Int,
+    val pageSize: Int
+)
+
+data class NodeSearchSort(
+    val properties: List<String>,
+    val direction: String
+)
+
+data class NodeSearchRule(
+    val rules: List<NodeSearchRulesItem>,
+    val relation: String
+)
+
+data class NodeSearchRulesItem(
+    val field: String,
+    val value: Any,
+    val operation: String
 )

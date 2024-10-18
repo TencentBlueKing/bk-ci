@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.TRANSFER_ERROR_C
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -49,7 +50,6 @@ import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.common.pipeline.utils.TransferUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED
@@ -59,6 +59,8 @@ import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_MUTEX_TI
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
+import com.tencent.devops.process.yaml.v3.models.IfField
+import com.tencent.devops.process.yaml.v3.models.IfField.Mode
 import com.tencent.devops.process.yaml.v3.models.job.Container3
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
@@ -186,18 +188,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
             ),
             mutex = getMutexYaml(job.mutexGroup),
             container = null,
-            ifField = when (job.jobControlOption?.runCondition) {
-                JobRunCondition.CUSTOM_CONDITION_MATCH -> job.jobControlOption?.customCondition
-                JobRunCondition.CUSTOM_VARIABLE_MATCH -> TransferUtil.customVariableMatch(
-                    job.jobControlOption?.customVariables
-                )
-
-                JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> TransferUtil.customVariableMatchNotRun(
-                    job.jobControlOption?.customVariables
-                )
-
-                else -> null
-            },
+            ifField = jobIfField(job.jobControlOption),
             steps = steps,
             timeoutMinutes = makeJobTimeout(job.jobControlOption),
             env = null,
@@ -212,6 +203,26 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 else -> null
             }
         )
+    }
+
+    private fun jobIfField(jobControlOption: JobControlOption?): Any? {
+        return when (jobControlOption?.runCondition) {
+            JobRunCondition.PREVIOUS_STAGE_SUCCESS -> IfType.SUCCESS.name
+            JobRunCondition.PREVIOUS_STAGE_FAILED -> IfType.FAILURE.name
+            JobRunCondition.PREVIOUS_STAGE_CANCEL -> IfType.CANCELED.name
+            JobRunCondition.CUSTOM_CONDITION_MATCH -> jobControlOption.customCondition
+            JobRunCondition.CUSTOM_VARIABLE_MATCH -> IfField(
+                mode = Mode.RUN_WHEN_ALL_PARAMS_MATCH,
+                params = jobControlOption.customVariables?.associateBy({ it.key ?: "" }, { it.value ?: "" })
+            )
+
+            JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> IfField(
+                mode = Mode.NOT_RUN_WHEN_ALL_PARAMS_MATCH,
+                params = jobControlOption.customVariables?.associateBy({ it.key ?: "" }, { it.value ?: "" })
+            )
+
+            else -> null
+        }
     }
 
     fun addYamlVMBuildContainer(
@@ -232,18 +243,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
             container = null,
             services = null,
             mutex = getMutexYaml(job.mutexGroup),
-            ifField = when (job.jobControlOption?.runCondition) {
-                JobRunCondition.CUSTOM_CONDITION_MATCH -> job.jobControlOption?.customCondition
-                JobRunCondition.CUSTOM_VARIABLE_MATCH -> TransferUtil.customVariableMatch(
-                    job.jobControlOption?.customVariables
-                )
-
-                JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> TransferUtil.customVariableMatchNotRun(
-                    job.jobControlOption?.customVariables
-                )
-
-                else -> null
-            },
+            ifField = jobIfField(job.jobControlOption),
             steps = steps,
             timeoutMinutes = makeJobTimeout(job.jobControlOption),
             env = job.customEnv?.associateBy({ it.key ?: "" }) {
@@ -378,10 +378,13 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 enable = jobEnable,
                 timeout = timeout,
                 timeoutVar = timeoutVar,
-                runCondition = when (job.ifField) {
-                    IfType.SUCCESS.name -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
-                    IfType.FAILURE.name -> JobRunCondition.PREVIOUS_STAGE_FAILED
-                    IfType.CANCELLED.name, IfType.CANCELED.name -> JobRunCondition.PREVIOUS_STAGE_CANCEL
+                runCondition = when {
+                    job.ifField == null -> JobRunCondition.STAGE_RUNNING
+                    IfType.SUCCESS.name == job.ifField.expression -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
+                    IfType.FAILURE.name == job.ifField.expression -> JobRunCondition.PREVIOUS_STAGE_FAILED
+                    IfType.CANCELLED.name == job.ifField.expression ||
+                        IfType.CANCELED.name == job.ifField.expression -> JobRunCondition.PREVIOUS_STAGE_CANCEL
+
                     else -> JobRunCondition.STAGE_RUNNING
                 },
                 dependOnType = DependOnType.NAME,
@@ -392,16 +395,27 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 allNodeConcurrency = job.runsOn.allNodeConcurrency
             )
         } else {
-            val runCondition = kotlin.run {
-                if (!job.ifField.isNullOrBlank()) JobRunCondition.CUSTOM_CONDITION_MATCH else null
-            } ?: JobRunCondition.STAGE_RUNNING
+            val runCondition = when {
+                job.ifField == null -> JobRunCondition.STAGE_RUNNING
+                !job.ifField.expression.isNullOrBlank() -> JobRunCondition.CUSTOM_CONDITION_MATCH
+                job.ifField.mode == Mode.RUN_WHEN_ALL_PARAMS_MATCH -> JobRunCondition.CUSTOM_VARIABLE_MATCH
+                job.ifField.mode == Mode.NOT_RUN_WHEN_ALL_PARAMS_MATCH -> JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+                else -> JobRunCondition.STAGE_RUNNING
+            }
             JobControlOption(
                 enable = jobEnable,
                 timeout = timeout,
                 timeoutVar = timeoutVar,
                 runCondition = runCondition,
                 customCondition = if (runCondition == JobRunCondition.CUSTOM_CONDITION_MATCH) {
-                    job.ifField
+                    job.ifField?.expression
+                } else {
+                    null
+                },
+                customVariables = if (runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH ||
+                    runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+                ) {
+                    job.ifField?.params?.map { NameAndValue(it.key, it.value) }
                 } else {
                     null
                 },

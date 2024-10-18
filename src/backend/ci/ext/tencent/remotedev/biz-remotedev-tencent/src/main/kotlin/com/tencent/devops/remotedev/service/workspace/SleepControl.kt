@@ -34,8 +34,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -71,7 +71,7 @@ class SleepControl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val permissionService: PermissionService,
-    private val dispatcher: RemoteDevDispatcher,
+    private val dispatcher: SampleEventDispatcher,
     private val workspaceCommon: WorkspaceCommon,
     private val notifyControl: NotifyControl
 ) {
@@ -216,7 +216,7 @@ class SleepControl @Autowired constructor(
                 EnvStatusEnum.stopped -> event.status = true
                 else -> logger.warn(
                     "stop workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
