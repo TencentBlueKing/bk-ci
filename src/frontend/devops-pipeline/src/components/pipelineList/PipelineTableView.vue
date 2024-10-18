@@ -185,12 +185,17 @@
             min-width="200"
             prop="groupLabel"
         >
-            <template slot-scope="{ row, $index }">
-                <div :class="['group-label-warpper', `group-label-warpper-${$index}`]">
+            <div
+                :ref="`belongsLabelBox_${props.$index}`"
+                slot-scope="props"
+                class="group-label-warpper"
+            >
+                <template v-if="labelGroups[props.$index].visibleLabels">
                     <span
-                        v-for="(item, index) in row.groupLabel?.slice(0, 2)"
                         class="group-tag"
+                        v-for="(item, index) in labelGroups[props.$index].visibleLabels"
                         :key="index"
+                        :ref="`labelName_${props.$index}`"
                     >
                         <span class="key">
                             {{ item.groupName }}
@@ -202,20 +207,21 @@
                             {{ item.labelName.join(',') }}
                         </span>
                     </span>
+
                     <bk-popover
                         placement="top"
                         theme="light"
                         ext-cls="group-tag-popover"
+                        v-if="labelGroups[props.$index].showMore"
                     >
-                        <span
-                            v-if="row.groupLabel?.length > 2"
-                            class="hidden-count"
+                        <bk-tag
+                            :ref="`labelMore_${props.$index}`"
                         >
-                            +{{ row.groupLabel?.slice(2, row.groupLabel.length).length }}
-                        </span>
+                            +{{ labelGroups[props.$index].showMore }}
+                        </bk-tag>
                         <div slot="content">
                             <div
-                                v-for="(item, index) in row.groupLabel?.slice(2, row.groupLabel.length)"
+                                v-for="(item, index) in labelGroups[props.$index].hiddenLabels"
                                 class="group-tag"
                                 :key="index"
                                 v-bk-overflow-tips
@@ -232,8 +238,8 @@
                             </div>
                         </div>
                     </bk-popover>
-                </div>
-            </template>
+                </template>
+            </div>
         </bk-table-column>
         <template v-if="isPatchView">
             <bk-table-column
@@ -608,7 +614,8 @@
                 tableSize: 'medium',
                 tableColumn: [],
                 selectedTableColumn: [],
-                showCollectIndex: -1
+                showCollectIndex: -1,
+                visibleLabelCountList: {}
             }
         },
         computed: {
@@ -644,6 +651,26 @@
                         visibleGroups: viewNames,
                         hiddenGroups: [],
                         showMore: viewNames?.length ?? 0
+                    }
+                })
+                return res
+            },
+            labelGroups () {
+                const res = this.pipelineList.map((pipeline, index) => {
+                    const { groupLabel = [] } = pipeline
+                    const visibleCount = this.visibleLabelCountList[index]
+                    if (visibleCount >= 1) {
+                        return {
+                            visibleLabels: groupLabel.slice(0, visibleCount),
+                            hiddenLabels: groupLabel.slice(visibleCount),
+                            showMore: groupLabel.length - visibleCount
+                        }
+                    }
+
+                    return {
+                        visibleLabels: groupLabel,
+                        hiddenLabels: [],
+                        showMore: groupLabel?.length ?? 0
                     }
                 })
                 return res
@@ -869,11 +896,12 @@
                         current: page
                     })
                     this.pipelineList = records
-                    console.log(this.pipelineList, 111)
                     if (this.isAllPipelineView || this.isPatchView || this.isDeleteView) {
                         this.visibleTagCountList = {}
-                        setTimeout(this.calcOverPos, 100)
+                        setTimeout(this.calcOverPosGroup, 100)
                     }
+                    this.visibleLabelCountList = {}
+                    setTimeout(this.calcOverPosTable, 100)
                 } catch (e) {
                     console.error(e)
                 } finally {
@@ -892,7 +920,7 @@
                     this.refresh()
                 }
             },
-            calcOverPos () {
+            calcOverPosGroup () {
                 const tagMargin = 6
 
                 this.visibleTagCountList = this.pipelineList.reduce((acc, pipeline, index) => {
@@ -907,13 +935,36 @@
 
                         this.$refs[`groupName_${index}`]?.every((groupName) => {
                             sumTagWidth += groupName.$el.offsetWidth + tagMargin
-
                             const isOverSize = sumTagWidth > viewPortWidth
                             !isOverSize && tagVisbleCount++
                             return !isOverSize
                         })
 
                         acc[index] = tagVisbleCount
+                    }
+                    return acc
+                }, {})
+            },
+            calcOverPosTable () {
+                const tagMargin = 6
+
+                this.visibleLabelCountList = this.pipelineList.reduce((acc, pipeline, index) => {
+                    if (Array.isArray(pipeline?.groupLabel)) {
+                        const labelBoxWidth = this.$refs[`belongsLabelBox_${index}`]?.clientWidth * 2
+                        const labelLength = pipeline?.groupLabel.length
+                        const moreTag = this.$refs?.[`labelMore_${index}`]?.$el
+                        const moreTagWidth = (moreTag?.clientWidth ?? 0) + tagMargin
+                        const viewPortWidth = labelBoxWidth - (labelLength > 1 ? moreTagWidth : 0)
+                        let sumTagWidth = 0
+                        let tagVisibleCount = 0
+                        this.$refs[`labelName_${index}`]?.every((label) => {
+                            sumTagWidth += label?.offsetWidth + tagMargin
+                            const isOverSize = sumTagWidth > viewPortWidth
+                            !isOverSize && tagVisibleCount++
+                            return !isOverSize
+                        })
+
+                        acc[index] = tagVisibleCount
                     }
                     return acc
                 }, {})
@@ -1103,10 +1154,10 @@
             }
         }
         .group-label-warpper {
-            margin: 5px 0;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
+            display: flex;
+            width: 100%;
+            flex-wrap: wrap;
+            margin-top: 3px;
         }
         .group-tag {
             display: inline-flex;
