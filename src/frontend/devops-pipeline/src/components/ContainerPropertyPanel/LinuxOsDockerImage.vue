@@ -277,31 +277,46 @@
         methods: {
             handleeEnableDockerChange () {
                 this.enableDocker = !this.enableDocker
-                const dockerInfo = this.enableDocker
+                let { dispatchType } = this.container
+                dispatchType = this.enableDocker
                     ? {
-                        imageType: 'THIRD'
+                        ...dispatchType,
+                        dockerInfo: {
+                            ...dispatchType.dockerInfo,
+                            imageType: 'THIRD'
+                        }
                     }
-                    : {}
+                    : {
+                        ...dispatchType,
+                        dockerInfo: undefined
+                    }
                 this.handleContainerChange(
                     'dispatchType',
                     Object.assign({
-                        ...this.container.dispatchType,
-                        dockerInfo
+                        ...dispatchType
                     })
                 )
             },
 
             changeImageType (name, value) {
+                const dockerInfo = {
+                    ...this.container.dispatchType?.dockerInfo,
+                    [name]: value
+                }
+
+                if (value !== 'THIRD') {
+                    dockerInfo.image = ''
+                    dockerInfo.credential = ''
+                } else {
+                    dockerInfo.storeImage = undefined
+                }
+
                 this.handleContainerChange(
                     'dispatchType',
                     Object.assign({
                         ...this.container.dispatchType,
                         dockerInfo: {
-                            ...this.container.dispatchType.dockerInfo,
-                            image: value === 'THIRD' ? this.container.dispatchType.dockerInfo.image : '',
-                            credential: value === 'THIRD' ? this.container.dispatchType.dockerInfo.credential : '',
-                            storeImage: value === 'THIRD' ? {} : this.container.dispatchType.dockerInfo.storeImage,
-                            [name]: value
+                            ...dockerInfo
                         }
                     })
                 )
