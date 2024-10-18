@@ -415,15 +415,15 @@ class RbacPermissionResourceGroupPermissionService(
 
             val latestResourceGroupPermissions = groupPermissionDetails.flatMap { permissionDetail ->
                 permissionDetail.relatedResourceInfos.flatMap { relatedResourceInfo ->
-                    relatedResourceInfo.instance.map { instancePathDTOs ->
-                        val (relatedResourceType, relatedResourceCode, relatedIamResourceCode) = when {
-                            // 带*号，则为项目下所有资源。
-                            instancePathDTOs.size > 1 && instancePathDTOs.last().id == ALL_RESOURCE -> {
-                                Triple(AuthResourceType.PROJECT.value, projectCode, projectCode)
-                            }
+                    relatedResourceInfo.instance.mapNotNull { instancePathDTOs ->
+                        try {
+                            val (relatedResourceType, relatedResourceCode, relatedIamResourceCode) = when {
+                                // 带*号，则为项目下所有资源。
+                                instancePathDTOs.size > 1 && instancePathDTOs.last().id == ALL_RESOURCE -> {
+                                    Triple(AuthResourceType.PROJECT.value, projectCode, projectCode)
+                                }
 
-                            else -> {
-                                try {
+                                else -> {
                                     val relatedIamResourceCode = converter.iamCode2Code(
                                         projectCode = projectCode,
                                         resourceType = instancePathDTOs.last().type,
@@ -434,29 +434,25 @@ class RbacPermissionResourceGroupPermissionService(
                                         second = relatedIamResourceCode,
                                         third = instancePathDTOs.last().id
                                     )
-                                } catch (ex: Exception) {
-                                    logger.warn("convert iam code to resource code failed!|${ex.message}")
-                                    Triple(
-                                        first = instancePathDTOs.last().type,
-                                        second = instancePathDTOs.last().id,
-                                        third = instancePathDTOs.last().id
-                                    )
                                 }
                             }
+                            ResourceGroupPermissionDTO(
+                                projectCode = projectCode,
+                                resourceType = resourceGroupInfo.resourceType,
+                                resourceCode = resourceGroupInfo.resourceCode,
+                                iamResourceCode = resourceGroupInfo.iamResourceCode,
+                                groupCode = resourceGroupInfo.groupCode,
+                                iamGroupId = iamGroupId,
+                                action = permissionDetail.actionId,
+                                actionRelatedResourceType = permissionDetail.actionRelatedResourceType,
+                                relatedResourceType = relatedResourceType,
+                                relatedResourceCode = relatedResourceCode,
+                                relatedIamResourceCode = relatedIamResourceCode
+                            )
+                        } catch (ex: Exception) {
+                            logger.warn("convert iam code to resource code failed!|${ex.message}")
+                            null
                         }
-                        ResourceGroupPermissionDTO(
-                            projectCode = projectCode,
-                            resourceType = resourceGroupInfo.resourceType,
-                            resourceCode = resourceGroupInfo.resourceCode,
-                            iamResourceCode = resourceGroupInfo.iamResourceCode,
-                            groupCode = resourceGroupInfo.groupCode,
-                            iamGroupId = iamGroupId,
-                            action = permissionDetail.actionId,
-                            actionRelatedResourceType = permissionDetail.actionRelatedResourceType,
-                            relatedResourceType = relatedResourceType,
-                            relatedResourceCode = relatedResourceCode,
-                            relatedIamResourceCode = relatedIamResourceCode
-                        )
                     }
                 }
             }.distinct()
