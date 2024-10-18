@@ -282,7 +282,7 @@ class AuthResourceGroupDao {
                     } else
                         it
                 }
-                .fetch().map { it.value1().toInt() }
+                .fetch().map { it.value1()?.toInt() }
         }
     }
 
