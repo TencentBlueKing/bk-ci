@@ -28,7 +28,7 @@
 package com.tencent.devops.process.engine.listener.run.monitor
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.process.engine.control.HeartbeatControl
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Component
 class PipelineBuildHeartbeatListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val heartbeatControl: HeartbeatControl
-) : BaseListener<PipelineContainerAgentHeartBeatEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineContainerAgentHeartBeatEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineContainerAgentHeartBeatEvent) {
         heartbeatControl.detectHeartbeat(event)

@@ -23,8 +23,16 @@
         <bk-log
             class="bk-log"
             ref="scroll"
+            :enable-a-i="enableAI"
+            :ai-tips="aiTips"
             @tag-change="tagChange"
-        ></bk-log>
+            @praise-ai="handlePraiseAi"
+            @down-praise-ai="handleDownPraiseAi"
+            @load-ai-message="handleLoadAiMessage"
+            @reload-ai-message="handleReloadAiMessage"
+            @cancel-praise-ai="handleCancelPraiseAI"
+            @cancel-down-praise-ai="handleCancelDownPraiseAI"
+        />
     </section>
 </template>
 
@@ -79,7 +87,9 @@
                 },
                 timeId: '',
                 clearIds: [],
-                showDebug: false
+                showDebug: false,
+                enableAI: false,
+                aiTips: ''
             }
         },
 
@@ -145,6 +155,7 @@
 
         mounted () {
             this.getLog()
+            this.checkAIStatus()
         },
 
         beforeDestroy () {
@@ -156,8 +167,103 @@
                 'getInitLog',
                 'getAfterLog',
                 'getLogStatus',
-                'getDownloadLogFromArtifactory'
+                'getDownloadLogFromArtifactory',
+                'praiseAi',
+                'cancelPraiseAi',
+                'getPraiseAiInfo',
+                'getLogAIMessage',
+                'getAIStatus'
             ]),
+
+            checkAIStatus () {
+                this.getAIStatus().then(res => {
+                    this.enableAI = res.data
+                    this.aiTips = this.$t('details.aiAnalysis', [this.$pipelineDocs.AIAnalysis])
+                })
+            },
+
+            handlePraiseAi (item) {
+                this.praiseAi({
+                    ...this.postData,
+                    score: true
+                }).then(() => {
+                    this.handleGetPraiseAiInfo(item)
+                    this.$bkMessage({ theme: 'success', message: this.$t('successPraise') })
+                })
+            },
+
+            handleDownPraiseAi (item) {
+                this.praiseAi({
+                    ...this.postData,
+                    score: false
+                }).then(() => {
+                    this.handleGetPraiseAiInfo(item)
+                    this.$bkMessage({ theme: 'success', message: this.$t('successDownPraise') })
+                })
+            },
+
+            handleCancelPraiseAI (item) {
+                this.cancelPraiseAi({
+                    ...this.postData,
+                    score: true
+                }).then(() => {
+                    this.handleGetPraiseAiInfo(item)
+                    this.$bkMessage({ theme: 'success', message: this.$t('successCancelPraise') })
+                })
+            },
+
+            handleCancelDownPraiseAI (item) {
+                this.cancelPraiseAi({
+                    ...this.postData,
+                    score: false
+                }).then(() => {
+                    this.handleGetPraiseAiInfo(item)
+                    this.$bkMessage({ theme: 'success', message: this.$t('successCancelDownPraise') })
+                })
+            },
+
+            handleGetPraiseAiInfo (item) {
+                const scrollRef = this.$refs.scroll
+                this.getPraiseAiInfo({
+                    ...this.postData
+                })
+                    .then((res) => {
+                        item.goodUsers = res.data.goodUsers
+                        item.badUsers = res.data.badUsers
+                        scrollRef.setSingleLogData(item)
+                    })
+            },
+
+            handleLoadAiMessage (item) {
+                item.aiMessage = ''
+                const scrollRef = this.$refs.scroll
+                this.handleGetPraiseAiInfo(item)
+                this.getLogAIMessage({
+                    ...this.postData,
+                    refresh: false,
+                    callBack (val) {
+                        item.aiMessage += val
+                        scrollRef.setSingleLogData(item)
+                        scrollRef.scrollAILogToBottom()
+                    }
+                })
+            },
+
+            handleReloadAiMessage (item) {
+                item.aiMessage = ''
+                const scrollRef = this.$refs.scroll
+                this.getLogAIMessage({
+                    ...this.postData,
+                    refresh: true,
+                    callBack (val) {
+                        item.aiMessage += val
+                        scrollRef.setSingleLogData(item)
+                        scrollRef.scrollAILogToBottom()
+                    }
+                }).then(() => {
+                    this.handleGetPraiseAiInfo(item)
+                })
+            },
 
             getLog () {
                 const id = hashID()

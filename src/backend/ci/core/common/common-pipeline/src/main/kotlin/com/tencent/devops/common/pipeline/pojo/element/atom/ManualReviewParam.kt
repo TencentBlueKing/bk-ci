@@ -57,7 +57,7 @@ data class ManualReviewParam(
     fun parseValueWithType(variables: Map<String, String>) {
         value = if (variables.containsKey(key) && !variables[key].isNullOrBlank()) {
             when (valueType) {
-                ManualReviewParamType.BOOLEAN -> variables[key].toBoolean()
+                ManualReviewParamType.BOOLEAN, ManualReviewParamType.CHECKBOX -> variables[key].toBoolean()
                 // TODO 将入库保存的字符串转回数组对象
                 else -> variables[key]
             }

@@ -30,9 +30,9 @@ package com.tencent.devops.stream.v1.dao
 import com.tencent.devops.model.stream.tables.TGitPipelineResource
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class V1GitPipelineResourceDao {
@@ -113,17 +113,13 @@ class V1GitPipelineResourceDao {
         gitProjectId: Long,
         keyword: String?,
         offset: Int,
-        limit: Int,
-        filePath: String? = null
+        limit: Int
     ): List<TGitPipelineResourceRecord> {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             val dsl = dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
             if (!keyword.isNullOrBlank()) {
                 dsl.and(DISPLAY_NAME.like("%$keyword%"))
-            }
-            if (!filePath.isNullOrBlank()) {
-                dsl.and(DIRECTORY.eq(filePath))
             }
             return dsl.orderBy(ENABLED.desc(), DISPLAY_NAME)
                 .limit(limit).offset(offset)
@@ -174,13 +170,18 @@ class V1GitPipelineResourceDao {
 
     fun getPipelineCount(
         dslContext: DSLContext,
-        gitProjectId: Long
+        gitProjectId: Long,
+        keyword: String?
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
-            return dslContext.selectCount()
+            val dsl = dslContext.selectCount()
                 .from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .fetchOne(0, Int::class.java)!!
+
+            if (!keyword.isNullOrBlank()) {
+                dsl.and(DISPLAY_NAME.like("%$keyword%"))
+            }
+            return dsl.fetchOne(0, Int::class.java)!!
         }
     }
 

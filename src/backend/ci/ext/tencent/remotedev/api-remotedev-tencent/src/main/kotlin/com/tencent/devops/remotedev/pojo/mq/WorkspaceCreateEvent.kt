@@ -28,14 +28,14 @@
 package com.tencent.devops.remotedev.pojo.mq
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.remotedev.MQ
+import com.tencent.devops.common.remotedev.RemoteDevMQ
 import com.tencent.devops.common.remotedev.WorkspaceEvent
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.remotedev.Devfile
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.ROUTE_WORKSPACE_CREATE_STARTUP)
+@Event(RemoteDevMQ.WORKSPACE_CREATE_STARTUP)
 data class WorkspaceCreateEvent(
     override val userId: String,
     override val traceId: String,

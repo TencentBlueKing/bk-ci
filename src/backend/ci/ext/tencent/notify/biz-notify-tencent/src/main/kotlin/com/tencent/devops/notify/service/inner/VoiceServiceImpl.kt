@@ -5,8 +5,6 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.notify.utils.TOF4Service
 import com.tencent.devops.common.notify.utils.TOF4Service.Companion.TOF4_VOICE_URL
 import com.tencent.devops.common.notify.utils.TOFConfiguration
-import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.ROUTE_VOICE
 import com.tencent.devops.notify.dao.VoiceNotifyDao
 import com.tencent.devops.notify.model.VoiceNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.VoiceNotifyMessage
@@ -14,7 +12,7 @@ import com.tencent.devops.notify.service.VoiceService
 import com.tencent.devops.notify.utils.TofUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
@@ -22,13 +20,13 @@ import org.springframework.stereotype.Service
 @Service
 class VoiceServiceImpl(
     private val voiceNotifyDao: VoiceNotifyDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val configuration: TOFConfiguration,
     private val tof4Service: TOF4Service,
     private val dslContext: DSLContext
 ) : VoiceService {
     override fun sendMqMsg(message: VoiceNotifyMessage) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_VOICE, message)
+        message.sendTo(streamBridge)
     }
 
     override fun sendMessage(voiceNotifyMessageWithOperation: VoiceNotifyMessageWithOperation) {
@@ -72,17 +70,15 @@ class VoiceServiceImpl(
             val deepCopyMessage = voiceNotifyMessageWithOperation.deepCopy<VoiceNotifyMessageWithOperation>()
             deepCopyMessage.id = id
             deepCopyMessage.retryCount = retryCount + 1
-            rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_VOICE, deepCopyMessage) { message ->
-                var delayTime = 0
-                when (retryCount) {
-                    1 -> delayTime = 30000
-                    2 -> delayTime = 120000
-                }
-                if (delayTime > 0) {
-                    message.messageProperties.setHeader("x-delay", delayTime)
-                }
-                message
+            var delayTime = 0
+            when (retryCount) {
+                1 -> delayTime = 30000
+                2 -> delayTime = 120000
             }
+            if (delayTime > 0) {
+                voiceNotifyMessageWithOperation.delayMills = delayTime
+            }
+            voiceNotifyMessageWithOperation.sendTo(streamBridge)
         }
     }
 

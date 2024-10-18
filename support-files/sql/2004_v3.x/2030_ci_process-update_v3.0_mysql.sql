@@ -77,6 +77,24 @@ BEGIN
     ALTER TABLE T_PIPELINE_RESOURCE_VERSION
         ADD COLUMN RELEASE_TIME TIMESTAMP NULL COMMENT '发布时间';
     END IF;
+	
+	IF NOT EXISTS(SELECT 1
+	                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_STAGE'
+                        AND COLUMN_NAME = 'STAGE_ID_FOR_USER') THEN
+    ALTER TABLE `T_PIPELINE_BUILD_STAGE` 
+			ADD COLUMN `STAGE_ID_FOR_USER` varchar(64) DEFAULT NULL COMMENT '当前stageId 阶段ID (用户可编辑)';
+    END IF;
+
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'MAX_CON_RUNNING_QUEUE_SIZE') THEN
+    ALTER TABLE T_PIPELINE_SETTING_VERSION
+        ADD COLUMN `MAX_CON_RUNNING_QUEUE_SIZE` int(11) DEFAULT NULL COMMENT '并发构建数量限制,值为-1时表示取系统默认值。';
+    END IF;
 
 COMMIT;
 

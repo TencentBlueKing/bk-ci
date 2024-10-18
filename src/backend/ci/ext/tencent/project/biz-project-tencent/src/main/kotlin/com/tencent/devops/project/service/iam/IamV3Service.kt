@@ -51,12 +51,12 @@ import com.tencent.devops.common.auth.api.pojo.DefaultGroupType.Companion.getDis
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.UserDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
@@ -68,7 +68,7 @@ class IamV3Service @Autowired constructor(
     val iamConfiguration: IamConfiguration,
     val projectDao: ProjectDao,
     val dslContext: DSLContext,
-    val projectDispatcher: ProjectDispatcher,
+    val projectDispatcher: SampleEventDispatcher,
     val client: Client,
     val userDao: UserDao
 ) {

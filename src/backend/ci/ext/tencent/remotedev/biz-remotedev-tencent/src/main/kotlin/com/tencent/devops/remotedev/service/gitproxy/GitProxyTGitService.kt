@@ -35,13 +35,13 @@ import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import java.time.Duration
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.Duration
 
 /**
  * 云研发映射到工蜂 ACL访问控制相关
@@ -58,7 +58,7 @@ class GitProxyTGitService @Autowired constructor(
     private val offshoreTGitApiClient: OffshoreTGitApiClient,
     private val tGitConfig: TGitConfig,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) {
     // 校验当前凭据的用户是否拥有连接项目的 master 及以上权限
     @ActionAuditRecord(
@@ -523,7 +523,7 @@ class GitProxyTGitService @Autowired constructor(
             "${OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG}|addOrRemoveAclIp|$projectId|$ips|remove=$remove|$tgitId"
         )
         AsyncExecute.dispatch(
-            rabbitTemplate = rabbitTemplate,
+            streamBridge = streamBridge,
             data = AsyncTGitAclIp(
                 projectId = projectId,
                 ips = ips,
@@ -582,7 +582,7 @@ class GitProxyTGitService @Autowired constructor(
     ) {
         logger.info("${OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG}|refreshProjectTGitSpecUser|$projectId|$tgitId")
         AsyncExecute.dispatch(
-            rabbitTemplate = rabbitTemplate,
+            streamBridge = streamBridge,
             data = AsyncTGitAclUser(projectId, tgitId),
             errorLogTag = OffshoreTGitApiClient.LOG_UPDATE_TGIT_ACL_TAG
         )
