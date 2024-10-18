@@ -259,31 +259,13 @@ open class MarketAtomTask : ITask() {
         writeInputFile(atomTmpSpace, inputVariables)
         writeSdkEnv(atomTmpSpace, buildTask, buildVariables)
         writeParamEnv(atomCode, atomTmpSpace, workspace, buildTask, buildVariables)
-
-        // 根据环境变量区分 java 版本
-        // val jdk17Path = System.getenv(AgentEnv.AGENT_JDK_17_PATH)
-        val jdk8Path = System.getenv(AgentEnv.AGENT_JDK_8_PATH)
-        val (runtimeJdkVersion, runtimeJdkPath) = getJavaFile()
-        // TODO: 获取插件指定的 JDK版本，
-        // 这里默认使用的是 8，如果用户没有 8 的路径，那么打印日志提示并使用worker的jdk版本执行
-        val atomJdkVersion = 8
-        var javaPath = runtimeJdkPath
-        if (atomJdkVersion != runtimeJdkVersion) {
-            if (jdk8Path.isNullOrBlank()) {
-                LoggerService.addWarnLine("plugin need jdk8 but not found, use worker jdk version $runtimeJdkVersion")
-            } else {
-                LoggerService.addDebugLine("worker jdk version $runtimeJdkVersion, but plugin use jdk8")
-                javaPath = jdk8Path
-            }
-        }
-
         // 环境变量 = 所有插件变量 + Worker端执行插件依赖的预置变量
         val runtimeVariables = variables.plus(
             mapOf(
                 DIR_ENV to atomTmpSpace.absolutePath,
                 INPUT_ENV to inputFile,
                 OUTPUT_ENV to outputFile,
-                JAVA_PATH_ENV to javaPath
+                JAVA_PATH_ENV to getJavaFile().absolutePath
             )
         ).toMutableMap()
 
@@ -1086,16 +1068,6 @@ open class MarketAtomTask : ITask() {
             LoggerService.addErrorLine("download plugin execute file fail: $t")
             throw TaskExecuteExceptionDecorator.decorate(t)
         }
-    }
-
-    private fun getJavaFile(): Pair<Int, String> {
-        val version = System.getProperty("java.version")
-        val versionNum = if (version.startsWith("17.")) {
-            17
-        } else {
-            8
-        }
-        return Pair(versionNum, File(System.getProperty("java.home"), "/bin/java").absolutePath)
     }
 
     private fun getContainerVariables(
