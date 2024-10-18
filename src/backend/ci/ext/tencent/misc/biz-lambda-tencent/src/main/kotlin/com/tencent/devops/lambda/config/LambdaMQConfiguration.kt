@@ -27,7 +27,6 @@
 package com.tencent.devops.lambda.config
 
 import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
