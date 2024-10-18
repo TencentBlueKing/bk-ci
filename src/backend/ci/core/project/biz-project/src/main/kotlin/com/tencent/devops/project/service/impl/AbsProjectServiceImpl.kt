@@ -166,6 +166,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     )
                 }
             }
+
             ProjectValidateType.english_name -> {
                 // 2 ~ 32 个字符+数字，以小写字母开头
                 if (name.length < NAME_MIN_LENGTH) {
@@ -263,7 +264,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("Failed to create project in permission center： $projectCreateInfo | ${e.message}")
             throw OperationException(
-                message = I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL) + ": ${e.message}"
+                message = "${e.message}"
             )
         }
         if (projectId.isNullOrEmpty()) {
