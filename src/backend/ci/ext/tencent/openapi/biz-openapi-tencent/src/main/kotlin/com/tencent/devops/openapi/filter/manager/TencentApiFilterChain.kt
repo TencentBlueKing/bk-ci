@@ -32,7 +32,8 @@ import com.tencent.devops.openapi.filter.manager.impl.ApiPathFilter
 import com.tencent.devops.openapi.filter.manager.impl.ManagerUserApiFilter
 import com.tencent.devops.openapi.filter.manager.impl.NoPermissionFilter
 import com.tencent.devops.openapi.filter.manager.impl.Oauth2ApiFilter
-import com.tencent.devops.openapi.filter.manager.impl.RemoteDevTokenApiFilter
+import com.tencent.devops.openapi.filter.manager.impl.RemoteDevCdsTokenApiFilter
+import com.tencent.devops.openapi.filter.manager.impl.RemoteDevOauthTokenApiFilter
 import com.tencent.devops.openapi.filter.manager.impl.TencentApigwApiFilter
 import javax.ws.rs.container.ContainerRequestContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,7 +54,8 @@ class TencentApiFilterChain @Autowired constructor(
                 managerCache.getFilter(AccessTokenFilter::class.java), // 根据access_token换取用户信息，内部暂未开启使用
                 managerCache.getFilter(NoPermissionFilter::class.java), // 走无权限校验，内部暂未开启使用
                 managerCache.getFilter(TencentApigwApiFilter::class.java), // 内部蓝鲸网关鉴权
-                managerCache.getFilter(RemoteDevTokenApiFilter::class.java), // 云桌面sdk 换取oauth token
+                managerCache.getFilter(RemoteDevCdsTokenApiFilter::class.java), // 云桌面sdk cdsToken替代hostIp作为唯一标识
+                managerCache.getFilter(RemoteDevOauthTokenApiFilter::class.java), // 云桌面sdk 换取oauth token
                 managerCache.getFilter(Oauth2ApiFilter::class.java), // 蓝盾oauth2 鉴权
                 managerCache.getFilter(ManagerUserApiFilter::class.java) // 换取特定app_code的超级管理员
             ).iterator()

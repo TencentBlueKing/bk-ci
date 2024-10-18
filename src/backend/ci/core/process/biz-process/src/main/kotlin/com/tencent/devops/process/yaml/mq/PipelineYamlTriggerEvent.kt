@@ -30,13 +30,13 @@ package com.tencent.devops.process.yaml.mq
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
 
-@Event(MQ.EXCHANGE_PIPELINE_YAML_LISTENER, MQ.ROUTE_PIPELINE_YAML_TRIGGER_EVENT)
+@Event(StreamBinding.PIPELINE_YAML_LISTENER_TRIGGER)
 data class PipelineYamlTriggerEvent(
     override val source: String = "PacYamlTrigger",
     override val projectId: String,

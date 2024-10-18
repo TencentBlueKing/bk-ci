@@ -91,6 +91,7 @@ class StageBuildDetailService(
                 return update
             }
         }, BuildStatus.RUNNING, operation = "updateStageStatus#$stageId")
+
         return allStageStatus ?: emptyList()
     }
 

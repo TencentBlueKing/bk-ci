@@ -31,7 +31,7 @@ package com.tencent.devops.auth.service
 import com.google.common.cache.CacheBuilder
 import com.google.common.hash.BloomFilter
 import com.google.common.hash.Funnels
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit
 @Service
 @Suppress("UnstableApiUsage")
 class AuthProjectUserMetricsService @Autowired constructor(
-    private val measureEventDispatcher: MeasureEventDispatcher
+    private val measureEventDispatcher: SampleEventDispatcher
 ) {
     private val userOperateCounterData = UserOperateCounterData()
 

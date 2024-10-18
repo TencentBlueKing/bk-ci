@@ -27,12 +27,14 @@
 
 package com.tencent.devops.common.event.dispatcher
 
+import com.tencent.devops.common.event.pojo.IEvent
+
 /**
  * 事件下发接口
  *
  * @version 1.0
  */
-interface EventDispatcher<T> {
+interface EventDispatcher<T : IEvent> {
 
     fun dispatch(vararg events: T)
 }

@@ -27,8 +27,12 @@
 
 package com.tencent.devops.common.websocket.dispatch.message
 
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 
+@Event(StreamBinding.WEBSOCKET_TMP_FANOUT)
 open class SendMessage(
     open val userId: String,
     // 用于匹配redis中对应的sessionList
@@ -37,4 +41,4 @@ open class SendMessage(
     open val sessionList: Set<String>?,
     // websocket最终推送报文
     open var notifyPost: NotifyPost
-)
+) : IEvent()

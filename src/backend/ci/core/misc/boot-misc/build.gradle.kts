@@ -30,5 +30,6 @@ dependencies {
     api(project(":core:misc:biz-image"))
     api(project(":core:misc:biz-monitoring"))
     api(project(":core:misc:biz-plugin"))
+    api(project(":core:misc:biz-gpt"))
     api(project(":core:common:common-auth:common-auth-provider"))
 }

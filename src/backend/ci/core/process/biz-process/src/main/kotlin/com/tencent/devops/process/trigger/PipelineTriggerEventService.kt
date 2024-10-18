@@ -59,8 +59,8 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
 import java.time.LocalDateTime
@@ -71,7 +71,7 @@ class PipelineTriggerEventService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineTriggerEventDao: PipelineTriggerEventDao,
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) {
 
     companion object {
@@ -399,7 +399,7 @@ class PipelineTriggerEventService @Autowired constructor(
             triggerEvent = replayTriggerEvent
         )
         CodeWebhookEventDispatcher.dispatchReplayEvent(
-            rabbitTemplate = rabbitTemplate,
+            streamBridge = streamBridge,
             event = ReplayWebhookEvent(
                 userId = userId,
                 projectId = projectId,
