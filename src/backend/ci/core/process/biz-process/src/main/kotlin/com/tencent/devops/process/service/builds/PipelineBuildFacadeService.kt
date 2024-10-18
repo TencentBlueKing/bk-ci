@@ -61,6 +61,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.RedisOperation
@@ -255,15 +256,31 @@ class PipelineBuildFacadeService(
                 val realValue = latestParamsMap[param.id]
                 // 入参、推荐版本号参数有上一次的构建参数的时候才设置成默认值，否者依然使用默认值
                 // 当值是boolean类型的时候，需要转为boolean类型
-                param.value = if (param.constant == true) {
-                    param.readOnly = true
-                    param.defaultValue
-                } else if (!param.required && !recommendVersionKey(param.id)) {
-                    param.defaultValue
-                } else if (param.defaultValue is Boolean) {
-                    realValue?.toString()?.toBoolean()
-                } else {
-                    realValue
+                param.value = when {
+                    param.constant == true -> {
+                        param.readOnly = true
+                        param.defaultValue
+                    }
+
+                    !param.required && !recommendVersionKey(param.id) -> {
+                        param.defaultValue
+                    }
+
+                    param.defaultValue is Boolean -> {
+                        realValue?.toString()?.toBoolean()
+                    }
+
+                    CascadePropertyUtils.supportCascadeParam(param.type) -> {
+                        CascadePropertyUtils.getLatestCascadeParamsValue(
+                            param = latestParamsMap,
+                            type = param.type,
+                            relKey = param.id
+                        )
+                    }
+
+                    else -> {
+                        realValue
+                    }
                 } ?: param.defaultValue
             }
         } else {
@@ -357,7 +374,8 @@ class PipelineBuildFacadeService(
             permission = AuthPermission.VIEW
         )
         val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
-        return pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, queryDslContext)
+        val parameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, queryDslContext)
+        return CascadePropertyUtils.mergeCascadeParams(parameters)
     }
 
     fun retry(

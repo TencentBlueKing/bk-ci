@@ -178,6 +178,8 @@ enum class VariablePropType(val value: String) {
     TIME_PICKER("time-picker"),
     COMPANY_STAFF_INPUT("company-staff-input"),
     GIT_REF("git-ref"),
+    SVN_REF("svn-tag"),
+    REPO_REF("repo-ref"),
     CODE_LIB("code-lib"),
     CONTAINER_TYPE("container-type"),
     ARTIFACTORY("artifactory"),

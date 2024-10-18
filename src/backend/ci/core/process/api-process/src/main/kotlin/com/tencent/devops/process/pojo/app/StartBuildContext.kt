@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -442,14 +443,19 @@ data class StartBuildContext(
             realStartParamKeys.forEach { key ->
                 pipelineParamMap[key]?.let { param ->
                     originStartParams.add(param)
-                    if (key.startsWith(CONTEXT_PREFIX)) {
-                        originStartContexts[key] = param
-                    } else {
-                        val ctxKey = CONTEXT_PREFIX + key
-                        originStartContexts[ctxKey] = param.copy(key = ctxKey)
-                    }
+                    fillContextPrefix(param, originStartContexts)
                 }
             }
+            pipelineParamMap.filter { it.value.valueType == BuildFormPropertyType.REPO_REF }
+                .map { it.value }
+                .groupBy { it.relKey }
+                .forEach {
+                    if (realStartParamKeys.contains(it.key)) {
+                        originStartParams.addAll(it.value)
+                    }
+                    // 补充【variables.】前缀
+                    it.value.forEach { repoRefParam -> fillContextPrefix(repoRefParam, originStartContexts) }
+                }
             pipelineParamMap.putAll(originStartContexts)
 
             pipelineParamMap[BUILD_NO]?.let { buildNoParam -> originStartParams.add(buildNoParam) }
@@ -457,6 +463,20 @@ data class StartBuildContext(
             pipelineParamMap[PIPELINE_RETRY_COUNT]?.let { retryCountParam -> originStartParams.add(retryCountParam) }
 
             return originStartParams
+        }
+
+        private fun fillContextPrefix(
+            param: BuildParameters,
+            originStartContexts: HashMap<String, BuildParameters>
+        ) {
+            with(param) {
+                if (key.startsWith(CONTEXT_PREFIX)) {
+                    originStartContexts[key] = param
+                } else {
+                    val ctxKey = CONTEXT_PREFIX + key
+                    originStartContexts[ctxKey] = param.copy(key = ctxKey)
+                }
+            }
         }
     }
 }

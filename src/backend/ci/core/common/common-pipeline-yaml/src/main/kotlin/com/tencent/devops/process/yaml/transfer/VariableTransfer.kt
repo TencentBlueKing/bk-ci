@@ -27,13 +27,16 @@
 
 package com.tencent.devops.process.yaml.transfer
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildContainerType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
@@ -91,6 +94,12 @@ class VariableTransfer {
                     type = VariablePropType.GIT_REF.value,
                     repoHashId = it.repoHashId
                 )
+                CascadePropertyUtils.supportCascadeParam(it.type) -> {
+                    // 级联选择器类型变量
+                    VariableProps(
+                        type = it.type.value
+                    )
+                }
 
                 it.type == BuildFormPropertyType.MULTIPLE -> VariableProps(
                     type = VariablePropType.CHECKBOX.value,
@@ -132,7 +141,12 @@ class VariableTransfer {
             }
             val const = it.constant.nullIfDefault(false)
             result[it.id] = Variable(
-                value = it.defaultValue.toString(),
+                value = if (CascadePropertyUtils.supportCascadeParam(it.type)) {
+                    // 级联选择器参数，展示成json格式
+                    JsonUtil.toJson(it.defaultValue, false)
+                } else {
+                    it.defaultValue.toString()
+                },
                 readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
                 const = const,
@@ -207,8 +221,18 @@ class VariableTransfer {
                     required = variable.allowModifyAtStartup ?: true,
                     constant = variable.const ?: false,
                     type = type,
-                    defaultValue = when (type) {
-                        BuildFormPropertyType.BOOLEAN -> variable.value?.toBoolean() ?: false
+                    defaultValue = when {
+                        type == BuildFormPropertyType.BOOLEAN ->
+                            variable.value?.toBoolean() ?: false
+
+                        CascadePropertyUtils.supportCascadeParam(type) ->
+                            variable.value?.let {
+                                JsonUtil.to(
+                                    json = it,
+                                    typeReference = object : TypeReference<Map<String, String>>() {}
+                                )
+                            } ?: mapOf<String, String>()
+
                         else -> variable.value ?: ""
                     },
                     options = variable.props?.options?.map {
