@@ -855,7 +855,24 @@ class GitProxyTGitService @Autowired constructor(
         }
 
         if (checkedId.isNotEmpty()) {
-            linkTGit(data.projectId, checkedId, tokenBox.get(data.projectId, credType, (data.credId ?: userId)))
+            val res = linkTGit(
+                projectId = data.projectId,
+                repoIds = checkedId,
+                innerToken = tokenBox.get(data.projectId, credType, (data.credId ?: userId))
+            )
+            if (res.values.contains(false)) {
+                if (res.size == 1) {
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.REBINDING_SUB_ERROR.errorCode,
+                        errorType = ErrorCodeEnum.REBINDING_SUB_ERROR.errorType
+                    )
+                } else {
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.REBINDING_ERROR.errorCode,
+                        errorType = ErrorCodeEnum.REBINDING_ERROR.errorType
+                    )
+                }
+            }
         }
         if (data.idMap.keys == checkedId) {
             return
