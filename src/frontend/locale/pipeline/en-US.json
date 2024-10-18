@@ -457,7 +457,9 @@
       "desc": "You do not have permission to view the pipeline template, please apply for permission",
       "apply": "Apply"
     },
-    "editStoreTemplateTips": "The development store template does not support editing"
+    "editStoreTemplateTips": "The development store template does not support editing",
+    "lastModifiedDate": "Last Modified on",
+    "lastModifiedBy": "Updater"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
