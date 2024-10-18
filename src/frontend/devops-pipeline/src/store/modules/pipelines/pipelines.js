@@ -120,6 +120,16 @@ const actions = {
     requestStoreImageList ({ commit }, { projectCode, agentType, recommendFlag, page, pageSize }) {
         return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/jobMarketImages?projectCode=${projectCode}&agentType=${agentType}&recommendFlag=${recommendFlag}&page=${page}&pageSize=${pageSize}`)
     },
+    requestProjectGroupAndUsers: async ({ commit }, { projectId }) => {
+        try {
+            const response = await ajax.get(`/experience/api/user/groups/${projectId}/projectGroupAndUsers`)
+            return response.data
+        } catch (e) {
+            if (e.code === 403) {
+                e.message = ''
+            }
+        }
+    },
     requestTemplateSetting: async ({ commit }, { projectId, templateId }) => {
         try {
             const response = await ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}/settings`)
