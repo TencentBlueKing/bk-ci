@@ -38,7 +38,7 @@ import java.util.regex.Pattern
 @Suppress("ALL")
 object DefaultPathUtils {
     private const val DEFAULT_EXTENSION = "temp"
-    private val LOG = LoggerFactory.getLogger(this::class.java.name)
+
     fun isFolder(path: String): Boolean {
         return path.endsWith("/")
     }
