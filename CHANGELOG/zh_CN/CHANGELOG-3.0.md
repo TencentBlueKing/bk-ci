@@ -1,5 +1,5 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
-- [v3.0.0](#v300)
+- [v3.0.0](#v3002024-09-10)
   - [Changelog since v2.1.0](#changelog-since-v210)
 
 <!-- END MUNGE: GENERATED_TOC -->
@@ -7,7 +7,7 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
-# v3.0.0
+# v3.0.0(2024-09-10)
 ## Changelog since v2.1.0
 #### 新增
 ##### 流水线
