@@ -47,6 +47,7 @@ func DoInstallAgent() error {
 	logs.Info("start install agent...")
 	config.Init(false)
 	if err := third_components.Init(); err != nil {
+		logs.WithError(err).Error("init third_components error")
 		systemutil.ExitProcess(1)
 	}
 
