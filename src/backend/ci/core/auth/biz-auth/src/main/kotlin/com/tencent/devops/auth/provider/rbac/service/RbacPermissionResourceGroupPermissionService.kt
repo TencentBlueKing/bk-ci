@@ -417,17 +417,23 @@ class RbacPermissionResourceGroupPermissionService(
                 permissionDetail.relatedResourceInfos.flatMap { relatedResourceInfo ->
                     relatedResourceInfo.instance.map { instancePathDTOs ->
                         val (relatedResourceType, relatedResourceCode, relatedIamResourceCode) = when {
+                            // 带*号，则为项目下所有资源。
                             instancePathDTOs.size > 1 && instancePathDTOs.last().id == ALL_RESOURCE -> {
                                 Triple(AuthResourceType.PROJECT.value, projectCode, projectCode)
                             }
 
                             else -> {
-                                val relatedIamResourceCode = converter.iamCode2Code(
-                                    projectCode = projectCode,
-                                    resourceType = instancePathDTOs.last().type,
-                                    iamResourceCode = instancePathDTOs.last().id
-                                )
-                                Triple(instancePathDTOs.last().type, relatedIamResourceCode, instancePathDTOs.last().id)
+                                try {
+                                    val relatedIamResourceCode = converter.iamCode2Code(
+                                        projectCode = projectCode,
+                                        resourceType = instancePathDTOs.last().type,
+                                        iamResourceCode = instancePathDTOs.last().id
+                                    )
+                                    Triple(instancePathDTOs.last().type, relatedIamResourceCode, instancePathDTOs.last().id)
+                                } catch (ex: Exception) {
+                                    logger.warn("convert iam code to resource code failed!|${ex.message}")
+                                    Triple(instancePathDTOs.last().type, instancePathDTOs.last().id, instancePathDTOs.last().id)
+                                }
                             }
                         }
                         ResourceGroupPermissionDTO(
