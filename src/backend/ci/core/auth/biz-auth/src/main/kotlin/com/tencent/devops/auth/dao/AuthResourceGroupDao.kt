@@ -282,7 +282,9 @@ class AuthResourceGroupDao {
                     } else
                         it
                 }
-                .fetch().map { it.value1()?.toInt() }
+                // 同步iam时，可能会同步到极少数组ID值为null，为了防止转化报错，过滤掉该类数据。
+                .fetch().filterNot { it.value1() == NULL_PLACEHOLDER }
+                .map { it.value1().toInt() }
         }
     }
 
@@ -416,5 +418,6 @@ class AuthResourceGroupDao {
 
     companion object {
         private val logger = LoggerFactory.getLogger(AuthResourceGroupDao::class.java)
+        private const val NULL_PLACEHOLDER = "null"
     }
 }
