@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.check.StageCheck
+import com.tencent.devops.process.yaml.v3.models.IfField
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -38,12 +39,13 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Stage(
+    val id: String? = null,
     var enable: Boolean? = null,
     val name: String?,
     val label: List<String> = emptyList(),
     @get:Schema(title = "if")
     @JsonProperty("if")
-    val ifField: String? = null,
+    val ifField: IfField? = null,
     @get:Schema(title = "fast-kill")
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = false,

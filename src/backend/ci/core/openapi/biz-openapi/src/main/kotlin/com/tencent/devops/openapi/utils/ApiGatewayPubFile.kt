@@ -31,11 +31,11 @@ import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIG
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIGW_PUBFILE_READ_ERROR
 import com.tencent.devops.openapi.exception.InvalidConfigException
+import java.io.File
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Component
-import java.io.File
 
 @Component
 @RefreshScope

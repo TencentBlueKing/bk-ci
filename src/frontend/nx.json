@@ -5,6 +5,10 @@
       "dependsOn": [
         "^public:master"
       ],
+      "outputs": [
+        "{projectRoot}/dist",
+        "{workspaceRoot}/frontend"
+      ],
       "cache": true
     },
     "dev": {
@@ -13,5 +17,6 @@
       ],
       "cache": true
     }
-  }
+  },
+  "defaultBase": "master"
 }

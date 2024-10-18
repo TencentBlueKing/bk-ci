@@ -29,10 +29,11 @@
 package com.tencent.devops.common.event.pojo.measure
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.stream.constants.StreamBinder
+import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_OPERATE, routeKey = MQ.ROUTE_PROJECT_USER_DAILY_OPERATE_METRICS)
+@Event(StreamBinding.METRICS_PROJECT_USER_OPERATE_DAILY, binder = StreamBinder.EXTEND_RABBIT)
 data class ProjectUserOperateMetricsEvent(
     @get:Schema(title = "项目用户操作度量数据")
     val userOperateCounterData: UserOperateCounterData

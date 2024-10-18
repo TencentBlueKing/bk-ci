@@ -27,101 +27,24 @@
  */
 package com.tencent.devops.process.yaml.mq
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.ScsConsumerBuilder
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class PipelineYamlMQConfig {
+class PipelineYamlMQConfig @Autowired constructor(
+    private val pipelineYamlTriggerListener: PipelineYamlTriggerListener
+) {
+    @EventConsumer
+    fun pipelineYamlEnableConsumer() =
+        ScsConsumerBuilder.build<PipelineYamlEnableEvent> { pipelineYamlTriggerListener.execute(it) }
 
-    @Bean
-    fun traceEventDispatcher(rabbitTemplate: RabbitTemplate) = TraceEventDispatcher(rabbitTemplate)
+    @EventConsumer
+    fun pipelineYamlDisableConsumer() =
+        ScsConsumerBuilder.build<PipelineYamlDisableEvent> { pipelineYamlTriggerListener.execute(it) }
 
-    /**
-     * yaml流水线触发交换机
-     */
-    @Bean
-    fun pipelineYamlExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_PIPELINE_YAML_LISTENER, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Bean
-    fun pipelineYamlEnableQueue() = Queue(MQ.QUEUE_PIPELINE_YAML_ENABLE_EVENT)
-
-    @Bean
-    fun pipelineYamlEnableQueueBind(
-        @Autowired pipelineYamlEnableQueue: Queue,
-        @Autowired pipelineYamlExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineYamlEnableQueue).to(pipelineYamlExchange)
-            .with(MQ.ROUTE_PIPELINE_YAML_ENABLE_EVENT)
-    }
-
-    @Bean
-    fun pipelineYamlEnableContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineYamlEnableQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired pacExchange: PipelineYamlTriggerListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineYamlEnableQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = pacExchange,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 10,
-            maxConcurrency = 20
-        )
-    }
-
-    @Bean
-    fun pipelineYamlTriggerQueue() = Queue(MQ.QUEUE_PIPELINE_YAML_TRIGGER_EVENT)
-
-    @Bean
-    fun pipelineYamlTriggerQueueBind(
-        @Autowired pipelineYamlTriggerQueue: Queue,
-        @Autowired pipelineYamlExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineYamlTriggerQueue).to(pipelineYamlExchange)
-            .with(MQ.ROUTE_PIPELINE_YAML_TRIGGER_EVENT)
-    }
-
-    @Bean
-    fun pipelineYamlTriggerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineYamlTriggerQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired pipelineYamlTriggerListener: PipelineYamlTriggerListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineYamlTriggerQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = pipelineYamlTriggerListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 30,
-            maxConcurrency = 50
-        )
-    }
+    @EventConsumer
+    fun pipelineYamlTriggerConsumer() =
+        ScsConsumerBuilder.build<PipelineYamlTriggerEvent> { pipelineYamlTriggerListener.execute(it) }
 }

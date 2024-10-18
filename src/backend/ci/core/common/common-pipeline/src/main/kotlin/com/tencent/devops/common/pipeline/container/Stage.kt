@@ -37,10 +37,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class Stage(
     @get:Schema(title = "容器集合", required = true)
     val containers: List<Container> = listOf(),
-    @get:Schema(title = "阶段ID", required = false)
+    @get:Schema(title = "阶段ID (系统标识，用户不可编辑)", required = false)
     var id: String?,
     @get:Schema(title = "阶段名称", required = true)
     var name: String? = "",
+    @get:Schema(title = "阶段ID (用户可编辑)", required = false)
+    var stageIdForUser: String? = null,
     @get:Schema(title = "阶段标签", required = false, readOnly = true)
     var tag: List<String>? = null,
     @get:Schema(title = "阶段状态", required = false, readOnly = true)
