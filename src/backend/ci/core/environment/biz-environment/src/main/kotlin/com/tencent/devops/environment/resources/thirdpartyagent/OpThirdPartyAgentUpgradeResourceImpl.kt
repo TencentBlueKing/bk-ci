@@ -145,47 +145,51 @@ class OpThirdPartyAgentUpgradeResourceImpl @Autowired constructor(
         )
     }
 
-    override fun setPriorityUpgradeAgentProjects(projectIds: List<String>): Result<Boolean> {
+    override fun setPriorityUpgradeAgentProjects(type: AgentUpgradeType?, projectIds: List<String>): Result<Boolean> {
         return projectScope.setUpgradeProjects(
             upgradeKey = ProjectScope.UpgradeKey.PRIORITY_PROJECT,
-            projectIds = projectIds.filter { it.isNotBlank() }.toSet()
+            projectIds = projectIds.filter { it.isNotBlank() }.toSet(),
+            type = type
         )
     }
 
-    override fun unsetPriorityUpgradeAgentProjects(projectIds: List<String>): Result<Boolean> {
+    override fun unsetPriorityUpgradeAgentProjects(type: AgentUpgradeType?, projectIds: List<String>): Result<Boolean> {
         return projectScope.unsetUpgradeProjects(
             upgradeKey = ProjectScope.UpgradeKey.PRIORITY_PROJECT,
-            projectIds = projectIds.filter { it.isNotBlank() }.toSet()
+            projectIds = projectIds.filter { it.isNotBlank() }.toSet(),
+            type = type
         )
     }
 
-    override fun getAllPriorityUpgradeAgentProjects(): Result<Set<String>> {
-        return Result(projectScope.getAllUpgradeProjects(ProjectScope.UpgradeKey.PRIORITY_PROJECT))
+    override fun getAllPriorityUpgradeAgentProjects(type: AgentUpgradeType?): Result<Set<String>> {
+        return Result(projectScope.getAllUpgradeProjects(ProjectScope.UpgradeKey.PRIORITY_PROJECT, type))
     }
 
-    override fun cleanAllPriorityUpgradeAgentProjects(): Result<Boolean> {
-        return Result(projectScope.cleanAllUpgradeProjects(ProjectScope.UpgradeKey.PRIORITY_PROJECT))
+    override fun cleanAllPriorityUpgradeAgentProjects(type: AgentUpgradeType?): Result<Boolean> {
+        return Result(projectScope.cleanAllUpgradeProjects(ProjectScope.UpgradeKey.PRIORITY_PROJECT, type))
     }
 
-    override fun setDenyUpgradeAgentProjects(projectIds: List<String>): Result<Boolean> {
+    override fun setDenyUpgradeAgentProjects(type: AgentUpgradeType?, projectIds: List<String>): Result<Boolean> {
         return projectScope.setUpgradeProjects(
             upgradeKey = ProjectScope.UpgradeKey.DENY_PROJECT,
-            projectIds = projectIds.filter { it.isNotBlank() }.toSet()
+            projectIds = projectIds.filter { it.isNotBlank() }.toSet(),
+            type = type
         )
     }
 
-    override fun unsetDenyUpgradeAgentProjects(projectIds: List<String>): Result<Boolean> {
+    override fun unsetDenyUpgradeAgentProjects(type: AgentUpgradeType?, projectIds: List<String>): Result<Boolean> {
         return projectScope.unsetUpgradeProjects(
             upgradeKey = ProjectScope.UpgradeKey.DENY_PROJECT,
-            projectIds = projectIds.filter { it.isNotBlank() }.toSet()
+            projectIds = projectIds.filter { it.isNotBlank() }.toSet(),
+            type = type
         )
     }
 
-    override fun getAllDenyUpgradeAgentProjects(): Result<Set<String>> {
-        return Result(projectScope.getAllUpgradeProjects(ProjectScope.UpgradeKey.DENY_PROJECT))
+    override fun getAllDenyUpgradeAgentProjects(type: AgentUpgradeType?): Result<Set<String>> {
+        return Result(projectScope.getAllUpgradeProjects(ProjectScope.UpgradeKey.DENY_PROJECT, type))
     }
 
-    override fun cleanAllDenyUpgradeAgentProjects(): Result<Boolean> {
-        return Result(projectScope.cleanAllUpgradeProjects(ProjectScope.UpgradeKey.DENY_PROJECT))
+    override fun cleanAllDenyUpgradeAgentProjects(type: AgentUpgradeType?): Result<Boolean> {
+        return Result(projectScope.cleanAllUpgradeProjects(ProjectScope.UpgradeKey.DENY_PROJECT, type))
     }
 }

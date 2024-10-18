@@ -1,3 +1,5 @@
+//go:build windows
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,69 +27,58 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package main
+package wintask
 
 import (
-	"flag"
-	"fmt"
-	"os"
-	"path/filepath"
-
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
-
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrader"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/capnspacehook/taskmaster"
+	"golang.org/x/sys/windows/svc/mgr"
+	"strings"
 )
+
+type StartType string
 
 const (
-	upgraderProcess = "upgrade"
+	// ServiceStart 服务
+	ServiceStart StartType = "SERVICE"
+	// TaskStart 执行计划
+	TaskStart StartType = "TASK"
+	// ManualStart 手动
+	ManualStart StartType = "MANUAL"
 )
 
-func main() {
-	// 初始化日志
-	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsUpgrader.log")
-	err := logs.Init(logFilePath, false, false)
+// FindService 查找windows服务
+func FindService(name string) bool {
+	m, err := mgr.Connect()
 	if err != nil {
-		fmt.Printf("init upgrader log error %v\n", err)
-		systemutil.ExitProcess(1)
+		logs.WithError(err).Error("connect manager failed")
+		return false
+	}
+	defer m.Disconnect()
+
+	service, err := m.OpenService(name)
+	if err != nil {
+		logs.WithError(err).Error("open manager failed")
+		return false
+	}
+	defer service.Close()
+
+	return true
+}
+
+// FindTask 查找windows执行计划
+func FindTask(name string) (*taskmaster.RegisteredTask, bool) {
+	service, err := taskmaster.Connect()
+	if err != nil {
+		logs.WithError(err).Error("connect taskmaster failed")
+		return nil, false
 	}
 
-	defer func() {
-		if err := recover(); err != nil {
-			logs.Error("panic: ", err)
-		}
-	}()
-
-	logs.Infof("version: %s", config.AgentVersion)
-
-	if ok := systemutil.CheckProcess(upgraderProcess); !ok {
-		logs.Warn("get process lock failed, exit")
-		return
+	task, err := service.GetRegisteredTask("\\" + name)
+	if err != nil && !strings.Contains(err.Error(), "error parsing registered task") {
+		logs.WithError(err).Error("get registered task failed")
+		return nil, false
 	}
 
-	action := flag.String("action", "upgrade", "action, upgrade or uninstall")
-	flag.Parse()
-	logs.Info("upgrader start, action: ", *action)
-	logs.Info("pid: ", os.Getpid())
-	logs.Info("current user userName: ", systemutil.GetCurrentUser().Username)
-	logs.Info("work dir: ", systemutil.GetWorkDir())
-
-	if config.ActionUpgrade == *action {
-		err := upgrader.DoUpgradeAgent()
-		if err != nil {
-			logs.WithError(err).Error("upgrade agent failed")
-			systemutil.ExitProcess(1)
-		}
-	} else if config.ActionUninstall == *action {
-		err := upgrader.DoUninstallAgent()
-		if err != nil {
-			logs.Error("upgrade agent failed")
-			systemutil.ExitProcess(1)
-		}
-	} else {
-		logs.Error("unsupport action")
-		systemutil.ExitProcess(1)
-	}
-	systemutil.ExitProcess(0)
+	return &task, true
 }
