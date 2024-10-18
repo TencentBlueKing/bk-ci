@@ -191,9 +191,16 @@
                         v-for="(item, index) in row.groupLabel?.slice(0, 2)"
                         class="group-tag"
                         :key="index"
-                        v-bk-overflow-tips
                     >
-                        {{ `${item.groupName}: ${item.labelName.join(',')}` }}
+                        <span class="key">
+                            {{ item.groupName }}
+                        </span>
+                        <span
+                            class="value"
+                            v-bk-overflow-tips
+                        >
+                            {{ item.labelName.join(',') }}
+                        </span>
                     </span>
                     <bk-popover
                         placement="top"
@@ -202,7 +209,7 @@
                     >
                         <span
                             v-if="row.groupLabel?.length > 2"
-                            class="group-tag"
+                            class="hidden-count"
                         >
                             +{{ row.groupLabel?.slice(2, row.groupLabel.length).length }}
                         </span>
@@ -213,7 +220,15 @@
                                 :key="index"
                                 v-bk-overflow-tips
                             >
-                                {{ `${item.groupName}: ${item.labelName.join(',')}` }}
+                                <span class="key">
+                                    {{ item.groupName }}
+                                </span>
+                                <span
+                                    class="value"
+                                    v-bk-overflow-tips
+                                >
+                                    {{ item.labelName.join(',') }}
+                                </span>
                             </div>
                         </div>
                     </bk-popover>
@@ -1088,48 +1103,74 @@
             }
         }
         .group-label-warpper {
-            overflow: hidden;
+            margin: 5px 0;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
         }
         .group-tag {
-            background-color: rgba(151, 155, 165, .1);
-            border-color: rgba(220, 222, 229, .6);
-            color: #63656e;
+            display: inline-flex;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            max-width: 95%;
+            .key {
+                flex-shrink: 0;
+                display: inline-block;
+                padding: 4px 8px;
+                border: 1px solid #dfe0e6;
+                background-color: #f0f1f5;
+            }
+            .value {
+                display: inline-block;
+                padding: 4px 8px;
+                border: 1px solid #dfe0e6;
+                background-color: #fff;
+                border-left: none;
+                -webkit-box-sizing: border-box;
+                box-sizing: border-box;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 100%;
+            }
+           
+        }
+    }
+    .hidden-count {
+        display: inline-block;
+        background-color: #f0f1f5;
+        padding: 4px 8px;
+    }
+    .group-tag-popover {
+        .group-tag {
+            max-width: 300px;
+            width: min-content;
+            display: flex;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            &:last-child {
+                margin-bottom: 0px;
+            }
+        }
+        .key {
+            flex-shrink: 0;
             display: inline-block;
-            font-size: 12px;
-            padding: 0 10px;
-            height: 22px;
-            line-height: 22px;
-            margin: 2px 0 2px 6px;
-            cursor: default;
+            padding: 4px 8px;
+            border: 1px solid #dfe0e6;
+            background-color: #f0f1f5;
+        }
+        .value {
+            display: inline-block;
+            padding: 4px 8px;
+            border: 1px solid #dfe0e6;
+            background-color: #fff;
+            border-left: none;
             -webkit-box-sizing: border-box;
             box-sizing: border-box;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             max-width: 100%;
-        }
-    }
-    .group-tag-popover {
-        .group-tag {
-            background-color: rgba(151, 155, 165, .1);
-            border-color: rgba(220, 222, 229, .6);
-            color: #63656e;
-            font-size: 12px;
-            padding: 0 10px;
-            height: 22px;
-            line-height: 22px;
-            margin-bottom: 5px;
-            max-width: 300px;
-            width: min-content;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            &:last-child {
-                margin-bottom: 0px;
-            }
         }
     }
 </style>
