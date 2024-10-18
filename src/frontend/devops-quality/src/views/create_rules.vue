@@ -300,7 +300,7 @@
                         </devops-form-item>
                         <p class="gateway-id-tips">
                             <i class="devops-icon icon-info-circle-shape"></i>
-                            <span>{{ $t('quality.若输入了前缀（例如gate1），红线将只对名称以前缀加下划线开头的控制点生效（例如gate1_XX）') }}</span>
+                            <span>{{ $t('quality.若输入了前缀（例如gate1），红线将只对名称以前缀开头的控制点生效（例如gate1_XX）') }}</span>
                         </p>
                         <bk-form-item
                             :label="$t('quality.生效范围')"

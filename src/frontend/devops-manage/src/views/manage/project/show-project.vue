@@ -21,6 +21,7 @@ import {
 useRoute,
 useRouter,
 } from 'vue-router';
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -410,6 +411,20 @@ onMounted(async () => {
                     >
                       {{ subjectScope.name }}
                     </bk-tag>
+                  </div>
+                </bk-form-item>
+                <bk-form-item property="pipelineDialect">
+                  <template #label>
+                    <dialect-popover-table />
+                  </template>
+                  <div>
+                    <span>{{ t(projectData.pipelineDialect) }}</span>
+                    <div class="diff-content" v-if="projectData.afterPipelineDialect">
+                      <p class="update-title">
+                        {{ t('本次更新：') }}
+                      </p>
+                      <span>{{ t(projectData.afterPipelineDialect) }}</span>
+                    </div>
                   </div>
                 </bk-form-item>
                 <bk-form-item>

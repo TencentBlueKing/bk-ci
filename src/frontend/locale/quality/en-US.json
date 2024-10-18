@@ -227,7 +227,7 @@
     "删除规则": "Delete a rule",
     "单流水线": "Single Pipeline",
     "仅展示最近10条。": "Only the last 10 are shown.",
-    "若输入了前缀（例如gate1），红线将只对名称以前缀加下划线开头的控制点生效（例如gate1_XX）": "If you enter a prefix (for example, gate1), the Red Line takes effect only for control points at the beginning of the name prefix with an underscore (for example, gate1_XX)",
+    "若输入了前缀（例如gate1），红线将只对名称以前缀开头的控制点生效（例如gate1_XX）": "If a prefix is entered (e.g., gate1), the red line will only apply to control points whose names start with the prefix (e.g., gate1_XX).",
     "请输入通知人员": "Please enter the notification personnel",
     "序号": "No.",
     "例如：CodeCoverage，创建后不可修改": "For example: CodeCoverage, which cannot be modified after creation",
