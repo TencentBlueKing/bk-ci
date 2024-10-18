@@ -97,7 +97,7 @@ class VariableTransfer {
                 CascadePropertyUtils.supportCascadeParam(it.type) -> {
                     // 级联选择器类型变量
                     VariableProps(
-                        type = it.type.value
+                        type = VariablePropType.REPO_REF.value
                     )
                 }
 
