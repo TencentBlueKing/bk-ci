@@ -259,6 +259,7 @@ open class MarketAtomTask : ITask() {
         writeInputFile(atomTmpSpace, inputVariables)
         writeSdkEnv(atomTmpSpace, buildTask, buildVariables)
         writeParamEnv(atomCode, atomTmpSpace, workspace, buildTask, buildVariables)
+
         // 环境变量 = 所有插件变量 + Worker端执行插件依赖的预置变量
         val runtimeVariables = variables.plus(
             mapOf(
@@ -1069,6 +1070,8 @@ open class MarketAtomTask : ITask() {
             throw TaskExecuteExceptionDecorator.decorate(t)
         }
     }
+
+    private fun getJavaFile() = File(System.getProperty("java.home"), "/bin/java")
 
     private fun getContainerVariables(
         buildTask: BuildTask,
