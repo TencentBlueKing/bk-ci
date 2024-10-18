@@ -223,15 +223,10 @@ class VariableTransfer {
                     type = type,
                     defaultValue = when {
                         type == BuildFormPropertyType.BOOLEAN ->
-                            variable.value?.toBoolean() ?: false
+                            (variable.value as String?)?.toBoolean() ?: false
 
                         CascadePropertyUtils.supportCascadeParam(type) ->
-                            variable.value?.let {
-                                JsonUtil.to(
-                                    json = it,
-                                    typeReference = object : TypeReference<Map<String, String>>() {}
-                                )
-                            } ?: mapOf<String, String>()
+                            variable.value ?: mapOf<String, String>()
 
                         else -> variable.value ?: ""
                     },

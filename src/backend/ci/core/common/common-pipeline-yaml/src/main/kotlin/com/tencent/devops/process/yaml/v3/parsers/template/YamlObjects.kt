@@ -70,33 +70,39 @@ object YamlObjects {
     }
 
     fun getVariable(fromPath: TemplatePath, key: String, variable: Map<String, Any>): Variable {
+        val props = if (variable["props"] == null) {
+            null
+        } else {
+            getVarProps(fromPath, variable["props"]!!)
+        }
+        val type = props?.type
         val va = Variable(
-            value = variable["value"]?.toString(),
+            value = if (type == VariablePropType.REPO_REF.value) {
+                variable["value"]?: mapOf<String,String>()
+            } else {
+                variable["value"]?.toString()
+            },
             readonly = getNullValue("readonly", variable)?.toBoolean(),
             const = getNullValue("const", variable)?.toBoolean(),
             allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
-            props = if (variable["props"] == null) {
-                null
-            } else {
-                getVarProps(fromPath, variable["props"]!!)
-            }
+            props = props
         )
 
         // 只有列表需要判断
-        if (va.props?.type == VariablePropType.SELECTOR.value || va.props?.type == VariablePropType.CHECKBOX.value) {
+        if (type == VariablePropType.SELECTOR.value || type == VariablePropType.CHECKBOX.value) {
             // 这期暂不对拉取远程接口的参数做校验
-            if (va.props.payload != null) {
+            if (props.payload != null) {
                 return va
             }
-
-            if (!va.value.isNullOrBlank() && va.props.options.isNullOrEmpty()) {
+            val value = va.value as String?
+            if (!value.isNullOrBlank() && props.options.isNullOrEmpty()) {
                 throw YamlFormatException(
-                    "$fromPath variable $key format error: value ${va.value} not in variable options"
+                    "$fromPath variable $key format error: value $value not in variable options"
                 )
             }
             val expectValues =
-                va.value?.split(",")?.asSequence()?.filter { it.isNotBlank() }?.map { it.trim() }?.toSet()
-            val resultValues = va.props.options?.map { it.id.toString() }?.toSet() ?: emptySet()
+                value?.split(",")?.asSequence()?.filter { it.isNotBlank() }?.map { it.trim() }?.toSet()
+            val resultValues = props.options?.map { it.id.toString() }?.toSet() ?: emptySet()
             // 说明默认值没有匹配到选项值，报错
             if (expectValues?.subtract(resultValues)?.isEmpty() == false) {
                 throw YamlFormatException(
@@ -106,7 +112,7 @@ object YamlObjects {
         }
 
         // 校验bool
-        if (va.props?.type == VariablePropType.BOOLEAN.value && (va.value != "true" && va.value != "false")) {
+        if (type == VariablePropType.BOOLEAN.value && (va.value != "true" && va.value != "false")) {
             throw YamlFormatException(
                 "$fromPath variable $key format error: bool value ${va.value} not true / false"
             )
