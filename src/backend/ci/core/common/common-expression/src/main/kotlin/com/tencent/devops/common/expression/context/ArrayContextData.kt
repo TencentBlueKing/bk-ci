@@ -28,6 +28,7 @@
 package com.tencent.devops.common.expression.context
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.tencent.devops.common.expression.expression.sdk.CollectionPipelineResult
 import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
 import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
 
@@ -40,11 +41,14 @@ class ArrayContextData : PipelineContextData(PipelineContextDataType.ARRAY), IRe
     override val count: Int
         get() = mItems.count()
 
-    fun add(item: PipelineContextData?) {
-        mItems.add(item)
-    }
+    override operator fun get(index: Int): PipelineContextData? = mItems[index]
 
-    override fun get(index: Int): Any? = mItems[index]
+    override fun getRes(index: Int): CollectionPipelineResult {
+        if (index >= 0 && index <= mItems.lastIndex) {
+            return CollectionPipelineResult(mItems[index])
+        }
+        return CollectionPipelineResult.noKey()
+    }
 
     override fun clone(): PipelineContextData {
         val result = ArrayContextData()
@@ -71,9 +75,17 @@ class ArrayContextData : PipelineContextData(PipelineContextDataType.ARRAY), IRe
         val list = mutableListOf<Any>()
         if (mItems.isNotEmpty()) {
             mItems.forEach {
+                if (it is DictionaryContextDataWithVal) {
+                    list.add(it.fetchValueNative())
+                    return@forEach
+                }
                 list.add(it?.fetchValue() ?: return@forEach)
             }
         }
         return list
+    }
+
+    fun add(item: PipelineContextData?) {
+        mItems.add(item)
     }
 }

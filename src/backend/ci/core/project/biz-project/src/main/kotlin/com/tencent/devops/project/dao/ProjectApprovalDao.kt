@@ -78,7 +78,8 @@ class ProjectApprovalDao {
                 TIPS_STATUS,
                 PROJECT_TYPE,
                 PRODUCT_ID,
-                PRODUCT_NAME
+                PRODUCT_NAME,
+                PIPELINE_DIALECT
             ).values(
                 projectCreateInfo.projectName,
                 projectCreateInfo.englishName,
@@ -102,7 +103,8 @@ class ProjectApprovalDao {
                 tipsStatus,
                 projectCreateInfo.projectType,
                 projectCreateInfo.productId,
-                projectCreateInfo.productName
+                projectCreateInfo.productName,
+                projectCreateInfo.pipelineDialect
             ).onDuplicateKeyUpdate()
                 .set(PROJECT_NAME, projectCreateInfo.projectName)
                 .set(DESCRIPTION, projectCreateInfo.description)
@@ -122,6 +124,7 @@ class ProjectApprovalDao {
                 .set(PROJECT_TYPE, projectCreateInfo.projectType)
                 .set(PRODUCT_ID, projectCreateInfo.productId)
                 .set(PRODUCT_NAME, projectCreateInfo.productName)
+                .set(PIPELINE_DIALECT, projectCreateInfo.pipelineDialect)
                 .execute()
         }
     }
@@ -156,6 +159,7 @@ class ProjectApprovalDao {
                 .set(PROJECT_TYPE, projectUpdateInfo.projectType)
                 .set(PRODUCT_ID, projectUpdateInfo.productId)
                 .set(PRODUCT_NAME, projectUpdateInfo.productName)
+                .set(PIPELINE_DIALECT, projectUpdateInfo.pipelineDialect)
                 .where(ENGLISH_NAME.eq(projectUpdateInfo.englishName))
                 .execute()
         }
@@ -187,6 +191,7 @@ class ProjectApprovalDao {
                 .set(PROJECT_TYPE, projectApprovalInfo.projectType)
                 .set(PRODUCT_ID, projectApprovalInfo.productId)
                 .set(PRODUCT_NAME, projectApprovalInfo.productName)
+                .set(PIPELINE_DIALECT, projectApprovalInfo.pipelineDialect)
                 .where(ENGLISH_NAME.eq(projectApprovalInfo.englishName))
                 .execute()
         }
@@ -287,7 +292,8 @@ class ProjectApprovalDao {
                 tipsStatus = tipsStatus,
                 projectType = projectType,
                 productId = productId,
-                productName = productName
+                productName = productName,
+                pipelineDialect = pipelineDialect
             )
         }
     }

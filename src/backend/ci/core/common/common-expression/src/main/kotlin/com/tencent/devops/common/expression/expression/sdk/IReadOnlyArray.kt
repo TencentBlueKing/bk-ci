@@ -30,5 +30,14 @@ package com.tencent.devops.common.expression.expression.sdk
 interface IReadOnlyArray<T> : Iterable<T> {
     val count: Int
 
+    /**
+     * 使用kotlin原生List的get方法
+     * 使用时需要注意场景，小心IndexOutOfBoundsException
+     */
     operator fun get(index: Int): Any?
+
+    /**
+     * 封装get，令返回结果更清晰
+     */
+    fun getRes(index: Int): CollectionResult
 }

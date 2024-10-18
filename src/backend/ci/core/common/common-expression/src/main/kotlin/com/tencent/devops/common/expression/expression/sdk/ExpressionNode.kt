@@ -69,10 +69,14 @@ abstract class ExpressionNode : IExpressionNode {
 
     protected abstract val traceFullyRealized: Boolean
 
+    // 用来展示打印这个节点
+    protected open val formatValue: String? = null
+    open fun format() = formatValue ?: name
+
     override fun evaluate(
         trace: ITraceWriter?,
         state: Any?,
-        options: EvaluationOptions?,
+        options: EvaluationOptions,
         expressionOutput: ExpressionOutput?
     ): EvaluationResult {
         if (container != null) {
@@ -140,7 +144,7 @@ abstract class ExpressionNode : IExpressionNode {
     override fun subNameValueEvaluate(
         trace: ITraceWriter?,
         state: Any?,
-        options: EvaluationOptions?,
+        options: EvaluationOptions,
         subInfo: SubNameValueEvaluateInfo,
         expressionOutput: ExpressionOutput?
     ): SubNameValueEvaluateResult {
