@@ -429,10 +429,18 @@ class RbacPermissionResourceGroupPermissionService(
                                         resourceType = instancePathDTOs.last().type,
                                         iamResourceCode = instancePathDTOs.last().id
                                     )
-                                    Triple(instancePathDTOs.last().type, relatedIamResourceCode, instancePathDTOs.last().id)
+                                    Triple(
+                                        first = instancePathDTOs.last().type,
+                                        second = relatedIamResourceCode,
+                                        third = instancePathDTOs.last().id
+                                    )
                                 } catch (ex: Exception) {
                                     logger.warn("convert iam code to resource code failed!|${ex.message}")
-                                    Triple(instancePathDTOs.last().type, instancePathDTOs.last().id, instancePathDTOs.last().id)
+                                    Triple(
+                                        first = instancePathDTOs.last().type,
+                                        second = instancePathDTOs.last().id,
+                                        third = instancePathDTOs.last().id
+                                    )
                                 }
                             }
                         }
