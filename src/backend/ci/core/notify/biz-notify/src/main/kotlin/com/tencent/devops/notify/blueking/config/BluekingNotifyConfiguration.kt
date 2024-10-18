@@ -21,11 +21,11 @@ import com.tencent.devops.notify.service.VoiceService
 import com.tencent.devops.notify.service.WechatService
 import com.tencent.devops.notify.service.WeworkService
 import org.jooq.DSLContext
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import com.tencent.devops.common.notify.utils.Configuration as NotifyConfig
@@ -60,9 +60,9 @@ class BluekingNotifyConfiguration {
     fun emailService(
         @Autowired notifyService: NotifyService,
         @Autowired emailNotifyDao: EmailNotifyDao,
-        @Autowired rabbitTemplate: RabbitTemplate,
+        @Autowired streamBridge: StreamBridge,
         @Autowired configuration: NotifyConfig
-    ) = EmailServiceImpl(notifyService, emailNotifyDao, rabbitTemplate, configuration)
+    ) = EmailServiceImpl(notifyService, emailNotifyDao, streamBridge, configuration)
 
     @Bean
     @ConditionalOnMissingBean(WeworkService::class)
@@ -73,35 +73,35 @@ class BluekingNotifyConfiguration {
     fun rtxService(
         @Autowired notifyService: NotifyService,
         @Autowired rtxNotifyDao: RtxNotifyDao,
-        @Autowired rabbitTemplate: RabbitTemplate,
+        @Autowired streamBridge: StreamBridge,
         @Autowired configuration: NotifyConfig
-    ) = RtxServiceImpl(notifyService, rtxNotifyDao, rabbitTemplate, configuration)
+    ) = RtxServiceImpl(notifyService, rtxNotifyDao, streamBridge, configuration)
 
     @Bean
     @ConditionalOnMissingBean(SmsService::class)
     fun smsService(
         @Autowired notifyService: NotifyService,
         @Autowired smsNotifyDao: SmsNotifyDao,
-        @Autowired rabbitTemplate: RabbitTemplate,
+        @Autowired streamBridge: StreamBridge,
         @Autowired configuration: NotifyConfig
-    ) = SmsServiceImpl(notifyService, smsNotifyDao, rabbitTemplate, configuration)
+    ) = SmsServiceImpl(notifyService, smsNotifyDao, streamBridge, configuration)
 
     @Bean
     @ConditionalOnMissingBean(WechatService::class)
     fun wechatService(
         @Autowired notifyService: NotifyService,
         @Autowired wechatNotifyDao: WechatNotifyDao,
-        @Autowired rabbitTemplate: RabbitTemplate,
+        @Autowired streamBridge: StreamBridge,
         @Autowired configuration: NotifyConfig
-    ) = WechatServiceImpl(notifyService, wechatNotifyDao, rabbitTemplate, configuration)
+    ) = WechatServiceImpl(notifyService, wechatNotifyDao, streamBridge, configuration)
 
     @Bean
     @ConditionalOnMissingBean(VoiceService::class)
     fun voiceService(
         @Autowired notifyService: NotifyService,
         @Autowired voiceNotifyDao: VoiceNotifyDao,
-        @Autowired rabbitTemplate: RabbitTemplate,
+        @Autowired streamBridge: StreamBridge,
         @Autowired configuration: NotifyConfig,
         @Autowired dslContext: DSLContext
-    ) = VoiceServiceImpl(notifyService, voiceNotifyDao, rabbitTemplate, configuration, dslContext)
+    ) = VoiceServiceImpl(notifyService, voiceNotifyDao, streamBridge, configuration, dslContext)
 }

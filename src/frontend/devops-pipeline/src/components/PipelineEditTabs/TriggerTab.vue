@@ -1,28 +1,60 @@
 <template>
     <div>
-        <bk-button v-if="editable" theme="primary" @click="addTrigger">{{$t('settings.addTrigger')}}</bk-button>
+        <bk-button
+            v-if="editable"
+            theme="primary"
+            @click="addTrigger"
+        >
+            {{ $t('settings.addTrigger') }}
+        </bk-button>
         <div class="trigger-list-wrapper">
             <bk-table :data="triggerList">
-                <bk-table-column :label="$t('settings.trigger')" prop="name" show-overflow-tooltip>
+                <bk-table-column
+                    :label="$t('settings.trigger')"
+                    prop="name"
+                    show-overflow-tooltip
+                >
                     <template slot-scope="props">
-                        <span @click="editTriggerAtom(props.$index)" :class="{ 'text-link': true, 'is-error': !props.row.name || props.row.isError }">
+                        <span
+                            @click="editTriggerAtom(props.$index)"
+                            :class="{ 'text-link': true, 'is-error': !props.row.name || props.row.isError }"
+                        >
                             {{ props.row.name || $t('settings.selectTrigger') }}
                         </span>
                     </template>
                 </bk-table-column>
                 <bk-table-column :label="$t('settings.enableStatus')">
                     <template slot-scope="props">
-                        <bk-switcher :disabled="!editable" :value="getIsEnable(props.row)" theme="primary" size="small" @change="(val) => handleUpdateOptions(props.$index, 'enable', val)"></bk-switcher>
+                        <bk-switcher
+                            :disabled="!editable"
+                            :value="getIsEnable(props.row)"
+                            theme="primary"
+                            size="small"
+                            @change="(val) => handleUpdateOptions(props.$index, 'enable', val)"
+                        ></bk-switcher>
                     </template>
                 </bk-table-column>
-                <bk-table-column v-if="editable" :label="$t('operate')" width="150" class-name="handler-btn">
+                <bk-table-column
+                    v-if="editable"
+                    :label="$t('operate')"
+                    width="150"
+                    class-name="handler-btn"
+                >
                     <template slot-scope="props">
-                        <span class="link-btn" @click="deleteTriggerAtom(props.$index)">{{ $t('delete') }}</span>
+                        <span
+                            class="link-btn"
+                            @click="deleteTriggerAtom(props.$index)"
+                        >{{ $t('delete') }}</span>
                     </template>
                 </bk-table-column>
             </bk-table>
         </div>
-        <atom-selector v-if="container" :container="container" :element="element" v-bind="editingElementPos" />
+        <atom-selector
+            v-if="container"
+            :container="container"
+            :element="element"
+            v-bind="editingElementPos"
+        />
         <template v-if="editingElementPos">
             <atom-property-panel
                 :element-index="editingElementPos.elementIndex"

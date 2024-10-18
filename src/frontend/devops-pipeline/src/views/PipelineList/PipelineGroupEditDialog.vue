@@ -8,15 +8,32 @@
         :close-icon="false"
         :draggable="false"
     >
-        <section v-if="group" class="pipeline-group-edit-dialog-main">
-            <aside class="pipeline-group-edit-source" v-bkloading="{ isLoading }">
+        <section
+            v-if="group"
+            class="pipeline-group-edit-dialog-main"
+        >
+            <aside
+                class="pipeline-group-edit-source"
+                v-bkloading="{ isLoading }"
+            >
                 <header class="pipeline-group-edit-header">{{ title }}</header>
                 <div class="group-form-item">
-                    <label class="group-form-label">{{$t('groupStrategy')}}</label>
-                    <bk-radio-group class="group-form-radio-group" v-model="model.viewType" @change="handleViewTypeChange">
-                        <bk-radio v-for="strategy in groupStrategy" :value="strategy.value" :key="strategy.value">
-                            <span v-bk-tooltips="strategy.tooltips" class="group-strategy-radio">
-                                {{strategy.label}}
+                    <label class="group-form-label">{{ $t('groupStrategy') }}</label>
+                    <bk-radio-group
+                        class="group-form-radio-group"
+                        v-model="model.viewType"
+                        @change="handleViewTypeChange"
+                    >
+                        <bk-radio
+                            v-for="strategy in groupStrategy"
+                            :value="strategy.value"
+                            :key="strategy.value"
+                        >
+                            <span
+                                v-bk-tooltips="strategy.tooltips"
+                                class="group-strategy-radio"
+                            >
+                                {{ strategy.label }}
                             </span>
                         </bk-radio>
                     </bk-radio-group>
@@ -25,15 +42,26 @@
                     <template v-if="isDynamicGroup">
                         <div class="group-form-item">
                             <label class="group-form-label">
-                                {{$t('groupLogicLabel')}}
+                                {{ $t('groupLogicLabel') }}
                             </label>
-                            <bk-radio-group class="group-form-radio-group" v-model="model.logic" @change="changeFilterChangeFlag">
-                                <bk-radio value="AND">{{$t('view.and')}}</bk-radio>
-                                <bk-radio value="OR">{{$t('view.or')}}</bk-radio>
+                            <bk-radio-group
+                                class="group-form-radio-group"
+                                v-model="model.logic"
+                                @change="changeFilterChangeFlag"
+                            >
+                                <bk-radio value="AND">{{ $t('view.and') }}</bk-radio>
+                                <bk-radio value="OR">{{ $t('view.or') }}</bk-radio>
                             </bk-radio-group>
                         </div>
-                        <bk-table class="group-filters-table" height="100%" :data="formatFilters">
-                            <bk-table-column width="152" :label="$t('view.key')">
+                        <bk-table
+                            class="group-filters-table"
+                            height="100%"
+                            :data="formatFilters"
+                        >
+                            <bk-table-column
+                                width="152"
+                                :label="$t('view.key')"
+                            >
                                 <template slot-scope="props">
                                     <bk-select
                                         :key="props.key"
@@ -49,7 +77,8 @@
                                                 :name="item.name"
                                                 :key="item.id"
                                             >
-                                                <bk-option v-for="option in item.children"
+                                                <bk-option
+                                                    v-for="option in item.children"
                                                     :key="option.id"
                                                     :id="option.id"
                                                     :name="option.name"
@@ -67,15 +96,26 @@
                                     </bk-select>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t('view.value')" prop="value">
-                                <div :title="props.row.key" :key="props.row.key" class="group-filter-value-cell" slot-scope="props">
+                            <bk-table-column
+                                :label="$t('view.value')"
+                                prop="value"
+                            >
+                                <div
+                                    :title="props.row.key"
+                                    :key="props.row.key"
+                                    class="group-filter-value-cell"
+                                    slot-scope="props"
+                                >
                                     <bk-form
                                         :label-width="0"
                                         :ref="`dynamicForms_${props.row.key}`"
                                         :model="props.row"
                                         class="group-filter-value-input"
                                     >
-                                        <bk-form-item v-if="props.row.id === NAME_FILTER_TYPE" v-bind="getDynamicFilterConf(props.row.id, props.row)">
+                                        <bk-form-item
+                                            v-if="props.row.id === NAME_FILTER_TYPE"
+                                            v-bind="getDynamicFilterConf(props.row.id, props.row)"
+                                        >
                                             <bk-input
                                                 :placeholder="$t('view.nameTips')"
                                                 maxlength="40"
@@ -83,7 +123,10 @@
                                                 v-model="props.row.pipelineName"
                                             />
                                         </bk-form-item>
-                                        <bk-form-item v-else-if="props.row.id === CREATOR_FILTER_TYPE" v-bind="getDynamicFilterConf(props.row.id)">
+                                        <bk-form-item
+                                            v-else-if="props.row.id === CREATOR_FILTER_TYPE"
+                                            v-bind="getDynamicFilterConf(props.row.id)"
+                                        >
                                             <bk-tag-input
                                                 allow-create
                                                 allow-auto-match
@@ -91,7 +134,10 @@
                                             />
                                         </bk-form-item>
 
-                                        <bk-form-item v-else-if="props.row.id === FILTER_BY_PAC_REPO" v-bind="getDynamicFilterConf(props.row.id)">
+                                        <bk-form-item
+                                            v-else-if="props.row.id === FILTER_BY_PAC_REPO"
+                                            v-bind="getDynamicFilterConf(props.row.id)"
+                                        >
                                             <div class="pac-repo-filter-value-area">
                                                 <bk-select
                                                     enable-scroll-load
@@ -120,7 +166,10 @@
                                                 </bk-select>
                                             </div>
                                         </bk-form-item>
-                                        <bk-form-item v-else v-bind="getDynamicFilterConf(props.row.id)">
+                                        <bk-form-item
+                                            v-else
+                                            v-bind="getDynamicFilterConf(props.row.id)"
+                                        >
                                             <bk-select
 
                                                 v-model="props.row.labelIds"
@@ -136,17 +185,31 @@
                                         </bk-form-item>
                                     </bk-form>
                                     <span class="filter-operations-span">
-                                        <bk-button theme="normal" text @click="removeFilter(props)">
+                                        <bk-button
+                                            theme="normal"
+                                            text
+                                            @click="removeFilter(props)"
+                                        >
                                             <i class="devops-icon icon-minus-circle" />
                                         </bk-button>
-                                        <bk-button theme="normal" text @click="addFilters(props.$index)">
+                                        <bk-button
+                                            theme="normal"
+                                            text
+                                            @click="addFilters(props.$index)"
+                                        >
                                             <i class="devops-icon icon-plus-circle" />
                                         </bk-button>
                                     </span>
                                 </div>
                             </bk-table-column>
                         </bk-table>
-                        <bk-button outline theme="primary" @click="updatePreview">{{$t('pipelinesPreview')}}</bk-button>
+                        <bk-button
+                            outline
+                            theme="primary"
+                            @click="updatePreview"
+                        >
+                            {{ $t('pipelinesPreview') }}
+                        </bk-button>
                     </template>
                     <template v-else>
                         <bk-input
@@ -163,9 +226,13 @@
                                 :default-expanded-nodes="defaultExpandedNodes"
                                 :show-icon="false"
                             >
-                                <div @click.stop :class="['pipeline-group-tree-node', {
-                                    'is-delete': data.deleted
-                                }]" slot-scope="{ node, data }">
+                                <div
+                                    @click.stop
+                                    :class="['pipeline-group-tree-node', {
+                                        'is-delete': data.deleted
+                                    }]"
+                                    slot-scope="{ node, data }"
+                                >
                                     <bk-checkbox
                                         v-bind="isChecked(data.id)"
                                         :disabled="!data.checkable"
@@ -175,9 +242,12 @@
                                         }"
                                         @change="(checked) => data.hasChild ? handleRootCheck(checked, data) : handleCheck(checked, data)"
                                     >
-                                        {{data.name}}
+                                        {{ data.name }}
                                     </bk-checkbox>
-                                    <span class="pipeline-group-tree-node-desc" v-if="data.deleted">{{ $t('deleted') }}</span>
+                                    <span
+                                        class="pipeline-group-tree-node-desc"
+                                        v-if="data.deleted"
+                                    >{{ $t('deleted') }}</span>
                                     <span v-if="data.hasChild">（{{ data.children.length }}）</span>
                                 </div>
                             </bk-big-tree>
@@ -187,34 +257,40 @@
             </aside>
             <aside class="pipeline-group-edit-preview">
                 <header>
-                    {{$t('resultPreview')}}
-                    <span class="pipeline-preview-time" v-if="previewTime">{{$t('previewTime', [previewTime])}}</span>
+                    {{ $t('resultPreview') }}
+                    <span
+                        class="pipeline-preview-time"
+                        v-if="previewTime"
+                    >{{ $t('previewTime', [previewTime]) }}</span>
                 </header>
                 <article v-bkloading="{ isLoading: loading }">
                     <header class="preview-pipeline-title">
                         <p>
-                            {{$t('total')}}
+                            {{ $t('total') }}
                             <span class="pipeline-total-count">
                                 {{ totalPreviewCount }}
                             </span>
-                            {{$t('strip')}}，
+                            {{ $t('strip') }}，
                         </p>
                         <p>
-                            {{$t('new')}}
+                            {{ $t('new') }}
                             <span class="pipeline-add-count">
                                 {{ preview.addedPipelineInfos.length }}
                             </span>
-                            {{$t('strip')}}，
+                            {{ $t('strip') }}，
                         </p>
                         <p>
-                            {{$t('removeFrom')}}
+                            {{ $t('removeFrom') }}
                             <span class="pipeline-removed-count">
                                 {{ preview.removedPipelineInfos.length }}
                             </span>
-                            {{$t('strip')}}
+                            {{ $t('strip') }}
                         </p>
                     </header>
-                    <ul v-if="preAddedPipelineList.length > 0" class="preview-pipeline-ul">
+                    <ul
+                        v-if="preAddedPipelineList.length > 0"
+                        class="preview-pipeline-ul"
+                    >
                         <li
                             v-for="(pipeline, index) in preAddedPipelineList"
                             :key="pipeline.pipelineId"
@@ -232,13 +308,13 @@
                                         {{ pipeline.pipelineName }}
                                     </p>
                                     <footer>
-                                        {{pipeline.groups}}
+                                        {{ pipeline.groups }}
                                     </footer>
                                 </main>
                                 <div slot="content">
-                                    <p>{{pipeline.pipelineName}}</p>
+                                    <p>{{ pipeline.pipelineName }}</p>
                                     <p>
-                                        {{pipeline.groups}}
+                                        {{ pipeline.groups }}
                                     </p>
                                 </div>
                             </bk-popover>
@@ -266,11 +342,11 @@
                     @click="handleSubmit"
                     :disabled="isFilterChange"
                 >
-                    {{$t('save')}}
+                    {{ $t('save') }}
                 </bk-button>
             </bk-popover>
             <bk-button @click="handleClose">
-                {{$t('cancel')}}
+                {{ $t('cancel') }}
             </bk-button>
         </footer>
     </bk-dialog>

@@ -1,5 +1,8 @@
 <template>
-    <section class="pipeline-edit-wrapper" v-bkloading="{ isLoading }">
+    <section
+        class="pipeline-edit-wrapper"
+        v-bkloading="{ isLoading }"
+    >
         <header class="create-pipeline-header">
             <div>
                 <span class="pointer">

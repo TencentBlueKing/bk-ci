@@ -1,5 +1,6 @@
 <template>
-    <bk-switcher :value="paramValue[paramKey]"
+    <bk-switcher
+        :value="paramValue[paramKey]"
         @change="changeParamValue"
         v-bind="$props"
     ></bk-switcher>

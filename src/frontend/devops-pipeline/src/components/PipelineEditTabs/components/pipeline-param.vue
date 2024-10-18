@@ -1,10 +1,27 @@
 <template>
     <div class="variable-container">
-        <bk-alert v-if="editable" type="info" :title="$t('newui.pipelineParam.useTips')" closable></bk-alert>
+        <bk-alert
+            v-if="editable"
+            type="info"
+            :title="$t('newui.pipelineParam.useTips')"
+            closable
+        ></bk-alert>
         <div class="operate-row">
             <template v-if="editable">
-                <bk-button class="var-btn" v-enStyle="'min-width:100px'" @click="handleAdd">{{$t('newui.pipelineParam.addVar')}}</bk-button>
-                <bk-button class="var-btn" v-enStyle="'min-width:100px'" @click="handleAdd('constant')">{{$t('newui.pipelineParam.addConst')}}</bk-button>
+                <bk-button
+                    class="var-btn"
+                    v-enStyle="'min-width:100px'"
+                    @click="handleAdd"
+                >
+                    {{ $t('newui.pipelineParam.addVar') }}
+                </bk-button>
+                <bk-button
+                    class="var-btn"
+                    v-enStyle="'min-width:100px'"
+                    @click="handleAdd('constant')"
+                >
+                    {{ $t('newui.pipelineParam.addConst') }}
+                </bk-button>
             </template>
             <bk-input
                 v-model="searchStr"
@@ -28,10 +45,18 @@
             />
         </template>
 
-        <div v-else-if="editable" class="current-edit-param-item">
+        <div
+            v-else-if="editable"
+            class="current-edit-param-item"
+        >
             <div class="edit-var-header">
-                <bk-icon style="font-size: 28px;" type="arrows-left" class="back-icon" @click="hideSlider" />
-                {{sliderTitle}}
+                <bk-icon
+                    style="font-size: 28px;"
+                    type="arrows-left"
+                    class="back-icon"
+                    @click="hideSlider"
+                />
+                {{ sliderTitle }}
             </div>
             <div class="edit-var-content">
                 <pipeline-param-form
@@ -41,13 +66,23 @@
                     :edit-index="editIndex"
                     :param-type="paramType"
                     :update-param="updateEditItem"
-                    :reset-edit-item="resetEditItem" />
+                    :reset-edit-item="resetEditItem"
+                />
             </div>
-            <div class="edit-var-footer" slot="footer">
-                <bk-button theme="primary" @click="handleSaveVar">
+            <div
+                class="edit-var-footer"
+                slot="footer"
+            >
+                <bk-button
+                    theme="primary"
+                    @click="handleSaveVar"
+                >
                     {{ editIndex === -1 ? $t('editPage.append') : $t('confirm') }}
                 </bk-button>
-                <bk-button style="margin-left: 8px;" @click="hideSlider">
+                <bk-button
+                    style="margin-left: 8px;"
+                    @click="hideSlider"
+                >
                     {{ $t('cancel') }}
                 </bk-button>
             </div>

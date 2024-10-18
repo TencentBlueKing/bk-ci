@@ -149,6 +149,10 @@
   "downloadLog": "下载日志",
   "hideDebugLog": "隐藏调试日志",
   "showDebugLog": "展示调试日志",
+  "successPraise": "已赞",
+  "successDownPraise": "已踩",
+  "successCancelPraise": "取消赞",
+  "successCancelDownPraise": "取消踩",
   "stageReview": {
     "stageInConditions": "准入规则",
     "approvalFlow": "审核流",
@@ -184,13 +188,16 @@
     "waitApproval": "待审批，处理人：{0}",
     "opinionRequired": "驳回时，审核意见必填",
     "userInputTips": "请输入一个或多个审核人，支持输入变量",
+    "userGroupInputTips": "请输入一个或多个用户组，支持输入变量",
     "reviewRequire": "审核名称和审核人必填",
     "addFlow": "添加审批步骤",
     "approveBy": "由 {0} 审批：",
     "editVariable": "变更参数：",
     "approveOpinion": "审批意见：",
     "approveTime": "审批时间：",
-    "approver": "处理人："
+    "approver": "处理人：",
+    "reviewer": "审核人",
+    "groups": "用户组"
   },
   "execDetail": {
     "log": "日志",
@@ -370,7 +377,11 @@
     "mdLink": "markdown链接",
     "conCopySuc": "内容复制成功",
     "additionDesc": "其他描述",
-    "voice": "语音"
+    "voice": "语音",
+    "concurrentMaxConcurrency": "最大可并发数",
+    "concurrentTimeout": "超限时排队，排队超时时间",
+    "maxConRunningQueueSizeTips": "最大可并发数范围在1-200之间",
+    "maxConcurrencyPlaceholder": "缺省时以系统设置为准"
   },
   "template": {
     "addTemplate": "新建模板",
@@ -649,6 +660,7 @@
     "checkDescInfo": "请在 {0} 前完成审核操作，逾期将自动标记流水线为Stage成功状态",
     "abort": "取消执行，立即标记为Stage成功状态",
     "agree": "继续执行",
+    "aiAnalysis": "AI 服务暂未部署完成，如需使用，请联系管理员部署。<a href=\"{0}\" target=\"_blank\" style=\"color:#3a84ff\">了解更多</a>",
     "statusMap": {
       "PAUSE": "暂停",
       "RUNNING": "执行中",
@@ -731,6 +743,7 @@
     "name": "产出物名称",
     "filePath": "文件路径",
     "size": "文件大小",
+    "created": "创建时间",
     "lastModified": "最后修改时间",
     "pipelineErrorGuide": "流水线故障排查指南",
     "pipelineErrorType": "错误类型",
@@ -1056,8 +1069,8 @@
     "projectCustom": "项目自定义",
     "all": "全部",
     "consistent": "锁定构建号",
-    "success_build_increment": "成功时加1",
-    "every_build_increment": "每次加1",
+    "success_build_increment": "构建成功+1",
+    "every_build_increment": "每次构建+1",
     "enableAtom": "启用本插件",
     "continueWhenFailed": "失败时继续",
     "WhenPluginFailed": "本插件运行失败时",
@@ -1578,5 +1591,30 @@
   },
   "debugHint": "调试和执行不共享构建号，但共享并发控制。调试记录仅在草稿版本调试期间有效，版本发布后将自动清理。",
   "templateRollbackBackTips": "当前流水线为约束模式（模板实例），需要跳转到模板进行版本回滚。",
-  "versionNotMatch": "当前版本非最新版本，无法执行"
+  "versionNotMatch": "当前版本非最新版本，无法执行",
+  "buildNoBaseline": {
+    "buildNoBaseline": "构建号基线",
+    "tips1": "1. 此项配置为构建号按照策略自增的基线值：",
+    "tips2": "- 当前流水线首次运行时，在此配置基础上开始自增。",
+    "tips3": "- 修改基线值、发布版本后，若希望后续执行以基线值重新开始自增，请在变量查看界面进行「重置当前构建号」操作使修改生效",
+    "tips4": "2. 有两种引用方式：",
+    "tips5": "- 流水线编排中，使用上下文 ${{ ci.build-no}} 引用",
+    "tips6": "- 流水线引用的脚本文件中，使用内置环境变量 ${{BK_CI_BUILD_NO}} 引用",
+    "tips7": "3. 示例，基线值为 0，策略为每次加 1，则下一次触发运行时构建号为 1",
+    "manualResetRequired": "基线值修改后不会自动生效，请务必在发布后手动重置",
+    "resetRequiredTips": "检测到构建号基线值发生了变化，请手动重置构建号",
+    "goReset": "去重置",
+    "baselineValue": "基线值：",
+    "currentValue": "当前值：",
+    "resetBuildNo": "重置构建号",
+    "isSureReset": "确定重置构建号？",
+    "confirm": "确定重置",
+    "CONSISTENT": "重置后，后续构建将锁定为 {0}",
+    "SUCCESS_BUILD_INCREMENT": "将构建号重置为基线值 {0} 后，下一次成功构建将从 {1} 开始计数",
+    "EVERY_BUILD_INCREMENT": "将构建号重置为基线值 {0} 后，下一次构建将从 {1} 开始计数"
+  },
+  "deleteDraft": "删除草稿",
+  "sureDeleteDraft": "确认删除该草稿？",
+  "deleteDraftPipeline": "当前流水线尚未发布，删除草稿等同于删除流水线，确认删除吗？",
+  "noDraft": "暂无可删除的草稿"
 }
