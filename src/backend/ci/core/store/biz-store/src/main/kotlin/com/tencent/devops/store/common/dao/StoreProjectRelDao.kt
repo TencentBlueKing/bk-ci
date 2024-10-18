@@ -591,4 +591,24 @@ class StoreProjectRelDao {
                 .fetchOne()
         }
     }
+
+    fun getUserTestProjectRelByStoreCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        projectCode: String,
+        userId: String
+    ): TStoreProjectRelRecord? {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            conditions.add(CREATOR.eq(userId))
+            conditions.add(PROJECT_CODE.eq(projectCode))
+            conditions.add(TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetchOne()
+        }
+    }
 }

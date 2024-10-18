@@ -380,10 +380,11 @@ class StoreProjectServiceImpl @Autowired constructor(
             )!!
             // 更新组件关联初始化项目
             storeProjectRelDao.updateStoreInitProject(context, userId, storeProjectInfo)
-            val testProjectInfo = storeProjectRelDao.getUserStoreTestProjectCode(
+            val testProjectInfo = storeProjectRelDao.getUserTestProjectRelByStoreCode(
                 dslContext = context,
                 storeCode = storeProjectInfo.storeCode,
-                storeType = storeProjectInfo.storeType,
+                storeType = storeProjectInfo.storeType.type.toByte(),
+                projectCode = storeProjectInfo.projectId,
                 userId = storeProjectInfo.userId
             )
             if (testProjectInfo == null) {
