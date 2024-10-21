@@ -41,6 +41,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE
 import com.tencent.devops.process.engine.atom.plugin.IElementBizPluginService
+import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.pipeline.SubPipelineIdAndName
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import com.tencent.devops.process.service.pipeline.SubPipelineRefService
@@ -59,6 +60,10 @@ class SubPipelineElementBizPluginService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineElementBizPluginService::class.java)
+    }
+
+    init {
+        ElementBizRegistrar.register(this)
     }
 
     override fun supportElement(element: Element): Boolean {
