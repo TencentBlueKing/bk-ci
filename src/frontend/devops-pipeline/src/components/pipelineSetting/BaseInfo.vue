@@ -91,6 +91,7 @@
                     :handle-change="handleBaseInfoChange"
                 />
             </bk-form-item>
+            {{ settings.pipelineDialect }}--{{ currentPipelineDialect }}
 
             <bk-form-item ext-cls="namingConvention">
                 <syntax-style-configuration
@@ -160,10 +161,10 @@
             'pipelineSetting.pipelineAsCodeSettings': {
                 handler (val) {
                     if (val) {
-                        const { inheritedDialect, pipelineDialect } = this.pipelineSetting.pipelineAsCodeSettings
+                        const { inheritedDialect, pipelineDialect, projectDialect } = this.pipelineSetting.pipelineAsCodeSettings
                         this.settings = {
                             ...this.pipelineSetting.pipelineAsCodeSettings,
-                            pipelineDialect: inheritedDialect ? this.currentPipelineDialect : pipelineDialect
+                            pipelineDialect: inheritedDialect ? projectDialect : pipelineDialect
                         }
                     }
                 },
