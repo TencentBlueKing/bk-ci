@@ -380,21 +380,30 @@ class StoreProjectServiceImpl @Autowired constructor(
             )!!
             // 更新组件关联初始化项目
             storeProjectRelDao.updateStoreInitProject(context, userId, storeProjectInfo)
-            storeProjectRelDao.deleteUserStoreTestProject(
+            val testProjectInfo = storeProjectRelDao.getUserTestProjectRelByStoreCode(
                 dslContext = context,
-                userId = initProjectInfo.creator,
-                storeType = storeProjectInfo.storeType,
                 storeCode = storeProjectInfo.storeCode,
-                storeProjectType = StoreProjectTypeEnum.TEST
-            )
-            storeProjectRelDao.addStoreProjectRel(
-                dslContext = context,
-                userId = userId,
                 storeType = storeProjectInfo.storeType.type.toByte(),
-                storeCode = storeProjectInfo.storeCode,
                 projectCode = storeProjectInfo.projectId,
-                type = StoreProjectTypeEnum.TEST.type.toByte()
+                userId = storeProjectInfo.userId
             )
+            if (testProjectInfo == null) {
+                storeProjectRelDao.deleteUserStoreTestProject(
+                    dslContext = context,
+                    userId = storeProjectInfo.userId,
+                    storeType = storeProjectInfo.storeType,
+                    storeCode = storeProjectInfo.storeCode,
+                    storeProjectType = StoreProjectTypeEnum.TEST
+                )
+                storeProjectRelDao.addStoreProjectRel(
+                    dslContext = context,
+                    userId = storeProjectInfo.userId,
+                    storeType = storeProjectInfo.storeType.type.toByte(),
+                    storeCode = storeProjectInfo.storeCode,
+                    projectCode = storeProjectInfo.projectId,
+                    type = StoreProjectTypeEnum.TEST.type.toByte()
+                )
+            }
             val storePipelineRel = storePipelineRelDao.getStorePipelineRel(
                 dslContext = context,
                 storeCode = storeProjectInfo.storeCode,
