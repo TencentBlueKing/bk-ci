@@ -300,5 +300,7 @@
     "确认离开当前页?": "Are you sure you want to leave this page?",
     "离开": "Leave",
     "基础信息": "Basic Information",
-    "高级信息": "Advanced Information"
+    "高级信息": "Advanced Information",
+    "所属服务": "Associated Service",
+    "资源": "Resource"
 }

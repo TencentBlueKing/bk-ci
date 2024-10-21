@@ -38,18 +38,18 @@ import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceScmWebhookResourceImpl @Autowired constructor(
     private val pipelineBuildWebhookService: PipelineBuildWebhookService,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val pipelineWebhookService: PipelineWebhookService
 ) : ServiceScmWebhookResource {
     override fun webHookCodeGithubCommit(webhook: GithubWebhook): Result<Boolean> {
         return Result(CodeWebhookEventDispatcher.dispatchGithubEvent(
-            rabbitTemplate = rabbitTemplate,
+            streamBridge = streamBridge,
             event = GithubWebhookEvent(githubWebhook = webhook)
         ))
     }

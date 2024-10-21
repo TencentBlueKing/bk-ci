@@ -787,6 +787,65 @@ export default {
         })
     },
 
+    praiseAi ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, score }) {
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=${score}`
+        if (currentExe) {
+            url += `&executeCount=${currentExe}`
+        }
+        return request.post(url)
+    },
+
+    cancelPraiseAi ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, score }) {
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=${score}`
+        if (currentExe) {
+            url += `&executeCount=${currentExe}`
+        }
+        return request.delete(url)
+    },
+
+    getPraiseAiInfo ({ commit }, { projectId, pipelineId, buildId, tag, currentExe }) {
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=true`
+        if (currentExe) {
+            url += `&executeCount=${currentExe}`
+        }
+        return request.get(url)
+    },
+
+    getLogAIMessage ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, refresh, callBack }) {
+        let url = `/misc/api/user/gpt/script_error_analysis/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&refresh=${refresh}`
+        if (currentExe) {
+            url += `&executeCount=${currentExe}`
+        }
+        return window.fetch(url, {
+            method: 'post'
+        }).then((response) => {
+            const reader = response.body.getReader()
+            const decoder = new TextDecoder()
+
+            const readChunk = () => {
+                return reader.read().then(appendChunks)
+            }
+
+            const appendChunks = (result) => {
+                const chunk = decoder.decode(result.value || new Uint8Array(), {
+                    stream: !result.done
+                })
+                if (chunk) {
+                    callBack(chunk)
+                }
+                if (!result.done) {
+                    readChunk()
+                }
+            }
+
+            readChunk()
+        })
+    },
+
+    getAIStatus () {
+        return request.get('/misc/api/user/gpt_config/is_ok')
+    },
+
     getMacSysVersion () {
         return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
     },
@@ -871,6 +930,9 @@ export default {
     },
     setAtomEditing ({ commit }, isEditing) {
         return commit(SET_ATOM_EDITING, isEditing)
+    },
+    updateBuildNo ({ commit }, { projectId, pipelineId, currentBuildNo }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/updateBuildNo`, { currentBuildNo })
     }
 
 }

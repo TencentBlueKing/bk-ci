@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
@@ -35,7 +34,6 @@ import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
@@ -48,7 +46,6 @@ import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
@@ -107,23 +104,8 @@ class PipelineRepositoryVersionService(
         val pipelineVersionLock = PipelineVersionLock(redisOperation, pipelineId, version)
         try {
             pipelineVersionLock.lock()
-            val count = pipelineBuildDao.countBuildNumByVersion(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version
-            )
-            if (count > 0) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD
-                )
-            }
-            dslContext.transaction { t ->
-                val transactionContext = DSL.using(t)
-                // #8161 软删除数据，前端无法查询到该版本
-                pipelineResourceVersionDao.deleteByVersion(transactionContext, projectId, pipelineId, version)
-//                pipelineSettingVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
-            }
+            // #8161 软删除数据，前端无法查询到该版本
+            pipelineResourceVersionDao.deleteByVersion(dslContext, projectId, pipelineId, version)
         } finally {
             pipelineVersionLock.unlock()
         }
@@ -190,13 +172,12 @@ class PipelineRepositoryVersionService(
         )
     }
 
-    fun listPipelineVersion(
+    fun listPipelineReleaseVersion(
         pipelineInfo: PipelineInfo?,
         projectId: String,
         pipelineId: String,
         offset: Int,
         limit: Int,
-        includeDraft: Boolean?,
         excludeVersion: Int?,
         versionName: String?,
         creator: String?,
@@ -210,27 +191,12 @@ class PipelineRepositoryVersionService(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            includeDraft = includeDraft,
+            includeDraft = false,
             versionName = versionName,
             creator = creator,
             description = description
         )
-        // 草稿单独提出来放在第一页，其他版本后插入结果
-        val result = mutableListOf<PipelineVersionSimple>()
-        if (includeDraft != false && offset == 0) {
-            pipelineResourceVersionDao.getDraftVersionResource(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )?.toSimple()?.apply {
-                baseVersionName = baseVersion?.let {
-                    pipelineResourceVersionDao.getPipelineVersionSimple(
-                        dslContext, projectId, pipelineId, it
-                    )?.versionName
-                }
-            }?.let { result.add(it) }
-        }
-        val others = pipelineResourceVersionDao.listPipelineVersion(
+        val result = pipelineResourceVersionDao.listPipelineVersion(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -242,8 +208,7 @@ class PipelineRepositoryVersionService(
             excludeVersion = excludeVersion,
             offset = offset,
             limit = limit
-        )
-        result.addAll(others)
+        ).toMutableList()
 
         // #8161 当过滤草稿时查到空结果是正常的，只在不过滤草稿时兼容老数据的版本表无记录
         val noSearch = versionName.isNullOrBlank() && creator.isNullOrBlank() && description.isNullOrBlank()
