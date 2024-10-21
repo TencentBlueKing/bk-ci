@@ -116,8 +116,8 @@
                     // 接入方版本号
                     version: '1.0.0'
                 },
-                env: ReleaseChannel.INSIDER,
-                // env: ReleaseChannel.PRODUCTION,
+                // env: ReleaseChannel.INSIDER,
+                env: ReleaseChannel.PRODUCTION,
                 forceAuthentication: false
                 // forceAuthentication: false,
                 // authenticatedSession: {
