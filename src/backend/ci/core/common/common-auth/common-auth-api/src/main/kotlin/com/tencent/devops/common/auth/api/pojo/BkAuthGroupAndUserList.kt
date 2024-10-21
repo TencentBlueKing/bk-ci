@@ -28,6 +28,7 @@
 package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.bk.sdk.iam.dto.manager.RoleGroupMemberInfo
 
 data class BkAuthGroupAndUserList(
     @JsonProperty("display_name")
@@ -38,6 +39,8 @@ data class BkAuthGroupAndUserList(
     val roleName: String,
     @JsonProperty("user_id_list")
     val userIdList: List<String>,
+    @JsonProperty("dept_info_list")
+    val deptInfoList: List<RoleGroupMemberInfo>? = null,
     @JsonProperty("type")
     val type: String
 )

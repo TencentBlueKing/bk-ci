@@ -23,8 +23,8 @@ import com.tencent.devops.remotedev.pojo.job.PipelineParam
 import org.jooq.DSLContext
 import org.jooq.JSON
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.Base64
@@ -36,7 +36,7 @@ class RemoteDevJobActionService @Autowired constructor(
     private val dslContext: DSLContext,
     private val remoteDevJobExecRecordDao: RemoteDevJobExecRecordDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) {
 
     // 一键通知云桌面
@@ -57,7 +57,7 @@ class RemoteDevJobActionService @Autowired constructor(
     }
 
     fun startPipeline(projectId: String, id: Long, param: PipelineParam) {
-        AsyncExecute.dispatch(rabbitTemplate, AsyncJobPipeline(projectId, id, param))
+        AsyncExecute.dispatch(streamBridge, AsyncJobPipeline(projectId, id, param))
     }
 
     // 执行流水线任务，异步

@@ -27,21 +27,27 @@
 
 package com.tencent.devops.remotedev.resources.user
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
-import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeData
-import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeResp
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.pojo.ClientTips
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeData
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeResp
 import com.tencent.devops.remotedev.pojo.common.QuotaType
-import com.tencent.devops.remotedev.service.clientupgrade.ClientUpgradeService
+import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.service.ClientTipsService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WatermarkService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.clientupgrade.ClientUpgradeService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -53,13 +59,15 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("ALL")
 class UserRemoteDevResourceImpl @Autowired constructor(
     private val remoteDevSettingService: RemoteDevSettingService,
+    private val workspaceService: WorkspaceService,
     private val watermarkService: WatermarkService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val permissionService: PermissionService,
     private val expertSupportService: ExpertSupportService,
     private val txcService: TxcService,
     private val redisCache: RedisCacheService,
-    private val clientUpgradeService: ClientUpgradeService
+    private val clientUpgradeService: ClientUpgradeService,
+    private val clientTipsService: ClientTipsService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -143,6 +151,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(clientUpgradeService.checkUpgrade(userId, data))
     }
 
+    override fun clientTips(userId: String, projectId: String?): Result<List<ClientTips>> {
+        return Result(clientTipsService.fetchTips(projectId = projectId, userId = userId))
+    }
+
     override fun getTxcToken(userId: String, openId: String, nickName: String, avatar: String): Result<String> {
         return Result(
             txcService.getTxcToken(
@@ -151,5 +163,23 @@ class UserRemoteDevResourceImpl @Autowired constructor(
                 avatar = avatar
             )
         )
+    }
+
+    override fun getProjectWorkspace(userId: String, cdsToken: String): Result<WeSecProjectWorkspace?> {
+        val cds = permissionService.checkCdsToken(cdsToken)
+        val res = workspaceService.getWorkspaceList4WeSec(
+            projectId = null,
+            ip = cds.hostName.substringAfter('.'),
+            hasDepartmentsInfo = true,
+            hasCurrentUser = true
+        )
+        // 理论上一个IP最多只会有一条，如果查出了两条记录可能会出现越界数据，不能返回，需要抛错
+        if (res.size > 1) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.REMOTEDEV_CLIENT_IP_DUPLICATE_ERROR.errorCode,
+                params = arrayOf(cds.hostName.substringAfter('.'))
+            )
+        }
+        return Result(res.randomOrNull())
     }
 }

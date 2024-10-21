@@ -35,6 +35,8 @@ data class ProjectGroupAndUsers(
     val groupName: String,
     @get:Schema(title = "组ID")
     val groupId: String,
+    @get:Schema(title = "组数字ID")
+    val groupRoleId: Int,
     @get:Schema(title = "组员")
     val users: Set<String>
 )

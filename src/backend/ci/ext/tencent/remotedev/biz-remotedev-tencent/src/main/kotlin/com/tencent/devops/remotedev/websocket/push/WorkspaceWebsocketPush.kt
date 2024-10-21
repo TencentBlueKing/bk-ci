@@ -29,8 +29,8 @@ package com.tencent.devops.remotedev.websocket.push
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
 import com.tencent.devops.common.websocket.enum.NotityLevel
@@ -42,7 +42,7 @@ import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import io.swagger.v3.oas.annotations.media.Schema
 import org.slf4j.LoggerFactory
 
-@Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
+@Event(StreamBinding.WEBSOCKET_TMP_FANOUT)
 data class WorkspaceWebsocketPush(
     val type: WebSocketActionType,
     @get:Schema(title = "行为是否成功")

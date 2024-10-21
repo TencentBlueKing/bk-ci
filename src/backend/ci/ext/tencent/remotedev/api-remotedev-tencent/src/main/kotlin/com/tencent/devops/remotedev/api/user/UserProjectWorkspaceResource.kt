@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.api.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
@@ -71,9 +70,6 @@ interface UserProjectWorkspaceResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "bkTicket", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
-        bkTicket: String,
         @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -358,6 +354,12 @@ interface UserProjectWorkspaceResource {
         page: Int?,
         @Parameter(description = "每页数据条数，默认20", required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @Parameter(description = "开始搜索视频时间", required = true)
+        @QueryParam("startTime")
+        startTime: Long,
+        @Parameter(description = "结束搜索视频时间", required = true)
+        @QueryParam("stopTime")
+        stopTime: Long
     ): Result<Page<WorkspaceRecordMetadata>>
 }
