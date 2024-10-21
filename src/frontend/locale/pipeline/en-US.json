@@ -459,7 +459,9 @@
       "desc": "You do not have permission to view the pipeline template, please apply for permission",
       "apply": "Apply"
     },
-    "editStoreTemplateTips": "The development store template does not support editing"
+    "editStoreTemplateTips": "The development store template does not support editing",
+    "lastModifiedDate": "Last Modified on",
+    "lastModifiedBy": "Updater"
   },
   "newlist": {
     "exportYamlTip": "PreCI is a set of solutions provided by Blue Shield DevOps for developers' pre-CI R&D activities, which can detect problems as early as possible before submitting code and improve code quality. Including IDE plug-ins and command line tools.",
@@ -1065,6 +1067,7 @@
     "bool": "Boolean",
     "enum": "Radio",
     "multiple": "Checkbox",
+    "checkbox": "Checkbox Confirmation Box",
     "svntag": "SVN branch or TAG",
     "gitref": "GIT branch or TAG",
     "codelib": "Code repository",
@@ -1141,7 +1144,7 @@
     "mutualTimeout": "Mutex Queue Timeout  (In minutes)",
     "mutualTimeoutPlaceholder": "Positive integer between 1-10080, support for referencing pipeline variables",
     "queueLabel": " Mutex Queue Length",
-    "queuePlaceholder": " Please fill in an integer between 1 and 10",
+    "queuePlaceholder": " Please fill in an integer between 1 and 50",
     "noEnv": "Agentless",
     "afterPreStageSuccess": "Run when pre-stage done",
     "manualRunStage": "Manual",

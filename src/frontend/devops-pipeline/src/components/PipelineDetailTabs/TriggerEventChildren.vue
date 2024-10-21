@@ -36,6 +36,16 @@
                 theme="primary"
                 v-bk-tooltips="$t('reTriggerTips')"
                 @click="triggerEvent(event)"
+                v-perm="{
+                    hasPermission: canExecute,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
             >
                 {{ $t('reTrigger') }}
             </bk-button>
@@ -43,9 +53,12 @@
     </ul>
 </template>
 <script>
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import { statusColorMap } from '@/utils/pipelineStatus'
     import { convertTime } from '@/utils/util'
-    import { mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     export default {
         props: {
             events: {
@@ -54,8 +67,21 @@
             }
         },
         computed: {
+            ...mapState('atom', ['pipelineInfo']),
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
+            },
             statusColorMap () {
                 return statusColorMap
+            },
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
+            canExecute () {
+                return this.pipelineInfo?.permissions?.canExecute ?? true
             }
         },
         inject: ['updateList'],

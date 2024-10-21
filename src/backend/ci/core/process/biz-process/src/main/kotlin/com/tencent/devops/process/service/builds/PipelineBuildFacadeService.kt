@@ -433,11 +433,6 @@ class PipelineBuildFacadeService(
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
-            if (!readyToBuildPipelineInfo.canManualStartup && checkManualStartup == false) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
-                )
-            }
 
             val model = buildDetailService.getBuildModel(projectId, buildId) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
