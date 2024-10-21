@@ -627,6 +627,7 @@ class PipelineContainerService @Autowired constructor(
                                 startTime = null
                                 endTime = null
                                 executeCount = context.executeCount
+                                controlOption.mutexGroup?.runtimeMutexGroup = null // 重试时重置互斥组名称，以便变量更改时能生效
                                 updateExistsContainer.add(Pair(this, container))
                             }
                             return@findHistoryContainer
