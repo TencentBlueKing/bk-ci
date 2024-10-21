@@ -262,5 +262,7 @@
     "未来 X 小时": "Next {0} Hours",
     "未来 X 天": "Next {0} Days",
     "过去 X 小时": "Last {0} Hours",
-    "过去 X 天": "Last {0} Days"
+    "过去 X 天": "Last {0} Days",
+    "所属服务": "Associated Service",
+    "资源": "Resource"
 }

@@ -28,10 +28,10 @@
 package com.tencent.devops.common.event.pojo.pipeline
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(MQ.EXCHANGE_PIPELINE_EXTENDS_FANOUT, MQ.ROUTE_PIPELINE_EXTENDS_MODEL)
+@Event(StreamBinding.PIPELINE_EXTENDS_FANOUT)
 data class PipelineModelAnalysisEvent(
     override val source: String,
     override val projectId: String,

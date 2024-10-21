@@ -26,15 +26,21 @@
  */
 package com.tencent.devops.notify.model
 
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.notify.constant.NotifyMQ.NOTIFY_EMAIL
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 
-class EmailNotifyMessageWithOperation : EmailNotifyMessage() {
+@Event(NOTIFY_EMAIL)
+class EmailNotifyMessageWithOperation(
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 0
+) : EmailNotifyMessage(delayMills, retryTime) {
+
     var id: String? = null
-    var retryCount: Int = 0
     var lastError: String? = null
 
     override fun toString(): String {
         return String.format("id(%s), retryCount(%s), message(%s) ",
-            id, retryCount, super.toString())
+            id, retryTime, super.toString())
     }
 }

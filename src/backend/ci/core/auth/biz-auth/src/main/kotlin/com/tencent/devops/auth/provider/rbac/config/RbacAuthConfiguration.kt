@@ -42,18 +42,20 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
+import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
+import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupApplyDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
+import com.tencent.devops.auth.dao.AuthResourceGroupPermissionDao
 import com.tencent.devops.auth.dao.AuthResourceSyncDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
 import com.tencent.devops.auth.provider.rbac.service.ItsmService
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
-import com.tencent.devops.auth.provider.rbac.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
 import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionApplyService
@@ -63,6 +65,8 @@ import com.tencent.devops.auth.provider.rbac.service.RbacPermissionExtService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionItsmCallbackService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionProjectService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceCallbackService
+import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupAndMemberFacadeServiceImpl
+import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupPermissionService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupSyncService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceMemberService
@@ -80,6 +84,7 @@ import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResultServic
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateV0PolicyService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateV3PolicyService
 import com.tencent.devops.auth.provider.rbac.service.migrate.RbacPermissionMigrateService
+import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.AuthVerifyRecordService
@@ -88,6 +93,9 @@ import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
@@ -144,7 +152,6 @@ class RbacAuthConfiguration {
     ) = AuthHelper(tokenService, iamV2PolicyService, iamConfiguration)
 
     @Bean
-    @SuppressWarnings("LongParameterList")
     fun permissionResourceService(
         authResourceService: AuthResourceService,
         permissionGradeManagerService: PermissionGradeManagerService,
@@ -166,31 +173,80 @@ class RbacAuthConfiguration {
     )
 
     @Bean
-    @SuppressWarnings("LongParameterList")
     fun permissionResourceGroupService(
         iamV2ManagerService: V2ManagerService,
         authResourceService: AuthResourceService,
-        permissionSubsetManagerService: PermissionSubsetManagerService,
-        permissionGroupPoliciesService: PermissionGroupPoliciesService,
+        permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
         authResourceGroupDao: AuthResourceGroupDao,
         dslContext: DSLContext,
-        v2ManagerService: V2ManagerService,
-        rbacCacheService: RbacCacheService,
-        monitorSpaceService: AuthMonitorSpaceService,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-        authResourceGroupMemberDao: AuthResourceGroupMemberDao
+        authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+        authResourceDao: AuthResourceDao,
+        resourceGroupSyncService: PermissionResourceGroupSyncService
     ) = RbacPermissionResourceGroupService(
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
-        permissionSubsetManagerService = permissionSubsetManagerService,
-        permissionGroupPoliciesService = permissionGroupPoliciesService,
+        permissionResourceGroupPermissionService = permissionResourceGroupPermissionService,
         authResourceGroupDao = authResourceGroupDao,
         dslContext = dslContext,
+        authResourceGroupConfigDao = authResourceGroupConfigDao,
+        authResourceGroupMemberDao = authResourceGroupMemberDao,
+        authResourceDao = authResourceDao,
+        resourceGroupSyncService = resourceGroupSyncService
+    )
+
+    @Bean
+    fun permissionResourceGroupAndMemberFacadeService(
+        permissionResourceGroupService: PermissionResourceGroupService,
+        groupPermissionService: PermissionResourceGroupPermissionService,
+        permissionResourceMemberService: PermissionResourceMemberService,
+        authResourceGroupDao: AuthResourceGroupDao,
+        authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+        dslContext: DSLContext,
+        deptService: DeptService,
+        iamV2ManagerService: V2ManagerService,
+        rbacCacheService: RbacCacheService
+    ) = RbacPermissionResourceGroupAndMemberFacadeServiceImpl(
+        permissionResourceGroupService = permissionResourceGroupService,
+        groupPermissionService = groupPermissionService,
+        permissionResourceMemberService = permissionResourceMemberService,
+        authResourceGroupDao = authResourceGroupDao,
+        authResourceGroupMemberDao = authResourceGroupMemberDao,
+        dslContext = dslContext,
+        deptService = deptService,
+        iamV2ManagerService = iamV2ManagerService,
+        rbacCacheService = rbacCacheService
+    )
+
+    @Bean
+    fun permissionResourceGroupPermissionService(
+        v2ManagerService: V2ManagerService,
+        rbacCacheService: RbacCacheService,
+        monitorSpaceService: AuthMonitorSpaceService,
+        authResourceGroupDao: AuthResourceGroupDao,
+        dslContext: DSLContext,
+        resourceGroupPermissionDao: AuthResourceGroupPermissionDao,
+        converter: AuthResourceCodeConverter,
+        client: Client,
+        iamV2ManagerService: V2ManagerService,
+        authAuthorizationScopesService: AuthAuthorizationScopesService,
+        authActionDao: AuthActionDao,
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+        objectMapper: ObjectMapper
+    ) = RbacPermissionResourceGroupPermissionService(
         v2ManagerService = v2ManagerService,
         rbacCacheService = rbacCacheService,
         monitorSpaceService = monitorSpaceService,
+        authResourceGroupDao = authResourceGroupDao,
+        dslContext = dslContext,
+        resourceGroupPermissionDao = resourceGroupPermissionDao,
+        converter = converter,
+        client = client,
+        iamV2ManagerService = iamV2ManagerService,
+        authAuthorizationScopesService = authAuthorizationScopesService,
+        authActionDao = authActionDao,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
-        authResourceGroupMemberDao = authResourceGroupMemberDao
+        objectMapper = objectMapper
     )
 
     @Bean
@@ -211,7 +267,6 @@ class RbacAuthConfiguration {
         authResourceGroupMemberDao = authResourceGroupMemberDao,
         dslContext = dslContext,
         deptService = deptService,
-        rbacCacheService = rbacCacheService,
         permissionAuthorizationService = permissionAuthorizationService,
         syncIamGroupMemberService = syncIamGroupMemberService
     )
@@ -260,7 +315,6 @@ class RbacAuthConfiguration {
 
     @Bean
     @Primary
-    @Suppress("LongParameterList")
     fun rbacPermissionProjectService(
         authHelper: AuthHelper,
         authResourceService: AuthResourceService,
@@ -293,7 +347,6 @@ class RbacAuthConfiguration {
 
     @Bean
     @Primary
-    @Suppress("LongParameterList")
     fun rbacPermissionApplyService(
         dslContext: DSLContext,
         v2ManagerService: V2ManagerService,
@@ -351,7 +404,7 @@ class RbacAuthConfiguration {
         migrateCreatorFixService: MigrateCreatorFixService,
         authResourceService: AuthResourceService,
         permissionGradeManagerService: PermissionGradeManagerService,
-        permissionGroupPoliciesService: PermissionGroupPoliciesService,
+        permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
         migrateResourceCodeConverter: MigrateResourceCodeConverter,
         tokenApi: AuthTokenApi,
         projectAuthServiceCode: ProjectAuthServiceCode,
@@ -366,7 +419,7 @@ class RbacAuthConfiguration {
         migrateCreatorFixService = migrateCreatorFixService,
         authResourceService = authResourceService,
         permissionGradeManagerService = permissionGradeManagerService,
-        permissionGroupPoliciesService = permissionGroupPoliciesService,
+        permissionResourceGroupPermissionService = permissionResourceGroupPermissionService,
         migrateResourceCodeConverter = migrateResourceCodeConverter,
         tokenApi = tokenApi,
         projectAuthServiceCode = projectAuthServiceCode,
@@ -433,7 +486,7 @@ class RbacAuthConfiguration {
         rbacCacheService: RbacCacheService,
         authMigrationDao: AuthMigrationDao,
         deptService: DeptService,
-        permissionGroupPoliciesService: PermissionGroupPoliciesService,
+        permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
         permissionResourceMemberService: PermissionResourceMemberService
     ) = MigrateV3PolicyService(
         v2ManagerService = v2ManagerService,
@@ -448,7 +501,7 @@ class RbacAuthConfiguration {
         rbacCacheService = rbacCacheService,
         authMigrationDao = authMigrationDao,
         deptService = deptService,
-        permissionGroupPoliciesService = permissionGroupPoliciesService,
+        permissionResourceGroupPermissionService = permissionResourceGroupPermissionService,
         permissionResourceMemberService = permissionResourceMemberService
     )
 
@@ -466,7 +519,7 @@ class RbacAuthConfiguration {
         rbacCacheService: RbacCacheService,
         authMigrationDao: AuthMigrationDao,
         deptService: DeptService,
-        permissionGroupPoliciesService: PermissionGroupPoliciesService,
+        permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
         permissionResourceMemberService: PermissionResourceMemberService
     ) = MigrateV0PolicyService(
         v2ManagerService = v2ManagerService,
@@ -481,7 +534,7 @@ class RbacAuthConfiguration {
         rbacCacheService = rbacCacheService,
         authMigrationDao = authMigrationDao,
         deptService = deptService,
-        permissionGroupPoliciesService = permissionGroupPoliciesService,
+        permissionResourceGroupPermissionService = permissionResourceGroupPermissionService,
         permissionResourceMemberService = permissionResourceMemberService
     )
 
@@ -530,17 +583,18 @@ class RbacAuthConfiguration {
 
     @Bean
     fun migratePermissionHandoverService(
-        v2ManagerService: V2ManagerService,
         permissionResourceMemberService: PermissionResourceMemberService,
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceService: AuthResourceService,
-        dslContext: DSLContext
+        authResourceGroupMemberService: PermissionResourceMemberService,
+        dslContext: DSLContext,
+        resourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService
     ) = MigratePermissionHandoverService(
-        v2ManagerService = v2ManagerService,
         permissionResourceMemberService = permissionResourceMemberService,
         authResourceGroupDao = authResourceGroupDao,
         authResourceService = authResourceService,
-        dslContext = dslContext
+        dslContext = dslContext,
+        resourceGroupAndMemberFacadeService = resourceGroupAndMemberFacadeService
     )
 
     @Bean
@@ -582,7 +636,8 @@ class RbacAuthConfiguration {
         rbacCacheService: RbacCacheService,
         redisOperation: RedisOperation,
         authResourceSyncDao: AuthResourceSyncDao,
-        authResourceGroupApplyDao: AuthResourceGroupApplyDao
+        authResourceGroupApplyDao: AuthResourceGroupApplyDao,
+        resourceGroupPermissionService: PermissionResourceGroupPermissionService
     ) = RbacPermissionResourceGroupSyncService(
         client = client,
         dslContext = dslContext,
@@ -593,6 +648,7 @@ class RbacAuthConfiguration {
         rbacCacheService = rbacCacheService,
         redisOperation = redisOperation,
         authResourceSyncDao = authResourceSyncDao,
-        authResourceGroupApplyDao = authResourceGroupApplyDao
+        authResourceGroupApplyDao = authResourceGroupApplyDao,
+        resourceGroupPermissionService = resourceGroupPermissionService
     )
 }

@@ -379,21 +379,46 @@ class StoreProjectServiceImpl @Autowired constructor(
             )!!
             // 更新组件关联初始化项目
             storeProjectRelDao.updateStoreInitProject(context, userId, storeProjectInfo)
-            storeProjectRelDao.deleteUserStoreTestProject(
+            val testProjectInfo = storeProjectRelDao.getUserTestProjectRelByStoreCode(
                 dslContext = context,
-                userId = initProjectInfo.creator,
-                storeType = storeProjectInfo.storeType,
                 storeCode = storeProjectInfo.storeCode,
-                storeProjectType = StoreProjectTypeEnum.TEST
-            )
-            storeProjectRelDao.addStoreProjectRel(
-                dslContext = context,
-                userId = userId,
                 storeType = storeProjectInfo.storeType.type.toByte(),
-                storeCode = storeProjectInfo.storeCode,
                 projectCode = storeProjectInfo.projectId,
-                type = StoreProjectTypeEnum.TEST.type.toByte()
+                userId = storeProjectInfo.userId
             )
+            if (testProjectInfo == null) {
+                storeProjectRelDao.deleteUserStoreTestProject(
+                    dslContext = context,
+                    userId = storeProjectInfo.userId,
+                    storeType = storeProjectInfo.storeType,
+                    storeCode = storeProjectInfo.storeCode,
+                    storeProjectType = StoreProjectTypeEnum.TEST
+                )
+                storeProjectRelDao.addStoreProjectRel(
+                    dslContext = context,
+                    userId = storeProjectInfo.userId,
+                    storeType = storeProjectInfo.storeType.type.toByte(),
+                    storeCode = storeProjectInfo.storeCode,
+                    projectCode = storeProjectInfo.projectId,
+                    type = StoreProjectTypeEnum.TEST.type.toByte()
+                )
+            }
+            val storePipelineRel = storePipelineRelDao.getStorePipelineRel(
+                dslContext = context,
+                storeCode = storeProjectInfo.storeCode,
+                storeType = storeProjectInfo.storeType
+            )
+            storePipelineRel?.let {
+                storePipelineRelDao.deleteStorePipelineRelById(context, storePipelineRel.id)
+                storePipelineBuildRelDao.deleteStorePipelineBuildRelByPipelineId(context, storePipelineRel.pipelineId)
+                client.get(ServicePipelineResource::class).delete(
+                    userId = userId,
+                    pipelineId = it.pipelineId,
+                    channelCode = ChannelCode.AM,
+                    projectId = initProjectInfo.projectCode,
+                    checkFlag = false
+                )
+            }
             val storeRepoHashId =
                 storeCommonService.getStoreRepoHashIdByCode(storeProjectInfo.storeCode, storeProjectInfo.storeType)
             storeRepoHashId?.let {

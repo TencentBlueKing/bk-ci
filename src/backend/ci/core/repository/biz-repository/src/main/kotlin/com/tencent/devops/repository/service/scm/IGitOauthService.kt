@@ -54,4 +54,6 @@ interface IGitOauthService {
     fun getAccessToken(userId: String): GitToken?
     fun saveAccessToken(userId: String, tGitToken: GitToken): Int
     fun deleteToken(userId: String): Int
+
+    fun getOauthUrl(userId: String, redirectUrl: String): String
 }

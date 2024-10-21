@@ -26,14 +26,20 @@
  */
 package com.tencent.devops.notify.pojo
 
+import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
+import com.tencent.devops.notify.constant.NotifyMQ.NOTIFY_EMAIL
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "email电子邮件消息类型")
-open class EmailNotifyMessage : BaseMessage() {
+@Event(destination = NOTIFY_EMAIL)
+open class EmailNotifyMessage(
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 0
+) : BaseMessage(delayMills, retryTime) {
 
     @get:Schema(title = "邮件格式", allowableValues = ["0", "1"], type = "int")
     var format: EnumEmailFormat = EnumEmailFormat.PLAIN_TEXT
