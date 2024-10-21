@@ -338,6 +338,27 @@ export default {
   removeMemberFromProjectCheck (projectId: string, params: any) {
     return http.post(`${IAM_PERFIX}/member/${projectId}/removeMemberFromProjectCheck`, params);
   },
+  /**
+   * 获取资源类型列表
+   */
+  getListResourceTypes () {
+    return http.get(`${USER_PERFIX}/auth/apply/listResourceTypes`);
+  },
+  /**
+   * 获取资源列表
+   */
+  getListResource (projectId: string, resourceType: string, params: any) {
+    const query = new URLSearchParams({
+      ...params,
+    }).toString();
+    return http.get(`${USER_PERFIX}/auth/resource/${projectId}/${resourceType}/listResources?${query}`);
+  },
+  /**
+   * 展示动作列表
+   */
+  getListActions (resourceType: string) {
+    return http.get(`${USER_PERFIX}/auth/apply/listActions?resourceType=${resourceType}`);
+  },
 
   syncGroupPermissions (projectId: string, groupId: any) {
     return http.put(`${IAM_PERFIX}/group/sync/${projectId}/${groupId}/syncGroupPermissions`);

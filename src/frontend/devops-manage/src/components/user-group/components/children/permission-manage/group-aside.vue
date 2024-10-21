@@ -1,5 +1,5 @@
 <template>
-  <article class="group-aside">
+  <article :class="['group-aside', {'group-aside-height': showSelectProject}]">
     <template v-if="showSelectProject">
       <div class="select-project">
         <p class="title">{{ t('选择项目') }}</p>
@@ -37,7 +37,7 @@
       </div>
       <div class="line-split" v-if="!isNotProject" />
     </template>
-    <bk-loading v-if="dataLoaded" :loading="fetchGroupLoading">
+    <bk-loading v-if="dataLoaded" :loading="fetchGroupLoading" class='saide-content'>
       <scroll-load-list
         class="group-list"
         ref="loadList"
@@ -562,6 +562,9 @@ export default {
   border-right: 1px solid #dde0e6;
   padding-top: 10px;
 }
+.group-aside-height {
+  height: calc(100% - 89px);
+}
 .select-project {
   padding: 10px 24px 0;
   .title {
@@ -569,6 +572,10 @@ export default {
     font-weight: 700;
     margin-bottom: 5px;
   }
+}
+.saide-content {
+  height: 100%;
+  overflow-y: auto;
 }
 .group-list {
   max-height: calc(100% - 70px);
