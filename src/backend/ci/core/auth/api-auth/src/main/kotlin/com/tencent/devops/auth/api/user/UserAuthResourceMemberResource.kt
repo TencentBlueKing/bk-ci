@@ -202,6 +202,15 @@ interface UserAuthResourceMemberResource {
         minExpiredAt: Long?,
         @QueryParam("maxExpiredAt")
         @Parameter(description = "最大过期时间")
-        maxExpiredAt: Long?
+        maxExpiredAt: Long?,
+        @QueryParam("relatedResourceType")
+        @Parameter(description = "资源类型")
+        relatedResourceType: String?,
+        @QueryParam("relatedResourceCode")
+        @Parameter(description = "资源ID")
+        relatedResourceCode: String?,
+        @QueryParam("action")
+        @Parameter(description = "操作")
+        action: String?
     ): Result<List<MemberGroupCountWithPermissionsVo>>
 }

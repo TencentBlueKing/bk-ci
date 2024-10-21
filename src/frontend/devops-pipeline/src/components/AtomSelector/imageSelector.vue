@@ -208,7 +208,7 @@
 
         watch: {
             buildResourceType (val) {
-                if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(val)) {
+                if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD', 'THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(val)) {
                     this.isLoading = true
                     this.searchKey = ''
                     this.clearData()
@@ -269,12 +269,15 @@
                 this.isLoading = true
                 Promise.all([this.getApiData(tab, false), this.getApiData(tab, true)]).finally(() => (this.isLoading = false))
             },
-
+            getBuildResourceType () {
+                if (['THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(this.buildResourceType)) return 'PUBLIC_DEVCLOUD'
+                return this.buildResourceType
+            },
             getApiData (tab, recommendFlag) {
                 this.isLoadingMore = true
                 const postData = Object.assign({
                     projectCode: this.$route.params.projectId,
-                    agentType: this.buildResourceType,
+                    agentType: this.getBuildResourceType(),
                     recommendFlag
                 }, tab)
 

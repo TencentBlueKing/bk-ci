@@ -173,7 +173,9 @@ class UserPTemplateResourceImpl @Autowired constructor(
         setting: PipelineSetting
     ): Result<Boolean> {
         if (setting.runLockType == PipelineRunLockType.SINGLE ||
-            setting.runLockType == PipelineRunLockType.SINGLE_LOCK
+            setting.runLockType == PipelineRunLockType.SINGLE_LOCK ||
+            setting.runLockType == PipelineRunLockType.GROUP_LOCK ||
+            setting.runLockType == PipelineRunLockType.MULTIPLE
         ) {
             if (setting.waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
                 setting.waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
