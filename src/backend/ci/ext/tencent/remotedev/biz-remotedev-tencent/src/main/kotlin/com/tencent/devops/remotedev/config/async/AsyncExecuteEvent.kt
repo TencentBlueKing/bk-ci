@@ -1,16 +1,17 @@
 package com.tencent.devops.remotedev.config.async
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.remotedev.MQ
+import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.remotedev.RemoteDevMQ
 import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.MDC
 
-@Event(MQ.EXCHANGE_REMOTE_DEV_ASYNC_EXECUTE, MQ.ROUTE_REMOTE_DEV_ASYNC_EXECUTE)
+@Event(RemoteDevMQ.REMOTE_DEV_ASYNC_EXECUTE)
 data class AsyncExecuteEvent(
     val traceId: String? = MDC.get(TraceTag.BIZID),
     val eventStr: String,
     val type: AsyncExecuteEventType
-)
+) : IEvent()
 
 enum class AsyncExecuteEventType {
     ASYNC_PIPELINE,

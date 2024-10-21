@@ -29,14 +29,14 @@
 package com.tencent.devops.auth.provider.rbac.listener
 
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class SyncGroupAndMemberListener @Autowired constructor(
     private val permissionResourceGroupSyncService: PermissionResourceGroupSyncService
-) : Listener<ProjectEnableStatusBroadCastEvent> {
+) : EventListener<ProjectEnableStatusBroadCastEvent> {
 
     override fun execute(event: ProjectEnableStatusBroadCastEvent) {
         logger.info("sync group and member when enabled project $event")

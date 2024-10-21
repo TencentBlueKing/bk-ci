@@ -26,8 +26,11 @@
  */
 package com.tencent.devops.notify.model
 
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.notify.constant.NotifyMQ.NOTIFY_RTX
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 
+@Event(NOTIFY_RTX)
 class RtxNotifyMessageWithOperation : RtxNotifyMessage() {
     var id: String? = null
     var batchId: String? = null

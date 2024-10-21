@@ -27,7 +27,7 @@
 
 package com.tencent.devops.remotedev.listener
 
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
@@ -50,7 +50,7 @@ class RemoteDevUpdateListener @Autowired constructor(
     private val stopWorkspaceHandler: StopWorkspaceHandler,
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
     private val rebuildWorkspaceHandler: RebuildWorkspaceHandler
-) : Listener<RemoteDevUpdateEvent> {
+) : EventListener<RemoteDevUpdateEvent> {
 
     @Suppress("ComplexMethod")
     override fun execute(event: RemoteDevUpdateEvent) {

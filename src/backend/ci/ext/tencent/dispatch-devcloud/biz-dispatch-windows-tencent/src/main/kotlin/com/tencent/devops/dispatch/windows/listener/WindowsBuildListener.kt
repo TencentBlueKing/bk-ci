@@ -4,6 +4,8 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
@@ -59,7 +61,15 @@ class WindowsBuildListener @Autowired constructor(
         return JobQuotaVmType.WINDOWS_DEVCLOUD
     }
 
+    override fun consumerFilter(dispatchType: DispatchType): Boolean {
+        return dispatchType is WindowsDispatchType
+    }
+
     override fun onStartup(dispatchMessage: DispatchMessage) {
+        if (dispatchMessage.event.dispatchType !is WindowsDispatchType) {
+            return
+        }
+
         logger.info("Windows Dispatch on start up - ($dispatchMessage)")
         val projectId = dispatchMessage.event.projectId
         val creator = dispatchMessage.event.userId

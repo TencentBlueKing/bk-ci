@@ -216,7 +216,8 @@ enum class PoolType {
                         image = pool.container ?: "",
                         credential = null,
                         options = null,
-                        imagePullPolicy = null
+                        imagePullPolicy = null,
+                        storeImage = null
                     ),
                     reusedInfo = null
                 )
@@ -230,7 +231,8 @@ enum class PoolType {
                         image = pool.container ?: "",
                         credential = null,
                         options = null,
-                        imagePullPolicy = null
+                        imagePullPolicy = null,
+                        storeImage = null
                     ),
                     reusedInfo = null
                 )
@@ -243,7 +245,8 @@ enum class PoolType {
                         image = pool.container ?: "",
                         credential = null,
                         options = null,
-                        imagePullPolicy = null
+                        imagePullPolicy = null,
+                        storeImage = null
                     ),
                     reusedInfo = null
                 )
@@ -256,7 +259,8 @@ enum class PoolType {
                         image = pool.container ?: "",
                         credential = null,
                         options = null,
-                        imagePullPolicy = null
+                        imagePullPolicy = null,
+                        storeImage = null
                     ),
                     reusedInfo = null
                 )

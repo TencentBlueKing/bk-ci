@@ -27,10 +27,10 @@
 
 package com.tencent.devops.process.listener
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -42,14 +42,15 @@ import org.springframework.stereotype.Component
  */
 @Component
 class MeasurePipelineBuildFinishListener @Autowired constructor(
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
+    private val pipelineRuntimeService: PipelineRuntimeService
+) : EventListener<PipelineBuildFinishBroadCastEvent> {
 
     @Value("\${measure.execute:#{null}}")
     private val measureExecute: String? = null
 
-    override fun run(event: PipelineBuildFinishBroadCastEvent) {
+    private val logger = LoggerFactory.getLogger(MeasurePipelineBuildFinishListener::class.java)
+
+    override fun execute(event: PipelineBuildFinishBroadCastEvent) {
         // 是否触发开关, gitci,auto集群无需次listener
         if (!measureExecute.isNullOrEmpty() && measureExecute == "false") {
             return

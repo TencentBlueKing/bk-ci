@@ -27,14 +27,8 @@
 
 package com.tencent.devops.stream.trigger.mq.streamRequest
 
-import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.StreamTriggerRequestService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.core.ExchangeTypes
-import org.springframework.amqp.rabbit.annotation.Exchange
-import org.springframework.amqp.rabbit.annotation.Queue
-import org.springframework.amqp.rabbit.annotation.QueueBinding
-import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -42,22 +36,7 @@ import org.springframework.stereotype.Service
 class StreamRequestListener @Autowired constructor(
     private val steamRequestService: StreamTriggerRequestService
 ) {
-    @RabbitListener(
-        bindings = [
-            (
-                QueueBinding(
-                    key = [MQ.ROUTE_STREAM_REQUEST_EVENT],
-                    value = Queue(value = MQ.QUEUE_STREAM_REQUEST_EVENT, durable = "true"),
-                    exchange = Exchange(
-                        value = MQ.EXCHANGE_STREAM_REQUEST_EVENT,
-                        durable = "true",
-                        delayed = "true",
-                        type = ExchangeTypes.DIRECT
-                    )
-                )
-                )
-        ]
-    )
+
     fun listenStreamRequestEvent(streamRequestEvent: StreamRequestEvent) {
         try {
             steamRequestService.externalCodeGitBuild(

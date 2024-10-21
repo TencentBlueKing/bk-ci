@@ -39,7 +39,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
@@ -83,7 +83,7 @@ class ExperienceDownloadService @Autowired constructor(
     private val experienceBaseService: ExperienceBaseService,
     private val experiencePushService: ExperiencePushService,
     private val client: Client,
-    private val measureEventDispatcher: MeasureEventDispatcher
+    private val measureEventDispatcher: SampleEventDispatcher
 ) {
     fun checkVersion(userId: String, platform: Int, params: List<CheckVersionParam>): List<CheckVersionVO> {
         val experienceRecordIds = if (params.isEmpty()) {

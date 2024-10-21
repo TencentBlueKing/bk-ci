@@ -54,7 +54,7 @@ class DispatchQueueControl @Autowired constructor(
 
     internal fun flushDispatchQueue(buildId: String, stageId: String) {
         // 构建启动和结束时，分别清空一次队列
-        LOG.info("ENGINE|$buildId|FLUSH_CONTAINER_QUEUE")
+        LOG.info("ENGINE|$buildId|s($stageId)|FLUSH_CONTAINER_QUEUE")
         redisOperation.delete(getDispatchQueueKey(buildId, stageId))
     }
 

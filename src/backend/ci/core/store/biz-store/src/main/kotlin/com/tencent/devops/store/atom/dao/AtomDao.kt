@@ -49,6 +49,7 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
@@ -87,7 +88,8 @@ import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.utils.VersionUtils
+import java.net.URLDecoder
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -98,8 +100,6 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.net.URLDecoder
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -1115,9 +1115,16 @@ class AtomDao : AtomBaseDao() {
         dslContext: DSLContext,
         projectCode: String,
         classifyCode: String? = null,
-        name: String? = null
+        name: String? = null,
+        queryDefaultFlag: Boolean = false
     ): Int {
-        val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, name, dslContext)
+        val (ta, tspr, conditions) = getInstalledConditions(
+            projectCode = projectCode,
+            classifyCode = classifyCode,
+            name = name,
+            dslContext = dslContext,
+            queryDefaultFlag = queryDefaultFlag
+        )
 
         return dslContext.select(DSL.countDistinct(ta.ATOM_CODE))
             .from(ta)
@@ -1136,10 +1143,17 @@ class AtomDao : AtomBaseDao() {
         classifyCode: String? = null,
         name: String? = null,
         page: Int? = null,
-        pageSize: Int? = null
+        pageSize: Int? = null,
+        queryDefaultFlag: Boolean = false
     ): Result<out Record>? {
 
-        val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, name, dslContext)
+        val (ta, tspr, conditions) = getInstalledConditions(
+            projectCode = projectCode,
+            classifyCode = classifyCode,
+            name = name,
+            dslContext = dslContext,
+            queryDefaultFlag = queryDefaultFlag
+        )
         val tc = TClassify.T_CLASSIFY
         // 查找每组atomCode最新的记录
         val t = dslContext.select(ta.ATOM_CODE.`as`(KEY_ATOM_CODE), DSL.max(ta.CREATE_TIME).`as`(KEY_CREATE_TIME))
@@ -1154,6 +1168,7 @@ class AtomDao : AtomBaseDao() {
             ta.CATEGROY.`as`(KEY_CATEGORY),
             ta.SUMMARY.`as`(KEY_SUMMARY),
             ta.PUBLISHER.`as`(KEY_PUBLISHER),
+            ta.DEFAULT_FLAG.`as`(KEY_DEFAULT_FLAG),
             tc.ID.`as`(KEY_CLASSIFY_ID),
             tc.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
             tc.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),
@@ -1182,13 +1197,17 @@ class AtomDao : AtomBaseDao() {
         projectCode: String,
         classifyCode: String?,
         name: String?,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        queryDefaultFlag: Boolean
     ): Triple<TAtom, TStoreProjectRel, MutableList<Condition>> {
         val ta = TAtom.T_ATOM
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
         val conditions = mutableListOf<Condition>()
-        conditions.add(tspr.PROJECT_CODE.eq(projectCode))
-        conditions.add(tspr.STORE_TYPE.eq(0))
+        if (queryDefaultFlag) {
+            conditions.add(ta.DEFAULT_FLAG.eq(true).or(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0))))
+        } else {
+            conditions.add(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0)))
+        }
         if (!classifyCode.isNullOrEmpty()) {
             val tClassify = TClassify.T_CLASSIFY
             val classifyId = dslContext.select(tClassify.ID)

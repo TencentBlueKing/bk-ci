@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
@@ -121,11 +122,23 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 )
             }
         }.getOrThrow()
+        // 获取imageName展示用
         if (dispatchType is StoreDispatchType && dispatchType.imageType == ImageType.BKSTORE) {
             val imageName = transferCache.getStoreImageDetail(
                 userId, dispatchType.imageCode!!, dispatchType.imageVersion
             )?.name
             dispatchType.imageName = imageName
+        }
+        if (dispatchType is ThirdPartyAgentDispatch &&
+            dispatchType.dockerInfo?.imageType == ImageType.BKSTORE &&
+            dispatchType.dockerInfo?.storeImage != null
+        ) {
+            val imageName = transferCache.getStoreImageDetail(
+                userId = userId,
+                imageCode = dispatchType.dockerInfo!!.storeImage!!.imageCode,
+                imageVersion = dispatchType.dockerInfo!!.storeImage!!.imageVersion
+            )?.name
+            dispatchType.dockerInfo!!.storeImage!!.imageName = imageName
         }
         val vmContainer = VMBuildContainer(
             jobId = job.id,

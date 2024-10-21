@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.api.service
 import com.tencent.devops.auth.pojo.dto.ClientDetailsDTO
 import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.CdsToken
 import com.tencent.devops.remotedev.pojo.DesktopTokenSign
 import com.tencent.devops.remotedev.pojo.sdk.SdkReportData
 import io.swagger.v3.oas.annotations.Operation
@@ -52,6 +53,15 @@ interface ServiceSDKResource {
         @QueryParam("appId")
         appId: String
     ): Result<ClientDetailsDTO?>
+
+    @Operation(summary = "提供给openapi服务拿取cdsToken解析内容")
+    @GET
+    @Path("/check_cds_token")
+    fun checkCdsToken(
+        @Parameter(description = "cdsToken", required = false)
+        @QueryParam("cdsToken")
+        cdsToken: String
+    ): Result<CdsToken?>
 
     @Operation(summary = "云桌面SDK上报数据")
     @POST

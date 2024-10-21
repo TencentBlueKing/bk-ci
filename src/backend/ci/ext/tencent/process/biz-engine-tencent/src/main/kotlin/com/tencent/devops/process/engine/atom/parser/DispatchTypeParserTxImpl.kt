@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.SampleDispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -84,6 +85,16 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         buildId: String,
         dispatchType: DispatchType
     ) {
+        if (dispatchType is ThirdPartyAgentDispatch) {
+            commonDispatchTypeParser.parse(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                dispatchType = dispatchType
+            )
+            return
+        }
         if (dispatchType is StoreDispatchType) {
             if (dispatchType.imageType == ImageType.BKSTORE) {
                 // 一般性处理

@@ -22,6 +22,9 @@ interface MemberListParamsType {
   groupName?: string,
   minExpiredAt?: number,
   maxExpiredAt?: number,
+  relatedResourceType?: string,
+  relatedResourceCode?: string,
+  action?: string,
 }
 
 export default defineStore('manageAside', () => {
@@ -38,23 +41,23 @@ export default defineStore('manageAside', () => {
   const btnLoading = ref(false);
   const removeUserDeptListMap = ref({});
   const showDeptListPermissionDialog = ref(false);
-  const seacrhObj = ref<SearchParamsType>({});
+  const searchObj = ref<SearchParamsType>({});
   /**
    * 人员组织侧边栏点击事件
    */
   function handleAsideClick(item: AsideItem) {
     asideItem.value = item;
     activeTab.value = item.id;
-    groupTableStore.fetchUserGroupList(item, seacrhObj.value);
+    groupTableStore.fetchUserGroupList(item, searchObj.value);
   }
   /**
    * 人员组织侧边栏页码切换
    */
-  async function handleAsidePageChange(current: number, projectId: string) {
+  async function handleAsidePageChange(current: number, projectId: string, searchGroup?: any) {
     asideItem.value = undefined;
     if (memberPagination.value.current !== current) {
       memberPagination.value.current = current;
-      getProjectMembers(projectId, true);
+      getProjectMembers(projectId, true, searchGroup);
     }
   }
   /**
@@ -71,7 +74,6 @@ export default defineStore('manageAside', () => {
    */
   async function handleAsideRemoveConfirm(removeUser: AsideItem, handOverMember: AsideItem, projectId: string, manageAsideRef: any) {
     showDeptListPermissionDialog.value = false
-    console.log(handOverMember, 'handOverMember')
     const params = {
       targetMember: removeUser,
       ...(Object.keys(handOverMember).length && {handoverTo: handOverMember})
@@ -114,6 +116,16 @@ export default defineStore('manageAside', () => {
       params.departedFlag = departedFlag;
     }
 
+    if (searchGroup?.relatedResourceType) {
+      params.relatedResourceType = searchGroup.relatedResourceType
+    }
+    if (searchGroup?.relatedResourceCode) {
+      params.relatedResourceCode = searchGroup.relatedResourceCode
+    }
+    if (searchGroup?.action) {
+      params.action = searchGroup.action
+    }
+
     if (searchGroup?.expiredAt && Object.keys(searchGroup?.expiredAt).length) {
       params.minExpiredAt = getTimestamp(searchGroup.expiredAt[0]?.formatText);
       params.maxExpiredAt = getTimestamp(searchGroup.expiredAt[1]?.formatText);
@@ -143,11 +155,15 @@ export default defineStore('manageAside', () => {
     try {
       isLoading.value = true;
       const params = getParams(projectId, departedFlag, searchGroup);
-      
-      seacrhObj.value = {
-        ...(params.groupName && {groupName: params.groupName}),
-        ...(params.minExpiredAt && {minExpiredAt: params.minExpiredAt}),
-        ...(params.maxExpiredAt && {maxExpiredAt: params.maxExpiredAt}),
+
+      searchObj.value = {
+        ...['groupName', 'minExpiredAt', 'maxExpiredAt', 'relatedResourceType', 'relatedResourceCode', 'action']
+          .reduce((acc, key) => {
+            if (params[key]) {
+              acc[key] = params[key];
+            }
+            return acc;
+          }, {})
       }
 
       const res = await http.getProjectMembersByCondition(projectId, params);
