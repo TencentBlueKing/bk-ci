@@ -1132,7 +1132,7 @@
     "mutualTimeout": "最长等待时间（单位分钟）",
     "mutualTimeoutPlaceholder": "1-10080之间的正整数，支持引用流水线变量",
     "queueLabel": "队列最大任务数",
-    "queuePlaceholder": "请填写1-10之间的整数",
+    "queuePlaceholder": "请填写1-50之间的整数",
     "noEnv": "无编译环境",
     "afterPreStageSuccess": "前一个Stage成功时运行",
     "manualRunStage": "手动触发运行",

@@ -1133,7 +1133,7 @@
     "mutualTimeout": "Mutex Queue Timeout  (In minutes)",
     "mutualTimeoutPlaceholder": "Positive integer between 1-10080, support for referencing pipeline variables",
     "queueLabel": " Mutex Queue Length",
-    "queuePlaceholder": " Please fill in an integer between 1 and 10",
+    "queuePlaceholder": " Please fill in an integer between 1 and 50",
     "noEnv": "Agentless",
     "afterPreStageSuccess": "Run when pre-stage done",
     "manualRunStage": "Manual",
