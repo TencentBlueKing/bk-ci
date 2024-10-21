@@ -65,7 +65,10 @@ class UserAuthResourceGroupSyncResourceImpl @Autowired constructor(
 
     override fun deleteGroupPermissions(userId: String, projectId: String, groupId: Int): Result<Boolean> {
         return Result(
-            permissionResourceGroupPermissionService.deleteByGroupIds(projectCode = projectId, iamGroupIds = listOf(groupId))
+            permissionResourceGroupPermissionService.deleteByGroupIds(
+                projectCode = projectId,
+                iamGroupIds = listOf(groupId)
+            )
         )
     }
 }
