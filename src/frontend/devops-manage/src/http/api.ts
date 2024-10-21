@@ -358,5 +358,13 @@ export default {
    */
   getListActions (resourceType: string) {
     return http.get(`${USER_PERFIX}/auth/apply/listActions?resourceType=${resourceType}`);
-  }
+  },
+
+  syncGroupPermissions (projectId: string, groupId: any) {
+    return http.put(`${IAM_PERFIX}/group/sync/${projectId}/${groupId}/syncGroupPermissions`);
+  },
+
+  syncDeleteGroupPermissions (projectId: string, groupId: any) {
+    return http.delete(`${IAM_PERFIX}/group/sync/${projectId}/${groupId}/deleteGroupPermissions`);
+  },
 };

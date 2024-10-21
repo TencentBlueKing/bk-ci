@@ -27,10 +27,14 @@
 
 package com.tencent.devops.project.pojo
 
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.project.pojo.enums.OS
 
+@Event(StreamBinding.PROJECT_COUNT_LOGIN)
 data class UserCountLogin(
     val userId: String,
     val os: OS,
     val ip: String
-)
+) : IEvent()

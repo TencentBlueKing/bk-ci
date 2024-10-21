@@ -41,9 +41,9 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.provider.rbac.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
-import com.tencent.devops.auth.provider.rbac.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -75,7 +75,7 @@ class MigrateV3PolicyService constructor(
     private val rbacCacheService: RbacCacheService,
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val permissionResourceMemberService: PermissionResourceMemberService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
@@ -88,7 +88,7 @@ class MigrateV3PolicyService constructor(
     permissionService = permissionService,
     rbacCacheService = rbacCacheService,
     deptService = deptService,
-    permissionGroupPoliciesService = permissionGroupPoliciesService,
+    permissionResourceGroupPermissionService = permissionResourceGroupPermissionService,
     permissionResourceMemberService = permissionResourceMemberService
 ) {
 

@@ -181,7 +181,9 @@ class PipelineRepositoryService constructor(
                 )
             }
             if (runLockType == PipelineRunLockType.SINGLE ||
-                runLockType == PipelineRunLockType.SINGLE_LOCK || runLockType == PipelineRunLockType.GROUP_LOCK
+                runLockType == PipelineRunLockType.SINGLE_LOCK ||
+                runLockType == PipelineRunLockType.GROUP_LOCK ||
+                runLockType == PipelineRunLockType.MULTIPLE
             ) {
                 if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
                     waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
@@ -247,9 +249,11 @@ class PipelineRepositoryService constructor(
             channelCode = channelCode,
             yamlInfo = yamlInfo
         )
-
-        val buildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
+        val buildNo = triggerContainer.buildNo?.apply {
+            // #10958 每次存储model都需要忽略当前的推荐版本号值，在返回前端时重查
+            currentBuildNo = null
+        }
         var canManualStartup = false
         var canElementSkip = false
         run lit@{
@@ -889,6 +893,7 @@ class PipelineRepositoryService constructor(
         var operationLogParams = versionName
         var branchAction: BranchVersionAction? = null
         var versionNum: Int? = null
+        var updateBuildNo = false
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -1057,6 +1062,13 @@ class PipelineRepositoryService constructor(
                             ) throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_VERSION_IS_NOT_UPDATED
                             )
+                            draftVersion.model.getTriggerContainer().buildNo?.let {
+                                val releaseBuildNo = releaseResource.model.getTriggerContainer().buildNo
+                                // [关闭变为开启]或[修改buildNo数值]，都属于更新行为，需要提示更新
+                                if (releaseBuildNo == null || releaseBuildNo.buildNo != it.buildNo) {
+                                    updateBuildNo = true
+                                }
+                            }
                             draftVersion.version
                         } else {
                             // 兼容逻辑：没有已有草稿保存正式版本时，直接增加正式版本，基准为上一个发布版本
@@ -1182,7 +1194,8 @@ class PipelineRepositoryService constructor(
             pipelineName = model.name,
             version = version,
             versionNum = versionNum,
-            versionName = versionName
+            versionName = versionName,
+            updateBuildNo = updateBuildNo
         )
     }
 
@@ -1345,7 +1358,7 @@ class PipelineRepositoryService constructor(
         )
         // 返回时将别名name补全为id
         resource?.let {
-            (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
+            resource.model.getTriggerContainer().params.forEach { param ->
                 param.name = param.name ?: param.id
             }
         }
@@ -1365,7 +1378,7 @@ class PipelineRepositoryService constructor(
         )
         // 返回时将别名name补全为id
         resource?.let {
-            (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
+            resource.model.getTriggerContainer().params.forEach { param ->
                 param.name = param.name ?: param.id
             }
         }
@@ -1419,6 +1432,7 @@ class PipelineRepositoryService constructor(
             ) ?: releaseResource
 
             // 计算版本号
+            val settingVersion = (latestResource.settingVersion ?: latestResource.version) + 1
             val now = LocalDateTime.now()
             val newDraft = targetVersion.copy(
                 version = latestResource.version + 1,
@@ -1426,7 +1440,7 @@ class PipelineRepositoryService constructor(
                 pipelineVersion = null,
                 triggerVersion = null,
                 versionName = null,
-                settingVersion = targetVersion.settingVersion,
+                settingVersion = settingVersion,
                 createTime = now,
                 updateTime = now
             )

@@ -24,8 +24,16 @@
             ref="multipleLog"
             class="bk-log"
             :log-list="pluginList"
+            :enable-a-i="enableAI"
+            :ai-tips="aiTips"
             @open-log="openLog"
             @tag-change="tagChange"
+            @praise-ai="handlePraiseAi"
+            @down-praise-ai="handleDownPraiseAi"
+            @load-ai-message="handleLoadAiMessage"
+            @reload-ai-message="handleReloadAiMessage"
+            @cancel-praise-ai="handleCancelPraiseAI"
+            @cancel-down-praise-ai="handleCancelDownPraiseAI"
         >
             <template slot-scope="log">
                 <status-icon
@@ -72,8 +80,14 @@
                 logPostData: {},
                 closeIds: [],
                 curExe: this.executeCount,
-                showDebug: false
+                showDebug: false,
+                enableAI: false,
+                aiTips: ''
             }
+        },
+
+        mounted () {
+            this.checkAIStatus()
         },
 
         beforeDestroy () {
@@ -83,8 +97,103 @@
         methods: {
             ...mapActions('atom', [
                 'getInitLog',
-                'getAfterLog'
+                'getAfterLog',
+                'praiseAi',
+                'cancelPraiseAi',
+                'getPraiseAiInfo',
+                'getLogAIMessage',
+                'getAIStatus'
             ]),
+
+            checkAIStatus () {
+                this.getAIStatus().then(res => {
+                    this.enableAI = res.data
+                    this.aiTips = this.$t('details.aiAnalysis', [this.$pipelineDocs.AIAnalysis])
+                })
+            },
+
+            handlePraiseAi ({ id, item }) {
+                this.praiseAi({
+                    ...this.logPostData[id],
+                    score: true
+                }).then(() => {
+                    this.handleGetPraiseAiInfo({ id, item })
+                    this.$bkMessage({ theme: 'success', message: this.$t('successPraise') })
+                })
+            },
+
+            handleDownPraiseAi ({ id, item }) {
+                this.praiseAi({
+                    ...this.logPostData[id],
+                    score: false
+                }).then(() => {
+                    this.handleGetPraiseAiInfo({ id, item })
+                    this.$bkMessage({ theme: 'success', message: this.$t('successDownPraise') })
+                })
+            },
+
+            handleCancelPraiseAI ({ id, item }) {
+                this.cancelPraiseAi({
+                    ...this.logPostData[id],
+                    score: true
+                }).then(() => {
+                    this.handleGetPraiseAiInfo({ id, item })
+                    this.$bkMessage({ theme: 'success', message: this.$t('successCancelPraise') })
+                })
+            },
+
+            handleCancelDownPraiseAI ({ id, item }) {
+                this.cancelPraiseAi({
+                    ...this.logPostData[id],
+                    score: false
+                }).then(() => {
+                    this.handleGetPraiseAiInfo({ id, item })
+                    this.$bkMessage({ theme: 'success', message: this.$t('successCancelDownPraise') })
+                })
+            },
+
+            handleGetPraiseAiInfo ({ id, item }) {
+                const ref = this.$refs.multipleLog
+                this.getPraiseAiInfo({
+                    ...this.logPostData[id]
+                })
+                    .then((res) => {
+                        item.goodUsers = res.data.goodUsers
+                        item.badUsers = res.data.badUsers
+                        ref.setSingleLogData(item, id)
+                    })
+            },
+
+            handleLoadAiMessage ({ id, item }) {
+                item.aiMessage = ''
+                const ref = this.$refs.multipleLog
+                this.handleGetPraiseAiInfo({ id, item })
+                this.getLogAIMessage({
+                    ...this.logPostData[id],
+                    refresh: false,
+                    callBack (val) {
+                        item.aiMessage += val
+                        ref.setSingleLogData(item, id)
+                        ref.scrollAILogToBottom(id)
+                    }
+                })
+            },
+
+            handleReloadAiMessage ({ id, item }) {
+                item.aiMessage = ''
+                const ref = this.$refs.multipleLog
+                this.getLogAIMessage({
+                    ...this.logPostData[id],
+                    refresh: true,
+                    callBack (val) {
+                        item.aiMessage += val
+                        ref.setSingleLogData(item, id)
+                        ref.scrollAILogToBottom(id)
+                    }
+                }).then(() => {
+                    this.handleGetPraiseAiInfo({ id, item })
+                })
+            },
 
             toggleShowDebugLog () {
                 this.showDebug = !this.showDebug

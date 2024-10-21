@@ -520,6 +520,7 @@ object ProcessMessageCode {
     const val BK_PREVIOUS_STAGE_SUCCESS = "bkPreviousStageSuccess" // [上游 Stage 成功时](Previous Stage Success):
     const val BK_UNEXECUTE_TASK = "bkUnexecuteTask" // 终止构建，跳过(UnExecute Task)
     const val BK_CONDITION_INVALID = "bkConditionInvalid" // 执行条件判断失败(Condition Invalid)
+    const val BK_STAGE_REVIEW_EMPTY_REVIEWER = "bkStageReviewEmptyViewer" // 由于无审核人，被系统自动驳回
 
     // [SystemLog]收到终止指令(UnExecute PostAction Task)
     const val BK_UNEXECUTE_POSTACTION_TASK = "bkUnexecutePostactionTask"
