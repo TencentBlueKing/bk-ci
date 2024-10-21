@@ -25,48 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.template
+package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.template.TemplateListModel
-import com.tencent.devops.process.pojo.template.TemplateModelDetail
-import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.service.template.TemplateFacadeService
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.repository.api.ServiceRepositoryPermissionResource
+import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.service.RepositoryPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserPipelineTemplateResourceImpl @Autowired constructor(
-    private val templateFacadeService: TemplateFacadeService
-) : UserPipelineTemplateResource {
-
-    override fun listQualityViewTemplates(
+class ServiceRepositoryPermissionResourceImpl @Autowired constructor(
+    private val repositoryPermissionService: RepositoryPermissionService
+) : ServiceRepositoryPermissionResource {
+    override fun validatePermission(
         userId: String,
         projectId: String,
-        templateType: TemplateType?,
-        storeFlag: Boolean?,
-        page: Int?,
-        pageSize: Int?,
-        keywords: String?
-    ): Result<TemplateListModel> {
-        return Result(
-            templateFacadeService.listTemplate(
-                projectId = projectId,
-                userId = userId,
-                templateType = templateType,
-                storeFlag = storeFlag,
-                orderBy = null,
-                sort = null,
-                page = page,
-                pageSize = pageSize,
-                keywords = keywords
+        repositoryHashId: String,
+        permission: AuthPermission
+    ): Result<Boolean> {
+        val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
+        repositoryPermissionService.validatePermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = permission,
+            repositoryId = repositoryId,
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_NOT_PERMISSIONS_OPERATE_REPOSITORY,
+                params = arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    repositoryHashId
+                ),
+                language = I18nUtil.getLanguage(userId)
             )
         )
-    }
-
-    override fun getTemplateInfo(userId: String, projectId: String, templateId: String): Result<TemplateModelDetail> {
-        return Result(templateFacadeService.getTemplate(
-            projectId = projectId, userId = userId, templateId = templateId, version = null
-        ))
+        return Result(true)
     }
 }
