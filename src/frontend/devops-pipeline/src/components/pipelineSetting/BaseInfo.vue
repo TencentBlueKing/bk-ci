@@ -91,7 +91,6 @@
                     :handle-change="handleBaseInfoChange"
                 />
             </bk-form-item>
-            {{ settings.pipelineDialect }}--{{ currentPipelineDialect }}
 
             <bk-form-item ext-cls="namingConvention">
                 <syntax-style-configuration
