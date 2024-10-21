@@ -515,7 +515,6 @@ class PipelineBuildWebhookService @Autowired constructor(
 //        )
         val version = webhookCommit.version ?: pipelineInfo.version
         checkPermission(userId, projectId = projectId, pipelineId = pipelineId)
-
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
