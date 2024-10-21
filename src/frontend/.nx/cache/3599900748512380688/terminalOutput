@@ -1,0 +1,23 @@
+
+> bkui-pipeline@0.1.34 public:master
+> webpack --mode production
+
+asset [1m[33mbk-pipeline.min.js[39m[22m [1m[33m262 KiB[39m[22m [1m[33m[compared for emit][39m[22m [1m[32m[minimized][39m[22m [1m[33m[big][39m[22m (name: main)
+cached modules 691 KiB (javascript) 972 bytes (runtime) [1m[32m[cached][39m[22m 133 modules
+
+[1m[33mWARNING[39m[22m in [1masset size limit: The following asset(s) exceed the recommended size limit (244 KiB).
+This can impact web performance.
+Assets: 
+  bk-pipeline.min.js (262 KiB)[39m[22m
+
+[1m[33mWARNING[39m[22m in [1mentrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.
+Entrypoints:
+  main (262 KiB)
+      bk-pipeline.min.js
+[39m[22m
+
+[1m[33mWARNING[39m[22m in [1mwebpack performance recommendations: 
+You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
+For more info visit https://webpack.js.org/guides/code-splitting/[39m[22m
+
+webpack 5.76.1 compiled with [1m[33m3 warnings[39m[22m in 22016 ms

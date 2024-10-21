@@ -8,12 +8,25 @@
             :popover-width="222"
             @change="doSelectPipeline"
         >
-            <span class="pipeline-name-crumb-select-trigger" slot="trigger">
+            <span
+                class="pipeline-name-crumb-select-trigger"
+                slot="trigger"
+            >
                 <span @click="goHistory">{{ pipelineName }}</span>
-                <div class="pipeline-pac-indicator" @click.stop.prevent="">
-                    <pac-tag v-if="showPacTag && pacEnabled" :info="yamlInfo" />
+                <div
+                    class="pipeline-pac-indicator"
+                    @click.stop.prevent=""
+                >
+                    <pac-tag
+                        v-if="showPacTag && pacEnabled"
+                        :info="yamlInfo"
+                    />
                 </div>
-                <i @click.prevent v-bk-tooltips="$t('subpage.switchPipelineTooltips')" class="devops-icon icon-shift"></i>
+                <i
+                    @click.prevent
+                    v-bk-tooltips="$t('subpage.switchPipelineTooltips')"
+                    class="devops-icon icon-shift"
+                ></i>
             </span>
             <bk-option
                 v-for="pipeline in pipelineList"

@@ -1,0 +1,86 @@
+
+> bk-permission@0.1.0 public:master
+> webpack  --mode production
+
+{ WEBPACK_BUNDLE: [33mtrue[39m, WEBPACK_BUILD: [33mtrue[39m }
+<w> [webpack.cache.PackFileCacheStrategy] Restoring failed for Compilation/modules|json|E:\bk-ci\src\frontend\bk-permission\src\utils\i18n.json from pack: Error: Expected end of object
+<w> (during deserialization of webpack/lib/dependencies/HarmonyImportSpecifierDependency)
+<w> (during deserialization of Array)
+<w> (during deserialization of webpack/lib/NormalModule)
+<w> (during deserialization of Map)
+<w> (during deserialization of webpack/lib/cache/PackFileCacheStrategy PackContentItems)
+<w> [webpack.cache.PackFileCacheStrategy] Restoring failed for ResolverCachePlugin|normal|default|dependencyType=|loaderImport|path=|E:\bk-ci\src\frontend\bk-permission\src\css|request=|E:\bk-ci\src\frontend\bk-permission\src\css\index.css from pack: Error: Expected end of object
+<w> (during deserialization of webpack/lib/dependencies/HarmonyImportSpecifierDependency)
+<w> (during deserialization of Array)
+<w> (during deserialization of webpack/lib/NormalModule)
+<w> (during deserialization of Map)
+<w> (during deserialization of webpack/lib/cache/PackFileCacheStrategy PackContentItems)
+<w> [webpack.cache.PackFileCacheStrategy] Restoring failed for ResolverCachePlugin|normal|default|dependencyType=|loaderImport|path=|E:\bk-ci\src\frontend\bk-permission\src\directive|request=|E:\bk-ci\src\frontend\bk-permission\src\directive\authority-directive.scss from pack: Error: Expected end of object
+<w> (during deserialization of webpack/lib/dependencies/HarmonyImportSpecifierDependency)
+<w> (during deserialization of Array)
+<w> (during deserialization of webpack/lib/NormalModule)
+<w> (during deserialization of Map)
+<w> (during deserialization of webpack/lib/cache/PackFileCacheStrategy PackContentItems)
+<w> [webpack.cache.PackFileCacheStrategy] Restoring failed for ResolverCachePlugin|normal|default|dependencyType=|loaderImport|path=|E:\bk-ci\src\frontend\bk-permission\src\function|request=|E:\bk-ci\src\frontend\bk-permission\src\function\permission.css from pack: Error: Expected end of object
+<w> (during deserialization of webpack/lib/dependencies/HarmonyImportSpecifierDependency)
+<w> (during deserialization of Array)
+<w> (during deserialization of webpack/lib/NormalModule)
+<w> (during deserialization of Map)
+<w> (during deserialization of webpack/lib/cache/PackFileCacheStrategy PackContentItems)
+<w> [webpack.cache.PackFileCacheStrategy] Restoring failed for ResolverCachePlugin|normal|default|dependencyType=|url|path=|E:\bk-ci\src\frontend\bk-permission\src\directive|request=|../svg/lock.svg?inline from pack: Error: Expected end of object
+<w> (during deserialization of webpack/lib/dependencies/HarmonyImportSpecifierDependency)
+<w> (during deserialization of Array)
+<w> (during deserialization of webpack/lib/NormalModule)
+<w> (during deserialization of Map)
+<w> (during deserialization of webpack/lib/cache/PackFileCacheStrategy PackContentItems)
+<w> [webpack.cache.PackFileCacheStrategy] Restoring failed for ResolverCachePlugin|normal|default|dependencyType=|url|path=|E:\bk-ci\src\frontend\bk-permission\src\css|request=|fonts/iconcool.svg from pack: Error: Expected end of object
+<w> (during deserialization of webpack/lib/dependencies/HarmonyImportSpecifierDependency)
+<w> (during deserialization of Array)
+<w> (during deserialization of webpack/lib/NormalModule)
+<w> (during deserialization of Map)
+<w> (during deserialization of webpack/lib/cache/PackFileCacheStrategy PackContentItems)
+<w> [webpack.cache.PackFileCacheStrategy] Restoring failed for ResolverCachePlugin|normal|default|dependencyType=|url|path=|E:\bk-ci\src\frontend\bk-permission\src\css|request=|fonts/iconcool.ttf from pack: Error: Expected end of object
+<w> (during deserialization of webpack/lib/dependencies/HarmonyImportSpecifierDependency)
+<w> (during deserialization of Array)
+<w> (during deserialization of webpack/lib/NormalModule)
+<w> (during deserialization of Map)
+<w> (during deserialization of webpack/lib/cache/PackFileCacheStrategy PackContentItems)
+<w> [webpack.cache.PackFileCacheStrategy] Restoring failed for ResolverCachePlugin|normal|default|dependencyType=|url|path=|E:\bk-ci\src\frontend\bk-permission\src\css|request=|fonts/iconcool.woff from pack: Error: Expected end of object
+<w> (during deserialization of webpack/lib/dependencies/HarmonyImportSpecifierDependency)
+<w> (during deserialization of Array)
+<w> (during deserialization of webpack/lib/NormalModule)
+<w> (during deserialization of Map)
+<w> (during deserialization of webpack/lib/cache/PackFileCacheStrategy PackContentItems)
+<w> [webpack.cache.PackFileCacheStrategy] Restoring failed for ResolverCachePlugin|normal|default|dependencyType=|url|path=|E:\bk-ci\src\frontend\bk-permission\src\css|request=|fonts/iconcool.eot from pack: Error: Expected end of object
+<w> (during deserialization of webpack/lib/dependencies/HarmonyImportSpecifierDependency)
+<w> (during deserialization of Array)
+<w> (during deserialization of webpack/lib/NormalModule)
+<w> (during deserialization of Map)
+<w> (during deserialization of webpack/lib/cache/PackFileCacheStrategy PackContentItems)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Expected end of object
+<w> (during deserialization of webpack/lib/dependencies/HarmonyImportSpecifierDependency)
+<w> (during deserialization of Array)
+<w> (during deserialization of webpack/lib/NormalModule)
+<w> (during deserialization of Map)
+<w> (during deserialization of webpack/lib/cache/PackFileCacheStrategy PackContentItems)
+assets by status 18.5 KiB [1m[32m[cached][39m[22m 3 assets
+assets by status 197 KiB [1m[33m[compared for emit][39m[22m
+  asset [1m[32mmain.js[39m[22m 153 KiB [1m[33m[compared for emit][39m[22m [1m[32m[minimized][39m[22m (name: main)
+  asset [1m[32mmain.css[39m[22m 44.2 KiB [1m[33m[compared for emit][39m[22m (name: main)
+Entrypoint [1mmain[39m[22m 197 KiB (18.5 KiB) = [1m[32mmain.css[39m[22m 44.2 KiB [1m[32mmain.js[39m[22m 153 KiB 3 auxiliary assets
+orphan modules 85.3 KiB (javascript) 18.5 KiB (asset) 1.15 KiB (runtime) [1m[33m[orphan][39m[22m 66 modules
+runtime modules 11.6 KiB 48 modules
+modules by path [1m./[39m[22m 374 KiB (javascript) 44.5 KiB (css/mini-extract)
+  modules by path [1m./node_modules/core-js/[39m[22m 255 KiB 215 modules
+  modules by path [1m./src/[39m[22m 119 KiB (javascript) 44.5 KiB (css/mini-extract)
+    modules by layer 119 KiB 45 modules
+    css modules 44.5 KiB 13 modules
+modules by path [1m../node_modules/.pnpm/[39m[22m 35.5 KiB
+  modules by path [1m../node_modules/.pnpm/@babel+runtime@7.24.7/node_modules/@babel/runtime/helpers/*.js[39m[22m 8.09 KiB
+    [1m../node_modules/.pnpm/@babel+runtime@7.24.7/node_modules/@babel/runtime/helpers/interopRequireDefault.js[39m[22m 214 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    + 19 modules
+  [1m../node_modules/.pnpm/vue-loader@15.10.1_@vue+compiler-sfc@3.4.31_css-loader@6.11.0_webpack@5.76.1_webpack-cli@4.10_ijrlfobhaftbl6desixfywolgy/node_modules/vue-loader/lib/runtime/componentNormalizer.js[39m[22m 2.7 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  [1m../node_modules/.pnpm/regenerator-runtime@0.14.1/node_modules/regenerator-runtime/runtime.js[39m[22m 24.7 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+[1mexternal {"commonjs":"vue","commonjs2":"vue","amd":"vue","root":"Vue"}[39m[22m 42 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+[1mexternal "axios"[39m[22m 42 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+webpack 5.76.1 compiled [1m[32msuccessfully[39m[22m in 36775 ms

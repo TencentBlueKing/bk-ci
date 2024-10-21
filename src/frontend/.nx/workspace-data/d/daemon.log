@@ -1,0 +1,458 @@
+[NX Daemon Server] - 2024-10-18T01:23:36.599Z - Started listening on: \\.\pipe\nx\C:\Users\v_hwweng\AppData\Local\Temp\cb3475231e4091a15d8b\d.sock
+[NX Daemon Server] - 2024-10-18T01:23:36.622Z - [WATCHER]: Subscribed to changes within: E:\bk-ci\src\frontend (native)
+[NX Daemon Server] - 2024-10-18T01:23:36.623Z - Established a connection. Number of open connections: 1
+[NX Daemon Server] - 2024-10-18T01:23:36.624Z - Established a connection. Number of open connections: 2
+[NX Daemon Server] - 2024-10-18T01:23:36.626Z - Closed a connection. Number of open connections: 1
+[NX Daemon Server] - 2024-10-18T01:23:36.649Z - [REQUEST]: Client Request for Project Graph Received
+[NX Daemon Server] - 2024-10-18T01:23:48.232Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:23:48.233Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:23:48.234Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:23:48.248Z - Time taken for 'loadNxPlugins' 823.8153ms
+[NX Daemon Server] - 2024-10-18T01:23:55.804Z - Time taken for 'build-project-configs' 7466.772299999999ms
+[NX Daemon Server] - 2024-10-18T01:23:58.541Z - [REQUEST]: Responding to the client. project-graph
+[NX Daemon Server] - 2024-10-18T01:23:58.544Z - Time taken for 'total for creating and serializing project graph' 21891.847ms
+[NX Daemon Server] - 2024-10-18T01:23:58.546Z - Done responding to the client project-graph
+[NX Daemon Server] - 2024-10-18T01:23:58.547Z - Handled REQUEST_PROJECT_GRAPH. Handling time: 21892. Response time: 6.
+[NX Daemon Server] - 2024-10-18T01:23:58.635Z - [REQUEST]: Responding to the client. handleHashTasks
+[NX Daemon Server] - 2024-10-18T01:23:58.635Z - Done responding to the client handleHashTasks
+[NX Daemon Server] - 2024-10-18T01:23:58.635Z - Handled HASH_TASKS. Handling time: 40. Response time: 0.
+[NX Daemon Server] - 2024-10-18T01:24:50.605Z - [REQUEST]: Responding to the client. recordOutputsHash
+[NX Daemon Server] - 2024-10-18T01:24:50.605Z - Done responding to the client recordOutputsHash
+[NX Daemon Server] - 2024-10-18T01:24:50.605Z - Handled RECORD_OUTPUTS_HASH. Handling time: 251. Response time: 0.
+[NX Daemon Server] - 2024-10-18T01:25:17.017Z - [REQUEST]: Responding to the client. recordOutputsHash
+[NX Daemon Server] - 2024-10-18T01:25:17.017Z - Done responding to the client recordOutputsHash
+[NX Daemon Server] - 2024-10-18T01:25:17.017Z - Handled RECORD_OUTPUTS_HASH. Handling time: 34. Response time: 0.
+[NX Daemon Server] - 2024-10-18T01:26:45.485Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:26:49.666Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:33:11.445Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:33:11.483Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:33:11.606Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:33:11.606Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:33:11.607Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:33:11.620Z - Time taken for 'hash changed files from watcher' 4.562399999937043ms
+[NX Daemon Server] - 2024-10-18T01:33:11.917Z - Time taken for 'build-project-configs' 273.81929999997374ms
+[NX Daemon Server] - 2024-10-18T01:33:12.061Z - Time taken for 'total execution time for createProjectGraph()' 105.23930000001565ms
+[NX Daemon Server] - 2024-10-18T01:33:14.427Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:36:58.205Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:36:58.205Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:36:58.411Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:36:58.412Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:36:58.412Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:36:58.421Z - Time taken for 'hash changed files from watcher' 3.211500000092201ms
+[NX Daemon Server] - 2024-10-18T01:36:58.566Z - Time taken for 'build-project-configs' 123.08980000007432ms
+[NX Daemon Server] - 2024-10-18T01:36:58.680Z - Time taken for 'total execution time for createProjectGraph()' 94.40439999999944ms
+[NX Daemon Server] - 2024-10-18T01:37:00.653Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:37:15.939Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:37:15.939Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:37:16.352Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:37:16.352Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:37:16.353Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:37:16.361Z - Time taken for 'hash changed files from watcher' 4.346200000029057ms
+[NX Daemon Server] - 2024-10-18T01:37:16.423Z - Time taken for 'build-project-configs' 43.18550000002142ms
+[NX Daemon Server] - 2024-10-18T01:37:16.536Z - Time taken for 'total execution time for createProjectGraph()' 91.1482000000542ms
+[NX Daemon Server] - 2024-10-18T01:37:17.959Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:40:05.744Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:40:05.744Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:40:06.558Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:40:06.558Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:40:06.558Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:40:06.569Z - Time taken for 'hash changed files from watcher' 4.452099999994971ms
+[NX Daemon Server] - 2024-10-18T01:40:06.635Z - Time taken for 'build-project-configs' 42.95559999998659ms
+[NX Daemon Server] - 2024-10-18T01:40:06.728Z - Time taken for 'total execution time for createProjectGraph()' 81.7384000000311ms
+[NX Daemon Server] - 2024-10-18T01:40:07.885Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:40:18.717Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:40:18.721Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:40:20.340Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:40:20.340Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:40:20.340Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:40:20.347Z - Time taken for 'hash changed files from watcher' 4.933500000042841ms
+[NX Daemon Server] - 2024-10-18T01:40:20.402Z - Time taken for 'build-project-configs' 37.1203000000678ms
+[NX Daemon Server] - 2024-10-18T01:40:20.515Z - Time taken for 'total execution time for createProjectGraph()' 85.18259999994189ms
+[NX Daemon Server] - 2024-10-18T01:40:20.770Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:41:12.780Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:41:12.781Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:41:15.219Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:41:15.998Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:41:15.998Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:41:15.998Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:41:16.006Z - Time taken for 'hash changed files from watcher' 4.553600000217557ms
+[NX Daemon Server] - 2024-10-18T01:41:16.054Z - Time taken for 'build-project-configs' 29.538100000005215ms
+[NX Daemon Server] - 2024-10-18T01:41:16.149Z - Time taken for 'total execution time for createProjectGraph()' 80.12129999999888ms
+[NX Daemon Server] - 2024-10-18T01:41:23.426Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:41:23.433Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:41:25.202Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:41:25.207Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:41:25.782Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:41:27.711Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:41:29.856Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:41:29.856Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:41:29.856Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:41:29.861Z - Time taken for 'hash changed files from watcher' 3.288799999980256ms
+[NX Daemon Server] - 2024-10-18T01:41:29.909Z - Time taken for 'build-project-configs' 32.54229999985546ms
+[NX Daemon Server] - 2024-10-18T01:41:29.990Z - Time taken for 'total execution time for createProjectGraph()' 68.46549999993294ms
+[NX Daemon Server] - 2024-10-18T01:41:32.818Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:41:32.820Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:41:34.597Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:41:39.227Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:41:39.227Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:41:39.227Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:41:39.232Z - Time taken for 'hash changed files from watcher' 3.354600000195205ms
+[NX Daemon Server] - 2024-10-18T01:41:39.278Z - Time taken for 'build-project-configs' 32.07870000018738ms
+[NX Daemon Server] - 2024-10-18T01:41:39.352Z - Time taken for 'total execution time for createProjectGraph()' 59.44330000015907ms
+[NX Daemon Server] - 2024-10-18T01:42:33.137Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:42:33.137Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:42:35.677Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:42:39.555Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:42:39.556Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:42:39.556Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:42:39.560Z - Time taken for 'hash changed files from watcher' 3.839799999957904ms
+[NX Daemon Server] - 2024-10-18T01:42:39.609Z - Time taken for 'build-project-configs' 33.07940000016242ms
+[NX Daemon Server] - 2024-10-18T01:42:39.685Z - Time taken for 'total execution time for createProjectGraph()' 60.90039999992587ms
+[NX Daemon Server] - 2024-10-18T01:43:05.491Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:43:05.492Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:43:07.682Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:43:11.910Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:43:11.910Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:43:11.910Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:43:11.917Z - Time taken for 'hash changed files from watcher' 3.2175000000279397ms
+[NX Daemon Server] - 2024-10-18T01:43:11.978Z - Time taken for 'build-project-configs' 41.315900000045076ms
+[NX Daemon Server] - 2024-10-18T01:43:12.073Z - Time taken for 'total execution time for createProjectGraph()' 77.4148999999743ms
+[NX Daemon Server] - 2024-10-18T01:44:04.848Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:44:04.848Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:44:06.981Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:44:11.265Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:44:11.265Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:44:11.265Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:44:11.272Z - Time taken for 'hash changed files from watcher' 3.7177000001538545ms
+[NX Daemon Server] - 2024-10-18T01:44:11.336Z - Time taken for 'build-project-configs' 41.14889999991283ms
+[NX Daemon Server] - 2024-10-18T01:44:11.434Z - Time taken for 'total execution time for createProjectGraph()' 89.36100000003353ms
+[NX Daemon Server] - 2024-10-18T01:44:53.830Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:44:53.831Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:44:57.104Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:45:00.236Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:45:00.237Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:45:00.237Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:45:00.242Z - Time taken for 'hash changed files from watcher' 3.159400000004098ms
+[NX Daemon Server] - 2024-10-18T01:45:00.288Z - Time taken for 'build-project-configs' 31.588300000177696ms
+[NX Daemon Server] - 2024-10-18T01:45:00.372Z - Time taken for 'total execution time for createProjectGraph()' 64.49099999992177ms
+[NX Daemon Server] - 2024-10-18T01:45:24.364Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:45:24.367Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:45:26.620Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:45:30.778Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:45:30.778Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:45:30.778Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:45:30.785Z - Time taken for 'hash changed files from watcher' 2.9677000001538545ms
+[NX Daemon Server] - 2024-10-18T01:45:30.839Z - Time taken for 'build-project-configs' 39.26890000002459ms
+[NX Daemon Server] - 2024-10-18T01:45:30.923Z - Time taken for 'total execution time for createProjectGraph()' 69.71450000000186ms
+[NX Daemon Server] - 2024-10-18T01:45:33.239Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:45:33.240Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:45:35.129Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:45:39.646Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:45:39.646Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:45:39.646Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:45:39.654Z - Time taken for 'hash changed files from watcher' 4.002499999944121ms
+[NX Daemon Server] - 2024-10-18T01:45:39.712Z - Time taken for 'build-project-configs' 40.61499999999069ms
+[NX Daemon Server] - 2024-10-18T01:45:39.795Z - Time taken for 'total execution time for createProjectGraph()' 73.83229999989271ms
+[NX Daemon Server] - 2024-10-18T01:45:54.157Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:45:54.159Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:45:56.760Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:46:00.577Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:46:00.577Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:46:00.577Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:46:00.586Z - Time taken for 'hash changed files from watcher' 4.376200000056997ms
+[NX Daemon Server] - 2024-10-18T01:46:00.648Z - Time taken for 'build-project-configs' 42.0948999999091ms
+[NX Daemon Server] - 2024-10-18T01:46:00.753Z - Time taken for 'total execution time for createProjectGraph()' 88.61170000000857ms
+[NX Daemon Server] - 2024-10-18T01:46:04.475Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:46:04.476Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:46:06.593Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:46:10.892Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:46:10.893Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:46:10.893Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:46:10.898Z - Time taken for 'hash changed files from watcher' 3.517900000093505ms
+[NX Daemon Server] - 2024-10-18T01:46:10.946Z - Time taken for 'build-project-configs' 34.08569999993779ms
+[NX Daemon Server] - 2024-10-18T01:46:11.029Z - Time taken for 'total execution time for createProjectGraph()' 67.68929999996908ms
+[NX Daemon Server] - 2024-10-18T01:47:13.887Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:47:13.888Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:47:16.419Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:47:20.300Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:47:20.300Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:47:20.300Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:47:20.305Z - Time taken for 'hash changed files from watcher' 3.656900000059977ms
+[NX Daemon Server] - 2024-10-18T01:47:20.359Z - Time taken for 'build-project-configs' 38.98989999992773ms
+[NX Daemon Server] - 2024-10-18T01:47:20.437Z - Time taken for 'total execution time for createProjectGraph()' 64.13339999993332ms
+[NX Daemon Server] - 2024-10-18T01:47:33.622Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:47:33.622Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:47:36.179Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:47:40.027Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:47:40.028Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:47:40.028Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:47:40.034Z - Time taken for 'hash changed files from watcher' 3.525499999988824ms
+[NX Daemon Server] - 2024-10-18T01:47:40.082Z - Time taken for 'build-project-configs' 34.254899999825284ms
+[NX Daemon Server] - 2024-10-18T01:47:40.166Z - Time taken for 'total execution time for createProjectGraph()' 69.05689999996684ms
+[NX Daemon Server] - 2024-10-18T01:48:01.514Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:48:01.517Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:48:04.069Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:48:07.933Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:48:07.933Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:48:07.933Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:48:07.940Z - Time taken for 'hash changed files from watcher' 4.507299999939278ms
+[NX Daemon Server] - 2024-10-18T01:48:07.991Z - Time taken for 'build-project-configs' 34.57019999995828ms
+[NX Daemon Server] - 2024-10-18T01:48:08.080Z - Time taken for 'total execution time for createProjectGraph()' 76.48300000000745ms
+[NX Daemon Server] - 2024-10-18T01:49:15.801Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:49:15.802Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:49:18.421Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:49:22.211Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:49:22.211Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:49:22.211Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:49:22.217Z - Time taken for 'hash changed files from watcher' 3.4640999999828637ms
+[NX Daemon Server] - 2024-10-18T01:49:22.271Z - Time taken for 'build-project-configs' 32.68449999997392ms
+[NX Daemon Server] - 2024-10-18T01:49:22.353Z - Time taken for 'total execution time for createProjectGraph()' 66.5663999998942ms
+[NX Daemon Server] - 2024-10-18T01:49:48.627Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:49:48.627Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:49:51.116Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:49:55.036Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:49:55.036Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:49:55.036Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:49:55.043Z - Time taken for 'hash changed files from watcher' 3.082799999974668ms
+[NX Daemon Server] - 2024-10-18T01:49:55.376Z - Time taken for 'build-project-configs' 318.46809999994ms
+[NX Daemon Server] - 2024-10-18T01:49:55.478Z - Time taken for 'total execution time for createProjectGraph()' 81.57380000012927ms
+[NX Daemon Server] - 2024-10-18T01:49:55.876Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:49:55.878Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:49:57.302Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:49:57.307Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:49:58.486Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:50:00.048Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:50:02.289Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:50:02.289Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:50:02.289Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:50:02.298Z - Time taken for 'hash changed files from watcher' 3.860399999888614ms
+[NX Daemon Server] - 2024-10-18T01:50:02.360Z - Time taken for 'build-project-configs' 41.54440000001341ms
+[NX Daemon Server] - 2024-10-18T01:50:02.454Z - Time taken for 'total execution time for createProjectGraph()' 71.3967999999877ms
+[NX Daemon Server] - 2024-10-18T01:51:05.988Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:51:05.989Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:51:08.355Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:51:12.402Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:51:12.402Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:51:12.402Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:51:12.408Z - Time taken for 'hash changed files from watcher' 4.201400000136346ms
+[NX Daemon Server] - 2024-10-18T01:51:12.855Z - Time taken for 'build-project-configs' 425.50900000007823ms
+[NX Daemon Server] - 2024-10-18T01:51:12.946Z - Time taken for 'total execution time for createProjectGraph()' 79.1875ms
+[NX Daemon Server] - 2024-10-18T01:51:58.593Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:51:58.596Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:52:01.283Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:52:01.283Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:52:02.351Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:52:04.274Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:52:05.014Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:52:05.014Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:52:05.014Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:52:05.019Z - Time taken for 'hash changed files from watcher' 3.385899999877438ms
+[NX Daemon Server] - 2024-10-18T01:52:05.204Z - Time taken for 'build-project-configs' 171.23650000011548ms
+[NX Daemon Server] - 2024-10-18T01:52:05.288Z - Time taken for 'total execution time for createProjectGraph()' 64.64079999993555ms
+[NX Daemon Server] - 2024-10-18T01:53:30.628Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:53:30.632Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:53:33.938Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:53:37.049Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:53:37.049Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:53:37.049Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:53:37.057Z - Time taken for 'hash changed files from watcher' 4.126999999862164ms
+[NX Daemon Server] - 2024-10-18T01:53:37.212Z - Time taken for 'build-project-configs' 140.67559999995865ms
+[NX Daemon Server] - 2024-10-18T01:53:37.299Z - Time taken for 'total execution time for createProjectGraph()' 75.626200000057ms
+[NX Daemon Server] - 2024-10-18T01:53:41.143Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:53:41.145Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:53:43.366Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:53:47.553Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:53:47.553Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:53:47.553Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:53:47.557Z - Time taken for 'hash changed files from watcher' 4.398300000000745ms
+[NX Daemon Server] - 2024-10-18T01:53:47.610Z - Time taken for 'build-project-configs' 35.699199999915436ms
+[NX Daemon Server] - 2024-10-18T01:53:47.692Z - Time taken for 'total execution time for createProjectGraph()' 67.33920000004582ms
+[NX Daemon Server] - 2024-10-18T01:54:08.680Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:54:08.681Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:54:11.246Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:54:15.088Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:54:15.088Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:54:15.088Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:54:15.093Z - Time taken for 'hash changed files from watcher' 2.912000000011176ms
+[NX Daemon Server] - 2024-10-18T01:54:15.140Z - Time taken for 'build-project-configs' 32.266800000099465ms
+[NX Daemon Server] - 2024-10-18T01:54:15.219Z - Time taken for 'total execution time for createProjectGraph()' 62.733199999900535ms
+[NX Daemon Server] - 2024-10-18T01:54:23.725Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:54:23.727Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:54:25.768Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:54:30.143Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:54:30.143Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:54:30.143Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:54:30.150Z - Time taken for 'hash changed files from watcher' 3.461200000019744ms
+[NX Daemon Server] - 2024-10-18T01:54:30.201Z - Time taken for 'build-project-configs' 35.76630000001751ms
+[NX Daemon Server] - 2024-10-18T01:54:30.272Z - Time taken for 'total execution time for createProjectGraph()' 58.98149999999441ms
+[NX Daemon Server] - 2024-10-18T01:54:45.575Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:54:45.577Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T01:54:48.002Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T01:54:51.983Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T01:54:51.983Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T01:54:51.983Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T01:54:51.989Z - Time taken for 'hash changed files from watcher' 3.8049000001046807ms
+[NX Daemon Server] - 2024-10-18T01:54:52.038Z - Time taken for 'build-project-configs' 32.7844000000041ms
+[NX Daemon Server] - 2024-10-18T01:54:52.117Z - Time taken for 'total execution time for createProjectGraph()' 63.684399999910966ms
+[NX Daemon Server] - 2024-10-18T02:08:34.244Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:08:34.277Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:08:37.167Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:08:40.684Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:08:40.684Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:08:40.684Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:08:40.704Z - Time taken for 'hash changed files from watcher' 3.0668000001460314ms
+[NX Daemon Server] - 2024-10-18T02:08:41.024Z - Time taken for 'build-project-configs' 299.22019999986514ms
+[NX Daemon Server] - 2024-10-18T02:08:41.110Z - Time taken for 'total execution time for createProjectGraph()' 65.63100000005215ms
+[NX Daemon Server] - 2024-10-18T02:09:09.569Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:09:09.571Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:09:11.685Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:09:11.686Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:09:13.203Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:09:15.145Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:09:15.991Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:09:15.991Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:09:15.991Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:09:16.000Z - Time taken for 'hash changed files from watcher' 4.1240000003017485ms
+[NX Daemon Server] - 2024-10-18T02:09:16.052Z - Time taken for 'build-project-configs' 39.053700000047684ms
+[NX Daemon Server] - 2024-10-18T02:09:16.159Z - Time taken for 'total execution time for createProjectGraph()' 80.84029999980703ms
+[NX Daemon Server] - 2024-10-18T02:09:23.274Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:09:23.276Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:09:25.315Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:09:25.316Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:09:26.851Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:09:26.853Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:09:27.598Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:09:29.098Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:09:29.691Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:09:29.692Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:09:29.692Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:09:29.698Z - Time taken for 'hash changed files from watcher' 3.1379999998025596ms
+[NX Daemon Server] - 2024-10-18T02:09:29.741Z - Time taken for 'build-project-configs' 29.038500000257045ms
+[NX Daemon Server] - 2024-10-18T02:09:29.831Z - Time taken for 'total execution time for createProjectGraph()' 64.55869999993593ms
+[NX Daemon Server] - 2024-10-18T02:09:42.748Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:09:42.750Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:09:45.202Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:09:48.405Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:09:48.407Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:09:49.169Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:09:49.169Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:09:49.169Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:09:49.177Z - Time taken for 'hash changed files from watcher' 3.6177999996580184ms
+[NX Daemon Server] - 2024-10-18T02:09:49.241Z - Time taken for 'build-project-configs' 39.27589999977499ms
+[NX Daemon Server] - 2024-10-18T02:09:49.349Z - Time taken for 'total execution time for createProjectGraph()' 88.80519999982789ms
+[NX Daemon Server] - 2024-10-18T02:09:50.028Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:10:14.222Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:10:14.223Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:10:16.710Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:10:20.640Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:10:20.640Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:10:20.640Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:10:20.646Z - Time taken for 'hash changed files from watcher' 3.530199999921024ms
+[NX Daemon Server] - 2024-10-18T02:10:20.706Z - Time taken for 'build-project-configs' 36.685099999886006ms
+[NX Daemon Server] - 2024-10-18T02:10:20.783Z - Time taken for 'total execution time for createProjectGraph()' 65.19260000018403ms
+[NX Daemon Server] - 2024-10-18T02:10:30.092Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:10:30.093Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:10:31.932Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:10:36.510Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:10:36.511Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:10:36.511Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:10:36.516Z - Time taken for 'hash changed files from watcher' 3.1291000000201166ms
+[NX Daemon Server] - 2024-10-18T02:10:36.560Z - Time taken for 'build-project-configs' 28.248399999924004ms
+[NX Daemon Server] - 2024-10-18T02:10:36.644Z - Time taken for 'total execution time for createProjectGraph()' 70.21400000015274ms
+[NX Daemon Server] - 2024-10-18T02:10:37.592Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:10:37.592Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:10:39.441Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:10:44.006Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:10:44.006Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:10:44.006Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:10:44.014Z - Time taken for 'hash changed files from watcher' 3.1875ms
+[NX Daemon Server] - 2024-10-18T02:10:44.064Z - Time taken for 'build-project-configs' 34.085800000000745ms
+[NX Daemon Server] - 2024-10-18T02:10:44.138Z - Time taken for 'total execution time for createProjectGraph()' 61.1836000001058ms
+[NX Daemon Server] - 2024-10-18T02:11:15.907Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:11:15.908Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:11:18.925Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:11:22.319Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:11:22.319Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:11:22.319Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:11:22.325Z - Time taken for 'hash changed files from watcher' 2.9353999998420477ms
+[NX Daemon Server] - 2024-10-18T02:11:22.376Z - Time taken for 'build-project-configs' 32.71469999989495ms
+[NX Daemon Server] - 2024-10-18T02:11:22.460Z - Time taken for 'total execution time for createProjectGraph()' 74.76069999998435ms
+[NX Daemon Server] - 2024-10-18T02:14:20.670Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:14:20.672Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:14:23.296Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:14:27.086Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:14:27.086Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:14:27.086Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:14:27.091Z - Time taken for 'hash changed files from watcher' 3.7504000002518296ms
+[NX Daemon Server] - 2024-10-18T02:14:27.145Z - Time taken for 'build-project-configs' 35.33850000007078ms
+[NX Daemon Server] - 2024-10-18T02:14:27.240Z - Time taken for 'total execution time for createProjectGraph()' 75.34909999975935ms
+[NX Daemon Server] - 2024-10-18T02:14:29.922Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:14:29.923Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:14:31.839Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:14:34.397Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:14:34.400Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:14:36.336Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:14:36.336Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:14:36.336Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:14:36.341Z - Time taken for 'hash changed files from watcher' 3.8467999999411404ms
+[NX Daemon Server] - 2024-10-18T02:14:36.412Z - Time taken for 'build-project-configs' 48.58020000020042ms
+[NX Daemon Server] - 2024-10-18T02:14:36.505Z - Time taken for 'total execution time for createProjectGraph()' 78.06030000001192ms
+[NX Daemon Server] - 2024-10-18T02:14:36.506Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:15:40.961Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:15:40.965Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:15:43.882Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:15:47.383Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:15:47.383Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:15:47.383Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:15:47.390Z - Time taken for 'hash changed files from watcher' 4.655400000046939ms
+[NX Daemon Server] - 2024-10-18T02:15:47.450Z - Time taken for 'build-project-configs' 40.592000000178814ms
+[NX Daemon Server] - 2024-10-18T02:15:47.556Z - Time taken for 'total execution time for createProjectGraph()' 80.20289999991655ms
+[NX Daemon Server] - 2024-10-18T02:15:54.782Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:15:54.782Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:15:56.541Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:16:01.197Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:16:01.197Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:16:01.197Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:16:01.204Z - Time taken for 'hash changed files from watcher' 3.9062999999150634ms
+[NX Daemon Server] - 2024-10-18T02:16:01.257Z - Time taken for 'build-project-configs' 36.26260000001639ms
+[NX Daemon Server] - 2024-10-18T02:16:01.337Z - Time taken for 'total execution time for createProjectGraph()' 66.22290000040084ms
+[NX Daemon Server] - 2024-10-18T02:16:06.715Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:16:06.719Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:16:08.615Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:16:13.125Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:16:13.126Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:16:13.126Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:16:13.132Z - Time taken for 'hash changed files from watcher' 3.1206999998539686ms
+[NX Daemon Server] - 2024-10-18T02:16:13.177Z - Time taken for 'build-project-configs' 29.50569999963045ms
+[NX Daemon Server] - 2024-10-18T02:16:13.253Z - Time taken for 'total execution time for createProjectGraph()' 60.67169999983162ms
+[NX Daemon Server] - 2024-10-18T02:16:49.033Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:16:49.035Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:16:51.499Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:16:55.446Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:16:55.446Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:16:55.446Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:16:55.452Z - Time taken for 'hash changed files from watcher' 3.732499999925494ms
+[NX Daemon Server] - 2024-10-18T02:16:55.611Z - Time taken for 'build-project-configs' 35.71640000026673ms
+[NX Daemon Server] - 2024-10-18T02:16:55.693Z - Time taken for 'total execution time for createProjectGraph()' 171.0682000000961ms
+[NX Daemon Server] - 2024-10-18T02:17:06.497Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:17:06.497Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:17:08.560Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:17:12.909Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:17:12.909Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:17:12.909Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:17:12.916Z - Time taken for 'hash changed files from watcher' 3.5734999999403954ms
+[NX Daemon Server] - 2024-10-18T02:17:12.986Z - Time taken for 'build-project-configs' 38.987900000065565ms
+[NX Daemon Server] - 2024-10-18T02:17:13.084Z - Time taken for 'total execution time for createProjectGraph()' 83.39930000016466ms
+[NX Daemon Server] - 2024-10-18T02:17:15.018Z - [WATCHER]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue was modified
+[NX Daemon Server] - 2024-10-18T02:17:15.018Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:17:17.083Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:17:21.434Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX Daemon Server] - 2024-10-18T02:17:21.434Z - [REQUEST]: devops-pipeline/src/components/pipelineList/PipelineTableView.vue
+[NX Daemon Server] - 2024-10-18T02:17:21.434Z - [REQUEST]: 
+[NX Daemon Server] - 2024-10-18T02:17:21.441Z - Time taken for 'hash changed files from watcher' 3.580000000074506ms
+[NX Daemon Server] - 2024-10-18T02:17:21.542Z - Time taken for 'build-project-configs' 84.6730999997817ms
+[NX Daemon Server] - 2024-10-18T02:17:21.625Z - Time taken for 'total execution time for createProjectGraph()' 71.22610000008717ms
+[NX Daemon Server] - 2024-10-18T02:17:52.401Z - [WATCHER]: Processing file changes in outputs
+[NX Daemon Server] - 2024-10-18T02:17:52.449Z - [WATCHER]: Stopping the watcher for E:\bk-ci\src\frontend (sources)
+[NX Daemon Server] - 2024-10-18T02:17:52.465Z - [WATCHER]: Stopping the watcher for E:\bk-ci\src\frontend (outputs)
+[NX Daemon Server] - 2024-10-18T02:17:52.465Z - Server stopped because: "LOCK_FILES_CHANGED"

@@ -1,9 +1,18 @@
 <template>
-    <div v-if="execDetail" class="pipeline-detail-header">
-        <pipeline-bread-crumb :show-record-entry="isDebugExec" show-build-num-switch :pipeline-name="pipelineInfo?.pipelineName" />
-        <aside :class="['pipeline-detail-right-aside', {
-            'is-debug-exec-detail': isDebugExec
-        }]">
+    <div
+        v-if="execDetail"
+        class="pipeline-detail-header"
+    >
+        <pipeline-bread-crumb
+            :show-record-entry="isDebugExec"
+            show-build-num-switch
+            :pipeline-name="pipelineInfo?.pipelineName"
+        />
+        <aside
+            :class="['pipeline-detail-right-aside', {
+                'is-debug-exec-detail': isDebugExec
+            }]"
+        >
             <bk-button
                 v-if="isRunning"
                 :disabled="loading"
@@ -75,7 +84,11 @@
             />
         </aside>
     </div>
-    <i v-else class="devops-icon icon-circle-2-1 spin-icon" style="margin-left: 20px;"></i>
+    <i
+        v-else
+        class="devops-icon icon-circle-2-1 spin-icon"
+        style="margin-left: 20px;"
+    ></i>
 </template>
 
 <script>

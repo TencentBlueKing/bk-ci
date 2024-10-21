@@ -15,7 +15,10 @@
                 :id="item[settingKey]"
                 :name="item[displayKey]"
             >
-                <slot name="option-item" v-bind="item"></slot>
+                <slot
+                    name="option-item"
+                    v-bind="item"
+                ></slot>
             </bk-option>
         </bk-select>
         <component
@@ -26,7 +29,8 @@
             :handle-change="handleChange"
             :value="element[curComponent.key]"
             :disabled="disabled"
-            v-bind="curComponent">
+            v-bind="curComponent"
+        >
         </component>
     </div>
 </template>
